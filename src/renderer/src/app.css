@@ -1,14 +1,11 @@
-@import 'tailwindcss';
+@import './lib/kit/reset.css';
 @import './lib/kit/tokens.css';
 @import './lib/kit/scrollbars.css';
-
-@source './**/*.{svelte,ts}';
 
 html,
 body,
 #app {
   height: 100%;
-  margin: 0;
 }
 
 body {
@@ -17,18 +14,4 @@ body {
   background: var(--xp-face);
   user-select: none;
   cursor: default;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-  color: inherit;
 }
