@@ -6,7 +6,7 @@ import { projectRoot } from './fixtures/launch'
 /**
  * The Changes pane on screen (UX-111, UX-116, UX-117): what the panel saw is measured here, not only the markup.
  * long-edits.json writes five files, one with a 36-character name in a folder, and a 16-line file.
- * UX-151: the list takes at least half of the pane and shows six rows at the default size of the chat and of the Code window.
+ * UX-184: the list takes the height of its rows (35% of the pane at most), the diff gets the rest, 12 lines at the default size.
  */
 describe('Changes pane', () => {
   let ctx: ScriptedDesktop
@@ -35,12 +35,14 @@ describe('Changes pane', () => {
     const code = ctx.desktop.code()
     await code.showChanges()
     for (const frame of [chat.frame, code.frame]) {
-      const list = (await frame.getByTestId('changes-list').boundingBox())!
       const rows = frame.getByTestId('changes-item')
       const count = await rows.count()
       expect(count).toBe(5)
       for (let i = 0; i < count; i++) {
         const row = rows.nth(i)
+        // A short list scrolls (UX-184): bring the row into view first.
+        await row.scrollIntoViewIfNeeded()
+        const list = (await frame.getByTestId('changes-list').boundingBox())!
         // The end of the name (its last characters and the extension) and the counts are both inside the list: nothing is cut off at the front or pushed out of sight.
         const tail = (await row.getByTestId('changes-name-tail').boundingBox())!
         const lines = (await row.getByTestId('changes-lines').boundingBox())!
@@ -50,8 +52,8 @@ describe('Changes pane', () => {
         expect(across(lines), `row ${i} counts`).toBe(true)
         expect(inside(tail, list), `row ${i} name end in the list`).toBe(true)
         expect(inside(lines, list), `row ${i} counts in the list`).toBe(true)
-        // The name is readable: its box is at least 100 px wide.
-        expect((await row.getByTestId('changes-file').boundingBox())!.width, `row ${i} name width`).toBeGreaterThanOrEqual(100)
+        // The name is readable: its box is at least 80 px wide (a short list scrolls, and its scroll bar takes 17 px, UX-184).
+        expect((await row.getByTestId('changes-file').boundingBox())!.width, `row ${i} name width`).toBeGreaterThanOrEqual(80)
         // The tail is whole: its text is not clipped by its own box.
         expect(await row.getByTestId('changes-name-tail').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
       }
@@ -64,19 +66,21 @@ describe('Changes pane', () => {
     }
   })
 
-  it('shows at least six rows and gives the list at least half of the pane, in the chat and in Code (UX-151)', async () => {
+  it('gives the list the height of its rows (at most 35% of the room) and the diff the rest, in the chat and in Code (UX-184)', async () => {
     const chat = ctx.desktop.chat()
     const code = ctx.desktop.code()
     await code.showChanges()
     for (const frame of [chat.frame, code.frame]) {
       const list = (await frame.getByTestId('changes-list').boundingBox())!
       const diff = (await frame.getByTestId('changes-diff').boundingBox())!
-      // Header 26 px and six rows of 20 px.
-      expect(list.height).toBeGreaterThanOrEqual(26 + 6 * 20)
-      expect(list.height).toBeGreaterThanOrEqual(diff.height)
-      // All five rows are whole, none is cut at the bottom.
+      // The list shows at least its header and two rows; the diff is not smaller than the list.
+      expect(list.height).toBeGreaterThanOrEqual(26 + 2 * 20)
+      expect(diff.height).toBeGreaterThanOrEqual(list.height)
+      // A diff line is 17 px: 12 of them need 204 px.
+      expect(diff.height).toBeGreaterThanOrEqual(12 * 17)
+      // The first rows are whole, none is cut at the bottom.
       const rows = frame.getByTestId('changes-item')
-      for (let i = 0; i < 5; i++) expect(inside((await rows.nth(i).boundingBox())!, list), `row ${i} in the list`).toBe(true)
+      for (let i = 0; i < 2; i++) expect(inside((await rows.nth(i).boundingBox())!, list), `row ${i} in the list`).toBe(true)
     }
   })
 
@@ -88,15 +92,14 @@ describe('Changes pane', () => {
     await see.gone(chat.frame.getByTestId('changes-reason'))
   })
 
-  it('gives the diff at least 40% of the pane and 8 lines at the default size (the list has the other half, UX-151)', async () => {
+  it('gives the diff at least 12 lines at the default size, and the diff scrolls alone (UX-184)', async () => {
     const chat = ctx.desktop.chat()
     await chat.changes.filter({ hasText: 'redirect-handler' }).click()
     const pane = (await chat.frame.getByTestId('changes-pane').boundingBox())!
     const diff = (await chat.frame.getByTestId('changes-diff').boundingBox())!
+    expect(diff.height).toBeGreaterThanOrEqual(12 * 17)
     expect(diff.height).toBeGreaterThanOrEqual(pane.height * 0.4)
-    // A diff line is 17 px: 8 of them need 136 px.
-    expect(diff.height).toBeGreaterThanOrEqual(8 * 17)
-    // The diff and the buttons are both on screen without scrolling the pane.
+    // The status words and the buttons are on screen: the pane itself does not scroll.
     const revert = (await chat.frame.getByTestId('changes-revert').boundingBox())!
     expect(inside(revert, pane)).toBe(true)
   })
@@ -109,13 +112,20 @@ describe('Changes pane', () => {
     await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
     await see.visible(chat.frame.getByTestId('changes-reverted'))
     await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
+    // Selecting the reverted row says where the change is and offers Restore... (UX-185).
+    await chat.frame.getByTestId('changes-reverted').click()
+    await see.text(chat.frame.getByTestId('changes-undone-text'), 'This change was undone. Restore it from the Recycle Bin.')
+    await chat.frame.getByTestId('changes-restore').click()
+    await see.visible(ctx.desktop.window('recycle-bin').getByTestId('recycle-bin-list'))
+    await see.attribute(ctx.desktop.window('recycle-bin').getByTestId('recycle-bin-item').first(), 'aria-selected', 'true')
+    await ctx.desktop.closeWindow('recycle-bin')
     // The notice is one line above the list and the list keeps its height: nothing is squeezed or clipped (UX-151).
     const note = (await chat.frame.getByTestId('changes-reverted-note').boundingBox())!
     const listAfter = (await chat.frame.getByTestId('changes-list').boundingBox())!
     expect(note.y + note.height).toBeLessThanOrEqual(listAfter.y + 1)
     expect(note.height).toBeLessThanOrEqual(30)
     expect(Math.abs(listAfter.height - listBefore.height)).toBeLessThanOrEqual(1)
-    expect(listAfter.height).toBeGreaterThanOrEqual(26 + 6 * 20)
+    expect(listAfter.height).toBeGreaterThanOrEqual(26 + 2 * 20)
     const rowsAfter = chat.frame.getByTestId('changes-item')
     for (let i = 0; i < (await rowsAfter.count()); i++) expect(inside((await rowsAfter.nth(i).boundingBox())!, listAfter), `row ${i} after revert`).toBe(true)
     expect(inside((await chat.frame.getByTestId('changes-reverted').boundingBox())!, listAfter)).toBe(true)
@@ -133,11 +143,11 @@ describe('Changes pane', () => {
     await code.showChanges()
     await see.visible(code.frame.getByTestId('changes-reverted'))
     await see.visible(code.frame.getByTestId('changes-open-recycle-bin'))
-    // The same in the Code window: the list is not squeezed, every row is inside it.
+    // The same in the Code window: the reverted row is in the list.
     const codeList = (await code.frame.getByTestId('changes-list').boundingBox())!
-    expect(codeList.height).toBeGreaterThanOrEqual(26 + 6 * 20)
-    const codeRows = code.frame.getByTestId('changes-item')
-    for (let i = 0; i < (await codeRows.count()); i++) expect(inside((await codeRows.nth(i).boundingBox())!, codeList), `Code row ${i} after revert`).toBe(true)
+    expect(codeList.height).toBeGreaterThanOrEqual(26 + 2 * 20)
+    // The Code list can be shorter than its rows (35% of a short pane): it scrolls, and the reverted row is reached by scrolling.
+    await code.frame.getByTestId('changes-reverted').scrollIntoViewIfNeeded()
     expect(inside((await code.frame.getByTestId('changes-reverted').boundingBox())!, codeList)).toBe(true)
   })
 })

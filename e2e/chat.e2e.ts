@@ -168,6 +168,7 @@ describe('chat turn with the fake agent', () => {
     const terminal = ctx.desktop.terminal()
     // Closing Code can leave the Terminal active already; a taskbar click would then minimise it.
     if (!(await terminal.output.isVisible())) await ctx.desktop.taskbarItem('terminal').click()
+    await see.visible(terminal.readOnlyNotice) // it is there from the start, before any click (UX-190)
     await terminal.output.click()
     await ctx.desktopPage.keyboard.type('dir')
     await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')

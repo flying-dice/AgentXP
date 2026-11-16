@@ -149,15 +149,18 @@ describe('opening file, change position and totals (UX-41, UX-42)', () => {
 })
 
 describe('numbers in digits (UX-77)', () => {
-  it('writes the verdict line with digits and names the blockers', () => {
+  it('writes the verdict sentence once, with the blockers in digits (the link says the comments, UX-191)', () => {
     const c = (severity: 'blocker' | 'minor', parentId: number | null = null) => ({ parentId, severity })
-    expect(verdictLine('request_changes', [c('blocker'), c('minor'), c('minor', 1)])).toBe('Changes requested. 2 comments, 1 is a blocker.')
-    expect(verdictLine('request_changes', [c('blocker'), c('blocker')])).toBe('Changes requested. 2 comments, 2 are blockers.')
-    expect(verdictLine('comment', [c('minor')])).toBe('Commented. 1 comment.')
+    expect(verdictLine('request_changes', [c('blocker'), c('minor'), c('minor', 1)])).toBe('Changes requested. 1 comment is a blocker.')
+    expect(verdictLine('request_changes', [c('blocker'), c('blocker')])).toBe('Changes requested. 2 comments are blockers.')
+    expect(verdictLine('request_changes', [c('minor')])).toBe('Changes requested.')
+    expect(verdictLine('comment', [c('minor')])).toBe('Commented.')
     expect(verdictLine('approve', [])).toBe('Approved.')
   })
   it('says how many files changed and how many are shown', () => {
     expect(filesStatusLabel(2, 1)).toBe('Showing 1 of 2 changed files')
+    expect(filesStatusLabel(2, 1, 'src\\auth/redirect.ts')).toBe('Showing redirect.ts (1 of 2 changed files)')
+    expect(filesStatusLabel(1, 1, 'redirect.ts')).toBe('1 file changed')
     expect(filesStatusLabel(2, 0)).toBe('2 files changed')
     expect(filesStatusLabel(1, 1)).toBe('1 file changed')
     expect(filesStatusLabel(0, 0)).toBe('0 files changed')

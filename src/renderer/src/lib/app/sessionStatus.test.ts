@@ -6,7 +6,7 @@ describe('sessionStatus', () => {
     expect(connectionLabel('idle')).toBe('Connected')
     expect(connectionLabel('working')).toBe('Working…')
     expect(connectionLabel('connecting')).toBe('Connecting…')
-    expect(connectionLabel('awaiting_permission')).toBe('Waiting for permission')
+    expect(connectionLabel('awaiting_permission')).toBe('Waiting for your answer')
   })
 
   it('reads Waiting for you, not Working, while the user is in control', () => {

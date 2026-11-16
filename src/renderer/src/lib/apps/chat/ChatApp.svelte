@@ -6,12 +6,14 @@
   import { chatTitleLabels } from '../../app/chatTitles'
   import { describeProblem } from '../../app/session/chatProblem'
   import { folderLabel } from '../../app/session/folderLabel'
+  import { NOT_RESPONDING_LINK, NOT_RESPONDING_MS, NOT_RESPONDING_TIP, showNotResponding } from '../../app/session/notResponding'
   import { connectionLabel, contextPercent, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
   import { getDesktopContext } from '../../desktop/context'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
+  import { openRecycleBin } from '../../app/changes/openRecycleBin'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { undoRevertItem } from '../../app/changes/changeMenu'
   import TasksPane from '../../app/shell/TasksPane.svelte'
@@ -174,6 +176,15 @@
 
   // ---- the caret goes to the message box when the window opens or comes to the front ----------------------------
   let focusSeq = $state(0)
+  /**
+   * A text the desktop holds for this window's message box (a new chat that continues a message that failed in another chat, UX-175).
+   * Its ids count apart from `focusSeq`, so the box does not mistake one for the other.
+   */
+  const HOST_PREFILL_BASE = 1_000_000
+  const hostPrefill = $derived.by(() => {
+    const held = host.prefills?.[win.id]
+    return held ? { ...held, id: held.id + HOST_PREFILL_BASE } : null
+  })
   $effect(() => {
     if (focused) untrack(() => (focusSeq += 1))
   })
@@ -272,6 +283,21 @@
     })
   }
 
+  /** "End the agent program..." and "Task Manager...": Task Manager on Processes, where End process stops the program of every chat (UX-176). */
+  const openProcesses = (): void => void host.openTaskManager('processes')
+
+  // The status line offers the way to end the program once the chat has worked for a while (UX-176); a request that waits does not count.
+  let workedLong = $state(false)
+  $effect(() => {
+    const working = !!store?.running && !store.pendingInterrupt
+    if (!working) {
+      workedLong = false
+      return
+    }
+    const timer = setTimeout(() => (workedLong = showNotResponding(NOT_RESPONDING_MS, false)), NOT_RESPONDING_MS)
+    return () => clearTimeout(timer)
+  })
+
   /** "New chat" (File menu, Ctrl+N): a new chat on the folder of this one, also when this chat's agent is broken. */
   const newChat = (): Promise<void> => host.startChat(session?.cwd ?? host.state.home)
 
@@ -291,6 +317,7 @@
         label: '&File',
         items: [
           { id: 'chat-new', testid: 'chat-menu-new', label: 'New &chat', shortcut: 'Ctrl+N', action: () => void newChat() },
+          { id: 'chat-end-agent', testid: 'chat-menu-end-agent', label: '&End the agent program...', title: 'Open Task Manager on Processes, where you can end the agent program', disabled: sessionId <= 0, action: openProcesses },
           { separator: true },
           { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
           ...closeItems('chat', () => void host.closeWindow(win.id), '&Close', 'Close this window. The agent keeps working.')
@@ -302,11 +329,12 @@
         items: [
           { id: 'chat-review', testid: 'chat-menu-review', label: '&Review changes', icon: 'changes', action: reviewChanges },
           { id: 'chat-code', testid: 'chat-menu-code', label: 'Open in &Code', action: () => void host.openApp({ app: 'code', path: host.projectRootOf(session?.cwd) }) },
+          { id: 'chat-task-manager', testid: 'chat-menu-task-manager', label: '&Task Manager...', title: 'Open Task Manager to see and end the agent programs', action: openProcesses },
           { separator: true },
           { id: 'chat-events', testid: 'chat-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog', action: () => void host.openEventViewer({ sessionId: sessionId > 0 ? sessionId : null }) }
         ]
       },
-      { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
+      { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: '&Changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
       help.menu()
     ])
   )
@@ -351,7 +379,7 @@
           <button type="button" class="dismiss" data-testid="chat-reopened-dismiss" aria-label="Dismiss" title="Dismiss" onclick={() => (reopened = null)}>x</button>
         </div>
       {/if}
-      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} prefill={{ id: focusSeq }} contained bind:store bind:session bind:agent />
+      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} prefill={hostPrefill ?? { id: focusSeq }} onprefilled={(id) => host.prefillApplied?.(win.id, id - HOST_PREFILL_BASE)} contained bind:store bind:session bind:agent />
     </div>
     <SurfaceSidebar
       surfaces={sidebarSurfaces}
@@ -375,7 +403,7 @@
                 layoutKey={`chat-${sessionId}`}
                 bind:selectedId={selectedChangeId}
                 onrevert={(c) => revert(c)}
-                onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })}
+                onopenrecyclebin={(id) => void openRecycleBin(host, id)}
                 onopeneditor={(c) => folder && void host.openApp({ app: 'code', path: c.path })}
               />
             {:else}
@@ -395,6 +423,11 @@
         <span>Context</span>
         <ProgressBar width={80} value={percent} label="Context used" />
         <span class="pct">{percent}%</span>
+      </StatusStripLabel>
+    {/if}
+    {#if workedLong}
+      <StatusStripLabel borders={['left']}>
+        <button type="button" class="reconnect" data-testid="chat-end-agent-link" title={NOT_RESPONDING_TIP} onclick={openProcesses}>{NOT_RESPONDING_LINK}</button>
       </StatusStripLabel>
     {/if}
     <StatusStripLabel testid="chat-status" text={connectionLabel(status, host.state.userInControl)} borders={['left']} />

@@ -34,7 +34,7 @@ export const projectQuoted = (label: string, letter?: string): string => `'${lab
 
 /** Text of the balloon after Eject: what happened, that the files are safe, and how to get the project back. */
 export const ejectBalloonText = (label: string, letter?: string): string =>
-  `${projectQuoted(label, letter)} was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.`
+  `${projectQuoted(label, letter)} was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.`
 
 /** The question before a project is removed while chats still work on it. */
 export const removeProjectText = (label: string): string => `Remove '${label}' from this desktop? The agent can no longer use it. The folder and its files stay where they are.`

@@ -85,7 +85,10 @@ export type ChipWord = 'Allow' | 'Ask' | 'Deny'
 
 export interface ToolChip {
   group: Exclude<ToolGroup, 'shell'>
-  /** The chip text: `<Name>: <Allow|Ask|Deny>`, plus ` (no Terminal open)` while no app that provides the tool is open. */
+  /**
+   * The chip text: `<Name>: <Allow|Ask|Deny>`. "(now)" follows Ask while "Ask before every action" is on and the saved setting is
+   * another (UX-173); "(Terminal is closed)" follows while no app that provides the tool is open (UX-178).
+   */
   label: string
   /** The name before the colon. */
   name: string
@@ -100,8 +103,11 @@ export interface ToolChip {
 /** The first words of every chip tooltip; a chip is a button that opens Control Center at Permissions (UX-142). */
 export const OPEN_CONTROL_CENTRE = 'Open Control Center to change this.'
 
-/** The name a screen reader reads for a chip: "Run commands: Ask. Open Control Center to change." */
-export const chipAriaLabel = (chip: Pick<ToolChip, 'label'>): string => `${chip.label}. Open Control Center to change.`
+/** The second line of the tooltip and the aria label of a chip that reads Ask (UX-178). */
+export const ASKS_YOU_FIRST = 'Asks you first.'
+
+/** The name a screen reader reads for a chip: "Run commands: Ask. Asks you first. Open Control Center to change." */
+export const chipAriaLabel = (chip: Pick<ToolChip, 'label' | 'word'>): string => `${chip.label}.${chip.word === 'Ask' ? ` ${ASKS_YOU_FIRST}` : ''} Open Control Center to change.`
 
 const DECISION_WORD: Record<PolicyDecision, ChipWord> = { allow: 'Allow', ask: 'Ask', deny: 'Deny' }
 
@@ -111,26 +117,29 @@ function providerText(group: Exclude<ToolGroup, 'shell'>): string {
   return apps.length <= 1 ? (apps[0] ?? 'app') : `${apps.slice(0, -1).join(', ')} or ${apps[apps.length - 1]}`
 }
 
-/** The short form for the chip: "Terminal" for one app, "app" for several ("no app open"). */
-const providerShort = (group: Exclude<ToolGroup, 'shell'>): string => (TOOL_GROUP_PROVIDERS[group].length === 1 ? APP_DISPLAY_NAMES[TOOL_GROUP_PROVIDERS[group][0]] : 'app')
+/** Why the tool cannot be used yet, short: "Terminal is closed" for one app, "no app is open" for several (UX-178). */
+const closedReason = (group: Exclude<ToolGroup, 'shell'>): string => (TOOL_GROUP_PROVIDERS[group].length === 1 ? `${APP_DISPLAY_NAMES[TOOL_GROUP_PROVIDERS[group][0]]} is closed` : 'no app is open')
 
 /**
- * The tooltip of a chip; every chip has one. It names the setting and, when the chip differs from it, the reason:
- * "Run commands is set to Ask. The agent cannot use it yet because no Terminal is open. Click to change it."
+ * The tooltip of a chip; every chip has one. It names the setting and, when the chip differs from it, the reason; a chip that
+ * reads Ask adds "Asks you first." on a second line (UX-178):
+ * "Open Control Center to change this. Saved setting: Allow. You are in control, so the agent asks first." and "Asks you first."
  */
 export function chipTooltip(group: Exclude<ToolGroup, 'shell'>, name: string, word: ChipWord, setting: ChipWord, closed: boolean): string {
-  const parts = [`${name} is set to ${setting}.`]
-  if (word !== setting) parts.push('You are in control, so the agent asks first.')
+  const parts = word === setting ? [`${name} is set to ${setting}.`] : [`Saved setting: ${setting}.`, 'You are in control, so the agent asks first.']
   if (word === 'Deny') parts.push('The agent cannot use it.')
   else if (closed) parts.push(`The agent cannot use it yet because no ${providerText(group)} is open.`)
-  return `${OPEN_CONTROL_CENTRE} ${parts.join(' ')}`
+  const lines = [`${OPEN_CONTROL_CENTRE} ${parts.join(' ')}`]
+  if (word === 'Ask') lines.push(ASKS_YOU_FIRST)
+  return lines.join('\n')
 }
 
 /**
  * Chips for the top bar, one pattern `<Name>: <Allow|Ask|Deny>`. Read files, Run commands and Browser are always there;
  * the other tool groups appear while their app is open (`tools` is what the open apps give the agent). The word is the setting
- * (or Ask while `askFirst`, "Ask before every action"); "Off" is not a word of the bar. While no app that provides the tool is
- * open the chip adds "(no Terminal open)" and a distinct style, so the setting and the reason can be read together.
+ * (or Ask while `askFirst`, "Ask before every action"); "Off" is not a word of the bar. A chip that reads Ask only because of the box
+ * reads "Ask (now)", because the saved setting is another. While no app that provides the tool is open the chip adds
+ * "(Terminal is closed)" and a distinct style, so the setting and the reason can be read together.
  */
 export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | null = null, askFirst = false): ToolChip[] {
   const open = new Set(tools)
@@ -140,7 +149,8 @@ export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | n
     const word: ChipWord = decision === 'deny' ? 'Deny' : askFirst || decision === 'ask' ? 'Ask' : 'Allow'
     const closed = word !== 'Deny' && !open.has(group)
     const state: ChipState = word === 'Deny' || closed ? 'off' : word === 'Ask' ? 'asks' : 'on'
-    const label = closed ? `${name}: ${word} (no ${providerShort(group)} open)` : `${name}: ${word}`
+    const notes = [...(word !== setting && word === 'Ask' ? ['now'] : []), ...(closed ? [closedReason(group)] : [])]
+    const label = `${name}: ${word}${notes.length === 0 ? '' : ` (${notes.join(', ')})`}`
     return { group, name, word, state, closed, label, tooltip: chipTooltip(group, name, word, setting, closed) }
   }
   const headline = new Set<ToolGroup>(HEADLINE)
@@ -194,8 +204,17 @@ export function controlText(closedApps: readonly string[] = []): string {
   const closed = closedApps.length === 0 ? '' : ` ${closedApps.length === 1 ? closedApps[0] : `${closedApps.slice(0, -1).join(', ')} and ${closedApps[closedApps.length - 1]}`} ${closedApps.length === 1 ? 'is' : 'are'} not open.`
   return `${CONTROL_SENTENCE}${closed}`
 }
-/** The first line of the Activity gadget while the user is in control and a step was running. */
-export const CONTROL_NOTE = `Stopped: you took control. ${ASK_FIRST_SENTENCE}`
+/** The first line of the Activity gadget while the user is in control and a step was running (UX-178: no "Stopped:"). */
+export const CONTROL_NOTE = 'You are in control. The agent asks first.'
+/**
+ * What the box does not do (UX-173): it is not a saved setting. The bar and the Activity gadget show it next to the
+ * link that opens Permissions: `before`, the link text, `after`.
+ */
+export const NOT_SAVED_NOTE = { before: 'This is not saved. To keep a tool on Ask, change it in ', link: 'Control Center', after: '.' } as const
+export const NOT_SAVED_TEXT = `${NOT_SAVED_NOTE.before}${NOT_SAVED_NOTE.link}${NOT_SAVED_NOTE.after}`
+/** The label of the take-control check box: it says how long it lasts (UX-173). */
+export const TAKE_CONTROL_LABEL = 'Ask before every action (until I untick it)'
+export const PAUSE_TIP = 'Pause every agent on this desktop'
 /** The same line while nothing was running: it is true and it does not sit over "Nothing has happened yet". */
 export const CONTROL_IDLE_NOTE = CONTROL_SENTENCE
 /** The tooltip of the Browser's Take over button: what one click does to every tool (UX-143). */

@@ -425,6 +425,7 @@
   .browser {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background: var(--w7-face);
@@ -619,6 +620,7 @@
     position: relative;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     background: var(--w7-window);
     border-top: 1px solid #8ea4c4;

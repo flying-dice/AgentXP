@@ -6,6 +6,9 @@ export const fail = (reason, notes = []) => ({ status: 'FAIL', reason, notes })
 export const manual = (reason, notes = []) => ({ status: 'MANUAL', reason, notes })
 
 /** Combines state checks (all must hold) into a result. */
+/** H-99: how the panelist made the agent ask: the chat's "Ask before every action" box sets userInControl (an overlay), not the policy. */
+export const controlNotes = (state) => [`ask before every action (userInControl): ${state?.userInControl ?? 'unknown'}; paused: ${state?.paused ?? 'unknown'}`]
+
 export function all(checks, notes = []) {
   const bad = checks.filter(([ok]) => !ok)
   if (bad.length) return fail(`not met: ${bad.map(([, why]) => why).join('; ')}`, notes)

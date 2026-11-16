@@ -1,5 +1,6 @@
 /** Pure window geometry for the window manager (no DOM, no state). */
-import type { Bounds } from '@shared/desktop'
+import type { AppKind, Bounds } from '@shared/desktop'
+import { placeWindow } from '@shared/desktop-views'
 
 export type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 export const RESIZE_EDGES: readonly ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
@@ -96,6 +97,22 @@ export function fitInsideWorkArea(b: Bounds, area: Size, barHeight: number): Bou
   const width = Math.min(b.width, area.width)
   const height = Math.min(b.height, Math.max(1, area.height - minY))
   return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, minY, Math.max(minY, area.height - height)), width, height }
+}
+
+const boundsOverlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+/**
+ * Where a window that the user opened from another window belongs (UX-181): whole inside the work area, and beside the window it
+ * came from (to the right, then below, then left, then above, else squeezed into the room that is left) instead of over it.
+ * `opened` is where it is now; the result equals `opened` when nothing has to move. `opener` is null when no window had the focus
+ * (or it was minimized).
+ */
+export function placeBesideOpener(app: AppKind, opened: Bounds, opener: Bounds | null, area: Size, barHeight: number, openCount: number): Bounds {
+  const fitted = fitInsideWorkArea(opened, area, barHeight)
+  if (!opener || !boundsOverlap(fitted, opener)) return fitted
+  const minY = barHeight > 0 ? minYBelow(barHeight) : 0
+  const beside = placeWindow(app, openCount, opener, area, { width: fitted.width, height: fitted.height }, minY)
+  return boundsOverlap(beside, opener) ? fitted : fitInsideWorkArea(beside, area, barHeight)
 }
 
 /** The Help window: 760 x 520, or the work area minus 40 px when that is less, never narrower than 640 px (UX-165). */

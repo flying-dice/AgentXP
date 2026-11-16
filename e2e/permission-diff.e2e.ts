@@ -33,14 +33,17 @@ describe('permission box: edit of an existing file', () => {
     await see.visible(chat.frame.getByTestId('permission-detail'))
   })
 
-  it('gives the change about 6 rows even in the default window, in one scroll area (UX-158)', async () => {
+  it('gives the change about 7 rows even in the default window, with the changed lines in view, in one scroll area (UX-158, UX-177)', async () => {
     const chat = ctx.desktop.chat()
     const view = chat.frame.getByTestId('permission-detail-view')
     await see.visible(view)
-    await see.eventually(async () => expect((await view.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(110))
-    // Below 8 rows the box offers the whole change.
+    await see.eventually(async () => expect((await view.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(130))
+    // Below 9 rows the box offers the whole change.
     await see.visible(chat.frame.getByTestId('permission-detail-more'))
     // The answers stay in the window next to the preview.
     await see.visible(chat.frame.getByTestId('permission-hint'))
+    // The chat above the box keeps one row at least, and the status bar says that the box waits for the answer.
+    expect((await chat.transcript.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(28)
+    await see.text(chat.frame.getByTestId('chat-status'), 'Waiting for your answer')
   })
 })

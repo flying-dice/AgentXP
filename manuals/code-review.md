@@ -76,7 +76,7 @@ The right edge of the window holds the chat with the reviewer. You can ask a que
 
 ### The Status Bar
 
-The status bar shows the folder, how many files changed (for example "2 files changed", or "Showing 1 of 2 changed files" when you opened one of them). In a narrow window the least important parts are left out, so no part is cut, the number of open comments, and what the reviewer does. Every number in the window is written in digits.
+The status bar shows the folder, how many files changed (for example "2 files changed", or "Showing redirect.ts (1 of 2 changed files)" when you opened one of them). In a narrow window the least important parts are left out, so no part is cut, the number of open comments, and what the reviewer does. Every number in the window is written in digits.
 
 ## 4 - Controls Reference
 
@@ -154,7 +154,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | No comments | Shows when the list is empty. | `review-comments-empty` |
 | Send comments to chat | Opens the **Send to chat** dialog box. | `review-send-all` |
 | Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. | `review-send-comments` |
-| Verdict text | The verdict and the numbers of comments and blockers, for example "Changes requested. 2 comments, 1 is a blocker." | `review-verdict-line` |
+| Verdict text | The verdict in one sentence, and how many comments are blockers, for example "Changes requested. 1 comment is a blocker." The link at the end of the sentence says how many comments there are. | `review-verdict-line` |
 | Send to chat dialog | Asks which chat gets the comments. The chat that is open reads "Chat: name (in folder)". The other choice reads "Start a new chat for these comments". | `review-send-dialog` |
 | Open chat | The line of an open chat in the dialog box: its name and the folder it works in. | `review-send-chat-name` |
 | Chat (option) | An existing chat, named as its window is: by its title, or New chat (project name) while it has no title. The attribute `data-session-id` gives it. | `review-send-chat` |
@@ -169,7 +169,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | All changes: file | A file in the one-page view. | `review-all-file` |
 | All changes: file heading | The name of a file in the one-page view. | `review-all-head` |
 | Start a new review | Asks the reviewer for a review of the changes. Nothing starts until you click it. | `review-ask-agent` |
-| Comments banner | Says how many comments are open. | `review-banner-comments` |
+| Comments banner | The link at the end of the verdict sentence. It says how many comments there are and shows the list. | `review-banner-comments` |
 | Compared with | Says what the changes are compared with. | `review-base-hint` |
 | Diff columns | The old and new text side by side. | `review-columns` |
 | Comment sent | Marks a comment that was sent. | `review-comment-sent` |

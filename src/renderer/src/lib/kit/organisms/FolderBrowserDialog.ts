@@ -90,6 +90,29 @@ export const placeNode = (place: BrowsePlaceDto, paths: Map<string, string>): Tr
   return { id, text: place.name, icon: 'folder', hasChildren: true, testid: 'folder-browser-node', title: place.path, attrs: { 'data-path': place.path } }
 }
 
+const samePath = (a: string, b: string): boolean => a.replace(/[\\/]+$/, '').toLowerCase() === b.replace(/[\\/]+$/, '').toLowerCase()
+const parentPath = (path: string): string => path.replace(/[\\/]+$/, '').replace(/[\\/][^\\/]*$/, '')
+
+/** True when the folder of `place` lies directly in the folder of another shortcut (Documents and Desktop inside Home). */
+const isInsideOtherPlace = (place: BrowsePlaceDto, places: BrowsePlaceDto[]): boolean => places.some((q) => q !== place && samePath(q.path, parentPath(place.path)))
+
+/** The shortcuts of the tree (UX-182): Home is the one place for Desktop and Documents, so a shortcut that Home already holds is not listed a second time. */
+export const dedupePlaces = (places: BrowsePlaceDto[]): BrowsePlaceDto[] => places.filter((p) => !isInsideOtherPlace(p, places))
+
+/**
+ * The tree nodes to open first when there are no recent projects: Documents (inside Home, which opens with it), else the first shortcut.
+ * Ids are those `placeNode` and `entryNode` make.
+ */
+export function startFolderIds(places: BrowsePlaceDto[]): string[] {
+  const kept = dedupePlaces(places)
+  const docs = places.find((p) => /[\\/]Documents$/.test(p.path))
+  if (!docs) return kept[0] ? [nodeId('place', kept[0].path)] : []
+  const home = kept.find((q) => samePath(q.path, parentPath(docs.path)))
+  if (!home) return [nodeId('place', docs.path)]
+  const homeId = nodeId('place', home.path)
+  return [homeId, nodeId(homeId, docs.path)]
+}
+
 /**
  * The top of the tree: "Computer" (the drives, already loaded and open) and the shortcuts below it.
  * `paths` receives the path of every node made, so the dialog can turn a selected id into a folder.
@@ -106,7 +129,7 @@ export function rootNodes(listing: BrowseListingDto, paths: Map<string, string>)
     children: listing.entries.map((e) => entryNode(COMPUTER_ID, e, paths))
   }
   const recent = recentGroup(listing.recent, paths)
-  return [...(recent ? [recent] : []), ...listing.places.map((p) => placeNode(p, paths)), computer]
+  return [...(recent ? [recent] : []), ...dedupePlaces(listing.places).map((p) => placeNode(p, paths)), computer]
 }
 
 /** Folder path as the user typed it, without the quotes Explorer puts around a pasted path. */

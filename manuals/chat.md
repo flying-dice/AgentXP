@@ -95,10 +95,12 @@ If the agent cannot start, a red row in the chat says why and names the program.
 
 - **Try again** – Starts the agent again. If you chose another default agent in Control Center, the button reads **Try again with** and the name of that agent, and the chat uses that agent.
 - **Open Agents** – Opens Control Center at **Agents**, where you can correct the command of the agent.
-- **Choose another agent** – Opens Control Center at **Agents**. Make another agent the default, come back, and click **Try again**.
+- **Choose another agent** – Opens Control Center at **Agents**. Make another agent the default, come back, and click **Try again**. When the program was not found, and after the agent failed a second time, this is the highlighted button, because trying again cannot help.
+
+The row says what to do next. For a program that is not there: **Check the command in Agents, or choose another agent.** For a program that stops at once: **Check that it is installed, or choose another agent.** When you made another agent the default and it could not start either, the row says **The default agent is now** and the name, and **It could not start either.** The technical text behind **Details...** starts with the same plain sentence.
 - **Details...** – Shows the technical text under the buttons. Click **Hide details** to close it.
 
-While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat (your text is kept in the box)** replaces **Restart and send again**, so that you do not send your message into the same failure again. Your text stays in the message box of the chat. After **Restart**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
+While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat with your text** replaces **Restart and send again**, so that you do not send your message into the same failure again. The new chat opens with your text in its message box. Press Enter to send it. The old chat keeps its error and says **Continued in a new chat.** After **Restart**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
 
 ## 4 - Controls Reference
 
@@ -110,9 +112,11 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
+| Task Manager (menu) | Opens Task Manager, where you can see and end the agent programs. | `chat-menu-task-manager` |
+| End the agent program (menu) | File menu: opens Task Manager on the Processes tab, where **End process** ends the agent program. | `chat-menu-end-agent` |
 | Event Viewer (menu) | Opens Event Viewer on the events of this chat. | `chat-menu-event-viewer` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
-| Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
+| Changes (menu) | View menu: shows or hides the Changes pane. | `chat-menu-panel` |
 | Close | Closes the window. The agent keeps working. (Tooltip: "Close this window. The agent keeps working.") | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
 | View Help | Opens the Chat Help window. F1. | `chat-menu-help` |
@@ -165,7 +169,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Include open file | Adds the file open in Code to your message. | `chat-include-file` |
 | Message box dialog | A question box. Its extra buttons end with the id of the button. | `message-box-action-*` |
 | Attach... | Adds files. | `chat-attach` |
-| Stop | Stops the agent. | `chat-stop` |
+| Stop | Stops the answer of this chat now. The chat stays. (Tooltip: "Stop this chat's answer now.") | `chat-stop` |
 | Send | Sends the message. | `chat-send` |
 | Changes pane | The right pane. | `chat-side-panel` |
 | Changes tab | Shows the changed files. | `chat-tab-changes` |
@@ -200,14 +204,16 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Move to Inline, Sidebar, Window | Moves the form. | `chat-surface-move-*` |
 | Working folder | Shows the folder of the chat. | `chat-cwd` |
 | Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, for example "The agent stopped. Click Restart, then send your message again." | `chat-problem-line` |
-| Connection state | Shows the state of the connection. | `chat-status` |
+| Connection state | Shows the state of the connection. While a permission box is open it reads **Waiting for your answer**. | `chat-status` |
+| Not responding link | Shows in the status bar when the chat has worked for more than 20 seconds. It opens Task Manager on the Processes tab. | `chat-end-agent-link` |
+| Continued note | Says **Continued in a new chat.** in the old chat after **Start a new chat**. | `chat-continued-note` |
 | Permission box | Asks if the agent can act. It is a part of the chat, above the message box. It takes up to half of the chat window. Only the lines of a change scroll inside it, and the two choices stay in the window. | `permission-dialog` |
 | Allow or refuse | The two choices. The name ends with the id of the choice. A allows. Enter denies, because Deny has the focus. | `permission-option-*` |
 | Keys line | Tells which keys answer: Enter denies, A allows. | `permission-hint` |
 | Waiting count | Says **1 of 2 waiting** when more than one request waits on the desktop. | `permission-queue` |
 | Retry line | Says **Press Send to try again.** above the message box while the text of a message that did not go through is in the box. It goes away when a send works. When you send the same text again, the first copy is replaced, so the chat shows the message once. | `chat-retry-hint` |
 | Setting line | The setting that made Agent7 ask, under the command. | `permission-detail-setting` |
-| Change preview | The lines that change, at least 8 rows. | `permission-detail-view` |
+| Change preview | The lines that change, at least 9 rows. | `permission-detail-view` |
 | Show all lines | Shows every line of a long change, or the whole change in a small window. | `permission-detail-more` |
 | Don't ask again for this kind of action | Saves your answer. | `permission-remember` |
 | Project tree | The tree of files, shown in Code. | `file-tree` |
@@ -250,7 +256,7 @@ To start a new chat, follow the steps below:
 
 To send a message, type it in the message box and click **Send**.
 
-To stop the agent, click **Stop**.
+To stop the answer of the chat, click **Stop**. To end the agent program itself, choose **File -> End the agent program...** or **Tools -> Task Manager...**. Task Manager opens on the **Processes** tab. When the chat has worked for more than 20 seconds, the status bar adds the link **Not responding? End the agent program**.
 
 ### Undo a Change of the Agent (Revert)
 

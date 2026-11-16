@@ -15,10 +15,9 @@ describe('Help contents (UX-132)', () => {
     expect(chapterOf(headings, 'missing')).toBeNull()
   })
 
-  it('puts a heading in the top third of the box, never further than 120 px down', () => {
-    expect(scrollTopFor(1000, 300)).toBe(900)
-    expect(scrollTopFor(1000, 900)).toBe(880)
-    expect(scrollTopFor(50, 600)).toBe(0)
+  it('leaves 8 px above a heading, so no text above it is cut (UX-183)', () => {
+    expect(scrollTopFor(1000)).toBe(992)
+    expect(scrollTopFor(5)).toBe(0)
   })
 
   it('keeps the sections of the current chapter only', () => {

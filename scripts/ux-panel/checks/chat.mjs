@@ -1,6 +1,6 @@
 // J05-J07, J11: prompts, permissions, stopping, pausing.
 import { REDIRECT_FIXED } from '../lib/fixtures.mjs'
-import { agentMessages, all, fail, manual, missingNumbers, pass, saysCouldNotTell, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
+import { agentMessages, all, controlNotes, fail, manual, missingNumbers, pass, saysCouldNotTell, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
 
 /** H-74: the lines of redirect.ts that change (REDIRECT_BUG against REDIRECT_FIXED). */
 export const REDIRECT_CHANGED_LINES = [1, 3, 4]
@@ -131,10 +131,14 @@ export const checks = {
   async 'T06.3'(ctx) {
     const policy = await ctx.policy()
     const entries = await ctx.transcript(ctx.state.sessionId)
-    return all([
-      [policy.groups.terminal === 'ask' || policy.groups.terminal === 'deny', `Terminal policy is ${policy.groups.terminal}`],
-      [permissions(entries).length > 0, 'a request appeared for the command']
-    ])
+    const state = await ctx.desktopState(ctx.state.desktopId).catch(() => null)
+    return all(
+      [
+        [policy.groups.terminal === 'ask' || policy.groups.terminal === 'deny', `Terminal policy is ${policy.groups.terminal}`],
+        [permissions(entries).length > 0, 'a request appeared for the command']
+      ],
+      controlNotes(state)
+    )
   },
 
   async 'T07.1'(ctx) {
@@ -184,6 +188,7 @@ export const checks = {
     return all(
       [[state?.userInControl === true || allAsk, route]],
       [
+        ...controlNotes(state),
         raised ? 'a request was raised for a call (optional proof)' : 'no prompt was sent, so no request was raised (optional: the scenario does not ask for a prompt)',
         ...(bar ? [conflicts.length ? `banner against chips: the bar says "${bar.banner}" but ${conflicts.map((c) => `"${c}"`).join(', ')} disagree(s): researcher, record it as a product defect (UX-118)` : 'banner against chips: consistent'] : [])
       ]

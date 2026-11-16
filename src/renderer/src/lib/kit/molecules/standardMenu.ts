@@ -21,7 +21,7 @@ export function helpMenu({ app, name, onhelp, onabout }: HelpMenuOptions): MenuD
   return {
     label: '&Help',
     items: [
-      { id: `${app}-help`, testid: `${app}-menu-help`, label: '&View Help', icon: 'help', shortcut: 'F1', action: onhelp },
+      { id: `${app}-help`, testid: `${app}-menu-help`, label: '&View Help (F1)', icon: 'help', action: onhelp },
       { separator: true },
       { id: `${app}-about`, testid: `${app}-menu-about`, label: `&About ${name}`, icon: 'info' as IconName, action: onabout }
     ]

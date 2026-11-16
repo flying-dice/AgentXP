@@ -78,10 +78,10 @@ export function browserNow(name: string, rawInput: string | null): string | null
     case 'browser_screenshot':
       return 'Looking at the page'
     case 'browser_click':
-      return 'Clicking on the page'
+      return 'Clicking an item on the page'
     case 'browser_type': {
       const text = str(input.text)
-      return text ? `Typing '${shorten(text)}'` : 'Typing on the page'
+      return text ? `Typing '${shorten(text)}'` : 'Typing into a text box'
     }
     case 'browser_press': {
       const key = str(input.key) ?? str(input.keys)

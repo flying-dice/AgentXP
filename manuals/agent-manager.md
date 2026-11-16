@@ -67,7 +67,8 @@ Each Task Manager window has a chat pane at its right edge, except on the **Chat
 | Task Manager window | The root of the window. | `agent-manager-app` |
 | Tabs | Chats, Processes, Terminals, Performance. | none |
 | Chats | The list of chats. | `agent-manager-chats` |
-| Chat | One chat. | `agent-manager-chat` |
+| Chat | One chat. The first chat is selected when the window opens, so **Open chat** is ready. | `agent-manager-chat` |
+| Hint | Says that a double-click on a chat opens it. | `agent-manager-hint` |
 | Open chat | Opens the window of the selected chat and brings it to the front. Double-click a row or press Enter to do the same. | `agent-manager-open-chat` |
 | End Task | Stops the turn of the selected chat. | `agent-manager-end-task` |
 | Reason note | Says why End process or End Task is off, for example **Select a chat first**. | `agent-manager-reason` |

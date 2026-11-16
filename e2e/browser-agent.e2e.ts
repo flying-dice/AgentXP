@@ -77,7 +77,7 @@ describe('Browser agent: a local chat web app', () => {
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
     // UX-143: the sentence says what the click did to every tool, in the tooltip of the button and on the top bar, with a Resume button.
-    await see.attribute(browser.getByTestId('browser-agent-takeover'), 'title', 'Stop the agent and use the page yourself. Every tool asks first until you resume.')
+    await see.attribute(browser.getByTestId('browser-agent-takeover'), 'title', 'Stop the agent here and use the page yourself.')
     await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume.')
     await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
     // Resume is one button, on the top bar; the page bar only shows the state.

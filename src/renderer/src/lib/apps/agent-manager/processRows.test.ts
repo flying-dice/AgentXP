@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { SessionDto } from '@shared/models'
 import { sampleAgents, sampleSessions } from '../../app/fakeApi'
 import type { TerminalDto } from '@shared/models'
-import { chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, runningToolTitle, terminalRows, withProgress } from './processRows'
+import { chatSelection, chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, runningToolTitle, terminalRows, withProgress } from './processRows'
 
 describe('processRows', () => {
   it('describes processes', () => {
@@ -64,4 +64,12 @@ describe('progress of a working chat (UX-163)', () => {
     expect(runningToolTitle({ a: { status: 'completed', title: 'Read a' }, b: { status: 'in_progress', title: 'Step 12 of 30' } })).toBe('Step 12 of 30')
     expect(runningToolTitle({ a: { status: 'completed', title: 'Read a' } })).toBeNull()
   })
+})
+
+describe('chatSelection (UX-180)', () => {
+  const rows = [{ id: '3' }, { id: '5' }]
+  it('selects the first row when nothing is selected', () => expect(chatSelection(rows, [])).toEqual(['3']))
+  it('keeps a selected row that is still there', () => expect(chatSelection(rows, ['5'])).toEqual(['5']))
+  it('falls back to the first row when the selected chat is gone', () => expect(chatSelection(rows, ['9'])).toEqual(['3']))
+  it('selects nothing in an empty list', () => expect(chatSelection([], ['3'])).toEqual([]))
 })

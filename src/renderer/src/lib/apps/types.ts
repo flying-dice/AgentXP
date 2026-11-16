@@ -39,8 +39,11 @@ export interface DesktopHost {
   plugInAgain(folderId: Id): Promise<DriveDto | null>
   /** Projects ejected from this desktop, newest first (at most three). */
   readonly recentlyRemoved: readonly RemovedProject[]
-  /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
-  startChat(cwd: VPath): Promise<void>
+  /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window; `draft` is put in its message box. */
+  startChat(cwd: VPath, draft?: string): Promise<void>
+  /** Text waiting for the message box of a window (a new chat that continues a failed message), by window id; the Chat app applies it and calls `prefillApplied`. */
+  readonly prefills?: Readonly<Record<Id, { id: number; text?: string }>>
+  prefillApplied?(windowId: Id, id: number): void
   /** File > New chat, Ctrl+N: starts a chat on the default drive of the desktop and focuses its composer. */
   startDefaultChat(): Promise<void>
   /**

@@ -11,7 +11,8 @@ import { ACTION_COMMANDS, normalizeKey, parseArgs, scrollReport, scrollWarning }
 import { launchApp, makeContext, repoRoot, sleep } from './lib/context.mjs'
 import { readBuild } from './lib/build.mjs'
 import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
-import { countSteps, createLog, readLog } from './lib/log.mjs'
+import { countSteps, createLog, readLog, REPLAY_TASKS } from './lib/log.mjs'
+import { windowKind, windowLine } from './lib/windows.mjs'
 import { serve } from './lib/rpc.mjs'
 import { runCheck } from './checks/index.mjs'
 import { runPreset } from './presets/index.mjs'
@@ -131,7 +132,7 @@ async function windowList() {
     const p = pages[i]
     const size = await p.evaluate(() => [innerWidth, innerHeight]).catch(() => [0, 0])
     // H-43: every window title is "Agent7"; the kind (launcher or desktop) tells the windows apart.
-    const kind = /[?&]launcher=/.test(p.url()) ? 'launcher' : /[?&]desktop=/.test(p.url()) ? 'desktop' : 'window'
+    const kind = windowKind(p.url())
     rows.push(`${p === cur ? '*' : ' '} ${i}  [${kind}]  "${await p.title().catch(() => '')}"  ${size[0]}x${size[1]}${p === cur ? '  (current)' : ''}`)
   }
   return rows
@@ -179,7 +180,10 @@ const SCROLL_POSITION_SOURCE = ({ x, y }) => {
 }
 
 // ---------------------------------------------------------------- panelist commands
-const HOVER_WAIT_MS = 800
+const HOVER_WAIT_MS = 1200 // H-103: a tooltip needs about 500 ms and the screenshot adds 250 ms
+/** H-102: after a click, wait this long for a window that the click opens (the app switches to a new window after 300 ms). */
+const NEW_WINDOW_WAIT_MS = 1500
+const WINDOW_SWITCH_MS = 450 // the 300 ms switch timer of the `window` event, plus the load
 const MOUSE_CMDS = new Set(['click', 'move', 'drag', 'scroll'])
 
 async function handleUx({ cmd, args = [], flags: f = {} }) {
@@ -190,6 +194,7 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
     let text = ''
     let page
     let scrollBefore = null
+    const windowsBefore = live()
     if (cmd === 'windows') {
       text = ['Windows:', ...(await windowList())].join('\n')
     } else if (cmd === 'switch') {
@@ -238,8 +243,15 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
     }
     const wasCurrent = current
     if (page) {
-      // H-52: a tooltip appears after 500 ms, so a hover waits 800 ms before the shot.
+      // H-52, H-103: a tooltip appears after 500 ms, so a hover waits 1.2 s before the shot.
       if (cmd !== 'shot') await sleep(cmd === 'move' ? HOVER_WAIT_MS : 150)
+      // H-102: a click can open a window (Create opens the new desktop); wait for it, so the shot shows it and not the old window.
+      if (cmd === 'click' && wasCurrent) {
+        const known = new Set(windowsBefore)
+        const deadline = Date.now() + NEW_WINDOW_WAIT_MS
+        while (Date.now() < deadline && !live().some((p) => !known.has(p))) await sleep(100)
+        if (live().some((p) => !known.has(p))) await sleep(WINDOW_SWITCH_MS)
+      }
       page = await currentPage().catch(() => null)
     }
     const lines = [text]
@@ -256,10 +268,19 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
       entry.screenshot = file
       entry.window = await page.title().catch(() => '')
       lines.push(`Screenshot: ${file}`)
+      lines.push(windowLine(page.url(), entry.window)) // H-102: which window the shot shows
       if (wasCurrent && page !== wasCurrent) lines.push('Note: the window you were using is gone; showing another window.')
       if (cmd === 'shot') lines.push(await summaryOf(page))
     }
     lines.push(...takeNotices())
+    // H-101: for T01.1 and T02.1 the log says on which action the check first held (the checker needs no answer).
+    if (ACTION_COMMANDS.includes(cmd) && REPLAY_TASKS.includes(state.task) && !state.checkHeld) {
+      const result = await runCheck(ctx, state.task, {}).catch(() => null)
+      if (result?.status === 'PASS') {
+        state.checkHeld = true
+        entry.checkHeld = true
+      }
+    }
     log.append({ ...entry, ok: true, ms: Date.now() - started })
     return { ok: true, text: lines.filter(Boolean).join('\n'), screenshot: entry.screenshot }
   } catch (error) {

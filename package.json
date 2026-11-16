@@ -16,7 +16,7 @@
     "test:e2e": "node scripts/e2e.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "dist": "npm run build && electron-builder",
+    "dist": "node scripts/write-build-info.mjs && npm run build && electron-builder",
     "docs:screenshots": "node scripts/docs-screenshots.mjs",
     "help:coverage": "node scripts/check-help-coverage.mjs",
     "agent:scripted": "node --experimental-strip-types --no-warnings agents/scripted-agent/index.ts"

@@ -106,6 +106,7 @@ node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with 
 - H-94: `session.json.build` is `{packaged, version, commit}` and `stop` adds a `- Build:` line under the record title and into
   `check.json.build`. `packaged` is true only when the app was started from the packaged executable (`UX_PACKAGED_EXE=<path>`); a round
   counts for the release gate only when `packaged` is true in every session (`lib/build.mjs` `gateProblem`).
+- H-100: the commit comes from `build-info.json` beside the packaged executable (`resources/build-info.json`, written by `node scripts/write-build-info.mjs`, which `npm run dist` runs first), else `UX_BUILD_COMMIT`, else the repository head. `start` refuses a session whose commit differs from a session already in the round's folder (the sibling folders of `--out`); pass `--confirm-build-change` only when you state that the app code is identical.
 - An answer task ends in MANUAL when `check` is run with `--no-answer` (H-82). `stop` then refuses (`the last check of this answer task had no answer`)
   until you run `check --answer "<text>"` with the panelist's answer; pass `--accept-no-answer` only when the panelist really gave none
   (the record says so). Keyword checks (case-insensitive substrings): T02.2 (already, exists, same name, own name, unique, in use, taken),
@@ -148,8 +149,7 @@ Record template:
 - Help used (F1, Help topics): ...
 - Steps (the numbered step list of the final report): ...
 - Frustrations / what they would change: ...
-- Evidence: <session folder copy>/shots/NNN.png, log.jsonl
-- Researcher notes (answer checks, MANUAL decisions): ...
+- Evidence: docs/ux/panel/<round>/<task>-<level>-session/shots/NNN.png, log.jsonl
 ```
 
 `log.jsonl` has one line per command (`ts`, `cmd`, `args`, `screenshot`, `window`, `ok`, `ms`). Step counting = lines whose
@@ -179,7 +179,7 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
   start again with the same `--out`.
 - T23.1b (the second crash; H-86: one id in the folders, the records and `tasks.mjs`, `T23.1-twice` is accepted only as an alias on the command line) needs product fix UX-123 (the failure count survives a restart until a turn completes). Records of rounds 4 and 5 keep the old file names.
 - T14.1 (H-73): the preset selects the idle "Scratch pad" row; the waiting row is not preselected.
-- The last reply of the Browser script `browser-agent` is plain: "I sent the message and found it in #general." (H-71); its reply to "what does the page say" is "The page is titled Fixture page. It says Example Domain." (H-79).
+- The last reply of the Browser script `browser-agent` is plain: "I sent the message and found it in #general." (H-71); any text that is not the scripted request or a request to read the page gets "Okay." (H-98); its reply to "what does the page say" is "The page is titled Fixture page. It says Example Domain." (H-79).
 - Mouse-less task T21.1: the driver refuses `click/move/drag/scroll` for that session.
 - Fixtures (H-32): every session starts the app with a sandbox home (`HOME` and `USERPROFILE` = `<tmp>/home`) and creates the
   projects under `<tmp>/home/Documents` (`login-app`, `docs-site`, `notes-folder`, ...), so the in-app Browse For Folder
@@ -188,7 +188,9 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 - Presets that change the desktop act through the UI (H-35): `eject-mid-job` uses the taskbar's Safely Remove Hardware menu and
   answers Yes; `paused-desktop` presses Pause all agents on the top bar. `recycled-change` reloads the desktop window after the revert (H-34).
 - `ux scroll <x> <y> <dy>` takes raw pixels (H-78): 100 is one wheel notch, 200 to 300 about a page. The output says how far the content moved and warns under 20. Every action prints "Step N" (H-81), counted like the budget; the budget stays secret.
-- `ux move` waits 800 ms before its screenshot (H-52), because tooltips appear after 500 ms.
+- `ux move` waits 1.2 s before its screenshot (H-52, H-103), because tooltips appear after 500 ms. After a `click`, the server waits up to 1.5 s for a window that the click opens and prints "Window shown: ..." under every shot (H-102).
+- H-101: for T01.1 and T02.1 the server runs the check after every action and marks the log line on which it first held (`checkHeld`); `check` takes `stepsToPass` from it unless `--steps-to-pass` is given.
+- H-104: the project folders of a session are under `/tmp/a7ux-.../home/Documents`; the panelist briefing says that `/tmp` paths are test paths.
 - T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1b` is the second failure ("It stopped again", plain Restart) as its own task.
 - `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
 - T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".

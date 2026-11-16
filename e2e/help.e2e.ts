@@ -64,6 +64,24 @@ describe('Help and Support', () => {
     await see.eventually(async () => expect(await help.getByTestId('help-article').getAttribute('data-topic')).toBe('index'))
   })
 
+  it('the status bar names the topic once, the contents list "Save a file", and a jump shows the heading whole (UX-183)', async () => {
+    const help = ctx.desktop.window('help')
+    await help.getByTestId('help-topic').filter({ hasText: 'Using Notepad' }).click()
+    await see.attribute(help.getByTestId('help-article'), 'data-topic', 'notepad')
+    await see.text(help.getByTestId('help-status'), 'Using Notepad')
+    expect(await help.getByTestId('help-status-topic').innerText()).not.toContain('Using Notepad')
+    await help.getByTestId('help-contents-link').filter({ hasText: /^Save a file$/ }).first().click()
+    await see.visible(help.getByTestId('help-target'))
+    await see.text(help.getByTestId('help-status-topic'), 'Save a file')
+    await see.eventually(async () => {
+      const heading = (await help.getByTestId('help-target').boundingBox())!
+      const article = (await help.getByTestId('help-article').boundingBox())!
+      expect(heading.y - article.y).toBeGreaterThanOrEqual(0)
+      expect(heading.y - article.y).toBeLessThan(article.height / 2)
+    })
+    await help.getByTestId('help-home').click()
+  })
+
   it('opens from the Start menu', async () => {
     await ctx.desktop.closeWindow('help')
     await see.count(ctx.desktop.windows('help'), 0)

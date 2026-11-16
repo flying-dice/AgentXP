@@ -13,7 +13,7 @@ export function parseTasks(markdown) {
   // split with two groups: [pre, id, title, body, id, title, body...]
   for (let i = 1; i < parts.length; i += 3) {
     const [id, title, body] = [parts[i], parts[i + 1], parts[i + 2]]
-    const scenario = /- Scenario: "([\s\S]*?)"\s*\n- /.exec(body)?.[1]?.replace(/\s*\n\s*/g, ' ')
+    const scenario = /- Scenario: "([\s\S]*?)"\s*\n- /.exec(body)?.[1]?.split(/\n[ \t]*\n/).map((part) => part.replace(/\s*\n\s*/g, ' ').trim()).join('\n\n')
     const budget = /Budget (\d+) \/ (\d+)/.exec(body)
     const min = /- Min (\d+)/.exec(body)
     const answer = /^- Answer: (.+)$/m.exec(body)?.[1]?.trim() ?? null

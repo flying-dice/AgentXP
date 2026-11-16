@@ -125,7 +125,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: select all | Edit menu: selects all items in the folder. Ctrl+A. | `explorer-menu-select-all` |
 | Menu: up | View menu: goes up one level. Alt+Up. | `explorer-menu-up` |
 | Menu: refresh | View menu: reads the folder again. F5. | `explorer-menu-refresh` |
-| Context menu: open | Opens the file or folder. | `explorer-ctx-open` |
+| Context menu: open | Opens the file or folder. For a file it names the program: **Open (default: Notepad)** for text files, **Open (default: Code)** for the rest. | `explorer-ctx-open` |
 | Context menu: open code | Opens the file in Code. | `explorer-ctx-open-code` |
 | Context menu: open notepad | Opens the file in Notepad. | `explorer-ctx-open-notepad` |
 | Context menu: copy path | Copies the path of the item. | `explorer-ctx-copy-path` |

@@ -31,7 +31,7 @@ const marked = new Marked({
         const section = sectionOfHref(href)
         return `<a href="${escapeHtml(topic)}.md${section ? `#${escapeHtml(section)}` : ''}" data-topic="${escapeHtml(topic)}"${section ? ` data-section="${escapeHtml(section)}"` : ''} data-testid="help-link">${inner}</a>`
       }
-      if (href.startsWith('#')) return `<a href="${escapeHtml(href)}" data-anchor="${escapeHtml(href.slice(1))}">${inner}</a>`
+      if (href.startsWith('#')) return `<a href="${escapeHtml(href)}" data-anchor="${escapeHtml(href.slice(1))}" data-testid="help-contents-link">${inner}</a>`
       return `<span class="external">${inner} (${escapeHtml(href)})</span>`
     },
     code({ text, lang }: Tokens.Code): string {

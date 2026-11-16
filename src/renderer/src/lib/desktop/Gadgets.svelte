@@ -7,7 +7,7 @@
   import { toolTitleOr } from '../app/session/toolTitles'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
-  import { feedText, type FeedItem } from './activity'
+  import { NOT_SAVED_NOTE, feedText, type FeedItem } from './activity'
   import { lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
   import type { ProtocolEventDto } from '@shared/desktop'
   import type { Agent7Api } from '@shared/ipc'
@@ -17,19 +17,21 @@
     contextUsed: number
     contextSize: number
     feed: FeedItem[]
-    /** `controlNote` of the feed: "Stopped: you took control" or "You are in control..." while the user is in control; null otherwise. */
+    /** `controlNote` of the feed: "You are in control. The agent asks first." while the user is in control; null otherwise. */
     controlNote?: string | null
     /** Session start for the running-time line; defaults to when the gadgets appeared. */
     since?: Date
     now?: Date
     /** Opens the Event Viewer: the link under the Activity list, a double-click on the gadget and its right-click menu. */
     onopeneventviewer?: () => void
+    /** The link of the "This is not saved" sentence (UX-173): opens Control Center at Permissions. */
+    onopenpermissions?: () => void
     /** Where the last warning or error comes from (UX-171); without it the gadget shows the tool calls only. */
     api?: Pick<Agent7Api, 'events' | 'on'>
     desktopId?: number
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, api, desktopId }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId }: Props = $props()
 
   const menu = new ContextMenu()
   const menuItems = () => [{ id: 'gadget-activity-menu-event-viewer', testid: 'gadget-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
@@ -92,7 +94,8 @@
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div class="activity" role="group" aria-label="Activity" data-testid="gadget-activity" title={onopeneventviewer ? 'Double-click to open the Event Viewer.' : undefined} ondblclick={() => onopeneventviewer?.()} oncontextmenu={(e) => onopeneventviewer && menu.show(e, menuItems())}>
     <ul class="feed">
-      {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>{/if}
+      {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>
+        <li class="not-saved" data-testid="gadget-activity-not-saved"><span>{NOT_SAVED_NOTE.before}{#if onopenpermissions}<button type="button" class="open-events inline" data-testid="gadget-activity-open-permissions" onclick={() => onopenpermissions?.()}>{NOT_SAVED_NOTE.link}</button>{:else}{NOT_SAVED_NOTE.link}{/if}{NOT_SAVED_NOTE.after}</span></li>{/if}
       {#if problem}<li class="problem" data-testid="gadget-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
       {#each feed as item (item.key)}
         <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
@@ -157,6 +160,10 @@
   .feed li.problem {
     font-weight: 700;
   }
+  .feed li.problem .t {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
   .feed li.control {
     font-weight: 700;
   }
@@ -170,6 +177,9 @@
     color: var(--w7-gadget-text);
     text-decoration: underline;
     cursor: default;
+  }
+  .open-events.inline {
+    margin: 0;
   }
   .open-events:focus-visible {
     outline: var(--w7-focus-outline);

@@ -106,8 +106,26 @@ describe('lastProblem', () => {
     const list = [ev(1, { level: 'error', payload: '{"error":{"message":"Old"}}' }), ev(2, { level: 'warning', payload: '{"error":{"message":"Drive E: was removed"}}' }), ev(3)]
     expect(lastProblem(list)).toEqual({ level: 'warning', text: 'Drive E: was removed' })
   })
-  it('is null without a warning or an error, and falls back to the event name', () => {
+  it('is null without a warning or an error, and falls back to a plain sentence', () => {
     expect(lastProblem([ev(1)])).toBeNull()
-    expect(lastProblem([ev(1, { level: 'error', name: 'session/prompt', payload: '{}' })])?.text).toBe('session/prompt')
+    expect(lastProblem([ev(1, { level: 'error', name: 'session/prompt', payload: '{}' })])?.text).toBe('The agent reported a problem')
+  })
+})
+
+describe('problem sentences (UX-188)', () => {
+  it('never shows a protocol word', () => {
+    expect(lastProblem([ev(1, { source: 'ag-ui', level: 'error', name: 'RUN_ERROR', payload: '{"type":"RUN_ERROR","message":"Internal error"}' })])?.text).toBe('The agent stopped unexpectedly')
+    expect(lastProblem([ev(1, { level: 'error', payload: '{"error":{"message":"Query closed before response received"}}' })])?.text).toBe('The connection dropped')
+    expect(lastProblem([ev(1, { level: 'warning', name: 'session/cancel' })])?.text).toBe('The agent was stopped')
+  })
+  it('says "Drive E: was removed" for a drive that is not plugged in, whole', () => {
+    const message = 'Drive E: is not plugged in on this desktop. Ask the user to plug the project in, or work on C:.'
+    expect(lastProblem([ev(1, { level: 'warning', source: 'mcp', payload: JSON.stringify({ content: [{ type: 'text', text: message }] }) })])?.text).toBe('Drive E: was removed')
+  })
+  it('drops the problem of a chat once the same chat finished a later turn, but not of another chat', () => {
+    const error = ev(1, { source: 'ag-ui', level: 'error', name: 'RUN_ERROR' })
+    expect(lastProblem([error, ev(2, { source: 'ag-ui', name: 'RUN_FINISHED' })])).toBeNull()
+    expect(lastProblem([error, ev(2, { sessionId: 2, source: 'ag-ui', name: 'RUN_FINISHED' })])?.level).toBe('error')
+    expect(lastProblem([ev(1, { sessionId: null, level: 'warning' }), ev(2, { name: 'RUN_FINISHED' })])?.level).toBe('warning')
   })
 })

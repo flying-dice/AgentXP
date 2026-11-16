@@ -25,7 +25,7 @@ export function startFailure(error: unknown, agent: AgentProgram): SessionProble
   else if (/ENOENT|not found|no such file/i.test(detail)) reason = `The program '${program}' was not found.`
   else if (/EACCES|EPERM|permission denied/i.test(detail)) reason = `The program '${program}' could not be run because Windows did not allow it.`
   else reason = `The program '${program}' stopped before it was ready.`
-  return { kind: 'start-failed', message: `The agent could not start. ${reason}`, detail, cause: reason }
+  return { kind: 'start-failed', message: `The agent could not start. ${reason}`, detail, cause: reason, agentName: agent.name }
 }
 
 /** A running agent whose connection dropped in the middle of a turn. */

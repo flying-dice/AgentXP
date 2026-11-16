@@ -49,10 +49,16 @@ describe('Code Review', () => {
     await see.text(review.threads.first(), 'stray zero')
   })
 
-  it('says every number in digits and shows how many files are shown (UX-77)', async () => {
+  it('says the verdict once with the comments as a link at its end, and names the file that is shown (UX-77, UX-191)', async () => {
     const review = ctx.desktop.codeReview()
-    await see.text(review.verdict.getByTestId('review-verdict-line'), /Changes requested\. 2 comments/)
-    await see.text(review.frame.getByTestId('review-status-files'), 'Showing 1 of 2 changed files')
+    await see.text(review.verdict.getByTestId('review-verdict-line'), /Changes requested\./)
+    // The numbers are in the link only: the banner never says them twice.
+    expect(await review.verdict.getByTestId('review-verdict-line').innerText()).not.toMatch(/\d comments,/)
+    await see.text(review.verdict.getByTestId('review-banner-comments'), '2 comments')
+    const banner = (await review.verdict.boundingBox())!
+    // The sentence runs the full width, so the banner is one or two lines high, not a tall narrow column.
+    expect(banner.height).toBeLessThan(60)
+    await see.text(review.frame.getByTestId('review-status-files'), /Showing .+ \(1 of 2 changed files\)/)
     await see.visible(review.frame.getByTestId('review-send-comments'))
     await see.enabled(review.frame.getByTestId('review-send-comments'))
   })

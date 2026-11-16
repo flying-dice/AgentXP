@@ -24,7 +24,7 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { chatRows, contextState, formatTokens, initialTab, processRows, terminalRows } from './processRows'
+  import { chatRows, chatSelection, contextState, formatTokens, initialTab, processRows, terminalRows } from './processRows'
 
   let { window: win, host }: AppProps<'agent-manager'> = $props()
 
@@ -120,6 +120,12 @@
   const termRows = $derived<ListRow[]>(terminalRows(terminals, sessions).map((t) => ({ ...t, icon: 'terminal' as const })))
   const chats = $derived(chatRows(sessions, agents, (id) => host.chatProgress(id)))
   const chatListRows = $derived<ListRow[]>(chats.map((c) => ({ ...c, icon: 'session' as const })))
+
+  // The Chats list always has a selected row, so that "Open chat" is on when the window opens (UX-180).
+  $effect(() => {
+    const next = chatSelection(chats, untrack(() => selectedChat))
+    if (next.join() !== untrack(() => selectedChat).join()) selectedChat = next
+  })
 
   const selectedChatRow = $derived(chats.find((c) => c.id === selectedChat[0]) ?? null)
   /** Why End Task is off: nothing is selected, or the selected chat is not working. */
@@ -249,6 +255,7 @@
             <div class="grid">
               <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" onactivate={switchTo} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
+            <p class="hint" data-testid="agent-manager-hint">Double-click a chat to open it.</p>
             <div class="buttons">
               <Button data-testid="agent-manager-open-chat" {...reasonFor(openReason, 'Open the window of this chat')} onclick={() => selectedChatRow && switchTo(selectedChatRow)}>Open chat</Button>
               <Button data-testid="agent-manager-end-task" {...reasonFor(endTaskReason, 'Stop the step that this chat is working on')} onclick={endTask}>End Task</Button>
@@ -334,6 +341,11 @@
   }
   .empty.static {
     position: static;
+  }
+  .hint {
+    flex: none;
+    margin: 0;
+    color: var(--w7-text-muted);
   }
   .buttons {
     flex: none;

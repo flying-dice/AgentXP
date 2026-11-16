@@ -250,7 +250,7 @@
         <span class="mark" aria-hidden="true"><Icon name="agent7" size={44} /></span>
       </header>
       <div class="body">
-        <p class="lead">Closing a desktop window only disconnects it. Its agents keep running.</p>
+        <p class="lead">Closing a desktop window only disconnects it. Its agents keep running. To end them, use <button type="button" class="link" data-testid="launcher-task-manager-link" title="How to end the agents of a desktop" onclick={() => (helpOpen = true)}>Task Manager</button> on the desktop.</p>
         <!-- A listbox needs option children: with no desktops the list is plain. -->
         <div class="list w7-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
           {#each sorted as desktop (desktop.id)}
@@ -368,6 +368,18 @@
   .lead {
     margin: 0;
     color: #1e3287;
+  }
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: #0066cc;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .link:hover {
+    color: #3399ff;
   }
   .list {
     flex: 1;

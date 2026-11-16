@@ -13,21 +13,27 @@ export const SPLITTER = 4
 export const LIST_MIN_HEIGHT = HEADER + ROW + BORDER
 export const DIFF_MIN_HEIGHT = 100
 
-/** The list shows at least this many rows when the chat has that many changes, and at most `MAX_ROWS` before it scrolls (UX-151). */
-export const MIN_ROWS = 6
+/** The list is never shorter than two rows and never longer than ten before it scrolls (UX-184). */
+export const MIN_ROWS = 2
 const MAX_ROWS = 10
+
+/** The list takes at most this share of the room; the diff has the rest (UX-184). */
+export const LIST_MAX_SHARE = 0.35
+
+/** A diff line is 17 px: the diff wants room for 12 of them (UX-184), and the pane scrolls as a whole when the window is too short. */
+export const DIFF_WANTED_HEIGHT = 12 * 17 + 6
 
 /** The height that holds `rows` rows with the header. */
 export const listHeightFor = (rows: number): number => HEADER + rows * ROW + BORDER
 
 /**
- * The list starts with at least half of the room (the diff gets at most half) and with room for six rows; more rows grow it up to ten.
- * The diff keeps its least height when the room allows it. `available` is the height of the list and the diff together.
+ * The list takes only the height of its rows (at least two, at most ten) and at most 35% of the room, so the diff gets the rest.
+ * `available` is the height of the list and the diff together.
  */
 export function defaultListHeight(rows: number, available: number): number {
-  const wanted = Math.max(available / 2, listHeightFor(Math.min(MAX_ROWS, Math.max(MIN_ROWS, rows))))
-  // Six rows win over the diff's least height: the pane then scrolls as a whole instead of squeezing the list.
-  return Math.round(Math.min(wanted, Math.max(available - SPLITTER - DIFF_MIN_HEIGHT, listHeightFor(MIN_ROWS))))
+  const wanted = listHeightFor(Math.min(MAX_ROWS, Math.max(MIN_ROWS, rows)))
+  const cap = Math.max(Math.round(available * LIST_MAX_SHARE), listHeightFor(MIN_ROWS))
+  return Math.min(wanted, cap)
 }
 
 /** A pane at least this wide and less than this high shows the diff beside the list; the list is then at least this wide and the diff this wide. */

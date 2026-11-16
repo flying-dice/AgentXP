@@ -6,6 +6,8 @@
   import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
+  import { attachLineSelect } from './lineSelect'
+  import { openRecycleBin } from '../../app/changes/openRecycleBin'
   import FileTree from '../../app/shell/FileTree.svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -355,6 +357,7 @@
     void text
     let frame = 0
     let el: HTMLElement | null = null
+    let detachLines = (): void => {}
     const onScroll = (): void => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(measure)
@@ -364,6 +367,8 @@
       el?.addEventListener('scroll', onScroll, { passive: true })
       el?.addEventListener('mouseup', readSelection)
       el?.addEventListener('keyup', readSelection)
+      // A click or a drag in the line number column selects lines (UX-186).
+      if (el) detachLines = attachLineSelect(el, readSelection)
       measure()
     })
     return () => {
@@ -371,6 +376,7 @@
       el?.removeEventListener('scroll', onScroll)
       el?.removeEventListener('mouseup', readSelection)
       el?.removeEventListener('keyup', readSelection)
+      detachLines()
     }
   })
 
@@ -559,7 +565,8 @@
 
   async function plugIn(): Promise<void> {
     try {
-      await host.plugInProject()
+      const drive = await host.plugInProject()
+      if (drive) tree?.select(driveRoot(drive.letter)) // the tree shows the new project and selects it (UX-181)
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
     }
@@ -595,7 +602,7 @@
   const activeRoot = (): string => (active ? rootOf(active) : (roots[0]?.path ?? host.state.home))
 
   // ---- the project tree: context menus ---------------------------------------------------------
-  let tree = $state<{ expand(path: string): void } | null>(null)
+  let tree = $state<{ expand(path: string): void; select(path: string): void } | null>(null)
   /** The row selected in the tree: the buttons above the tree act on it. */
   let treeTarget = $state<FileTreeTarget | null>(null)
   const treeBar = $derived.by(() => {
@@ -873,7 +880,7 @@
             {#if tab.id === 'projects'}
               <ToolStrip aria-label="Project tools" class="tree-tools">
                 <ToolStripButton data-testid="code-tree-new-chat" icon="session" text="New chat here" title="Start a chat that works in the selected project or folder" onclick={newChatHere} />
-                <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Plug in a folder from your computer as a project" onclick={() => void plugIn()} />
+                <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Give the agent a folder of your computer to work on" onclick={() => void plugIn()} />
                 <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project first: click a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
               </ToolStrip>
               {#if !hasProject}
@@ -967,7 +974,7 @@
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <div class="changes" data-testid="code-changes">
-                <ChangesPane {changes} gitCount={gitEntries.length} onopengit={() => (logsTab = 'git')} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
+                <ChangesPane {changes} gitCount={gitEntries.length} gitTracked={gitStatuses.length > 0 ? gitStatuses.some((s) => s !== null) : undefined} onopengit={() => (logsTab = 'git')} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={(id) => void openRecycleBin(host, id)} />
               </div>
             {:else}
               <div class="gitpane" data-testid="code-git-pane">
@@ -1030,7 +1037,7 @@
     <StatusStripLabel text={openingReview ? 'Opening Review...' : (active ?? 'Ready')} spring testid="code-status-path" />
     {#if editing}<StatusStripLabel text="Agent editing" borders={['left']} width={100} testid="code-status-editing" />{/if}
     {#if lineLabel}<StatusStripLabel text={lineLabel} borders={['left']} />{/if}
-    {#if selection}<StatusStripLabel text="Selected {selection.startLine}-{selection.endLine}" borders={['left']} />{/if}
+    {#if selection}<StatusStripLabel text="Selected {selection.startLine}-{selection.endLine}" borders={['left']} testid="code-status-selected" />{:else if active}<StatusStripLabel text="Select some lines first" borders={['left']} width={150} testid="code-status-select-hint" />{/if}
     {#if active}<StatusStripLabel text="Ln {caret.line}, Col {caret.col}" borders={['left']} width={96} testid="code-status-caret" />{/if}
     {#if active && text !== null}<StatusStripLabel text="UTF-8 / {eol}" borders={['left']} width={84} />{/if}
     {#if activeStatus}<StatusStripLabel text={formatBranch(activeStatus)} borders={['left']} width={130} testid="code-git-branch" />{/if}

@@ -243,8 +243,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Min 8. Budget 24 / 32.
 
 **T17.2 - It does not start**
-- Scenario: "You started a chat and the assistant does not answer. Find out why and tell me what to do."
-- Start state: the default agent has a bad command (`not-a-real-command`).
+- Scenario: "You started a chat and the assistant does not answer. Find out why and tell me what to do. You may change the assistant setting of the program if that helps."
+- Start state: the default agent has a bad command (`not-a-real-command`). The Agents list also has a working scripted agent, "Helper assistant" (not the default), and Claude Code (H-97).
 - Success check: the answer names the wrong command or "not found", points to the Agents page and says what to do (edit or change it, choose another agent, set a default, new chat; H-42); the panelist did not restart the app.
 - Answer: why the assistant does not answer and what to do.
 - Min 3. Budget 9 / 12.
@@ -316,7 +316,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T22.2 - Find a topic by search**
 - Scenario: "Find out how to undo a change that the assistant made."
 - Start state: Help and Support closed, a chat open.
-- Success check: the topic about the Changes pane or Recycle Bin is open; the answer lists the steps correctly.
+- Success check: the answer lists the steps correctly (Changes, select, Revert; Recycle Bin to restore). A Help topic about the Changes pane or Recycle Bin is not required (H-96); if a Help window is open, its topic must be one of those.
 - Answer: how to undo a change that the assistant made.
 - Min 4. Budget 12 / 16.
 
@@ -403,7 +403,11 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J28 Let the agent use a web app in the Browser
 
 **T28.1 - The assistant reads a web page**
-- Scenario: "Ask the assistant: 'Use the chat app at http://127.0.0.1:4174/'. While it works, watch the web page. Then tell me how you could see that the assistant was using the page, and what it did there."
+- Scenario: "Type this request to the assistant, exactly as written:
+
+  Use the chat app at http://127.0.0.1:4174/
+
+While it works, watch the web page. When it has finished, tell the facilitator how you could see that the assistant was using the page, and what it did there. Do not ask the assistant that question."
 - Start state: Browser and an idle chat open; `browser-agent` script (the local team chat page, no network).
 - Success check: the assistant finished (its last reply: "I sent the message and found it in #general.", H-71), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
 - Answer: what was posted in the chat app.

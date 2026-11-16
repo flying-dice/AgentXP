@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { see, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
 
 describe('desktop: tools follow apps', () => {
@@ -14,16 +14,16 @@ describe('desktop: tools follow apps', () => {
   it('starts with no app windows, the three headline chips closed and the "open an app" hint in the top bar', async () => {
     await see.visible(ctx.desktop.topBar)
     await see.visible(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
-    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (no Terminal open)')
-    await see.text(ctx.desktop.toolChip('fs.read'), 'Read files: Allow (no app open)')
-    await see.text(ctx.desktop.toolChip('browser'), 'Browser: Allow (no Browser open)')
+    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (Terminal is closed)')
+    await see.text(ctx.desktop.toolChip('fs.read'), 'Read files: Allow (no app is open)')
+    await see.text(ctx.desktop.toolChip('browser'), 'Browser: Allow (Browser is closed)')
     await see.count(ctx.desktop.windows('terminal'), 0)
   })
 
   it('every chip is a button that says it opens Control Center, then the setting and why the agent cannot use it yet (UX-142)', async () => {
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.\nAsks you first.')
     await see.attribute(ctx.desktop.toolChip('browser'), 'title', 'Open Control Center to change this. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'aria-label', 'Run commands: Ask (no Terminal open). Open Control Center to change.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'aria-label', 'Run commands: Ask (Terminal is closed). Asks you first. Open Control Center to change.')
   })
 
   it('a chip opens Control Center at Permissions with the row of its tool selected, and only a chip without an app has a dashed border (UX-159)', async () => {
@@ -41,7 +41,7 @@ describe('desktop: tools follow apps', () => {
     await see.visible(ctx.desktop.taskbarItem('terminal'))
     await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'asks')
     await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask')
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask.\nAsks you first.')
     await see.gone(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
 
@@ -66,7 +66,7 @@ describe('desktop: tools follow apps', () => {
     await ctx.desktop.closeWindow('code')
     await ctx.desktop.closeWindow('terminal')
     await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'off')
-    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (no Terminal open)')
+    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (Terminal is closed)')
     await see.gone(ctx.desktop.toolChip('code'))
     await see.visible(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
@@ -80,6 +80,7 @@ describe('desktop: tools follow apps', () => {
 
   it('Pause all agents toggles the top bar between Idle and Paused, and says what it does', async () => {
     await see.text(ctx.desktop.pauseButton, 'Pause all agents')
+    expect(await ctx.desktop.pauseButton.getAttribute('title')).toMatch(/^Pause every agent on this desktop\./)
     await ctx.desktop.pauseButton.click()
     await see.text(ctx.desktop.status, 'Paused: no agent will act until you resume.')
     await see.text(ctx.desktop.pauseButton, 'Resume agents and continue')
@@ -98,7 +99,18 @@ describe('desktop: tools follow apps', () => {
     await see.attribute(ctx.desktop.topBar, 'data-state', 'control')
     await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
     await see.text(ctx.desktopPage.getByTestId('gadget-activity-control'), 'You are in control. All tools ask first until you resume.')
+    // UX-173: the box says how long it lasts, a chip that differs from the saved setting says (now), and both places link to Permissions.
+    await see.text(ctx.desktopPage.getByTestId('topbar-ask-slot'), 'Ask before every action (until I untick it)')
+    await see.text(ctx.desktopPage.getByTestId('topbar-control-note'), 'This is not saved. To keep a tool on Ask, change it in Control Center.')
+    await see.text(ctx.desktopPage.getByTestId('gadget-activity-not-saved'), 'This is not saved. To keep a tool on Ask, change it in Control Center.')
+    await see.text(ctx.desktop.toolChip('fs.read'), 'Read files: Ask (now')
     await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask')
+    await ctx.desktopPage.getByTestId('topbar-control-note-link').click()
+    await see.text(ctx.desktopPage.getByTestId('control-centre-heading'), 'Permissions')
+    await ctx.desktop.closeWindow('control-centre')
+    await ctx.desktopPage.getByTestId('gadget-activity-open-permissions').click()
+    await see.text(ctx.desktopPage.getByTestId('control-centre-heading'), 'Permissions')
+    await ctx.desktop.closeWindow('control-centre')
     await ctx.desktopPage.getByTestId('topbar-give-back').click()
     await see.gone(ctx.desktopPage.getByTestId('topbar-give-back'))
     await see.gone(ctx.desktopPage.getByTestId('gadget-activity-control'))

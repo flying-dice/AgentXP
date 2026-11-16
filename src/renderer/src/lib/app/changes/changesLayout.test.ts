@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { RecycledChangeDto } from '@shared/desktop'
-import { DIFF_MIN_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, listHeightFor, readListSize, revertedRows, writeListSize } from './changesLayout'
+import { DIFF_MIN_HEIGHT, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, listHeightFor, readListSize, revertedRows, writeListSize } from './changesLayout'
 
 const entry = (id: number, path: string, sessionId: number | null, revertedAt = `2026-11-16T10:0${id}:00Z`): RecycledChangeDto => ({
   id,
@@ -12,18 +12,24 @@ const entry = (id: number, path: string, sessionId: number | null, revertedAt = 
   revertedAt
 })
 
-describe('the height of the list (UX-151)', () => {
-  it('takes at least half of the room and six rows, and leaves the diff its least height', () => {
-    // A roomy pane: half of it.
-    expect(defaultListHeight(2, 500)).toBe(250)
-    // A short pane: six rows win over half.
-    expect(defaultListHeight(5, 240)).toBe(listHeightFor(6))
-    expect(defaultListHeight(5, 240)).toBeGreaterThanOrEqual(240 / 2)
-    // Many rows grow the list up to ten rows.
-    expect(defaultListHeight(30, 800)).toBe(400)
-    expect(defaultListHeight(8, 300)).toBe(listHeightFor(8))
-    // A tiny pane still gives the list its six rows (the pane scrolls).
-    expect(defaultListHeight(5, 50)).toBe(listHeightFor(6))
+describe('the height of the list (UX-184)', () => {
+  it('takes the height of its rows, at least two and at most 35% of the room', () => {
+    // Two files: two rows (and a short list is not stretched).
+    expect(defaultListHeight(2, 500)).toBe(listHeightFor(2))
+    // No file: still two rows.
+    expect(defaultListHeight(0, 500)).toBe(listHeightFor(2))
+    // Five files in a roomy pane: five rows.
+    expect(defaultListHeight(5, 500)).toBe(listHeightFor(5))
+    // Many files: 35% of the room, the diff has the rest.
+    expect(defaultListHeight(30, 500)).toBe(175)
+    // A tiny pane still gives the list its two rows (the pane scrolls).
+    expect(defaultListHeight(5, 50)).toBe(listHeightFor(2))
+    // Never more than ten rows.
+    expect(defaultListHeight(30, 5000)).toBe(listHeightFor(10))
+  })
+
+  it('wants room for 12 diff lines', () => {
+    expect(DIFF_WANTED_HEIGHT).toBeGreaterThanOrEqual(12 * 17)
     expect(DIFF_MIN_HEIGHT).toBeGreaterThanOrEqual(5 * 17)
   })
 

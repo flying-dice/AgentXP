@@ -40,7 +40,7 @@ The screen shows the working folder, each command, and its output. It follows th
 
 ### The Status Bar
 
-The status bar says that the shell is read-only. The cursor on the screen is a hollow block that does not blink, a sign that you cannot type. If you press a key on the screen, a note appears at the bottom of the screen for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
+The status bar says that the shell is read-only. The cursor on the screen is a hollow block that does not blink, a sign that you cannot type. When the window opens, a note shows at the bottom of the screen and stays until you first click on the screen. After that, a click or a key press on the screen shows the note for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
 
 ### The Chat Pane
 
@@ -54,7 +54,7 @@ Each Terminal window has a chat pane at its right edge. The pane starts closed, 
 | Terminal | Selects which terminal the screen shows. | `terminal-picker` |
 | Screen | Shows the output. The attribute `data-running` tells if a command runs. | `terminal-output` |
 | Status | Shows Running, the exit code, or No terminals. | `terminal-status` |
-| Read-only note | Appears for 4 seconds at the bottom of the screen when you press a key. | `terminal-readonly-notice` |
+| Read-only note | Shows at the bottom of the screen when the window opens and stays until your first click on the screen. After that it shows for 4 seconds when you click or press a key. | `terminal-readonly-notice` |
 | Locked cursor | The hollow block cursor of the screen. | `console-cursor-locked` |
 
 ### Menu Bar and Context Menu

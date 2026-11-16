@@ -17,9 +17,16 @@ This topic tells you how to make the agent ask before it does anything, and how 
 
 By default, the agent can read files without asking. It asks before it writes a file or runs a command. If you want to see each step, set more actions to **Ask**.
 
+There are two ways to make the agent ask. They differ in how long they last:
+
+- **For this desktop only.** Select the check box **Ask before every action (until I untick it)** in the top bar. Every tool asks first. This is not saved. When you clear the box, or restart Agent7, the agent goes back to the settings of Control Center. The bar says so: **This is not saved. To keep a tool on Ask, change it in Control Center.**
+- **Always.** Set the tool to **Ask** or **Deny** in Control Center, on the **Permissions** page. Agent7 keeps this setting.
+
 ## 2 - Make the Agent Ask
 
-To approve every action, follow the steps below:
+To keep the agent asking, also after you restart Agent7, follow the steps below. To ask only for a while, select **Ask before every action (until I untick it)** in the top bar instead.
+
+While the box is selected, a chip that is not on **Ask** in Control Center reads **Ask (now)**, for example **Run commands: Ask (now)**. Point to the chip to read the saved setting, for example **Saved setting: Allow.** The link **Control Center** in the line **This is not saved...** opens the Permissions page.
 
 1. Click **Start -> Control Center**. The Control Center window opens.
 2. Click **Permissions**.
@@ -47,8 +54,14 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 | Waiting count | The line **1 of 2 waiting** in the box, when more than one request waits. | `permission-queue` |
 | Waiting count (Action Center) | The same line in the permission dialog box of the Action Center. | `uac-queue` |
 | Setting line | The setting that made Agent7 ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
-| Change preview | The lines that change in the permission box of a chat. It shows at least 8 rows and up to 14, then it scrolls. It is the only part of the box that scrolls. | `permission-detail-view` |
-| Show all lines | Shows every line of a long change. When the chat window is too small for 8 rows it reads **Show the whole change**. | `permission-detail-more` |
+| Change preview | The lines that change in the permission box of a chat. It shows at least 9 rows and up to 14, then it scrolls. When more rows follow, the last row is cut in half, so you see that there is more. It is the only part of the box that scrolls. The chat above the box keeps one row at least. | `permission-detail-view` |
+| Show all lines | Shows every line of a long change. When the chat window is too small for 9 rows it reads **Show the whole change**. | `permission-detail-more` |
+| Check box label | The label of the check box in the top bar: **Ask before every action (until I untick it)**. | `topbar-ask-slot` |
+| Not saved line | The line in the top bar while you are in control: **This is not saved. To keep a tool on Ask, change it in Control Center.** | `topbar-control-note` |
+| Not saved link (top bar) | The words **Control Center** in that line. It opens the Permissions page. | `topbar-control-note-link` |
+| Not saved line (Activity) | The same sentence in the Activity list. | `gadget-activity-not-saved` |
+| Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `gadget-activity-open-permissions` |
+| Chip help line | Shows the help text of a tool chip while the chip has the keyboard focus. | `topbar-chip-tip` |
 | Change preview (Action Center) | The same preview in the permission dialog box of the Action Center. | `uac-detail-view` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |
 

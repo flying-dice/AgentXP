@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanTypedPath, COMPUTER_ID, emptyFolderNode, entryNode, isBareName, matchesGroup, nodeId, RECENT_ID, recentLabels, rootNodes, withMatches } from './FolderBrowserDialog'
+import { cleanTypedPath, COMPUTER_ID, dedupePlaces, startFolderIds, emptyFolderNode, entryNode, isBareName, matchesGroup, nodeId, RECENT_ID, recentLabels, rootNodes, withMatches } from './FolderBrowserDialog'
 
 describe('Browse For Folder tree model', () => {
   const listing = {
@@ -69,5 +69,26 @@ describe('Browse For Folder tree model', () => {
     expect(withMatches(base, group)[0].children?.map((c) => c.text)).toEqual(['/a/x', '/b/x'])
     expect(withMatches(withMatches(base, group), null)).toEqual(base)
     expect(emptyFolderNode('p').text).toBe('This folder has no subfolders.')
+  })
+
+  describe('each folder once (UX-182)', () => {
+    const home = { name: 'Home', path: 'C:\\Users\\jo' }
+    const docs = { name: 'Documents', path: 'C:\\Users\\jo\\Documents' }
+    const desk = { name: 'Desktop', path: 'C:\\Users\\jo\\Desktop' }
+    it('drops Documents and Desktop from the top level when Home holds them', () => {
+      expect(dedupePlaces([home, docs, desk])).toEqual([home])
+      expect(rootNodes({ ...listing, places: [home, docs, desk] }, new Map()).map((n) => n.text)).toEqual(['Home', 'Computer'])
+    })
+    it('keeps a shortcut that no other shortcut holds', () => {
+      expect(dedupePlaces([docs, desk])).toEqual([docs, desk])
+      expect(dedupePlaces([{ name: 'Home', path: '/home/jo/' }, { name: 'Documents', path: '/home/jo/Documents' }])).toHaveLength(1)
+    })
+    it('opens Home and the Documents inside it first', () => {
+      const homeId = nodeId('place', home.path)
+      expect(startFolderIds([home, docs, desk])).toEqual([homeId, nodeId(homeId, docs.path)])
+      expect(startFolderIds([docs])).toEqual([nodeId('place', docs.path)])
+      expect(startFolderIds([home])).toEqual([nodeId('place', home.path)])
+      expect(startFolderIds([])).toEqual([])
+    })
   })
 })

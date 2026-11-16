@@ -91,7 +91,7 @@
   }
 </script>
 
-<p class="callout" role="note" data-testid="permissions-callout">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. {ASK_HELP}</p>
+<p class="callout" role="note" data-testid="permissions-callout">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. {ASK_HELP} These settings are always kept. The box 'Ask before every action' in the top bar is different: it works only until you untick it and it is not saved.</p>
 <div class="all" role="group" aria-label="Set all permissions">
   <span class="all-label">Set every permission to:</span>
   <ComboBox testid="permissions-set-all-value" aria-label="Set every permission to" items={DECISION_ITEMS} bind:value={allValue} style="width:80px" />

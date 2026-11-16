@@ -15,16 +15,16 @@ import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync,
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from './lib/args.mjs'
-import { countSteps, readLog, summarize } from './lib/log.mjs'
+import { countSteps, readLog, stepsToPassFromLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
 import { buildBrief } from './lib/brief.mjs'
-import { buildLine, withBuildLine } from './lib/build.mjs'
+import { buildLine, commitProblem, readBuild, siblingCommits, withBuildLine } from './lib/build.mjs'
 import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, contextProblem, effectiveSteps, loadTasks, normalizeLevel, parsePrevious, recordAnswerProblem, scenarioText, startDecision, stepsToPassOf, syncSeq, withStepsLine } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool', 'steps-to-pass': 'string', rerun: 'string', 'finished-by-facilitator': 'bool' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool', 'steps-to-pass': 'string', rerun: 'string', 'finished-by-facilitator': 'bool', 'confirm-build-change': 'bool' })
 // H-86: one id for the second crash (T23.1b); the old name is only accepted here.
 if (flags.task) flags.task = canonicalTaskId(flags.task)
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
@@ -79,6 +79,9 @@ async function start() {
   const previous = parsePrevious(flags.previous)
   const refused = contextProblem(flags.task, previous)
   if (refused) throw new Error(refused)
+  // H-100: a round is one build: refuse a start whose commit differs from a session already in the round's folder.
+  const split = commitProblem([readBuild({ repoRoot: join(here, '../..') }).commit, ...siblingCommits(out)], { confirmed: flags['confirm-build-change'] })
+  if (split) throw new Error(split)
   // H-66: start is idempotent for the same task and level; a failed or dead session releases the folder (its session.json is kept aside as session.failed-<time>.json, server.log stays).
   const existingFile = join(out, 'session.json')
   const existing = existsSync(existingFile) ? JSON.parse(readFileSync(existingFile, 'utf8')) : null
@@ -161,7 +164,8 @@ async function check() {
   const earlier = existsSync(previousFile) ? JSON.parse(readFileSync(previousFile, 'utf8')) : null
   const earlierRuns = earlier?.runs ?? (earlier ? [{ checkerStatus: earlier.checkerStatus, steps: earlier.steps }] : [])
   // H-92: the budget and the weak rule use the steps when the check first held, not the steps the panelist spent afterwards.
-  const explicitSteps = flags['steps-to-pass'] === undefined ? undefined : Number(flags['steps-to-pass'])
+  // H-101: without --steps-to-pass, the log of a replayed task (T01.1, T02.1) says when the check first held.
+  const explicitSteps = flags['steps-to-pass'] === undefined ? (stepsToPassFromLog(entries) ?? undefined) : Number(flags['steps-to-pass'])
   const stepsToPass = stepsToPassOf({ explicit: explicitSteps, runs: earlierRuns, checkerStatus: result.status, steps })
   const verdict = budgetVerdict(result.status, effectiveSteps(steps, stepsToPass), budget, null)
   const status = verdict.status

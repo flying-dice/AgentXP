@@ -322,10 +322,11 @@
 </div>
 
 <style>
+  /* A box above the message box (a request, an error) may squeeze the transcript to one row, never to nothing (UX-177). */
   .wrap {
     position: relative;
     flex: 1;
-    min-height: 0;
+    min-height: 32px;
     display: flex;
     flex-direction: column;
   }
