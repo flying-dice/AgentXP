@@ -14,7 +14,9 @@ describe('treeMenu', () => {
   })
 
   it('Eject is off for the agent home', () => {
-    expect(treeMenu('project', ops(), { canEject: false }).find((i) => i.testid === 'code-ctx-eject')?.disabled).toBe(true)
+    const eject = treeMenu('project', ops(), { canEject: false }).find((i) => i.testid === 'code-ctx-eject')
+    expect(eject?.disabled).toBe(true)
+    expect(eject?.title).toContain('Select a project') // UX-167: a grey item says why
   })
 
   it('a file offers Open, Open with Notepad, Copy as path and Ask the agent about this...', () => {

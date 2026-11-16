@@ -189,10 +189,15 @@ describe('Code app git awareness', () => {
     await ctx.desktop.closeWindow('code-review')
   })
 
-  it('one click on a Git row opens its diff in the review pane (UX-152)', async () => {
+  it('one click on a Git row shows its diff in the pane below and opens no window; a double-click opens Review (UX-168)', async () => {
     const code = ctx.desktop.code()
     await code.frame.getByTestId('code-logs-tab-git').click()
     await code.frame.getByTestId('code-git-entry').filter({ hasText: 'fresh.txt' }).click()
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-git-preview').getAttribute('data-path')).toContain('fresh.txt'))
+    await see.gone(code.frame.getByTestId('code-git-preview-hint'))
+    expect(await ctx.desktopPage.getByTestId('window-code-review').count()).toBe(0)
+    await code.frame.getByTestId('code-git-entry').filter({ hasText: 'fresh.txt' }).dblclick()
+    await see.text(code.frame.getByTestId('code-status-path'), 'Opening Review...')
     const review = ctx.desktop.codeReview()
     await see.visible(review.app)
     await see.text(review.frame.getByTestId('review-file-head'), 'fresh.txt')

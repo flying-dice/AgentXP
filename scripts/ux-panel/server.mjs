@@ -8,7 +8,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { ACTION_COMMANDS, normalizeKey, parseArgs, scrollReport, scrollWarning } from './lib/args.mjs'
-import { launchApp, makeContext, sleep } from './lib/context.mjs'
+import { launchApp, makeContext, repoRoot, sleep } from './lib/context.mjs'
+import { readBuild } from './lib/build.mjs'
 import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
 import { countSteps, createLog, readLog } from './lib/log.mjs'
 import { serve } from './lib/rpc.mjs'
@@ -281,7 +282,7 @@ process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
 const sessionFile = join(sessionDir, 'session.json')
-const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, tmp, userData, testPageUrl: state.testPageUrl, home: sandboxHome, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
+const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, build: readBuild({ repoRoot }), tmp, userData, testPageUrl: state.testPageUrl, home: sandboxHome, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
 writeSession({ ready: false })
 
 try {

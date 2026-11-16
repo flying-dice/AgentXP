@@ -42,7 +42,7 @@
             {#if c.state === 'sent'}<Icon name="check" size={12} title="Sent to chat" />{/if}
           </span>
         </span>
-        <span class="text">{c.body}</span>
+        <span class="text" title={c.body}>{c.body}</span>
         {#if replies(c) > 0}<span class="rep">{replies(c)} {replies(c) === 1 ? 'reply' : 'replies'}</span>{/if}
       </button>
     {:else}
@@ -156,10 +156,10 @@
     color: var(--w7-text-muted);
     font-size: 11px;
   }
+  /* The words of a comment wrap: a short remark is read whole (UX-167). */
   .text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .empty {
     padding: 10px 8px;

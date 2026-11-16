@@ -87,11 +87,42 @@ export function withStepsLine(text, steps, budget) {
 /** H-54: a task asks a question when its tasks.md entry has an `Answer:` line (the scenario wording is not guessed). */
 export const asksQuestion = (task) => Boolean(task?.answer)
 
-/** H-59: `check` refuses a verdict for an answer task unless the facilitator passes `--answer` or says `--no-answer`. Returns the error text or null. */
-export const answerProblem = (task, { answer, noAnswer } = {}) =>
-  asksQuestion(task) && !answer && !noAnswer
-    ? 'this task asks a question: pass the "Answer: ..." line of the final report with --answer "<text>", or --no-answer when the panelist gave none'
-    : null
+/**
+ * H-59, H-90: `check` refuses a verdict for an answer task unless the facilitator passes `--answer`. `--no-answer` alone is refused too
+ * (H-82 came back in R4, R5 and R6: a MANUAL verdict with no Answer line); it needs `--accept-no-answer` as well, for a panelist
+ * that really gave none. Returns the error text or null.
+ */
+export const answerProblem = (task, { answer, noAnswer, acceptNoAnswer } = {}) => {
+  if (!asksQuestion(task) || answer) return null
+  if (noAnswer && acceptNoAnswer) return null
+  if (noAnswer) return 'this task asks a question and --no-answer alone is not accepted (H-90): pass the "Answer: ..." line of the final report with --answer "<text>"; when the panelist really gave none, pass --no-answer --accept-no-answer and say so in the record'
+  return 'this task asks a question: pass the "Answer: ..." line of the final report with --answer "<text>" (or, when the panelist gave none, --no-answer --accept-no-answer)'
+}
+
+/**
+ * H-90: `stop` refuses a record without an `Answer:` line (more than a placeholder) for a task that has an Answer field in
+ * tasks.md, unless `acceptNoAnswer`. Returns the error text or null.
+ */
+export function recordAnswerProblem(task, recordText, { acceptNoAnswer = false } = {}) {
+  if (!asksQuestion(task) || acceptNoAnswer) return null
+  const value = /^[-*]?\s*Answer:\s*(.*)$/im.exec(recordText ?? '')?.[1]?.trim() ?? ''
+  if (value && !/^(none|n\/a|no answer|-|\.\.\.|<.*>)\.?$/i.test(value)) return null
+  return 'the record has no "- Answer: <text>" line, but this task asks a question (H-90): add the panelist\'s answer to the record, or pass --accept-no-answer when the panelist really gave none'
+}
+
+/** H-92: the steps that count for the budget and the weak rule: the steps when the check first held (`stepsToPass`), never more than the steps taken. */
+export const effectiveSteps = (steps, stepsToPass) => (Number.isInteger(stepsToPass) && stepsToPass >= 0 ? Math.min(steps, stepsToPass) : steps)
+
+/**
+ * H-92: the steps when the check first held. An explicit value (`--steps-to-pass`, read from the log by the facilitator) wins; else
+ * the steps of the first earlier run whose checker said PASS; else the steps now when the checker says PASS; else null.
+ */
+export function stepsToPassOf({ explicit, runs = [], checkerStatus, steps }) {
+  if (Number.isInteger(explicit)) return explicit
+  const first = runs.find((r) => r.checkerStatus === 'PASS')
+  if (first) return first.steps
+  return checkerStatus === 'PASS' ? steps : null
+}
 
 /** H-53: the rating from a record's `- SEQ: <n>` line (1 to 7), or null. */
 export const seqFromRecord = (text) => {
@@ -157,7 +188,7 @@ export function syncSeq(check, recordText, { confirmed = false } = {}) {
 }
 
 /** H-53: check.json with the rating of the record; the weak flag is recomputed from the rating, the steps and the budget. */
-export const withSeq = (check, seq) => ({ ...check, seq, weak: budgetVerdict(check.status, check.steps, check.budget, seq).weak })
+export const withSeq = (check, seq) => ({ ...check, seq, weak: budgetVerdict(check.status, effectiveSteps(check.steps, check.stepsToPass), check.budget, seq).weak })
 
 /** The scenario as the panelist gets it: `{TEST_PAGE_URL}` becomes the address of the session's test page. */
 export const scenarioText = (scenario, { testPageUrl } = {}) => (scenario ?? '').replaceAll('{TEST_PAGE_URL}', testPageUrl ?? TEST_PAGE_URL)

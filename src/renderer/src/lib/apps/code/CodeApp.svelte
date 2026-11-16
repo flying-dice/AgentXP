@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
   import type { FileChangeDto } from '@shared/models'
+  import type { ReviewFileDto } from '@shared/review'
   import { formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
   import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
@@ -20,6 +21,7 @@
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
+  import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import type { GutterMark } from '../../kit/organisms/CodeViewer'
   import { languageFromPath } from '../../kit/organisms/highlighter'
   import ListView from '../../kit/organisms/ListView.svelte'
@@ -528,13 +530,31 @@
     }
   }
 
-  /** One click on a Git row opens its diff (UX-152). A double click is a click and an activation: the same row opens once. */
-  let lastReview = { path: '', at: 0 }
-  function reviewRow(id: string): void {
+  /**
+   * One click on a Git row shows its diff in the pane below the list; no window opens (UX-168). A double click or Enter opens
+   * Code Review on the file, and the status line says so while the window opens.
+   */
+  let gitPreview = $state.raw<{ path: string; file: ReviewFileDto | null } | null>(null)
+  async function previewRow(id: string): Promise<void> {
     const path = rowReviewPath(gitRows, id)
-    if (!path || (path === lastReview.path && Date.now() - lastReview.at < 800)) return
-    lastReview = { path, at: Date.now() }
-    void showChanges(path)
+    if (!path) return
+    gitPreview = { path, file: null }
+    const root = rootOf(path)
+    const relative = relativeToRoot(root, path)
+    const file = relative ? await host.api.review.file(desktopId, root, 'HEAD', relative).catch(() => null) : null
+    if (gitPreview?.path === path) gitPreview = { path, file }
+  }
+  // A preview of a file that left the list (committed, reverted) goes away with its row.
+  $effect(() => {
+    const open = gitPreview?.path
+    if (open && !gitRows.some((r) => r.id === open)) untrack(() => (gitPreview = null))
+  })
+  let openingReview = $state(false)
+  function openReviewRow(id: string): void {
+    const path = rowReviewPath(gitRows, id)
+    if (!path) return
+    openingReview = true
+    void showChanges(path).finally(() => setTimeout(() => (openingReview = false), 1500))
   }
 
   async function plugIn(): Promise<void> {
@@ -793,7 +813,7 @@
   /** Git list: double-click and the menu show the change (Code Review against the last commit) or open the file. */
   const gitRowMenu = (row: ListRow, event: MouseEvent): void =>
     ctx.show(event, [
-      { id: 'code-git-ctx-show', testid: 'code-git-ctx-show', label: '&Show changes', icon: 'changes', action: () => void showChanges(row.id) },
+      { id: 'code-git-ctx-show', testid: 'code-git-ctx-show', label: '&Show changes', icon: 'changes', action: () => openReviewRow(row.id) },
       { id: 'code-git-ctx-open', testid: 'code-git-ctx-open', label: '&Open file', icon: 'file-code', disabled: gitRows.find((r) => r.id === row.id)?.text === GIT_STATE_WORD.deleted, action: () => show(row.id) }
     ])
   const eol = $derived(text === null ? '' : text.includes('\r\n') ? 'CRLF' : 'LF')
@@ -854,7 +874,7 @@
               <ToolStrip aria-label="Project tools" class="tree-tools">
                 <ToolStripButton data-testid="code-tree-new-chat" icon="session" text="New chat here" title="Start a chat that works in the selected project or folder" onclick={newChatHere} />
                 <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Plug in a folder from your computer as a project" onclick={() => void plugIn()} />
-                <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
+                <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project first: click a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
               </ToolStrip>
               {#if !hasProject}
                 <div class="plug-hint" data-testid="code-tree-empty">
@@ -966,10 +986,21 @@
                   testid="code-git-list"
                   emptyText={activeStatus ? 'Nothing to commit.' : ''}
                   aria-label="Git status"
-                  onselect={(ids) => ids[0] && reviewRow(ids[0])}
-                  onactivate={(row) => reviewRow(row.id)}
+                  onselect={(ids) => ids[0] && void previewRow(ids[0])}
+                  onactivate={(row) => openReviewRow(row.id)}
                   oncontextmenu={gitRowMenu}
                 />
+                <div class="gitdiff" data-testid="code-git-preview" data-path={gitPreview?.path ?? ''}>
+                  {#if gitPreview?.file}
+                    {#key gitPreview.path}
+                      <DiffViewer oldText={gitPreview.file.oldText} newText={gitPreview.file.newText} fileName={gitPreview.path} toolbar={false} wrap label="Changes in {gitPreview.path}" />
+                    {/key}
+                  {:else if gitPreview}
+                    <div class="hint" data-testid="code-git-preview-hint">Loading the changes...</div>
+                  {:else}
+                    <div class="hint" data-testid="code-git-preview-hint">Click a file to see what changed. Double-click it to open Code Review.</div>
+                  {/if}
+                </div>
               </div>
             {/if}
           {/snippet}
@@ -996,7 +1027,7 @@
     {/if}
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={active ?? 'Ready'} spring testid="code-status-path" />
+    <StatusStripLabel text={openingReview ? 'Opening Review...' : (active ?? 'Ready')} spring testid="code-status-path" />
     {#if editing}<StatusStripLabel text="Agent editing" borders={['left']} width={100} testid="code-status-editing" />{/if}
     {#if lineLabel}<StatusStripLabel text={lineLabel} borders={['left']} />{/if}
     {#if selection}<StatusStripLabel text="Selected {selection.startLine}-{selection.endLine}" borders={['left']} />{/if}
@@ -1198,6 +1229,23 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+  }
+  /* The diff of the clicked row: half of the pane, so the list keeps its rows. */
+  .gitdiff {
+    flex: 1;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    background: var(--w7-window);
+    border: 1px solid var(--w7-list-border);
+  }
+  .gitdiff :global(.w7-diffviewer) {
+    flex: 1;
+  }
+  .gitpane :global(.w7-listview) {
+    flex: 1;
+    min-height: 60px;
   }
   .gitline {
     flex: none;

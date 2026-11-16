@@ -23,7 +23,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Someone installed this program for you and left it open. You have never used it. Find out what you can do first and start getting set up."
 - Start state: fresh user-data folder, launcher just opened.
 - Success check: the New desktop dialog is open (or a desktop was created) within budget.
-- Min 1 (click **New...**). Budget 3 / 4.
+- Min 1 (click **New...**). Budget 3 / 4. Steps to pass (H-92): the check holds at the second action (the dialog is open); `check.json.stepsToPass` records it and the budget and the weak rule use it, because the scenario's second clause ("start getting set up") invites more actions after the goal.
 - Notes: observe if the empty text is read, and what the panelist thinks a "desktop" is (post-task question).
 
 ### J02 Create a desktop
@@ -186,7 +186,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T13.1 - Leave it running**
 - Scenario: "You need to leave your desk for a while, and the assistant should keep working. Close this window without stopping it. Later, come back and see where it is."
 - Start state: `stepping` script (auto mode, long), turn running.
-- Success check: the chat window was closed or the desktop disconnected and the agent kept running (the run state is recorded at reconnect); then reconnected with the chat showing new progress (a higher "N of 30" than at the start, or more tool calls).
+- Success check: the chat window was closed or the desktop disconnected and the agent kept running (the run state is recorded at reconnect); then reconnected with the chat showing new progress (a higher "N of 30" than at the start, or more tool calls) **and a window of the original chat (same session id) open after the close** (H-91). Progress without that window is MANUAL (`reopened: false` in the notes): the researcher decides from the log whether the panelist went back to the same chat.
 - Min 3. Budget 9 / 12.
 
 **T13.2 - You were called back**
@@ -336,7 +336,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T23.2 - The connection dropped**
 - Scenario: "You were typing a long message to the assistant and an error says it could not send. Get your message to the assistant."
-- Start state: error injected on the first send.
+- Start state: error injected on the first send. The scripted agent `flaky` (`scripts/ux-panel/scripts/flaky.json`) fails the first prompt of every agent process with "The connection to the assistant dropped. Could not send." and answers all later prompts ("Got your message: ..."). Reconnect starts a new agent process, so **the first send after each Reconnect fails again** (H-95; seen in R6 T23.2 intermediate). The product item is UX-162 (the failed message must show once, with Send again).
 - Success check: the message arrives and the agent replies.
 - Min 3. Budget 9 / 12.
 

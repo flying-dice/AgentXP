@@ -43,7 +43,7 @@ export const checks = {
     const state = all([[same, `the app is still the same process (pid ${pid}, was ${ctx.state.appPid ?? 'not recorded'})`]])
     return withAnswer(state, answer, {
       // H-42: the cause, the place (Agents page) and what to do (edit/change it, choose another agent, set a default, new chat).
-      keywords: [['not-a-real-command', 'not found'], ['agents page', 'agents', 'agent manager', 'settings'], ['edit', 'change', 'choose another', 'set as default', 'new chat']],
+      keywords: [['not-a-real-command', 'not found'], ['agents page', 'agents', 'agent manager', 'settings'], ['edit', 'change', 'choose another', /set\s+(?:\S+\s+){0,3}as\s+default/i, /default\b[^.]{0,40}\bagent|agent\b[^.]{0,40}\bdefault/i, 'new chat']],
       expect: 'the answer names the wrong command ("not-a-real-command" or "not found"), points to the Agents page and says what to do (edit or change it, choose another agent, set a default); the panelist did not restart the app'
     })
   },

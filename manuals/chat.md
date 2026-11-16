@@ -169,8 +169,12 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Diff | Shows the diff of the selected file. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the selected file in Code. | `changes-open-editor` |
-| Reverted row | A change that was reverted stays in the list, in grey, with the words "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
-| Reverted text | The words on a reverted row. | `changes-reverted-text` |
+| Reverted row | A change that was reverted stays in the list, in grey, with the word "Reverted". Point to it to read "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
+| Reverted text | The word "Reverted" on a reverted row. Its tooltip has the full words. | `changes-reverted-text` |
+| Row menu: Revert | Right-click a changed file: undoes the change, after a question. | `changes-ctx-revert` |
+| Row menu: Open in editor | Right-click a changed file: shows the file in Code. Dimmed for a deleted file. | `changes-ctx-open-editor` |
+| Row menu: Restore from the Recycle Bin | Right-click a reverted file: opens the Recycle Bin, where you restore it. | `changes-ctx-restore` |
+| Menu: undo revert | Edit menu: takes the file that you reverted last out of the Recycle Bin. It shows only right after a revert. | `chat-menu-undo-revert` |
 | Open Recycle Bin | The link in the one line above the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
 | Changes pane | The whole pane: the list, the diff and the buttons. | `changes-pane` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
@@ -247,7 +251,7 @@ To undo a change of the agent, follow the steps below:
 1. Click **Changes**. In a chat window, click **Tasks and changes** first. The pane opens on the **Changes** tab.
 2. Select the file.
 3. Click **Revert**. A question appears.
-4. Click **Yes**. The file goes back to its old text. The row says "Reverted. Restore from the Recycle Bin".
+4. Click **Yes**. The file goes back to its old text. The row says "Reverted". Point to it, or read the line above the list, for "Restore from the Recycle Bin". You can also right-click the row and click **Restore from the Recycle Bin**, or click **Edit**, **Undo revert** right after the revert.
 
 To get a reverted change back, click **Open Recycle Bin** under the list, or open the **[Recycle Bin](recycle-bin.md)**, select the item, and click **Restore this item**.
 

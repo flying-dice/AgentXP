@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { SEVERITY_HELP, addCommentTitle, addCommentButtonTitle, chatChoiceLabel, NEW_CHAT_FOR_COMMENTS, baseLabel, filesStatusLabel, verdictLine, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
+import { fitStatusFields, SEVERITY_HELP, addCommentTitle, addCommentButtonTitle, chatChoiceLabel, NEW_CHAT_FOR_COMMENTS, baseLabel, filesStatusLabel, verdictLine, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -157,7 +157,7 @@ describe('numbers in digits (UX-77)', () => {
     expect(verdictLine('approve', [])).toBe('Approved.')
   })
   it('says how many files changed and how many are shown', () => {
-    expect(filesStatusLabel(2, 1)).toBe('2 files changed. Showing 1 (the one you opened).')
+    expect(filesStatusLabel(2, 1)).toBe('Showing 1 of 2 changed files')
     expect(filesStatusLabel(2, 0)).toBe('2 files changed')
     expect(filesStatusLabel(1, 1)).toBe('1 file changed')
     expect(filesStatusLabel(0, 0)).toBe('0 files changed')
@@ -183,5 +183,24 @@ describe('the send dialog and the Add comment button (UX-122)', () => {
     expect(addCommentButtonTitle(false, false)).toMatch(/Expanded/)
     expect(addCommentButtonTitle(true, false)).toMatch(/Select a line/)
     expect(addCommentButtonTitle(true, true)).toBe('Add a comment on the selected line')
+  })
+})
+
+describe('fitStatusFields (UX-167)', () => {
+  const fields = [
+    { key: 'files', text: '2 files changed' },
+    { key: 'comments', text: '0 open, 0 resolved, 2 sent' },
+    { key: 'change', text: 'Change 3 of 7' },
+    { key: 'agent', text: 'Connected' }
+  ]
+  it('keeps every field in a wide window', () => {
+    expect(fitStatusFields(fields, 1200).map((f) => f.key)).toEqual(['files', 'comments', 'change', 'agent'])
+  })
+  it('drops the least important fields first and never cuts one', () => {
+    expect(fitStatusFields(fields, 480).map((f) => f.key)).toEqual(['files', 'comments'])
+    expect(fitStatusFields(fields, 200).map((f) => f.key)).toEqual(['files'])
+  })
+  it('measures nothing before the window has a width', () => {
+    expect(fitStatusFields(fields, 0)).toHaveLength(4)
   })
 })
