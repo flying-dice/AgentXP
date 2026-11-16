@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { TEST_PAGE_URL } from './fixtures.mjs'
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 
 export function parseTasks(markdown) {
@@ -25,3 +27,20 @@ export function loadTasks() {
 
 /** Step budget for a level: 3 x Min for opus/sonnet, 4 x Min for haiku (tasks.md gives both numbers). */
 export const budgetFor = (task, level) => (level === 'haiku' ? task.budgetNovice : task.budgetExpert)
+
+/** `T18.1-inline` -> `T18.1`: the id of tasks.md (variant suffixes belong to tasks.mjs only). */
+export const baseTaskId = (id) => String(id).replace(/-(inline|sidebar|window)$/, '')
+
+/** The scenario as the panelist gets it: `{TEST_PAGE_URL}` becomes the address of the session's test page. */
+export const scenarioText = (scenario, { testPageUrl } = {}) => (scenario ?? '').replaceAll('{TEST_PAGE_URL}', testPageUrl ?? TEST_PAGE_URL)
+
+/** Budget verdict of a finished check: FAIL over budget; a PASS within +25 percent of the budget is flagged as a near miss. */
+export function budgetVerdict(status, steps, budget) {
+  if (!budget || steps <= budget) return { status, nearMiss: false, lines: [] }
+  const near = status === 'PASS' && steps <= Math.floor(budget * 1.25)
+  return {
+    status: 'FAIL',
+    nearMiss: near,
+    lines: [`BUDGET EXCEEDED (${steps} > ${budget}): the task counts as FAILED`, ...(near ? [`within +25 percent: review (limit ${Math.floor(budget * 1.25)}); the researcher may flag this as a near miss`] : [])]
+  }
+}

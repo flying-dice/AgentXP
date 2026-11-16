@@ -37,7 +37,7 @@ export const TASKS = {
   'T18.1-sidebar': { preset: 'a2ui', options: { variant: 'sidebar' } },
   'T18.1-window': { preset: 'a2ui', options: { variant: 'window' } },
   'T18.2': { preset: 'a2ui', options: { variant: 'window', closeWindow: true } },
-  'T19.1': { preset: 'project-desktop' },
+  'T19.1': { preset: 'project-desktop', options: { script: 'browser-agent' } },
   'T19.2': { preset: 'project-desktop', options: { open: ['browser'], browserUrl: 'http://127.0.0.1:9/' } },
   'T20.1': { preset: 'eject-mid-job', options: { keepEjected: true } },
   'T20.2': { preset: 'long-turn-running', options: { taskManagerClosed: true } },
@@ -45,7 +45,7 @@ export const TASKS = {
   'T22.1': { preset: 'project-desktop', options: { open: ['explorer'] } },
   'T22.2': { preset: 'chat-open', options: { script: 'demo' } },
   'T23.1': { preset: 'crashed-agent' },
-  'T23.2': { preset: 'chat-open', options: { script: 'flaky' } },
+  'T23.2': { preset: 'chat-open', options: { script: 'flaky', firstMessage: 'Please list the files in my project' } },
   'T24.1': { preset: 'project-desktop', options: { git: true, modifyGit: true, open: ['code'] } },
   'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } },
   'T25.1': { preset: 'review-ready' },
@@ -66,5 +66,5 @@ export const TASKS = {
 /** Short notes the facilitator must hand to the panelist when a start state needs a spoken detail. */
 export const TASK_NOTES = {
   'T28.1': 'The team chat web page is at http://127.0.0.1:4174/ (local, no network). The scenario already contains the address.',
-  'T19.1': 'The test page is at http://127.0.0.1:4173/ (no real network). Tell the panelist to use that address where the task says example.com.'
+  'T19.1': 'The scenario text carries the test page address (per-session port, printed in the panelist block); give the panelist exactly that text.'
 }

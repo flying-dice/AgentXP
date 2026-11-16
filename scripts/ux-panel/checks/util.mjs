@@ -44,3 +44,44 @@ export const agentMessages = (entries) => entries.filter((e) => e.kind === 'mess
 export const textOf = (entry) => (entry.blocks ?? []).map((b) => b.text ?? '').join('')
 
 export const windowsOf = (state, app) => (state?.windows ?? []).filter((w) => w.app === app)
+
+/**
+ * The Help window of the app, whatever its title ("Help and Support", "Chat Help", "Explorer Help"...): the window with
+ * app `help` in the desktop state, plus the text and data-topic of its article. Null when no Help window is open.
+ */
+export async function helpInfo(ctx) {
+  const id = ctx.state?.desktopId
+  const state = id ? await ctx.desktopState(id) : null
+  const win = windowsOf(state, 'help')[0]
+  let topic = win?.view?.topic ?? null
+  let text = ''
+  const page = id ? ctx.desktopWindow?.(id) : null
+  const article = page ? page.getByTestId('help-article') : null
+  if (article && (await article.count().catch(() => 0)) > 0) {
+    topic = (await article.first().getAttribute('data-topic').catch(() => null)) ?? topic
+    text = await article.first().innerText().catch(() => '')
+  }
+  return win || topic || text ? { topic, text } : null
+}
+
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+
+/** Keyword group for a count: the digits and the word ("5", "five"). */
+export const countWords = (n) => [String(n), ...(NUMBER_WORDS[n] ? [NUMBER_WORDS[n]] : [])]
+
+/** Keyword group for a file path: the base name with and without the extension ("README.md", "README"). */
+export function nameWords(path) {
+  const base = String(path).split(/[\\/]/).pop() ?? ''
+  const bare = base.replace(/\.[^.]+$/, '')
+  return bare && bare !== base ? [base, bare] : [base]
+}
+
+/** Highest "N of M" progress number in the text of the transcript (messages, tool titles), or 0. */
+export function lastProgress(entries) {
+  let max = 0
+  for (const e of entries) {
+    const text = [textOf(e), e.title ?? ''].join(' ')
+    for (const m of text.matchAll(/(\d+)\s+of\s+\d+/gi)) max = Math.max(max, Number(m[1]))
+  }
+  return max
+}

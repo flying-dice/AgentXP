@@ -81,8 +81,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T06.1 - Allow after reading**
 - Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts."
 - Start state: `demo` script; Write files = Ask.
-- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist opened the details first (the session log shows it) or said what lines changed.
-- Min 2 (Show details, Allow). Budget 6 / 8.
+- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist names the changed lines (the diff is inline; opening the details is optional).
+- Min 1 (Allow). Budget 3 / 4.
 
 **T06.2 - Deny**
 - Scenario: "The assistant asks to run a command. You do not know it. Say no, and make sure that the assistant does not run it."
@@ -131,14 +131,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T10.1 - Take away the command line**
 - Scenario: "You want to be sure that, right now, the assistant cannot run commands. Make that true, and show me how you can tell."
 - Start state: Terminal window open on the desktop.
-- Success check: no Terminal window open; the top bar has no Terminal chip; the panelist names the chip list as the proof (answer check).
-- Min 1 (close Terminal). Budget 4 / 5.
+- Success check: the assistant cannot run commands: either no Terminal window is open and the Workspace bar ("Agent can use") has no Terminal chip, or the Terminal permission is Deny; the panelist names the chip list, the closed Terminal or the Deny policy as the proof (answer check).
+- Min 1 (close Terminal; the Permissions route is longer). Budget 8 / 10.
 
 **T10.2 - What can it touch?**
 - Scenario: "Without asking the assistant, tell me which of these it can do now: read files, run commands, browse the web."
 - Start state: Explorer and Browser open, Terminal closed.
 - Success check: the answer is exactly: read files yes, run commands no, browse yes (researcher check).
-- Min 1 (look). Budget 3 / 4.
+- Min 0 (look only, the answer takes no action). Budget 3 / 4.
 
 ### J11 Pause and take control
 
@@ -151,8 +151,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T11.2 - Approve every step**
 - Scenario: "For the next job you want to approve every single thing the assistant does, even reading."
 - Start state: all permissions Allow; chat open.
-- Success check: `userInControl` is true and the next read call raised a request.
-- Min 1 + prompt (3). Budget 9 / 12.
+- Success check: `userInControl` is true, or every permission group is Ask. A prompt and a raised request are an optional extra (the scenario does not ask for them).
+- Min 1 (take control or set every group to Ask). Budget 9 / 12.
 
 **T11.3 - Carry on after a pause**
 - Scenario: "You paused the assistant a minute ago. Now let it finish the job."
@@ -179,7 +179,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T13.1 - Leave it running**
 - Scenario: "You need to leave your desk for a while, and the assistant should keep working. Close this window without stopping it. Later, come back and see where it is."
 - Start state: `stepping` script (auto mode, long), turn running.
-- Success check: window closed and the agent kept running (the run state is working in the launcher); then reconnected with the chat showing new progress.
+- Success check: the chat window was closed or the desktop disconnected and the agent kept running (the run state is recorded at reconnect); then reconnected with the chat showing new progress (a higher "N of 30" than at the start, or more tool calls).
 - Min 3. Budget 9 / 12.
 
 **T13.2 - You were called back**
@@ -193,7 +193,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T14.1 - Which one needs me?**
 - Scenario: "You have four workspaces running. Find the one that is waiting for you and open it."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected; the panelist names the error desktop (answer check).
+- Success check: the desktop with the pending request is connected. The error desktop is not asked for (the launcher cannot show an error until UX-06); the researcher records whether the waiting row was preselected.
 - Min 2. Budget 6 / 8.
 
 **T14.2 - Rename**
@@ -255,8 +255,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J19 Browse
 
 **T19.1 - Look at a web page**
-- Scenario: "Open a web page at example.com on this desktop, and let the assistant read it too."
-- Start state: no Browser window; a local test page served by the harness at a fixed address (use that address; no real network).
+- Scenario: "Open the web page at {TEST_PAGE_URL} on this desktop, and let the assistant read it too."
+- Start state: no Browser window; `browser-agent` script; a local test page served by the harness at its own port per session (the facilitator substitutes the address for `{TEST_PAGE_URL}`, default http://127.0.0.1:4173/; no real network).
 - Success check: Browser window open at the page; the Browser chip shown; the panelist said the assistant can now see it (answer check).
 - Min 4. Budget 12 / 16.
 
@@ -294,7 +294,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You are in the Explorer window and do not know what the button called 'Plug in a project' does. Find out without leaving the program."
 - Start state: Explorer open.
 - Success check: a help topic for Explorer is open, and the panelist's answer states what the button does (answer check).
-- Min 1 (F1) + read. Budget 6 / 8.
+- Min 2 (F1 + read). Budget 6 / 8.
 
 **T22.2 - Find a topic by search**
 - Scenario: "Find out how to undo a change that the assistant made."
@@ -319,9 +319,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J24 Code, git status and the gutter [planned]
 
 **T24.1 - What changed in git**
-- Scenario: "Open the project's code. Tell me which files have changes that are not saved in version control yet, and which line of redirect.ts is new."
+- Scenario: "Open the project's code. Tell me which files have changes that are not saved in version control yet, and which lines of redirect.ts are new."
 - Start state: the Git project with two modified files and one new file; new Code app.
-- Success check: the answer names the three files and the correct line (researcher check).
+- Success check: the answer names the three files (redirect.ts, login.ts, session.ts) and the new lines of redirect.ts (the diff shows lines 1, 3 and 4; keyword 3 is checked; researcher check).
 - Min 5. Budget 15 / 20.
 
 **T24.2 - Not a Git project**

@@ -1,6 +1,6 @@
 // J08-J09: review and restore changes.
 import { LOGIN_EDITED, REDIRECT_BUG, REDIRECT_FIXED } from '../lib/fixtures.mjs'
-import { all, fail, manual, projectRoot, readText, withAnswer } from './util.mjs'
+import { all, countWords, fail, manual, nameWords, projectRoot, readText, withAnswer } from './util.mjs'
 
 export const checks = {
   async 'T08.1'(ctx) {
@@ -16,9 +16,10 @@ export const checks = {
   async 'T08.2'(ctx, { answer }) {
     const changes = await ctx.changes(ctx.state.sessionId)
     const ranked = [...changes].sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions))
-    const top = ranked[0]?.path.split('\\').pop() ?? '?'
+    const topPath = ranked[0]?.path ?? '?'
+    const top = topPath.split(/[\\/]/).pop()
     const state = changes.length >= 5 ? { status: 'PASS', reason: `${changes.length} agent changes exist`, notes: [] } : fail(`only ${changes.length} changes in the start state`)
-    return withAnswer(state, answer, { keywords: [[String(changes.length), 'five'], top], expect: `${changes.length} files changed, most changed: ${top}; and the session log shows Code or the Changes pane was used [planned task]` })
+    return withAnswer(state, answer, { keywords: [countWords(changes.length), nameWords(topPath)], expect: `${changes.length} files changed, most changed: ${top}; and the session log shows Code or the Changes pane was used [planned task]` })
   },
 
   async 'T09.1'(ctx) {

@@ -1,4 +1,5 @@
 // Start states with chats: open chat, pending requests, running turns, changes, recycled changes.
+import { lastProgress } from '../checks/util.mjs'
 import { ALL_ALLOW, PROMPT_FIX, chatWithPendingRequest, projectDesktop } from './base.mjs'
 
 const idleChat = async (ctx, options, extra = {}) => {
@@ -10,9 +11,17 @@ const idleChat = async (ctx, options, extra = {}) => {
 }
 
 export const presets = {
-  /** A connected desktop with an open, idle chat on login-app. Options: script, allowAll, policy. */
+  /** A connected desktop with an open, idle chat on login-app. Options: script, allowAll, policy, firstMessage (sent first, so a flaky agent's error is on screen). */
   async 'chat-open'(ctx, options) {
-    await idleChat(ctx, options)
+    const { firstMessage, ...rest } = options
+    const { desktop } = await idleChat(ctx, rest)
+    if (firstMessage) {
+      // The error of a flaky agent must be on screen at the start: the first send fails (with the text kept for a retry).
+      await ctx.sendPrompt(desktop.id, ctx.state.sessionId, firstMessage)
+      await ctx.sleep(3000) // the failed send ends the turn; the chat may report an error status rather than idle
+      ctx.state.firstMessage = firstMessage
+      ctx.saveState()
+    }
   },
 
   /** The chat asked for a permission; the box is on screen. Options: script (default fix-redirect), policy, prompt. */
@@ -104,7 +113,10 @@ export const presets = {
     const { desktop } = await idleChat(ctx, { script: 'long-turn' })
     await ctx.sendPrompt(desktop.id, ctx.state.sessionId, 'start the long job')
     await ctx.waitFor(async () => (await ctx.launcherList()).find((d) => d.id === desktop.id)?.runState === 'working', 'the turn running')
-    ctx.state.messagesAtStart = (await ctx.transcript(ctx.state.sessionId)).length
+    const entries = await ctx.transcript(ctx.state.sessionId)
+    ctx.state.messagesAtStart = entries.length
+    ctx.state.progressAtStart = lastProgress(entries)
+    ctx.state.toolCallsAtStart = entries.filter((e) => e.kind === 'tool_call').length
     ctx.saveState()
   },
 

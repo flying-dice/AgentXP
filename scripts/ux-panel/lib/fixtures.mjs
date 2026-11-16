@@ -71,5 +71,6 @@ export function createPlainFolder(base) {
 }
 
 export const TEST_PAGE_PORT = 4173
-export const TEST_PAGE_URL = `http://127.0.0.1:${TEST_PAGE_PORT}/`
+export const testPageUrl = (port = TEST_PAGE_PORT) => `http://127.0.0.1:${port}/`
+export const TEST_PAGE_URL = testPageUrl()
 export const TEST_PAGE_HTML = '<!doctype html><title>Fixture page</title><body style="font:20px sans-serif;margin:40px"><h1>Example Domain</h1><p>This page is served by the test harness. Welcome to the fixture page.</p></body>'

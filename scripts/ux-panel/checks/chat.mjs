@@ -13,7 +13,7 @@ export const checks = {
       [agentMessages(entries).length > 0, 'the assistant answered'],
       [session?.status === 'idle', 'the turn ended']
     ])
-    return withAnswer(state, answer, { keywords: ['redirect.ts'], expect: 'the answer names the file the assistant read (src/auth/redirect.ts) and the file it changed (src/auth/redirect.ts) and says it is finished' })
+    return withAnswer(state, answer, { keywords: [['redirect.ts'], ['finished', 'done', 'complete', 'fixed', 'changed it', 'made the change']], expect: 'the answer names the file the assistant read (src/auth/redirect.ts) and the file it changed (src/auth/redirect.ts) and says it is finished' })
   },
 
   async 'T05.2'(ctx) {
@@ -37,7 +37,7 @@ export const checks = {
         [request?.permission.outcome === 'selected' && request.permission.selectedOptionId === 'allow', `the request was answered ${request?.permission.selectedOptionId ?? request?.permission.outcome ?? 'never'} (want allow)`],
         [disk === REDIRECT_FIXED, 'redirect.ts on disk contains the fix']
       ],
-      ['researcher: the session log should show the details were opened first, or the panelist names the changed lines']
+      ['researcher: the panelist should name the changed lines (answer or think-aloud); opening the details is optional because the diff is inline']
     )
   },
 
@@ -91,10 +91,14 @@ export const checks = {
   async 'T11.2'(ctx) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     const entries = await ctx.transcript(ctx.state.sessionId)
-    return all([
-      [state?.userInControl === true, `userInControl is ${state?.userInControl}`],
-      [permissions(entries).length > 0, 'the next call raised a request (send a prompt first)']
-    ])
+    const policy = await ctx.policy()
+    const groups = Object.values(policy.groups ?? {})
+    const allAsk = groups.length > 0 && groups.every((g) => g === 'ask')
+    const raised = permissions(entries).length > 0
+    return all(
+      [[state?.userInControl === true || allAsk, `userInControl is ${state?.userInControl}; all permission groups Ask: ${allAsk}`]],
+      [raised ? 'a request was raised for a call (optional proof)' : 'no prompt was sent, so no request was raised (optional: the scenario does not ask for a prompt)']
+    )
   },
 
   async 'T11.3'(ctx) {

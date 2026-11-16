@@ -9,7 +9,7 @@ const A2UI = async (ctx) => {
 export const checks = {
   async 'T18.1'(ctx, { answer }) {
     const actions = await A2UI(ctx)
-    return withAnswer(all([[actions.some((e) => /"name":\s*"Nia"/.test(e.payload) || /Nia/.test(e.payload)), `the agent received an action with name = Nia (${actions.length} action prompt(s))`]]), answer, { keywords: [['got action', 'hello nia', 'nia']], expect: "the answer matches the agent's reply (Got action ... hello Nia)" })
+    return withAnswer(all([[actions.some((e) => /"name":\s*"Nia"/.test(e.payload) || /Nia/.test(e.payload)), `the agent received an action with name = Nia (${actions.length} action prompt(s))`]]), answer, { keywords: [['received', 'thanks', 'thank you'], ['nia']], expect: "the answer matches the agent's reply (Thanks Nia, I received your answer)" })
   },
 
   async 'T18.2'(ctx) {
@@ -44,14 +44,19 @@ export const checks = {
   async 'T23.2'(ctx) {
     const entries = await ctx.transcript(ctx.state.sessionId)
     const session = (await ctx.sessions()).find((s) => s.id === ctx.state.sessionId)
+    const first = ctx.state.firstMessage
+    const replied = agentMessages(entries).map((m) => /^\s*Got your message: ([\s\S]*?)\s*$/.exec(textOf(m))?.[1]).filter((t) => t !== undefined)
+    const users = userMessages(entries).map((m) => textOf(m).trim())
+    // exact text: the reply echoes the message without a "You" prefix and equals the message that failed to send
+    const exact = replied.some((t) => (first ? t === first : users.includes(t)))
     return all([
-      [agentMessages(entries).some((m) => /Got your message/.test(textOf(m))), 'the agent replied to the message'],
+      [exact, first ? `the agent replied to exactly the first message "${first}" (replies: ${replied.join(' | ') || 'none'})` : `the agent replied to a message the user sent (replies: ${replied.join(' | ') || 'none'})`],
       [session?.status === 'idle', 'the chat is idle']
     ])
   },
 
   async 'T24.1'(ctx, { answer }) {
-    return withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts'], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the correct new line of redirect.ts (the line with searchParams) [planned task]' })
+    return withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts', '3'], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams) [planned task]' })
   },
 
   async 'T24.2'(ctx, { answer }) {
