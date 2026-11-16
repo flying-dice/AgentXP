@@ -1,0 +1,440 @@
+{
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "cores": 4,
+    "ramGB": 15.7,
+    "os": "linux 6.18.44-fc-v470",
+    "display": "xvfb-run, 1920x1200x24 (headless, software rendering)",
+    "electron": "45.3.2",
+    "chrome": "156.0.8078.100",
+    "node": "v22.23.4"
+  },
+  "launcherCold": 755,
+  "launcherWarmRuns": [
+    687,
+    711,
+    732,
+    680,
+    735
+  ],
+  "startedAt": "2026-11-16T14:39:25.932Z",
+  "runs": 5,
+  "rows": 2000,
+  "soakSeconds": 240,
+  "load": {
+    "windows": 6,
+    "transcriptEntries": 2002,
+    "domNodes": 19281
+  },
+  "metrics": [
+    {
+      "id": "input_composer",
+      "label": "Input response, chat composer (keydown to paint, median of keystrokes)",
+      "unit": "ms",
+      "target": "<= 100",
+      "value": 10,
+      "runs": [
+        10,
+        10,
+        11,
+        10,
+        10
+      ],
+      "pass": true,
+      "note": "",
+      "worstP95": 18.9,
+      "worstKey": 19.2
+    },
+    {
+      "id": "input_notepad",
+      "label": "Input response, Notepad",
+      "unit": "ms",
+      "target": "<= 100",
+      "value": 11,
+      "runs": [
+        11,
+        11,
+        11,
+        10,
+        10
+      ],
+      "pass": true,
+      "note": "",
+      "worstP95": 18.7,
+      "worstKey": 22.6
+    },
+    {
+      "id": "input_composer_loaded",
+      "label": "Input response, chat composer, 6 windows and a long transcript open",
+      "unit": "ms",
+      "target": "<= 100",
+      "value": 11,
+      "runs": [
+        10,
+        12,
+        11,
+        12,
+        11
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "window_open_explorer",
+      "label": "Window open, Start menu click to Explorer visible",
+      "unit": "ms",
+      "target": "<= 200",
+      "value": 16,
+      "runs": [
+        33,
+        16,
+        16,
+        16,
+        17
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "window_open_notepad",
+      "label": "Window open, Start menu click to Notepad visible",
+      "unit": "ms",
+      "target": "<= 200",
+      "value": 15,
+      "runs": [
+        15,
+        15,
+        16,
+        16,
+        12
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "launcher_warm",
+      "label": "Launcher to interactive, warm (process start to launcher usable)",
+      "unit": "ms",
+      "target": "<= 1500",
+      "value": 711,
+      "runs": [
+        687,
+        711,
+        732,
+        680,
+        735
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "desktop_connect",
+      "label": "Desktop connect (Connect click to desktop painted)",
+      "unit": "ms",
+      "target": "<= 2000",
+      "value": 337,
+      "runs": [
+        309,
+        328,
+        349,
+        337,
+        348
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "scroll_fps",
+      "label": "Scroll fps, 2000-row transcript, 6 windows",
+      "unit": "fps",
+      "target": ">= 57",
+      "value": 55.2,
+      "runs": [
+        55.2,
+        48.2,
+        51.2,
+        56.8,
+        58.4
+      ],
+      "pass": false,
+      "note": "Pass at 57 or more (60 fps with half a frame of jitter).",
+      "p95FrameMs": 33.3,
+      "maxFrameMs": 50,
+      "slowFrames": [
+        12,
+        28,
+        22,
+        8,
+        4
+      ]
+    },
+    {
+      "id": "drag_fps",
+      "label": "Window drag fps, 2000-row transcript, 6 windows",
+      "unit": "fps",
+      "target": ">= 57",
+      "value": 44.7,
+      "runs": [
+        43.1,
+        42.4,
+        44.7,
+        47.1,
+        47.2
+      ],
+      "pass": false,
+      "note": "Pass at 57 or more.",
+      "p95FrameMs": 33.4,
+      "maxFrameMs": 50.1,
+      "slowFrames": [
+        41,
+        42,
+        38,
+        29,
+        30
+      ]
+    },
+    {
+      "id": "drag_fps_light",
+      "label": "Control: window drag fps, 2 windows, no long transcript",
+      "unit": "fps",
+      "target": ">= 57",
+      "value": 60,
+      "runs": [
+        60,
+        60,
+        60,
+        60,
+        59.2
+      ],
+      "pass": true,
+      "note": "Control for the environment: the same drag on a light desktop."
+    },
+    {
+      "id": "longtask_stream",
+      "label": "Longest main-thread task while a turn streams (6 windows and a long transcript open)",
+      "unit": "ms",
+      "target": "<= 50",
+      "value": 0,
+      "runs": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "pass": true,
+      "note": "The Long Tasks API only reports tasks over 50 ms; 0 means none was reported.",
+      "observerSupported": true,
+      "turnMsAfterSend": [
+        1735,
+        1828,
+        1813,
+        1717,
+        1725
+      ],
+      "perRun": [
+        {
+          "longTasks": 0,
+          "durations": []
+        },
+        {
+          "longTasks": 0,
+          "durations": []
+        },
+        {
+          "longTasks": 0,
+          "durations": []
+        },
+        {
+          "longTasks": 0,
+          "durations": []
+        },
+        {
+          "longTasks": 0,
+          "durations": []
+        }
+      ]
+    },
+    {
+      "id": "agent_start_progress",
+      "label": "Agent start shows progress (Enter to first progress sign)",
+      "unit": "ms",
+      "target": "<= 100",
+      "value": 12,
+      "runs": [
+        12,
+        9,
+        6,
+        13,
+        27
+      ],
+      "pass": true,
+      "note": "",
+      "signs": [
+        {
+          "ms": 12.1,
+          "sign": "chat-starting",
+          "preexisting": "chat-starting"
+        },
+        {
+          "ms": 9.1,
+          "sign": "chat-starting",
+          "preexisting": "chat-starting"
+        },
+        {
+          "ms": 6.1,
+          "sign": "chat-starting",
+          "preexisting": "chat-starting"
+        },
+        {
+          "ms": 13.1,
+          "sign": "chat-starting",
+          "preexisting": "chat-starting"
+        },
+        {
+          "ms": 26.7,
+          "sign": "chat-starting",
+          "preexisting": "chat-starting"
+        }
+      ]
+    },
+    {
+      "id": "memory_growth",
+      "label": "Memory growth over the soak (working set, all processes)",
+      "unit": "%",
+      "target": "<= 10",
+      "value": 7.4,
+      "runs": [
+        7.4
+      ],
+      "pass": true,
+      "note": "One run of 240 s (the rubric asks for 30 minutes): growth of the median of the last 3 samples over the median of the 3 samples after a 30 s warm-up.",
+      "cycles": 47,
+      "soakSeconds": 240,
+      "startMB": 1293,
+      "endMB": 1388,
+      "slopeMBPerMin": 33.52,
+      "samples": [
+        {
+          "s": 0,
+          "totalMB": 1155,
+          "rendererMB": 707,
+          "mainMB": 191,
+          "heapMB": 45.2
+        },
+        {
+          "s": 19,
+          "totalMB": 1249,
+          "rendererMB": 781,
+          "mainMB": 195,
+          "heapMB": 45.2
+        },
+        {
+          "s": 32,
+          "totalMB": 1245,
+          "rendererMB": 796,
+          "mainMB": 184,
+          "heapMB": 45.2
+        },
+        {
+          "s": 48,
+          "totalMB": 1293,
+          "rendererMB": 833,
+          "mainMB": 188,
+          "heapMB": 45.2
+        },
+        {
+          "s": 62,
+          "totalMB": 1301,
+          "rendererMB": 846,
+          "mainMB": 188,
+          "heapMB": 45.2
+        },
+        {
+          "s": 76,
+          "totalMB": 1321,
+          "rendererMB": 861,
+          "mainMB": 190,
+          "heapMB": 45.2
+        },
+        {
+          "s": 91,
+          "totalMB": 1334,
+          "rendererMB": 874,
+          "mainMB": 189,
+          "heapMB": 45.2
+        },
+        {
+          "s": 105,
+          "totalMB": 1311,
+          "rendererMB": 850,
+          "mainMB": 188,
+          "heapMB": 45.2
+        },
+        {
+          "s": 120,
+          "totalMB": 1335,
+          "rendererMB": 876,
+          "mainMB": 190,
+          "heapMB": 45.2
+        },
+        {
+          "s": 135,
+          "totalMB": 1347,
+          "rendererMB": 887,
+          "mainMB": 190,
+          "heapMB": 45.2
+        },
+        {
+          "s": 152,
+          "totalMB": 1375,
+          "rendererMB": 912,
+          "mainMB": 195,
+          "heapMB": 45.2
+        },
+        {
+          "s": 165,
+          "totalMB": 1364,
+          "rendererMB": 908,
+          "mainMB": 193,
+          "heapMB": 45.2
+        },
+        {
+          "s": 183,
+          "totalMB": 1368,
+          "rendererMB": 912,
+          "mainMB": 194,
+          "heapMB": 45.2
+        },
+        {
+          "s": 200,
+          "totalMB": 1372,
+          "rendererMB": 916,
+          "mainMB": 195,
+          "heapMB": 45.2
+        },
+        {
+          "s": 218,
+          "totalMB": 1366,
+          "rendererMB": 921,
+          "mainMB": 184,
+          "heapMB": 45.2
+        },
+        {
+          "s": 237,
+          "totalMB": 1388,
+          "rendererMB": 940,
+          "mainMB": 186,
+          "heapMB": 45.2
+        },
+        {
+          "s": 240,
+          "totalMB": 1398,
+          "rendererMB": 942,
+          "mainMB": 187,
+          "heapMB": 45.2
+        }
+      ]
+    }
+  ]
+}

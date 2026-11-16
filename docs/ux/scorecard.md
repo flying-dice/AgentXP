@@ -464,6 +464,35 @@ One line per dimension. The global notes above explain D10, D5 and D11 lines tha
 - D10 8: no timings recorded; no jank seen in the R2 runs (rubric needs measured values for 9 or 10)
 - D11 7: no "Saving a new file" topic; Terminal read-only only in the status bar
 
+## Performance (UX-84)
+
+Measured with `scripts/ux-panel/perf.mjs` (the built app through Playwright `_electron`, one instance at a time, test ids only). Raw numbers: `docs/ux/evidence/perf.json`. Command: `node scripts/ux-panel/perf.mjs --out docs/ux/evidence/perf.json` (builds, then runs under `xvfb-run` when there is no display).
+
+**Machine (NOT the reference machine; read every number with this caveat).** Intel Xeon @ 2.10 GHz (from `/proc/cpuinfo`), 4 vCPUs, 15.7 GB RAM, Linux 6.18 container, headless `xvfb-run` at 1920x1200x24 with software rendering (no GPU), Electron 45.3.2 (Chrome 156). The Playwright driver ran on the same 4 CPUs and competes with the app during the fps runs, so fps is a lower bound. Timings of the input, window and connect steps are far under their targets; the fps verdicts need the reference machine before they are final.
+
+**Method.** Each metric is the median of 5 runs. Load for the fps, streaming and memory rows: 6 windows (the long chat, a second chat, Explorer, Notepad, WordPad, Paint) and one chat of 2,002 transcript entries (1,001 questions and 1,001 answers, seeded into the SQLite database with the app closed, then opened; 19,281 DOM nodes). Input response: keydown `timeStamp` to the frame after the next paint (rAF plus a message task), median of 25 keystrokes per run. Window open: click `timeStamp` on the Start menu item to the first frame with the window visible. Launcher: process start to launcher list or empty state shown and New enabled, warm (the same user-data folder with a migrated database; the first start with an empty database was 755 ms). Desktop connect: the Connect click to the first painted frame of the desktop (taskbar). Scroll and drag fps: rAF frame count over 2.5 s of real mouse wheel or pointer events. Streaming: a `PerformanceObserver` for `longtask` while a 6,000-character markdown reply streams in 12-character chunks every 6 ms (about 1.7 s a turn). Agent start: Enter in the first chat message to the first of "Starting the agent...", the user message or Stop.
+
+| Target (rubric D10) | Measured (median of 5) | Result |
+|---|---|---|
+| Input response under 100 ms, chat composer | 10 ms (worst run p95 19 ms) | PASS |
+| Input response under 100 ms, Notepad | 11 ms | PASS |
+| Input response under 100 ms, composer with 6 windows and 2,000 rows open | 11 ms | PASS |
+| Window open under 200 ms (Start menu click to window visible) | Explorer 16 ms, Notepad 15 ms | PASS |
+| Launcher to interactive under 1.5 s, warm | 711 ms | PASS |
+| Desktop connect under 2 s | 337 ms | PASS |
+| Scrolling at 60 fps, 2,000-row transcript and 6 windows | 55.2 fps (runs 48 to 58; p95 frame 33 ms, worst frame 50 ms) | FAIL (threshold 57 fps) |
+| Dragging at 60 fps, 2,000-row transcript and 6 windows | 44.7 fps (runs 42 to 47; p95 frame 33 ms, worst frame 50 ms). Control with two windows and no long transcript: 60 fps | FAIL |
+| No main-thread task over 50 ms during streaming | none reported in 5 turns (the Long Tasks API reports only tasks over 50 ms) | PASS |
+| Agent start shows progress at once | 12 ms (the "Starting the agent..." line is already on screen when Enter is pressed) | PASS |
+| Memory stable over a long run | 7.4 % growth of total working set over a 240 s soak (1,293 to 1,388 MB, 47 cycles of window open, typing, streaming and scrolling); slope about 34 MB a minute | PASS by the 10 % rule, but see below |
+
+**The soak is 4 minutes, not 30.** A 30-minute run is too long for one measurement pass, so this is a short soak; D10 "memory stable over a 30-minute run" is not proven. The working set was still rising at the end (about 34 MB a minute, mostly the renderer, which also holds the growing chats); at that rate 30 minutes would add roughly 1 GB, so a real 30-minute run is needed before the memory clause counts. Main process memory was flat (about 190 MB). The JS heap figure is not usable: `performance.memory` is quantised in this build.
+
+**Failures and likely cause.**
+- Scroll and drag fps. The control drag (two windows, no long transcript) holds 60 fps, so the drag cost comes from the large window: the transcript renders every row (no virtualisation, about 19,000 DOM nodes), and on the software rasteriser each frame of a moved or scrolled window repaints that big layer. Scroll is borderline (55 fps median, individual runs 48 to 58). No single-task jank: p95 frame 33 ms, worst 50 ms. Two cheap fixes were tried and measured: `content-visibility: auto` on the transcript rows (scroll and drag moved by less than the run-to-run spread, and one full run was worse) and `will-change: transform` on the window frame (worse: 46 fps). Both were reverted, so the product is unchanged. The real fix is a windowed (virtualised) transcript list, which is more than a small change in `src/`; to be decided by the UX lead. Re-measure on the reference machine with a GPU before accepting a failure here.
+
+D10 stays below 10 until the fps rows pass on the reference machine and a 30-minute soak is recorded.
+
 ## Calibration
 
 Not yet done. J06 is the proposed calibration journey; it needs a second blind reviewer. The round 1 expert scores and the round 2 scores above are from different reviewers, so the 74 lower cells are not a regression by themselves (see "Round 1 to round 2 movement").
