@@ -28,6 +28,10 @@ export interface TerminalChange extends TerminalSnapshot {
   sessionKey: string
   terminalId: string
   command: string
+  args: string[]
+  cwd: string | null
+  /** Text appended since the previous change ('' on exit without trailing output). */
+  delta: string
 }
 
 export type TerminalChangeListener = (change: TerminalChange) => void
@@ -41,9 +45,11 @@ class ManagedTerminal {
     readonly sessionKey: string,
     readonly id: string,
     readonly command: string,
+    readonly args: string[],
+    readonly cwd: string | null,
     readonly child: ChildProcess,
     byteLimit: number,
-    private readonly notify: (terminal: ManagedTerminal) => void
+    private readonly notify: (terminal: ManagedTerminal, delta: string) => void
   ) {
     this.output = new BoundedOutput(byteLimit)
     child.stdout?.on('data', (chunk: Buffer) => this.onData(chunk))
@@ -62,15 +68,14 @@ class ManagedTerminal {
   }
 
   private onData(chunk: Buffer): void {
-    this.output.append(chunk)
-    this.notify(this)
+    this.notify(this, this.output.append(chunk))
   }
 
   private finish(resolve: (status: TerminalExitStatus) => void, status: TerminalExitStatus): void {
     if (this.exitStatus) return
-    this.output.finish()
+    const delta = this.output.finish()
     this.exitStatus = status
-    this.notify(this)
+    this.notify(this, delta)
     resolve(status)
   }
 }
@@ -91,7 +96,16 @@ export class TerminalManager {
       ...treeSpawnOptions()
     })
     const limit = params.outputByteLimit ?? DEFAULT_OUTPUT_BYTE_LIMIT
-    const terminal = new ManagedTerminal(sessionKey, id, params.command, child, limit, (t) => this.emit(t))
+    const terminal = new ManagedTerminal(
+      sessionKey,
+      id,
+      params.command,
+      params.args ?? [],
+      params.cwd ?? null,
+      child,
+      limit,
+      (t, delta) => this.emit(t, delta)
+    )
     this.terminals.set(id, terminal)
     return id
   }
@@ -127,11 +141,14 @@ export class TerminalManager {
     return terminal
   }
 
-  private emit(terminal: ManagedTerminal): void {
+  private emit(terminal: ManagedTerminal, delta: string): void {
     this.onChange({
       sessionKey: terminal.sessionKey,
       terminalId: terminal.id,
       command: terminal.command,
+      args: terminal.args,
+      cwd: terminal.cwd,
+      delta,
       ...terminal.snapshot()
     })
   }

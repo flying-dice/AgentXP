@@ -11,14 +11,14 @@ export class BoundedOutput {
 
   constructor(private readonly byteLimit: number) {}
 
-  append(chunk: Buffer): void {
-    this.text += this.decoder.write(chunk)
-    this.enforceLimit()
+  /** Returns the text newly decoded from `chunk` (before any truncation). */
+  append(chunk: Buffer): string {
+    return this.add(this.decoder.write(chunk))
   }
 
-  finish(): void {
-    this.text += this.decoder.end()
-    this.enforceLimit()
+  /** Flushes a trailing partial character; returns the text it produced. */
+  finish(): string {
+    return this.add(this.decoder.end())
   }
 
   get value(): string {
@@ -27,6 +27,12 @@ export class BoundedOutput {
 
   get truncated(): boolean {
     return this.cut
+  }
+
+  private add(decoded: string): string {
+    this.text += decoded
+    this.enforceLimit()
+    return decoded
   }
 
   private enforceLimit(): void {

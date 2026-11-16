@@ -33,6 +33,8 @@ export type A2uiServerMessage =
 
 /** A user interaction sent back to the agent. */
 export interface A2uiClientEvent {
+  /** The session that owns the surface. Optional: when omitted main looks the surface up by id. */
+  sessionId?: number
   surfaceId: string
   sourceComponentId: string
   action: A2uiAction
