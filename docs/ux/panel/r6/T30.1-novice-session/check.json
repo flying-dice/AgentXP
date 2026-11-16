@@ -1,0 +1,30 @@
+{
+  "task": "T30.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "Notepad shows {\"app\":\"notepad\",\"path\":\"E:\\\\README.md\",\"dirty\":false,\"caretLine\":1} (want README.md)",
+  "notes": [],
+  "steps": 3,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:13:49.446Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:13:49.446Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Notepad shows {\"app\":\"notepad\",\"path\":\"E:\\\\README.md\",\"dirty\":false,\"caretLine\":1} (want README.md)",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

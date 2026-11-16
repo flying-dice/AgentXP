@@ -1,0 +1,30 @@
+{
+  "task": "T30.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the About dialog of Notepad is open; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 8,
+  "answer": "Notepad, part of Agent7 version 0.1.0",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:14:11.196Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:14:11.196Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the About dialog of Notepad is open; answer ok",
+      "steps": 2,
+      "answer": "Notepad, part of Agent7 version 0.1.0",
+      "noAnswer": false
+    }
+  ]
+}

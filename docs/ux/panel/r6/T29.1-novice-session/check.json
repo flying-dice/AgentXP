@@ -1,0 +1,30 @@
+{
+  "task": "T29.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "2 tab(s) (want 2); the first tab is the active one; the first tab still shows the test page (http://127.0.0.1:37177/); the second tab has the address http://127.0.0.1:37177/second (http://127.0.0.1:37177/second); the second page loaded (tab title \"Second page\")",
+  "notes": [],
+  "steps": 5,
+  "budget": 20,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:13:14.956Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:13:14.956Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "2 tab(s) (want 2); the first tab is the active one; the first tab still shows the test page (http://127.0.0.1:37177/); the second tab has the address http://127.0.0.1:37177/second (http://127.0.0.1:37177/second); the second page loaded (tab title \"Second page\")",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}
