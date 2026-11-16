@@ -4,6 +4,7 @@ import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
 import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
 import type { GitService } from '../application/git/GitService'
+import type { ReviewService } from '../application/review/ReviewService'
 import type { DriveService } from '../application/vfs/DriveService'
 import type { LauncherService } from '../application/launcher/LauncherService'
 import type { RecycleService } from '../application/RecycleService'
@@ -33,6 +34,7 @@ export interface ApiServices {
   desktops: DesktopService
   vfs: VirtualFileSystem
   git: GitService
+  reviews: ReviewService
   drives: DriveService
   launcher: LauncherService
   processes: ProcessService
@@ -80,6 +82,7 @@ export function createApi(s: ApiServices): InvokeApi {
       setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
       newChat: (desktopId, agentId, cwd) => s.desktops.newChat(desktopId, agentId, cwd),
+      openReview: (desktopId, root, baseRef, agentId) => s.desktops.openReview(desktopId, root, baseRef, agentId),
       policy: async () => s.desktops.policy(),
       setPolicy: async (policy) => s.desktops.setPolicy(policy),
       attachBrowser: perWindow('desktop.attachBrowser'),
@@ -99,6 +102,15 @@ export function createApi(s: ApiServices): InvokeApi {
       lineChanges: (desktopId, path) => s.git.lineChanges(desktopId, path),
       headText: (desktopId, path) => s.git.headText(desktopId, path),
       revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex)
+    },
+    review: {
+      changes: (desktopId, root, baseRef) => s.reviews.changes(desktopId, root, baseRef),
+      file: (desktopId, root, baseRef, path) => s.reviews.file(desktopId, root, baseRef, path),
+      state: async (sessionId) => s.reviews.state(sessionId),
+      addComment: async (sessionId, input) => s.reviews.addComment(sessionId, input, 'user'),
+      setState: async (commentId, state) => s.reviews.setState(commentId, state),
+      remove: async (commentId) => s.reviews.remove(commentId),
+      markSent: async (sessionId, ids) => s.reviews.markSent(sessionId, ids)
     },
     drives: {
       list: async (desktopId) => s.drives.list(desktopId),

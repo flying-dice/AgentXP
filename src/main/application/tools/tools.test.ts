@@ -22,6 +22,7 @@ import { createEventsTools } from './eventsTools'
 import { createNotesTools } from './notesTools'
 import { createPaintTools } from './paintTools'
 import { createRecycleTools } from './recycleTools'
+import { createReviewTools } from './reviewTools'
 import { createSnipTools } from './snipTools'
 import { createWordpadTools } from './wordpadTools'
 import { ProtocolEventLog } from '../events/ProtocolEventLog'
@@ -197,7 +198,8 @@ beforeEach(async () => {
           }
         }
       }),
-      ...createRecycleTools({ recycle: recycle as never })
+      ...createRecycleTools({ recycle: recycle as never }),
+      ...createReviewTools({ reviews: {} as never }) // exercised in reviewTools.test.ts
     }
   })
 })
@@ -218,7 +220,8 @@ describe('tool catalog', () => {
     expect(byGroup('events')).toEqual(['events_query'])
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
-    expect(TOOL_SPECS).toHaveLength(35)
+    expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
+    expect(TOOL_SPECS).toHaveLength(39)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {

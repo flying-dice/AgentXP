@@ -162,7 +162,7 @@ export class LauncherService {
       connected,
       runState: deriveRunState(sessions.map((s) => s.status), pendingApprovals),
       pendingApprovals,
-      chatCount: sessions.length,
+      chatCount: sessions.filter((s) => s.role === 'chat').length,
       drives: this.deps.drives.list(d.id),
       thumbnailUrl: this.deps.thumbnails.urlOf(d.id),
       lastUsedAt: d.lastUsedAt,

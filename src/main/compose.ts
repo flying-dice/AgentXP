@@ -18,6 +18,9 @@ import { ToolPaths } from './application/tools/ToolPaths'
 import { DriveService } from './application/vfs/DriveService'
 import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
 import { GitService } from './application/git/GitService'
+import { ReviewService } from './application/review/ReviewService'
+import { createReviewTools } from './application/tools/reviewTools'
+import { SqliteReviewRepository } from './infrastructure/db/sqlite-review-repository'
 import type { GitCli } from './application/git/ports'
 import { ExecGitCli } from './infrastructure/git/ExecGitCli'
 import { ToolGateway } from './application/desktop/ToolGateway'
@@ -174,7 +177,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     windows: new SqliteAppWindowRepository(db),
     toolPolicies: new SqliteToolPolicyRepository(db),
     notes: new SqliteStickyNoteRepository(db),
-    recycled: new SqliteRecycledChangeRepository(db)
+    recycled: new SqliteRecycledChangeRepository(db),
+    reviews: new SqliteReviewRepository(db)
   }
   const fileSystem = new NodeWorkspaceFileSystem()
   const desktopsDir = options.desktopsDir ?? mkdtempSync(join(tmpdir(), 'agent7-desktops-'))
@@ -182,9 +186,10 @@ export function composeApp(options: ComposeOptions): AppServices {
   const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const drives = new DriveService({ drives: repos.drives, folders: repos.folders, desktops: repos.desktops, pickFolder: () => folderService.pick() })
   const vfs = new VirtualFileSystem({ host: hostFiles, folders: repos.folders, drives, desktopsDir })
+  const gitCli = options.git ?? new ExecGitCli()
   const git = new GitService({
     vfs,
-    cli: options.git ?? new ExecGitCli(),
+    cli: gitCli,
     events: publisher,
     codeDesktops: () => windowHost.connectedIds().filter((id) => desktops.windowsOf(id, 'code').length > 0),
     pollMs: options.gitPollMs
@@ -295,6 +300,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     else launcher.publishChanged()
   })
   const gateway = new ToolGateway({ desktops, broker, events: eventBus })
+  const reviews = new ReviewService({ reviews: repos.reviews, sessions: repos.sessions, vfs, cli: gitCli, events: publisher, states: desktops })
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
   a2ui.attachWindows({
     open: (sessionId, surfaceId, by, size) => desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null,
@@ -335,7 +341,8 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createNotesTools({ notes }),
       ...createEventsTools({ log: eventLog }),
       ...createSnipTools({ desktops, screen }),
-      ...createRecycleTools({ recycle })
+      ...createRecycleTools({ recycle }),
+      ...createReviewTools({ reviews })
     },
     log: {
       called: (context, tool, args) => eventLog.recordToolCall(context, tool, args),
@@ -370,6 +377,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     desktops,
     vfs,
     git,
+    reviews,
     drives,
     launcher,
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),

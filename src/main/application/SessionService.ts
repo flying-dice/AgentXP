@@ -1,8 +1,8 @@
 import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { PromptInput } from '@shared/ipc'
-import { AGENT_HOME, normaliseVPath, type VPath } from '@shared/vfs'
-import type { ContentBlockDto, Id, SessionDto } from '@shared/models'
+import { AGENT_HOME, normaliseVPath, vpathName, type VPath } from '@shared/vfs'
+import type { ContentBlockDto, Id, SessionDto, SessionRole } from '@shared/models'
 import type { A2uiSurfaceRepository } from '../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
 import type { PermissionRepository } from '../domain/repositories/permission-repository'
@@ -60,15 +60,19 @@ const toBlocks = ({ text, attachments }: PromptInput): ContentBlockDto[] => [
 export class SessionService {
   constructor(private readonly deps: SessionServiceDeps) {}
 
-  /** Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. */
-  async create(desktopId: Id, agentId?: Id, cwd: VPath = AGENT_HOME): Promise<SessionDto> {
+  /**
+   * Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. `role` is
+   * `review` for the reviewer of a Code Review window and `aside` for an embedded chat panel (default `chat`).
+   */
+  async create(desktopId: Id, agentId?: Id, cwd: VPath = AGENT_HOME, role: SessionRole = 'chat'): Promise<SessionDto> {
     const { sessions, runtime, events } = this.deps
     const agent = required(agentId === undefined ? this.deps.agents.getDefault() : this.deps.agents.get(agentId), 'Agent')
     const workingDirectory = normaliseVPath(cwd)
     if (!workingDirectory) throw new AppError(`Not a valid working directory: ${cwd}`)
     const folder = await this.deps.vfs.stat(desktopId, workingDirectory)
     if (folder?.kind !== 'directory') throw new AppError(`The working directory ${workingDirectory} does not exist.`)
-    const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title: DEFAULT_SESSION_TITLE })
+    const title = role === 'review' ? `Review of ${vpathName(workingDirectory)}` : DEFAULT_SESSION_TITLE
+    const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title, role })
     try {
       await runtime.ensureConnected(session.id)
     } catch (error) {

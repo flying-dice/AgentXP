@@ -16,7 +16,8 @@ import {
   type WindowState
 } from '@shared/desktop'
 import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, initialView, placeWindow, windowTitle } from '@shared/desktop-views'
-import type { Id, SessionDto } from '@shared/models'
+import type { Id, SessionDto, SessionRole } from '@shared/models'
+import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
 import type { A2uiSurfaceRepository } from '../../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
@@ -31,7 +32,7 @@ import type { DesktopStates } from './ports'
 
 /** What `DesktopService` needs from the chat lifecycle (satisfied by `SessionService`). */
 export interface ChatLifecycle {
-  create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined): Promise<SessionDto>
+  create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined, role?: SessionRole): Promise<SessionDto>
   cancel(sessionId: Id): Promise<void>
   remove(sessionId: Id): Promise<void>
 }
@@ -175,6 +176,14 @@ export class DesktopService implements DesktopStates {
     this.attention.get(record.desktopId)?.delete(windowId)
     if (this.focus.get(record.desktopId) === windowId) this.focus.delete(record.desktopId)
     this.emit(record.desktopId)
+    if (record.sessionId !== null) this.removeOwnedSession(record.sessionId)
+  }
+
+  /** A review or aside session lives and dies with its window (its comments go with it); a chat outlives its window. */
+  private removeOwnedSession(sessionId: Id): void {
+    const session = this.deps.sessions.get(sessionId)
+    if (!session || session.role === 'chat') return
+    void this.deps.chats.remove(sessionId).catch(() => {})
   }
 
   // ---- surface windows ---------------------------------------------------------------------------
@@ -270,6 +279,22 @@ export class DesktopService implements DesktopStates {
     return this.openWindow({ desktopId, app: 'chat', sessionId: session.id })
   }
 
+  /**
+   * Starts a code review of `root` against `baseRef`: the review session first (its agent works in `root`), then the
+   * Code Review window that owns it. Closing the window deletes the session and its comments.
+   */
+  async openReview(desktopId: Id, root: VPath, baseRef: string = 'HEAD', agentId?: Id): Promise<AppWindowState> {
+    const desktop = this.record(desktopId)
+    if (!isSafeRef(baseRef)) throw new AppError(`Not a valid git ref: ${baseRef}`)
+    const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, root, 'review')
+    try {
+      return this.openWindow({ desktopId, app: 'code-review', sessionId: session.id, path: root, baseRef })
+    } catch (error) {
+      await this.deps.chats.remove(session.id).catch(() => {})
+      throw error
+    }
+  }
+
   /** A chat was renamed: its window title follows. */
   onSessionChanged(session: SessionDto): void {
     if (session.desktopId != null) this.emit(session.desktopId)
@@ -341,7 +366,13 @@ export class DesktopService implements DesktopStates {
     }
     const live = this.views.get(record.id)
     if (live) return live
-    const view = initialView({ app: record.app, path: record.path || undefined, url: record.url ?? undefined, sessionId: record.sessionId ?? undefined })
+    const view = initialView({
+      app: record.app,
+      path: record.path || undefined,
+      url: record.url ?? undefined,
+      sessionId: record.sessionId ?? undefined,
+      baseRef: record.baseRef ?? undefined
+    })
     this.views.set(record.id, view)
     return view
   }
@@ -394,17 +425,29 @@ export class DesktopService implements DesktopStates {
       if (input.sessionId === undefined || input.surfaceId === undefined) throw new AppError('A surface window needs a session and a surface')
       return this.deps.windows.findSurfaceWindow(input.sessionId, input.surfaceId)
     }
+    if (input.app === 'code-review') {
+      if (input.sessionId === undefined) throw new AppError('A Code Review window needs its review session. Start a review with desktop.openReview.')
+      return this.deps.windows.findChatWindow(input.sessionId)
+    }
     if (!SINGLETON_APPS.includes(input.app)) return null
     return this.deps.windows.list(input.desktopId).find((w) => w.app === input.app) ?? null
   }
 
-  private subtypeOf(input: OpenWindowInput): { sessionId?: Id; path?: string | null; url?: string; surface?: { sessionId: Id; surfaceId: string } } {
+  private subtypeOf(input: OpenWindowInput): { sessionId?: Id; path?: string | null; url?: string; baseRef?: string; surface?: { sessionId: Id; surfaceId: string } } {
     if (input.app === 'chat') {
       const session = required(this.deps.sessions.get(input.sessionId ?? 0), 'Session')
       if (session.desktopId !== input.desktopId) throw new AppError('The chat belongs to another desktop')
       return { sessionId: session.id }
     }
     if (PATH_APPS.includes(input.app)) return { path: input.path ?? null }
+    if (input.app === 'code-review') {
+      const session = required(this.deps.sessions.get(input.sessionId ?? 0), 'Session')
+      if (session.desktopId !== input.desktopId) throw new AppError('The review belongs to another desktop')
+      if (session.role !== 'review') throw new AppError('A Code Review window needs a review session')
+      const baseRef = input.baseRef ?? 'HEAD'
+      if (!isSafeRef(baseRef)) throw new AppError(`Not a valid git ref: ${baseRef}`)
+      return { sessionId: session.id, path: input.path ?? session.cwd, baseRef }
+    }
     if (input.app === 'surface') {
       const { sessionId, surfaceId } = input
       const session = required(this.deps.sessions.get(sessionId ?? 0), 'Session')
@@ -435,6 +478,9 @@ export class DesktopService implements DesktopStates {
         return windows.setPath(record.id, view.activePath)
       case 'browser':
         return windows.setUrl(record.id, view.url)
+      case 'code-review':
+        windows.setPath(record.id, view.root)
+        return windows.setBaseRef(record.id, view.baseRef)
       default:
         return
     }

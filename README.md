@@ -462,6 +462,7 @@ The desktop has these apps:
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
 - **Task Manager** – Lists the chats, the agent processes, the terminals, and the context use. **End process** stops an agent process.
 - **Control Centre** – Sets the agents, the permissions, and the appearance of the desktop.
+- **Help and Support** – Shows the manual of each app. Press F1 to open the manual of the window that has focus. The manuals are in `docs/help`.
 
 ### The Event Viewer
 

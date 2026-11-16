@@ -86,6 +86,11 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   `<app>-app` (`notepad-app`, `code-app`, ...).
 - New UI gets test ids as part of the change, with the same naming; do not rename existing ones lightly (specs
   depend on them).
+- **Every new `data-testid` must be documented in `docs/help`**: add a row to the Controls reference table of the
+  manual of its app (`docs/help/<appKind>.md`, `desktop.md` or `launcher.md`). `npm run help:coverage`
+  (`scripts/check-help-coverage.mjs`) fails when a static id of `src/renderer/src/lib/{apps,desktop,launcher,pages}`
+  is in no manual. A template id is written with its static prefix and `*` (`chat-message-*`). Kit internals
+  that need no manual go on the ignore list of the script, with a reason.
 
 **Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry
