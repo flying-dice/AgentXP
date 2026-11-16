@@ -45,7 +45,7 @@ The bar below the menu has the **Model** list and the **Tasks and changes** butt
 
 ### The Transcript
 
-The transcript is the large area in the middle. It shows your messages, the messages of the agent, and the reasoning of the agent. Each tool call has a card. A card shows the state of the call: running, waiting, done, failed, or cancelled. If a turn ends in an unusual way, a notice tells why. An error appears as a red row.
+The transcript is the large area in the middle. It shows your messages and the answer of the agent. Everything the agent does on the way, such as its messages between tool calls, its reasoning, and its tool calls, is folded into one **Thinking** line. Click the line to open it, or choose **View -> Show thinking and tool details** to open all of them. A permission request opens its line by itself. Each tool call has a card. A card shows the state of the call: running, waiting, done, failed, or cancelled. If a turn ends in an unusual way, a notice tells why. An error appears as a red row.
 
 A drawn form from the agent (an A2UI surface) appears as a row with **Open**, **Close**, **Delete**, and **Move to**. See **[Agent window](surface.md)**.
 
@@ -88,6 +88,7 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
+| Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
 | Close | Closes the window. | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
@@ -99,6 +100,8 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Your message | One message from you. | `chat-message-user` |
 | Agent message | One message from the agent. | `chat-message-*` |
 | Reasoning | The reasoning of the agent. | `chat-reasoning` |
+| Thinking line | One folded line for everything the agent did on the way to its answer, for example "Thought and used 4 tools". While the agent works it reads "Working..." and the tool that runs now. | `chat-activity-group` |
+| Thinking line (button) | Opens or closes the line. Inside are the messages, reasoning, and tool cards of the turn. | `chat-activity-toggle` |
 | Tool call card | One tool call. The attribute `data-status` gives the state. | `tool-call-card` |
 | Show, Hide | Opens or closes the details of a card. | `tool-call-toggle` |
 | Stop notice | Tells why a turn ended. | `chat-stop-notice` |

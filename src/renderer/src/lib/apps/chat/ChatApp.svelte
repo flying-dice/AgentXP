@@ -5,6 +5,7 @@
   import { connectionLabel, contextPercent } from '../../app/sessionStatus'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
+  import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import TasksPane from '../../app/shell/TasksPane.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
@@ -190,7 +191,7 @@
           { id: 'chat-code', testid: 'chat-menu-code', label: 'Open in &Code', action: () => void host.openApp({ app: 'code', path: host.projectRootOf(session?.cwd) }) }
         ]
       },
-      { label: '&View', items: [{ id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
+      { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
       help.menu()
     ])
   )

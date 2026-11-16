@@ -87,6 +87,7 @@ The status bar shows the folder, the number of files, the number of open comment
 | Compare against | The branch, tag or commit to compare with. You can type in it. | `new-review-ref` |
 | Review | Opens the Code Review window for the chosen project and ref. | `new-review-start` |
 | Cancel | Closes the box without a review. | `new-review-cancel` |
+| Show thinking and tool details (menu) | Opens every Thinking line of the Reviewer pane. The same setting as in Chat. | `review-menu-details` |
 | Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
 | Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |

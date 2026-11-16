@@ -1,6 +1,6 @@
 import type { Message } from '@ag-ui/core'
 import { describe, expect, it } from 'vitest'
-import { buildTranscriptRows, userParts } from './transcriptRows'
+import { activitySummary, buildTranscriptRows, groupTranscript, userParts, type TranscriptRow } from './transcriptRows'
 
 const none = new Map()
 
@@ -72,5 +72,44 @@ describe('userParts', () => {
       { type: 'document', source: { type: 'url', value: 'file:///home/me/My%20Doc.pdf' } }
     ])
     expect(parts).toEqual({ text: 'see', attachments: ['My Doc.pdf'] })
+  })
+})
+
+const user = (id: string): TranscriptRow => ({ kind: 'user', id, text: id, attachments: [] })
+const agent = (id: string): TranscriptRow => ({ kind: 'agent', id, text: id })
+const tool = (id: string): TranscriptRow => ({ kind: 'tool', id, toolCallId: id, name: 'Read', rawInput: '{}', result: null })
+const think = (id: string): TranscriptRow => ({ kind: 'reasoning', id, text: id })
+const shape = (rows: TranscriptRow[]): string[] => groupTranscript(rows).map((i) => (i.kind === 'row' ? i.row.id : `[${i.rows.map((r) => r.id).join(' ')}]`))
+
+describe('groupTranscript', () => {
+  it('folds narration, reasoning and tools into one group and keeps the final answer visible', () => {
+    expect(shape([user('u'), agent('n1'), tool('t1'), think('r1'), agent('n2'), tool('t2'), tool('t3'), agent('answer')])).toEqual(['u', '[n1 t1 r1 n2 t2 t3]', 'answer'])
+  })
+
+  it('leaves a turn without tools or reasoning untouched', () => {
+    expect(shape([user('u'), agent('a'), agent('b')])).toEqual(['u', 'a', 'b'])
+  })
+
+  it('makes one group per turn', () => {
+    expect(shape([user('u1'), tool('t1'), agent('a1'), user('u2'), tool('t2'), agent('a2')])).toEqual(['u1', '[t1]', 'a1', 'u2', '[t2]', 'a2'])
+  })
+
+  it('keeps a running turn whose last row is a tool entirely folded, and shows trailing text as the answer', () => {
+    expect(shape([user('u'), agent('n'), tool('t1')])).toEqual(['u', '[n t1]'])
+    expect(shape([user('u'), tool('t1'), agent('maybe the answer')])).toEqual(['u', '[t1]', 'maybe the answer'])
+  })
+
+  it('ends the run at surface and stop rows', () => {
+    const surface: TranscriptRow = { kind: 'surface', id: 's', surfaceId: 'x' }
+    expect(shape([user('u'), tool('t1'), surface, tool('t2'), agent('a')])).toEqual(['u', '[t1]', 's', '[t2]', 'a'])
+  })
+})
+
+describe('activitySummary', () => {
+  it('names the thinking and the tool count', () => {
+    expect(activitySummary({ tools: 4, failed: 0, thought: true })).toBe('Thought and used 4 tools')
+    expect(activitySummary({ tools: 1, failed: 0, thought: false })).toBe('Used 1 tool')
+    expect(activitySummary({ tools: 0, failed: 0, thought: true })).toBe('Thought')
+    expect(activitySummary({ tools: 3, failed: 1, thought: false })).toBe('Used 3 tools, 1 failed')
   })
 })

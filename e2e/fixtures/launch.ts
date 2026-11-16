@@ -45,6 +45,8 @@ export async function launchAgent7(options: LaunchOptions = {}): Promise<Agent7I
     env: { ...process.env, AGENT7_USER_DATA: userData } as Record<string, string>
   })
   app.context().setDefaultTimeout(WAIT_MS)
+  // The specs look at tool cards and narration, which the app folds by default (View > Show thinking and tool details).
+  await app.context().addInitScript(() => window.localStorage.setItem('agent7.transcript.detail', 'all'))
 
   const ready = async (page: Page): Promise<Page> => {
     await page.waitForFunction(() => Boolean((window as unknown as { agent7?: unknown }).agent7))
