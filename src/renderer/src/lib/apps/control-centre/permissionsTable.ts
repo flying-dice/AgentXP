@@ -24,6 +24,7 @@ const META: { key: PolicyKey; label: string; description: string }[] = [
   { key: 'events', label: 'Events', description: 'Search the Event Viewer log of protocol messages' },
   { key: 'snip', label: 'Screen capture', description: 'Take screenshots of the desktop with the Snipping Tool' },
   { key: 'recycle', label: 'Recycle Bin', description: 'List and restore deleted items' },
+  { key: 'review', label: 'Code review', description: 'Comment on changes and submit a verdict in a Code Review window' },
   { key: 'openApps', label: 'Agent may open apps', description: 'Let the agent open and close apps on this desktop' }
 ]
 

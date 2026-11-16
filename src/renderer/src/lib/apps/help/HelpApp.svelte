@@ -12,12 +12,8 @@
   import { renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
 
-  interface Props extends AppProps<'help'> {
-    /** The manuals; the manuals of docs/help by default (stories and tests pass their own). */
-    topics?: HelpTopic[]
-  }
-
-  let { window: win, host, topics = helpTopics }: Props = $props()
+  let { window: win, host }: AppProps<'help'> = $props()
+  const topics: HelpTopic[] = helpTopics
 
   // svelte-ignore state_referenced_locally
   let history = $state.raw(startHistory(win.view.topic || HOME_TOPIC))

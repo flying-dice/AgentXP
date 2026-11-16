@@ -5,6 +5,7 @@
  */
 import { z } from 'zod'
 import { AGENT_OPENABLE_APPS, type ToolGroup } from '@shared/desktop'
+import { REVIEW_SEVERITIES, REVIEW_VERDICTS } from '@shared/review'
 import type { ToolContext, ToolResult } from './types'
 
 const app = z.enum(AGENT_OPENABLE_APPS)
@@ -21,7 +22,11 @@ export const DESKTOP_INSTRUCTIONS =
   'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more. ' +
   'UI you draw with a2ui_render appears where you choose with target: inline in the chat (short conversational forms), in a sidebar beside the chat ' +
   '(a companion panel), or in its own window (an app-like UI the user keeps open). Sidebar tabs and windows can be closed and reopened by the user, ' +
-  'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window.'
+  'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window. ' +
+  'If you are asked to do a code review, you are the reviewer of a Code Review window and act as a merge-request reviewer: ' +
+  'review_list_changes lists the changed files, review_read_diff shows one file with line numbers, review_add_comment leaves an inline comment ' +
+  '(a specific line, a severity of blocker, major, minor or nit, and what is wrong and why), and review_submit ends the review with a verdict and a summary. ' +
+  'Comment on real problems (bugs, missing tests, unclear code), not on style you cannot justify, and do not edit files while reviewing; the user passes your comments to a chat to fix.'
 
 const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
 
@@ -243,6 +248,35 @@ export const TOOL_DEFS = {
     group: 'recycle',
     description: 'Restore a reverted change: its file content is written back and recorded as a new change.',
     input: z.object({ id: z.number().int() })
+  },
+  review_list_changes: {
+    group: 'review',
+    description: 'List the changed files of the review (status, added and removed lines, open comments) against the review\'s base ref. Only works in the review session of a Code Review window.',
+    input: z.object({})
+  },
+  review_read_diff: {
+    group: 'review',
+    description:
+      'Read one changed file as a diff with line numbers: "+ 12 | text" is an added line (new line 12), "- 8 | text" a removed line (old line 8), "  12 | text" context. Comment on new lines with side "new", on removed lines with side "old".',
+    input: z.object({ path: z.string().min(1).describe('Path from review_list_changes (relative to the review folder)') })
+  },
+  review_add_comment: {
+    group: 'review',
+    description: 'Leave an inline review comment on a line (or line range) of a changed file, like a merge-request comment. Returns the comment id.',
+    input: z.object({
+      path: z.string().min(1).describe('Path from review_list_changes'),
+      line: z.number().int().min(1).describe('First line, numbered as in review_read_diff'),
+      endLine: z.number().int().min(1).optional().describe('Last line of a range; default: the same line'),
+      side: z.enum(['old', 'new']).optional().describe('"new" (default) for added and context lines, "old" for removed lines'),
+      severity: z.enum(REVIEW_SEVERITIES).optional().describe('blocker (must fix), major, minor (default) or nit'),
+      body: z.string().min(1).describe('What is wrong and why, and how to fix it'),
+      replyTo: z.number().int().optional().describe('The id of a comment to answer')
+    })
+  },
+  review_submit: {
+    group: 'review',
+    description: 'Finish the review with a verdict and a short summary. The user sees it as the banner of the Code Review window. Submitting again replaces the verdict.',
+    input: z.object({ verdict: z.enum(REVIEW_VERDICTS), body: z.string().describe('A short summary of the review') })
   }
 } as const satisfies Record<string, ToolDefinition>
 

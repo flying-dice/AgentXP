@@ -21,7 +21,8 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   notes: 'Sticky Notes tools',
   events: 'Event Viewer tools',
   snip: 'Screen capture',
-  recycle: 'Recycle Bin tools'
+  recycle: 'Recycle Bin tools',
+  review: 'Code review tools'
 }
 
 export const groupLabel = (group: GatedToolGroup): string => GROUP_LABELS[group]

@@ -59,7 +59,8 @@ const GROUP_ACTION: Record<Exclude<ToolGroup, 'shell'>, string> = {
   notes: 'Using Sticky Notes',
   events: 'Reading the Event Viewer',
   snip: 'Capturing the screen',
-  recycle: 'Restoring from the Recycle Bin'
+  recycle: 'Restoring from the Recycle Bin',
+  review: 'Reviewing code'
 }
 
 export const approvalGroup = (kind: ToolKind | null): Exclude<ToolGroup, 'shell'> | null => (kind ? (KIND_GROUP[kind] ?? null) : null)
