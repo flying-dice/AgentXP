@@ -56,6 +56,25 @@ The status bar shows the number of items.
 | Reverted changes | The list of items. | `recycle-bin-list` |
 | Item | One reverted change. | `recycle-bin-item` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `recycle-bin-menu-help` |
+| Menu: about | Opens the About Recycle Bin box. | `recycle-bin-menu-about` |
+| Dialog: about | The About Recycle Bin box. | `recycle-bin-about` |
+| Dialog: about ok | Closes the About box. | `recycle-bin-about-ok` |
+| Menu: restore | File menu: restores the selected item. | `recycle-bin-menu-restore` |
+| Menu: restore all | File menu: restores all items. | `recycle-bin-menu-restore-all` |
+| Menu: empty | File menu: empties the Recycle Bin. | `recycle-bin-menu-empty` |
+| Menu: close | Closes the window. Alt+F4. | `recycle-bin-menu-close` |
+| Menu: refresh | View menu: reads the list again. F5. | `recycle-bin-menu-refresh` |
+| Context menu: restore | Restores the item. | `recycle-bin-ctx-restore` |
+| Context menu: restore all | Restores all items. | `recycle-bin-ctx-restore-all` |
+| Context menu: empty | Empties the Recycle Bin. | `recycle-bin-ctx-empty` |
+
 ### Keys
 
 | Name | What it does | data-testid |

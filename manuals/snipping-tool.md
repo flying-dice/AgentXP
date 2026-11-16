@@ -62,6 +62,27 @@ The status bar tells what to do and what happened, for example **Captured** with
 | Copy | Copies the snip. | none |
 | Delay | Selects the delay before the capture. | none |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `snipping-tool-menu-help` |
+| Menu: about | Opens the About Snipping Tool box. | `snipping-tool-menu-about` |
+| Dialog: about | The About Snipping Tool box. | `snipping-tool-about` |
+| Dialog: about ok | Closes the About box. | `snipping-tool-about-ok` |
+| Menu: new | File menu: takes a rectangular snip. Ctrl+N. | `snipping-tool-menu-new` |
+| Menu: window | File menu: takes a window snip. | `snipping-tool-menu-window` |
+| Menu: full | File menu: takes a full-screen snip. | `snipping-tool-menu-full` |
+| Menu: close | Closes the window. Alt+F4. | `snipping-tool-menu-close` |
+| Menu: copy | Edit menu: copies the snip. | `snipping-tool-menu-copy` |
+| Menu: cancel | Tools menu: cancels the snip. | `snipping-tool-menu-cancel` |
+| Menu: options | Tools menu: opens the options. | `snipping-tool-menu-options` |
+| Context menu: copy | Copies the snip. | `snipping-tool-ctx-copy` |
+| Context menu: new | Takes a new snip. | `snipping-tool-ctx-new` |
+| Context menu: options | Opens the options. | `snipping-tool-ctx-options` |
+
 ### Keys
 
 | Name | What it does | data-testid |

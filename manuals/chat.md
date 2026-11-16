@@ -134,6 +134,22 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Don't ask again for this kind of action | Saves your answer. | `permission-remember` |
 | Project tree | The tree of files, shown in Code. | `file-tree` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `chat-menu-help` |
+| Menu: about | Opens the About Chat box. | `chat-menu-about` |
+| Dialog: about | The About Chat box. | `chat-about` |
+| Dialog: about ok | Closes the About box. | `chat-about-ok` |
+| Menu: copy | Edit menu: copies the selected text. | `chat-menu-copy` |
+| Menu: select all | Edit menu: selects all text. | `chat-menu-select-all` |
+| Context menu: copy message | Copies the text of the message under the pointer. | `chat-ctx-copy-message` |
+| Context menu: copy code | Copies the first code block of that message. Dimmed when there is none. | `chat-ctx-copy-code` |
+| Context menu: quote | Puts the message in the message box as a quote. | `chat-ctx-quote` |
+
 ### Keys
 
 | Name | What it does | data-testid |

@@ -60,6 +60,27 @@ The window refreshes the lists every two seconds. The status bar shows the numbe
 | End Task | Stops the turn of the selected chat. | `agent-manager-end-task` |
 | End process | Stops the selected agent program after a question. | `agent-manager-end-process` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `agent-manager-menu-help` |
+| Menu: about | Opens the About Task Manager box. | `agent-manager-menu-about` |
+| Dialog: about | The About Task Manager box. | `agent-manager-about` |
+| Dialog: about ok | Closes the About box. | `agent-manager-about-ok` |
+| Menu: switch | File menu: opens the selected chat. | `agent-manager-menu-switch` |
+| Menu: close | Closes the window. Alt+F4. | `agent-manager-menu-close` |
+| Menu: refresh | View menu: refreshes the lists. F5. | `agent-manager-menu-refresh` |
+| Menu: tab * | View menu: shows a tab (Chats, Processes, Terminals, Performance). | `agent-manager-menu-tab-*` |
+| Menu: end task | Options menu: ends the task of the selected chat. | `agent-manager-menu-end-task` |
+| Menu: end process | Options menu: ends the selected agent process. | `agent-manager-menu-end-process` |
+| Context menu: switch | Opens the chat. | `agent-manager-ctx-switch` |
+| Context menu: end task | Ends the task of the chat. | `agent-manager-ctx-end-task` |
+| Context menu: end process | Ends the agent process. | `agent-manager-ctx-end-process` |
+| Context menu: refresh | Refreshes the lists. | `agent-manager-ctx-refresh` |
+
 ### Keys
 
 | Name | What it does | data-testid |

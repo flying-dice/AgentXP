@@ -5,6 +5,13 @@
   import type { AppProps } from '../types'
   import Button from '../../kit/atoms/Button.svelte'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import DataGridView from '../../kit/organisms/DataGridView.svelte'
   import type { CellRef, GridColumn } from '../../kit/organisms/DataGridView'
@@ -16,7 +23,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { chatRows, contextState, formatTokens, processRows, terminalRows } from './processRows'
 
-  let { host }: AppProps<'agent-manager'> = $props()
+  let { window: win, host }: AppProps<'agent-manager'> = $props()
 
   /** How often the lists refresh while the window is open. */
   const REFRESH_MS = 2000
@@ -113,12 +120,71 @@
     await refresh()
   }
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'agent-manager')
+  const ctx = new ContextMenu()
+
+  const switchTo = (chat: { id: string }): void => void host.openApp({ app: 'chat', sessionId: Number(chat.id) })
+
+  /** The actions that exist as buttons: Switch to and End Task on a chat, End process on an agent process, Refresh anywhere. */
+  function contextItems(): MenuItemDef[] {
+    const refreshItem: MenuItemDef = { id: 'agent-manager-ctx-refresh', testid: 'agent-manager-ctx-refresh', label: '&Refresh now', icon: 'refresh', shortcut: 'F5', action: () => void refresh() }
+    if (tab === 'chats' && selectedChatRow) {
+      const chat = selectedChatRow
+      return [
+        { id: 'agent-manager-ctx-switch', testid: 'agent-manager-ctx-switch', label: '&Switch to', icon: 'session', action: () => switchTo(chat) },
+        { id: 'agent-manager-ctx-end-task', testid: 'agent-manager-ctx-end-task', label: '&End Task', icon: 'close', disabled: !chat.busy, action: () => void endTask() },
+        { separator: true },
+        refreshItem
+      ]
+    }
+    if (tab === 'processes' && selectedProcess) return [{ id: 'agent-manager-ctx-end-process', testid: 'agent-manager-ctx-end-process', label: '&End process', icon: 'close', action: () => void endProcess() }, { separator: true }, refreshItem]
+    return [refreshItem]
+  }
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'switch', testid: 'agent-manager-menu-switch', label: '&Switch to chat', disabled: !selectedChatRow, action: () => selectedChatRow && switchTo(selectedChatRow) },
+          ...closeItems('agent-manager', () => void host.closeWindow(win.id)).map((i) => (i.separator ? i : { ...i, label: 'E&xit Task Manager' }))
+        ]
+      },
+      {
+        label: '&View',
+        items: [
+          { id: 'refresh', testid: 'agent-manager-menu-refresh', label: '&Refresh Now', shortcut: 'F5', action: () => void refresh() },
+          { separator: true },
+          ...tabs.map((t) => ({ id: `tab-${t.id}`, testid: `agent-manager-menu-tab-${t.id}`, label: t.title, radio: true, checked: tab === t.id, action: () => (tab = t.id) }))
+        ]
+      },
+      {
+        label: '&Options',
+        items: [
+          { id: 'end-task', testid: 'agent-manager-menu-end-task', label: '&End Task', disabled: !selectedChatRow?.busy, action: () => void endTask() },
+          { id: 'end-process', testid: 'agent-manager-menu-end-process', label: 'End &process', disabled: !selectedProcess, action: () => void endProcess() }
+        ]
+      },
+      help.menu()
+    ])
+  )
+
+  function onkeydown(event: KeyboardEvent): void {
+    if (event.key === 'F5') {
+      event.preventDefault()
+      void refresh()
+    } else ctx.key(event, contextItems)
+  }
+
   const totalContext = $derived(
     sessions.length === 0 ? 0 : Math.round(chats.reduce((sum, c) => sum + c.percent, 0) / sessions.length)
   )
 </script>
 
-<div class="am" data-testid="agent-manager-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="am" data-testid="agent-manager-app" {onkeydown} oncontextmenu={(e) => ctx.show(e, contextItems())}>
+  <MenuStrip {menus} aria-label="Task Manager menu" />
   <div class="tabs">
     <TabControl {tabs} bind:selected={tab} aria-label="Agent7 Task Manager">
       {#snippet panel(t)}
@@ -133,7 +199,7 @@
             </div>
           {:else if t.id === 'chats'}
             <div class="grid">
-              <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" emptyText="There are no chats on this desktop yet." />
+              <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
             <div class="buttons">
               <Button data-testid="agent-manager-end-task" disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
@@ -169,6 +235,8 @@
     <StatusStripLabel text="Terminals: {terminals.length}" borders={['left']} width={100} />
     <StatusStripLabel text="Context: {totalContext}%" borders={['left']} width={100} />
   </StatusStrip>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Task Manager" />
+  <AppAbout {help} />
 </div>
 
 <style>

@@ -106,6 +106,8 @@ The status bar shows the path, **Agent editing** while the agent writes, the vis
 | Revert hunk (toolbar) | Reverts the open block or the block under the caret. | `code-toolbar-revert-hunk` |
 | Refresh git status | Reads the git status again. | `code-refresh` |
 | Management (button) | Shows or hides the left pane. | `code-management-toggle` |
+| Review changes (menu) | Opens Code Review on the changes of the project. | `code-menu-review` |
+| Review changes (button) | Opens Code Review on the changes of the project. | `code-review-changes` |
 | Logs (button) | Shows or hides the bottom pane. | `code-changes-toggle` |
 | Agent is editing | Shows that the agent writes the open file. | `code-editing` |
 | Management pane | The left pane. | `code-management` |
@@ -144,6 +146,27 @@ The status bar shows the path, **Agent editing** while the agent writes, the vis
 | Agent editing | Shows that the agent writes. | `code-status-editing` |
 | Caret | Shows the line and the column. | `code-status-caret` |
 | Branch | Shows the git branch. | `code-git-branch` |
+
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `code-menu-help` |
+| Menu: about | Opens the About Code box. | `code-menu-about` |
+| Dialog: about | The About Code box. | `code-about` |
+| Dialog: about ok | Closes the About box. | `code-about-ok` |
+| Menu: close | Closes the window. Alt+F4. | `code-menu-close` |
+| Context menu: cut | Cut. Dimmed: the editor is read only. | `code-ctx-cut` |
+| Context menu: copy | Copies the selected code. | `code-ctx-copy` |
+| Context menu: paste | Paste. Dimmed: the editor is read only. | `code-ctx-paste` |
+| Context menu: select all | Selects all code in the file. | `code-ctx-select-all` |
+| Context menu: revert hunk | Reverts the change under the caret. Shown only on a change. | `code-ctx-revert-hunk` |
+| Context menu: goto file | Opens the Open dialog box to go to another file. Ctrl+O. | `code-ctx-goto-file` |
+| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `code-ctx-explain` |
+| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `code-ctx-ask` |
+| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `code-ctx-send` |
 
 ### Keys
 

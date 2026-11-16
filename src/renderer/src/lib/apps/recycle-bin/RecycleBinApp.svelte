@@ -3,6 +3,13 @@
   import type { RecycledChangeDto } from '@shared/desktop'
   import type { SessionDto } from '@shared/models'
   import type { AppProps } from '../types'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
@@ -94,6 +101,41 @@
     await refresh()
   }
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'recycle-bin')
+  const ctx = new ContextMenu()
+
+  /** The same actions as the toolbar buttons: Restore this item, Restore all items, Empty the Recycle Bin. */
+  const contextItems = (): MenuItemDef[] => [
+    { id: 'recycle-bin-ctx-restore', testid: 'recycle-bin-ctx-restore', label: '&Restore', icon: 'undo', disabled: !current, action: () => current && void restore(current) },
+    { id: 'recycle-bin-ctx-restore-all', testid: 'recycle-bin-ctx-restore-all', label: 'Restore &all items', icon: 'redo', disabled: items.length === 0, action: () => void restoreAll() },
+    { separator: true },
+    { id: 'recycle-bin-ctx-empty', testid: 'recycle-bin-ctx-empty', label: '&Empty the Recycle Bin', icon: 'delete', disabled: items.length === 0, action: () => void empty() }
+  ]
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'restore', testid: 'recycle-bin-menu-restore', label: '&Restore this item', disabled: !current, action: () => current && void restore(current) },
+          { id: 'restore-all', testid: 'recycle-bin-menu-restore-all', label: 'Restore &all items', disabled: items.length === 0, action: () => void restoreAll() },
+          { id: 'empty', testid: 'recycle-bin-menu-empty', label: '&Empty the Recycle Bin', disabled: items.length === 0, action: () => void empty() },
+          ...closeItems('recycle-bin', () => void host.closeWindow(win.id))
+        ]
+      },
+      { label: '&View', items: [{ id: 'refresh', testid: 'recycle-bin-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void refresh() }] },
+      help.menu()
+    ])
+  )
+
+  function onkeydown(event: KeyboardEvent): void {
+    if (event.key === 'F5') {
+      event.preventDefault()
+      void refresh()
+    } else ctx.key(event, contextItems)
+  }
+
   const columns: ListColumn[] = [
     { key: 'name', header: 'Name', width: 150 },
     { key: 'location', header: 'Original location', width: 150 },
@@ -102,7 +144,9 @@
   ]
 </script>
 
-<div class="rb" data-testid="recycle-bin-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="rb" data-testid="recycle-bin-app" {onkeydown} oncontextmenu={(e) => ctx.show(e, contextItems())}>
+  <MenuStrip {menus} aria-label="Recycle Bin menu" />
   <ToolStrip aria-label="Recycle Bin">
     <ToolStripButton data-testid="recycle-bin-restore" icon="undo" text="Restore this item" disabled={!current} onclick={() => current && void restore(current)} />
     <ToolStripButton data-testid="recycle-bin-restore-all" icon="redo" text="Restore all items" disabled={items.length === 0} onclick={() => void restoreAll()} />
@@ -112,7 +156,7 @@
     <SplitContainer orientation="horizontal" splitterDistance={170} panel1MinSize={80} panel2MinSize={90} fixedPanel="panel2">
       {#snippet panel1()}
         <div class="list">
-          <ListView testid="recycle-bin-list" rowTestid="recycle-bin-item" {columns} {rows} bind:selected aria-label="Reverted changes" emptyText={error ?? 'The Recycle Bin is empty.'} />
+          <ListView testid="recycle-bin-list" rowTestid="recycle-bin-item" {columns} {rows} bind:selected aria-label="Reverted changes" emptyText={error ?? 'The Recycle Bin is empty.'} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} />
         </div>
       {/snippet}
       {#snippet panel2()}
@@ -132,6 +176,8 @@
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text="{items.length} item{items.length === 1 ? '' : 's'}" spring />
   </StatusStrip>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Recycle Bin" />
+  <AppAbout {help} />
 </div>
 
 <style>

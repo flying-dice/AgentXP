@@ -3,7 +3,13 @@
   import type { AppProps } from '../types'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
-  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import ToolStripDropDownButton from '../../kit/molecules/ToolStripDropDownButton.svelte'
@@ -94,10 +100,47 @@
     { label: '&Window Snip', action: () => void snip('window') },
     { label: '&Full-screen Snip', action: () => void snip('full') }
   ])
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'snipping-tool')
+  const ctx = new ContextMenu()
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'new', testid: 'snipping-tool-menu-new', label: '&New Snip', shortcut: 'Ctrl+N', disabled: busy, action: () => void snip('rect') },
+          { id: 'window', testid: 'snipping-tool-menu-window', label: '&Window Snip', disabled: busy, action: () => void snip('window') },
+          { id: 'full', testid: 'snipping-tool-menu-full', label: '&Full-screen Snip', disabled: busy, action: () => void snip('full') },
+          ...closeItems('snipping-tool', () => void host.closeWindow(win.id))
+        ]
+      },
+      { label: '&Edit', items: [{ id: 'copy', testid: 'snipping-tool-menu-copy', label: '&Copy', shortcut: 'Ctrl+C', disabled: !image, action: () => void copy() }] },
+      {
+        label: '&Tools',
+        items: [
+          { id: 'cancel', testid: 'snipping-tool-menu-cancel', label: 'C&ancel Snip', shortcut: 'Esc', disabled: !busy, action: cancel },
+          { id: 'options', testid: 'snipping-tool-menu-options', label: '&Options...', action: () => (options = true) }
+        ]
+      },
+      help.menu()
+    ])
+  )
+
+  /** The buttons of the toolbar: New Snip, Copy, Options. */
+  const contextItems = (): MenuItemDef[] => [
+    { id: 'snipping-tool-ctx-copy', testid: 'snipping-tool-ctx-copy', label: '&Copy', icon: 'copy', disabled: !image, action: () => void copy() },
+    { separator: true },
+    { id: 'snipping-tool-ctx-new', testid: 'snipping-tool-ctx-new', label: '&New Snip', icon: 'scissors', disabled: busy, action: () => void snip('rect') },
+    { id: 'snipping-tool-ctx-options', testid: 'snipping-tool-ctx-options', label: '&Options...', icon: 'options', action: () => (options = true) }
+  ]
+
   const delays = [0, 1, 3, 5].map((s) => ({ value: String(s), label: s === 0 ? 'No delay' : `${s} second${s === 1 ? '' : 's'}` }))
 </script>
 
-<div class="sn" data-testid="snipping-tool-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="sn" data-testid="snipping-tool-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+  <MenuStrip {menus} aria-label="Snipping Tool menu" />
   <ToolStrip aria-label="Snipping Tool">
     <ToolStripButton data-testid="snipping-tool-new" icon="scissors" text="New" disabled={busy} onclick={() => void snip('rect')} />
     <ToolStripDropDownButton text="▾" title="Snip type" items={newItems} disabled={busy} />
@@ -118,6 +161,8 @@
     <StatusStripLabel text={status} spring />
     {#if delay > 0}<StatusStripLabel text="Delay: {delay} s" borders={['left']} width={90} />{/if}
   </StatusStrip>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Snipping Tool" />
+  <AppAbout {help} />
   {#if options}
     <Dialog title="Snipping Tool Options" iconName="options" width="340px" contained onclose={() => (options = false)}>
       <div class="opts">

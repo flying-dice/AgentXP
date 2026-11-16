@@ -87,6 +87,37 @@ The status bar shows the number of items and the selection.
 | Start a chat here | Starts a chat in that folder or drive. | `menu-item-explorer-folder-chat`, `menu-item-explorer-drive-chat` |
 | Eject (menu) | Ejects the drive. | `menu-item-explorer-drive-eject` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `explorer-menu-help` |
+| Menu: about | Opens the About Explorer box. | `explorer-menu-about` |
+| Dialog: about | The About Explorer box. | `explorer-about` |
+| Dialog: about ok | Closes the About box. | `explorer-about-ok` |
+| Menu: open | File menu: opens the selected file, folder or drive. | `explorer-menu-open` |
+| Menu: plug in | File menu: plugs in a project as a USB drive. | `explorer-menu-plug-in` |
+| Menu: eject | File menu: ejects the selected USB drive. | `explorer-menu-eject` |
+| Menu: properties | File menu: shows the properties of the selected file or folder. | `explorer-menu-properties` |
+| Menu: close | Closes the window. Alt+F4. | `explorer-menu-close` |
+| Menu: copy path | Edit menu: copies the path of the selected item. | `explorer-menu-copy-path` |
+| Menu: select all | Edit menu: selects all items in the folder. Ctrl+A. | `explorer-menu-select-all` |
+| Menu: up | View menu: goes up one level. Alt+Up. | `explorer-menu-up` |
+| Menu: refresh | View menu: reads the folder again. F5. | `explorer-menu-refresh` |
+| Context menu: open | Opens the file or folder. | `explorer-ctx-open` |
+| Context menu: open code | Opens the file in Code. | `explorer-ctx-open-code` |
+| Context menu: open notepad | Opens the file in Notepad. | `explorer-ctx-open-notepad` |
+| Context menu: copy path | Copies the path of the item. | `explorer-ctx-copy-path` |
+| Context menu: start chat | Starts a chat in the folder. | `explorer-ctx-start-chat` |
+| Context menu: ask | Starts a chat about the item or the folder. | `explorer-ctx-ask` |
+| Context menu: properties | Shows the type, location, size and date. | `explorer-ctx-properties` |
+| Context menu: refresh | Background menu: reads the folder again. F5. | `explorer-ctx-refresh` |
+| Context menu: up | Background menu: goes up one level. | `explorer-ctx-up` |
+| Context menu: drive ask | Drive menu: starts a chat about the drive. | `explorer-ctx-drive-ask` |
+| Context menu: drive copy path | Drive menu: copies the drive path. | `explorer-ctx-drive-copy-path` |
+
 ### Keys
 
 | Name | What it does | data-testid |

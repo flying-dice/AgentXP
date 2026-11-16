@@ -61,6 +61,7 @@ describe('Browser agent: a local chat web app', () => {
 
   it('the user opens and closes tabs with the tab strip', async () => {
     const browser = ctx.desktop.window('browser')
+    await ctx.desktop.focusWindow('browser') // the chat window is tiled over part of it
     await browser.getByTestId('browser-tab-new').click()
     const created = browser.getByTestId('browser-tab-3')
     await see.visible(created)

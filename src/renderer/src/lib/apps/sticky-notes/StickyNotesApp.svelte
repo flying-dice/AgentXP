@@ -5,13 +5,19 @@
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import ToolStripDropDownButton from '../../kit/molecules/ToolStripDropDownButton.svelte'
-  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import ToolStrip from '../../kit/organisms/ToolStrip.svelte'
   import { followNotes } from './followNotes'
   import { NOTE_THEME, STICKY_COLORS, noteTitle } from './noteModel'
 
-  let { host }: AppProps<'sticky-notes'> = $props()
+  let { window: win, host }: AppProps<'sticky-notes'> = $props()
 
   let notes = $state.raw<StickyNoteDto[]>([])
   let sessions = $state.raw<SessionDto[]>([])
@@ -46,9 +52,38 @@
   const planItems = $derived<MenuItemDef[]>(
     sessions.length === 0 ? [{ label: '(no chats yet)', disabled: true }] : sessions.map((s) => ({ label: s.title || 'New chat', icon: 'tasks', action: () => void addPlan(s) }))
   )
+
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'sticky-notes')
+  const ctx = new ContextMenu()
+  const removeSelected = (): void => void (selected !== null && host.api.notes.remove(selected))
+
+  /** A note in the list: Delete note, the colours of the Color button, New note. Elsewhere: New note. */
+  const contextItems = (): MenuItemDef[] => [
+    ...(selected !== null
+      ? [
+          ...colorItems.map((c, i) => ({ ...c, id: `sticky-notes-ctx-color-${STICKY_COLORS[i]}`, testid: `sticky-notes-ctx-color-${STICKY_COLORS[i]}` })),
+          { separator: true } as MenuItemDef,
+          { id: 'sticky-notes-ctx-delete', testid: 'sticky-notes-ctx-delete', label: '&Delete note', icon: 'delete', action: removeSelected } as MenuItemDef,
+          { separator: true } as MenuItemDef
+        ]
+      : []),
+    { id: 'sticky-notes-ctx-new', testid: 'sticky-notes-ctx-new', label: '&New note', icon: 'plus', action: () => void addNote() }
+  ]
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      { label: '&File', items: [{ id: 'new', testid: 'sticky-notes-menu-new', label: '&New note', shortcut: 'Ctrl+N', action: () => void addNote() }, ...closeItems('sticky-notes', () => void host.closeWindow(win.id))] },
+      { label: '&Edit', items: [{ id: 'delete', testid: 'sticky-notes-menu-delete', label: '&Delete note', shortcut: 'Del', disabled: selected === null, action: removeSelected }] },
+      { label: '&Note', items: [{ label: '&Color', items: colorItems }, { label: '&Plan note', items: planItems }] },
+      help.menu()
+    ])
+  )
 </script>
 
-<div class="sn" data-testid="sticky-notes-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="sn" data-testid="sticky-notes-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+  <MenuStrip {menus} aria-label="Sticky Notes menu" />
   <ToolStrip aria-label="Sticky Notes">
     <ToolStripButton data-testid="sticky-notes-new" icon="plus" text="New note" onclick={() => void addNote()} />
     <ToolStripDropDownButton text="Color" items={colorItems} />
@@ -56,7 +91,7 @@
   </ToolStrip>
   <div class="list w7-scroll" role="list" aria-label="Notes">
     {#each notes as note (note.id)}
-      <div class="row" role="listitem" class:sel={selected === note.id}>
+      <div class="row" role="listitem" class:sel={selected === note.id} oncontextmenu={(e) => ((selected = note.id), ctx.show(e, contextItems()))}>
         <button type="button" class="pick" onclick={() => (selected = note.id)}>
           <span class="swatch" style:background={NOTE_THEME[note.color].paper} style:border-color={NOTE_THEME[note.color].border}></span>
           <span class="title">{noteTitle(note, chatTitle(note.planSessionId))}</span>
@@ -69,6 +104,8 @@
     {/each}
   </div>
   <p class="hint">Notes show on the desktop, and the agent can read and write them, only while Sticky Notes is open.</p>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Sticky Notes" />
+  <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text="{notes.length} note{notes.length === 1 ? '' : 's'}" spring />
   </StatusStrip>

@@ -61,6 +61,26 @@ Each note is a small window on the desktop. Drag its title bar to move it. Drag 
 | Delete note (note) | Deletes the note. | `notes-sticky-delete` |
 | Note text | The text of the note. | `notes-sticky-text` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `sticky-notes-menu-help` |
+| Menu: about | Opens the About Sticky Notes box. | `sticky-notes-menu-about` |
+| Dialog: about | The About Sticky Notes box. | `sticky-notes-about` |
+| Dialog: about ok | Closes the About box. | `sticky-notes-about-ok` |
+| Menu: new | File menu: adds a note. Ctrl+N. | `sticky-notes-menu-new` |
+| Menu: close | Closes the window. Alt+F4. | `sticky-notes-menu-close` |
+| Menu: delete | Edit menu: deletes the selected note. | `sticky-notes-menu-delete` |
+| Context menu: color * | Sets the colour of the selected note. | `sticky-notes-ctx-color-*` |
+| Context menu: delete | Deletes the selected note. | `sticky-notes-ctx-delete` |
+| Context menu: new | Adds a note. | `sticky-notes-ctx-new` |
+| Context menu: notes color * | Sticky note on the desktop: sets its colour. | `notes-ctx-color-*` |
+| Context menu: notes new | Sticky note on the desktop: adds a note. | `notes-ctx-new` |
+| Context menu: notes delete | Sticky note on the desktop: deletes the note. | `notes-ctx-delete` |
+
 ### Keys
 
 | Name | What it does | data-testid |

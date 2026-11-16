@@ -63,6 +63,28 @@ The status bar shows the title of the topic. During a search, it shows how many 
 | Missing topic | Shows when the topic does not exist. | `help-missing` |
 | Status | Shows the title or the number of matches. | `help-status` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `help-menu-help` |
+| Menu: about | Opens the About Help and Support box. | `help-menu-about` |
+| Dialog: about | The About Help and Support box. | `help-about` |
+| Dialog: about ok | Closes the About box. | `help-about-ok` |
+| Menu: close | Closes the window. Alt+F4. | `help-menu-close` |
+| Menu: copy | Edit menu: copies the selected text. | `help-menu-copy` |
+| Menu: select all | Edit menu: selects all text. | `help-menu-select-all` |
+| Menu: back | View menu: goes back. | `help-menu-back` |
+| Menu: forward | View menu: goes forward. | `help-menu-forward` |
+| Menu: home | View menu: shows the home topic. | `help-menu-home` |
+| Context menu: copy | Copies the selected text. | `help-ctx-copy` |
+| Context menu: select all | Selects all text. | `help-ctx-select-all` |
+| Context menu: back | Goes back. | `help-ctx-back` |
+| Context menu: forward | Goes forward. | `help-ctx-forward` |
+| Context menu: home | Shows the home topic. | `help-ctx-home` |
+
 ### Keys
 
 | Name | What it does | data-testid |

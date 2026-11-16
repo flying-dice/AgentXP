@@ -4,6 +4,13 @@
   import type { AppProps } from '../types'
   import Icon from '../../kit/atoms/Icon.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
@@ -47,6 +54,38 @@
     void tick().then(() => article && (article.scrollTop = 0))
   })
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'help')
+  const ctx = new ContextMenu()
+  const copy = (): void => void document.execCommand('copy')
+  const selectAll = (): void => void (article && window.getSelection()?.selectAllChildren(article))
+  const selected = (): boolean => !!window.getSelection() && !window.getSelection()!.isCollapsed && !!article?.contains(window.getSelection()!.anchorNode)
+
+  /** Copy, Select All and the toolbar's Back, Forward and Home. */
+  const contextItems = (): MenuItemDef[] => [
+    ...editItems('help-ctx', { copy, selectAll }, { hasSelection: selected() }),
+    { separator: true },
+    { id: 'help-ctx-back', testid: 'help-ctx-back', label: '&Back', icon: 'chevron-left', disabled: history.past.length === 0, action: () => (history = back(history)) },
+    { id: 'help-ctx-forward', testid: 'help-ctx-forward', label: '&Forward', icon: 'chevron-right', disabled: history.future.length === 0, action: () => (history = forward(history)) },
+    { id: 'help-ctx-home', testid: 'help-ctx-home', label: '&Home', icon: 'help', action: () => show(HOME_TOPIC) }
+  ]
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      { label: '&File', items: closeItems('help', () => void host.closeWindow(win.id)).slice(1) },
+      { label: '&Edit', items: editItems('help-menu', { copy, selectAll }, { hasSelection: true }) },
+      {
+        label: '&View',
+        items: [
+          { id: 'back', testid: 'help-menu-back', label: '&Back', shortcut: 'Alt+Left', disabled: history.past.length === 0, action: () => (history = back(history)) },
+          { id: 'forward', testid: 'help-menu-forward', label: '&Forward', shortcut: 'Alt+Right', disabled: history.future.length === 0, action: () => (history = forward(history)) },
+          { id: 'home', testid: 'help-menu-home', label: '&Home', action: () => show(HOME_TOPIC) }
+        ]
+      },
+      help.menu()
+    ])
+  )
+
   function onArticleClick(event: MouseEvent): void {
     const anchor = (event.target as HTMLElement).closest('a')
     if (!anchor) return
@@ -58,7 +97,9 @@
   }
 </script>
 
-<div class="help" data-testid="help-app" data-topic={topic}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="help" data-testid="help-app" data-topic={topic} oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+  <MenuStrip {menus} aria-label="Help menu" />
   <div class="bar" role="toolbar" aria-label="Help toolbar">
     <div class="orbs">
       <button class="orb" data-testid="help-back" aria-label="Back" title="Back" disabled={history.past.length === 0} onclick={() => (history = back(history))}><Icon name="chevron-left" size={16} /></button>
@@ -95,6 +136,8 @@
       {/if}
     </article>
   </div>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Help" />
+  <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="help-status" text={searching ? `${shown.length} of ${topics.length} topics` : (current?.title ?? '')} spring />
     <StatusStripLabel text="Topic: {topic}" borders={['left']} width={170} />

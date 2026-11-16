@@ -21,8 +21,10 @@
 
   let { initialUrl, electron, active, testId, onpatch, onready }: Props = $props()
 
+  // The webview opens with this address once; later changes go through navigate() (a reactive src would reload the page).
   // svelte-ignore state_referenced_locally
-  let url = $state(initialUrl)
+  const firstUrl = initialUrl
+  let url = $state(firstUrl)
   let loading = $state(false)
   let view = $state<WebviewElement | null>(null)
   let ready = false
@@ -140,7 +142,7 @@
 
 <div class="tabpage" class:hidden={!active} data-testid={testId} data-active={active}>
   {#if electron}
-    <webview bind:this={view} class="webview" src={initialUrl} partition="persist:agent7-browser"></webview>
+    <webview bind:this={view} class="webview" src={firstUrl} partition="persist:agent7-browser"></webview>
   {:else}
     <PlaceholderPage {url} {loading} />
   {/if}

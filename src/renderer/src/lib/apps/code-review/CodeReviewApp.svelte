@@ -49,8 +49,11 @@
   const root = $derived(win.view.root)
 
   // ---- state ------------------------------------------------------------------------------------
+  // svelte-ignore state_referenced_locally
   let baseRef = $state(win.view.baseRef)
+  // svelte-ignore state_referenced_locally
   let baseDraft = $state(win.view.baseRef)
+  // svelte-ignore state_referenced_locally
   let chosenPath = $state<string | null>(win.view.selectedPath)
   let changes = $state.raw<ReviewChangeDto[]>([])
   let loading = $state(true)
@@ -61,6 +64,15 @@
   let layout = $state<ReviewLayout>(loadLayout())
   let selectedRow = $state<number | null>(null)
   let commentsOpen = $state(true)
+  // A narrow window (tiled beside another one) starts with the comments list and the reviewer chat closed, so the diff has room.
+  let clientWidth = $state(0)
+  let sized = false
+  $effect(() => {
+    if (sized || clientWidth === 0) return
+    sized = true
+    if (clientWidth < 960) commentsOpen = false
+    if (clientWidth < 760) chatCollapsed = true
+  })
   let selectedCommentId = $state<number | null>(null)
   let chatCollapsed = $state(false)
   let chatWidth = $state(340)
@@ -95,6 +107,7 @@
 
   // ---- view state: report ours, follow the agent's ------------------------------------------------
   const sync = new ViewSync<{ baseRef: string; selectedPath: string | null }>((v) => JSON.stringify([v.baseRef, v.selectedPath]))
+  // svelte-ignore state_referenced_locally
   sync.mark({ baseRef, selectedPath: chosenPath })
 
   $effect(() => {
@@ -396,7 +409,7 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="review" data-testid="code-review-app" data-session-id={sessionId} data-mode={mode} data-layout={layout}>
+<div class="review" bind:clientWidth data-testid="code-review-app" data-session-id={sessionId} data-mode={mode} data-layout={layout}>
   <MenuStrip {menus} aria-label="Code Review menu" />
   <div class="bar">
     <ToolStripButton icon="file" text="Outline" checked={mode === 'outline'} onclick={() => (mode = 'outline')} data-testid="review-view-outline" />

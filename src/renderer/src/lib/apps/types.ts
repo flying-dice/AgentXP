@@ -7,7 +7,7 @@ import type { Component } from 'svelte'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { DriveLetter, VPath } from '@shared/vfs'
-import type { AppKind, AppView, AppWindowState, DesktopState, OpenWindowInput, ViewOf } from '@shared/desktop'
+import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
 
 /** What the shell gives every app. Implemented by lib/desktop/DesktopController. */
@@ -24,6 +24,12 @@ export interface DesktopHost {
   ejectDrive(letter: DriveLetter): Promise<void>
   /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
   startChat(cwd: VPath): Promise<void>
+  /**
+   * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat). Today it starts a chat on the window's
+   * drive (or home) and opens its Chat window with the prompt of `askChatPrompt(request)`; a chat side panel can take
+   * the request later without any app changing.
+   */
+  askChat(request: AskChatRequest): Promise<void>
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

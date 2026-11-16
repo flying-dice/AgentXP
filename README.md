@@ -330,13 +330,14 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Code | Read and write files, open a file, show a line, and show a change | `code_open`, `code_reveal`, `code_show_diff` |
 | Notepad | Open and read text files, and write files | `notepad_open`, `notepad_read`, `fs/write_text_file` |
 | Terminal | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
-| Browser | Open web pages, read them, click, type, go back, and take a picture | `browser_navigate`, `browser_read`, `browser_click`, `browser_type`, `browser_back`, `browser_screenshot` |
+| Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
 | Agent Paint | Draw, read the picture, clear it, and resize it | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
 | WordPad | Open, read, and write documents | `wordpad_open`, `wordpad_read`, `wordpad_write` |
 | Sticky Notes | List, add, change, and remove notes, and keep a plan note | `notes_list`, `notes_add`, `notes_update`, `notes_remove` |
 | Event Viewer | Search the messages of the desktop | `events_query` |
 | Snipping Tool | Take a picture of the desktop or of one window | `screen_capture` |
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
+| Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
 
 The Chat, Control Centre, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
 

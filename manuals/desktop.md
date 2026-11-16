@@ -227,6 +227,16 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Menu bar button | One menu of an app, for example `menubar-file`. | `menubar-*` |
 | Menu item | One menu item. The name follows the item, for example `menu-item-save`. | `menu-item-*` |
 
+### Taskbar Button Menu
+
+Right-click a taskbar button to open its menu.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Restore | Restores a minimized or maximized window. | `taskbar-ctx-restore` |
+| Minimize | Minimizes the window. | `taskbar-ctx-minimize` |
+| Close window | Closes the window. Alt+F4. | `taskbar-ctx-close` |
+
 ### Keys
 
 | Name | What it does | data-testid |

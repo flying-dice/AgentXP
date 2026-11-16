@@ -33,10 +33,12 @@
     startOpen?: boolean
     onstart?: () => void
     onitemclick?: (item: TaskbarItem) => void
+    /** Right click, Menu key or Shift+F10 on a button; `x`/`y` are viewport coordinates. */
+    onitemcontext?: (item: TaskbarItem, at: { x: number; y: number }) => void
     class?: string
   }
 
-  let { items = [], clock, tray, startOpen = false, onstart, onitemclick, class: className = '' }: Props = $props()
+  let { items = [], clock, tray, startOpen = false, onstart, onitemclick, onitemcontext, class: className = '' }: Props = $props()
 
   let now = $state(new Date())
   $effect(() => {
@@ -84,6 +86,16 @@
         aria-pressed={item.running ? !!item.active : undefined}
         title={item.title}
         onclick={() => onitemclick?.(item)}
+        oncontextmenu={(e) => {
+          e.preventDefault()
+          onitemcontext?.(item, { x: e.clientX, y: e.clientY })
+        }}
+        onkeydown={(e) => {
+          if (e.key !== 'ContextMenu' && !(e.key === 'F10' && e.shiftKey)) return
+          e.preventDefault()
+          const r = e.currentTarget.getBoundingClientRect()
+          onitemcontext?.(item, { x: r.left, y: r.top })
+        }}
       >
         {#if item.iconSnippet}{@render item.iconSnippet()}{:else if item.icon}<Icon name={item.icon} size={item.pinned && !item.running ? 22 : 18} />{/if}
         {#if item.running && !item.pinned}<span class="label">{item.title}</span>{/if}

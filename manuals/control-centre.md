@@ -83,6 +83,20 @@ The page shows the version of Agent7.
 | Cancel | Drops the changes. | none |
 | Show gadgets on the desktop | Shows or hides the gadgets. | none |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `control-centre-menu-help` |
+| Menu: about | Opens the About Control Centre box. | `control-centre-menu-about` |
+| Dialog: about | The About Control Centre box. | `control-centre-about` |
+| Dialog: about ok | Closes the About box. | `control-centre-about-ok` |
+| Menu: close | Closes the window. Alt+F4. | `control-centre-menu-close` |
+| Menu: page * | View menu: shows a page. | `control-centre-menu-page-*` |
+| Context menu: page * | Shows a page. | `control-centre-ctx-page-*` |
+
 ## 5 - Common Tasks
 
 To add an agent, follow the steps below:

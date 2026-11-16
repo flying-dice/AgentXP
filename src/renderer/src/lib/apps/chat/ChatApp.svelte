@@ -12,7 +12,13 @@
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
-  import type { MenuDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { copyText, quoteText, transcriptItems } from '../shared/contextItems'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
@@ -138,25 +144,61 @@
     }
   }
 
-  const menus = $derived<MenuDef[]>([
-    {
-      label: '&Chat',
-      items: [
-        { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
-        { id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) },
-        { separator: true },
-        { id: 'chat-close', testid: 'chat-menu-close', label: '&Close', action: () => void host.closeWindow(win.id) }
-      ]
-    },
-    { label: '&Help', items: [{ id: 'chat-help', testid: 'chat-menu-help', label: '&Help on Chat', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'chat' }) }] }
-  ])
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'chat')
+  const ctx = new ContextMenu()
+  let root = $state<HTMLElement | null>(null)
+
+  /** Puts a quote of the message into the composer (the composer input is the only text box with this test id). */
+  function quoteInReply(text: string): void {
+    const input = root?.querySelector<HTMLTextAreaElement | HTMLInputElement>('[data-testid="chat-composer-input"]')
+    if (!input) return
+    input.value = `${input.value ? `${input.value}\n` : ''}${quoteText(text)}`
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.focus()
+  }
+
+  /** The menu of the element under the pointer (or the focus): Copy message, Copy code, Quote in reply. */
+  function contextItems(target: EventTarget | null): MenuItemDef[] {
+    const message = target instanceof Element ? target.closest<HTMLElement>('[data-testid^="chat-message"]') : null
+    const pre = target instanceof Element ? target.closest('pre') : null
+    return transcriptItems({
+      message: message?.innerText.trim() ?? '',
+      code: (pre ?? message?.querySelector('pre'))?.textContent?.replace(/\n$/, '') ?? '',
+      quote: quoteInReply,
+      copy: copyText
+    })
+  }
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
+          ...closeItems('chat', () => void host.closeWindow(win.id))
+        ]
+      },
+      { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }) },
+      { label: '&View', items: [{ id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
+      help.menu()
+    ])
+  )
 
   const setModel = (id: string): void => void host.api.sessions.setModel(sessionId, id)
   const setMode = (id: number, modeId: string): Promise<void> => host.api.sessions.setMode(id, modeId)
   const pickFiles = (): Promise<string[]> => host.api.dialogs.pickFiles()
 </script>
 
-<div class="chat" data-testid="chat-app" data-session-id={sessionId}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="chat"
+  data-testid="chat-app"
+  data-session-id={sessionId}
+  bind:this={root}
+  oncontextmenu={(e) => ctx.show(e, contextItems(e.target))}
+  onkeydown={(e) => ctx.key(e, () => contextItems(e.target))}
+>
   <MenuStrip {menus} aria-label="Chat menu" />
   <div class="bar">
     <span>Model:</span>
@@ -204,6 +246,8 @@
       </aside>
     {/if}
   </div>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Chat" />
+  <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="chat-cwd" text={store?.error ?? folder?.path ?? ''} spring />
     {#if session}

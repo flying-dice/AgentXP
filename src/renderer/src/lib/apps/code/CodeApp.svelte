@@ -8,7 +8,13 @@
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
   import Separator from '../../kit/atoms/Separator.svelte'
-  import type { MenuDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { askChatItems } from '../shared/contextItems'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
@@ -414,6 +420,46 @@
     }
   }
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'code')
+  const ctx = new ContextMenu()
+
+  /** The text selected in the editor (the viewer is plain DOM text), '' outside it. */
+  function selectedText(): string {
+    const sel = window.getSelection()
+    if (!sel || sel.isCollapsed || !host_el || !sel.anchorNode || !host_el.contains(sel.anchorNode)) return ''
+    return sel.toString()
+  }
+  const copySelection = (): void => void document.execCommand('copy')
+  const selectAllText = (): void => {
+    const code = host_el?.querySelector('.w7-codeviewer .scroll')
+    if (code) window.getSelection()?.selectAllChildren(code)
+  }
+
+  function ask(kind: 'explain' | 'ask' | 'send', selected: string): void {
+    void host.askChat({
+      app: 'code',
+      windowId: win.id,
+      kind,
+      ...(active ? { path: active } : {}),
+      ...(selected ? { text: selected } : {}),
+      range: selection ?? { startLine: caret.line, endLine: caret.line }
+    })
+  }
+
+  /** Cut, Copy, Paste, Select All (the viewer is read only), Revert hunk when on a hunk, Go to file and the Ask chat group. */
+  const contextItems = (): MenuItemDef[] => {
+    const selected = selectedText()
+    const hasSelection = selected !== ''
+    return [
+      ...editItems('code-ctx', { cut: () => {}, copy: copySelection, paste: () => {}, selectAll: selectAllText }, { hasSelection, readOnly: true }),
+      ...(revertTarget !== null ? [{ separator: true } as MenuItemDef, { id: 'code-ctx-revert-hunk', testid: 'code-ctx-revert-hunk', label: '&Revert hunk...', icon: 'recycle', action: () => void revertHunk(revertTarget) } as MenuItemDef] : []),
+      { separator: true },
+      { id: 'code-ctx-goto-file', testid: 'code-ctx-goto-file', label: '&Go to file...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
+      ...askChatItems('code', { hasSelection, ask: (kind) => ask(kind, selected) })
+    ]
+  }
+
   const menus = $derived<MenuDef[]>([
     {
       label: '&File',
@@ -422,14 +468,14 @@
         { separator: true },
         { id: 'code-close-file', label: '&Close file', disabled: active === null, action: () => active && close(active) },
         { id: 'code-close-all', label: 'Close &all files', disabled: tabs.length === 0, action: () => [...tabs].forEach(close) },
-        { separator: true },
-        { id: 'code-exit', label: 'E&xit', action: () => void host.closeWindow(win.id) }
+        ...closeItems('code', () => void host.closeWindow(win.id))
       ]
     },
     {
       label: '&Edit',
       items: [
-        { id: 'code-copy', label: '&Copy', icon: 'copy', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
+        { id: 'code-copy', label: '&Copy', icon: 'copy', shortcut: 'Ctrl+C', action: copySelection },
+        { id: 'code-select-all', label: 'Select &All', shortcut: 'Ctrl+A', action: selectAllText },
         { separator: true },
         { id: 'code-revert-hunk', label: '&Revert hunk...', disabled: revertTarget === null, action: () => void revertHunk(revertTarget) }
       ]
@@ -456,19 +502,7 @@
         { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: () => void reviewChanges() }
       ]
     },
-    {
-      label: '&Help',
-      items: [
-        { id: 'code-help', testid: 'code-menu-help', label: '&Help on Code', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'code' }) },
-        { separator: true },
-        {
-          id: 'code-about',
-          label: '&About Code...',
-          action: () =>
-            void showMessageBox({ text: 'Code shows the files of the plugged-in projects. The agent edits them; you review the changes here, with git status in the tree and the margin.', caption: 'About Code', buttons: 'OK', icon: 'information' })
-        }
-      ]
-    }
+    help.menu()
   ])
 
   const mgmtTabs = [
@@ -540,8 +574,10 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="code" data-testid="code-app" onkeydown={onKeydown}>
+<div class="code" data-testid="code-app" onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))} oncontextmenu={(e) => ctx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Code menu" />
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Code" />
+  <AppAbout {help} />
   <ToolStrip aria-label="Code toolbar" class="cb-tools">
     <ToolStripButton data-testid="code-new" icon="new" title="New file (the agent creates files)" disabled />
     <ToolStripButton data-testid="code-open" icon="open-folder" title="Open file (Ctrl+O)" onclick={() => (openDialog = true)} />

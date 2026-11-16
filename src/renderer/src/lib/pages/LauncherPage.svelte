@@ -161,6 +161,9 @@
   const usbDrives = $derived(current?.drives ?? [])
 </script>
 
+<!-- The browser's own context menu never shows. -->
+<svelte:window oncontextmenu={(e) => e.preventDefault()} />
+
 <div class="page">
   <Form testid="launcher-window" title="Agent7 Desktop Connection" iconName="agent7" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

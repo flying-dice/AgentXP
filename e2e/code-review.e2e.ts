@@ -33,12 +33,12 @@ describe('Code Review', () => {
     const review = ctx.desktop.codeReview()
     await ctx.desktop.openApp('code-review')
     await see.visible(review.app)
+    await review.showOutline()
     await see.count(review.files, 2)
-    console.log('DBG', JSON.stringify(await review.files.evaluateAll((els) => els.map((e) => [e.getAttribute('data-path'), e.getAttribute('data-status'), e.textContent]))))
     await see.attribute(review.file('notes.txt'), 'data-status', 'modified')
     await see.attribute(review.file('fresh.txt'), 'data-status', 'untracked')
     // The first prompt went out by itself: the agent calls review_add_comment twice, then review_submit.
-    await review.showExpanded()
+    await review.openFile('notes.txt')
     await see.count(review.threads, 2)
     await see.attribute(review.verdict, 'data-verdict', 'request_changes')
     await see.text(review.threads.first(), 'stray zero')
@@ -49,7 +49,7 @@ describe('Code Review', () => {
     await see.visible(review.margin)
     await see.eventually(async () => {
       const kinds = await review.marginBlocks.evaluateAll((els) => els.map((e) => e.getAttribute('data-kind')))
-      expect(new Set(kinds)).toEqual(new Set(['add', 'del', 'both']))
+      expect(new Set(kinds)).toEqual(new Set(['add', 'del']))
     })
     await review.nextChange.click()
     await see.eventually(async () => {

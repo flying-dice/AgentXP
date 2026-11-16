@@ -6,6 +6,7 @@
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { NOTE_THEME, STICKY_COLORS, moveNote, planItems, resizeNote } from './noteModel'
 
   interface Props {
@@ -27,9 +28,7 @@
   let draft = $state(note.text)
   let editing = $state(false)
   let live = $state.raw<Bounds | null>(null)
-  let menuOpen = $state(false)
-  let menuX = $state(0)
-  let menuY = $state(0)
+  const ctx = new ContextMenu()
 
   const theme = $derived(NOTE_THEME[note.color])
   const bounds = $derived(live ?? note.bounds)
@@ -70,9 +69,10 @@
   }
 
   const menu = $derived<MenuItemDef[]>([
-    ...STICKY_COLORS.map((c: StickyColor): MenuItemDef => ({ label: NOTE_THEME[c].label, radio: true, checked: note.color === c, action: () => onpatch({ color: c }) })),
+    ...STICKY_COLORS.map((c: StickyColor): MenuItemDef => ({ id: `notes-ctx-color-${c}`, testid: `notes-ctx-color-${c}`, label: NOTE_THEME[c].label, radio: true, checked: note.color === c, action: () => onpatch({ color: c }) })),
     { separator: true },
-    { label: '&Delete note', icon: 'delete', action: onremove }
+    { id: 'notes-ctx-new', testid: 'notes-ctx-new', label: '&New note', icon: 'plus', action: onadd },
+    { id: 'notes-ctx-delete', testid: 'notes-ctx-delete', label: '&Delete note', icon: 'delete', action: onremove }
   ])
 </script>
 
@@ -91,12 +91,8 @@
   style:--edge={theme.border}
   aria-label={isPlan ? `Plan note: ${chatTitle ?? ''}` : 'Sticky note'}
   onpointerdown={() => onfront?.()}
-  oncontextmenu={(e) => {
-    e.preventDefault()
-    menuX = e.clientX
-    menuY = e.clientY
-    menuOpen = true
-  }}
+  oncontextmenu={(e) => ctx.show(e, menu)}
+  onkeydown={(e) => ctx.key(e, menu)}
 >
   <!-- svelte-ignore a11y_no_static_element_interactions -- the title bar is a pointer-only drag handle; the note has its own keyboard-reachable buttons -->
   <header class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
@@ -132,7 +128,7 @@
   {/if}
   <div class="grip" role="separator" aria-label="Resize note" aria-orientation="horizontal" onpointerdown={(e) => down('resize', e)} onpointermove={move} onpointerup={up} onpointercancel={up}></div>
 </article>
-<ContextMenuStrip items={menu} bind:open={menuOpen} x={menuX} y={menuY} label="Note menu" />
+<ContextMenuStrip items={ctx.items} bind:open={ctx.open} x={ctx.x} y={ctx.y} label="Note menu" />
 
 <style>
   .note {

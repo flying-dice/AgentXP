@@ -4,6 +4,7 @@ import {
   DESKTOP_CONTEXT_DESCRIPTION,
   type AppView,
   type AppWindowState,
+  type AskChatRequest,
   type Bounds,
   type DesktopState,
   type OpenWindowInput,
@@ -12,6 +13,7 @@ import {
 } from '@shared/desktop'
 import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
+import { askChatCwd, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
@@ -407,6 +409,15 @@ export class DesktopController implements DesktopHost {
 
   async startChat(cwd: VPath): Promise<void> {
     await this.newChatIn(cwd)
+  }
+
+  /** "Ask chat about this": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
+  async askChat(request: AskChatRequest): Promise<void> {
+    const cwd = askChatCwd(request, this.state.windows, this.state.home)
+    const window = await this.newChatIn(cwd)
+    if (window.view.app !== 'chat') return
+    const store = this.inbox.storeFor(window.view.sessionId) as Partial<Pick<SessionAgentStore, 'send'>>
+    await store.send?.(askChatPrompt(request))
   }
 
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */

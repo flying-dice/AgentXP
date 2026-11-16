@@ -61,6 +61,38 @@ The status bar shows the file path, a message, **Modified**, the number of words
 | Document | The formatted page. | `wordpad-reader` |
 | Document source | The text box of the source. | `wordpad-source` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `wordpad-menu-help` |
+| Menu: about | Opens the About WordPad box. | `wordpad-menu-about` |
+| Dialog: about | The About WordPad box. | `wordpad-about` |
+| Dialog: about ok | Closes the About box. | `wordpad-about-ok` |
+| Menu: new | Starts an empty document. Ctrl+N. | `wordpad-menu-new` |
+| Menu: open | Opens a document. Ctrl+O. | `wordpad-menu-open` |
+| Menu: save | Saves the document. Ctrl+S. | `wordpad-menu-save` |
+| Menu: close | Closes the window. Alt+F4. | `wordpad-menu-close` |
+| Menu: read | View menu: shows the formatted document. | `wordpad-menu-read` |
+| Menu: edit | View menu: edits the markdown source. | `wordpad-menu-edit` |
+| Menu: undo | Undoes the last edit. Ctrl+Z. | `wordpad-menu-undo` |
+| Menu: cut | Cuts the selected text. Ctrl+X. | `wordpad-menu-cut` |
+| Menu: copy | Copies the selected text. Ctrl+C. | `wordpad-menu-copy` |
+| Menu: paste | Pastes the clipboard text. Ctrl+V. | `wordpad-menu-paste` |
+| Menu: delete | Deletes the selected text. Del. | `wordpad-menu-delete` |
+| Menu: select all | Selects all text. Ctrl+A. | `wordpad-menu-select-all` |
+| Context menu: undo | Undoes the last edit. Ctrl+Z. | `wordpad-ctx-undo` |
+| Context menu: cut | Cuts the selected text. Ctrl+X. | `wordpad-ctx-cut` |
+| Context menu: copy | Copies the selected text. Ctrl+C. | `wordpad-ctx-copy` |
+| Context menu: paste | Pastes the clipboard text. Ctrl+V. | `wordpad-ctx-paste` |
+| Context menu: delete | Deletes the selected text. Del. | `wordpad-ctx-delete` |
+| Context menu: select all | Selects all text. Ctrl+A. | `wordpad-ctx-select-all` |
+| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `wordpad-ctx-explain` |
+| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `wordpad-ctx-ask` |
+| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `wordpad-ctx-send` |
+
 ### Keys
 
 | Name | What it does | data-testid |

@@ -50,6 +50,25 @@ The status bar says that the shell is read-only. It also shows **Running**, **Ex
 | Screen | Shows the output. The attribute `data-running` tells if a command runs. | `terminal-output` |
 | Status | Shows Running, the exit code, or No terminals. | `terminal-status` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `terminal-menu-help` |
+| Menu: about | Opens the About Terminal box. | `terminal-menu-about` |
+| Dialog: about | The About Terminal box. | `terminal-about` |
+| Dialog: about ok | Closes the About box. | `terminal-about-ok` |
+| Menu: close | Closes the window. Alt+F4. | `terminal-menu-close` |
+| Menu: copy | Edit menu: copies the selected output. | `terminal-menu-copy` |
+| Menu: select all | Edit menu: selects all output. | `terminal-menu-select-all` |
+| Menu: clear | Edit menu: hides the output shown so far. | `terminal-menu-clear` |
+| Context menu: copy | Copies the selected output. | `terminal-ctx-copy` |
+| Context menu: select all | Selects all output. | `terminal-ctx-select-all` |
+| Context menu: clear | Hides the output shown so far. The agent keeps the output. | `terminal-ctx-clear` |
+| Context menu: ask | Starts a chat about the selected output, or the last lines. | `terminal-ctx-ask` |
+
 ### Keys
 
 | Name | What it does | data-testid |

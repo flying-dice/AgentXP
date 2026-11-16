@@ -59,6 +59,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 
 - **[Explorer](explorer.md)** – Browse the drives and plug in projects.
 - **[Code](code.md)** – View code, review the changes of the agent, and revert them.
+- **[Code Review](code-review.md)** – Let an agent review your changes and send its comments to a chat.
 - **[Notepad](notepad.md)** – Read and edit plain text files.
 - **[WordPad](wordpad.md)** – Read and write markdown documents.
 - **[Recycle Bin](recycle-bin.md)** – Restore the changes that you reverted.

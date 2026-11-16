@@ -3,6 +3,14 @@
   import type { AppProps } from '../types'
   import { registerAppRequestHandler } from '../appRequests'
   import Icon from '../../kit/atoms/Icon.svelte'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { copyText } from '../shared/contextItems'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
@@ -174,11 +182,55 @@
     clearTimeout(ringTimer)
   })
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'browser')
+  const ctx = new ContextMenu()
+
+  const askAboutPage = (): void => void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title })
+
+  /** Back, Forward, Reload, Copy link (the page address), Ask chat about this page. */
+  const contextItems = (): MenuItemDef[] => [
+    { id: 'browser-ctx-back', testid: 'browser-ctx-back', label: '&Back', icon: 'chevron-left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
+    { id: 'browser-ctx-forward', testid: 'browser-ctx-forward', label: '&Forward', icon: 'chevron-right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) },
+    { id: 'browser-ctx-reload', testid: 'browser-ctx-reload', label: '&Reload', icon: 'refresh', shortcut: 'F5', action: () => pages[activeId]?.reload() },
+    { separator: true },
+    { id: 'browser-ctx-copy-link', testid: 'browser-ctx-copy-link', label: 'Copy &link', icon: 'copy', disabled: active.url === BLANK, action: () => copyText(active.url) },
+    { separator: true },
+    { id: 'browser-ctx-ask', testid: 'browser-ctx-ask', label: 'Ask &chat about this page...', icon: 'session', disabled: active.url === BLANK, action: askAboutPage }
+  ]
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'new-tab', testid: 'browser-menu-new-tab', label: 'New &Tab', shortcut: 'Ctrl+T', action: () => void openTab() },
+          { id: 'close-tab', testid: 'browser-menu-close-tab', label: 'Close Ta&b', disabled: tabs.length < 2, action: () => closeAt(activeId) },
+          ...closeItems('browser', () => void host.closeWindow(win.id))
+        ]
+      },
+      { label: '&Edit', items: [{ id: 'copy-address', testid: 'browser-menu-copy-address', label: '&Copy page address', disabled: active.url === BLANK, action: () => copyText(active.url) }] },
+      {
+        label: '&View',
+        items: [
+          { id: 'refresh', testid: 'browser-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => pages[activeId]?.reload() },
+          { id: 'stop', testid: 'browser-menu-stop', label: '&Stop', shortcut: 'Esc', disabled: !active.loading, action: () => pages[activeId]?.stop() },
+          { separator: true },
+          { id: 'back', testid: 'browser-menu-back', label: '&Back', shortcut: 'Alt+Left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
+          { id: 'forward', testid: 'browser-menu-forward', label: '&Forward', shortcut: 'Alt+Right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) }
+        ]
+      },
+      help.menu()
+    ])
+  )
+
   const zone = $derived(active.url.startsWith('file:') || active.url === BLANK ? 'Computer' : 'Internet')
   const status = $derived(active.loading ? `Opening page ${active.url}...` : 'Done')
 </script>
 
-<div class="browser" data-testid="browser-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="browser" data-testid="browser-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+  <MenuStrip {menus} aria-label="Browser menu" />
   <div class="chrome">
     <div class="orbs">
       <button class="orb" data-testid="browser-back" aria-label="Back" title="Back" disabled={!active.canBack} onclick={() => pages[activeId]?.step(-1)}><Icon name="chevron-left" size={16} /></button>
@@ -236,6 +288,8 @@
       <div class="ring" data-testid="browser-agent-ring" style:left="{ring.x - 3}px" style:top="{ring.y - 3}px" style:width="{ring.width + 6}px" style:height="{ring.height + 6}px"></div>
     {/if}
   </div>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Browser" />
+  <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={status} spring />
     <StatusStripLabel borders={['left']} width={230}>

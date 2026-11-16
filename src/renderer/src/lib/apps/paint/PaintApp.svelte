@@ -4,7 +4,12 @@
   import type { AppProps } from '../types'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
-  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { registerAppRequestHandler } from '../appRequests'
@@ -47,9 +52,9 @@
   let textBox = $state<{ x: number; y: number; value: string } | null>(null)
   let textInput = $state<HTMLInputElement | null>(null)
   let resizing = $state<{ width: number; height: number } | null>(null)
-  let menuOpen = $state(false)
-  let menuX = $state(0)
-  let menuY = $state(0)
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'paint')
+  const menuCtx = new ContextMenu()
   const tip = TIPS[Math.floor(Math.random() * TIPS.length)]
 
   const undo: ImageData[] = []
@@ -289,21 +294,20 @@
     }
   }
 
-  const menu = $derived<MenuItemDef[]>([
-    { label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() },
-    { label: '&Undo', shortcut: 'Ctrl+Z', disabled: undo.length === 0, action: undoLast },
-    { label: '&Copy picture', action: () => void copyImage() },
-    { separator: true },
-    { id: 'paint-help', testid: 'paint-menu-help', label: '&Help on Paint', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'paint' }) },
-    { label: 'E&xit', action: () => void host.closeWindow(win.id) }
-  ])
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
+      { label: '&Edit', items: editItems('paint-menu', { undo: undoLast, copy: () => void copyImage() }, { hasSelection: true }) },
+      help.menu()
+    ])
+  )
 
-  function openMenu(event: MouseEvent): void {
-    const r = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    menuX = r.left
-    menuY = r.bottom
-    menuOpen = true
-  }
+  /** Undo, Copy picture and New: the same actions as the menu bar. The canvas itself paints with the right button. */
+  const contextItems = (): MenuItemDef[] => [
+    ...editItems('paint-ctx', { undo: undoLast, copy: () => void copyImage() }, { hasSelection: true, canUndo: undo.length > 0 }),
+    { separator: true },
+    { id: 'paint-ctx-new', testid: 'paint-ctx-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }
+  ]
 
   function pickColor(event: MouseEvent, color: string): void {
     if (event.button === 2) color2 = color
@@ -315,12 +319,11 @@
 <svelte:window onkeydown={onWindowKey} />
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="paint" data-testid="paint-app" role="application" aria-label="Agent Paint" tabindex="-1" {onkeydown}>
-  <div class="tabs">
-    <button type="button" class="appbtn" data-testid="paint-menu" onclick={openMenu}>Paint</button>
-    <span class="tab on">Home</span>
-    <span class="tab">View</span>
-  </div>
+<div class="paint" data-testid="paint-app" role="application" aria-label="Agent Paint" tabindex="-1" onkeydown={(e) => {
+    menuCtx.key(e, contextItems)
+    onkeydown(e)
+  }} oncontextmenu={(e) => menuCtx.show(e, contextItems())}>
+  <MenuStrip {menus} aria-label="Paint menu" />
   <div class="ribbon">
     <section class="group" aria-label="Tools">
       <div class="body tools">
@@ -375,7 +378,7 @@
         </div>
         <div class="palette" role="group" aria-label="Palette">
           {#each PALETTE as c (c)}
-            <button type="button" class="sw" data-testid="paint-swatch" data-color={c} style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
+            <button type="button" class="sw" data-testid="paint-swatch" data-color={c} style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
           {/each}
         </div>
       </div>
@@ -398,7 +401,7 @@
         {onpointerup}
         onpointercancel={onpointerup}
         onpointerleave={() => (pointer = null)}
-        oncontextmenu={(e) => e.preventDefault()}
+        oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation())}
       ></canvas>
       {#if ghost}
         <div class="ghost" style:left="{ghost.x}px" style:top="{ghost.y}px" aria-hidden="true">
@@ -434,7 +437,8 @@
     <StatusStripLabel text="{resizing?.width ?? width} × {resizing?.height ?? height}px" borders={['left']} width={130} />
     <StatusStripLabel text={agentDrawing ? 'The agent is drawing…' : tip} borders={['left']} spring />
   </StatusStrip>
-  <ContextMenuStrip items={menu} bind:open={menuOpen} x={menuX} y={menuY} label="Paint menu" />
+  <ContextMenuStrip items={menuCtx.items} bind:open={menuCtx.open} x={menuCtx.x} y={menuCtx.y} label="Paint" />
+  <AppAbout {help} />
 </div>
 
 <style>
@@ -446,43 +450,6 @@
     flex-direction: column;
     background: #dbe6f4;
     outline: 0;
-  }
-  .tabs {
-    flex: none;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 24px;
-    padding: 0 4px;
-    background: linear-gradient(#f7faff, #dfe9f6);
-  }
-  .appbtn {
-    align-self: center;
-    height: 19px;
-    margin-right: 6px;
-    padding: 0 14px;
-    border: 1px solid #1e4f8a;
-    border-radius: 3px 3px 0 0;
-    background: linear-gradient(#5b9be0, #2a6cc0 48%, #1f5cae 50%, #3d86d8);
-    color: #fff;
-    font: inherit;
-    font-weight: 600;
-    text-shadow: 0 0 2px rgba(0, 30, 80, 0.6);
-    cursor: default;
-  }
-  .appbtn:hover {
-    filter: brightness(1.12);
-  }
-  .tab {
-    padding: 2px 12px 3px;
-    border: 1px solid transparent;
-    border-bottom: 0;
-    color: #1e3287;
-  }
-  .tab.on {
-    border-color: #a5b9d5;
-    border-radius: 3px 3px 0 0;
-    background: linear-gradient(#fdfeff, #e6eef9);
   }
   .ribbon {
     flex: none;

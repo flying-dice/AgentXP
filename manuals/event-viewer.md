@@ -79,6 +79,30 @@ The status bar shows the total number of events.
 | Find text | The text to find. Press Enter to search. | `event-viewer-find-text` |
 | Total | Shows the number of all events. | `event-viewer-total` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `event-viewer-menu-help` |
+| Menu: about | Opens the About Event Viewer box. | `event-viewer-menu-about` |
+| Dialog: about | The About Event Viewer box. | `event-viewer-about` |
+| Dialog: about ok | Closes the About box. | `event-viewer-about-ok` |
+| Menu: clear | File menu: clears the log. | `event-viewer-menu-clear` |
+| Menu: close | Closes the window. Alt+F4. | `event-viewer-menu-close` |
+| Menu: copy | Edit menu: copies the selected event. | `event-viewer-menu-copy` |
+| Menu: find | Edit menu: finds text in the events. | `event-viewer-menu-find` |
+| Menu: refresh | View menu: reads the events again. F5. | `event-viewer-menu-refresh` |
+| Menu: filter | View menu: opens the filter box. | `event-viewer-menu-filter` |
+| Menu: clear filter | View menu: removes the filter. | `event-viewer-menu-clear-filter` |
+| Menu: autoscroll | View menu: follows the newest event. | `event-viewer-menu-autoscroll` |
+| Context menu: copy | Copies the selected event. | `event-viewer-ctx-copy` |
+| Context menu: find | Finds text in the events. | `event-viewer-ctx-find` |
+| Context menu: filter | Opens the filter box. | `event-viewer-ctx-filter` |
+| Context menu: refresh | Reads the events again. | `event-viewer-ctx-refresh` |
+| Context menu: clear | Clears the log. | `event-viewer-ctx-clear` |
+
 ### Keys
 
 | Name | What it does | data-testid |

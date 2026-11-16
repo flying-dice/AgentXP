@@ -92,13 +92,9 @@ export class ElectronBrowserDriver implements BrowserDriver {
 
   async navigate(windowId: Id, url: string): Promise<PageInfo> {
     const contents = await this.guest(windowId)
-    const dbg = (m: string): void => void require('node:fs').appendFileSync('/tmp/claude-0/drv.log', `${Date.now()} ${m}\n`)
-    dbg(`navigate ${url} from ${contents.getURL()} id=${contents.id}`)
-    contents.on('did-start-navigation', (_e: unknown, u: string) => dbg(`start-nav ${u}`))
-    contents.on('did-fail-load', (_e: unknown, c: number, d: string, u: string) => dbg(`fail ${c} ${d} ${u}`))
-    contents.on('did-stop-loading', () => dbg(`stop ${contents.getURL()}`))
-    await this.untilLoaded(contents, () => void contents.loadURL(url).catch(() => {}))
-    dbg(`navigated ${contents.getURL()}`)
+    // The Browser app also loads the address (it follows the window view), which aborts the first load: ignore the stop of
+    // that aborted load (the page is still about:blank) and wait for the real one.
+    await this.untilLoaded(contents, () => void contents.loadURL(url).catch(() => {}), true)
     return info(contents)
   }
 
@@ -478,20 +474,31 @@ export class ElectronBrowserDriver implements BrowserDriver {
   }
 
   /** Starts `trigger` and resolves when the page stops loading (rejects on a failed main-frame load or after the timeout). */
-  private untilLoaded(contents: WebContents, trigger: () => void): Promise<void> {
+  private untilLoaded(contents: WebContents, trigger: () => void, ignoreBlankStop = false): Promise<void> {
     return new Promise((resolve, reject) => {
       const finish = (error?: Error): void => {
         clearTimeout(timer)
+        if (poll) clearInterval(poll)
         contents.off('did-stop-loading', onStop)
         contents.off('did-fail-load', onFail)
         if (error) reject(error)
         else resolve()
       }
-      const onStop = (): void => finish()
+      const onStop = (): void => {
+        if (ignoreBlankStop && (contents.getURL() === 'about:blank' || contents.getURL() === '')) return
+        finish()
+      }
       const onFail = (_event: unknown, code: number, description: string, _url: string, isMainFrame: boolean): void => {
         if (isMainFrame && code !== ERR_ABORTED) finish(new Error(`The page failed to load: ${description} (${code}).`))
       }
       const timer = setTimeout(() => finish(new Error(`The page did not finish loading within ${Math.round(this.loadTimeoutMs / 1000)} seconds.`)), this.loadTimeoutMs)
+      // A stop event can be missed when the load is restarted by another navigation: also look at the page itself.
+      const poll = ignoreBlankStop
+        ? setInterval(() => {
+            const at = contents.getURL()
+            if (!contents.isLoading() && at !== 'about:blank' && at !== '') finish()
+          }, 100)
+        : undefined
       contents.on('did-stop-loading', onStop)
       contents.on('did-fail-load', onFail)
       trigger()

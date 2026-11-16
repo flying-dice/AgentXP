@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import { normaliseVPath, type DriveDto, type VfsEntryDto, type VPath } from '@shared/vfs'
+  import { normaliseVPath, vpathParent, type DriveDto, type VfsEntryDto, type VPath } from '@shared/vfs'
   import type { AppProps } from '../types'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
@@ -12,7 +12,14 @@
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import TreeView from '../../kit/organisms/TreeView.svelte'
   import type { TreeNodeData } from '../../kit/organisms/TreeView'
-  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { copyText } from '../shared/contextItems'
+  import { backgroundItems, defaultOpener, entryItems, propertiesText } from './explorerContext'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { errorText } from '../shared/listing'
@@ -250,42 +257,98 @@
     }
   }
 
-  // Context menu of a drive: Open, Eject.
-  let menuOpen = $state(false)
-  let menuX = $state(0)
-  let menuY = $state(0)
-  let menuDrive = $state.raw<DriveDto | null>(null)
-  let menuFolder = $state<VPath | null>(null)
-  const menuItems = $derived<MenuItemDef[]>(
-    menuFolder
-      ? [
-          { id: 'explorer-folder-open', label: '&Open', action: () => menuFolder && go(menuFolder) },
-          { id: 'explorer-folder-chat', label: 'Start a &chat here', icon: 'session', action: () => menuFolder && void host.startChat(menuFolder) }
-        ]
-      : [
-          { id: 'explorer-drive-open', label: '&Open', action: () => menuDrive && go(driveRoot(menuDrive.letter)) },
-          { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: () => menuDrive && void host.startChat(driveRoot(menuDrive.letter)) },
-          { separator: true },
-          { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: menuDrive?.kind !== 'removable', action: () => menuDrive && void host.ejectDrive(menuDrive.letter) }
-        ]
-  )
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'explorer')
+  const ctx = new ContextMenu()
+
+  const askAbout = (target: VPath): void => void host.askChat({ app: 'explorer', windowId: win.id, kind: 'ask', path: target })
+
+  async function showProperties(entry: VfsEntryDto): Promise<void> {
+    await showMessageBox({ text: propertiesText(entry, typeName(entry.path, entry.kind === 'directory')), caption: `${entry.name} Properties`, buttons: 'OK', icon: 'information' })
+  }
+
+  const openEntry = (entry: VfsEntryDto): void => {
+    if (entry.kind === 'directory') go(entry.path)
+    else void host.openApp({ app: defaultOpener(entry.path), path: entry.path })
+  }
+
+  /** A file or folder: Open, Open with, Copy path, Start chat here, Ask chat, Properties. */
+  const entryMenu = (entry: VfsEntryDto): MenuItemDef[] =>
+    entryItems(entry, {
+      open: () => openEntry(entry),
+      openWith: (app) => void host.openApp({ app, path: entry.path }),
+      copyPath: () => copyText(entry.path),
+      properties: () => void showProperties(entry),
+      startChat: () => void host.startChat(entry.kind === 'directory' ? entry.path : (vpathParent(entry.path) ?? entry.path)),
+      askChat: () => askAbout(entry.path)
+    })
+
+  const backgroundMenu = (): MenuItemDef[] =>
+    backgroundItems({ refresh, up: () => go(upPath(path)), inFolder: path !== '', startChat: () => path !== '' && void host.startChat(path), askChat: () => path !== '' && askAbout(path) })
+
+  const driveMenuItems = (drive: DriveDto): MenuItemDef[] => [
+    { id: 'explorer-drive-open', label: '&Open', action: () => go(driveRoot(drive.letter)) },
+    { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: () => void host.startChat(driveRoot(drive.letter)) },
+    { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask chat a&bout this...', icon: 'session', action: () => askAbout(driveRoot(drive.letter)) },
+    { id: 'explorer-ctx-drive-copy-path', testid: 'explorer-ctx-drive-copy-path', label: 'Copy as &path', icon: 'copy', action: () => copyText(driveRoot(drive.letter)) },
+    { separator: true },
+    { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: drive.kind !== 'removable', action: () => void host.ejectDrive(drive.letter) }
+  ]
 
   function folderMenu(row: ListRow, event: MouseEvent): void {
     const entry = entries.find((e) => e.path === row.id)
-    if (entry?.kind !== 'directory') return
-    menuDrive = null
-    menuFolder = entry.path
-    menuX = event.clientX
-    menuY = event.clientY
-    menuOpen = true
+    ctx.show(event, entry ? entryMenu(entry) : backgroundMenu())
   }
 
   function driveMenu(drive: DriveDto, event: MouseEvent): void {
-    menuDrive = drive
-    menuFolder = null
-    menuX = event.clientX
-    menuY = event.clientY
-    menuOpen = true
+    ctx.show(event, driveMenuItems(drive))
+  }
+
+  /** What the Menu key opens: the menu of the selected file, folder or drive, else the background menu. */
+  function keyMenu(): MenuItemDef[] {
+    if (selectedDrive) return driveMenuItems(selectedDrive)
+    return selectedEntry ? entryMenu(selectedEntry) : backgroundMenu()
+  }
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'open', testid: 'explorer-menu-open', label: '&Open', disabled: !selectedEntry && !selectedDrive, action: () => (selectedEntry ? openEntry(selectedEntry) : selectedDrive && go(driveRoot(selectedDrive.letter))) },
+          { id: 'plug', testid: 'explorer-menu-plug-in', label: '&Plug in a project...', action: () => void plugIn() },
+          { id: 'eject', testid: 'explorer-menu-eject', label: '&Eject', disabled: selectedDrive?.kind !== 'removable', action: () => selectedDrive && void host.ejectDrive(selectedDrive.letter) },
+          { id: 'props', testid: 'explorer-menu-properties', label: 'P&roperties', disabled: !selectedEntry, action: () => selectedEntry && void showProperties(selectedEntry) },
+          ...closeItems('explorer', () => void host.closeWindow(win.id))
+        ]
+      },
+      {
+        label: '&Edit',
+        items: [
+          { id: 'copy-path', testid: 'explorer-menu-copy-path', label: 'Copy as &path', disabled: !selectedEntry && !selectedDrive, action: () => copyText(selectedEntry?.path ?? (selectedDrive ? driveRoot(selectedDrive.letter) : '')) },
+          { separator: true },
+          { id: 'select-all', testid: 'explorer-menu-select-all', label: 'Select &All', shortcut: 'Ctrl+A', disabled: path === '', action: () => (selected = rows.map((r) => r.id)) }
+        ]
+      },
+      {
+        label: '&View',
+        items: [
+          { id: 'up', testid: 'explorer-menu-up', label: '&Up one level', shortcut: 'Alt+Up', disabled: path === '', action: () => go(upPath(path)) },
+          { id: 'refresh', testid: 'explorer-menu-refresh', label: '&Refresh', shortcut: 'F5', action: refresh }
+        ]
+      },
+      help.menu()
+    ])
+  )
+
+  function onkeydown(event: KeyboardEvent): void {
+    if (event.key === 'F5') {
+      event.preventDefault()
+      refresh()
+    } else if (event.altKey && event.key === 'ArrowUp' && path !== '') {
+      event.preventDefault()
+      go(upPath(path))
+    } else ctx.key(event, keyMenu)
   }
 
   function onSelectDrive(root: VPath): void {
@@ -303,7 +366,9 @@
   )
 </script>
 
-<div class="explorer" data-testid="explorer-app" data-path={path}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="explorer" data-testid="explorer-app" data-path={path} {onkeydown} oncontextmenu={(e) => ctx.show(e, backgroundMenu())}>
+  <MenuStrip {menus} aria-label="Explorer menu" />
   <div class="nav">
     <ToolStripButton data-testid="explorer-back" icon="chevron-left" title="Back" aria-label="Back" disabled={history.length === 0} onclick={back} />
     <ToolStripButton data-testid="explorer-up" icon="chevron-up" title="Up one level" aria-label="Up" disabled={path === ''} onclick={() => go(upPath(path))} />
@@ -339,7 +404,8 @@
       <StatusStripLabel testid="explorer-selection" text={selectionText} borders={['left']} />
     {/if}
   </StatusStrip>
-  <ContextMenuStrip items={menuItems} bind:open={menuOpen} x={menuX} y={menuY} label={menuFolder ? 'Folder' : 'Drive'} />
+  <ContextMenuStrip items={ctx.items} bind:open={ctx.open} x={ctx.x} y={ctx.y} label="Explorer" />
+  <AppAbout {help} />
 </div>
 
 <style>

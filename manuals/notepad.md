@@ -60,6 +60,33 @@ The status bar shows **Modified** when you changed the text. After you save, it 
 | Help menu | Opens the Help menu. | `menubar-help` |
 | View Help | Opens this manual. F1. | `notepad-menu-help` |
 
+### Menu Bar and Context Menu
+
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Menu: help | Opens the Help window for this app. F1. | `notepad-menu-help` |
+| Menu: about | Opens the About Notepad box. | `notepad-menu-about` |
+| Dialog: about | The About Notepad box. | `notepad-about` |
+| Dialog: about ok | Closes the About box. | `notepad-about-ok` |
+| Menu: close | Closes the window. Alt+F4. | `notepad-menu-close` |
+| Menu: undo | Undoes the last edit. Ctrl+Z. | `notepad-menu-undo` |
+| Menu: cut | Cuts the selected text. Ctrl+X. | `notepad-menu-cut` |
+| Menu: copy | Copies the selected text. Ctrl+C. | `notepad-menu-copy` |
+| Menu: paste | Pastes the clipboard text. Ctrl+V. | `notepad-menu-paste` |
+| Menu: delete | Deletes the selected text. Del. | `notepad-menu-delete` |
+| Menu: select all | Selects all text. Ctrl+A. | `notepad-menu-select-all` |
+| Context menu: undo | Undoes the last edit. Ctrl+Z. | `notepad-ctx-undo` |
+| Context menu: cut | Cuts the selected text. Ctrl+X. | `notepad-ctx-cut` |
+| Context menu: copy | Copies the selected text. Ctrl+C. | `notepad-ctx-copy` |
+| Context menu: paste | Pastes the clipboard text. Ctrl+V. | `notepad-ctx-paste` |
+| Context menu: delete | Deletes the selected text. Del. | `notepad-ctx-delete` |
+| Context menu: select all | Selects all text. Ctrl+A. | `notepad-ctx-select-all` |
+| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `notepad-ctx-explain` |
+| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `notepad-ctx-ask` |
+| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `notepad-ctx-send` |
+
 ### Keys
 
 | Name | What it does | data-testid |

@@ -65,6 +65,11 @@ export class CodeReviewWindow {
     return this.id('review-status-agent')
   }
 
+  /** Double-click a file of the outline: the expanded view opens on it. */
+  async openFile(path: string): Promise<void> {
+    await this.file(path).dblclick()
+  }
+
   async showExpanded(): Promise<void> {
     await this.id('review-view-expanded').click()
   }

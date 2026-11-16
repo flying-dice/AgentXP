@@ -4,6 +4,7 @@
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
+  import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
   import { joinVPath } from '@shared/vfs'
@@ -27,6 +28,8 @@
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { taskbarItems } from '../desktop/windowOrder'
+  import { taskbarMenuItems } from '../desktop/taskbarMenu'
+  import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
   import { HOME_TOPIC, topicForApp } from '../apps/help/helpModel'
 
   interface Props {
@@ -140,6 +143,14 @@
   const centreApprovals = $derived(approvals.map((a) => ({ key: a.key, title: a.title, detail: a.chatTitle })))
   const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text })))
 
+  // The taskbar button menu: Restore, Minimize, Close window.
+  const taskbarMenu = new ContextMenu()
+  function taskbarContext(item: { id: string }, at: { x: number; y: number }): void {
+    const w = desktop.state.windows.find((x) => x.id === Number(item.id))
+    if (!w) return
+    taskbarMenu.showAt(at.x, at.y, taskbarMenuItems(w.windowState, { restore: () => void desktop.restore(w.id).then(() => desktop.focusWindow(w.id)), minimize: () => void desktop.minimize(w.id), close: () => void desktop.closeWindow(w.id) }))
+  }
+
   function onKeydown(event: KeyboardEvent): void {
     if (event.altKey && event.key === 'F4') {
       event.preventDefault()
@@ -156,7 +167,8 @@
   }
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<!-- The browser's own context menu never shows on the desktop: every app and the desktop have their own. -->
+<svelte:window onkeydown={onKeydown} oncontextmenu={(e) => e.preventDefault()} />
 
 <div class="page" bind:this={root}>
   <Desktop
@@ -164,6 +176,7 @@
     startOpen={desktop.startOpen}
     onstart={() => desktop.toggleStart()}
     onitemclick={(item) => void desktop.toggleFromTaskbar(Number(item.id))}
+    onitemcontext={taskbarContext}
   >
     <DesktopSurface
       icons={desktopIcons}
@@ -278,6 +291,7 @@
         <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} onclose={() => desktop.dismissBalloon()} />
       </div>
     {/if}
+    <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />
     {#snippet tray()}
       <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} />
       <TrayFlag count={approvals.length} open={desktop.actionCenterOpen} bind:element={flag} onclick={() => desktop.toggleActionCenter()} />
