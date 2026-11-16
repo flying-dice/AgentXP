@@ -35,7 +35,8 @@
     {#each roots as c (c.id)}
       <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">
-          <span class="dot {c.severity}" title={SEVERITY_LABELS[c.severity]}></span>
+          <span class="dot {c.severity}" aria-hidden="true"></span>
+          <span class="level" data-testid="review-comment-level">{SEVERITY_LABELS[c.severity]}</span>
           <span class="loc">{commentLocation(c)}</span>
           {#if c.state === 'resolved'}<span class="state">Resolved</span>{/if}
           <span class="sent" data-testid="review-comment-sent" data-sent={c.state === 'sent' ? 'yes' : 'no'}>
@@ -127,6 +128,10 @@
     display: flex;
     align-items: center;
     gap: 5px;
+  }
+  .level {
+    flex: none;
+    font-weight: bold;
   }
   .loc {
     font-family: var(--w7-font-mono);

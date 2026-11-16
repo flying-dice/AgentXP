@@ -1,9 +1,15 @@
 import { changeCounts, changeCountsShort } from '@shared/lineCounts'
 import type { FileChangeDto, FileChangeKind } from '@shared/models'
+import type { IconName } from '../../kit/atoms/icons'
 
 const KIND: Record<FileChangeKind, string> = { added: 'Added', modified: 'Modified', deleted: 'Deleted' }
 
 export const changeKindLabel = (kind: FileChangeKind): string => KIND[kind]
+
+/** The picture of a status in a list too narrow for its word (UX-207). The word is its tooltip and its name for a screen reader. */
+const KIND_ICON: Record<FileChangeKind, IconName> = { added: 'plus', modified: 'edit', deleted: 'delete' }
+export const changeKindIcon = (kind: FileChangeKind): IconName => KIND_ICON[kind]
+export const REVERTED_ICON: IconName = 'undo'
 
 type Counted = Pick<FileChangeDto, 'additions' | 'deletions'> & Partial<Pick<FileChangeDto, 'kind' | 'originalText' | 'currentText'>>
 

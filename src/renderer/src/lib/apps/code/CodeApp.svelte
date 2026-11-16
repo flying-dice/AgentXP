@@ -7,7 +7,7 @@
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import { attachLineSelect } from './lineSelect'
-  import { openRecycleBin } from '../../app/changes/openRecycleBin'
+  import { openRecycleBin, restoreReverted } from '../../app/changes/openRecycleBin'
   import FileTree from '../../app/shell/FileTree.svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -40,7 +40,7 @@
   import { errorText } from '../shared/listing'
   import { chatSessionIds, useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
-  import { closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout, type Panes } from './codeModel'
+  import { closeTab, focusKey, isFocused, linesOf, managementFits, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout, type Panes } from './codeModel'
   import { localStore } from '../../desktop/chatPane'
   import { chatStripHidden } from '../../desktop/chatStrip.svelte'
   import { treeMenu, treeToolbar, type TreeMenuTarget } from './codeContext'
@@ -459,11 +459,17 @@
    * Focus on the file (toolbar button, View menu, F11, Ctrl+Shift+F): the chat pane, Management and Changes and Git close
    * together and the file has the whole window. The same control then reads "Show panes" and brings back what was open.
    */
+  let appWidth = $state(0)
+  let squeezed = $state(false)
+  let overridden = false
+  let autoChange = false
   const panes = $derived<Panes>({ management: showManagement, logs: showLogs, chat: host.chatPaneOpen(win.id) })
   const focusMode = $derived(isFocused(panes))
   const allPanelsOpen = $derived(showManagement && showLogs && panes.chat)
   let restorePanes = $state.raw<Panes | null>(null)
   function setPanes(next: Panes): void {
+    // "Show panes" asks for every pane at once: that is the user's choice, so the squeeze below leaves Management open (UX-210).
+    if (next.chat && next.management) overridden = true
     showManagement = next.management
     showLogs = next.logs
     if (next.chat !== host.chatPaneOpen(win.id)) host.toggleChatPane(win.id)
@@ -474,6 +480,36 @@
     if (focusMode) chatStripHidden.add(id)
     else chatStripHidden.delete(id)
     return () => void chatStripHidden.delete(id)
+  })
+  // With the chat pane open the editor keeps at least EDITOR_MIN_WIDTH: Management closes when the room is short and returns when the
+  // chat pane closes (UX-210). A click on Management while the chat pane is open is the user's choice and is never undone.
+  $effect(() => {
+    const open = panes.chat
+    const width = appWidth
+    untrack(() => {
+      if (!open) {
+        if (squeezed) {
+          autoChange = true
+          showManagement = true
+          squeezed = false
+        }
+        overridden = false
+      } else if (!overridden && !squeezed && showManagement && !managementFits(width)) {
+        autoChange = true
+        showManagement = false
+        squeezed = true
+      }
+    })
+  })
+  $effect(() => {
+    void showManagement
+    untrack(() => {
+      if (autoChange) autoChange = false
+      else if (panes.chat) {
+        overridden = true
+        squeezed = false
+      }
+    })
   })
   /** Focus mode, "Chat": opens the chat pane, which ends Focus mode. */
   const openChatFromFocus = (): void => host.toggleChatPane(win.id)
@@ -677,7 +713,7 @@
 
   /** Cut, Copy, Paste, Select All (the viewer is read only), Revert hunk when on a hunk, Go to file and the Ask the agent group. */
   const contextItems = (): MenuItemDef[] => {
-    const selected = selectedText()
+    const selected = quotedText()
     const hasSelection = selected !== ''
     return [
       ...editItems('code-ctx', { cut: () => {}, copy: copySelection, paste: () => {}, selectAll: selectAllText }, { hasSelection, readOnly: true }),
@@ -689,15 +725,15 @@
   }
 
   /** The text of the selected lines: the DOM selection is gone once the focus moved to the chat pane, the range stays. */
-  const linesOf = (source: string | null | undefined, range: { startLine: number; endLine: number } | null): string =>
-    source && range ? source.split('\n').slice(range.startLine - 1, range.endLine).join('\n') : ''
+  /** What a question about the selection quotes: the whole lines the status bar names, never half a line (UX-210). */
+  const quotedText = (): string => (selection ? linesOf(text, selection) : selectedText())
 
   // The chat pane knows the open file, all tabs, the selection and the git status of the file.
   // svelte-ignore state_referenced_locally
   useAppContext(host, () => win.id, () => ({
     openFile: active,
     openTabs: [...tabs],
-    ...selectionContext(selectedText() || linesOf(text, selection), selection),
+    ...selectionContext(quotedText(), selection),
     ...(active ? { gitStatus: stateOf(active), changedLines: lineChanges.length } : {})
   }))
 
@@ -844,7 +880,7 @@
 <svelte:window onkeydown={onFocusKey} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="code" data-testid="code-app" onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))} oncontextmenu={(e) => ctx.show(e, contextItems())}>
+<div class="code" data-testid="code-app" bind:clientWidth={appWidth} onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))} oncontextmenu={(e) => ctx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Code menu" />
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Code" />
   <AppAbout {help} />
@@ -855,7 +891,7 @@
     <ToolStripButton data-testid="code-next-change" icon="chevron-down" aria-label="Next change" title={lineChanges.length === 0 ? 'The open file has no changes to step through.' : 'Next change (Alt+F5)'} disabled={lineChanges.length === 0} onclick={() => step(1)} />
     <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title={revertTarget === null ? 'Select a changed line in the file first.' : 'Revert hunk'} aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
-    <ToolStripButton data-testid="code-ask-selection" icon="session" text="Ask about selection" title={selection ? 'Ask the chat about the lines you selected' : 'Select some lines of the file first'} disabled={active === null || selection === null} onclick={() => ask('ask', selectedText() || linesOf(text, selection))} />
+    <ToolStripButton data-testid="code-ask-selection" icon="session" text="Ask about selection" title={selection ? 'Ask the chat about the lines you selected' : 'Select some lines of the file first'} disabled={active === null || selection === null} onclick={() => ask('ask', quotedText())} />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-refresh" icon="refresh" title="Refresh git status" aria-label="Refresh git status" onclick={() => void refreshGit()} />
     <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Look at the changes of this project. Nothing starts until you ask the agent to review." onclick={() => void reviewChanges()} />
@@ -980,7 +1016,7 @@
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <div class="changes" data-testid="code-changes">
-                <ChangesPane {changes} gitCount={gitEntries.length} gitTracked={gitStatuses.length > 0 ? gitStatuses.some((s) => s !== null) : undefined} onopengit={() => (logsTab = 'git')} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={(id) => void openRecycleBin(host, id)} />
+                <ChangesPane {changes} gitCount={gitEntries.length} gitTracked={gitStatuses.length > 0 ? gitStatuses.some((s) => s !== null) : undefined} onopengit={() => (logsTab = 'git')} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={(id) => void openRecycleBin(host, id)} onrestore={(id) => restoreReverted(host, id)} />
               </div>
             {:else}
               <div class="gitpane" data-testid="code-git-pane">

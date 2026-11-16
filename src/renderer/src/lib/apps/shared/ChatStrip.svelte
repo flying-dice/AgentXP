@@ -13,14 +13,16 @@
     /** The chat has something new since it was closed. */
     news?: boolean
     title?: string
+    /** The word on the tab. A window that knows what the chat is for says it (the Code window: Ask about this file, UX-210). */
+    label?: string
   }
 
-  let { onopen, testid, news = false, title = 'Chat' }: Props = $props()
+  let { onopen, testid, news = false, title = 'Chat', label = 'Chat' }: Props = $props()
 </script>
 
-<button type="button" class="tab" class:news data-testid={testid} data-news={news} aria-label={news ? 'Open the chat. It has news.' : 'Open the chat'} {title} onclick={onopen}>
+<button type="button" class="tab" class:news data-testid={testid} data-news={news} aria-label={news ? `Open the chat: ${label}. It has news.` : `Open the chat: ${label}`} {title} onclick={onopen}>
   <Icon name="session" size={16} />
-  <span class="text">Chat</span>
+  <span class="text">{label}</span>
 </button>
 
 <style>
@@ -42,7 +44,13 @@
     cursor: default;
   }
   .text {
+    max-width: 100%;
+    padding: 0 2px;
     font-weight: 700;
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
   }
   .tab:hover {
     background: var(--w7-btn-hover-face);

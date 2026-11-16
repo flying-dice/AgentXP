@@ -13,7 +13,7 @@
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
-  import { openRecycleBin } from '../../app/changes/openRecycleBin'
+  import { openRecycleBin, restoreReverted } from '../../app/changes/openRecycleBin'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { undoRevertItem } from '../../app/changes/changeMenu'
   import TasksPane from '../../app/shell/TasksPane.svelte'
@@ -408,6 +408,7 @@
                 bind:selectedId={selectedChangeId}
                 onrevert={(c) => revert(c)}
                 onopenrecyclebin={(id) => void openRecycleBin(host, id)}
+                onrestore={(id) => restoreReverted(host, id)}
                 onopeneditor={(c) => folder && void host.openApp({ app: 'code', path: c.path })}
               />
             {:else}

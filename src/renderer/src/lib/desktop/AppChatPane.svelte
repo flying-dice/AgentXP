@@ -75,7 +75,7 @@
 
 {#if pane.collapsed}
   {#if !chatStripHidden.has(w.id)}
-    <ChatStrip testid="chat-pane-toggle" {news} title="Chat (Ctrl+Shift+C): ask about what you are looking at" onopen={() => desktop.setChatPane(w.id, true)} />
+    <ChatStrip testid="chat-pane-toggle" {news} label={w.app === 'code' ? 'Ask about this file' : undefined} title="Chat (Ctrl+Shift+C): ask about what you are looking at" onopen={() => desktop.setChatPane(w.id, true)} />
   {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->

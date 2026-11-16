@@ -43,7 +43,7 @@ The menu bar has the menus **File**, **Edit**, **View**, **Search**, **Tools**, 
 
 ### The Toolbar
 
-The toolbar has the buttons for files, for changes, for the panes, and for the chat. **Ask about selection** opens the chat pane (420 pixels wide) with a question about the lines that you selected in the file. The lines stay marked in the file while you write in the chat pane. At the right end, **Focus on the file** gives the file the whole window. Some buttons are always dimmed because the agent writes the files.
+The toolbar has the buttons for files, for changes, for the panes, and for the chat. **Ask about selection** opens the chat pane (420 pixels wide) with a question about the lines that you selected in the file. The question quotes whole lines, the lines that the status bar names (for example "Selected 1-2"), even when your selection ended in the middle of a line. The lines stay marked in the file while you write in the chat pane. When the chat pane opens in a narrow window, the Management pane closes so that the file stays at least 400 pixels wide, and it comes back when you close the chat pane. At the right end, **Focus on the file** gives the file the whole window. Some buttons are always dimmed because the agent writes the files.
 
 ### The Management Pane
 
@@ -51,7 +51,7 @@ The pane is at the left. It has three tabs.
 
 - **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
-- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. A row marked "Reverted" shows "This change was undone" and a **Restore...** button that opens the Recycle Bin on that file. The list shows only changes that are not committed yet: when you commit a file in Git, its row leaves the list (in a folder without Git every change stays). When nothing is left, the list says "No uncommitted changes from this chat."; if Git shows changed files from before, the line above the list says how many and links to Git. In a folder without Git it says that the folder is not tracked by Git.
+- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. The list has the columns **File**, **Status** (the whole word: Modified, Added, Deleted or Reverted), **Path** (the folder, shown in a wide pane; point to a row for the whole path) and **Lines**. A row marked "Reverted" shows "This change was undone" and a **Restore** button that puts the file back in one click; the pane then says "Restored" and the file name. If the file cannot be put back from here (for example, its folder is gone), the pane says why and the button reads **Open Recycle Bin...**. The list shows only changes that are not committed yet: when you commit a file in Git, its row leaves the list (in a folder without Git every change stays). When nothing is left, the list says "No uncommitted changes from this chat."; if Git shows changed files from before, the line above the list says how many and links to the Git tab. In a folder without Git it says "This folder is not tracked by Git, so there are no change marks."
 
 ### The Editor
 
@@ -162,15 +162,18 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Open in editor | Shows the file in the editor. | `changes-open-editor` |
 | Open Recycle Bin | The link in the one line above the list after a revert. It opens the Recycle Bin. A reverted file stays in the list, in grey, after you close and open the pane or the window. | `changes-open-recycle-bin` |
 | Changes pane | The whole pane: the list, the diff and the buttons. The list is as high as its rows (two rows at least, a third of the pane at most) and the diff gets the rest, about 12 lines. The diff scrolls on its own. In a wide, short pane the diff is beside the list. | `changes-pane` |
-| Nothing changed note | The line above an empty list. When Git shows changed files it says how many, from before this chat. In a folder without Git it says that the folder is not tracked by Git. | `changes-git-note` |
-| Open Git | The link in that line. It shows the Git tab. | `changes-open-git` |
+| Nothing changed note | The line above an empty list. When Git shows changed files it says how many, from before this chat, and links to the Git tab. In a folder without Git it says: This folder is not tracked by Git, so there are no change marks. | `changes-git-note` |
+| Open Git | The link **open the Git tab** at the end of that line. It shows the Git tab. | `changes-open-git` |
 | Reverted note | One line above the list after a revert, with the link to the Recycle Bin. | `changes-reverted-note` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
 | Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
-| Why a button is dimmed | The line above the buttons that says what to do first: "Nothing to revert yet." while the list is empty, "Select a changed file first." when nothing is selected. | `changes-reason` |
-| Undone change | The words in place of the diff when you select a reverted row: "This change was undone. Restore it from the Recycle Bin." | `changes-undone` |
+| Why a button is dimmed | The line above the buttons that says what to do first: "Nothing to revert yet." while the list is empty, "Select a changed file first." only when no row is selected. | `changes-reason` |
+| Undone change | The words in place of the diff when you select a reverted row: "This change was undone. Restore it to put the file back." | `changes-undone` |
 | Undone change text | The sentence itself. | `changes-undone-text` |
-| Restore | The button below that sentence. It opens the Recycle Bin on that file. | `changes-restore` |
+| Restore | The button below that sentence. It puts the file back in one click. When that is not possible it reads **Open Recycle Bin...** and opens the Recycle Bin on that file. | `changes-restore` |
+| Restored | The line above the list after a restore: Restored and the file name. | `changes-restored` |
+| Status | The word of a row: Modified, Added, Deleted or Reverted. The column is as wide as its words. | `changes-status` |
+| Path | The folder of a row, in a wide pane. Point to it for the whole path. | `changes-path` |
 | Path | Shows the active file. | `code-status-path` |
 | Agent editing | Shows that the agent writes. | `code-status-editing` |
 | Caret | Shows the line and the column. | `code-status-caret` |
@@ -191,7 +194,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Dialog: about | The About Code box. | `code-about` |
 | Dialog: about ok | Closes the About box. | `code-about-ok` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `code-menu-chat-pane` |
-| Chat pane edge | The tab at the right edge with a chat icon and the word Chat. It pulses when the chat has news. Click it to open the chat (Ctrl+Shift+C). Focus mode hides it. | `chat-pane-toggle` |
+| Chat pane edge | The tab at the right edge with a chat icon and the words **Ask about this file**. It pulses when the chat has news. Click it to open the chat (Ctrl+Shift+C). Focus mode hides it. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `code-menu-close` |
 | Context menu: cut | Cut. Dimmed: the editor is read only. | `code-ctx-cut` |
 | Context menu: copy | Copies the selected code. | `code-ctx-copy` |

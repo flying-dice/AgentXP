@@ -55,6 +55,9 @@
     commentCounts,
     fileView,
     filesStatusLabel,
+    sentCommentsLine,
+    sendButtonText,
+    sendButtonTitle,
     verdictLine,
     neighbourFile,
     openCounts,
@@ -132,6 +135,7 @@
   const positionLabel = $derived(changePositionLabel(fv.regions, selectedRow))
   const counts = $derived(commentCounts(review.comments))
   const opens = $derived(openCounts(review.comments))
+  const sentLine = $derived(sentCommentsLine(counts.sent))
   const reviewing = $derived(store?.running ?? false)
   const status = $derived(store?.state.session.status && store.state.session.status !== 'closed' ? store.state.session.status : (session?.status ?? null))
   // The status bar drops its least important field when the window is narrow, instead of cutting a field (UX-167).
@@ -547,7 +551,7 @@
     <span class="spring"></span>
     <ToolStripButton icon="agent" text="Start a new review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={askTitle} />
     <ToolStripButton icon="properties" text="Comments ({counts.total})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" title="Show or hide the list of comments. The number counts every comment, open or not." />
-    <ToolStripButton icon="session" text="Send comments to chat..." onclick={() => void openSend('open')} disabled={counts.open === 0} data-testid="review-send-comments" title={counts.open === 0 ? 'There are no open comments to send.' : 'Send the open comments to a chat, so the agent can fix them'} />
+    <ToolStripButton icon="session" text={sendButtonText(counts.open, counts.sent)} onclick={() => void openSend('open')} disabled={counts.open === 0} data-testid="review-send-comments" title={sendButtonTitle(counts.open, counts.sent)} />
   </div>
 
   {#if review.summary}
@@ -563,6 +567,12 @@
           : 'Nobody has reviewed these changes yet. Click a line number to comment yourself, or click "Start a new review...".'}
         {@render commentsLink()}
       </span>
+    </div>
+  {/if}
+
+  {#if sentLine}
+    <div class="banner sent" data-testid="review-sent-line" role="status">
+      <span class="sentence">{sentLine}</span>
     </div>
   {/if}
 
@@ -764,6 +774,9 @@
   }
   .banner.pending {
     color: var(--w7-text-muted);
+  }
+  .banner.sent {
+    background: #e6f0fb;
   }
   .review :global(.sl.keep) {
     flex: none;

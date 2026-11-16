@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ALL_PANES, NO_PANES, closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout } from './codeModel'
+import { ALL_PANES, NO_PANES, closeTab, focusKey, isFocused, linesOf, managementFits, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout } from './codeModel'
 
 describe('tabs', () => {
   it('opens a tab once and activates it', () => {
@@ -77,5 +77,22 @@ describe('focus on the file', () => {
     data.set(key, '{nope')
     expect(readLayout(storage, key).management).toBe(true)
     expect(readLayout(null, key).logs).toBe(true)
+  })
+})
+
+describe('ask about selection (UX-210)', () => {
+  it('quotes whole lines, from the first to the last line of the range', () => {
+    const source = 'one\nexport const question = "what is\nthree'
+    expect(linesOf(source, { startLine: 1, endLine: 2 })).toBe('one\nexport const question = "what is')
+    expect(linesOf(source, { startLine: 3, endLine: 3 })).toBe('three')
+    expect(linesOf(source, null)).toBe('')
+    expect(linesOf(null, { startLine: 1, endLine: 1 })).toBe('')
+  })
+
+  it('keeps Management open only while the editor stays 400 px wide', () => {
+    expect(managementFits(0)).toBe(true)
+    expect(managementFits(604)).toBe(true)
+    expect(managementFits(603)).toBe(false)
+    expect(managementFits(400)).toBe(false)
   })
 })

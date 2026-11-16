@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { RecycledChangeDto } from '@shared/desktop'
-import { DIFF_MIN_HEIGHT, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, listHeightFor, readListSize, revertedRows, writeListSize } from './changesLayout'
+import { COMPACT_LIST_WIDTH, isCompactList, PATH_MIN_LIST_WIDTH, changeColumns, statusColumnWidth, DIFF_MIN_HEIGHT, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, listHeightFor, readListSize, revertedRows, writeListSize } from './changesLayout'
 
 const entry = (id: number, path: string, sessionId: number | null, revertedAt = `2026-11-16T10:0${id}:00Z`): RecycledChangeDto => ({
   id,
@@ -78,5 +78,36 @@ describe('reverted rows (UX-117)', () => {
 
   it('is empty without chats', () => {
     expect(revertedRows([entry(1, 'E:\\a.ts', 5)], [], [])).toEqual([])
+  })
+})
+
+describe('changeColumns (UX-207)', () => {
+  it('sizes the Status column to its longest word, never less than 64 px', () => {
+    expect(statusColumnWidth([])).toBe(64)
+    expect(statusColumnWidth(['Added'])).toBe(64)
+    expect(statusColumnWidth(['Added', 'Modified'])).toBe(80)
+    expect(statusColumnWidth(['Reverted', 'Deleted'])).toBe(80)
+  })
+
+  it('shows a Path column only in a wide list', () => {
+    expect(changeColumns(['Modified'], 340).map((c) => c.key)).toEqual(['file', 'kind', 'lines'])
+    expect(changeColumns(['Modified'], PATH_MIN_LIST_WIDTH).map((c) => c.key)).toEqual(['file', 'kind', 'dir', 'lines'])
+  })
+
+  it('keeps File and Path flexible and the others fixed', () => {
+    const columns = changeColumns(['Modified'], 600)
+    expect(columns.find((c) => c.key === 'file')?.width).toBeUndefined()
+    expect(columns.find((c) => c.key === 'dir')?.width).toBeUndefined()
+    expect(columns.find((c) => c.key === 'kind')?.width).toBe(80)
+    expect(columns.find((c) => c.key === 'lines')?.width).toBe(84)
+  })
+
+  it('has no Status column in a narrow list, so File and Lines stay whole', () => {
+    expect(isCompactList(COMPACT_LIST_WIDTH - 1)).toBe(true)
+    expect(isCompactList(COMPACT_LIST_WIDTH)).toBe(false)
+    const columns = changeColumns(['Modified'], 225)
+    expect(columns.map((c) => c.key)).toEqual(['file', 'lines'])
+    // 120 (File at least) + 84 fits the 206 px of the list of a small Code window.
+    expect(columns.reduce((sum, c) => sum + (c.width ?? c.minWidth ?? 0), 0)).toBeLessThanOrEqual(206)
   })
 })

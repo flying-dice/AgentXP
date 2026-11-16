@@ -54,6 +54,10 @@ describe('Changes pane', () => {
         expect(inside(lines, list), `row ${i} counts in the list`).toBe(true)
         // The name is readable: its box is at least 80 px wide (a short list scrolls, and its scroll bar takes 17 px, UX-184).
         expect((await row.getByTestId('changes-file').boundingBox())!.width, `row ${i} name width`).toBeGreaterThanOrEqual(80)
+        // The Status word is whole ("Modified", never "Modi...") (UX-207).
+        // A list too narrow for the column (the dock of a small Code window) shows the status as the picture of the row, and has no word to cut.
+        const status = row.getByTestId('changes-status')
+        if ((await status.count()) > 0) expect(await status.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), `row ${i} status`).toBe(true)
         // The tail is whole: its text is not clipped by its own box.
         expect(await row.getByTestId('changes-name-tail').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
       }
@@ -112,10 +116,14 @@ describe('Changes pane', () => {
     await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
     await see.visible(chat.frame.getByTestId('changes-reverted'))
     await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
-    // Selecting the reverted row says where the change is and offers Restore... (UX-185).
+    // Selecting the reverted row says where the change is and offers Restore (UX-185, UX-209). The hint under the list no longer asks for a selection.
     await chat.frame.getByTestId('changes-reverted').click()
-    await see.text(chat.frame.getByTestId('changes-undone-text'), 'This change was undone. Restore it from the Recycle Bin.')
-    await chat.frame.getByTestId('changes-restore').click()
+    await see.text(chat.frame.getByTestId('changes-undone-text'), 'This change was undone. Restore it to put the file back.')
+    await see.text(chat.frame.getByTestId('changes-restore'), 'Restore')
+    await see.gone(chat.frame.getByTestId('changes-reason'))
+    // The right-click menu opens the Recycle Bin on the item.
+    await chat.frame.getByTestId('changes-reverted').click({ button: 'right' })
+    await ctx.desktopPage.getByTestId('changes-ctx-restore').click()
     await see.visible(ctx.desktop.window('recycle-bin').getByTestId('recycle-bin-list'))
     await see.attribute(ctx.desktop.window('recycle-bin').getByTestId('recycle-bin-item').first(), 'aria-selected', 'true')
     await ctx.desktop.closeWindow('recycle-bin')
@@ -149,5 +157,16 @@ describe('Changes pane', () => {
     // The Code list can be shorter than its rows (35% of a short pane): it scrolls, and the reverted row is reached by scrolling.
     await code.frame.getByTestId('changes-reverted').scrollIntoViewIfNeeded()
     expect(inside((await code.frame.getByTestId('changes-reverted').boundingBox())!, codeList)).toBe(true)
+  })
+
+  it('Restore puts the file back in one click and the pane says so (UX-209)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.showChanges()
+    await chat.frame.getByTestId('changes-reverted').click()
+    await chat.frame.getByTestId('changes-restore').click()
+    await see.text(chat.frame.getByTestId('changes-restored'), /^Restored .+\.$/)
+    await see.gone(chat.frame.getByTestId('changes-reverted'))
+    // No Recycle Bin window was opened for it.
+    await see.count(ctx.desktop.windows('recycle-bin'), 0)
   })
 })

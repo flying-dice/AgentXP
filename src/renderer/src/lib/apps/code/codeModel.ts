@@ -102,3 +102,18 @@ export function writeLayout(storage: Pick<Storage, 'setItem'> | null, key: strin
     /* quota or blocked storage */
   }
 }
+
+/**
+ * The text of the lines `range.startLine` to `range.endLine` (1-based, both included) of `source`: what "Ask about selection" quotes, so a drag
+ * that stopped in the middle of a line still asks about whole lines, the lines the status bar names (UX-210). Empty without text or range.
+ */
+export const linesOf = (source: string | null | undefined, range: { startLine: number; endLine: number } | null): string =>
+  source && range ? source.split('\n').slice(range.startLine - 1, range.endLine).join('\n') : ''
+
+/** The editor is at least this wide while the chat pane is open (UX-210). */
+export const EDITOR_MIN_WIDTH = 400
+/** The Management pane and the bar beside it. */
+export const MANAGEMENT_WIDTH = 204
+
+/** Does the editor keep `EDITOR_MIN_WIDTH` with Management open in a window `appWidth` px wide (the chat pane already taken off)? Unknown (0) fits. */
+export const managementFits = (appWidth: number): boolean => appWidth <= 0 || appWidth - MANAGEMENT_WIDTH >= EDITOR_MIN_WIDTH

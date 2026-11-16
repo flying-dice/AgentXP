@@ -1,5 +1,6 @@
 import type { RecycledChangeDto } from '@shared/desktop'
 import type { Id } from '@shared/models'
+import type { ListColumn } from '../../kit/organisms/ListView'
 
 /** Height of the list header, of one row and of the borders, as ListView draws them. */
 const HEADER = 26
@@ -37,10 +38,12 @@ export function defaultListHeight(rows: number, available: number): number {
 }
 
 /** A pane at least this wide and less than this high shows the diff beside the list; the list is then at least this wide and the diff this wide. */
-export const BESIDE_MIN_WIDTH = 460
+export const BESIDE_MIN_WIDTH = 520
 export const BESIDE_MAX_HEIGHT = 380
 export const LIST_MIN_WIDTH = 200
 export const DIFF_MIN_WIDTH = 180
+/** The list beside the diff opens this wide: File, Status and Lines whole, without a sideways scroll (UX-207). */
+export const BESIDE_LIST_WIDTH = 300
 
 const keyOf = (layoutKey: string): string => `agent7.changes.list.v2.${layoutKey}`
 
@@ -88,4 +91,38 @@ export function revertedRows(recycled: readonly RecycledChangeDto[], sessionIds:
     rows.push({ id: entry.id, path: entry.path, at: entry.revertedAt })
   }
   return rows.sort((a, b) => a.at.localeCompare(b.at)).map(({ id, path }) => ({ id, path }))
+}
+
+/** A character of the list font, and the room around a word (cell padding, the sort mark). */
+const CHAR_PX = 7
+const CELL_PAD = 24
+
+/** The Status column is as wide as its longest word ("Modified", "Reverted"), so a word is never cut (UX-207). */
+export const statusColumnWidth = (words: readonly string[]): number => Math.max(64, Math.max(0, ...words.map((w) => w.length)) * CHAR_PX + CELL_PAD)
+
+/** A list at least this wide has a Path column (the folder); a narrower one has the whole path in the tooltip of the file name. */
+export const PATH_MIN_LIST_WIDTH = 430
+
+/** A list narrower than this (the dock of a small Code window) has no Status column: the picture at the start of each row says it, and the word is in the tooltip of the name. File and Lines stay whole. */
+export const COMPACT_LIST_WIDTH = 300
+export const isCompactList = (listWidth: number): boolean => listWidth < COMPACT_LIST_WIDTH
+
+/**
+ * The columns of the list (UX-207): File takes the free width, Status is as wide as its words, Path (the folder, in a wide list only) shares what
+ * is left and shows the whole path in a tooltip, Lines is a fixed 84 px. `words` are the status words of the rows now in the list.
+ */
+export function changeColumns(words: readonly string[], listWidth: number): ListColumn[] {
+  if (isCompactList(listWidth)) {
+    return [
+      { key: 'file', header: 'File', minWidth: 120 },
+      { key: 'lines', header: 'Lines', width: 84, align: 'right' }
+    ]
+  }
+  const columns: ListColumn[] = [
+    { key: 'file', header: 'File', minWidth: 96 },
+    { key: 'kind', header: 'Status', width: statusColumnWidth(words) }
+  ]
+  if (listWidth >= PATH_MIN_LIST_WIDTH) columns.push({ key: 'dir', header: 'Path', minWidth: 90 })
+  columns.push({ key: 'lines', header: 'Lines', width: 84, align: 'right' })
+  return columns
 }
