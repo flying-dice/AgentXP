@@ -34,16 +34,23 @@ export interface FeedItem {
   chatTitle: string
   title: string
   status: ToolCallStatus
+  /** How many equal calls in a row this line stands for ("Read the page (24 times)"); 1 for a single call. */
+  count: number
 }
 
-/** The last `limit` tool calls across chats; the most recently updated chat first, latest call first. */
+/** "Read the page (24 times)" for a repeated call, the title alone for a single one. */
+export const feedText = (title: string, count: number): string => (count > 1 ? `${title} (${count} times)` : title)
+
+/** The last `limit` lines of what the agent did across chats; the most recently updated chat first, latest call first, equal calls in a row as one line. */
 export function recentToolCalls(chats: readonly ChatActivityInput[], limit = 8): FeedItem[] {
   const ordered = [...chats].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
   const items: FeedItem[] = []
   for (const chat of ordered) {
     const entries = Object.entries(chat.toolCalls)
     for (let i = entries.length - 1; i >= 0; i--) {
-      items.push({ key: `${chat.sessionId}:${entries[i][0]}`, chatTitle: chat.title, title: entries[i][1].title, status: entries[i][1].status })
+      const last = items[items.length - 1]
+      if (last && last.chatTitle === chat.title && last.title === entries[i][1].title) last.count++
+      else items.push({ key: `${chat.sessionId}:${entries[i][0]}`, chatTitle: chat.title, title: entries[i][1].title, status: entries[i][1].status, count: 1 })
     }
   }
   return items.slice(0, limit)

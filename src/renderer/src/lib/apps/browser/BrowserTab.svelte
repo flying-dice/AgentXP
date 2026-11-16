@@ -3,7 +3,7 @@
    * One tab of the Browser app: its own `<webview>` (Electron) or a static preview (Storybook), with its own history.
    * The app calls the exported functions and listens to `onpatch`.
    */
-  import { BLANK, hostOf } from './address'
+  import { BLANK, hostOf, normalizeAddress } from './address'
   import ErrorPage from './ErrorPage.svelte'
   import { describeLoadFailure, isShownFailure, stepZoom, type LoadFailure } from './pageStatus'
   import PlaceholderPage from './PlaceholderPage.svelte'
@@ -192,7 +192,7 @@
     <PlaceholderPage {url} {loading} />
   {/if}
   {#if failure}
-    <ErrorPage {failure} onrefresh={reload} {onhelp} />
+    <ErrorPage {failure} onrefresh={reload} {onhelp} onnavigate={(address) => navigate(normalizeAddress(address))} />
   {:else if url === BLANK}
     <StartPage />
   {/if}

@@ -5,7 +5,7 @@
   import ToolStatusIcon from '../app/session/ToolStatusIcon.svelte'
   import { toolStatusView } from '../app/session/toolStatus'
   import { toolTitleOr } from '../app/session/toolTitles'
-  import type { FeedItem } from './activity'
+  import { feedText, type FeedItem } from './activity'
 
   interface Props {
     chatTitle: string | null
@@ -59,7 +59,7 @@
   <Gadget title="Activity">
     <ul class="feed">
       {#each feed as item (item.key)}
-        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {toolTitleOr(item.title)}">{toolTitleOr(item.title)}</span></li>
+        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
       {:else}
         <li class="muted">Nothing has happened yet.</li>
       {/each}

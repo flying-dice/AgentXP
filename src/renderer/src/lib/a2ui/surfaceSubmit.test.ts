@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SurfaceSubmit } from './surfaceSubmit.svelte'
+import { SurfaceSubmit, sentLine } from './surfaceSubmit.svelte'
 
 describe('SurfaceSubmit', () => {
   it('shows Sending... from the press until a turn has started and ended, then Sent.', () => {
@@ -19,6 +19,13 @@ describe('SurfaceSubmit', () => {
     submit.begin('send')
     submit.follow(undefined)
     expect(submit.phase).toBe('sent')
+  })
+
+  it('quotes the reply under the button, shortened, or just says Sent.', () => {
+    expect(sentLine('')).toBe('Sent.')
+    expect(sentLine('  Hello Ann,\n  welcome. ')).toBe('Sent. The assistant answered: Hello Ann, welcome.')
+    expect(sentLine('x'.repeat(300)).length).toBeLessThan(170)
+    expect(sentLine('x'.repeat(300)).endsWith('...')).toBe(true)
   })
 
   it('can be sent again after the agent changed the form', () => {

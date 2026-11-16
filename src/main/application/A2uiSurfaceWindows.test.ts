@@ -61,7 +61,7 @@ describe('surface windows: opening', () => {
     expect(result).toEqual({ ok: true, notes: [expect.stringContaining('Shown in its own window "Dashboard"')] })
     expect(surfaceWindows()).toHaveLength(1)
     expect(surfaceWindows()[0]).toMatchObject({
-      title: 'Dashboard',
+      title: 'Dashboard - from the assistant',
       openedBy: 'agent',
       bounds: { width: 480, height: 360 },
       view: { app: 'surface', surfaceId: 'dash', sessionId, title: 'Dashboard' }
@@ -71,7 +71,7 @@ describe('surface windows: opening', () => {
 
   it('falls back to "Agent window" and uses the size hint of the theme', async () => {
     await render([create('a', undefined, { width: 700, height: 100 })], 'window')
-    expect(surfaceWindows()[0]).toMatchObject({ title: 'Agent window', bounds: { width: 700, height: 160 } })
+    expect(surfaceWindows()[0]).toMatchObject({ title: 'Agent window - from the assistant', bounds: { width: 700, height: 160 } })
   })
 
   it('inline surfaces open no window and add no note; the target defaults to inline', async () => {
@@ -100,7 +100,7 @@ describe('surface windows: opening', () => {
   it('a second createSurface opens a second window', async () => {
     await render([create('a', 'A')], 'window')
     await render([create('b', 'B')], 'window')
-    expect(surfaceWindows().map((w) => w.title)).toEqual(['A', 'B'])
+    expect(surfaceWindows().map((w) => w.title)).toEqual(['A - from the assistant', 'B - from the assistant'])
   })
 })
 

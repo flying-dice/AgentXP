@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectTerminals, lastLines, renderTerminal, stripAnsi, terminalLabel } from './terminalModel'
+import { collectTerminals, isTypingKey, lastLines, renderTerminal, stripAnsi, terminalLabel } from './terminalModel'
 
 const sources = [
   { sessionId: 1, sessionTitle: 'Fix login', terminals: { t1: { command: 'npm test', output: 'ok\n', exitCode: 0 } } },
@@ -45,5 +45,18 @@ describe('terminalModel', () => {
     const [done, running] = collectTerminals(sources)
     expect(terminalLabel(done, false)).toBe('npm test')
     expect(terminalLabel(running, true)).toBe('Build: npm run build (running)')
+  })
+})
+
+describe('isTypingKey', () => {
+  const key = (k: string, over: Partial<{ ctrlKey: boolean; altKey: boolean; metaKey: boolean }> = {}) => isTypingKey({ key: k, ctrlKey: false, altKey: false, metaKey: false, ...over })
+  it('is true for what a person types in a console', () => {
+    for (const k of ['d', 'D', ' ', '1', 'Enter', 'Backspace', 'Delete']) expect(key(k)).toBe(true)
+  })
+  it('is false for shortcuts, navigation and modifiers', () => {
+    expect(key('c', { ctrlKey: true })).toBe(false)
+    expect(key('a', { metaKey: true })).toBe(false)
+    expect(key('F', { altKey: true })).toBe(false)
+    for (const k of ['Tab', 'ArrowUp', 'PageDown', 'Shift', 'Control', 'F1', 'Escape']) expect(key(k)).toBe(false)
   })
 })

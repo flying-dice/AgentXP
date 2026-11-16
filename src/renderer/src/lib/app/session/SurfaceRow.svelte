@@ -24,7 +24,8 @@
   {#if model.hasOpenClose}
     <Icon name={model.icon} />
     <span class="label" title={model.stateText}>
-      <span class="title" data-testid="chat-surface-title">{model.title}</span><span class="state" data-testid="chat-surface-state">: {model.stateLabel}</span>
+      <span class="intro">The assistant opened a {model.purpose}: <span class="title" data-testid="chat-surface-title">{model.title}</span>.<span class="state" data-testid="chat-surface-state"> ({model.stateLabel})</span></span>
+      <span class="where" data-testid="chat-surface-where">{model.where}</span>
     </span>
   {:else}
     <span class="grow"></span>
@@ -58,16 +59,20 @@
     flex: 1;
   }
   .label {
-    flex: 1;
+    flex: 1 1 200px;
     min-width: 0;
     display: flex;
-    white-space: nowrap;
+    flex-direction: column;
+  }
+  .intro,
+  .where {
+    overflow-wrap: anywhere;
   }
   .title {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-weight: 600;
+  }
+  .where {
+    color: var(--w7-text-muted);
   }
   .state {
     flex: none;

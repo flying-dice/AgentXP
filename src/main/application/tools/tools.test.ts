@@ -84,6 +84,9 @@ class FakeDriver implements BrowserDriver {
   async select(_w: number, ref: number, option: string, guard: BrowserGuard) {
     return this.act(`select:${ref}:${option}`, guard)
   }
+  async elementOf(_w: number, ref: number) {
+    return ref === 2 ? { role: 'textbox', name: 'Message' } : { role: 'button', name: 'Send' }
+  }
   async back() {
     return this.go('back')
   }
@@ -577,8 +580,19 @@ describe('browser tools', () => {
   it('shows the user what the agent does: an activity request at the start and one with the box at the end', async () => {
     await run('browser_click', { ref: 3 })
     expect(browserRequests.sent.map((r) => r.method)).toEqual(['activity', 'activity'])
-    expect(browserRequests.sent[0]!.params).toMatchObject({ label: 'Clicking [3]' })
+    expect(browserRequests.sent[0]!.params).toMatchObject({ label: "Clicking the button 'Send'" })
     expect(browserRequests.sent[1]!.params).toMatchObject({ box: { x: 1, y: 2, width: 3, height: 4 } })
+  })
+
+  it('names the element in plain words, without a ref, and announces reads too', async () => {
+    await run('browser_type', { ref: 2, text: 'hi' })
+    expect(browserRequests.sent[0]!.params).toMatchObject({ label: 'Typing into the message box' })
+    browserRequests.sent.length = 0
+    await run('browser_read')
+    expect(browserRequests.sent.map((r) => r.method)).toEqual(['activity', 'activity'])
+    expect(browserRequests.sent[0]!.params).toMatchObject({ label: 'Reading the page', reading: true })
+    expect(browserRequests.sent[1]!.params).toMatchObject({ label: 'Reading the page', reading: false })
+    for (const r of browserRequests.sent) expect(JSON.stringify(r.params)).not.toMatch(/\[\d+\]/)
   })
 
   it('stops an action when the user pauses Agent7 or takes control meanwhile', async () => {

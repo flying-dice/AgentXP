@@ -69,6 +69,9 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await settled()
       await see.attribute(chat().surfaceRow('Notes'), 'data-state', 'open')
       await see.attribute(chat().surfaceRow('Notes'), 'data-target', 'sidebar')
+      // The row names what the assistant opened and where it is.
+      await see.text(chat().surfaceRow('Notes'), 'The assistant opened a form: Notes.')
+      await see.text(chat().surfaceRow('Notes').getByTestId('chat-surface-where'), "It is in the sidebar 'Notes'.")
       expect(await ctx.desktop.windows('surface').count()).toBe(0)
     })
 
@@ -96,12 +99,13 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await see.visible(surfaceWindow().getByTestId('a2ui-surface'))
       await see.visible(surfaceWindow().getByTestId('a2ui-textbox'))
       await see.visible(surfaceWindow().getByTestId('a2ui-button').filter({ hasText: 'Send' }))
-      await see.text(surfaceWindow().getByTestId('window-title'), 'Board')
+      await see.text(surfaceWindow().getByTestId('window-title'), 'Board - from the assistant')
       await see.visible(chat().agentMessage('The window is open.'))
       await see.visible(chat().agentMessage('Shown in its own window "Board"'))
       await settled()
       await see.attribute(chat().surfaceRow('Board'), 'data-state', 'open')
       await see.attribute(chat().surfaceRow('Board'), 'data-target', 'window')
+      await see.text(chat().surfaceRow('Board').getByTestId('chat-surface-where'), "It is in the window 'Board - from the assistant'.")
       // The window did not take focus from the chat the user is working in.
       await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
     })

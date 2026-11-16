@@ -69,3 +69,15 @@ export function terminalLabel(entry: TerminalEntry, withChat: boolean): string {
   const command = entry.command.length > 40 ? `${entry.command.slice(0, 39)}...` : entry.command
   return `${withChat ? `${entry.sessionTitle}: ` : ''}${command}${entry.running ? ' (running)' : ''}`
 }
+
+/** The notice a key press in the Terminal shows (the Terminal is read-only: the agent runs the commands). */
+export const READ_ONLY_NOTICE = 'Read-only: the agent runs the commands here. You can watch but not type. Ask the agent in Chat to run a command.'
+
+/** How long the notice stays at the bottom of the screen. */
+export const NOTICE_MS = 4000
+
+/** True for a key that would be typing in a real console: a character, Enter, Backspace or Delete (not Ctrl, Alt or Meta shortcuts, arrows or Tab). */
+export function isTypingKey(event: { key: string; ctrlKey: boolean; altKey: boolean; metaKey: boolean }): boolean {
+  if (event.ctrlKey || event.altKey || event.metaKey) return false
+  return event.key.length === 1 || event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete'
+}

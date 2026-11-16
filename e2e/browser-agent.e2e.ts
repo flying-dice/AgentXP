@@ -45,12 +45,28 @@ describe('Browser agent: a local chat web app', () => {
     // While the agent works, the Browser window says so and rings its target.
     await see.visible(browser.getByTestId('browser-agent-bar'))
     await see.text(browser.getByTestId('browser-agent-bar'), 'Agent is using this page')
+    // The status bar says whether the assistant can see the page.
+    await see.visible(browser.getByTestId('browser-assistant-status'))
 
     // The last step is a message that quotes the agent's own message as the page shows it.
     await agentSays(ctx, 'DONE')
     await see.text(chat.agentMessage('DONE'), 'You Second message via submit')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
+
+    // The bar stays after the last step (and no element number shows in it); the status bar says the assistant can see the page.
+    await see.visible(browser.getByTestId('browser-agent-bar'))
+    expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
+    await see.text(browser.getByTestId('browser-assistant-status'), 'Assistant: can see this page')
+
+    // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
+    await browser.getByTestId('browser-agent-takeover').click()
+    await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
+    await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
+    await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
+    await browser.getByTestId('browser-agent-giveback').click()
+    await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'false')
+    await see.text(browser.getByTestId('browser-agent-takeover'), 'Take over')
 
     // The page the agent drove is the page of the window.
     await see.eventually(async () => expect(await browser.getByTestId('browser-address').inputValue()).toContain(web.origin))
@@ -80,6 +96,8 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(browser.getByTestId('browser-tab-1'), 'data-active', 'false')
     await see.text(created, 'New Tab')
     await see.text(browser.getByTestId('browser-start-page'), 'Type an address above to open a page.')
+    // The tab strip holds only tabs; the close button is outside the tab list.
+    await see.attribute(created, 'role', 'tab')
     await browser.getByTestId('browser-tab-close-3').click()
     await see.gone(browser.getByTestId('browser-tab-3'))
     await see.attribute(browser.getByTestId('browser-tab-1'), 'data-active', 'true')
@@ -91,12 +109,14 @@ describe('Browser agent: a local chat web app', () => {
     await browser.getByTestId('browser-go').click()
     await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")
     await see.text(browser.getByTestId('browser-error-cause'), "The address '127.0.0.1:9' could not be reached.")
+    // Port 9 is one the Browser blocks: the hint says so and does not blame the network.
+    await see.text(browser.getByTestId('browser-error-hint'), 'port that the Browser blocks')
     await see.visible(browser.getByTestId('browser-error-help'))
     await browser.getByTestId('browser-error-refresh').click()
     await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")
-    // A good address clears the error page.
-    await browser.getByTestId('browser-address').fill(`${web.origin}/`)
-    await browser.getByTestId('browser-go').click()
+    // A good address typed in the error page clears it.
+    await browser.getByTestId('browser-error-address').fill(`${web.origin}/`)
+    await browser.getByTestId('browser-error-go').click()
     await see.gone(browser.getByTestId('browser-error-page'))
   })
 })
