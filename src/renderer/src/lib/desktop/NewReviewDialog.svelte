@@ -66,7 +66,7 @@
     </ul>
     <label class="ref">
       <span>Compare against:</span>
-      <ComboBox testid="new-review-ref" items={REFS} dropDownStyle="DropDown" bind:value={baseRef} aria-label="Compare against (a branch, tag or commit)" />
+      <ComboBox testid="new-review-ref" style="flex:1" items={REFS} dropDownStyle="DropDown" bind:value={baseRef} aria-label="Compare against (a branch, tag or commit)" />
     </label>
   </div>
   {#snippet buttons()}

@@ -147,19 +147,41 @@
     padding: 0 8px 8px;
     border: 1px solid var(--w7-frame-border);
     border-radius: 7px;
-    background: var(--w7-frame-active);
-    backdrop-filter: var(--w7-glass-blur);
+    isolation: isolate;
     box-shadow: var(--w7-frame-shadow);
     font: var(--w7-font);
     color: var(--w7-text);
     min-width: 0;
     min-height: 0;
   }
+  /*
+   * The frame glass is a layer behind the content, not a backdrop-filter on the frame itself: a backdrop-filter makes
+   * its element the containing block of position:fixed descendants, which moved every popup (combo lists, menus) of the
+   * window to the wrong place.
+   */
+  .w7-form::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--w7-frame-active);
+    backdrop-filter: var(--w7-glass-blur);
+    pointer-events: none;
+  }
   .w7-form.inactive {
     border-color: var(--w7-frame-inactive-border);
+    box-shadow: var(--w7-frame-shadow-inactive);
+  }
+  .w7-form.inactive::before {
     background: var(--w7-frame-inactive);
     backdrop-filter: none;
-    box-shadow: var(--w7-frame-shadow-inactive);
+  }
+  .w7-form.maximized::before {
+    backdrop-filter: none;
+  }
+  .w7-form.frameless::before {
+    display: none;
   }
   .w7-form.maximized {
     position: absolute;
@@ -169,7 +191,6 @@
     padding: 0 0 0;
     border: 0;
     border-radius: 0;
-    backdrop-filter: none;
   }
   .w7-form.maximized :global(.form-title) {
     padding-left: 6px;
@@ -179,7 +200,6 @@
     border: 0;
     border-radius: 0;
     background: none;
-    backdrop-filter: none;
     box-shadow: none;
     width: 100%;
     height: 100%;

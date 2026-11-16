@@ -116,13 +116,23 @@
     align-items: center;
     gap: 8px;
     padding: 0 8px 0 6px;
-    background: var(--w7-taskbar-face);
-    backdrop-filter: var(--w7-glass-blur);
+    position: relative;
+    isolation: isolate;
     border-top: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     font: var(--w7-font);
     color: #000;
     user-select: none;
+  }
+  /* A layer, not a backdrop-filter on the bar: that would make the bar the containing block of fixed popups (the USB menu). */
+  .w7-taskbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--w7-taskbar-face);
+    backdrop-filter: var(--w7-glass-blur);
+    pointer-events: none;
   }
   .strip {
     flex: 1;
