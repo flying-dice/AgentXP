@@ -1,6 +1,6 @@
 // Checkers of T25.x to T31.x (features added after the sprint plan).
 import { TEST_PAGE_URL } from '../lib/fixtures.mjs'
-import { agentMessages, all, countWords, fail, manual, pass, resourceText, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
+import { agentMessages, all, controlNotes, countWords, fail, manual, pass, resourceText, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
 
 /** H-26: the file fills the window when the editor is at least 90 percent as wide as the Code window's client area. */
 export const FILL_RATIO = 0.9
@@ -138,7 +138,7 @@ export const checks = {
         [control !== null, `userInControl is ${state?.userInControl}, paused is ${state?.paused} (want one of them true)`],
         [after === before, `no tool call in the last 3 s (${before} -> ${after})`]
       ],
-      [`control used: ${control ?? 'none'}; researcher: see log.jsonl, was it the bar's Take over, the top bar's Pause all agents, or the taskbar or tray control?`]
+      [...controlNotes(state), `control used: ${control ?? 'none'}; researcher: see log.jsonl, was it the bar's Take over, the top bar's Pause all agents, or the taskbar or tray control?`]
     )
   },
 

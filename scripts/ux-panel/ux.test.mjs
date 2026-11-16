@@ -14,7 +14,7 @@ import { CHECKS } from './checks/index.mjs'
 import { barChipConflicts, countsThreeAndThree } from './checks/chat.mjs'
 import { commitProblem, gateProblem, readBuild, siblingCommits, withBuildLine } from './lib/build.mjs'
 import { T162_NO, T162_WHY } from './checks/settings.mjs'
-import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, saysCouldNotTell, userText } from './checks/util.mjs'
+import { controlNotes, countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, saysCouldNotTell, userText } from './checks/util.mjs'
 import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
 import { LOGIN_ORIGINAL, REDIRECT_BUG, REDIRECT_FIXED } from './lib/fixtures.mjs'
 import { TASKS } from './tasks.mjs'
@@ -1462,5 +1462,12 @@ describe('H-101 to H-105 round 7 harness', () => {
     expect(source('PANELIST.md')).toContain('start with `/tmp` are test paths')
     expect(source('presets/desktops.mjs')).toContain("name: 'Helper assistant'")
     expect(source('presets/desktops.mjs')).toContain('makeDefault: false')
+  })
+})
+
+describe('H-99 control notes', () => {
+  it('records the ask-before-every-action box and pause', () => {
+    expect(controlNotes({ userInControl: true, paused: false })[0]).toBe('ask before every action (userInControl): true; paused: false')
+    expect(controlNotes(null)[0]).toContain('unknown')
   })
 })
