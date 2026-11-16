@@ -75,7 +75,7 @@
   }
 </script>
 
-<Dialog {title} iconName="open-folder" width="420px" contained {onclose}>
+<Dialog testid="open-file-dialog" {title} iconName="open-folder" width="420px" contained {onclose}>
   <div class="open">
     <div class="where">
       <ToolStripButton icon="chevron-up" title="Up one level" aria-label="Up" disabled={dir === ''} onclick={() => (dir = upPath(dir))} />

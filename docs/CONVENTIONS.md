@@ -1,7 +1,7 @@
 # Conventions for contributors (human or agent)
 
-Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/main-window.png`
-(screenshot), `docs/design/main-window.dc.html` (markup + behaviour of the mockup),
+Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
+(`desktop.png`, `start.png`, `tray.png` screenshots, `Desktop.dc.html` markup + behaviour of the mockup, its README),
 `docs/design/win7.css` (the mockup's control CSS). Tokens: `src/renderer/src/lib/kit/tokens.css`.
 
 ## Svelte / kit

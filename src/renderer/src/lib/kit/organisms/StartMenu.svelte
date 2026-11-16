@@ -19,12 +19,24 @@
     onrecent?: (id: string) => void
     onplace?: (id: string) => void
     onpower?: () => void
+    /** The Disconnect button (and the first item of its arrow menu). Without it the shut-down area is hidden. */
+    ondisconnect?: () => void
+    /** Arrow menu: show the launcher to switch to another desktop. */
+    onswitch?: () => void
+    /** Arrow menu: delete this desktop (the host asks first). */
+    ondelete?: () => void
     onclose?: () => void
     /** Taskbar orb element: presses on it are not "outside". */
     ignore?: HTMLElement | null
   }
 
-  let { programs, groups = [], recent = [], places, powerLabel = 'Pause agent', query = $bindable(''), onrun, onrecent, onplace, onpower, onclose, ignore = null }: Props = $props()
+  let { programs, groups = [], recent = [], places, powerLabel = 'Pause agent', query = $bindable(''), onrun, onrecent, onplace, onpower, ondisconnect, onswitch, ondelete, onclose, ignore = null }: Props = $props()
+
+  let shutdownOpen = $state(false)
+  const pick = (action?: () => void): void => {
+    shutdownOpen = false
+    action?.()
+  }
 
   const shownPrograms = $derived(filterStartItems(programs, query))
   const shownRecent = $derived(filterStartItems(recent, query))
@@ -39,7 +51,8 @@
   function onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.stopPropagation()
-      onclose?.()
+      if (shutdownOpen) shutdownOpen = false
+      else onclose?.()
     } else if (event.key === 'Enter' && searching) {
       const first = shownPrograms[0] ?? shownGroups[0]?.items[0] ?? shownRecent[0]
       if (!first) return
@@ -116,6 +129,26 @@
     <div class="power">
       <button type="button" class="power-btn" data-testid="start-menu-power" onclick={() => onpower?.()}><Icon name={powerLabel.startsWith('Resume') ? 'play' : 'pause'} size={14} />{powerLabel}</button>
     </div>
+    {#if ondisconnect}
+      <div class="shutdown">
+        <button type="button" class="power-btn main" data-testid="start-menu-disconnect" title="Close this window. The agents keep running." onclick={() => pick(ondisconnect)}>Disconnect</button><button
+          type="button"
+          class="power-btn arrow"
+          data-testid="start-menu-disconnect-arrow"
+          aria-haspopup="menu"
+          aria-expanded={shutdownOpen}
+          aria-label="Disconnect options"
+          onclick={() => (shutdownOpen = !shutdownOpen)}>▸</button
+        >
+        {#if shutdownOpen}
+          <ul class="shutdown-menu" role="menu" data-testid="start-menu-disconnect-menu">
+            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-disconnect" onclick={() => pick(ondisconnect)}>Disconnect</button></li>
+            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-switch" onclick={() => pick(onswitch)}>Switch desktop…</button></li>
+            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-delete" onclick={() => pick(ondelete)}>Delete desktop…</button></li>
+          </ul>
+        {/if}
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -323,6 +356,51 @@
     text-shadow: 0 0 2px rgba(60, 20, 0, 0.8);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
     cursor: default;
+  }
+  .shutdown {
+    position: relative;
+    display: flex;
+    padding-bottom: 8px;
+  }
+  .power-btn.main {
+    flex: 1;
+    justify-content: center;
+    border-radius: 3px 0 0 3px;
+  }
+  .power-btn.arrow {
+    width: 22px;
+    padding: 0;
+    justify-content: center;
+    border-left-color: rgba(255, 255, 255, 0.5);
+    border-radius: 0 3px 3px 0;
+  }
+  .shutdown-menu {
+    position: absolute;
+    right: 0;
+    bottom: 34px;
+    z-index: 1;
+    min-width: 140px;
+    padding: 2px;
+    border: 1px solid var(--w7-menu-border, #979797);
+    background: var(--w7-menu-face, #f0f0f0);
+    box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
+  }
+  .shutdown-menu button {
+    width: 100%;
+    padding: 4px 22px 4px 10px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    font: inherit;
+    color: #000;
+    text-align: left;
+    cursor: default;
+  }
+  .shutdown-menu button:hover,
+  .shutdown-menu button:focus-visible {
+    outline: none;
+    border-color: var(--w7-menu-hot-border);
+    background: var(--w7-menu-hot-face);
   }
   .power-btn:hover {
     filter: brightness(1.12);

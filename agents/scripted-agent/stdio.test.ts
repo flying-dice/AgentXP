@@ -45,6 +45,21 @@ describe('scripted agent process', () => {
     connection.close()
   })
 
+  it('numbers sessions uniquely across processes (the app stores UNIQUE(agent_id, acp_session_id))', async () => {
+    const ids: string[] = []
+    for (let i = 0; i < 2; i++) {
+      const proc = spawnAgent(['--script', 'stepping'], { AGENT7_SCRIPT_CONTROL: socketPath() })
+      const connection = client({ name: 'test' }).connect(ndJsonStream(Writable.toWeb(proc.stdin!) as WritableStream<Uint8Array>, Readable.toWeb(proc.stdout!) as ReadableStream<Uint8Array>))
+      await connection.agent.request(methods.agent.initialize, { protocolVersion: PROTOCOL_VERSION })
+      const first = await connection.agent.request(methods.agent.session.new, { cwd: process.cwd(), mcpServers: [] })
+      const second = await connection.agent.request(methods.agent.session.new, { cwd: process.cwd(), mcpServers: [] })
+      ids.push(first.sessionId, second.sessionId)
+      connection.close()
+      proc.kill()
+    }
+    expect(new Set(ids).size).toBe(4)
+  })
+
   it('exits with a readable error for an invalid script', async () => {
     const proc = spawnAgent(['--script', join(dirname(entry), 'script.schema.json')])
     let stderr = ''

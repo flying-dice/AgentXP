@@ -199,13 +199,25 @@
     if (target && /\.(md|markdown|txt)$/i.test(target)) void confirmDiscard().then((ok) => (ok ? load(target) : undefined))
   }
 
+  const newDocument = (): Promise<void> => confirmDiscard().then((ok) => (ok ? load(null) : undefined))
+  const openDocument = (): Promise<void> => confirmDiscard().then((ok) => void (ok && (picking = true)))
+
   const menu = $derived<MenuItemDef[]>([
-    { label: '&New', shortcut: 'Ctrl+N', action: () => void confirmDiscard().then((ok) => (ok ? load(null) : undefined)) },
-    { label: '&Open...', shortcut: 'Ctrl+O', action: () => void confirmDiscard().then((ok) => void (ok && (picking = true))) },
+    { label: '&New', shortcut: 'Ctrl+N', action: () => void newDocument() },
+    { label: '&Open...', shortcut: 'Ctrl+O', action: () => void openDocument() },
     { label: '&Save', shortcut: 'Ctrl+S', disabled: !dirty && path !== null, action: () => void save() },
     { separator: true },
     { label: 'E&xit', action: () => void host.closeWindow(win.id) }
   ])
+
+  /** Ctrl+N and Ctrl+O work wherever the focus is inside the focused WordPad window. */
+  function onWindowKey(event: KeyboardEvent): void {
+    if (!focused || picking || !event.ctrlKey || event.altKey || event.shiftKey) return
+    const key = event.key.toLowerCase()
+    if (key !== 'n' && key !== 'o') return
+    event.preventDefault()
+    void (key === 'n' ? newDocument() : openDocument())
+  }
 
   function onkeydown(event: KeyboardEvent): void {
     if (!event.ctrlKey) return
@@ -225,6 +237,8 @@
   const words = $derived(text.trim() === '' ? 0 : text.trim().split(/\s+/).length)
   const editing = $derived(mode === 'edit')
 </script>
+
+<svelte:window onkeydown={onWindowKey} />
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="wordpad" data-testid="wordpad-app" role="application" aria-label="WordPad" tabindex="-1" {onkeydown}>

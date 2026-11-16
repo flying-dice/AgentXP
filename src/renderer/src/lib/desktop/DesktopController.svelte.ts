@@ -15,6 +15,7 @@ import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
 import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
+import { DELETE_WARNING } from '../launcher/launcherModel'
 import { isBusy } from '../app/sessionStatus'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
 import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
@@ -84,6 +85,8 @@ export class DesktopController implements DesktopHost {
 
   // shell UI state
   startOpen = $state(false)
+  /** The "New chat on..." dialog (pick the working drive). */
+  newChatDialogOpen = $state(false)
   actionCenterOpen = $state(false)
   gadgetsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
@@ -171,7 +174,12 @@ export class DesktopController implements DesktopHost {
       this.sessions.start(this.api, (id) => this.inbox.unregister(id)),
       this.api.on('session.changed', () => this.syncStores()),
       this.api.on('status.message', ({ text }) => this.pushMessage(text)),
-      this.api.on('recycle.changed', () => void this.refreshRecycle())
+      this.api.on('recycle.changed', () => void this.refreshRecycle()),
+      // A cleared transcript: the chat's store drops its messages and tool cards (nothing streams while idle).
+      this.api.on('transcript.cleared', ({ sessionId }) => {
+        const store = this.inbox.stores.get(sessionId)
+        if (store instanceof SessionAgentStore) void store.reload()
+      })
     ]
     const [state] = await Promise.all([this.api.desktop.current(), this.sessions.load().catch(() => {})])
     if (state) this.apply(state)
@@ -388,10 +396,35 @@ export class DesktopController implements DesktopHost {
     return this.api.desktop.newChat(this.state.desktopId)
   }
 
+  async startChat(cwd: VPath): Promise<void> {
+    await this.newChatIn(cwd)
+  }
+
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
   async newChatIn(cwd: VPath): Promise<AppWindowState> {
     this.startOpen = false
     return this.api.desktop.newChat(this.state.desktopId, undefined, cwd)
+  }
+
+  /** Disconnect: closes this desktop's window. The agents and their turns keep running; reconnect from the launcher. */
+  async disconnect(): Promise<void> {
+    this.startOpen = false
+    await this.api.window.close()
+  }
+
+  /** Asks, then deletes this desktop (its window closes with it). Returns whether it was deleted. */
+  async deleteDesktop(): Promise<boolean> {
+    this.startOpen = false
+    const answer = await showMessageBox({
+      text: `Delete the desktop '${this.state.title}'?\n\n${DELETE_WARNING}`,
+      caption: 'Agent7 Desktop Connection',
+      buttons: 'YesNo',
+      icon: 'warning',
+      defaultButton: 1
+    })
+    if (answer !== 'yes') return false
+    await this.api.launcher.remove(this.state.desktopId)
+    return true
   }
 
   /** Shows the launcher window (Start menu: Agent7 Desktops...). */

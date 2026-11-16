@@ -154,6 +154,15 @@
     { label: 'F&ormat', items: [{ id: 'wrap', label: '&Word Wrap', checked: wrap, action: () => (wrap = !wrap) }] }
   ])
 
+  /** Ctrl+N and Ctrl+O work wherever the focus is inside the focused Notepad window. */
+  function onWindowKey(event: KeyboardEvent): void {
+    if (!focused || picking || !event.ctrlKey || event.altKey || event.shiftKey) return
+    const key = event.key.toLowerCase()
+    if (key !== 'n' && key !== 'o') return
+    event.preventDefault()
+    void (key === 'n' ? newFile() : openFile())
+  }
+
   function onkeydown(event: KeyboardEvent): void {
     if (event.key === 'F5') {
       event.preventDefault()
@@ -164,6 +173,8 @@
     }
   }
 </script>
+
+<svelte:window onkeydown={onWindowKey} />
 
 <div class="notepad" data-testid="notepad-app">
   <MenuStrip {menus} aria-label="Notepad menu" />

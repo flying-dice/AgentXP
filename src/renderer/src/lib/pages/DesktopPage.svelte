@@ -23,6 +23,7 @@
   import TopBar from '../desktop/TopBar.svelte'
   import TrayFlag from '../desktop/TrayFlag.svelte'
   import UacDialog from '../desktop/UacDialog.svelte'
+  import NewChatDialog from '../desktop/NewChatDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { taskbarItems } from '../desktop/windowOrder'
@@ -46,14 +47,18 @@
   let flag: HTMLButtonElement | null = $state(null)
   let usbIcon: HTMLButtonElement | null = $state(null)
   let query = $state('')
+  let maximized = $state(false)
   const since = new Date()
 
   onMount(() => {
     void desktop.start()
     const stopRequests = startAppRequests(desktop.api)
+    void desktop.api.window.getState().then((s) => (maximized = s.maximized)).catch(() => {})
+    const stopWindow = desktop.api.window.onStateChanged((s) => (maximized = s.maximized))
     orb = root?.querySelector<HTMLElement>('.w7-taskbar .orb') ?? null
     return () => {
       stopRequests()
+      stopWindow()
       desktop.dispose()
     }
   })
@@ -93,6 +98,7 @@
     { id: 'control-centre', title: 'Control Centre' },
     { id: 'agent-manager', title: 'Task Manager' },
     { id: 'recycle-bin', title: 'Recycle Bin' },
+    { id: 'chat-on', title: 'New chat on a drive…' },
     { id: 'desktops', title: 'Agent7 Desktops…' }
   ]
 
@@ -119,6 +125,7 @@
   function openPlace(id: string): void {
     desktop.startOpen = false
     if (id === 'desktops') void desktop.showLauncher()
+    else if (id === 'chat-on') desktop.newChatDialogOpen = true
     else if (id === 'computer') void desktop.openApp({ app: 'explorer', path: '' })
     else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
@@ -176,6 +183,10 @@
         tools={desktop.state.tools}
         onpause={() => void desktop.togglePaused()}
         ontakecontrol={() => void desktop.toggleUserInControl()}
+        {maximized}
+        onminimize={() => void desktop.api.window.minimize()}
+        onmaximize={() => void desktop.api.window.toggleMaximize()}
+        ondisconnect={() => void desktop.disconnect()}
       />
     {/if}
 
@@ -205,6 +216,9 @@
             desktop.startOpen = false
             void desktop.togglePaused()
           }}
+          ondisconnect={() => void desktop.disconnect()}
+          onswitch={() => void desktop.showLauncher()}
+          ondelete={() => void desktop.deleteDesktop()}
           onclose={() => (desktop.startOpen = false)}
         />
       </div>
@@ -237,6 +251,16 @@
     {/if}
     {#if desktop.needsDesktop}
       <WelcomeDialog onopen={() => void desktop.showLauncher()} />
+    {/if}
+    {#if desktop.newChatDialogOpen}
+      <NewChatDialog
+        drives={desktop.state.drives}
+        oncancel={() => (desktop.newChatDialogOpen = false)}
+        onstart={(cwd) => {
+          desktop.newChatDialogOpen = false
+          void desktop.newChatIn(cwd)
+        }}
+      />
     {/if}
     {#if desktop.autoPlay}
       <AutoPlayDialog drive={desktop.autoPlay} onchoose={(c) => void desktop.autoPlayChoose(c)} />

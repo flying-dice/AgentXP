@@ -50,6 +50,8 @@ export class StoryHost implements DesktopHost {
 
   ejectDrive = (letter: string): Promise<void> => this.api.drives.eject(this.current.desktopId, letter)
 
+  startChat = async (cwd: string): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId, undefined, cwd))
+
   updateView(windowId: Id, view: AppView): void {
     this.reports = [...this.reports.slice(-9), view]
     void this.api.desktop.updateView(windowId, view)

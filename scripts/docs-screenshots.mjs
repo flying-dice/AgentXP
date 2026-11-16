@@ -114,13 +114,10 @@ async function main() {
         if (!scripted) throw new Error('the built-in Scripted Agent is missing')
         await api.agents.update(scripted.id, { name: scripted.name, command: scripted.command, args: [scripted.args[0], '--script', script], env: scripted.env })
         await api.agents.setDefault(scripted.id)
-        // One agent process serves one chat, and the Scripted Agent numbers its ACP sessions from 1 in each process.
-        // Two chats of the same agent row would collide on UNIQUE(agent_id, acp_session_id), so the second chat gets a twin row.
-        const twin = await api.agents.create({ name: scripted.name + ' 2', command: scripted.command, args: [scripted.args[0], '--script', script], env: scripted.env })
         const folder = await api.folders.add(workspace)
         const second = await api.launcher.create({ title: 'Release notes', folderIds: [folder.id] })
         const third = await api.launcher.create({ title: 'Try new ideas', folderIds: [] })
-        return { folderId: folder.id, twinId: twin.id, other: [second.id, third.id] }
+        return { folderId: folder.id, other: [second.id, third.id] }
       },
       { workspace, script: join(root, 'scripts/docs-screenshots/chat.json') }
     )
@@ -246,7 +243,7 @@ async function main() {
 
     // ---- a second chat: the form --------------------------------------------------------------------------------------
     console.log('a2ui')
-    await api(({ desktopId, agentId }) => window.agent7.desktop.newChat(desktopId, agentId), { desktopId, agentId: setup.twinId })
+    await api(({ desktopId }) => window.agent7.desktop.newChat(desktopId), { desktopId })
     const chat2 = page.getByTestId('window-chat').nth(1)
     await chat2.waitFor()
     await api(async () => {
@@ -293,7 +290,7 @@ async function main() {
     await page.getByTestId('start-menu-place-control-centre').click()
     const cc = page.getByTestId('window-control-centre')
     await cc.waitFor()
-    await place('control-centre', { x: 180, y: 70, width: 760, height: 540 })
+    await place('control-centre', { x: 180, y: 60, width: 760, height: 690 })
     await cc.getByTestId('control-centre-page-permissions').click()
     await pause(900)
     await shot('control-centre-permissions', cc)
@@ -356,7 +353,7 @@ async function main() {
     'python3',
     [
       '-c',
-      'import sys\nfrom PIL import Image\nfor p in sys.argv[1:]:\n    im = Image.open(p).convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)\n    im.save(p, optimize=True)\n'
+      'import sys\nfrom PIL import Image\nfor p in sys.argv[1:]:\n    im = Image.open(p).convert("RGB").quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)\n    im.save(p, optimize=True)\n'
     ].concat(written),
     { stdio: 'inherit' }
   )

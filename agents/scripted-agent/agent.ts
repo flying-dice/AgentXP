@@ -1,5 +1,6 @@
 /** The ACP agent: sessions, prompt turns, cancellation. Wires the script host, controller and runner together. */
 import { PROTOCOL_VERSION, RequestError, agent, methods, type AgentApp, type AgentContext, type McpServer } from '@agentclientprotocol/sdk'
+import { randomUUID } from 'node:crypto'
 import { NO_DEFAULTS, sendUpdate, type ActionContext } from './actions.ts'
 import type { StepController } from './control.ts'
 import { McpHub } from './mcp.ts'
@@ -25,7 +26,6 @@ export interface ScriptedAgent {
 
 export function createScriptedAgent(host: ScriptHost, controller: StepController): ScriptedAgent {
   const sessions = new Map<string, Session>()
-  let counter = 0
 
   const session = (id: string): Session => {
     const found = sessions.get(id)
@@ -68,7 +68,7 @@ export function createScriptedAgent(host: ScriptHost, controller: StepController
       agentCapabilities: { loadSession: true }
     }))
     .onRequest(methods.agent.session.new, ({ params, client }) => {
-      const id = `scripted-${++counter}`
+      const id = `scripted-${randomUUID()}`
       const created = open(id, params.cwd, params.mcpServers)
       advertiseCommands(client, id)
       return { sessionId: id, ...state(created) }

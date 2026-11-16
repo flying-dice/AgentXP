@@ -155,6 +155,8 @@ export interface Agent7Events extends DesktopEvents, LauncherEvents {
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]
   'status.message': { text: string }
+  /** The transcript was cleared: the chat's AG-UI store reloads (empty messages and state). */
+  'transcript.cleared': { sessionId: Id }
 }
 
 export type Agent7EventName = keyof Agent7Events

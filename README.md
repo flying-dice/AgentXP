@@ -139,7 +139,7 @@ To disconnect a desktop, follow the steps below:
 2. Click **Show Options**. The desktop details appear.
 3. Click **Disconnect**. The desktop window closes.
 
-If you close a desktop window with the close command of your own computer, the result is the same. Closing a desktop window only disconnects the desktop. The agents, the chats, and the requests for permission keep running in Agent7.
+You can also click the red **Close** button of the connection bar at the top of the desktop window, or click **Start -> Disconnect**. The result is the same. Closing a desktop window only disconnects the desktop. The agents, the chats, and the requests for permission keep running in Agent7.
 
 To come back, click **Connect** again. The apps, chats, and files are as you left them. To show this window again from a desktop, click **Start -> Agent7 Desktops...**.
 
@@ -176,7 +176,9 @@ The desktop has these parts:
 
 ### The Top Bar
 
-The top bar is at the top of the desktop. It shows the name of the desktop, the state of the agent, and two buttons.
+The top bar is at the top of the desktop. It starts with the connection bar. The rest of the top bar shows the state of the agent and two buttons.
+
+- **Connection bar** – Shows the name of the desktop. The pin keeps the top bar open. If you click the pin again, the top bar folds away until you point to it. The next buttons minimize and maximize the desktop window. The red **Close** button is **Disconnect**. It closes the window, and the agents keep running.
 
 - **Status** – Shows **Idle**, **Paused**, or **Working** with the name of the action that runs now.
 - **Pause** – Stops the running turns of the agent and blocks new tool calls. The button changes to **Resume**.
@@ -206,8 +208,9 @@ The Start menu has these parts:
 - **System Tools** – Opens **Event Viewer**, **Task Manager**, and **Control Centre**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
-- **Places** – Opens **Computer**, **Documents**, **Control Centre**, **Task Manager**, **Recycle Bin**, and **Agent7 Desktops...**.
+- **Places** – Opens **Computer**, **Documents**, **Control Centre**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **Agent7 Desktops...**.
 - **Pause agent** – Pauses the agent. The button changes to **Resume agent**.
+- **Disconnect** – Closes the desktop window. The agents keep running. Click the arrow next to the button for **Disconnect**, **Switch desktop...**, and **Delete desktop...**. **Switch desktop...** shows the **Agent7 Desktop Connection** window. **Delete desktop...** asks you first.
 
 ### The Action Center
 
@@ -266,7 +269,15 @@ The **AutoPlay** dialog box has three choices. **Open folder to view files** ope
 
 To start a chat, click **Start -> New chat**. A Chat window appears. The chat works in the home folder `C:\Users\Agent` of the desktop. The agent can still use the files on each USB drive.
 
-To start a chat on a USB drive, use the **AutoPlay** dialog box. The status bar of the Chat window shows the folder of the chat, for example `E:\`.
+To start a chat on a USB drive at any time, use one of these ways:
+
+- Click **Start -> New chat on a drive...**, select the drive, and click **Start chat**.
+- In **Computer**, right-click a drive or a folder and click **Start a chat here**.
+- Use the **AutoPlay** dialog box when you plug in a drive.
+
+The status bar of the Chat window shows the folder of the chat, for example `E:\`.
+
+To remove the messages from a Chat window, click **Chat -> Clear transcript...** and click **Yes**.
 
 **Tip:** The first start of Claude Code can take a minute. Agent7 downloads the agent with `npx` the first time.
 
@@ -384,9 +395,7 @@ The **Setting** column has three choices:
 - **Ask** – The agent waits until you answer a request in the Action Center.
 - **Deny** – Agent7 refuses the action.
 
-The page lists **Read files**, **Write files**, **Notepad**, **Code**, **Terminal**, **Browser**, and **Agent may open apps**. A new desktop asks before the agent writes files or runs commands. It allows the rest.
-
-**Note:** Agent7 also asks before the agent writes in WordPad or restores an item from the Recycle Bin. You cannot change these two rules on this page.
+The page lists **Read files**, **Write files**, **Notepad**, **Code**, **Terminal**, **Browser**, **Paint**, **WordPad**, **Notes**, **Events**, **Screen capture**, **Recycle Bin**, and **Agent may open apps**. A new desktop asks before the agent writes files, runs commands, writes in WordPad, or restores an item from the Recycle Bin. It allows the rest.
 
 ## 8 - Drives and Files
 
@@ -495,11 +504,15 @@ You can do many tasks in Agent7 with the keyboard. The table below lists the sho
 | Shift+Enter | Start a new line in a message |
 | Esc | Close a dialog box or a menu, or the review of a request |
 | Alt | Show the access keys of the menus |
+| Ctrl+N | Start a new file in Notepad and in WordPad, or a new picture in Agent Paint |
+| Ctrl+O | Open a file in Notepad and in WordPad |
 | Ctrl+S | Save the file in Notepad and in WordPad |
 | F5 | Insert the time and the date in Notepad |
 | Ctrl+B | Make the selected text bold in WordPad |
 | Ctrl+I | Make the selected text italic in WordPad |
 | Ctrl+Z | Undo the last stroke in Agent Paint |
+
+The keys for Notepad, WordPad, and Agent Paint work when the window of that app has the focus.
 
 In the **Agent7 Desktop Connection** window, press the Up or Down arrow to select a desktop. Press Enter to connect it. Press F2 to rename it. Press Delete to delete it.
 

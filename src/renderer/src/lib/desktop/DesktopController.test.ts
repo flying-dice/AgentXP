@@ -74,6 +74,29 @@ describe('DesktopController', () => {
     expect(controller.windowById(b.id)?.windowState).toBe('minimized')
   })
 
+  it('Disconnect closes the OS window; Delete asks first and removes the desktop only on yes', async () => {
+    const { api, controller } = await started()
+    const close = vi.spyOn(api.window, 'close')
+    await controller.disconnect()
+    expect(close).toHaveBeenCalledTimes(1)
+
+    const remove = vi.spyOn(api.launcher, 'remove')
+    const ask = async (result: 'yes' | 'no'): Promise<boolean> => {
+      const pending = controller.deleteDesktop()
+      let queued: { id: number; options: { caption?: string } }[] = []
+      await vi.waitFor(() => {
+        messageBoxes.queue.subscribe((q) => (queued = q))()
+        expect(queued.length).toBeGreaterThan(0)
+      })
+      messageBoxes.settle(queued[0].id, result)
+      return pending
+    }
+    expect(await ask('no')).toBe(false)
+    expect(remove).not.toHaveBeenCalled()
+    expect(await ask('yes')).toBe(true)
+    expect(remove).toHaveBeenCalledWith(controller.state.desktopId)
+  })
+
   it('toggles pause and user control', async () => {
     const { controller } = await started()
     await controller.togglePaused()

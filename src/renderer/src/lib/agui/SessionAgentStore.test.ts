@@ -144,4 +144,24 @@ describe('SessionAgentStore', () => {
     expect(api.runs).toHaveLength(2) // the reconnect
     expect(store.interrupts).toEqual([])
   })
+
+  it('reload forgets messages, open interrupts and tool calls after the transcript was cleared', async () => {
+    const card = { title: 'Edit', kind: 'edit', status: 'in_progress', rawInput: null, locations: [], contents: [] }
+    api.script = (input) =>
+      bookends(
+        input,
+        { type: EventType.MESSAGES_SNAPSHOT, messages: [{ id: 'a1', role: 'assistant', toolCalls: [{ id: 't1', type: 'function', function: { name: 'Edit', arguments: '{}' } }] }] },
+        { type: EventType.STATE_SNAPSHOT, snapshot: { session: { title: 'T' }, tasks: [], changes: [], toolCalls: { t1: card }, terminals: {} } }
+      )
+    await store.connect()
+    expect(store.messages).toHaveLength(1)
+    expect(Object.keys(store.state.toolCalls)).toEqual(['t1'])
+
+    api.script = (input) =>
+      bookends(input, { type: EventType.MESSAGES_SNAPSHOT, messages: [] }, { type: EventType.STATE_SNAPSHOT, snapshot: { session: { title: 'T' }, tasks: [], changes: [], toolCalls: {}, terminals: {} } })
+    await store.reload()
+    expect(store.messages).toEqual([])
+    expect(store.state.toolCalls).toEqual({})
+    expect(store.interrupts).toEqual([])
+  })
 })

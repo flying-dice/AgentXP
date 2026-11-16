@@ -2,6 +2,7 @@
   import Button from '../kit/atoms/Button.svelte'
   import type { ToolGroup } from '@shared/desktop'
   import { toolChips } from './activity'
+  import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
     title: string
@@ -12,26 +13,39 @@
     tools: ToolGroup[]
     onpause?: () => void
     ontakecontrol?: () => void
+    /** The OS window is maximised. */
+    maximized?: boolean
+    onminimize?: () => void
+    onmaximize?: () => void
+    /** Disconnect: closes the window, the agents keep running. */
+    ondisconnect?: () => void
   }
 
-  let { title, working, paused, userInControl, tools, onpause, ontakecontrol }: Props = $props()
+  let { title, working, paused, userInControl, tools, onpause, ontakecontrol, maximized = false, onminimize, onmaximize, ondisconnect }: Props = $props()
+
+  let pinned = $state(true)
 
   const chips = $derived(toolChips(tools))
-  const status = $derived(paused ? 'Paused' : working ? `Working: ${working}` : 'Idle')
-  const state = $derived(paused ? 'paused' : working ? 'working' : 'idle')
+  // One derivation for the text, the dot and `data-state`, so they cannot disagree.
+  const view = $derived<{ state: 'paused' | 'working' | 'idle'; text: string }>(
+    paused ? { state: 'paused', text: 'Paused' } : working ? { state: 'working', text: `Working: ${working}` } : { state: 'idle', text: 'Idle' }
+  )
+  const status = $derived(view.text)
+  const mode = $derived(view.state)
 </script>
 
-<div class="w7-topbar" data-testid="topbar" data-state={state} role="region" aria-label="Agent strip">
-  <div class="row">
-    <span class="dot {state}" aria-hidden="true"></span>
-    <span class="who"><strong>Agent7</strong> · {title}</span>
+<div class="w7-topbar" class:folded={!pinned} data-testid="topbar" data-state={mode} role="region" aria-label="Agent strip">
+  <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
+    <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" data-testid="topbar-status" title={status}>{status}</span>
+  </ConnectionBar>
+  <div class="body">
+    <div class="chips" data-testid="topbar-tool-chips" aria-label="Tools the agent can use now">
+      <span class="lead">Agent can use</span>
+      {#each chips as chip (chip.group)}<span class="chip" data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}">{chip.label}</span>{:else}<span class="none" data-testid="topbar-tool-chips-none">nothing yet (open an app)</span>{/each}
+    </div>
     <Button data-testid="topbar-pause" onclick={() => onpause?.()}>{paused ? 'Resume' : 'Pause'}</Button>
     <Button data-testid="topbar-take-control" onclick={() => ontakecontrol?.()} aria-pressed={userInControl}>{userInControl ? 'Release' : 'Take control'}</Button>
-  </div>
-  <div class="chips" data-testid="topbar-tool-chips" aria-label="Tools the agent can use now">
-    <span class="lead">Agent can use</span>
-    {#each chips as chip (chip.group)}<span class="chip" data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}">{chip.label}</span>{:else}<span class="none" data-testid="topbar-tool-chips-none">nothing yet (open an app)</span>{/each}
   </div>
 </div>
 
@@ -45,33 +59,37 @@
     box-sizing: border-box;
     min-width: 560px;
     max-width: calc(100% - 340px);
-    padding: 3px 8px 3px;
+    padding: 0 8px 3px;
     border: 1px solid #5d6c82;
     border-top: 0;
     border-radius: 0 0 5px 5px;
+    overflow: hidden;
     background: linear-gradient(#fdfefe, #e6edf7 55%, #d8e3f2);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 2px 8px rgba(0, 0, 0, 0.45);
     font: var(--w7-font);
     color: #000;
     user-select: none;
   }
-  .row {
+  .body {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 26px;
+    align-items: flex-start;
+    gap: 6px;
+    padding-top: 2px;
   }
-  .who {
-    flex: none;
-    white-space: nowrap;
+  .w7-topbar.folded .body {
+    display: none;
+  }
+  .w7-topbar.folded:hover .body,
+  .w7-topbar.folded:has(:focus-visible) .body {
+    display: flex;
   }
   .status {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #333;
+    color: #1b2433;
   }
   .dot {
     flex: none;
@@ -90,11 +108,13 @@
     background: radial-gradient(circle at 35% 30%, #fff1a8, #e0a800 70%);
   }
   .chips {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
-    padding: 1px 0 2px 18px;
+    padding: 2px 0 2px 2px;
     font-size: 11px;
   }
   .lead,
