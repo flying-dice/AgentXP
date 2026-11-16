@@ -41,7 +41,7 @@ export class ProcessService {
       const key = `${session.agentId}:${session.desktopId}`
       const group = groups.get(key) ?? {
         agentId: session.agentId,
-        agentName: this.agents.get(session.agentId)?.name ?? `Agent ${session.agentId}`,
+        agentName: this.agents.get(session.agentId)?.name ?? `Removed agent (${session.agentId})`,
         desktopId: session.desktopId,
         pid: null,
         memoryBytes: null,

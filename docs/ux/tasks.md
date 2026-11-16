@@ -200,7 +200,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T14.1 - Which one needs me?**
 - Scenario: "You have four workspaces running. Find the one that is waiting for you and open it, and tell me which workspace has a problem."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher shows "Idle" for it until UX-58, so the panelist must look inside); the researcher records whether the waiting row was preselected.
+- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher row shows the amber text "Agent problem: ..." with data-state error since UX-87); the researcher records whether the waiting row was preselected.
 - Answer: the workspace that has a problem ("Docs site").
 - Min 2. Budget 6 / 8.
 

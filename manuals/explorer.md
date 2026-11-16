@@ -49,7 +49,7 @@ The pane is at the left. It has **Favorites**, **Libraries**, and **Computer** w
 
 ### The File List
 
-The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click an item to see **Open**, **Open with Notepad** and **Open with Code** (files only), **Copy as path**, **Start a chat here**, **Ask chat about this...**, and **Properties**.
+The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click an item to see **Open**, **Open with Notepad** and **Open with Code** (files only), **Copy as path**, **Start a chat here**, **Ask the agent about this...**, and **Properties**.
 
 ### The Computer Window
 
@@ -129,7 +129,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: open notepad | Opens the file in Notepad. | `explorer-ctx-open-notepad` |
 | Context menu: copy path | Copies the path of the item. | `explorer-ctx-copy-path` |
 | Context menu: start chat | Starts a chat in the folder. | `explorer-ctx-start-chat` |
-| Context menu: ask | Opens the chat pane with a draft about the item or the folder. | `explorer-ctx-ask` |
+| Context menu: ask the agent about this | Opens the chat pane with a draft about the item or the folder. | `explorer-ctx-ask` |
 | Context menu: properties | Shows the type, location, size and date. | `explorer-ctx-properties` |
 | Context menu: refresh | Background menu: reads the folder again. F5. | `explorer-ctx-refresh` |
 | Context menu: up | Background menu: goes up one level. | `explorer-ctx-up` |

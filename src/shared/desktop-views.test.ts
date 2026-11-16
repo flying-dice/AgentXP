@@ -96,6 +96,7 @@ describe('helpWindowTitle', () => {
   })
 
   it('is what windowTitle gives a help view', () => {
+    expect(windowTitle({ app: 'event-viewer', sessionId: null, level: 'all', selectedEventId: null })).toBe('Event Viewer') // the same words as the root of its tree
     expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Agent7 Help and Support: Using Terminal')
   })
 })

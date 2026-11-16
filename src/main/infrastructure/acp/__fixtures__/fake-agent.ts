@@ -6,6 +6,7 @@
  * permission, writes `fake-agent-output.txt` through fs/write_text_file, runs a
  * terminal command, then ends the turn (or reports `cancelled`).
  */
+import { randomUUID } from 'node:crypto'
 import { Readable, Writable } from 'node:stream'
 import { PROTOCOL_VERSION, agent, methods, ndJsonStream } from '@agentclientprotocol/sdk'
 import type { AgentContext } from '@agentclientprotocol/sdk'
@@ -35,9 +36,12 @@ const app = agent({ name: 'fake-agent' })
     agentCapabilities: { loadSession: false }
   }))
   .onRequest(methods.agent.session.new, ({ params }) => {
-    cwds.set('fake-session', params.cwd)
+    // Unit tests expect the fixed id. The e2e fixture sets FAKE_AGENT_UNIQUE_SESSIONS: Agent7 keeps (agent, ACP session id)
+    // unique, and every chat of one registered agent starts a new process of this file, so a fixed id would collide.
+    const sessionId = process.env['FAKE_AGENT_UNIQUE_SESSIONS'] ? `fake-session-${randomUUID()}` : 'fake-session'
+    cwds.set(sessionId, params.cwd)
     return {
-      sessionId: 'fake-session',
+      sessionId,
       modes: {
         currentModeId: 'default',
         availableModes: [

@@ -77,8 +77,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: copy | Copies the selected output. | `terminal-ctx-copy` |
 | Context menu: select all | Selects all output. | `terminal-ctx-select-all` |
 | Context menu: clear | Hides the output shown so far. The agent keeps the output. | `terminal-ctx-clear` |
-| Context menu: ask | Opens the chat pane with a draft about the selected output, or the last lines. | `terminal-ctx-ask` |
-| Context menu: open in Chat window | Starts a full chat with the selected output, or the last lines, in a Chat window. | `terminal-ctx-open-chat` |
+| Context menu: ask the agent about this | Opens the chat pane with a draft about the selected output, or the last lines. | `terminal-ctx-ask` |
+| Context menu: explain this | Opens the chat pane and asks the agent to explain the selected output. Needs a selection. | `terminal-ctx-explain` |
+| Context menu: start a chat here | Starts a full chat with the selected output, or the last lines, in a Chat window. | `terminal-ctx-open-chat` |
 
 ### Keys
 

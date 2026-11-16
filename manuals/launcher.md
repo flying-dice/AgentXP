@@ -74,7 +74,7 @@ The dialog box has one box for the new name. The same name rules apply, and the 
 
 The dialog box is part of Agent7. It is not a window of your computer. It says **Select a folder for the agent to work on.** (New desktop) or **Select the project folder to plug in to this desktop.** (Plug in a project).
 
-- The tree starts with **Recent folders**, the projects of your desktops. It shows **Computer** (your drives, or `/`) and the shortcuts **Home**, **Documents**, and **Desktop**. The box opens on **Documents**, or on **Home** if there is no Documents folder. Folders only. Click the arrow, or press Enter or the Right arrow, to open a folder.
+- The tree starts with **Projects you used before** (point at it to read "Folders that Agent7 opened before"), the projects of your desktops. It shows **Computer** (your drives, or `/`) and the shortcuts **Home**, **Documents**, and **Desktop**. The box opens on **Documents**, or on **Home** if there is no Documents folder. Folders only. Click the arrow, or press Enter or the Right arrow, to open a folder.
 - **Folder** shows the path of the selected folder. You can type or paste a path instead. You can also type only a name, for example `login-app`. Agent7 looks for it in your recent folders and near Documents and Home. A folder that has no subfolders shows **This folder has no subfolders.**
 - **Make New Folder** creates a folder named **New Folder** inside the selected folder and selects it.
 - **OK** is dimmed until a folder is selected. **Cancel**, or Esc, closes the box. You can change the size of the box.
@@ -121,7 +121,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | Browse For Folder | The dialog box that chooses a folder. | `folder-browser-dialog` |
 | Instruction | Says what the folder is for. | `folder-browser-instruction` |
 | Folder tree | The tree of folders. | `folder-browser-tree` |
-| Group (tree) | The group Recent folders, or Matches while you look for a name. | `folder-browser-group` |
+| Group (tree) | The group Projects you used before, or Matches while you look for a name. | `folder-browser-group` |
 | Empty folder | Says that the folder has no subfolders. | `folder-browser-empty` |
 | Folder (tree) | One folder or shortcut of the tree. | `folder-browser-node` |
 | Status | Shows **Opening the folder list...** or a problem. | `folder-browser-status` |

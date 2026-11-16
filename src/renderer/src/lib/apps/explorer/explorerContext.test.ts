@@ -5,7 +5,7 @@ const actions = (): EntryActions => ({ open: vi.fn(), openWith: vi.fn(), copyPat
 const ids = (items: { testid?: string }[]): (string | undefined)[] => items.filter((i) => i.testid).map((i) => i.testid)
 
 describe('entryItems', () => {
-  it('a file offers Open, Open with Notepad and Code, Copy path, Start chat, Ask chat and Properties', () => {
+  it('a file offers Open, Open with Notepad and Code, Copy path, Start chat, Ask the agent about this and Properties', () => {
     const items = entryItems({ path: 'E:\\a.ts', kind: 'file' }, actions())
     expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-notepad', 'explorer-ctx-open-code', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
   })
@@ -28,7 +28,7 @@ describe('entryItems', () => {
 
 describe('backgroundItems', () => {
   const noop = () => {}
-  it('lists Refresh, Up, Start chat and Ask chat', () => {
+  it('lists Refresh, Up, Start chat and Ask the agent about this', () => {
     expect(ids(backgroundItems({ refresh: noop, up: noop, inFolder: true, startChat: noop, askChat: noop }))).toEqual(['explorer-ctx-refresh', 'explorer-ctx-up', 'explorer-ctx-start-chat', 'explorer-ctx-ask'])
   })
 

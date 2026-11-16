@@ -237,7 +237,7 @@
   const askAboutPage = (selection?: string): void =>
     void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title, ...(selection ? { text: selection } : { question: ASK_ABOUT_PAGE_QUESTION }) })
 
-  /** Back, Forward, Reload, Copy link (the page address, or the link under the pointer), Ask chat about this page or selection. */
+  /** Back, Forward, Reload, Copy link (the page address, or the link under the pointer), Ask the agent about this page or selection. */
   const contextItems = (page?: PageContext): MenuItemDef[] => [
     { id: 'browser-ctx-back', testid: 'browser-ctx-back', label: '&Back', icon: 'chevron-left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
     { id: 'browser-ctx-forward', testid: 'browser-ctx-forward', label: '&Forward', icon: 'chevron-right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) },

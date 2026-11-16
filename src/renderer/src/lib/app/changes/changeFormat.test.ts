@@ -13,6 +13,19 @@ describe('changeFormat', () => {
   })
 })
 
+describe('Changes pane counts (UX-111)', () => {
+  it('count from the texts like the permission box does', () => {
+    const texts = { kind: 'modified' as const, originalText: 'a\nb\nc\nd\ne\n', currentText: 'a\nX\nY\nZ\ne\n', additions: 0, deletions: 0 }
+    expect(linesLabel(texts)).toBe('+3 / -3')
+    expect(changesSummary([texts])).toBe('1 file, +3 -3')
+  })
+  it('add and delete count the whole file; saved numbers stand in without texts', () => {
+    expect(linesLabel({ kind: 'added', originalText: null, currentText: 'x\ny\n', additions: 0, deletions: 0 })).toBe('+2 / -0')
+    expect(linesLabel({ kind: 'deleted', originalText: 'x\ny\n', currentText: null, additions: 0, deletions: 0 })).toBe('+0 / -2')
+    expect(linesLabel({ additions: 4, deletions: 1 })).toBe('+4 / -1')
+  })
+})
+
 describe('changes list (UX-40)', () => {
   it('totals the files and lines', () => {
     expect(changesSummary([{ additions: 5, deletions: 1 }, { additions: 7, deletions: 2 }])).toBe('2 files, +12 -3')

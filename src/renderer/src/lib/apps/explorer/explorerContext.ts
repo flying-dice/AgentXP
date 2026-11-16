@@ -21,7 +21,7 @@ export interface EntryActions {
 }
 
 /**
- * Open, Open with Notepad / Code (files), Copy as path, Start a chat here, Ask chat about this, Properties.
+ * Open, Open with Notepad / Code (files), Copy as path, Start a chat here, Ask the agent about this, Properties.
  * Explorer only views files, so there are no editing verbs (Cut, Copy, Paste, Delete, Rename).
  */
 export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] {
@@ -43,7 +43,7 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
     file
       ? { id: 'explorer-ctx-start-chat', testid: 'explorer-ctx-start-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat }
       : { id: 'explorer-folder-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat },
-    { id: 'explorer-ctx-ask', testid: 'explorer-ctx-ask', label: 'Ask chat a&bout this...', icon: 'session', action: a.askChat },
+    { id: 'explorer-ctx-ask', testid: 'explorer-ctx-ask', label: 'Ask the agent a&bout this...', icon: 'session', action: a.askChat },
     { separator: true },
     { id: 'explorer-ctx-properties', testid: 'explorer-ctx-properties', label: 'P&roperties', icon: 'properties', action: a.properties }
   ]
@@ -58,14 +58,14 @@ export interface BackgroundActions {
   askChat: () => void
 }
 
-/** Refresh, Up one level, Start chat here, Ask chat about this folder. */
+/** Refresh, Up one level, Start chat here, Ask the agent about this folder. */
 export function backgroundItems(a: BackgroundActions): MenuItemDef[] {
   return [
     { id: 'explorer-ctx-refresh', testid: 'explorer-ctx-refresh', label: '&Refresh', icon: 'refresh', shortcut: 'F5', action: a.refresh },
     { id: 'explorer-ctx-up', testid: 'explorer-ctx-up', label: '&Up one level', icon: 'chevron-up', disabled: !a.inFolder, action: a.up },
     { separator: true },
     { id: 'explorer-ctx-start-chat', testid: 'explorer-ctx-start-chat', label: 'Start a &chat here', icon: 'session', disabled: !a.inFolder, action: a.startChat },
-    { id: 'explorer-ctx-ask', testid: 'explorer-ctx-ask', label: 'Ask chat a&bout this...', icon: 'session', disabled: !a.inFolder, action: a.askChat }
+    { id: 'explorer-ctx-ask', testid: 'explorer-ctx-ask', label: 'Ask the agent a&bout this...', icon: 'session', disabled: !a.inFolder, action: a.askChat }
   ]
 }
 
@@ -89,12 +89,12 @@ export interface DriveActions {
   properties: () => void
 }
 
-/** What a drive offers (Computer and the navigation pane): Open, Start a chat here, Ask chat, Copy path, Eject, Properties. */
+/** What a drive offers (Computer and the navigation pane): Open, Start a chat here, Ask the agent about this, Copy path, Eject, Properties. */
 export function driveItems(drive: { kind: 'system' | 'removable' }, a: DriveActions): MenuItemDef[] {
   return [
     { id: 'explorer-drive-open', label: '&Open', icon: 'open-folder', action: a.open },
     { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat },
-    { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask chat a&bout this...', icon: 'session', action: a.askChat },
+    { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask the agent a&bout this...', icon: 'session', action: a.askChat },
     { id: 'explorer-ctx-drive-copy-path', testid: 'explorer-ctx-drive-copy-path', label: 'Copy as &path', icon: 'copy', action: a.copyPath },
     { separator: true },
     { id: 'explorer-drive-eject', label: '&Eject (remove from this desktop)', icon: 'usb', disabled: drive.kind !== 'removable', action: a.eject },

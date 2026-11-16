@@ -45,7 +45,7 @@ describe('Context menus and in-app Help', () => {
     await see.count(ctx.desktop.windows('chat'), 0) // the explain route stays in the pane
   })
 
-  it('Notepad: Ask chat... fills the composer of the pane and does not send', async () => {
+  it('Notepad: Ask the agent about this... fills the composer of the pane and does not send', async () => {
     const notepad = ctx.desktop.window('notepad')
     await ctx.desktop.focusWindow('notepad')
     const aside = ctx.desktop.aside('notepad')

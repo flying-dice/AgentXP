@@ -57,19 +57,19 @@ export const entryNode = (parentId: string, entry: BrowseEntryDto, paths: Map<st
   return { id, text: entry.name, icon: 'folder', hasChildren: entry.hasChildren, testid: 'folder-browser-node', title: entry.path, attrs: { 'data-path': entry.path } }
 }
 
-const groupNode = (id: string, text: string, places: BrowsePlaceDto[], labels: string[], paths: Map<string, string>): TreeNodeData => {
+const groupNode = (id: string, text: string, places: BrowsePlaceDto[], labels: string[], paths: Map<string, string>, title?: string): TreeNodeData => {
   paths.set(id, '')
   const children = places.map((p, i): TreeNodeData => {
     const childId = nodeId(id, p.path)
     paths.set(childId, p.path)
     return { id: childId, text: labels[i], icon: 'folder', hasChildren: true, testid: 'folder-browser-node', title: p.path, attrs: { 'data-path': p.path } }
   })
-  return { id, text, icon: 'folder', expanded: true, testid: 'folder-browser-group', attrs: { 'data-path': '' }, children }
+  return { id, text, icon: 'folder', expanded: true, title, testid: 'folder-browser-group', attrs: { 'data-path': '' }, children }
 }
 
 /** The "Projects you used before" group, or null when there are none. */
 export const recentGroup = (places: BrowsePlaceDto[] | undefined, paths: Map<string, string>): TreeNodeData | null =>
-  places && places.length > 0 ? groupNode(RECENT_ID, 'Projects you used before', places, recentLabels(places), paths) : null
+  places && places.length > 0 ? groupNode(RECENT_ID, 'Projects you used before', places, recentLabels(places), paths, 'Folders that Agent7 opened before') : null
 
 /** The "Matches" group of a typed name that more than one folder has: each node shows its full path. */
 export const matchesGroup = (places: BrowsePlaceDto[], paths: Map<string, string>): TreeNodeData =>

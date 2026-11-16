@@ -32,6 +32,9 @@ export function changeCounts(oldText: string | null, newText: string): ChangeCou
   return { kind, additions, deletions }
 }
 
+/** The compact form for a narrow column: "+5 / -2" (the Changes pane). Same numbers as `changeCountsText`. */
+export const changeCountsShort = ({ additions, deletions }: Pick<ChangeCounts, 'additions' | 'deletions'>): string => `+${additions} / -${deletions}`
+
 const lines = (n: number): string => `${n} ${n === 1 ? 'line' : 'lines'}`
 
 /** "5 lines added, 2 removed"; the words of `CANNOT_READ_TEXT` when the counts are unknown; "This replaces the whole file." only for a rewrite of every line. */

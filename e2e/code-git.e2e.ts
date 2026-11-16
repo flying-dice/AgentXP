@@ -126,6 +126,23 @@ describe('Code app git awareness', () => {
     await see.visible(code.frame.getByTestId('code-management'))
   })
 
+  it('the buttons above the tree start a chat here and remove a project only when a project is selected (UX-112)', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-mgmt-tab-projects').click()
+    const items = code.frame.getByTestId('code-tree-item')
+    const project = code.frame.getByTestId('file-tree-root')
+    await see.visible(project)
+    await project.click()
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(true))
+    await items.filter({ hasText: 'keep.txt' }).click()
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(false))
+    expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(false) // nothing is selected in the file
+    await code.frame.getByTestId('code-tree-new-chat').click()
+    const chat = ctx.desktop.window('chat')
+    await see.visible(chat.getByTestId('chat-app'))
+    await ctx.desktop.closeWindow('chat')
+  })
+
   it('the Git list shows the lines of each file and double-click opens the file that was clicked (UX-78)', async () => {
     const code = ctx.desktop.code()
     await code.frame.getByTestId('code-logs-tab-git').click()
@@ -148,23 +165,6 @@ describe('Code app git awareness', () => {
     await see.visible(review.app)
     await see.text(review.frame.getByTestId('review-file-head'), 'notes.txt')
     await ctx.desktop.closeWindow('code-review')
-  })
-
-  it('the buttons above the tree start a chat here and remove a project only when a project is selected (UX-112)', async () => {
-    const code = ctx.desktop.code()
-    await code.frame.getByTestId('code-mgmt-tab-projects').click()
-    const items = code.frame.getByTestId('code-tree-item')
-    const project = code.frame.getByTestId('file-tree-root')
-    await see.visible(project)
-    await project.click()
-    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(true))
-    await items.filter({ hasText: 'keep.txt' }).click()
-    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(false))
-    expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(false) // nothing is selected in the file
-    await code.frame.getByTestId('code-tree-new-chat').click()
-    const chat = ctx.desktop.window('chat')
-    await see.visible(chat.getByTestId('chat-app'))
-    await ctx.desktop.closeWindow('chat')
   })
 })
 

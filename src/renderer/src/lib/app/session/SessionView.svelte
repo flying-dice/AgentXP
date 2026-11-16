@@ -88,7 +88,7 @@
     newDefaultAgent = null
   }: Props = $props()
 
-  const agentName = $derived(agent?.name ?? 'Agent')
+  const agentName = $derived(agent?.name ?? 'The agent')
   const info = $derived(store.state.session)
   const title = $derived(info.title || session.title)
   const modes = $derived(info.modes.length > 0 ? info.modes : session.modes)

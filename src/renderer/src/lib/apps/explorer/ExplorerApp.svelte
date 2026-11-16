@@ -299,7 +299,7 @@
     else void host.openApp({ app: defaultOpener(entry.path), path: entry.path })
   }
 
-  /** A file or folder: Open, Open with, Copy path, Start chat here, Ask chat, Properties. */
+  /** A file or folder: Open, Open with, Copy path, Start chat here, Ask the agent about this, Properties. */
   const entryMenu = (entry: VfsEntryDto): MenuItemDef[] =>
     entryItems(entry, {
       open: () => openEntry(entry),

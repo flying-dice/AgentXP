@@ -1,7 +1,7 @@
 /**
- * "Ask chat about this": the prompt a request becomes and the folder the chat works in. Pure, so the format
- * is tested. `DesktopController.askChat` sends the prompt in the window's chat pane (the draft for "Ask chat...");
- * the folder is for "Open in Chat window".
+ * "Ask the agent about this": the prompt a request becomes and the folder the chat works in. Pure, so the format
+ * is tested. `DesktopController.askChat` sends the prompt in the window's chat pane (the draft for "Ask the agent about this...");
+ * the folder is for "Start a chat here".
  */
 import { APP_DISPLAY_NAMES, type AppView, type AskChatRequest } from '@shared/desktop'
 import { viewPath } from '@shared/desktop-views'

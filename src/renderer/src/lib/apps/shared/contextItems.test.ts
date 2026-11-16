@@ -24,7 +24,7 @@ describe('file chat items', () => {
     const start = vi.fn()
     const askItem = askAboutFileItem('code', ask)
     const startItem = startChatHereItem('code', start)
-    expect(askItem).toMatchObject({ testid: 'code-ctx-ask', label: 'Ask &chat about this file...' })
+    expect(askItem).toMatchObject({ testid: 'code-ctx-ask', label: '&Ask the agent about this...' })
     expect(startItem).toMatchObject({ testid: 'code-ctx-start-chat', label: 'Start a &chat here' })
     askItem.action?.()
     startItem.action?.()

@@ -35,7 +35,7 @@ export async function registerFakeAgent(page: Page, name = 'Fake agent'): Promis
   return page.evaluate(
     async ({ name, script }) => {
       const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
-      const agent = await api.agents.create({ name, command: 'node', args: ['--experimental-strip-types', '--no-warnings', script], env: {} })
+      const agent = await api.agents.create({ name, command: 'node', args: ['--experimental-strip-types', '--no-warnings', script], env: { FAKE_AGENT_UNIQUE_SESSIONS: '1' } })
       await api.agents.setDefault(agent.id)
       return agent.id
     },

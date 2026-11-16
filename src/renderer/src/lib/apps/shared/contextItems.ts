@@ -1,5 +1,5 @@
 /**
- * Pure builders of the context menu items that several apps share: the "Ask chat about this" group, the text
+ * Pure builders of the context menu items that several apps share: the "Ask the agent about this" group, the text
  * editing operations of a textarea and the line range of a selection. Test ids are `<app>-ctx-<action>`.
  */
 import type { AskChatRequest } from '@shared/desktop'
@@ -17,7 +17,7 @@ export interface AskChatItemsOptions {
 export const CHAT_ITEM_LABELS = {
   explain: '&Explain this',
   ask: '&Ask the agent about this...',
-  askFile: 'Ask &chat about this file...',
+  askFile: '&Ask the agent about this...',
   startHere: 'Start a &chat here'
 } as const
 
@@ -33,7 +33,7 @@ export function askChatItems(app: string, { hasSelection, ask }: AskChatItemsOpt
   ]
 }
 
-/** "Ask chat about this file...": opens the chat pane with a draft about a file (a tree row, a list item). */
+/** "Ask the agent about this...": opens the chat pane with a draft about a file (a tree row, a list item). */
 export const askAboutFileItem = (app: string, action: () => void, disabled = false): MenuItemDef => ({
   id: `${app}-ctx-ask`,
   testid: `${app}-ctx-ask`,

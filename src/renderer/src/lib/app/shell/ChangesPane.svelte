@@ -8,7 +8,7 @@
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
-  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
 
   interface Props {
     changes: FileChangeDto[]
@@ -49,7 +49,7 @@
       file: c.path,
       kind: changeKindLabel(c.kind),
       // A number, so that sorting by this column sorts by size.
-      lines: c.additions + c.deletions,
+      lines: fileChangeCounts(c).additions + fileChangeCounts(c).deletions,
       label: linesLabel(c),
       reverted: false
     })),

@@ -67,7 +67,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
   return [
     {
       id: 'root',
-      text: 'Event Viewer (a list of what happened)',
+      text: 'Event Viewer',
       icon: 'eventlog',
       expanded: true,
       children: [

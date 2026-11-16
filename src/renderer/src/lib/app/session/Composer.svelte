@@ -26,7 +26,7 @@
     pickFiles?: () => Promise<string[]>
     /**
      * Fills the box (and focuses it) when `id` is one the box has not applied yet; without `text` it only focuses.
-     * The host (the chat pane: "Ask chat...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
+     * The host (the chat pane: "Ask the agent about this...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
      */
     prefill?: { id: number; text?: string } | null
     onprefilled?: (id: number) => void

@@ -21,7 +21,7 @@ describe('processRows', () => {
     const busy: SessionDto = { ...sampleSessions[0], status: 'working', contextUsed: 150000, contextSize: 200000 }
     const [row] = chatRows([busy], sampleAgents)
     expect(row).toMatchObject({ agent: 'Claude Code', status: 'Working', context: '75%', percent: 75, tokens: '150k / 200k', busy: true })
-    expect(chatRows([{ ...busy, contextSize: 0 }], [])[0]).toMatchObject({ context: '-', agent: 'Agent 1' })
+    expect(chatRows([{ ...busy, contextSize: 0 }], [])[0]).toMatchObject({ context: '-', agent: 'Removed agent (1)' })
   })
 
   it('picks the bar state and formats tokens', () => {

@@ -1,16 +1,36 @@
+import { changeCounts, changeCountsShort } from '@shared/lineCounts'
 import type { FileChangeDto, FileChangeKind } from '@shared/models'
 
 const KIND: Record<FileChangeKind, string> = { added: 'Added', modified: 'Modified', deleted: 'Deleted' }
 
 export const changeKindLabel = (kind: FileChangeKind): string => KIND[kind]
 
-/** "+4 / -1": the lines column, "+ added / - removed". */
-export const linesLabel = (change: Pick<FileChangeDto, 'additions' | 'deletions'>): string => `+${change.additions} / -${change.deletions}`
+type Counted = Pick<FileChangeDto, 'additions' | 'deletions'> & Partial<Pick<FileChangeDto, 'kind' | 'originalText' | 'currentText'>>
+
+/**
+ * The lines of a change, counted by the shared `changeCounts` (the same code as the permission box) from the two texts
+ * when the pane has them; the numbers saved with the change stand in when it does not.
+ */
+export function fileChangeCounts(change: Counted): { additions: number; deletions: number } {
+  if (change.originalText !== undefined || change.currentText !== undefined) {
+    const before = change.kind === 'added' ? (change.originalText ?? '') : change.originalText
+    const after = change.kind === 'deleted' ? (change.currentText ?? '') : change.currentText
+    if (before !== null && before !== undefined && after !== null && after !== undefined) {
+      const { additions, deletions } = changeCounts(before, after)
+      return { additions, deletions }
+    }
+  }
+  return { additions: change.additions, deletions: change.deletions }
+}
+
+/** "+4 / -1": the lines column, "+ added / - removed" (the compact form of the permission box's "4 lines added, 1 removed"). */
+export const linesLabel = (change: Counted): string => changeCountsShort(fileChangeCounts(change))
 
 /** "5 files, +12 -3": the total over a list of changes. */
-export function changesSummary(changes: readonly Pick<FileChangeDto, 'additions' | 'deletions'>[]): string {
-  const added = changes.reduce((n, c) => n + c.additions, 0)
-  const removed = changes.reduce((n, c) => n + c.deletions, 0)
+export function changesSummary(changes: readonly Counted[]): string {
+  const counts = changes.map(fileChangeCounts)
+  const added = counts.reduce((n, c) => n + c.additions, 0)
+  const removed = counts.reduce((n, c) => n + c.deletions, 0)
   return `${changes.length} ${changes.length === 1 ? 'file' : 'files'}, +${added} -${removed}`
 }
 

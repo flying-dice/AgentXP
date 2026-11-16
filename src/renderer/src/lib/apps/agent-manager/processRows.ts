@@ -59,7 +59,7 @@ export function chatRows(sessions: readonly SessionDto[], agents: readonly Agent
     return {
       id: String(s.id),
       title: s.title || 'New chat',
-      agent: agents.find((a) => a.id === s.agentId)?.name ?? `Agent ${s.agentId}`,
+      agent: agents.find((a) => a.id === s.agentId)?.name ?? `Removed agent (${s.agentId})`,
       status: chatStatusText(s.status),
       context: s.contextSize > 0 ? `${percent}%` : '-',
       tokens: s.contextSize > 0 ? `${formatTokens(s.contextUsed)} / ${formatTokens(s.contextSize)}` : '-',

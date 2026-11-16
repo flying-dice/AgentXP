@@ -613,7 +613,7 @@
     })
   }
 
-  /** Cut, Copy, Paste, Select All (the viewer is read only), Revert hunk when on a hunk, Go to file and the Ask chat group. */
+  /** Cut, Copy, Paste, Select All (the viewer is read only), Revert hunk when on a hunk, Go to file and the Ask the agent group. */
   const contextItems = (): MenuItemDef[] => {
     const selected = selectedText()
     const hasSelection = selected !== ''

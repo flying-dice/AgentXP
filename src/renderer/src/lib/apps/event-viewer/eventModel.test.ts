@@ -39,6 +39,7 @@ describe('appendEvents', () => {
 describe('tree', () => {
   it('has logs and a node per chat', () => {
     const tree = logTree([{ id: 4, title: 'Fix bug' }, { id: 5, title: '' }])
+    expect(tree[0]?.text).toBe('Event Viewer')
     const logs = tree[0].children!.find((n) => n.id === ALL_NODE)!
     expect(logs.children!.map((n) => n.text)).toEqual(['ACP', 'AG-UI', 'MCP'])
     expect(tree[0].children!.find((n) => n.id === 'chats')!.children!.map((n) => n.text)).toEqual(['Fix bug', 'New chat'])

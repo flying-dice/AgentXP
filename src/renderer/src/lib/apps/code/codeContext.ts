@@ -4,6 +4,7 @@
  */
 import { vpathParent } from '@shared/vfs'
 import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+import { CHAT_ITEM_LABELS } from '../shared/contextItems'
 
 export interface TreeMenuOps {
   /** Opens the file, or expands the folder. */
@@ -44,7 +45,7 @@ export function treeMenu(target: TreeMenuTarget, ops: TreeMenuOps, state: { canE
         item('open', '&Open', ops.open, { icon: 'file-code' }),
         item('open-notepad', 'Open with &Notepad', ops.openWithNotepad, { icon: 'file-text' }),
         item('copy-path', 'Copy as &path', ops.copyPath, { icon: 'copy' }),
-        item('ask-file', '&Ask chat about this file...', ops.askAboutFile, { icon: 'session' })
+        item('ask-file', CHAT_ITEM_LABELS.askFile, ops.askAboutFile, { icon: 'session' })
       ]
     case 'empty':
       return [item('plug-in', '&Plug in a project...', ops.plugIn, { icon: 'plus' })]

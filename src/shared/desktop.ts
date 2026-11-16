@@ -310,7 +310,7 @@ export interface OpenWindowInput {
 }
 
 /**
- * "Ask chat about this": what an app hands to the desktop when the user picks Explain this, Ask chat... or Send
+ * "Ask the agent about this": what an app hands to the desktop when the user picks Explain this, Ask the agent about this... or Send
  * selection to chat from a context menu. `DesktopHost.askChat` turns it into a chat prompt; a chat side panel can
  * take the same request later, so the apps never change.
  */
@@ -320,8 +320,8 @@ export interface AskChatRequest {
   /** The window it comes from (its drive decides where a new chat works). */
   windowId: Id
   /**
-   * explain: "Explain this"; ask: "Ask chat..." (the user adds the question); send: "Send selection to chat"; window: "Open in Chat
-   * window" (like send, but in a new full chat instead of the window's chat pane).
+   * explain: "Explain this"; ask: "Ask the agent about this..." (the user adds the question); send: "Send selection to chat"; window: "Start a chat here"
+   * (like send, but in a new full chat instead of the window's chat pane).
    */
   kind: 'explain' | 'ask' | 'send' | 'window'
   /** The selected text, the output or the page text. */

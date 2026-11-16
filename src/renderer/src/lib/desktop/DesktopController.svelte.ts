@@ -135,7 +135,7 @@ export class DesktopController implements DesktopHost {
   usbMenuOpen = $state(false)
   /** The chat pane of each window: collapsed or open, and its width (remembered in localStorage per window). */
   panes = $state.raw<Record<Id, PaneState>>({})
-  /** A draft to put into a window's pane composer ("Ask chat..."); the composer reports it applied. */
+  /** A draft to put into a window's pane composer ("Ask the agent about this..."); the composer reports it applied. */
   prefills = $state.raw<Record<Id, { id: number; text?: string }>>({})
   /** What each app registered for its pane (`setContext`); not reactive: it is read when a prompt is sent. */
   private readonly contexts = new Map<Id, () => Record<string, unknown> | null | undefined>()
@@ -594,8 +594,8 @@ export class DesktopController implements DesktopHost {
   }
 
   /**
-   * "Ask chat about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
-   * "Send selection to chat" send it, "Ask chat..." fills the composer so the user adds the question. A window without
+   * "Ask the agent about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
+   * "Send selection to chat" send it, "Ask the agent about this..." fills the composer so the user adds the question. A window without
    * a pane (or one that is gone) starts a full chat instead, like `askChatWindow`.
    */
   async askChat(request: AskChatRequest): Promise<void> {
@@ -634,7 +634,7 @@ export class DesktopController implements DesktopHost {
     else await store.send?.(text, [filePath])
   }
 
-  /** "Open in Chat window": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
+  /** "Start a chat here": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
   async askChatWindow(request: AskChatRequest): Promise<void> {
     const cwd = askChatCwd(request, this.state.windows, this.state.home)
     const window = await this.newChatIn(cwd)

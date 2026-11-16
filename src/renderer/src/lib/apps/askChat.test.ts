@@ -43,7 +43,7 @@ describe('askChatPrompt', () => {
     expect(prompt).toContain('```ts\nconst x = 1\n```')
   })
 
-  it('says a question follows for Ask chat...', () => {
+  it('says a question follows for Ask the agent about this...', () => {
     expect(askChatPrompt({ ...base, kind: 'ask', path: 'E:\\a.md', text: 'hi' })).toContain('I have a question about')
     expect(askChatPrompt({ ...base, kind: 'ask', path: 'E:\\a.md', text: 'hi' })).toContain('My question follows')
   })
@@ -80,7 +80,7 @@ describe('askChatCwd', () => {
 })
 
 describe('askChatDraft', () => {
-  it('is what the composer gets for Ask chat...: the subject and the selection, then room for the question', () => {
+  it('is what the composer gets for Ask the agent about this...: the subject and the selection, then room for the question', () => {
     const draft = askChatDraft({ ...base, kind: 'ask', path: 'E:\\src\\a.ts', range: { startLine: 3, endLine: 5 }, text: 'const x = 1' })
     expect(draft).toBe('I have a question about a selection from E:\\src\\a.ts (lines 3-5).\n\n```ts\nconst x = 1\n```\n\n')
     expect(draft).not.toContain('My question follows')

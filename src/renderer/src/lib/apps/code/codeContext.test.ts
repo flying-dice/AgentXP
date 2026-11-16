@@ -17,8 +17,8 @@ describe('treeMenu', () => {
     expect(treeMenu('project', ops(), { canEject: false }).find((i) => i.testid === 'code-ctx-eject')?.disabled).toBe(true)
   })
 
-  it('a file offers Open, Open with Notepad, Copy as path and Ask chat', () => {
-    expect(labels(treeMenu('file', ops(), { canEject: true }))).toEqual(['&Open', 'Open with &Notepad', 'Copy as &path', '&Ask chat about this file...'])
+  it('a file offers Open, Open with Notepad, Copy as path and Ask the agent about this...', () => {
+    expect(labels(treeMenu('file', ops(), { canEject: true }))).toEqual(['&Open', 'Open with &Notepad', 'Copy as &path', '&Ask the agent about this...'])
   })
 
   it('the empty area plugs in a project', () => {

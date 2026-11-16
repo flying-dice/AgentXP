@@ -40,7 +40,7 @@ The list is at the left under the title **Control Center Home**. It has **Agents
 
 ### The Agents Page
 
-The page lists the agents. The columns are **Name**, **Command**, and **Default**. Point at a row to see its full command. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
+The page lists the agents. The columns are **Name**, **About** (one plain sentence, for example that the Scripted Agent is a practice agent that gives fixed sample answers and does not use an AI model), **Command**, and **Default**. Point at a row to see its full command. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
 
 - **Add...** – Opens the **Add Agent** dialog box.
 - **Edit...** – Opens the **Edit Agent** dialog box for the selected agent.

@@ -69,6 +69,14 @@ export const formFromAgent = (agent: AgentDto): AgentFormValues => ({
   defaultModeId: agent.defaultModeId ?? ''
 })
 
+/** One plain sentence for the agents list: what the agent is (the bundled sample agent has no AI behind it). */
+export const describeAgent = (agent: Pick<AgentDto, 'name' | 'command' | 'args'>): string =>
+  agent.args.some((a) => /scripted-agent/.test(a))
+    ? 'A practice agent that gives fixed sample answers. It does not use an AI model.'
+    : /claude/i.test(agent.name) || /claude/i.test([agent.command, ...agent.args].join(' '))
+      ? 'Claude Code: an AI assistant that works on your project.'
+      : ''
+
 /** The command line of a form ("node my-agent.js"): the name an agent gets when none is typed. */
 export const commandLine = (values: Pick<AgentFormValues, 'command' | 'args'>): string =>
   [values.command.trim(), ...parseArgs(values.args)].filter(Boolean).join(' ')

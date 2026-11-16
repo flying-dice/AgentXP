@@ -191,7 +191,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Tree menu: open in Explorer | Shows the folder in Explorer. | `code-ctx-open-explorer` |
 | Tree menu: open with Notepad | Opens the file in Notepad. | `code-ctx-open-notepad` |
 | Tree menu: copy as path | Copies the path of the file or folder. | `code-ctx-copy-path` |
-| Tree menu: ask chat | Asks the chat about this file. | `code-ctx-ask-file` |
+| Tree menu: ask the agent about this | Opens the chat pane with a draft about this file (**Ask the agent about this...**). | `code-ctx-ask-file` |
 | Tree menu: remove from desktop | Takes the project off the desktop. Its folder stays on your disk. | `code-ctx-eject` |
 | Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
 | Project tree | The folders and files of the project. | `code-tree` |
