@@ -3,7 +3,8 @@
   import { effectiveStatus, isStarting } from '../sessionStatus'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
-  import { describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
+  import type { ChatSuggestion } from './chatPaneText'
+  import { RESTARTED_NOTE, describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
   import PermissionDialog from './PermissionDialog.svelte'
   import { PAUSED_NOTE, STOPPED_BY_PAUSE_NOTE } from './resumeNote'
   import { permissionMetadata } from './permissionOptions'
@@ -32,7 +33,7 @@
     /** Without the title bar (a host such as the embedded chat panel shows its own). */
     compact?: boolean
     /** Chips above the composer (the chat pane): clicking one sends its `text`. */
-    suggestions?: readonly { id: string; label: string; text: string }[]
+    suggestions?: readonly ChatSuggestion[]
     /** See `Composer`: fills and focuses the box. */
     prefill?: { id: number; text?: string } | null
     onprefilled?: (id: number) => void
@@ -49,6 +50,8 @@
     loadDetails?: (detail: string | null) => Promise<string>
     /** "Show in Event Viewer" of the error row. */
     onshowevents?: () => void
+    /** "Show in Event Viewer" under a failed step: opens the viewer on the event of that tool call. */
+    onshowtoolevent?: (toolCallId: string) => void
     /** "Open Agents" and "Choose another agent" of the error row: Control Center at Agents. */
     onopenagents?: () => void
     /** "Start a new chat" after a second failure in a row. */
@@ -79,12 +82,13 @@
     onaskfirst,
     loadDetails,
     onshowevents,
+    onshowtoolevent,
     onopenagents,
     onnewchat,
     newDefaultAgent = null
   }: Props = $props()
 
-  const agentName = $derived(agent?.name ?? 'Agent')
+  const agentName = $derived(agent?.name ?? 'The agent')
   const info = $derived(store.state.session)
   const title = $derived(info.title || session.title)
   const modes = $derived(info.modes.length > 0 ? info.modes : session.modes)
@@ -138,12 +142,23 @@
   function onproblem(id: ProblemActionId): void {
     if (id === 'send-again') void (session.problem ? restartThen(() => store.resend()) : store.resend())
     else if (id === 'restart-send') void restartThen(() => store.resend())
-    else if (id === 'restart') void restartThen()
+    else if (id === 'restart') void restartThen(store.failedSend ? putBack : undefined)
     else if (id === 'details') void toggleDetails()
     else if (id === 'open-agents' || id === 'choose-agent') onopenagents?.()
     else if (id === 'new-chat') onnewchat?.()
     else onshowevents?.()
   }
+
+  /** After "Restart": the message that was not answered goes back into the message box, and a line says to press Send. */
+  let restartedNote = $state(false)
+  async function putBack(): Promise<void> {
+    await editFailed()
+    restartedNote = !!edit
+  }
+  // The line goes away with the next send or the next problem.
+  $effect(() => {
+    if (store.running || problem) untrack(() => (restartedNote = false))
+  })
 
   /** "Edit" on a message that was not sent: the text goes back into the message box. */
   let edit = $state<{ id: number; text: string } | null>(null)
@@ -176,16 +191,20 @@
     deniedToolCalls={store.deniedToolCalls}
     onaction={(event) => void store.sendA2uiAction(event)}
     {surfaceControls}
+    {onshowtoolevent}
   />
   {#if suggestions.length > 0 && !store.running && !request}
     <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">
       {#each suggestions as s (s.id)}
-        <button type="button" class="chip" data-testid="embedded-chat-suggestion" data-suggestion={s.id} onclick={() => void store.send(s.text)}>{s.label}</button>
+        <button type="button" class="chip" class:off={s.disabled} data-testid="embedded-chat-suggestion" data-suggestion={s.id} aria-disabled={s.disabled || undefined} title={s.tip} onclick={() => !s.disabled && void store.send(s.text)}>{s.label}</button>
       {/each}
     </div>
   {/if}
   {#if store.lastDecision}
     <div class="decision" role="status" data-testid="chat-permission-result" data-allowed={store.lastDecision.allowed}>{store.lastDecision.text}</div>
+  {/if}
+  {#if restartedNote}
+    <div class="decision" role="status" data-testid="chat-restarted-note">{RESTARTED_NOTE}</div>
   {/if}
   {#if paused}
     <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>
@@ -257,6 +276,13 @@
   .chip:hover {
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
+  }
+  .chip.off,
+  .chip.off:hover {
+    border-color: #c5ccd6;
+    background: #f1f3f6;
+    color: #7a8494;
+    cursor: default;
   }
   .session-view {
     display: flex;

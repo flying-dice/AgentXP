@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DriveDto } from '@shared/vfs'
-import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, desktopWindowTitle, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, lastUsedText, nameSuggestion, projectSuggestion, rowStatus, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
+import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, desktopWindowTitle, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, lastUsedText, nameSuggestion, projectSuggestion, READY_TEXT, rowStatus, shortCause, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
 
 const usb = (letter: string, label: string): DriveDto => ({ letter, label, kind: 'removable', folderId: 1, pluggedAt: null })
 const system: DriveDto = { letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }
@@ -74,6 +74,14 @@ describe('launcherModel', () => {
     expect(rowStatus({ runState: 'awaiting_approval', pendingApprovals: 1 })).toMatchObject({ icon: 'shield', strong: true, label: 'Needs your approval (1)' })
     expect(rowStatus({ runState: 'error', pendingApprovals: 0 })).toMatchObject({ icon: 'error', strong: true, hint: expect.stringContaining('Agents') })
     expect(rowStatus({ runState: 'idle', pendingApprovals: 0 })).toMatchObject({ icon: null, strong: false, hint: '' })
+    expect(rowStatus({ runState: 'error', pendingApprovals: 0, lastError: "The agent could not start. The program 'x' was not found." }).label).toBe("Agent problem: The program 'x' was not found.")
+    expect(shortCause(null)).toBe('the agent could not start.')
+  })
+
+  it('a new desktop that is not open says what to press', () => {
+    expect(rowStatus({ runState: 'idle', pendingApprovals: 0, connected: false }, true).label).toBe(READY_TEXT)
+    expect(rowStatus({ runState: 'idle', pendingApprovals: 0, connected: true }, true).label).toBe('Idle')
+    expect(rowStatus({ runState: 'working', pendingApprovals: 0, connected: false }, true).label).toBe('Working')
   })
 
   it('preselects a desktop that waits for approval, else the most recent', () => {

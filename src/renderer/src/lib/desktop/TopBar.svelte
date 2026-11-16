@@ -2,13 +2,17 @@
   import Button from '../kit/atoms/Button.svelte'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
   import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
-  import { RESUME_BUTTON, barStatus, noToolsOpen, toolChips } from './activity'
+  import { RESUME_BUTTON, barStatus, toolChips, toolsLine } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
     title: string
     /** What the agent is doing right now; null = idle. */
     working: string | null
+    /** Requests that wait for the user's answer; the status then reads "Waiting for you: n requests to approve" as a link. */
+    waiting?: number
+    /** Chat windows that are open: an open chat is something the agent can use. */
+    chatsOpen?: number
     paused: boolean
     /** "Ask before every action": the agent must ask before it reads, writes, runs a command or uses the browser. */
     userInControl: boolean
@@ -18,6 +22,8 @@
     /** A short line that stands in for "Idle" for a few seconds ("Resumed. Nothing was stopped."). */
     notice?: string | null
     onpause?: () => void
+    /** The "Waiting for you" link: opens the next request. */
+    onopenrequest?: () => void
     /** The "Ask before every action" check box and the "Give control back" button: switches the flag. */
     ontakecontrol?: () => void
     /** A chip was clicked: open Control Center at Permissions. */
@@ -32,14 +38,14 @@
     agentProblem?: string | null
   }
 
-  let { title, working, paused, userInControl, tools, policy = null, notice = null, onpause, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
+  let { title, working, waiting = 0, chatsOpen = 0, paused, userInControl, tools, policy = null, notice = null, onpause, onopenrequest, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
 
   const chips = $derived(toolChips(tools, policy, userInControl))
-  const nothingOpen = $derived(noToolsOpen(tools))
+  const toolsNote = $derived(toolsLine(tools, chatsOpen))
   // One derivation for the text, the dot and `data-state`, so they cannot disagree.
-  const view = $derived(barStatus({ paused, userInControl, working, notice }))
+  const view = $derived(barStatus({ paused, userInControl, working, waiting, notice }))
   const status = $derived(view.text)
   const mode = $derived(view.state)
 </script>
@@ -47,7 +53,9 @@
 <div class="w7-topbar" class:folded={!pinned} data-testid="topbar" data-state={mode} role="region" aria-label="Agent strip">
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} class:control={mode === 'control'} class:waiting={mode === 'waiting'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
-    <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>{status}</span>
+    <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
+      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Open the next request." onclick={() => onopenrequest?.()}>{status}</button>{:else}{status}{/if}
+    </span>
     {#if userInControl && !paused}
       <button type="button" class="give-back" data-testid="topbar-give-back" title="The agent goes back to the settings in Control Center and no longer asks before every action." onclick={() => ontakecontrol?.()}>Give control back</button>
     {/if}
@@ -59,12 +67,12 @@
       {#each chips as chip (chip.group)}
         <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} onclick={() => onopenpermissions?.()}>{chip.label}</button>
       {/each}
-      {#if nothingOpen}<span class="none" data-testid="topbar-tool-chips-none">Agent can use nothing yet. Open an app to give it a tool.</span>{/if}
+      {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
     <span class="pause-slot">
       <Button
         data-testid="topbar-pause"
-        title={paused ? 'Lets the agents act again. A step that Pause stopped is asked to continue where it stopped.' : 'Stops every agent on this desktop now and keeps them from doing anything until you click Resume agents and continue.'}
+        title={paused ? 'Let every agent act again. A step that Pause stopped is asked to continue where it stopped.' : 'Pause every agent on this desktop. Each one stops now and does nothing until you click Resume agents and continue. Chats and files stay as they are.'}
         onclick={() => onpause?.()}>{paused ? RESUME_BUTTON : 'Pause all agents'}</Button>
     </span>
     <span class="ask-slot" title="You decide on every action. The agent asks first, even for reading.">
@@ -204,6 +212,19 @@
     border: 1px solid #d9b44a;
     background: #fff4cf;
     color: #5f4300;
+  }
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .link:focus-visible {
+    outline: var(--w7-focus-outline);
+    outline-offset: 1px;
   }
   .give-back {
     flex: none;

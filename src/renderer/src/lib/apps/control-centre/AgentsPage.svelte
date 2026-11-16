@@ -4,7 +4,7 @@
   import type { AgentInput } from '@shared/ipc'
   import type { AgentDto } from '@shared/models'
   import AgentEditDialog from '../../app/options/AgentEditDialog.svelte'
-  import { formFromAgent } from '../../app/options/agentForm'
+  import { describeAgent, formFromAgent } from '../../app/options/agentForm'
   import Button from '../../kit/atoms/Button.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
@@ -25,12 +25,13 @@
 
   const columns: ListColumn[] = [
     { key: 'name', header: 'Name', width: 120 },
+    { key: 'about', header: 'About', width: 220 },
     { key: 'command', header: 'Command' },
     { key: 'mode', header: 'Start mode', width: 120 },
     { key: 'isDefault', header: 'Default', width: 56 }
   ]
   const rows = $derived<ListRow[]>(
-    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, command: [a.command, ...a.args].join(' '), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
+    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: describeAgent(a), command: [a.command, ...a.args].join(' '), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
   )
   const selectedAgent = $derived(agents.items.find((a) => String(a.id) === selected[0]) ?? null)
 

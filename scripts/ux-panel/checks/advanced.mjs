@@ -1,5 +1,14 @@
 // J18, J21, J23, J24.
-import { agentMessages, all, countWords, fail, pass, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
+import { agentMessages, all, fail, missingNumbers, pass, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
+
+/** H-60: the new lines of redirect.ts in the diff. */
+export const GIT_NEW_LINES = [1, 3, 4]
+
+/** H-58: what the start state of T23.1 showed. A first crash that already says "It stopped again" is a product defect, not a task error. */
+export const crashNotes = (state) =>
+  state.firstCrashOffersRestartSend === false
+    ? [`note: the start state did not offer "Restart and send again" (${state.startedAtSecondFailure ? 'the box already said "It stopped again"' : 'no such button'}): researcher, record it as a product defect`]
+    : []
 
 const A2UI = async (ctx) => {
   const events = await ctx.protocol(ctx.state.desktopId, { source: 'acp', sessionId: ctx.state.sessionId })
@@ -38,7 +47,7 @@ export const checks = {
       [outcomes.at(-1) === 'success', `the last turn ended ${outcomes.at(-1) ?? 'never'} (want success)`],
       [userMessages(entries).length >= 2, 'a new request was sent after the crash'],
       [agentMessages(entries).length > 0 && session?.status === 'idle', 'the assistant answered and the chat is idle']
-    ])
+    ], crashNotes(ctx.state))
   },
 
   async 'T23.2'(ctx) {
@@ -56,7 +65,11 @@ export const checks = {
   },
 
   async 'T24.1'(ctx, { answer }) {
-    return withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts', countWords(3)], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams) [planned task]' })
+    // H-60: the three file names and the three line numbers 1, 3 and 4 (a lone "3" no longer passes).
+    const result = withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts'], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams)' })
+    if (result.status !== 'PASS' || !answer) return result
+    const missing = missingNumbers(answer, GIT_NEW_LINES)
+    return missing.length ? fail(`state ok but the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${GIT_NEW_LINES.join(', ')})`, result.notes) : result
   },
 
   async 'T24.2'(ctx, { answer }) {

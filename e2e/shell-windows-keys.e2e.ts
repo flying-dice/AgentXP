@@ -47,7 +47,7 @@ describe('shell: windows come forward, have their own names, and the keyboard re
   })
 
   it('Ctrl+N also works with an Explorer window in front', async () => {
-    await ctx.desktop.window('explorer', 0).getByTestId('explorer-app').click({ position: { x: 4, y: 4 } })
+    await ctx.desktop.focusWindow('explorer', 0)
     const before = await ctx.desktop.windows('chat').count()
     await ctx.desktopPage.keyboard.press('Control+n')
     await ctx.desktop.window('chat', before).waitFor()

@@ -4,6 +4,12 @@ import { all, fail, lastProgress, manual, pass, projectRoot, readText, windowsOf
 
 const loginAppIntact = (ctx) => readText(ctx.fixtures.loginApp, 'src/auth/redirect.ts') === REDIRECT_BUG && readText(ctx.fixtures.loginApp, 'src/auth/login.ts') === LOGIN_ORIGINAL
 
+/** H-49: the heading of the test page; the assistant's reading ("It says: Example Domain ...") must reach the answer. */
+export const PAGE_HEADING = 'Example Domain'
+
+/** H-62: T19.2 keywords by cause (the start state is the blocked port 9), plus the older connection words. */
+export const BLOCKED_PORT_WORDS = ['port', 'blocked', 'address', 'refused', 'not load', 'could not connect', "couldn't connect", "can't connect", 'cannot connect', 'not connect', 'unreachable', 'no network', 'no internet']
+
 export const checks = {
   async 'T10.1'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
@@ -75,8 +81,11 @@ export const checks = {
     const row = list.find((d) => d.id === ctx.state.pendingDesktopId)
     // H-39: the scenario also asks which workspace has a problem: the answer must name the error desktop.
     const title = ctx.state.errorDesktopTitle ?? 'Docs site'
-    const state = all([[row?.connected === true, 'the desktop with the pending request is connected']], ['researcher: record whether the waiting row was preselected when the launcher opened'])
-    return withAnswer(state, answer, { keywords: [title], expect: `the answer names the workspace with the problem: ${title}` })
+    // H-51: the preset waits until the error row shows its problem; a row that reads Idle now is a product defect (UX-87), not a panelist error.
+    const errorRow = list.find((d) => d.id === ctx.state.errorDesktopId)
+    const notes = ['researcher: record whether the waiting row was preselected when the launcher opened', ...(ctx.state.errorDesktopId && !errorRow?.agentProblem ? [`note: the row of ${title} shows no agent problem at the end (agentProblem is empty)`] : [])]
+    const state = all([[row?.connected === true, 'the desktop with the pending request is connected']], notes)
+    return withAnswer(state, answer, { keywords: [[title, title.replace(/ /g, '-')]], expect: `the answer names the workspace with the problem: ${title}` })
   },
 
   async 'T14.2'(ctx) {
@@ -117,14 +126,14 @@ export const checks = {
         [read, 'the assistant read the page (a browser_read call)']
       ]),
       answer,
-      { keywords: [['assistant can', 'agent can', 'can now see', 'can see the page', 'can read the page', 'assistant sees', 'agent sees', 'browser chip', 'chip is on']], expect: 'the panelist said the assistant can now see the page' }
+      { keywords: [[PAGE_HEADING]], expect: `the answer says what the page says ("${PAGE_HEADING}"), as the assistant told it` }
     )
   },
 
   async 'T19.2'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
-    return withAnswer(all([[windowsOf(state, 'browser').length > 0, 'the Browser window is open']]), answer, { keywords: [["could not connect", "couldn't connect", "can't connect", 'cannot connect', 'not connect', 'unreachable', 'refused', 'no network', 'no internet', 'not load', 'refresh']], expect: 'the panelist names the connection problem and retried via Refresh or a new address (check the session log)' })
+    return withAnswer(all([[windowsOf(state, 'browser').length > 0, 'the Browser window is open']]), answer, { keywords: [BLOCKED_PORT_WORDS], expect: 'the panelist names the cause (the port is blocked, the address is wrong or refuses the connection) and what to do; Refresh or a new address (check the session log)' })
   },
 
   async 'T20.1'(ctx, { answer }) {

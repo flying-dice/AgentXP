@@ -19,7 +19,7 @@ import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
-import { addRemoved, ejectBalloonText, pluggedBalloonText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
+import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, pluggedBalloonText, projectQuoted, removeProjectText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
@@ -31,7 +31,8 @@ import type { PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { cycleTarget, nextFocus, raise, taskbarAction } from './windowOrder'
+import type { BarRect } from './geometry'
+import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
 import { ICON_HINT, takeIconHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
@@ -46,7 +47,7 @@ export interface SnipOverlayState {
   resolve: (region: Bounds | null) => void
 }
 
-/** The Win7 notification balloon over the tray ("Safe To Remove Hardware"). */
+/** The Win7 notification balloon over the tray ("Project removed" after an eject). */
 export interface Balloon {
   title: string
   text: string
@@ -134,7 +135,7 @@ export class DesktopController implements DesktopHost {
   usbMenuOpen = $state(false)
   /** The chat pane of each window: collapsed or open, and its width (remembered in localStorage per window). */
   panes = $state.raw<Record<Id, PaneState>>({})
-  /** A draft to put into a window's pane composer ("Ask chat..."); the composer reports it applied. */
+  /** A draft to put into a window's pane composer ("Ask the agent about this..."); the composer reports it applied. */
   prefills = $state.raw<Record<Id, { id: number; text?: string }>>({})
   /** What each app registered for its pane (`setContext`); not reactive: it is read when a prompt is sent. */
   private readonly contexts = new Map<Id, () => Record<string, unknown> | null | undefined>()
@@ -170,10 +171,20 @@ export class DesktopController implements DesktopHost {
       return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: store.state.session.status === 'closed' ? s.status : store.state.session.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
   }
-  /** "Read src/a.ts", "Waiting for approval" or null (idle). */
+  /** A chat was busy when the user took control: the Activity gadget says "Stopped: you took control". */
+  stoppedStep = $state(false)
+  /** Requests that wait for the user's answer: the one count of the bar, the Activity gadget and the taskbar flag. */
+  get waitingCount(): number {
+    return this.inbox.pending.length
+  }
+  /** Open chat windows: an open chat is something the agent can use (the line next to the chips of the bar). */
+  get chatsOpen(): number {
+    return this.state.windows.filter((w) => w.view.app === 'chat').length
+  }
+  /** "Waiting for you: 2 requests to approve", "Read src/a.ts" or null (idle). */
   get working(): string | null {
     const inputs = this.activityInputs
-    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
+    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })), this.waitingCount)
   }
   /** "Agent: not started" while a chat of this desktop has an agent that could not start (the red chip of the bar); else null. */
   get agentProblem(): string | null {
@@ -433,6 +444,23 @@ export class DesktopController implements DesktopHost {
     else await this.raiseWindow(windowId)
   }
 
+  // ---- top bar ----------------------------------------------------------------------------------
+
+  /** The size of the top bar as the page measured it (null until the first measurement). */
+  barRect = $state.raw<BarRect | null>(null)
+
+  /**
+   * The top bar was measured (first paint, or it grew with the chips row or the status line). Windows that now have their
+   * title bar under it move down (UX-88). Idempotent: a window that is clear of the bar stays where it is.
+   */
+  async setBarRect(rect: BarRect): Promise<void> {
+    this.barRect = rect
+    for (const move of windowsToMoveBelowBar(this.state.windows, rect)) {
+      this.patch(move.id, { bounds: move.bounds })
+      await this.api.desktop.setBounds(move.id, move.bounds)
+    }
+  }
+
   // ---- drag / resize ----------------------------------------------------------------------------
 
   boundsOf(w: AppWindowState): Bounds {
@@ -470,6 +498,12 @@ export class DesktopController implements DesktopHost {
   async openControlCentre(page: ControlCentrePage): Promise<void> {
     const window = await this.openApp({ app: 'control-centre' })
     await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
+  }
+
+  /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event: the flag menu and "Show in Event Viewer". */
+  async openEventViewer(scope: { sessionId?: Id | null; selectedEventId?: number | null } = {}): Promise<void> {
+    const window = await this.openApp({ app: 'event-viewer' })
+    await this.api.desktop.updateView(window.id, { app: 'event-viewer', sessionId: scope.sessionId ?? null, level: 'all', selectedEventId: scope.selectedEventId ?? null })
   }
 
   /**
@@ -525,6 +559,7 @@ export class DesktopController implements DesktopHost {
    */
   async toggleUserInControl(): Promise<void> {
     const on = !this.state.userInControl
+    this.stoppedStep = on && this.busy
     if (this.current) this.current = { ...this.current, userInControl: on }
     await this.api.desktop.setUserInControl(this.state.desktopId, on)
   }
@@ -559,8 +594,8 @@ export class DesktopController implements DesktopHost {
   }
 
   /**
-   * "Ask chat about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
-   * "Send selection to chat" send it, "Ask chat..." fills the composer so the user adds the question. A window without
+   * "Ask the agent about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
+   * "Send selection to chat" send it, "Ask the agent about this..." fills the composer so the user adds the question. A window without
    * a pane (or one that is gone) starts a full chat instead, like `askChatWindow`.
    */
   async askChat(request: AskChatRequest): Promise<void> {
@@ -599,7 +634,7 @@ export class DesktopController implements DesktopHost {
     else await store.send?.(text, [filePath])
   }
 
-  /** "Open in Chat window": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
+  /** "Start a chat here": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
   async askChatWindow(request: AskChatRequest): Promise<void> {
     const cwd = askChatCwd(request, this.state.windows, this.state.home)
     const window = await this.newChatIn(cwd)
@@ -765,20 +800,19 @@ export class DesktopController implements DesktopHost {
     return this.allSessions.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
   }
 
-  /** Safely Remove: warns when chats work on the drive, ejects it, then shows the balloon. */
+  /** Eject (remove from this desktop): warns when chats work on the drive, ejects it, then shows the balloon. */
   async ejectDrive(letter: DriveLetter): Promise<void> {
     const drive = this.state.drives.find((d) => d.letter === letter)
     if (!drive || drive.kind === 'system') return
     this.usbMenuOpen = false
     this.startOpen = false
-    const title = driveTitle(drive)
     const working = this.chatsOnDrive(letter)
     if (working.length > 0) {
       const names = working.map((s) => `"${s.title || 'New chat'}"`).slice(0, 3).join(', ')
       const more = working.length > 3 ? ` and ${working.length - 3} more` : ''
       const answer = await showMessageBox({
-        text: `${working.length === 1 ? 'A chat works' : `${working.length} chats work`} on '${title}': ${names}${more}.\n\nIf you remove it now, the agent loses access to its files at once and every file or terminal request on it is refused.\n\nDo you want to remove it anyway?`,
-        caption: 'Safely Remove Hardware',
+        text: `${removeProjectText(drive.label)}\n\n${working.length === 1 ? 'A chat works' : `${working.length} chats work`} on it: ${names}${more}. Their file and terminal requests on it are refused until you plug it in again.`,
+        caption: 'Remove project',
         buttons: 'YesNo',
         icon: 'warning',
         defaultButton: 1
@@ -791,7 +825,7 @@ export class DesktopController implements DesktopHost {
       const removedProjects = gone.length > 0 ? addRemoved(this.current.removedProjects ?? [], gone[0], REMOVED_PROJECTS_KEPT) : this.current.removedProjects
       this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter), removedProjects }
     }
-    this.showBalloon({ title: 'Safe To Remove Hardware', text: ejectBalloonText(title), icon: 'usb-safe' })
+    this.showBalloon({ title: EJECT_BALLOON_TITLE, text: ejectBalloonText(drive.label, letter), icon: 'usb-safe' })
   }
 
   /** Plug in a project: the Browse For Folder dialog, then the drive. Resolves the drive (also when it was plugged in already), or null when cancelled or it failed. */
@@ -827,7 +861,7 @@ export class DesktopController implements DesktopHost {
   private async plugInFolder(folder: FolderDto, options: { explorer?: boolean; autoPlay?: boolean } = {}): Promise<DriveDto | null> {
     const already = this.state.drives.find((d) => d.kind === 'removable' && d.folderId === folder.id)
     if (already) {
-      await showMessageBox({ text: `${folder.name} is already plugged in as drive ${already.letter}:.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
+      await showMessageBox({ text: `The project ${projectQuoted(folder.name, already.letter)} is already plugged in.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
       return already
     }
     if (!options.autoPlay) this.chosenPlugIns++
@@ -855,7 +889,7 @@ export class DesktopController implements DesktopHost {
   openEjectList(): void {
     this.startOpen = false
     if (this.state.drives.some((d) => d.kind === 'removable')) this.usbMenuOpen = true
-    else this.showBalloon({ title: 'Safely Remove Hardware', text: 'No project is plugged in.', icon: 'info' })
+    else this.showBalloon({ title: 'Remove a project', text: 'No project is plugged in.', icon: 'info' })
   }
 
   showBalloon(balloon: Balloon): void {
@@ -966,6 +1000,12 @@ export class DesktopController implements DesktopHost {
     } catch {
       this.policy = null
     }
+  }
+
+  /** The "Waiting for you" link of the bar: opens the next request of the inbox. */
+  async openNextRequest(): Promise<void> {
+    const next = this.inbox.pending[0]
+    if (next) await this.review(next)
   }
 
   /** The reviewed approval answered (option id) or dismissed without answering (undefined). */

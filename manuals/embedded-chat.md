@@ -12,7 +12,7 @@ This manual describes the chat pane at the right edge of an app window. The pane
   - The Suggestions
   - The Transcript and the Composer
   - What the Agent Sees
-  - Explain This and Ask Chat
+  - Explain This and Ask the Agent
   - The Other Panels
 - 4 - Controls Reference
 - 5 - Common Tasks
@@ -82,14 +82,13 @@ With each message, the agent gets the state of the desktop and the context of th
 
 The agent works in the folder of the drive that the window shows. Without a drive, it works in its own home folder. The agent can use the tools of the apps that are open. For example, in the Browser pane the agent can read and click in the page.
 
-### Explain This and Ask Chat
+### Explain This and Ask the Agent
 
 The context menus of the apps have a group of chat items.
 
-- **Explain this** opens the pane and sends the selected text with the question.
+- **Ask the agent about this...** opens the pane and puts a draft in the message box. Type your question below the draft and press Enter.
+- **Explain this** opens the pane and sends the selected text with the question. The chat shows, for example, "Explain lines 1 to 2 of index.ts." The button **Explain this** above the message box sends the same message. It is dimmed until you select some text.
 - **Send selection to chat** opens the pane and sends the selected text.
-- **Ask chat...** opens the pane and puts a draft in the message box. Type your question below the draft and press Enter.
-- **Open in Chat window** starts a full chat in the Chat window with the selected text.
 
 ### The Other Panels
 

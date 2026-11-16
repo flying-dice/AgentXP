@@ -40,6 +40,15 @@ export function matchesFilter(e: ProtocolEventDto, f: EventFilter): boolean {
 
 export const filterEvents = (events: readonly ProtocolEventDto[], f: EventFilter): ProtocolEventDto[] => events.filter((e) => matchesFilter(e, f))
 
+/**
+ * The event that belongs to a failed tool call: an error of that call first, else the newest event that names the call.
+ * `events` is oldest first (the order of the log); null when no event names the call.
+ */
+export function eventForToolCall(events: readonly ProtocolEventDto[], toolCallId: string): ProtocolEventDto | null {
+  const named = events.filter((e) => e.payload.includes(toolCallId))
+  return [...named].reverse().find((e) => e.level === 'error') ?? named.at(-1) ?? null
+}
+
 /** Appends new events (ignoring ids already present), keeping the newest MAX_EVENTS. */
 export function appendEvents(list: readonly ProtocolEventDto[], added: readonly ProtocolEventDto[], max = MAX_EVENTS): ProtocolEventDto[] {
   const seen = new Set(list.map((e) => e.id))
@@ -58,7 +67,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
   return [
     {
       id: 'root',
-      text: 'Event Viewer (Agent7)',
+      text: 'Event Viewer',
       icon: 'eventlog',
       expanded: true,
       children: [

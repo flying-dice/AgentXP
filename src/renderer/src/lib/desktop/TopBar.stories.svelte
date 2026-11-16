@@ -36,7 +36,7 @@
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 
-<Story name="WaitingForYou" args={{ working: 'Waiting for you' }}>
+<Story name="WaitingForYou" args={{ working: 'Change src/auth/redirect.ts', waiting: 2 }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 <Story name="ResumedNothingStopped" args={{ working: null, notice: 'Resumed. Nothing was stopped.' }}>

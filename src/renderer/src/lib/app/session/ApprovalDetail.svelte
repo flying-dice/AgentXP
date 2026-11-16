@@ -28,8 +28,12 @@
 {#if diff?.kind === 'diff' && summary}
   <div class="detail" data-testid="{testid}-detail">
     <div class="path" data-testid="{testid}-detail-path">{diff.path}</div>
-    <div class="summary" data-testid="{testid}-detail-summary">{summary.text}{summary.replacesWholeFile ? '. This replaces the whole file.' : ''}</div>
-    <DiffViewer oldText={diff.oldText ?? ''} newText={diff.newText} fileName={diff.path} toolbar={false} wrap maxHeight={all ? '360px' : '170px'} label="Change preview" />
+    <div class="summary" data-testid="{testid}-detail-summary">{summary.text}</div>
+    {#if summary.unreadable}
+      <CodeViewer code={diff.newText} language="text" wordWrap maxHeight="140px" label="New text of the file" />
+    {:else}
+      <DiffViewer oldText={diff.oldText ?? ''} newText={diff.newText} fileName={diff.path} toolbar={false} wrap maxHeight={all ? '360px' : '170px'} label="Change preview" />
+    {/if}
     {#if clipped}
       <button type="button" class="more" data-testid="{testid}-detail-more" aria-expanded={all} onclick={() => (all = !all)}>{all ? 'Show fewer lines' : `Show all ${summary.rows} lines`}</button>
     {/if}

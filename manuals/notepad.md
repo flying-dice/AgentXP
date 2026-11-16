@@ -100,7 +100,6 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: select all | Selects all text. Ctrl+A. | `notepad-ctx-select-all` |
 | Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `notepad-ctx-explain` |
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `notepad-ctx-ask` |
-| Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `notepad-ctx-open-chat` |
 
 ### Keys
 

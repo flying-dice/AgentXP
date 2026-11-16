@@ -40,7 +40,14 @@
   })
   const sessionId = $derived(local ?? w.asideSessionId ?? 0)
 
-  const suggestions = $derived(suggestionsFor(w.app, desktop.contextOf(w.id)))
+  // What is selected in the app is not reactive state: the chips ask again when the selection changes or the pointer comes to the pane.
+  let seen = $state(0)
+  $effect(() => {
+    const again = (): number => seen++
+    document.addEventListener('selectionchange', again)
+    return () => document.removeEventListener('selectionchange', again)
+  })
+  const suggestions = $derived((void seen, suggestionsFor(w.app, desktop.contextOf(w.id), w.id)))
   /** Where the pane works: the project drive of the window's view, else the agent's home ("Chat about login-app (E:)"). */
   const cwd = $derived(asideCwd(w.view, desktop.state.home))
   const heading = $derived(chatAboutTitle(cwd, desktop.state.drives))
@@ -63,7 +70,8 @@
     <span class="label">Chat</span>
   </button>
 {:else}
-  <div class="pane" data-testid="chat-pane" data-window-id={w.id}>
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="pane" data-testid="chat-pane" data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++}>
     <EmbeddedChat
       host={desktop}
       {sessionId}

@@ -3,7 +3,9 @@
  * Which apps have one, what the pane remembers per window, the app context that rides with a prompt and the
  * suggestion chips of the compact panel.
  */
-import type { AppKind } from '@shared/desktop'
+import type { AppKind, AskChatRequest } from '@shared/desktop'
+import { askChatPrompt } from '../apps/askChat'
+import { SELECT_FIRST_TIP, type ChatSuggestion } from '../app/session/chatPaneText'
 import type { Id } from '@shared/models'
 
 export const PANE_DEFAULT_WIDTH = 340
@@ -59,40 +61,72 @@ export function composeAppContext(window: { id: Id; app: AppKind; title: string 
   return { windowId: window.id, app: window.app, title: window.title, ...(provided ?? {}) }
 }
 
-/** A suggestion chip: `label` is what the chip says, `text` what it sends. */
-export interface Suggestion {
-  id: string
-  label: string
-  text: string
-}
+export type Suggestion = ChatSuggestion
 
 const has = (value: unknown): boolean => (Array.isArray(value) ? value.length > 0 : typeof value === 'string' ? value.trim() !== '' : value != null && value !== false)
 
 const chip = (id: string, label: string, text = label): Suggestion => ({ id, label, text })
 
+const textOf = (value: unknown): string => (typeof value === 'string' ? value : '')
+
+/**
+ * The request behind the chip "Explain this": the same request the right-click route sends, built from what the app
+ * registered (the selection and its lines, the open file, the page, the selected items). Null while nothing is selected.
+ */
+export function explainRequest(app: AppKind, windowId: number, context: Record<string, unknown> | null | undefined): AskChatRequest | null {
+  const c = context ?? {}
+  const selection = textOf(c['selection'])
+  const range = c['range'] as AskChatRequest['range']
+  const path = textOf(c['openFile'])
+  if (app === 'explorer') {
+    const item = Array.isArray(c['selectedItems']) ? textOf(c['selectedItems'][0]) : ''
+    return item ? { app, windowId, kind: 'explain', path: item } : null
+  }
+  if (app === 'event-viewer') {
+    const row = c['selectedRow'] as { id?: number; source?: string; name?: string; payload?: string } | null | undefined
+    return row ? { app, windowId, kind: 'explain', text: `Event ${row.id ?? ''}, ${row.source ?? ''} ${row.name ?? ''}\n${row.payload ?? ''}`.trim() } : null
+  }
+  if (app === 'terminal') {
+    const lines = Array.isArray(c['lastOutput']) ? (c['lastOutput'] as unknown[]).map(textOf).join('\n') : ''
+    const text = selection || lines
+    return text.trim() ? { app, windowId, kind: 'explain', text } : null
+  }
+  if (!selection.trim()) return null
+  return { app, windowId, kind: 'explain', text: selection, ...(path ? { path } : {}), ...(range ? { range } : {}), ...(textOf(c['url']) ? { url: textOf(c['url']), title: textOf(c['title']) } : {}) }
+}
+
+/**
+ * The chip "Explain this": it sends the message of `askChatPrompt` (the selection travels, like the right-click route);
+ * with nothing selected it is disabled and the tooltip says "Select some text first."
+ */
+export function explainChip(app: AppKind, windowId: number, context: Record<string, unknown> | null | undefined, label = 'Explain this'): Suggestion {
+  const request = explainRequest(app, windowId, context)
+  return request ? chip('explain', label, askChatPrompt(request)) : { ...chip('explain', label), disabled: true, tip: SELECT_FIRST_TIP }
+}
+
 /** Two or three chips for the short exchanges of the compact pane, picked from what the app's context holds. */
-export function suggestionsFor(app: AppKind, context: Record<string, unknown> | null | undefined): Suggestion[] {
+export function suggestionsFor(app: AppKind, context: Record<string, unknown> | null | undefined, windowId = 0): Suggestion[] {
   const c = context ?? {}
   const selection = has(c['selection'])
   switch (app) {
     case 'code': {
       return [
-        has(c['openFile']) || selection ? chip('explain', 'Explain this') : chip('explain', 'What can I do here?'),
+        has(c['openFile']) || selection ? explainChip(app, windowId, c) : chip('explain', 'What can I do here?'),
         ...(has(c['openFile']) ? [chip('changed', 'What changed in this file?')] : []),
         ...(has(c['openFile']) ? [chip('bugs', 'Any bugs here?')] : [])
       ]
     }
     case 'notepad':
     case 'wordpad':
-      return [chip('explain', 'Explain this'), chip('summarise', selection ? 'Summarise the selection' : 'Summarise this'), chip('proofread', 'Fix typos')]
+      return [explainChip(app, windowId, c), chip('summarise', selection ? 'Summarise the selection' : 'Summarise this'), chip('proofread', 'Fix typos')]
     case 'explorer':
-      return has(c['selectedItems']) ? [chip('explain', 'Explain this'), chip('find', 'Which of these changed?')] : [chip('folder', 'What is in this folder?'), chip('find', 'Where is the main code?')]
+      return has(c['selectedItems']) ? [explainChip(app, windowId, c), chip('find', 'Which of these changed?')] : [chip('folder', 'What is in this folder?'), chip('find', 'Where is the main code?')]
     case 'terminal':
-      return [chip('explain', 'Explain this output'), chip('failed', 'Why did it fail?')]
+      return [explainChip(app, windowId, c, 'Explain this output'), chip('failed', 'Why did it fail?')]
     case 'browser':
-      return [chip('summarise', 'Summarise this page'), ...(selection ? [chip('explain', 'Explain this')] : [chip('links', 'What are the main links?')])]
+      return [chip('summarise', 'Summarise this page'), ...(selection ? [explainChip(app, windowId, c)] : [chip('links', 'What are the main links?')])]
     case 'event-viewer':
-      return has(c['selectedRow']) ? [chip('explain', 'Explain this event')] : [chip('errors', 'Any errors in these events?')]
+      return has(c['selectedRow']) ? [explainChip(app, windowId, c, 'Explain this event')] : [chip('errors', 'Any errors in these events?')]
     case 'agent-manager':
       return [chip('context', 'Which chat uses the most context?')]
     case 'recycle-bin':

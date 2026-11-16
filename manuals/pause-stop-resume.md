@@ -42,11 +42,11 @@ The status area of the top bar always shows one of these:
 
 - **Working** – An agent works. The text names what it does now.
 - **Paused: no agent will act until you resume.** – You paused the desktop.
-- **You are in control: the agent asks before every action.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser.
-- **Waiting for you** – An agent waits for your answer to a request.
+- **You are in control. Browser and all other tools are set to Ask until you resume.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser.
+- **Waiting for you: 2 requests to approve** – An agent waits for your answer to a request.
 - **Idle** – No agent works.
 
-When you take control, Agent7 stops the step that runs now. The Activity list shows **Stopped: you took control**. The chat status reads **Waiting for you**, not **Working**. The button **Give control back** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
+When you take control, Agent7 stops the step that runs now. The Activity list shows **Stopped: you took control** when a step was running. If nothing was running, it shows **You are in control. The agent waits until you resume.** The chat status reads **Waiting for you**, not **Working**. The button **Give control back** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
 
 The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask**, **Run commands: Off**. See **[Using Control Center](control-centre.md)** for the meaning of **Off**. Point to a chip to read its tooltip. Click a chip to change the setting.
 

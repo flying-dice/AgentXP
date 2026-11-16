@@ -32,11 +32,24 @@ export const desktopWindowTitle = (desktopTitle: string): string => `${desktopTi
 /** Tooltip of the error state: where to change the agent. */
 export const ERROR_HINT = 'Open the desktop, then Control Center > Agents, to change the command.'
 
-/** What a row shows for the state: an icon for the two states that need the user, the words, and a tooltip. */
-export function rowStatus(d: Pick<DesktopSummaryDto, 'runState' | 'pendingApprovals'>): { label: string; tone: StateTone; icon: 'shield' | 'error' | null; strong: boolean; hint: string } {
+/** Status text of a new desktop whose window did not open: what to press next. */
+export const READY_TEXT = 'Ready. Click Connect to open it.'
+
+/** The cause of an agent problem in a few words: the stored message without its "The agent could not start." lead. */
+export const shortCause = (message: string | null | undefined): string => (message ?? '').replace(/^The agent could not start\.\s*/, '').trim() || 'the agent could not start.'
+
+/**
+ * What a row shows for the state: an icon for the two states that need the user, the words, and a tooltip.
+ * `ready` marks a desktop that was just created and is not open yet (it says what to press).
+ */
+export function rowStatus(
+  d: Pick<DesktopSummaryDto, 'runState' | 'pendingApprovals'> & { lastError?: string | null; connected?: boolean },
+  ready = false
+): { label: string; tone: StateTone; icon: 'shield' | 'error' | null; strong: boolean; hint: string } {
   const tone = stateTone(d)
+  if (tone === 'idle' && ready && !d.connected) return { label: READY_TEXT, tone, icon: null, strong: false, hint: '' }
   return {
-    label: stateLabel(d),
+    label: tone === 'error' ? `Agent problem: ${shortCause(d.lastError)}` : stateLabel(d),
     tone,
     icon: tone === 'approval' ? 'shield' : tone === 'error' ? 'error' : null,
     strong: tone === 'approval' || tone === 'error',

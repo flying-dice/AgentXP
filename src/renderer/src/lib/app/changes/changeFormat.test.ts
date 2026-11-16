@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REVERTED_KIND, REVERTED_LABEL, splitFileName, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
+import { REVERTED_KIND, REVERTED_LABEL, splitFileName, splitForMiddleEllipsis, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
 
 describe('changeFormat', () => {
   it('labels kinds and line counts', () => {
@@ -10,6 +10,19 @@ describe('changeFormat', () => {
   it('joins with the separator of the folder path', () => {
     expect(absolutePath('/home/a/', 'src/x.ts')).toBe('/home/a/src/x.ts')
     expect(absolutePath('C:\\Users\\a', 'src/x.ts')).toBe('C:\\Users\\a\\src\\x.ts')
+  })
+})
+
+describe('Changes pane counts (UX-111)', () => {
+  it('count from the texts like the permission box does', () => {
+    const texts = { kind: 'modified' as const, originalText: 'a\nb\nc\nd\ne\n', currentText: 'a\nX\nY\nZ\ne\n', additions: 0, deletions: 0 }
+    expect(linesLabel(texts)).toBe('+3 / -3')
+    expect(changesSummary([texts])).toBe('1 file, +3 -3')
+  })
+  it('add and delete count the whole file; saved numbers stand in without texts', () => {
+    expect(linesLabel({ kind: 'added', originalText: null, currentText: 'x\ny\n', additions: 0, deletions: 0 })).toBe('+2 / -0')
+    expect(linesLabel({ kind: 'deleted', originalText: 'x\ny\n', currentText: null, additions: 0, deletions: 0 })).toBe('+0 / -2')
+    expect(linesLabel({ additions: 4, deletions: 1 })).toBe('+4 / -1')
   })
 })
 
@@ -39,5 +52,20 @@ describe('file names in the list (UX-79)', () => {
     expect(splitFileName('a.test.ts')).toEqual({ stem: 'a.test', ext: '.ts' })
     expect(splitFileName('.gitignore')).toEqual({ stem: '.gitignore', ext: '' })
     expect(splitFileName('Makefile')).toEqual({ stem: 'Makefile', ext: '' })
+  })
+})
+
+describe('cutting a name in the middle (UX-111)', () => {
+  it('keeps the end of the stem and the extension together', () => {
+    expect(splitForMiddleEllipsis('redirect-handler.ts')).toEqual({ head: 'redirect-h', tail: 'andler.ts' })
+    expect(splitForMiddleEllipsis('a.test.ts')).toEqual({ head: '', tail: 'a.test.ts' })
+    expect(splitForMiddleEllipsis('Makefile')).toEqual({ head: 'Ma', tail: 'kefile' })
+    expect(splitForMiddleEllipsis('.gitignore')).toEqual({ head: '.git', tail: 'ignore' })
+  })
+  it('always gives back the whole name when the parts are joined', () => {
+    for (const name of ['redirect.ts', 'x', 'README.md', 'archive.tar.gz']) {
+      const { head, tail } = splitForMiddleEllipsis(name)
+      expect(head + tail).toBe(name)
+    }
   })
 })

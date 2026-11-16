@@ -33,10 +33,17 @@ export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: 
 export const DEFAULT_MIN_WINDOW_SIZE = { width: 480, height: 320 } as const
 export const minWindowSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? DEFAULT_MIN_WINDOW_SIZE
 
-/** Height of the top bar of the desktop; a new window starts below it (with a gap of 4). */
-export const TOP_BAR_HEIGHT = 30
-/** The lowest `y` a new window is placed at. */
-export const WINDOW_MIN_Y = TOP_BAR_HEIGHT + 4
+/**
+ * Height of the top bar of the desktop until the renderer has measured it (UX-88). The bar is about 52 px with the
+ * chips row and 68 px with the status line, so a first paint uses the larger one.
+ */
+export const TOP_BAR_HEIGHT = 68
+/** A new window starts this far below the bar. */
+const BAR_GAP = 4
+/** The lowest `y` a window is placed at for a bar of `barHeight` pixels (the fallback height until it is measured). */
+export const windowMinY = (barHeight: number = TOP_BAR_HEIGHT): number => Math.round(barHeight) + BAR_GAP
+/** The lowest `y` a new window is placed at before the bar is measured. */
+export const WINDOW_MIN_Y = windowMinY()
 
 /**
  * Windows that show the same title (two Explorer windows on Computer) get " (2)", " (3)" in the order they were opened,
@@ -80,10 +87,10 @@ const overlaps = (a: Bounds, b: Bounds): boolean =>
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v))
 
 /** Moves (and, when it is larger than the area, shrinks) `b` so it lies inside `area`. */
-function within(b: Bounds, area: { width: number; height: number }): Bounds {
+function within(b: Bounds, area: { width: number; height: number }, minY: number): Bounds {
   const width = Math.min(b.width, area.width)
-  const height = Math.min(b.height, Math.max(1, area.height - WINDOW_MIN_Y))
-  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, WINDOW_MIN_Y, Math.max(WINDOW_MIN_Y, area.height - height)), width, height }
+  const height = Math.min(b.height, Math.max(1, area.height - minY))
+  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, minY, Math.max(minY, area.height - height)), width, height }
 }
 
 /**
@@ -97,12 +104,13 @@ export function placeWindow(
   openCount: number,
   avoid: Bounds | null,
   area: { width: number; height: number } = DESKTOP_AREA,
-  size?: { width: number; height: number }
+  size?: { width: number; height: number },
+  minY: number = WINDOW_MIN_Y
 ): Bounds {
-  const base = within(cascadedBounds(app, openCount, size), area)
+  const base = within(cascadedBounds(app, openCount, size), area, minY)
   if (!avoid || !overlaps(base, avoid)) return base
   const { width, height } = base
-  const top = clamp(avoid.y, WINDOW_MIN_Y, Math.max(WINDOW_MIN_Y, area.height - height))
+  const top = clamp(avoid.y, minY, Math.max(minY, area.height - height))
   const left = clamp(avoid.x, 0, area.width - width)
   const rightX = avoid.x + avoid.width + PLACEMENT_GAP
   const belowY = avoid.y + avoid.height + PLACEMENT_GAP
@@ -112,7 +120,7 @@ export function placeWindow(
     { x: avoid.x - PLACEMENT_GAP - width, y: top, width, height },
     { x: left, y: avoid.y - PLACEMENT_GAP - height, width, height }
   ]
-  const fits = exact.find((b) => b.x >= 0 && b.y >= WINDOW_MIN_Y && b.x + b.width <= area.width && b.y + b.height <= area.height)
+  const fits = exact.find((b) => b.x >= 0 && b.y >= minY && b.x + b.width <= area.width && b.y + b.height <= area.height)
   if (fits) return fits
   const roomRight = area.width - rightX
   if (roomRight >= MIN_TILE.width) return { x: rightX, y: top, width: roomRight, height }
@@ -121,7 +129,59 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef'>, title = 'Chat'): AppView {
+/** A window opened from another: how far right and down it starts from the window that has the focus. */
+export const PARENT_OFFSET = 28
+
+/** Tools that open beside the window that asked for them (on the side with more free width) instead of on top of it. */
+const SIDE_APPS: ReadonlySet<AppKind> = new Set<AppKind>(['help', 'event-viewer', 'snipping-tool', 'agent-manager'])
+
+/** The window that has the focus when a new one opens. */
+export interface PlacementParent {
+  app: AppKind
+  bounds: Bounds
+}
+
+/**
+ * Bounds of a new window (UX-88). Below the top bar always (`minY`). Next to the focused window:
+ * - the focused chat is never covered: the window is tiled beside it (`placeWindow`);
+ * - Help, Event Viewer and other tools that go beside what asked for them take the side of the desktop with more free width
+ *   (squeezed to fit, else they cascade);
+ * - everything else cascades from the focused window: 28 px right and down, so its title bar and buttons stay visible.
+ * With no focused window this is the plain cascade.
+ */
+export function placeNewWindow(
+  app: AppKind,
+  openCount: number,
+  parent: PlacementParent | null,
+  area: { width: number; height: number } = DESKTOP_AREA,
+  size?: { width: number; height: number },
+  minY: number = WINDOW_MIN_Y
+): Bounds {
+  if (!parent) return placeWindow(app, openCount, null, area, size, minY)
+  if (parent.app === 'chat') return placeWindow(app, openCount, parent.bounds, area, size, minY)
+  const base = within(cascadedBounds(app, openCount, size), area, minY)
+  const p = parent.bounds
+  if (SIDE_APPS.has(app)) {
+    const left = p.x
+    const right = area.width - (p.x + p.width)
+    const onRight = right >= left
+    const room = (onRight ? right : left) - PLACEMENT_GAP
+    if (room >= MIN_TILE.width) {
+      const width = Math.min(base.width, room)
+      const x = onRight ? p.x + p.width + PLACEMENT_GAP : p.x - PLACEMENT_GAP - width
+      return within({ ...base, x, y: Math.max(p.y, minY), width }, area, minY)
+    }
+  }
+  const x = p.x + PARENT_OFFSET
+  const y = p.y + PARENT_OFFSET
+  const fits = x + base.width <= area.width && y + base.height <= area.height
+  if (fits) return { ...base, x, y: Math.max(y, minY) }
+  // No room to cascade: keep the title bar of the focused window free (tile beside it when the default spot would cover it).
+  const titleStrip: Bounds = { x: p.x, y: p.y, width: p.width, height: PARENT_OFFSET }
+  return overlaps(base, titleStrip) ? placeWindow(app, openCount, p, area, size, minY) : base
+}
+
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -164,7 +224,7 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
     case 'help':
       return { app: 'help', topic: input.topic ?? 'index' }
     case 'code-review':
-      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: null, sessionId: input.sessionId ?? 0 }
+      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: input.selectedPath ?? null, sessionId: input.sessionId ?? 0 }
   }
 }
 
@@ -178,10 +238,17 @@ export function helpWindowTitle(topic: string): string {
   return kind && kind !== 'help' ? `${HELP_PROGRAM_NAME}: Using ${APP_DISPLAY_NAMES[kind]}` : HELP_PROGRAM_NAME
 }
 
+/** "Review - review-notes": the Code Review window is named after the project, like the chats of that project. */
+export const reviewWindowTitle = (projectName: string): string => `Review - ${projectName}`
+
 /** The title of the window of an agent's form: "<title> - from the agent". */
 export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
 
-export function windowTitle(view: AppView): string {
+/**
+ * The title of a window. `projectName` is the name of the project a Code Review window shows (the label of its drive,
+ * which only the desktop knows); without it the folder name stands in.
+ */
+export function windowTitle(view: AppView, projectName?: string): string {
   switch (view.app) {
     case 'chat':
       return view.title
@@ -202,7 +269,7 @@ export function windowTitle(view: AppView): string {
     case 'help':
       return helpWindowTitle(view.topic)
     case 'code-review':
-      return `${view.root.length <= 3 ? view.root : vpathName(view.root)} - Code Review`
+      return reviewWindowTitle(projectName ?? (view.root.length <= 3 ? view.root : vpathName(view.root)))
     default:
       return APP_DISPLAY_NAMES[view.app]
   }

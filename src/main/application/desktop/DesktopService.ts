@@ -17,10 +17,10 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeNewWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
-import { AGENT_HOME, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
+import { AGENT_HOME, parseVPath, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
 import type { A2uiSurfaceRepository } from '../../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
 import type { AppWindowRecord, AppWindowRepository } from '../../domain/repositories/app-window-repository'
@@ -160,7 +160,7 @@ export class DesktopService implements DesktopStates {
 
   /**
    * Opens a window (or brings the existing one of a singleton app / chat forward). A new window is tiled
-   * beside the focused chat instead of over it (`placeWindow`) and comes to the front with the focus. When the user
+   * beside the focused window instead of over it (`placeNewWindow`) and comes to the front with the focus. When the user
    * typed in another window in the last 2 seconds, an agent's window comes to the front without the focus and its
    * taskbar button flashes until the user focuses it.
    */
@@ -175,16 +175,19 @@ export class DesktopService implements DesktopStates {
       if (input.topic !== undefined && existing.app === 'help') this.updateView(existing.id, { app: 'help', topic: input.topic })
       return this.windowState(existing.id)
     }
-    const avoid = focused?.app === 'chat' && focused.windowState === 'normal' ? focused.bounds : null
+    // New windows start below the top bar and beside the focused window (`placeNewWindow`).
+    const parent = focused && focused.windowState === 'normal' ? { app: focused.app, bounds: focused.bounds } : null
     const record = this.deps.windows.create({
       desktopId,
       app: input.app,
-      bounds: placeWindow(input.app, this.deps.windows.list(desktopId).length, avoid, undefined, sizeOf(input.app, size)),
+      bounds: placeNewWindow(input.app, this.deps.windows.list(desktopId).length, parent, undefined, sizeOf(input.app, size)),
       windowState: 'normal',
       openedBy,
       ...this.subtypeOf(input)
     })
     if (input.app === 'help' && input.topic !== undefined) this.views.set(record.id, { app: 'help', topic: input.topic })
+    // The file of a review is part of its first view, so the window never shows another file first (the Git list of Code).
+    if (input.app === 'code-review' && input.selectedPath !== undefined) this.views.set(record.id, initialView({ app: 'code-review', path: record.path || undefined, sessionId: record.sessionId ?? undefined, baseRef: record.baseRef ?? undefined, selectedPath: input.selectedPath }))
     if (typing) {
       this.flag(desktopId, record.id) // on top (new rows are), the focus stays where the user types
     } else {
@@ -344,12 +347,12 @@ export class DesktopService implements DesktopStates {
    * Starts a code review of `root` against `baseRef`: the review session first (its agent works in `root`), then the
    * Code Review window that owns it. Closing the window deletes the session and its comments.
    */
-  async openReview(desktopId: Id, root: VPath, baseRef: string = 'HEAD', agentId?: Id): Promise<AppWindowState> {
+  async openReview(desktopId: Id, root: VPath, baseRef: string = 'HEAD', agentId?: Id, selectedPath?: string): Promise<AppWindowState> {
     const desktop = this.record(desktopId)
     if (!isSafeRef(baseRef)) throw new AppError(`Not a valid git ref: ${baseRef}`)
     const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, root, 'review')
     try {
-      return this.openWindow({ desktopId, app: 'code-review', sessionId: session.id, path: root, baseRef })
+      return this.openWindow({ desktopId, app: 'code-review', sessionId: session.id, path: root, baseRef, selectedPath })
     } catch (error) {
       await this.deps.chats.remove(session.id).catch(() => {})
       throw error
@@ -449,7 +452,7 @@ export class DesktopService implements DesktopStates {
     return {
       id: record.id,
       app: record.app,
-      title: windowTitle(view),
+      title: windowTitle(view, this.projectNameOf(record.desktopId, view)),
       bounds: record.bounds,
       windowState: record.windowState,
       openedBy: record.openedBy,
@@ -457,6 +460,14 @@ export class DesktopService implements DesktopStates {
       ...(record.asideSessionId !== null ? { asideSessionId: record.asideSessionId } : {}),
       view
     }
+  }
+
+  /** The name of the project a Code Review window shows: the label of its drive when it shows the whole drive. */
+  private projectNameOf(desktopId: Id, view: AppView): string | undefined {
+    if (view.app !== 'code-review') return undefined
+    const parsed = parseVPath(view.root)
+    if (!parsed || parsed.segments.length > 0) return undefined
+    return this.deps.drives.list(desktopId).find((d) => d.letter === parsed.drive)?.label
   }
 
   /** Chat views follow the session title; the others are the live view or the persisted starting point. */

@@ -166,6 +166,7 @@ const FIND_SOURCE = (needle) => {
 }
 
 // ---------------------------------------------------------------- panelist commands
+const HOVER_WAIT_MS = 800
 const MOUSE_CMDS = new Set(['click', 'move', 'drag', 'scroll'])
 
 async function handleUx({ cmd, args = [], flags: f = {} }) {
@@ -222,7 +223,8 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
     }
     const wasCurrent = current
     if (page) {
-      if (cmd !== 'shot') await sleep(150)
+      // H-52: a tooltip appears after 500 ms, so a hover waits 800 ms before the shot.
+      if (cmd !== 'shot') await sleep(cmd === 'move' ? HOVER_WAIT_MS : 150)
       page = await currentPage().catch(() => null)
     }
     const lines = [text]

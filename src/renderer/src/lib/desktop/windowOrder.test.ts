@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AppKind, AppWindowState, WindowState } from '@shared/desktop'
-import { cycleTarget, nextFocus, raise, taskbarAction, taskbarItems, visibleWindows } from './windowOrder'
+import { cycleTarget, nextFocus, raise, taskbarAction, taskbarItems, visibleWindows, windowsToMoveBelowBar } from './windowOrder'
 
 const win = (id: number, app: AppKind = 'explorer', windowState: WindowState = 'normal'): AppWindowState => ({
   id,
@@ -78,5 +78,19 @@ describe('cycleTarget (Alt+Tab)', () => {
   it('takes the front window when none has focus, and nothing when there are none', () => {
     expect(cycleTarget(ws, null, 1)).toBe(3)
     expect(cycleTarget([], null, 1)).toBeNull()
+  })
+})
+
+describe('windows under the top bar (UX-88)', () => {
+  const at = (id: number, x: number, y: number, windowState: WindowState = 'normal'): AppWindowState => ({ ...win(id, 'explorer', windowState), bounds: { x, y, width: 300, height: 200 } })
+  for (const height of [52, 68]) {
+    it(`moves a window whose title bar is under a bar of ${height} px to ${height + 4}`, () => {
+      const bar = { left: 400, right: 900, height }
+      const moves = windowsToMoveBelowBar([at(1, 450, 34), at(2, 450, height + 4), at(3, 0, 10), at(4, 450, 10, 'maximized'), at(5, 700, 0)], bar)
+      expect(moves.map((m) => [m.id, m.bounds.y])).toEqual([[1, height + 4], [5, height + 4]])
+    })
+  }
+  it('keeps a window that is clear of the bar sideways', () => {
+    expect(windowsToMoveBelowBar([at(1, 0, 0)], { left: 400, right: 900, height: 68 })).toEqual([])
   })
 })

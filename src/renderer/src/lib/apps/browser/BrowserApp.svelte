@@ -18,7 +18,7 @@
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
-  import { ASSISTANT_TOOLTIP, assistantStatus, pageStatus, zoomText } from './pageStatus'
+  import { ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -54,6 +54,10 @@
   let activity = $state<string | null>(null)
   /** The agent is reading the page right now (the status bar says "Agent: reading"). */
   let reading = $state(false)
+  /** What the agent is waiting for, for the tooltip of the bar ("Waiting for the text ... to show on the page."). */
+  let activityDetail = $state<string | null>(null)
+  /** The address of the page that the agent read (the status bar says so while that page is open). */
+  let readUrl = $state<string | null>(null)
   /** The user took control while the agent worked: the bar stays, with Give control back, until the user gives it back. */
   let engaged = $state(false)
   let ring = $state<{ x: number; y: number; width: number; height: number } | null>(null)
@@ -167,14 +171,16 @@
 
   async function handle(method: string, params: unknown): Promise<unknown> {
     if (method === 'activity') {
-      const p = (params ?? {}) as { label?: string; reading?: boolean; box?: { x: number; y: number; width: number; height: number } }
+      const p = (params ?? {}) as { label?: string; detail?: string; reading?: boolean; read?: boolean; box?: { x: number; y: number; width: number; height: number } }
       // The first action of a turn brings the window to the front: the user sees what the agent does without hunting for it.
       if (activity === null) void host.focusWindow(win.id)
       activity = p.label || 'working'
       reading = p.reading === true
+      activityDetail = p.detail ?? null
+      if (p.read === true) readUrl = active.url
       engaged = true
       clearTimeout(activityTimer)
-      activityTimer = setTimeout(() => ((activity = null), (reading = false)), ACTIVITY_MS)
+      activityTimer = setTimeout(() => ((activity = null), (reading = false), (activityDetail = null)), ACTIVITY_MS)
       if (p.box) {
         ring = p.box
         clearTimeout(ringTimer)
@@ -229,9 +235,9 @@
   useAppContext(host, () => win.id, () => ({ url: active.url, title: active.title, tabs: tabs.length, ...selectionContext(pageSelection) }))
 
   const askAboutPage = (selection?: string): void =>
-    void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title, ...(selection ? { text: selection } : {}) })
+    void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title, ...(selection ? { text: selection } : { question: ASK_ABOUT_PAGE_QUESTION }) })
 
-  /** Back, Forward, Reload, Copy link (the page address, or the link under the pointer), Ask chat about this page or selection. */
+  /** Back, Forward, Reload, Copy link (the page address, or the link under the pointer), Ask the agent about this page or selection. */
   const contextItems = (page?: PageContext): MenuItemDef[] => [
     { id: 'browser-ctx-back', testid: 'browser-ctx-back', label: '&Back', icon: 'chevron-left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
     { id: 'browser-ctx-forward', testid: 'browser-ctx-forward', label: '&Forward', icon: 'chevron-right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) },
@@ -277,7 +283,7 @@
   const status = $derived(pageStatus({ url: active.url, loading: active.loading, failed: active.failed }))
   const userInControl = $derived(host.state.userInControl)
   const setControl = (on: boolean): void => void host.api.desktop.setUserInControl(host.state.desktopId, on)
-  const assistant = $derived(assistantStatus(host.state.policy?.groups.browser ?? 'allow', reading))
+  const assistant = $derived(assistantStatus(host.state.policy?.groups.browser ?? 'allow', reading, readUrl !== null && readUrl === active.url))
 
   /** Ctrl+Plus, Ctrl+Minus and Ctrl+0 zoom the page (the guest page keeps its own keys when it has focus). */
   function zoomKey(event: KeyboardEvent): void {
@@ -362,7 +368,7 @@
     {#if activity !== null || engaged}
       <div class="agentbar" data-testid="browser-agent-bar" data-taken-over={userInControl} role="status">
         <Icon name="shield" size={12} />
-        <span data-testid="browser-agent-bar-text"
+        <span data-testid="browser-agent-bar-text" title={activityDetail ?? undefined}
           >{userInControl ? 'You have control of this page. The agent stops and asks before it uses the page again.' : `Agent is using this page: ${activity ?? 'working'}`}</span
         >
         {#if userInControl}
@@ -390,6 +396,9 @@
     <StatusStripLabel testid="browser-assistant-status" borders={['left']} width={190}>
       <span class="t" title={ASSISTANT_TOOLTIP}>{assistant}</span>
     </StatusStripLabel>
+    <StatusStripLabel borders={['left']} width={118}>
+      <button class="ask" type="button" data-testid="browser-ask-page" disabled={active.url === BLANK} title="Open the chat and ask the assistant about this page." onclick={() => askAboutPage()}>Ask about this page</button>
+    </StatusStripLabel>
     <StatusStripLabel text={zoomText(active.zoom)} borders={['left']} width={56} textAlign="right" />
   </StatusStrip>
 </div>
@@ -401,6 +410,14 @@
     display: flex;
     flex-direction: column;
     background: var(--w7-face);
+  }
+  .ask {
+    font: inherit;
+    font-size: 11px;
+    height: 18px;
+    padding: 0 6px;
+    margin: 0;
+    white-space: nowrap;
   }
   .chrome {
     flex: none;

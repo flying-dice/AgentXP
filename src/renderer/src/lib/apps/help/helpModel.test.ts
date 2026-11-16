@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { back, forward, locate, markWords, parseTopics, plainText, queryWords, searchHits, searchTopics, slugOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
+import { HELP_ANCHORS, back, forward, indexSections, markWords, parseTopics, plainText, queryWords, searchSections, sectionsOf, slugOf, snippetOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
 
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
@@ -30,27 +30,31 @@ describe('titleOf and plainText', () => {
   })
 })
 
-describe('searchTopics', () => {
+describe('searchSections', () => {
   const topics = parseTopics(files)
-  it('keeps all topics for an empty query', () => {
-    expect(searchTopics(topics, '  ')).toHaveLength(topics.length)
+  const ids = (query: string, preferred?: string): string[] => searchSections(topics, query, preferred).map((h) => h.topic.id)
+  it('gives nothing for an empty query', () => {
+    expect(searchSections(topics, '  ')).toEqual([])
   })
   it('matches every word in the title or the text, ignoring case', () => {
-    expect(searchTopics(topics, 'SAVE text').map((t) => t.id)).toEqual(['notepad'])
-    expect(searchTopics(topics, 'pencil').map((t) => t.id)).toEqual(['paint'])
+    expect(ids('SAVE text')).toEqual(['notepad'])
+    expect(ids('pencil')).toEqual(['paint'])
   })
   it('puts title matches first', () => {
-    expect(searchTopics(topics, 'using').map((t) => t.id)).toEqual(['desktop', 'notepad', 'paint'])
-    expect(searchTopics(topics, 'f1 help').map((t) => t.id)).toEqual(['index'])
+    expect(ids('using')).toEqual(['desktop', 'notepad', 'paint'])
+    expect(ids('f1 help')).toEqual(['index'])
   })
-  it('returns nothing when no topic matches', () => {
-    expect(searchTopics(topics, 'unicorn')).toEqual([])
+  it('returns nothing when no section matches', () => {
+    expect(searchSections(topics, 'unicorn')).toEqual([])
   })
 })
 
 describe('topicForApp and topicOfHref', () => {
-  it('uses the app kind as the topic and the desktop topic without a window', () => {
-    expect(topicForApp('notepad')).toBe('notepad')
+  it('uses the app kind and its help anchor as the topic, and the keyboard topic without a window', () => {
+    expect(topicForApp('notepad')).toBe('notepad#common-tasks')
+    expect(topicForApp('code-review')).toBe('code-review#common-tasks')
+    expect(splitTopic(topicForApp('notepad'))).toEqual({ topic: 'notepad', section: 'common-tasks' })
+    expect(Object.keys(HELP_ANCHORS)).toContain('chat')
     expect(topicForApp(null)).toBe('keyboard')
     expect(topicForApp(undefined)).toBe('keyboard')
   })
@@ -97,28 +101,39 @@ describe('search that finds the answer (UX-44)', () => {
     expect(queryWords('the')).toEqual(['the'])
   })
 
+  const topicIds = (query: string): string[] => [...new Set(searchSections(topics, query).map((h) => h.topic.id))]
+
   it('finds the troubleshooting topic for "no answer" and "page stays blank"', () => {
-    expect(searchTopics(topics, 'no answer').map((t) => t.id)).toEqual(['agent-does-not-start'])
-    expect(searchTopics(topics, 'page stays blank').map((t) => t.id)).toEqual(['agent-does-not-start'])
+    expect(topicIds('no answer')).toEqual(['agent-does-not-start'])
+    expect(topicIds('page stays blank')).toEqual(['agent-does-not-start'])
   })
 
-  it('falls back to topics with half of the words, never to nothing-matching ones', () => {
-    expect(searchTopics(topics, 'blank unicorn').map((t) => t.id)).toEqual(['agent-does-not-start'])
-    expect(searchTopics(topics, 'unicorn')).toEqual([])
+  it('falls back to sections with half of the words, never to nothing-matching ones', () => {
+    expect(topicIds('blank unicorn')).toEqual(['agent-does-not-start'])
+    expect(topicIds('unicorn')).toEqual([])
   })
 
   it('names the section and a snippet around the match', () => {
-    const [hit] = searchHits(topics, 'blank')
+    const [hit] = searchSections(topics, 'blank')
     expect(hit.topic.id).toBe('agent-does-not-start')
     expect(hit.section).toBe('Troubleshooting')
     expect(hit.sectionId).toBe('troubleshooting')
     expect(hit.snippet).toContain('page stays blank')
   })
 
-  it('locate skips code blocks and falls back to the start of the topic', () => {
-    const topic = { id: 'x', title: 'X', body: '# X\n\n```\nsecret\n```\n\nOpen text.' }
-    expect(locate(topic, ['secret']).section).toBe('')
-    expect(locate(topic, ['secret']).snippet).toContain('Open text')
+  it('cuts a topic into sections, skips code blocks and the table of contents', () => {
+    const topic = { id: 'x', title: 'X', body: '# X\n\nIntro words.\n\n## Table of Contents\n\n- A\n\n## A - Part\n\n```\nsecret\n```\n\nOpen text.\n\n### Deep\n\nDeeper text.' }
+    expect(sectionsOf(topic).map((s) => [s.section, s.text])).toEqual([
+      ['', 'Intro words.'],
+      ['A - Part', 'Open text.'],
+      ['Deep', 'Deeper text.']
+    ])
+    expect(searchSections([topic], 'secret')).toEqual([])
+  })
+
+  it('shows the start of the section when only its heading matches', () => {
+    expect(snippetOf('Plain start of the section.', ['nothing'])).toBe('Plain start of the section.')
+    expect(snippetOf('a'.repeat(300), ['a']).length).toBeLessThan(300)
   })
 
   it('marks the words in the text and not in tags or character references', () => {
@@ -148,8 +163,40 @@ describe('sections and ranking (UX-80, UX-81)', () => {
   })
 
   it('puts the topic of the focused app first', () => {
-    expect(searchTopics(topics, 'save').map((t) => t.id)).toEqual(['chat', 'notepad', 'code'])
-    expect(searchTopics(topics, 'save', 'code')[0].id).toBe('code')
-    expect(searchHits(topics, 'save', 'chat')[0].topic.id).toBe('chat')
+    expect(searchSections(topics, 'save').map((h) => h.topic.id)).toEqual(['chat', 'notepad', 'code'])
+    expect(searchSections(topics, 'save', 'code')[0].topic.id).toBe('code')
+    expect(searchSections(topics, 'save', 'chat')[0].topic.id).toBe('chat')
+  })
+})
+
+describe('section search (UX-110)', () => {
+  const topics = parseTopics({
+    '/manuals/chat.md': '# Using Chat\n\nYou can stop the agent, undo its file changes, and answer its requests.\n\n## 3 - The Window\n\nThe transcript.\n\n### Undo a change (Revert)\n\nClick **Revert**. The file goes back to its old text.\n\n## 5 - Common Tasks\n\nTo stop the agent, click **Stop**.',
+    '/manuals/notepad.md': '# Using Notepad\n\n## 5 - Common Tasks\n\nTo undo the last edit press Ctrl+Z. Save with Ctrl+S.',
+    '/manuals/code.md': '# Using Code\n\n## Revert a hunk\n\nThe lines go back to the last commit.'
+  })
+
+  it('finds the Revert section first for "undo", before the text that only mentions it', () => {
+    const [first, ...rest] = searchSections(topics, 'undo')
+    expect(first.topic.id).toBe('chat')
+    expect(first.section).toBe('Undo a change (Revert)')
+    expect(first.sectionId).toBe('undo-a-change-revert')
+    expect(rest.map((h) => `${h.topic.id}:${h.section}`)).toEqual(['chat:', 'notepad:5 - Common Tasks'])
+  })
+
+  it('ranks a heading match above a body match whatever the topic order', () => {
+    const [first] = searchSections(topics, 'revert')
+    expect(first.section).toBe('Undo a change (Revert)')
+    expect(searchSections(topics, 'revert').map((h) => h.section)).toEqual(['Undo a change (Revert)', 'Revert a hunk'])
+  })
+
+  it('lists the topic of the focused app first among equals', () => {
+    expect(searchSections(topics, 'stop', 'chat')[0].topic.id).toBe('chat')
+    expect(searchSections(topics, 'ctrl', 'notepad')[0].topic.id).toBe('notepad')
+  })
+
+  it('indexes the sections once per list of topics', () => {
+    expect(indexSections(topics)).toBe(indexSections(topics))
+    expect(indexSections(topics).map((s) => s.sectionId)).toContain('3-the-window')
   })
 })

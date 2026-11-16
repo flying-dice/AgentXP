@@ -1,6 +1,7 @@
 /** Pure summaries of what the agent is doing, from the chats of a desktop. */
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
+import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
 export interface ChatActivityInput {
@@ -14,12 +15,21 @@ export interface ChatActivityInput {
 
 const RUNNING: readonly ToolCallStatus[] = ['pending', 'in_progress']
 
-/** What `workingText` says while a chat waits for the user's answer to a permission request (the bar shows "Waiting for you"). */
+/** What the bar says while requests wait for the user's answer. */
 export const WAITING_FOR_YOU = 'Waiting for you'
 
-/** "Read src/auth/redirect.ts" (the running tool) or the chat title of a working chat; null when idle. */
-export function workingText(chats: readonly ChatActivityInput[]): string | null {
+/** "Waiting for you: 1 request to approve" or "Waiting for you: 2 requests to approve"; one count for the bar, the chips row and the taskbar flag. */
+export const waitingText = (count: number): string => `${WAITING_FOR_YOU}: ${count} ${count === 1 ? 'request' : 'requests'} to approve`
+
+/**
+ * What the status area says about the work: a waiting request first ("Waiting for you: 2 requests to approve", `waiting` defaults to the
+ * chats that wait), then the running tool, then the title of a working chat; null when idle. A running tool in another chat shows only
+ * when nothing waits.
+ */
+export function workingText(chats: readonly ChatActivityInput[], waiting?: number): string | null {
   const busy = chats.filter((c) => c.status === 'working' || c.status === 'awaiting_permission' || c.status === 'connecting')
+  const waits = waiting ?? busy.filter((c) => c.status === 'awaiting_permission').length
+  if (waits > 0) return waitingText(waits)
   if (busy.length === 0) return null
   for (const chat of [...busy].reverse()) {
     const calls = Object.values(chat.toolCalls)
@@ -28,8 +38,7 @@ export function workingText(chats: readonly ChatActivityInput[]): string | null 
     }
   }
   const first = busy[busy.length - 1]
-  if (first.status === 'connecting') return 'Starting the agent...'
-  return first.status === 'awaiting_permission' ? WAITING_FOR_YOU : first.title || 'Thinking'
+  return first.status === 'connecting' ? 'Starting the agent...' : first.title || 'Thinking'
 }
 
 export interface FeedItem {
@@ -59,28 +68,8 @@ export function recentToolCalls(chats: readonly ChatActivityInput[], limit = 8):
   return items.slice(0, limit)
 }
 
-const CHIP_LABELS: Record<Exclude<ToolGroup, 'shell'>, string> = {
-  'fs.read': 'Read files',
-  'fs.write': 'Write files',
-  notepad: 'Notepad',
-  code: 'Code',
-  terminal: 'Run commands',
-  browser: 'Browser',
-  paint: 'Paint',
-  wordpad: 'WordPad',
-  notes: 'Notes',
-  events: 'Events',
-  snip: 'Screen capture',
-  recycle: 'Recycle Bin',
-  review: 'Code review'
-}
-
 /** The three chips the bar always shows, so "Run commands: Off" can be read without guessing. */
-const HEADLINE: { group: Exclude<ToolGroup, 'shell'>; label: string }[] = [
-  { group: 'fs.read', label: 'Read files' },
-  { group: 'terminal', label: 'Run commands' },
-  { group: 'browser', label: 'Browser' }
-]
+const HEADLINE: Exclude<ToolGroup, 'shell'>[] = ['fs.read', 'terminal', 'browser']
 
 /** `on`: the agent just uses it; `asks`: it must ask first; `off`: not available (denied, or no app that gives it is open). */
 export type ChipState = 'on' | 'asks' | 'off'
@@ -129,13 +118,19 @@ export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | n
     const state: ChipState = word === 'Deny' || word === 'Off' ? 'off' : word === 'Ask' ? 'asks' : 'on'
     return { group, name, word, state, label: `${name}: ${word}`, tooltip: chipTooltip(group, name, word, setting) }
   }
-  const headline = new Set<ToolGroup>(HEADLINE.map((h) => h.group))
+  const headline = new Set<ToolGroup>(HEADLINE)
   const others = tools.filter((g): g is Exclude<ToolGroup, 'shell'> => g !== 'shell' && !headline.has(g))
-  return [...HEADLINE.map((h) => chip(h.group, h.label)), ...others.map((g) => chip(g, CHIP_LABELS[g]))]
+  return [...HEADLINE, ...others].map((g) => chip(g, PERMISSION_NAMES[g]))
 }
 
-/** True when no app gives the agent a tool (the bar then adds "open an app"). */
-export const noToolsOpen = (tools: readonly ToolGroup[]): boolean => tools.every((g) => g === 'shell')
+/** True when no app and no chat is open; an open chat is something the agent can use. */
+export const noToolsOpen = (tools: readonly ToolGroup[], chatsOpen = 0): boolean => chatsOpen === 0 && tools.every((g) => g === 'shell')
+
+/** The line next to the chips: "nothing yet" when no app and no chat is open, "this chat" when only chats are, otherwise none. */
+export function toolsLine(tools: readonly ToolGroup[], chatsOpen: number): string | null {
+  if (noToolsOpen(tools, chatsOpen)) return 'Agent can use nothing yet. Open an app to give it a tool.'
+  return tools.every((g) => g === 'shell') ? 'The agent can use this chat.' : null
+}
 
 /** What the status area of the top bar shows; `data-state` of the bar and its dot. */
 export type BarState = 'idle' | 'working' | 'paused' | 'control' | 'waiting'
@@ -146,14 +141,24 @@ export interface BarStatusInput {
   userInControl: boolean
   /** `workingText` of the desktop's chats; null = idle. */
   working: string | null
+  /** Requests that wait for the user's answer (the same count as the taskbar flag). */
+  waiting?: number
   /** A short line that replaces "Idle" for a few seconds ("Resumed. Nothing was stopped."). */
   notice?: string | null
 }
 
 export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
-export const CONTROL_TEXT = 'You are in control: the agent asks before every action.'
-/** The first line of the Activity gadget while the user is in control. */
+export const CONTROL_TEXT = 'You are in control. Browser and all other tools are set to Ask until you resume.'
+/** The first line of the Activity gadget while the user is in control and a step was running. */
 export const CONTROL_NOTE = 'Stopped: you took control'
+/** The same line while nothing was running: it is true and it does not sit over "Nothing has happened yet". */
+export const CONTROL_IDLE_NOTE = 'You are in control. The agent waits until you resume.'
+
+/** The first line of the Activity gadget: null when the user is not in control; "Stopped" only when a step was running (`stoppedStep`: a chat was busy when control was taken) or was stopped. */
+export function controlNote(userInControl: boolean, feed: readonly FeedItem[], stoppedStep = false): string | null {
+  if (!userInControl) return null
+  return stoppedStep || feed.some((f) => f.status === 'pending' || f.status === 'in_progress' || f.status === 'cancelled') ? CONTROL_NOTE : CONTROL_IDLE_NOTE
+}
 export const RESUME_BUTTON = 'Resume agents and continue'
 
 /**
@@ -161,10 +166,10 @@ export const RESUME_BUTTON = 'Resume agents and continue'
  * Idle (or the short notice that stands in for Idle). Paused wins over control, control over the rest, so what the
  * agent may do is never hidden by what it is doing.
  */
-export function barStatus({ paused, userInControl, working, notice = null }: BarStatusInput): { state: BarState; text: string } {
+export function barStatus({ paused, userInControl, working, waiting = 0, notice = null }: BarStatusInput): { state: BarState; text: string } {
   if (paused) return { state: 'paused', text: PAUSED_TEXT }
   if (userInControl) return { state: 'control', text: CONTROL_TEXT }
-  if (working === WAITING_FOR_YOU) return { state: 'waiting', text: WAITING_FOR_YOU }
+  if (waiting > 0) return { state: 'waiting', text: waitingText(waiting) }
   if (working) return { state: 'working', text: `Working: ${working}` }
   return { state: 'idle', text: notice ?? 'Idle' }
 }

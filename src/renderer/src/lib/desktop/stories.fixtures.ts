@@ -31,7 +31,7 @@ export interface PrepareOptions {
   gadgets?: boolean
   /** The Safely Remove menu of the USB tray icon is open. */
   usbMenu?: boolean
-  /** The "Safe To Remove Hardware" balloon is showing (as after an eject). */
+  /** The "Project removed" balloon is showing (as after an eject). */
   balloon?: boolean
   /** The AutoPlay dialog for a just-plugged-in drive F: (dotfiles). */
   autoPlay?: boolean
@@ -101,7 +101,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   if (options.agentOpened && controller.current) controller.current = markAgentOpened(controller.current)
   if (options.snip) void controller.pickSnipRegion(options.snip)
   if (options.usbMenu) controller.usbMenuOpen = true
-  if (options.balloon) controller.showBalloon({ title: 'Safe To Remove Hardware', text: "The 'dotfiles (F:)' device can now be safely removed from the computer.", icon: 'usb-safe' })
+  if (options.balloon) controller.showBalloon({ title: 'Project removed', text: "'dotfiles' (F:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.", icon: 'usb-safe' })
   if (options.autoPlay) await api.drives.plugIn(1, 2)
   if (options.eject) void controller.ejectDrive('E')
   if (options.draw) {

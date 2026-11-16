@@ -32,7 +32,6 @@ const START_GROUP: Partial<Record<AppId, string>> = {
   paint: 'accessories',
   'snipping-tool': 'accessories',
   'sticky-notes': 'accessories',
-  'event-viewer': 'system-tools',
   'agent-manager': 'system-tools',
   'control-centre': 'system-tools'
 }

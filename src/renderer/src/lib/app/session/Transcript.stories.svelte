@@ -39,7 +39,7 @@
     messages: completed.messages,
     agentState: completed.state,
     activities: new Map(),
-    problem: { text: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed', actions: [{ id: 'restart-send', label: 'Restart and send again' }, { id: 'details', label: 'Details...' }] }
+    problem: { text: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed', actions: [{ id: 'restart-send', label: 'Restart and send again' }, { id: 'details', label: 'Details...' }], status: 'The agent stopped. Click Restart and send again.' }
   }}
 >
   {#snippet template(args)}<div class="box"><Transcript {...args} /></div>{/snippet}

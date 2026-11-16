@@ -26,7 +26,7 @@ This manual describes the Code Review window. Code Review shows the changes of a
 
 Use Code Review to check a change before you keep it. The window compares the files of a project with a base, for example the last commit. A reviewer agent reads the changes and leaves comments on the lines, like the reviewer of a merge request. You can answer the comments, resolve them, and send them to a chat that fixes the code.
 
-Each Code Review window has its own review chat with an agent. The chat ends when you close the window.
+Each Code Review window has its own review chat with an agent. The chat ends when you close the window. The window is titled **Review - ** and the name of the project, for example **Review - review-notes**.
 
 ## 2 - Open It
 
@@ -62,7 +62,7 @@ The outline lists each changed file with its status, the number of added and rem
 
 ### The Expanded View
 
-The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. To write a comment on a line, point to the line and click the blue **+** at its left, or click the line number, or double-click the line, or right-click the line and choose **Add comment on this line**. Ctrl+Alt+M does the same for the selected line. Comments of the reviewer and your answers appear under the line.
+The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. To write a comment on a line, click the blue **+** at its left (it is always there, faint until you point to it), or click the line number, or double-click the line, or right-click the line and choose **Add comment on this line**. Ctrl+Alt+M does the same for the selected line. Comments of the reviewer and your answers appear under the line. Under each comment, the buttons **Resolve**, **Reply**, **Send to chat**, and **Delete** say what they do in words, also in a narrow window.
 
 Press F7 to go to the next change. Press Shift+F7 to go to the previous change. At the last change of a file, F7 goes on to the next file. The **Side by side** button shows the old and new text in two columns.
 
@@ -125,7 +125,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Margin bar | The bar at the left edge. Click it to jump to a place. | `review-margin` |
 | Margin block | One red or yellow block. The attribute `data-kind` tells which. | `review-margin-block` |
 | Line | One line of the file. | `review-row` |
-| Add comment (+) | The blue **+** that shows when you point to a line. It starts a comment on that line. The tooltip says which line. | `review-gutter-plus` |
+| Add comment (+) | The blue **+** at the left of a line. It is faint until you point to it or move the focus to it. It starts a comment on that line. The tooltip says: Add a comment on this line. | `review-gutter-plus` |
 | Add comment on this line (right-click) | Starts a comment on the line you right-clicked. Ctrl+Alt+M does the same for the selected line. | `review-ctx-add-comment` |
 | Line number | Starts a comment on the line. The unified view has one column: the new line number, or the old one on a removed line. | `review-gutter-add` |
 | Lost comments | Lists comments whose line is not in the file any more. | `review-orphans` |
@@ -154,7 +154,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. | `review-send-comments` |
 | Verdict text | The verdict and the numbers of comments and blockers, for example "Changes requested. 2 comments, 1 is a blocker." | `review-verdict-line` |
 | Send to chat dialog | Asks which chat gets the comments. | `review-send-dialog` |
-| Chat (option) | An existing chat. The attribute `data-session-id` gives it. | `review-send-chat` |
+| Chat (option) | An existing chat, named as its window is: by its title, or New chat (project name) while it has no title. The attribute `data-session-id` gives it. | `review-send-chat` |
 | New chat (option) | Starts a new chat. | `review-send-new-chat` |
 | Send | Sends the comments. | `review-send-confirm` |
 | Cancel (send) | Closes the dialog box. | `review-send-cancel` |

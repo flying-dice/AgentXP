@@ -44,8 +44,8 @@ describe('approvals', () => {
     expect(approvalGroup(null)).toBeNull()
   })
   it('explains the reason from the policy when derivable', () => {
-    expect(approvalReason('edit', DEFAULT_TOOL_POLICY, false)).toBe('Writing files is set to Ask in Control Center.')
-    expect(approvalReason('execute', DEFAULT_TOOL_POLICY, false)).toBe('Running commands is set to Ask in Control Center.')
+    expect(approvalReason('edit', DEFAULT_TOOL_POLICY, false)).toBe('Write files is set to Ask in Control Center.')
+    expect(approvalReason('execute', DEFAULT_TOOL_POLICY, false)).toBe('Run commands is set to Ask in Control Center.')
     expect(approvalReason('read', DEFAULT_TOOL_POLICY, false)).toBe('The agent asked for your permission.')
     expect(approvalReason('edit', null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason(null, null, false)).toBe('The agent asked for your permission.')

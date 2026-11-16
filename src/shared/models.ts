@@ -115,9 +115,12 @@ export type ToolKind =
   | 'switch_mode'
   | 'other'
 
+/** Why the current text of a file could not be read for a change request (`unreadable`: it is not a file, or reading failed). */
+export type ReadErrorKind = 'unreadable'
+
 export type ToolCallContentDto =
   | { kind: 'content'; block: ContentBlockDto }
-  | { kind: 'diff'; path: string; oldText: string | null; newText: string }
+  | { kind: 'diff'; path: string; oldText: string | null; newText: string; oldTextError?: ReadErrorKind }
   | { kind: 'terminal'; terminalId: string }
 
 export interface ToolCallLocationDto {

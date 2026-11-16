@@ -1,6 +1,6 @@
 /**
  * What the agent did in the Browser, in plain words. A turn that only used `browser_*` tools folds into one line
- * ("Worked in the Browser: 28 steps") with its first and last step ("Opened the chat page", "Typed on the page"), so a
+ * ("Used 28 steps in the browser (read, clicked, typed)") with its first and last step ("Opened the chat page", "Typed on the page"), so a
  * person can answer "what did it do there" without opening Details. Tool names and element numbers stay in Details.
  */
 import type { WorkRow } from './transcriptRows'
@@ -96,9 +96,41 @@ export function coalesceSteps(steps: readonly string[]): string[] {
   return out.map((s) => (s.times > 1 ? `${s.text} ${s.times} times` : s.text))
 }
 
+/** What each Browser tool did, as a past-tense verb for the counts ("clicked", "typed", "read"). Tools that share a word share a count. */
+const KIND_WORD: Record<string, string> = {
+  browser_navigate: 'opened',
+  browser_tabs: 'opened',
+  browser_back: 'opened',
+  browser_forward: 'opened',
+  browser_reload: 'opened',
+  browser_read: 'read',
+  browser_find: 'read',
+  browser_screenshot: 'read',
+  browser_click: 'clicked',
+  browser_select: 'clicked',
+  browser_type: 'typed',
+  browser_press: 'typed',
+  browser_scroll: 'scrolled',
+  browser_wait: 'waited'
+}
+
+/** How many steps of each kind, most frequent first (ties keep the order of first use): [['read', 24], ['typed', 1]]. */
+export function stepKinds(toolNames: readonly string[]): [string, number][] {
+  const counts = new Map<string, number>()
+  for (const name of toolNames) {
+    const word = KIND_WORD[browserToolName(name) ?? ''] ?? 'used'
+    counts.set(word, (counts.get(word) ?? 0) + 1)
+  }
+  return [...counts].sort((a, b) => b[1] - a[1])
+}
+
+const SUMMARY_KINDS = 3
+
 export interface BrowserWork {
-  /** "Worked in the Browser: 28 steps". */
+  /** "Used 28 steps in the browser (read, clicked, typed)". */
   summary: string
+  /** The counts per kind for the tooltip: "Read 24 times, clicked 2 times, typed 1 time". */
+  tooltip: string
   /** "First: Opened the chat page. Last: Typed on the page."; null for a single step. */
   detail: string | null
 }
@@ -114,8 +146,11 @@ export function browserWork(rows: readonly WorkRow[]): BrowserWork | null {
     steps.push(step)
   }
   const shown = coalesceSteps(steps)
+  const kinds = stepKinds(tools.map((t) => t.name))
+  const times = (n: number): string => `${n} ${n === 1 ? 'time' : 'times'}`
   return {
-    summary: `Worked in the Browser: ${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`,
+    summary: `Used ${steps.length} ${steps.length === 1 ? 'step' : 'steps'} in the browser (${kinds.slice(0, SUMMARY_KINDS).map(([word]) => word).join(', ')})`,
+    tooltip: kinds.map(([word, n], i) => `${i === 0 ? word[0].toUpperCase() + word.slice(1) : word} ${times(n)}`).join(', '),
     detail: steps.length > 1 ? `First: ${shown[0]}. Last: ${shown.at(-1)}.` : null
   }
 }

@@ -21,7 +21,7 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 | `windows` / `switch <n>` | list the program windows, look at another one |
 | `shot` | take a screenshot (also prints the words that are on screen) |
 | `click <x> <y>` (`--double`, `--right`) | click at a pixel position of the screenshot |
-| `move <x> <y>` | hover (tooltips) |
+| `move <x> <y>` | hover (tooltips; the screenshot is taken after a short wait, so a tooltip is in it. If you expect one and do not see it, look again with `shot`) |
 | `drag <x1> <y1> <x2> <y2>` | drag with the mouse |
 | `scroll <x> <y> <dy>` | scroll (positive = down) |
 | `type "<text>"` | type text where the keyboard focus is |
@@ -69,3 +69,8 @@ report.
 4. **Help**: whether you used F1 or Help, and what you found.
 5. **Single Ease Question** (1 = very difficult ... 7 = very easy): "Overall, how easy or difficult was this task?" Give one number and one sentence on why.
 6. **Frustrations** and what you would change (a short list).
+
+Quote the screen, not your memory (H-61): every piece of text from the program that you quote (a button, a message, an address)
+must be copied from a screenshot, with the number of that screenshot (for example "Plug in again" in 004.png). Do not write a
+text that you did not see. Before the final report, take one more `shot` and say in one line what that last screenshot shows;
+do not describe a screen that you did not look at. If you did not see something, write "I did not see it".

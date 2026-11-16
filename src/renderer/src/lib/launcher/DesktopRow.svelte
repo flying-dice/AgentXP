@@ -11,13 +11,15 @@
     now?: Date
     /** Connect was pressed and the desktop window is not up yet. */
     opening?: boolean
+    /** Just created and not open yet: the status says to click Connect. */
+    ready?: boolean
     onselect?: () => void
     onactivate?: () => void
   }
 
-  let { desktop, selected = false, now, opening = false, onselect, onactivate }: Props = $props()
+  let { desktop, selected = false, now, opening = false, ready = false, onselect, onactivate }: Props = $props()
 
-  const status = $derived(rowStatus(desktop))
+  const status = $derived(rowStatus(desktop, ready))
 </script>
 
 <div
@@ -26,6 +28,7 @@
   class:selected
   class:waiting={status.tone === 'approval'}
   class:failed={status.tone === 'error'}
+  data-ready={ready || undefined}
   role="option"
   tabindex="-1"
   aria-selected={selected}
@@ -139,13 +142,13 @@
     background: radial-gradient(circle at 35% 30%, #ffe08a, #e89a0c);
   }
   .error .dot {
-    background: radial-gradient(circle at 35% 30%, #ff9a8a, #c91d0f);
+    background: radial-gradient(circle at 35% 30%, #ffe08a, #e89a0c);
   }
   .approval {
     color: #8a5200;
   }
   .error {
-    color: #a01408;
+    color: #8a5200;
   }
   .strong {
     font-weight: 700;

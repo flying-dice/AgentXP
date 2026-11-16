@@ -35,9 +35,10 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Min 6 (New..., type name, Browse..., confirm folder, Create, Connect). Budget 18 / 24.
 
 **T02.2 - Name already used**
-- Scenario: "You already have a workspace called 'Fix login redirect'. Make another one for the folder docs-site with the same name."
+- Scenario: "You already have a workspace called 'Fix login redirect'. Make another one for the folder docs-site. Try to give it the same name. If the program will not allow that, say why and finish with a name that works."
 - Start state: one desktop with that name.
-- Success check: the panelist ends with a second desktop with a different, valid name, and states why the first name was refused (post-task question).
+- Success check: the panelist ends with a second desktop with a different, valid name, and states why the same name was refused (the answer needs the reason: already used, same name, own name, exists).
+- Answer: why the same name was refused (the name is already used).
 - Min 7. Budget 21 / 28.
 
 ### J03 Plug in a project
@@ -68,6 +69,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Ask the assistant: 'Fix the login redirect bug so that deep links survive sign-in'. Then tell me, in your own words, what it did and whether it is finished."
 - Start state: chat open on login-app; scripted agent `demo`, permissions Allow for all (so no dialogs).
 - Success check: the prompt appears in the chat, the turn ended (`data-running` false), and the panelist's answer names the file it read and the file it changed (checked by a researcher against the transcript).
+- Answer: what the assistant did, in the panelist's own words.
 - Min 3 (click box, type, Enter). Budget 9 / 12.
 
 **T05.2 - Stop the assistant**
@@ -82,6 +84,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts. Tell me which lines it changes."
 - Start state: `demo` script; Write files = Ask.
 - Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the word "line", "searchParams" or "next"; the diff is inline; opening the details is optional; answer check, H-44).
+- Answer: which lines of redirect.ts change.
 - Min 1 (Allow). Budget 3 / 4.
 
 **T06.2 - Deny**
@@ -116,6 +119,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Before you accept the work, look at every line that the assistant changed and tell me how many files changed, which one changed most and which lines of that file changed."
 - Start state: chat with five agent changes in a Git project; new Code app.
 - Success check: the answer gives the file count (digits or words), the file that changed most and says which lines (the word "line"); the panelist used Code or the Changes pane (session log; researcher check).
+- Answer: how many files changed and which lines changed.
 - Min 6. Budget 18 / 24.
 
 ### J09 Restore from the Recycle Bin
@@ -132,12 +136,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You want to be sure that, right now, the assistant cannot run commands. Make that true, and show me how you can tell."
 - Start state: Terminal window open on the desktop.
 - Success check: the assistant cannot run commands: either no Terminal window is open and the Workspace bar ("Agent can use") has no Terminal chip, or the Terminal permission is Deny; the panelist names the chip list, the closed Terminal or the Deny policy as the proof (answer check).
+- Answer: how the panelist can see that the assistant cannot run commands.
 - Min 1 (close Terminal; the Permissions route is longer). Budget 8 / 10.
 
 **T10.2 - What can it touch?**
 - Scenario: "Without asking the assistant, tell me which of these it can do now: read files, run commands, browse the web."
 - Start state: Explorer and Browser open, Terminal closed.
 - Success check: the answer is exactly: read files yes, run commands no, browse yes (researcher check).
+- Answer: read files yes, run commands no, browse the web yes.
 - Min 0 (look only, the answer takes no action). Budget 3 / 4.
 
 ### J11 Pause and take control
@@ -172,6 +178,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "The assistant was working on login-app, and you removed the folder while it worked. Tell me what the assistant says happened, and bring the folder back."
 - Start state: `demo` script; eject while the turn runs (harness does the eject).
 - Success check: the folder is plugged in again; the panelist's answer names the missing drive as the cause.
+- Answer: what the assistant could not do (the drive was removed).
 - Min 6. Budget 18 / 24.
 
 ### J13 Disconnect and reconnect
@@ -193,7 +200,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T14.1 - Which one needs me?**
 - Scenario: "You have four workspaces running. Find the one that is waiting for you and open it, and tell me which workspace has a problem."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher shows "Idle" for it until UX-58, so the panelist must look inside); the researcher records whether the waiting row was preselected.
+- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher row shows the amber text "Agent problem: ..." with data-state error since UX-87); the researcher records whether the waiting row was preselected.
+- Answer: the workspace that has a problem ("Docs site").
 - Min 2. Budget 6 / 8.
 
 **T14.2 - Rename**
@@ -208,6 +216,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You do not need the workspace 'Try new ideas' any more. Remove it. Tell me what is lost and what stays."
 - Start state: three desktops; 'Try new ideas' has a project plugged in and one chat.
 - Success check: that desktop is deleted; the project folder remains; the answer says chats and C: files are lost and the project folder stays.
+- Answer: what is lost and what stays.
 - Min 3. Budget 9 / 12.
 
 ### J16 Choose permissions
@@ -222,6 +231,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Find out whether turning off 'Code' would also stop the assistant from writing files with Notepad."
 - Start state: Control Center closed.
 - Success check: the answer matches the documented behavior (researcher check; the answer must come from the screen or the manual).
+- Answer: whether turning off Code also stops Notepad from writing files.
 - Min 4. Budget 12 / 16.
 
 ### J17 Add and choose agents
@@ -236,6 +246,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You started a chat and the assistant does not answer. Find out why and tell me what to do."
 - Start state: the default agent has a bad command (`not-a-real-command`).
 - Success check: the answer names the wrong command or "not found", points to the Agents page and says what to do (edit or change it, choose another agent, set a default, new chat; H-42); the panelist did not restart the app.
+- Answer: why the assistant does not answer and what to do.
 - Min 3. Budget 9 / 12.
 
 ### J18 A2UI surfaces
@@ -244,6 +255,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "The assistant shows you a form. Fill it in with the name 'Nia' and press the main button, then tell me what the assistant answered."
 - Start state: scripted agent `a2ui` inline, sidebar and window variants (one task per variant).
 - Success check: the agent received an action with the data `name = Nia`; the answer matches the agent's reply.
+- Answer: what the assistant replied to the form.
 - Min 3. Budget 9 / 12.
 
 **T18.2 - A window you closed**
@@ -255,15 +267,17 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J19 Browse
 
 **T19.1 - Look at a web page**
-- Scenario: "Open the web page at {TEST_PAGE_URL} on this desktop, and let the assistant read it too."
+- Scenario: "Open the web page at {TEST_PAGE_URL} on this desktop, then ask the assistant what it says."
 - Start state: no Browser window; `browser-agent` script; a local test page served by the harness at its own port per session (the facilitator substitutes the address for `{TEST_PAGE_URL}`, default http://127.0.0.1:4173/; no real network).
-- Success check: Browser window open at the page; the Browser chip shown; the panelist said the assistant can now see it (answer check).
+- Success check: Browser window open at the page; the Browser chip shown; the assistant read the page (a `browser_read` call, H-49); the answer contains the page title "Example Domain".
+- Answer: what the page says ("Example Domain"), as told by the assistant.
 - Min 4. Budget 12 / 16.
 
 **T19.2 - No network**
 - Scenario: "The page does not load. Tell me why and what you would do."
 - Start state: an unreachable address.
 - Success check: the panelist names the connection problem and retries via Refresh or a new address.
+- Answer: why the page does not load (the port is blocked or the address is wrong) and what to do.
 - Min 3. Budget 9 / 12.
 
 ### J20 Investigate
@@ -272,6 +286,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "The assistant said it could not use a folder. Find out the reason in the program's own records."
 - Start state: a refused call after an eject (warning event).
 - Success check: the answer names the removed drive; the panelist opened the Event Viewer (log).
+- Answer: the reason found in the Event Viewer (the removed drive).
 - Min 5. Budget 15 / 20.
 
 **T20.2 - Stuck assistant**
@@ -294,12 +309,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You are in the Explorer window and do not know what the button called 'Plug in a project' does. Find out without leaving the program."
 - Start state: Explorer open.
 - Success check: the answer states what the button does ("project folder", "drive" or "see its files"). A tooltip answer is enough; a Help topic for Explorer open is the other valid route and is the Min (H-24).
+- Answer: what Plug in a project does.
 - Min 2 (F1 + read). Budget 6 / 8.
 
 **T22.2 - Find a topic by search**
 - Scenario: "Find out how to undo a change that the assistant made."
 - Start state: Help and Support closed, a chat open.
 - Success check: the topic about the Changes pane or Recycle Bin is open; the answer lists the steps correctly.
+- Answer: how to undo a change that the assistant made.
 - Min 4. Budget 12 / 16.
 
 ### J23 Recover from errors
@@ -322,12 +339,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Open the project's code. Tell me which files have changes that are not saved in version control yet, and which lines of redirect.ts are new."
 - Start state: the Git project with two modified files and one new file; new Code app.
 - Success check: the answer names the three files (redirect.ts, login.ts, session.ts) and the new lines of redirect.ts (the diff shows lines 1, 3 and 4; keyword 3 is checked; researcher check).
+- Answer: the three files and the new lines of redirect.ts (1, 3 and 4).
 - Min 5. Budget 15 / 20.
 
 **T24.2 - Not a Git project**
 - Scenario: "Open the code for a folder that is not under version control. Tell me why there are no change marks."
 - Start state: plain folder plugged in.
 - Success check: answer names the missing Git repository (from the screen text).
+- Answer: why there are no change marks (no Git repository).
 - Min 4. Budget 12 / 16.
 
 ### J25 Review the agent's changes in Code Review
@@ -336,12 +355,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "The assistant checked the changes in the project and left remarks. Tell me which remark is the most serious one, in which file it is and on which line."
 - Start state: Code Review open on a Git project (`review-notes`) with two reviewer comments (one Blocker on notes.txt line 4, one Minor on line 1); `review` script; a chat is open behind it.
 - Success check: the window is still open and the answer names notes.txt and line 4 (answer check).
+- Answer: which remark is the most serious (notes.txt line 4).
 - Min 3 (open file, read comment list, read). Budget 9 / 12.
 
 **T25.2 - The verdict**
 - Scenario: "Tell me whether the assistant accepted the changes or wants more work, and how many remarks it left."
 - Start state: same as T25.1.
 - Success check: the answer says that changes are requested (not approved) and that there are 2 remarks.
+- Answer: the verdict and the number of remarks (2).
 - Min 2. Budget 6 / 8.
 
 ### J26 Send review comments to a chat, and comment yourself
@@ -367,7 +388,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Min 3 (select lines, right-click, Explain this). Budget 9 / 12.
 
 **T27.2 - More room for the file**
-- Scenario: "The side panel next to the file takes too much room. Make the file use the whole window."
+- Scenario: "The file has too little room. Make the file use the whole window. Nothing else should share the window with the file."
 - Start state: Code window with the chat pane open.
 - Success check: the pane is hidden, the window still offers a way to bring it back, and the file area is at least 90 percent as wide as the Code window (H-26).
 - Min 1. Budget 3 / 4.
@@ -378,6 +399,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Ask the assistant: 'Use the chat app at http://127.0.0.1:4174/'. While it works, watch the web page. Then tell me how you could see that the assistant was using the page, and what it did there."
 - Start state: Browser and an idle chat open; `browser-agent` script (the local team chat page, no network).
 - Success check: the assistant finished (DONE), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
+- Answer: what was posted in the chat app.
 - Min 3. Budget 9 / 12.
 
 **T28.2 - Take back the page**
@@ -406,6 +428,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Find out which version of Notepad you are using."
 - Start state: Notepad open.
 - Success check: the answer gives the version that the About dialog shows (researcher check).
+- Answer: the version of Notepad.
 - Min 2 (Help menu, About). Budget 6 / 8.
 
 ### J31 Help from inside an app
@@ -420,6 +443,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You clicked into the Terminal window and typing does nothing. Find out why, using the help of the program."
 - Start state: Terminal open.
 - Success check: Help and Support is open on the Terminal topic and the answer says that the Terminal only shows what the assistant runs.
+- Answer: why typing does nothing in the Terminal (it is read only).
 - Min 2. Budget 6 / 8.
 
 ## Coverage table

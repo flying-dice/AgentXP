@@ -1,7 +1,8 @@
 /** Pure z-order, focus and taskbar logic over `DesktopState.windows` (back to front). */
 import type { Id } from '@shared/models'
-import type { AppKind, AppWindowState } from '@shared/desktop'
+import type { AppKind, AppWindowState, Bounds } from '@shared/desktop'
 import type { TaskbarItem } from '../kit/organisms/Taskbar.svelte'
+import { belowBar, type BarRect } from './geometry'
 
 /** Moves a window to the front (end of the list) and returns the new list. */
 export function raise(windows: readonly AppWindowState[], id: Id): AppWindowState[] {
@@ -70,4 +71,15 @@ export function cycleTarget(windows: readonly AppWindowState[], focusedId: Id | 
   const at = recent.findIndex((w) => w.id === focusedId)
   if (at < 0) return recent[0].id
   return recent[(at + direction + recent.length) % recent.length].id
+}
+
+/** The windows that have their title bar under the top bar, with the bounds that put them just below it (maximised ones fill the desktop and stay). */
+export function windowsToMoveBelowBar(windows: readonly AppWindowState[], bar: BarRect): { id: Id; bounds: Bounds }[] {
+  const moves: { id: Id; bounds: Bounds }[] = []
+  for (const w of windows) {
+    if (w.windowState === 'maximized') continue
+    const bounds = belowBar(w.bounds, bar)
+    if (bounds !== w.bounds) moves.push({ id: w.id, bounds })
+  }
+  return moves
 }

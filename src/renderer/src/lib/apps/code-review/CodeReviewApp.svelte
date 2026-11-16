@@ -45,6 +45,7 @@
   import SendToChatDialog, { type SendTarget } from './SendToChatDialog.svelte'
   import {
     HEAD_MEANING,
+    projectNameOf,
     STATUS_LABEL,
     baseLabel,
     changePositionLabel,
@@ -644,7 +645,7 @@
   <AppAbout {help} />
 
   {#if sendDialog}
-    <SendToChatDialog chats={sendDialog.chats} count={sendDialog.count} cwd={root} busy={sending} onsend={(target) => void confirmSend(target)} oncancel={() => (sendDialog = null)} />
+    <SendToChatDialog chats={sendDialog.chats} count={sendDialog.count} cwd={root} projectName={(cwd) => projectNameOf(cwd, host.state.drives)} busy={sending} onsend={(target) => void confirmSend(target)} oncancel={() => (sendDialog = null)} />
   {/if}
 </div>
 

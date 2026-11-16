@@ -57,6 +57,20 @@ describe('Code Review', () => {
     await see.enabled(review.frame.getByTestId('review-send-comments'))
   })
 
+  it('names the window after the project and puts a word on every comment button (UX-108, UX-109)', async () => {
+    const review = ctx.desktop.codeReview()
+    await see.text(ctx.desktop.window('code-review').getByTestId('window-title'), /^Review - /)
+    const thread = review.threads.first()
+    await see.text(thread.getByTestId('review-comment-resolve'), 'Resolve')
+    await see.text(thread.getByTestId('review-comment-reply'), 'Reply')
+    await see.text(thread.getByTestId('review-comment-send'), 'Send to chat')
+    await see.text(thread.getByTestId('review-comment-delete'), 'Delete')
+    // The "+" is there without pointing at the line.
+    const plus = review.rows.nth(1).getByTestId('review-gutter-plus')
+    await see.visible(plus)
+    await see.attribute(plus, 'title', 'Add a comment on this line')
+  })
+
   it('a comment opens from the + , the right-click menu and a double click, and the box explains Minor (UX-76)', async () => {
     const review = ctx.desktop.codeReview()
     const row = review.rows.nth(1)
@@ -104,6 +118,8 @@ describe('Code Review', () => {
     const chat = ctx.desktop.chat()
     await see.visible(review.frame.getByTestId('review-send-dialog'))
     await see.count(review.frame.getByTestId('review-send-chat'), 1)
+    // The chat is named as its window is, never "Chat 3" (UX-109).
+    expect(await review.frame.getByTestId('review-send-chat').innerText()).not.toMatch(/^Chat \d/)
     await review.frame.getByTestId('review-send-chat').click()
     await review.frame.getByTestId('review-send-confirm').click()
     await see.visible(chat.agentMessage('Fixing the review comments now'))

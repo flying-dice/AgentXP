@@ -53,6 +53,8 @@
     /** What the surface rows can do (open, close, delete, move); the Chat app provides it. */
     surfaceControls?: SurfaceControls
     onlink?: (href: string) => void
+    /** "Show in Event Viewer" under a failed step; gets the id of the tool call. */
+    onshowtoolevent?: (toolCallId: string) => void
   }
 
   let {
@@ -75,7 +77,8 @@
     deniedToolCalls = new Set(),
     onaction,
     surfaceControls = noSurfaceControls,
-    onlink
+    onlink,
+    onshowtoolevent
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
@@ -115,6 +118,11 @@
   /** The first and last step of a finished group that only used the Browser, in plain words. */
   function detailOf(id: string, rows: readonly WorkRow[]): string | null {
     return running && id === lastId ? null : (browserWork(rows)?.detail ?? null)
+  }
+
+  /** The counts per kind of a finished Browser-only group, for the tooltip of its line. */
+  function tooltipOf(id: string, rows: readonly WorkRow[]): string | null {
+    return running && id === lastId ? null : (browserWork(rows)?.tooltip ?? null)
   }
 
   let scroller: HTMLDivElement | undefined = $state()
@@ -209,6 +217,7 @@
       waiting={waitingToolCallId === row.toolCallId}
       denied={deniedToolCalls.has(row.toolCallId)}
       earlier={earlier.has(row.id)}
+      onshowevent={onshowtoolevent}
     />
   {:else if row.kind === 'stop'}
     <StopNotice reason={row.reason} />
@@ -246,6 +255,7 @@
         <ActivityGroup
           summary={summaryOf(item.id, item.rows)}
           detail={detailOf(item.id, item.rows)}
+          tooltip={tooltipOf(item.id, item.rows)}
           live={running && item.id === lastId}
           bind:open={() => isOpen(item.id, item.rows), (value) => (overrides[item.id] = value)}
         >
@@ -262,7 +272,7 @@
   {/snippet}
   {#snippet empty()}
     <div class="row">
-      <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
+      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />{/if}
     </div>
   {/snippet}
   {#snippet tail()}

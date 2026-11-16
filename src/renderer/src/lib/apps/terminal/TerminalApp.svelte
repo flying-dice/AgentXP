@@ -12,6 +12,7 @@
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import ConsoleView from '../../kit/organisms/ConsoleView.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
+  import { askChatItems, CHAT_ITEM_LABELS } from '../shared/contextItems'
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
@@ -85,25 +86,20 @@
     ...selectionContext(selectedText())
   }))
 
+  const recentOutput = (): string => text.trim().split('\n').slice(-40).join('\n')
+
   const contextItems = (): MenuItemDef[] => {
     const selected = selectedText()
     return [
       ...editItems('terminal-ctx', { copy, selectAll }, { hasSelection: selected !== '' }),
       { id: 'terminal-ctx-clear', testid: 'terminal-ctx-clear', label: 'C&lear view', icon: 'delete', action: clearView },
-      { separator: true },
-      {
-        id: 'terminal-ctx-ask',
-        testid: 'terminal-ctx-ask',
-        label: 'Ask &chat about this output...',
-        icon: 'session',
-        action: () => void host.askChat({ app: 'terminal', windowId: win.id, kind: 'ask', text: selected || text.trim().split('\n').slice(-40).join('\n') })
-      },
+      ...askChatItems('terminal', { hasSelection: selected !== '', ask: (kind) => void host.askChat({ app: 'terminal', windowId: win.id, kind, text: selected || recentOutput() }) }),
       {
         id: 'terminal-ctx-open-chat',
         testid: 'terminal-ctx-open-chat',
-        label: 'Open in Chat &window',
+        label: CHAT_ITEM_LABELS.startHere,
         icon: 'session',
-        action: () => void host.askChat({ app: 'terminal', windowId: win.id, kind: 'window', text: selected || text.trim().split('\n').slice(-40).join('\n') })
+        action: () => void host.askChat({ app: 'terminal', windowId: win.id, kind: 'window', text: selected || recentOutput() })
       }
     ]
   }

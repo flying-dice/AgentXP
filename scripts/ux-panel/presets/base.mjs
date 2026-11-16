@@ -10,6 +10,8 @@ export const SCRIPT_APPS = { demo: ['code'], 'fix-redirect': ['code'], 'two-edit
 /** Scripted Agent as the default agent (H-16): every preset that has no desktop of its own still gets it. */
 export const useDefaultAgent = (ctx) => ctx.useScript('demo')
 export const PROMPT_FIX = 'Fix the login redirect bug so that deep links survive sign-in'
+/** H-57: a second, different request (another file) for the two-chats start state. */
+export const PROMPT_LOGIN = 'Trim the user name in src/auth/login.ts before it is checked'
 
 /** Resolves project keys (`loginApp`, `docsSite`, `plain`) to folder paths. */
 export const projectPaths = (ctx, keys) => keys.map((k) => (k === 'loginAppGit' ? ctx.fixtures.loginAppGit() : ctx.fixtures[k]))

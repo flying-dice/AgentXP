@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, type DesktopState } from '@shared/desktop'
 import type { SessionDto, SessionRole } from '@shared/models'
+import { WINDOW_MIN_Y } from '@shared/desktop-views'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
 import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
@@ -185,10 +186,18 @@ describe('DesktopService: window placement and focus', () => {
     expect(overlaps(notepad.bounds, { x: 600, y: 100, width: 640, height: 520 })).toBe(false)
   })
 
-  it('cascades as before when the focused window is not a chat', () => {
-    service.openWindow({ desktopId, app: 'terminal' })
+  it('cascades from the focused window (28 px right and down) when it is not a chat, and never starts under the top bar', () => {
+    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+    expect(terminal.bounds.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
-    expect(notepad.bounds).toEqual({ x: 232, y: 152, width: 520, height: 380 })
+    expect(notepad.bounds).toMatchObject({ x: terminal.bounds.x + 28, y: terminal.bounds.y + 28, width: 520, height: 380 })
+  })
+
+  it('Help opens beside the window that asked for it', () => {
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    const help = service.openWindow({ desktopId, app: 'help' })
+    expect(overlaps(help.bounds, notepad.bounds)).toBe(false)
+    expect(help.bounds.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
   })
 
   it('a window the agent opens comes to the front and takes the focus', async () => {

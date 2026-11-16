@@ -20,8 +20,9 @@
   import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import { connectionLabel, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
-  import { OPEN_PANE_TIP, PANE_EMPTY_TEXT } from '../../app/session/chatPaneText'
+  import { OPEN_PANE_TIP, PANE_EMPTY_TEXT, type ChatSuggestion } from '../../app/session/chatPaneText'
   import { logLines, problemDetails } from '../../app/session/chatProblem'
+  import { eventForToolCall } from '../event-viewer/eventModel'
   import { folderLabel } from '../../app/session/folderLabel'
   import Composer from '../../app/session/Composer.svelte'
   import SessionView from '../../app/session/SessionView.svelte'
@@ -76,7 +77,7 @@
     /** "New conversation" in the header (only with a session): the host deletes the session, the panel goes blank. */
     onnew?: () => void | Promise<void>
     /** Chips above the composer; clicking one sends its text. */
-    suggestions?: readonly { id: string; label: string; text: string }[]
+    suggestions?: readonly ChatSuggestion[]
     /** Fills and focuses the composer (see `Composer`). */
     prefill?: { id: number; text?: string } | null
     onprefilled?: (id: number) => void
@@ -220,9 +221,15 @@
   }
   /** "Start a new chat" after a second failure: a chat on the same folder with the current default agent. */
   const startNewChat = (): void => void (session ? host.startChat(session.cwd) : undefined)
+  /** "Show in Event Viewer" of the error row: the viewer on this chat, on its newest error. */
   async function showInEventViewer(): Promise<void> {
-    const viewer = await host.openApp({ app: 'event-viewer' })
-    host.updateView(viewer.id, { app: 'event-viewer', sessionId, level: 'all', selectedEventId: null })
+    const events = await host.api.events.query({ desktopId: host.state.desktopId, sessionId, level: 'error', limit: 50 }).catch(() => [])
+    await host.openEventViewer({ sessionId, selectedEventId: events.at(-1)?.id ?? null })
+  }
+  /** "Show in Event Viewer" under a failed step: the viewer on this chat, on the event of that tool call. */
+  async function showToolEvent(toolCallId: string): Promise<void> {
+    const events = await host.api.events.query({ desktopId: host.state.desktopId, sessionId, text: toolCallId, limit: 200 }).catch(() => [])
+    await host.openEventViewer({ sessionId, selectedEventId: eventForToolCall(events, toolCallId)?.id ?? null })
   }
   const setAskFirst = (on: boolean): void => void host.api.desktop.setUserInControl(host.state.desktopId, on)
   /** "Reconnect" of a chat that lost its agent: a fresh agent program, then the chat loads again. */
@@ -291,14 +298,14 @@
     <div class="body">
       {#if shared && session}
         {#key sessionId}
-          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} stoppedByPause={host.stoppedByPause(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} {loadDetails} onshowevents={() => void showInEventViewer()} onopenagents={() => void openAgents()} onnewchat={startNewChat} {newDefaultAgent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
+          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} stoppedByPause={host.stoppedByPause(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} {loadDetails} onshowevents={() => void showInEventViewer()} onshowtoolevent={(id) => void showToolEvent(id)} onopenagents={() => void openAgents()} onnewchat={startNewChat} {newDefaultAgent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
         {/key}
       {:else if sessionId <= 0 && onstart}
         <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : (blankText ?? PANE_EMPTY_TEXT))}</div>
         {#if suggestionsOpen}
           <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">
             {#each suggestions as s (s.id)}
-              <button type="button" class="chip" data-testid="embedded-chat-suggestion" data-suggestion={s.id} onclick={() => void startAndSend(s.text)}>{s.label}</button>
+              <button type="button" class="chip" class:off={s.disabled} data-testid="embedded-chat-suggestion" data-suggestion={s.id} aria-disabled={s.disabled || undefined} title={s.tip} onclick={() => !s.disabled && void startAndSend(s.text)}>{s.label}</button>
             {/each}
           </div>
         {/if}
@@ -461,6 +468,13 @@
   .chip:hover {
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
+  }
+  .chip.off,
+  .chip.off:hover {
+    border-color: #c5ccd6;
+    background: #f1f3f6;
+    color: #7a8494;
+    cursor: default;
   }
   .blank {
     flex: 1;

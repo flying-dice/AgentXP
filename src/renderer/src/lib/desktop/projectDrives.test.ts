@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addRemoved, ejectBalloonText, plugAgainLabel, pluggedBalloonText } from './projectDrives'
+import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, plugAgainLabel, pluggedBalloonText, projectQuoted, removeProjectText } from './projectDrives'
 
 describe('projectDrives', () => {
   it('remembers the last three removed projects, newest first, each once', () => {
@@ -18,7 +18,10 @@ describe('projectDrives', () => {
 
   it('words the balloons', () => {
     expect(pluggedBalloonText('login-app (E:)')).toBe('Project plugged in: login-app (E:) is ready to use.')
-    expect(ejectBalloonText('login-app (E:)')).toContain('login-app (E:) can now be removed. Its files on disk were not changed.')
-    expect(ejectBalloonText('x')).toContain('Plug in a project...')
+    expect(EJECT_BALLOON_TITLE).toBe('Project removed')
+    expect(ejectBalloonText('login-app', 'E')).toBe("'login-app' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.")
+    expect(ejectBalloonText('x')).toContain("'x' was removed")
+    expect(projectQuoted('login-app', 'E')).toBe("'login-app' (E:)")
+    expect(removeProjectText('login-app')).toBe("Remove 'login-app' from this desktop? The agent can no longer use it. The folder and its files stay where they are.")
   })
 })

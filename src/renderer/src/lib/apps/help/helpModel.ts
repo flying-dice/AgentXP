@@ -39,8 +39,19 @@ export const slugOf = (text: string): string =>
     .trim()
     .replace(/[\s-]+/g, '-')
 
-/** The topic F1 opens for the focused window; a desktop without a focused window gets the keyboard topic. */
-export const topicForApp = (app: AppKind | null | undefined): string => (app ? app : KEYBOARD_TOPIC)
+/**
+ * The section each app's manual opens at when F1 or View Help asks for it: the heading of the section (its slug, with or
+ * without the number the manuals put in front). An app without an entry opens at the top of its manual. Every app manual
+ * has "Common Tasks", the section that answers "how do I...", so that is where F1 lands.
+ */
+export const HELP_ANCHORS: Partial<Record<AppKind, string>> = Object.fromEntries(APP_KINDS.map((kind) => [kind, 'common-tasks']))
+
+/** The topic F1 opens for the focused window, with the app's help anchor ("notepad#common-tasks"); a desktop without a focused window gets the keyboard topic. */
+export function topicForApp(app: AppKind | null | undefined): string {
+  if (!app) return KEYBOARD_TOPIC
+  const anchor = HELP_ANCHORS[app]
+  return anchor ? `${app}#${anchor}` : app
+}
 
 /**
  * A topic with a section: `browser#troubleshooting` is the topic `browser` scrolled to its heading
@@ -87,38 +98,54 @@ export function queryWords(query: string): string[] {
   return meaningful.length > 0 ? meaningful : words
 }
 
-interface Scored {
+/** One part of a manual: the introduction under the title (`section` empty) or one section under a heading. */
+export interface HelpSection {
   topic: HelpTopic
-  inTitle: boolean
-  matched: number
-  at: number
+  /** The heading of the section (empty for the introduction of the topic). */
+  section: string
+  /** The slug of `section`, the `id` of its heading in the article. */
+  sectionId: string
+  /** The plain words under the heading, up to the next heading. */
+  text: string
 }
 
-function score(topics: readonly HelpTopic[], words: readonly string[]): Scored[] {
-  return topics.map((topic, at) => {
-    const title = topic.title.toLowerCase()
-    const all = `${title} ${plainText(topic.body).toLowerCase()}`
-    return { topic, inTitle: words.every((w) => title.includes(w)), matched: words.filter((w) => all.includes(w)).length, at }
-  })
+/** Headings that only list or point elsewhere: a search never lands on them. */
+const SKIPPED_SECTIONS = new Set(['table-of-contents'])
+
+/** Cuts a topic into its introduction and its sections (the `##` to `####` headings; code blocks are left out). */
+export function sectionsOf(topic: HelpTopic): HelpSection[] {
+  const sections: HelpSection[] = []
+  let current: { section: string; lines: string[] } = { section: '', lines: [] }
+  const close = (): void => {
+    const sectionId = current.section ? slugOf(current.section) : ''
+    if (!SKIPPED_SECTIONS.has(sectionId)) sections.push({ topic, section: current.section, sectionId, text: plainText(current.lines.join('\n')) })
+  }
+  let inCode = false
+  for (const line of topic.body.split(/\r?\n/)) {
+    if (/^```/.test(line)) inCode = !inCode
+    if (inCode) continue
+    const heading = /^#{2,4}\s+(.+?)\s*#*$/.exec(line)
+    if (heading) {
+      close()
+      current = { section: heading[1].trim(), lines: [] }
+    } else if (!/^#\s/.test(line)) current.lines.push(line)
+  }
+  close()
+  return sections
 }
 
-/**
- * Topics that contain every word of the query (case-insensitive, stop words left out) in the title or the text.
- * A topic with the words in the title comes first. When no topic has every word, the topics that have at least half of
- * the words follow, the best first. An empty query keeps all topics in order.
- */
-export function searchTopics(topics: readonly HelpTopic[], query: string, preferred?: string): HelpTopic[] {
-  const words = queryWords(query)
-  if (words.length === 0) return [...topics]
-  const scored = score(topics, words)
-  const all = scored.filter((s) => s.matched === words.length)
-  const hits = all.length > 0 || words.length < 2 ? all : scored.filter((s) => s.matched >= Math.ceil(words.length / 2))
-  // The topic of the app that was focused when Help opened comes first (UX-81).
-  const first = (s: Scored): number => (preferred !== undefined && s.topic.id === preferred ? 0 : 1)
-  return hits.sort((a, b) => first(a) - first(b) || Number(b.inTitle) - Number(a.inTitle) || b.matched - a.matched || a.at - b.at).map((h) => h.topic)
+/** The sections of every topic, in reading order. Built once per list of topics. */
+const indexes = new WeakMap<readonly HelpTopic[], HelpSection[]>()
+export function indexSections(topics: readonly HelpTopic[]): HelpSection[] {
+  let index = indexes.get(topics)
+  if (!index) {
+    index = topics.flatMap(sectionsOf)
+    indexes.set(topics, index)
+  }
+  return index
 }
 
-/** One search result: the topic, the section where the words are, and a line of text around them. */
+/** One search result: the section where the words are, its topic and a line of text around the words. */
 export interface HelpHit {
   topic: HelpTopic
   /** The heading of the section that holds the match (empty for the top of the topic). */
@@ -130,37 +157,48 @@ export interface HelpHit {
 
 const SNIPPET_AROUND = 70
 
-/** The first line of the topic that has the most of the words, with the heading above it and a short snippet. */
-export function locate(topic: HelpTopic, words: readonly string[]): { section: string; sectionId: string; snippet: string } {
-  let heading = ''
-  let best = { count: 0, section: '', text: '' }
-  let inCode = false
-  for (const line of topic.body.split(/\r?\n/)) {
-    if (/^```/.test(line)) inCode = !inCode
-    if (inCode) continue
-    const h = /^#{2,4}\s+(.+?)\s*#*$/.exec(line)
-    if (h) {
-      heading = h[1].trim()
-      continue
-    }
-    const text = plainText(line)
-    const lower = text.toLowerCase()
-    const count = words.filter((w) => lower.includes(w)).length
-    if (count > best.count) best = { count, section: heading, text }
-  }
-  if (best.count === 0) return { section: '', sectionId: '', snippet: plainText(topic.body).slice(0, SNIPPET_AROUND * 2) }
-  const lower = best.text.toLowerCase()
-  const first = Math.min(...words.map((w) => lower.indexOf(w)).filter((i) => i >= 0))
+/** A short line of the section text around the first of the words; the start of the text when only the heading matches. */
+export function snippetOf(text: string, words: readonly string[]): string {
+  const lower = text.toLowerCase()
+  const found = words.map((w) => lower.indexOf(w)).filter((i) => i >= 0)
+  if (found.length === 0) return text.slice(0, SNIPPET_AROUND * 2).trim()
+  const first = Math.min(...found)
   const from = Math.max(0, first - SNIPPET_AROUND)
-  const to = Math.min(best.text.length, first + SNIPPET_AROUND)
-  const snippet = `${from > 0 ? '...' : ''}${best.text.slice(from, to).trim()}${to < best.text.length ? '...' : ''}`
-  return { section: best.section, sectionId: best.section ? slugOf(best.section) : '', snippet }
+  const to = Math.min(text.length, first + SNIPPET_AROUND)
+  return `${from > 0 ? '...' : ''}${text.slice(from, to).trim()}${to < text.length ? '...' : ''}`
 }
 
-/** The results of a search with their section and snippet (same order as `searchTopics`). */
-export function searchHits(topics: readonly HelpTopic[], query: string, preferred?: string): HelpHit[] {
+interface ScoredSection {
+  hit: HelpSection
+  /** Every word is in the heading of the section (the title of the topic for its introduction). */
+  inHeading: boolean
+  /** Every word is in the title of the topic and the heading together. */
+  inName: boolean
+  matched: number
+  at: number
+}
+
+/**
+ * The sections that contain every word of the query (case-insensitive, stop words left out), the best first: a section
+ * with the words in its heading comes before one that has them only in its text, then the topic of the app that was
+ * focused when Help opened (UX-81), then the order of the manuals. When no section has every word, the sections that have
+ * at least half of the words follow. An empty query gives no sections.
+ */
+export function searchSections(topics: readonly HelpTopic[], query: string, preferred?: string): HelpHit[] {
   const words = queryWords(query)
-  return searchTopics(topics, query, preferred).map((topic) => ({ topic, ...locate(topic, words) }))
+  if (words.length === 0) return []
+  const scored = indexSections(topics).map((hit, at): ScoredSection => {
+    const heading = (hit.section || hit.topic.title).toLowerCase()
+    const name = `${hit.topic.title} ${hit.section}`.toLowerCase()
+    const all = `${name} ${hit.text.toLowerCase()}`
+    return { hit, inHeading: words.every((w) => heading.includes(w)), inName: words.every((w) => name.includes(w)), matched: words.filter((w) => all.includes(w)).length, at }
+  })
+  const full = scored.filter((s) => s.matched === words.length)
+  const hits = full.length > 0 || words.length < 2 ? full : scored.filter((s) => s.matched >= Math.ceil(words.length / 2))
+  const first = (s: ScoredSection): number => (preferred !== undefined && s.hit.topic.id === preferred ? 0 : 1)
+  return hits
+    .sort((a, b) => Number(b.inHeading) - Number(a.inHeading) || Number(b.inName) - Number(a.inName) || b.matched - a.matched || first(a) - first(b) || a.at - b.at)
+    .map(({ hit }) => ({ topic: hit.topic, section: hit.section, sectionId: hit.sectionId, snippet: snippetOf(hit.text, words) }))
 }
 
 const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

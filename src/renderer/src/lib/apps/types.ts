@@ -17,6 +17,8 @@ export interface DesktopHost {
   readonly state: DesktopState
   readonly api: Agent7Api
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
+  /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event ("Show in Event Viewer"). */
+  openEventViewer(scope?: { sessionId?: Id | null; selectedEventId?: number | null }): Promise<void>
   /** The root to review or work on for a path: its plugged-in project drive, else the first project drive, else home. */
   projectRootOf(path?: string | null): VPath
   /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */
@@ -38,8 +40,8 @@ export interface DesktopHost {
   /** File > New chat, Ctrl+N: starts a chat on the default drive of the desktop and focuses its composer. */
   startDefaultChat(): Promise<void>
   /**
-   * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat): opens the requesting window's chat pane
-   * and sends the prompt of `askChatPrompt(request)` there ("Ask chat..." only fills the composer, for the user's
+   * "Ask the agent about this" (Explain this, Ask the agent about this..., Send selection to chat): opens the requesting window's chat pane
+   * and sends the prompt of `askChatPrompt(request)` there ("Ask the agent about this..." only fills the composer, for the user's
    * question). A window without a pane (Chat, Code Review, a surface) starts a chat on its drive and opens its Chat window.
    */
   askChat(request: AskChatRequest): Promise<void>

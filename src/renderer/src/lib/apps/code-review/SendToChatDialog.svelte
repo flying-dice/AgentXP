@@ -15,12 +15,14 @@
     count: number
     /** Where a new chat would work (the review's folder). */
     cwd: string
+    /** The project a path belongs to, for a chat that has no title yet. */
+    projectName?: (cwd: string) => string | null
     busy?: boolean
     onsend: (target: SendTarget) => void
     oncancel: () => void
   }
 
-  let { chats, count, cwd, busy = false, onsend, oncancel }: Props = $props()
+  let { chats, count, cwd, projectName = () => null, busy = false, onsend, oncancel }: Props = $props()
 
   let chosen = $state<string | null>(null)
   const choice = $derived(chosen ?? (chats[0] ? `chat:${chats[0].id}` : 'new'))
@@ -35,7 +37,7 @@
         <li>
           <button type="button" class="option" role="radio" aria-checked={choice === `chat:${chat.id}`} class:on={choice === `chat:${chat.id}`} data-testid="review-send-chat" data-session-id={chat.id} onclick={() => (chosen = `chat:${chat.id}`)}>
             <Icon name="session" size={24} />
-            <span class="text"><span class="title">{chatLabel(chat)}</span><span class="sub">{chat.cwd}</span></span>
+            <span class="text"><span class="title">{chatLabel(chat, projectName(chat.cwd))}</span><span class="sub">{chat.cwd}</span></span>
           </button>
         </li>
       {/each}

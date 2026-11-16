@@ -128,7 +128,7 @@ describe('scripted agent: demo.json, allow path', () => {
   it('the Changes list shows the file the agent wrote', async () => {
     const chat = ctx.desktop.chat()
     await chat.showChanges()
-    await see.text(chat.changes, 'SCRIPTED.md')
+    await see.attribute(chat.changes.getByTestId('changes-file'), 'title', /SCRIPTED\.md/)
   })
 })
 

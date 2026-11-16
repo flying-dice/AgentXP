@@ -101,6 +101,48 @@ describe('Code app git awareness', () => {
     await see.visible(code.frame.getByTestId('code-management'))
   })
 
+  it('the Focus on the file button gives the file the whole window and reads Show panes; F11 does the same (UX-106)', async () => {
+    const code = ctx.desktop.code()
+    const toggle = code.frame.getByTestId('code-focus-toggle')
+    await see.text(toggle, 'Focus on the file')
+    await toggle.click()
+    await see.text(toggle, 'Show panes')
+    await see.gone(code.frame.getByTestId('code-management'))
+    await see.gone(code.frame.getByTestId('code-logs'))
+    await see.eventually(async () => {
+      const app = await code.frame.getByTestId('code-app').boundingBox()
+      const editor = await code.editor.boundingBox()
+      expect(editor!.width / app!.width).toBeGreaterThanOrEqual(0.9)
+    })
+    await toggle.click()
+    await see.text(toggle, 'Focus on the file')
+    await see.visible(code.frame.getByTestId('code-management'))
+    await see.visible(code.frame.getByTestId('code-logs'))
+    await code.editor.click()
+    await ctx.desktopPage.keyboard.press('F11')
+    await see.text(toggle, 'Show panes')
+    await ctx.desktopPage.keyboard.press('F11')
+    await see.text(toggle, 'Focus on the file')
+    await see.visible(code.frame.getByTestId('code-management'))
+  })
+
+  it('the buttons above the tree start a chat here and remove a project only when a project is selected (UX-112)', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-mgmt-tab-projects').click()
+    const items = code.frame.getByTestId('code-tree-item')
+    const project = code.frame.getByTestId('file-tree-root')
+    await see.visible(project)
+    await project.click()
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(true))
+    await items.filter({ hasText: 'keep.txt' }).click()
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-tree-remove').isEnabled()).toBe(false))
+    expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(false) // nothing is selected in the file
+    await code.frame.getByTestId('code-tree-new-chat').click()
+    const chat = ctx.desktop.window('chat')
+    await see.visible(chat.getByTestId('chat-app'))
+    await ctx.desktop.closeWindow('chat')
+  })
+
   it('the Git list shows the lines of each file and double-click opens the file that was clicked (UX-78)', async () => {
     const code = ctx.desktop.code()
     await code.frame.getByTestId('code-logs-tab-git').click()
@@ -109,12 +151,19 @@ describe('Code app git awareness', () => {
     const rows = code.frame.getByTestId('code-git-entry')
     await see.count(rows, 2)
     await see.text(rows.filter({ hasText: 'fresh.txt' }), '+1 / -0')
+    // The tooltip of a row names the lines that changed (UX-107).
+    await see.eventually(async () => expect(await rows.filter({ hasText: 'notes.txt' }).getAttribute('title')).toMatch(/^notes\.txt: lines? [\d, and]+ changed$/))
     // Nothing is selected until the user picks a row.
     expect(await rows.evaluateAll((els) => els.filter((e) => e.getAttribute('aria-selected') === 'true').length)).toBe(0)
     await rows.filter({ hasText: 'fresh.txt' }).dblclick()
     const review = ctx.desktop.codeReview()
     await see.visible(review.app)
     await see.text(review.frame.getByTestId('review-file-head'), 'fresh.txt')
+    await ctx.desktop.closeWindow('code-review')
+    // The other row opens its own file, not the first one of the review (UX-107).
+    await rows.filter({ hasText: 'notes.txt' }).dblclick()
+    await see.visible(review.app)
+    await see.text(review.frame.getByTestId('review-file-head'), 'notes.txt')
     await ctx.desktop.closeWindow('code-review')
   })
 })

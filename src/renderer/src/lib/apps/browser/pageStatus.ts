@@ -52,14 +52,18 @@ export function failureHint(failure: LoadFailure): string {
 /** The agent's access to the page, from the Browser permission (Control Center > Permissions). */
 export type AssistantAccess = 'allow' | 'ask' | 'deny'
 
-/** The "Agent:" segment of the status bar: whether the agent can see the page that is open. */
-export function assistantStatus(access: AssistantAccess, reading: boolean): string {
-  if (access === 'deny') return 'Agent: cannot see pages'
+/** The "Agent:" segment of the status bar: whether the agent can read the page that is open, and whether it did. */
+export function assistantStatus(access: AssistantAccess, reading: boolean, hasRead = false): string {
+  if (access === 'deny') return 'Agent: cannot read pages'
   if (reading) return 'Agent: reading'
-  return access === 'ask' ? 'Agent: asks first' : 'Agent: can see this page'
+  if (hasRead) return 'The agent read this page'
+  return access === 'ask' ? 'Agent: asks first' : 'Agent: can read this page'
 }
 
-export const ASSISTANT_TOOLTIP = 'The agent can read the page that is open here. Change this in Control Center > Permissions > Browser.'
+export const ASSISTANT_TOOLTIP = 'The assistant can read this page when you ask it. Change this in Control Center > Permissions > Browser.'
+
+/** The question that "Ask about this page" puts in the chat box. */
+export const ASK_ABOUT_PAGE_QUESTION = 'What does this page say?'
 
 export interface PageStatusInput {
   url: string

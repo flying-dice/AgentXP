@@ -1,5 +1,5 @@
 /**
- * Pure builders of the context menu items that several apps share: the "Ask chat about this" group, the text
+ * Pure builders of the context menu items that several apps share: the "Ask the agent about this" group, the text
  * editing operations of a textarea and the line range of a selection. Test ids are `<app>-ctx-<action>`.
  */
 import type { AskChatRequest } from '@shared/desktop'
@@ -16,26 +16,24 @@ export interface AskChatItemsOptions {
 /** The words of the chat items, the same in every app (F-019). */
 export const CHAT_ITEM_LABELS = {
   explain: '&Explain this',
-  ask: 'Ask &chat about this...',
-  askFile: 'Ask &chat about this file...',
-  openWindow: 'Open in Chat &window',
+  ask: '&Ask the agent about this...',
+  askFile: '&Ask the agent about this...',
   startHere: 'Start a &chat here'
 } as const
 
 /**
- * The chat group of a selection menu: separator, Explain this, "Ask chat about this..." (both use the chat pane) and
- * "Open in Chat window" (a full chat instead of the pane). The same three items, in the same words, in every app.
+ * The chat group of a selection menu: separator, "Ask the agent about this..." and Explain this (both use the chat pane).
+ * The same two items, in the same words, in every app.
  */
 export function askChatItems(app: string, { hasSelection, ask }: AskChatItemsOptions): MenuItemDef[] {
   return [
     { separator: true },
-    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: CHAT_ITEM_LABELS.explain, icon: 'session', disabled: !hasSelection, action: () => ask('explain') },
     { id: `${app}-ctx-ask`, testid: `${app}-ctx-ask`, label: CHAT_ITEM_LABELS.ask, icon: 'session', action: () => ask('ask') },
-    { id: `${app}-ctx-open-chat`, testid: `${app}-ctx-open-chat`, label: CHAT_ITEM_LABELS.openWindow, icon: 'session', disabled: !hasSelection, action: () => ask('window') }
+    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: CHAT_ITEM_LABELS.explain, icon: 'session', disabled: !hasSelection, action: () => ask('explain') }
   ]
 }
 
-/** "Ask chat about this file...": opens the chat pane with a draft about a file (a tree row, a list item). */
+/** "Ask the agent about this...": opens the chat pane with a draft about a file (a tree row, a list item). */
 export const askAboutFileItem = (app: string, action: () => void, disabled = false): MenuItemDef => ({
   id: `${app}-ctx-ask`,
   testid: `${app}-ctx-ask`,

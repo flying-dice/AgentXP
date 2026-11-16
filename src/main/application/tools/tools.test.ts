@@ -595,6 +595,20 @@ describe('browser tools', () => {
     for (const r of browserRequests.sent) expect(JSON.stringify(r.params)).not.toMatch(/\[\d+\]/)
   })
 
+  it('marks the page as read when a read ends', async () => {
+    await run('browser_read')
+    expect(browserRequests.sent[0]!.params).not.toHaveProperty('read')
+    expect(browserRequests.sent[1]!.params).toMatchObject({ read: true })
+  })
+
+  it('describes a wait in words, with the wanted page text only in the detail', async () => {
+    await run('browser_wait', { text: 'Reacted (1)' })
+    const params = browserRequests.sent[0]!.params as { label: string; detail?: string }
+    expect(params.label).toBe('Waiting for the page to change')
+    expect(params.label).not.toContain('Reacted')
+    expect(params.detail).toBe('Waiting for the text "Reacted (1)" to show on the page.')
+  })
+
   it('stops an action when the user pauses Agent7 or takes control meanwhile', async () => {
     await run('browser_click', { ref: 1 })
     const guard = driver.guards[0]!

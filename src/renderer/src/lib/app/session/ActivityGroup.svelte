@@ -7,17 +7,19 @@
     summary: string
     /** A second, muted line under the summary ("First: ... Last: ..."); the Browser's steps in plain words. */
     detail?: string | null
+    /** The tooltip of the summary line (the Browser's counts per kind). */
+    tooltip?: string | null
     /** The turn is still working on this group. */
     live?: boolean
     open?: boolean
     children: Snippet
   }
 
-  let { summary, detail = null, live = false, open = $bindable(false), children }: Props = $props()
+  let { summary, detail = null, tooltip = null, live = false, open = $bindable(false), children }: Props = $props()
 </script>
 
 <div class="activity" data-testid="chat-activity-group" data-open={open} data-live={live}>
-  <button class="toggle" type="button" data-testid="chat-activity-toggle" aria-expanded={open} onclick={() => (open = !open)}>
+  <button class="toggle" type="button" data-testid="chat-activity-toggle" aria-expanded={open} title={tooltip ?? undefined} onclick={() => (open = !open)}>
     <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
       {#if open}
         <path d="M8.5 2L8.5 8.5L2 8.5z" fill="#404040" stroke="#404040" />

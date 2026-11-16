@@ -15,14 +15,14 @@ let broken = 0
 for (const id of ids) {
   const out = join(base, id)
   const run = (...args) => spawnSync(process.execPath, [join(here, 'session.mjs'), ...args, '--out', out], { encoding: 'utf8' })
-  const started = run('start', '--task', id, '--level', 'sonnet')
+  const started = run('start', '--task', id, '--level', 'intermediate')
   if (started.status !== 0) {
     broken++
     console.log(`${id}\tSTART FAILED\t${started.stderr.trim().split('\n')[0]}`)
     run('stop', '--no-check')
     continue
   }
-  const checked = run('check')
+  const checked = run('check', '--no-answer')
   const info = JSON.parse(readFileSync(join(out, 'session.json'), 'utf8'))
   console.log(`${id}\t${info.preset}\t${checked.stdout.split('\n')[0]}`)
   run('stop', '--no-check')

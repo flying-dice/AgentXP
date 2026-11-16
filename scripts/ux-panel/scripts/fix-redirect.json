@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "fix-redirect",
-  "description": "Reads src/auth/redirect.ts, asks to change it, writes the fix on Allow. Answers the same way on Deny.",
+  "description": "Reads src/auth/redirect.ts, asks to change it, writes the fix on Allow. Answers the same way on Deny. H-57: a prompt that names login.ts gets the same flow for src/auth/login.ts (trims the user name), so two chats can ask for different files.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -20,6 +20,114 @@
         {
           "type": "message",
           "text": "Hello! I am the assistant. Ask me to change something in your project."
+        }
+      ]
+    },
+    {
+      "id": "login",
+      "match": {
+        "regex": "login\\.ts",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I will look at the sign-in form first.\n"
+        },
+        {
+          "type": "readFile",
+          "path": "{{cwd}}/src/auth/login.ts",
+          "saveAs": "login",
+          "label": "read login.ts"
+        },
+        {
+          "type": "message",
+          "text": "I read src/auth/login.ts: it does not trim the user name. I want to change that file.\n"
+        },
+        {
+          "type": "toolCall",
+          "id": "edit-1",
+          "title": "Change src/auth/login.ts",
+          "kind": "edit",
+          "status": "pending",
+          "rawInput": {
+            "path": "src/auth/login.ts"
+          },
+          "locations": [
+            {
+              "path": "{{cwd}}/src/auth/login.ts"
+            }
+          ],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/src/auth/login.ts",
+                "newText": "import { afterLogin } from './redirect'\n\nexport function login(user: string, password: string, url: string): string | null {\n  if (!user.trim() || !password) return null // the agent trims the user name\n  return afterLogin(url)\n}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-1",
+          "title": "Change src/auth/login.ts",
+          "options": [
+            {
+              "optionId": "allow",
+              "name": "Allow",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "deny",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ],
+          "branches": {
+            "allow": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "in_progress"
+              },
+              {
+                "type": "writeFile",
+                "path": "{{cwd}}/src/auth/login.ts",
+                "content": "import { afterLogin } from './redirect'\n\nexport function login(user: string, password: string, url: string): string | null {\n  if (!user.trim() || !password) return null // the agent trims the user name\n  return afterLogin(url)\n}\n"
+              },
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "completed"
+              },
+              {
+                "type": "message",
+                "text": "Done. I changed src/auth/login.ts so that the user name is trimmed. The work is finished."
+              }
+            ],
+            "deny": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "failed"
+              },
+              {
+                "type": "message",
+                "text": "Understood. I did not change any file."
+              }
+            ],
+            "cancelled": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "failed"
+              },
+              {
+                "type": "end",
+                "stopReason": "cancelled"
+              }
+            ]
+          }
         }
       ]
     },

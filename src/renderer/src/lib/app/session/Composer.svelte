@@ -26,7 +26,7 @@
     pickFiles?: () => Promise<string[]>
     /**
      * Fills the box (and focuses it) when `id` is one the box has not applied yet; without `text` it only focuses.
-     * The host (the chat pane: "Ask chat...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
+     * The host (the chat pane: "Ask the agent about this...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
      */
     prefill?: { id: number; text?: string } | null
     onprefilled?: (id: number) => void
@@ -154,7 +154,7 @@
     </span>
     <span class="spacer"></span>
     <Button data-testid="chat-attach" onclick={attach}>Attach…</Button>
-    <span title="Stops this reply. You can send another message."><Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button></span>
+    <span title="Stop this step. The chat stays and you can send another message."><Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button></span>
     <span title={sendReason ?? (starting ? 'Your message will be sent when the agent is ready.' : 'Send the message (Enter)')}><Button data-testid="chat-send" isDefault disabled={!canSend} onclick={send}>Send</Button></span>
   </div>
 </div>

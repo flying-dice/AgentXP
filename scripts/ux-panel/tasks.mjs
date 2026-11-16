@@ -45,6 +45,7 @@ export const TASKS = {
   'T22.1': { preset: 'project-desktop', options: { open: ['explorer'] } },
   'T22.2': { preset: 'chat-open', options: { script: 'demo' } },
   'T23.1': { preset: 'crashed-agent' },
+  'T23.1-twice': { preset: 'crashed-agent', options: { twice: true } },
   'T23.2': { preset: 'chat-open', options: { script: 'flaky', firstMessage: 'Please list the files in my project' } },
   'T24.1': { preset: 'project-desktop', options: { git: true, modifyGit: true, open: ['code'] } },
   'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } },

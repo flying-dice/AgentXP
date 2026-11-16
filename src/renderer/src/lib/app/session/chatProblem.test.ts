@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeProblem, logLines, problemDetails, sendStateOf } from './chatProblem'
+import { describeProblem, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
 
 const stopped = { kind: 'agent-stopped', message: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed' } as const
 const notFound = { kind: 'start-failed', message: "The agent could not start. The program 'not-a-real-command' was not found.", detail: 'spawn not-a-real-command ENOENT' } as const
@@ -61,8 +61,53 @@ describe('describeProblem', () => {
   })
 
   it('an error the agent reported itself is shown as it came, with Send again when nothing was answered', () => {
-    expect(describeProblem({ error: 'Rate limit', problem: null, failed: null })).toEqual({ text: 'Rate limit', detail: null, actions: [] })
-    expect(describeProblem({ error: 'Rate limit', problem: null, failed: { unanswered: true } })).toEqual({ text: 'Rate limit', detail: null, actions: [{ id: 'send-again', label: 'Send again' }] })
+    expect(describeProblem({ error: 'Rate limit', problem: null, failed: null })).toEqual({ text: 'Rate limit', detail: null, actions: [], status: 'Rate limit' })
+    expect(describeProblem({ error: 'Rate limit', problem: null, failed: { unanswered: true } })).toEqual({ text: 'Rate limit', detail: null, actions: [{ id: 'send-again', label: 'Send again' }], status: 'Rate limit' })
+  })
+
+  it('the status bar gets one plain sentence and a next step, never the connection text (ACP closed)', () => {
+    const closed = describeProblem({ error: 'ACP connection closed', problem: stopped, failed: null })!
+    expect(closed.status).toBe('The agent stopped. Click Restart, then send your message again.')
+    expect(describeProblem({ error: 'ACP connection closed', problem: stopped, failed: { unanswered: true } })!.status).toBe('The agent stopped. Click Restart and send again.')
+    expect(describeProblem({ error: null, problem: { ...stopped, failures: 2 }, failed: null })!.status).toBe('The agent stopped again. Click Restart, or start a new chat.')
+    for (const text of [closed.status, describeProblem({ error: 'ACP connection closed', problem: null, failed: null })!.status]) expect(text).not.toMatch(/ACP|connection closed/)
+  })
+
+  it('a program that does not start (spawn error) says so with the next step', () => {
+    const result = describeProblem({ error: null, problem: notFound, failed: null })!
+    expect(result.status).toBe("The agent could not start. The program 'not-a-real-command' was not found. Click Try again, or open Agents to change the command.")
+    const raw = describeProblem({ error: 'spawn x ENOENT', problem: null, failed: null })!
+    expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'spawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
+  })
+
+  it('a timeout is plain too, with Send again for a message nobody answered', () => {
+    const result = describeProblem({ error: 'Request timed out after 60000ms', problem: null, failed: { unanswered: true } })!
+    expect(result).toMatchObject({ text: 'The agent did not answer in time.', status: 'The agent did not answer in time. Click Send again to try again.' })
+    expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'details'])
+  })
+
+  it('keeps the sentence of the agent when one is left after the protocol words', () => {
+    expect(describeProblem({ error: 'Internal error: Scripted expectation failed', problem: null, failed: null })?.text).toBe('Internal error: Scripted expectation failed')
+    expect(describeProblem({ error: 'JSON-RPC error -32603: Scripted expectation failed', problem: null, failed: null })?.text).toBe('Scripted expectation failed')
+  })
+
+  it('other technical text is replaced by one sentence and kept behind Details', () => {
+    expect(describeProblem({ error: 'JSON-RPC error -32603', problem: null, failed: null })).toMatchObject({ text: 'Something went wrong while the agent worked.', detail: 'JSON-RPC error -32603' })
+  })
+})
+
+describe('plainError', () => {
+  it('keeps the agent words and says nothing about plain text', () => {
+    expect(plainError('Rate limit', false)).toBeNull()
+    expect(plainError('ACP connection closed', false)?.text).toBe('The agent stopped before it finished.')
+  })
+})
+
+describe('a first crash (failures 1, as main records one crash)', () => {
+  it('offers Restart and send again and does not say it stopped again', () => {
+    const shown = describeProblem({ error: 'ACP connection closed', problem: { ...stopped, failures: 1 }, failed: { unanswered: true } })!
+    expect(shown.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Show in Event Viewer'])
+    expect(shown.text).not.toMatch(/stopped again/)
   })
 })
 

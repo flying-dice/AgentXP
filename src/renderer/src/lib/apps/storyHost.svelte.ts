@@ -59,6 +59,10 @@ export class StoryHost implements DesktopHost {
   }
 
   openApp = async (input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState> => this.api.desktop.openWindow({ desktopId: this.current.desktopId, ...input })
+  openEventViewer = async (scope: { sessionId?: number | null; selectedEventId?: number | null } = {}): Promise<void> => {
+    const window = await this.openApp({ app: 'event-viewer' })
+    this.updateView(window.id, { app: 'event-viewer', sessionId: scope.sessionId ?? null, level: 'all', selectedEventId: scope.selectedEventId ?? null })
+  }
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
 

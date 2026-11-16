@@ -106,3 +106,38 @@ export function relativeToRoot(root: VPath, path: VPath): string | null {
   if (!r.segments.every((segment, i) => segment.toLowerCase() === p.segments[i].toLowerCase())) return null
   return p.segments.slice(r.segments.length).join('/')
 }
+
+/** The line numbers a file's changes touch, in order and without repeats; a deleted change counts at the line it was cut from. */
+export function changedLineNumbers(changes: readonly Pick<GitLineChange, "kind" | "start" | "end">[]): number[] {
+  const lines = new Set<number>()
+  for (const c of changes) {
+    if (c.kind === 'deleted') lines.add(anchorLine(c))
+    else for (let line = c.start; line <= c.end; line++) lines.add(line)
+  }
+  return [...lines].sort((a, b) => a - b)
+}
+
+const MAX_LISTED_LINES = 12
+
+/** "1, 3 and 4", or ranges ("1-3, 7 and 10-40") when the list would be long. */
+function listLines(lines: readonly number[]): string {
+  let parts: string[]
+  if (lines.length <= MAX_LISTED_LINES) parts = lines.map(String)
+  else {
+    parts = []
+    for (let i = 0; i < lines.length; ) {
+      let j = i
+      while (j + 1 < lines.length && lines[j + 1] === lines[j] + 1) j++
+      parts.push(j > i ? `${lines[i]}-${lines[j]}` : String(lines[i]))
+      i = j + 1
+    }
+  }
+  return parts.length <= 1 ? (parts[0] ?? '') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`
+}
+
+/** The tooltip of a Git row: "redirect.ts: lines 1, 3 and 4 changed". Empty when the lines are not known (yet). */
+export function gitRowTooltip(name: string, changes: readonly Pick<GitLineChange, "kind" | "start" | "end">[] | undefined): string {
+  const lines = changes ? changedLineNumbers(changes) : []
+  if (lines.length === 0) return ''
+  return `${name}: ${lines.length === 1 ? 'line' : 'lines'} ${listLines(lines)} changed`
+}
