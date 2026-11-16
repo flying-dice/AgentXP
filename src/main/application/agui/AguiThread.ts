@@ -190,6 +190,12 @@ export class AguiThread {
         return this.pushInterleaved(surfaceSnapshotEvent(message.payload))
       case 'surface.removed':
         return this.pushInterleaved(surfaceRemovedEvent(message.payload.surfaceId))
+      case 'transcript.upserted': {
+        // The permission broker completes a change (the file's current text) after the agent's event: the box reads this state.
+        const { entry } = message.payload
+        if (entry.kind === 'tool_call') this.updateState(() => this.model.setToolCallContents(entry.toolCallId, entry.contents))
+        return
+      }
       case 'transcript.cleared':
         return this.onTranscriptCleared()
       default:

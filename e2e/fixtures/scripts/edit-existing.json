@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "edit-existing",
+  "description": "Like fix-redirect (UX-114): reads src/auth/redirect.ts, sends the change as a tool call with a diff and no old text, then asks permission with a title only.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "edit",
+      "match": { "any": true },
+      "steps": [
+        { "type": "readFile", "path": "{{cwd}}/src/auth/redirect.ts", "saveAs": "redirect", "label": "read redirect.ts" },
+        { "type": "message", "text": "I want to change that file.\n" },
+        {
+          "type": "toolCall",
+          "id": "edit-1",
+          "title": "Change src/auth/redirect.ts",
+          "kind": "edit",
+          "status": "pending",
+          "rawInput": { "path": "src/auth/redirect.ts" },
+          "locations": [{ "path": "{{cwd}}/src/auth/redirect.ts" }],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/src/auth/redirect.ts",
+                "newText": "// Deep links survive sign-in.\nexport function afterLogin(url: string): string {\n  const next = new URL(url, 'http://app.local').searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/home'\n}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-1",
+          "title": "Change src/auth/redirect.ts",
+          "options": [
+            { "optionId": "allow", "name": "Allow", "kind": "allow_once" },
+            { "optionId": "deny", "name": "Deny", "kind": "reject_once" }
+          ]
+        },
+        { "type": "message", "text": "Done.\n" }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import type { JsonPatchOperation } from '@ag-ui/core'
 import type { AguiSessionInfo, AguiSessionState, AguiTerminalState, AguiToolCallState } from '@shared/agui-state'
 import type { DesktopState } from '@shared/desktop'
-import type { FileChangeDto, SessionDto, TaskDto, TerminalDto } from '@shared/models'
+import type { FileChangeDto, SessionDto, TaskDto, TerminalDto, ToolCallContentDto } from '@shared/models'
 import type { ToolCallCreatedEvent, ToolCallPatch } from '../../domain/agent/AgentSessionEvent'
 import { diffJson } from './jsonDiff'
 
@@ -110,6 +110,12 @@ export class SessionStateModel {
   toolCallUpdated(toolCallId: string, patch: ToolCallPatch): void {
     const current = this.state.toolCalls[toolCallId] ?? BLANK_TOOL_CALL
     this.putToolCall(toolCallId, mergeToolCall(current, patch))
+  }
+
+  /** The stored changes of a call the state already knows (the broker adds the old text of a diff); other calls are left alone. */
+  setToolCallContents(toolCallId: string, contents: ToolCallContentDto[]): void {
+    const current = this.state.toolCalls[toolCallId]
+    if (current && contents.length > 0) this.putToolCall(toolCallId, { ...current, contents })
   }
 
   private putToolCall(toolCallId: string, value: AguiToolCallState): void {

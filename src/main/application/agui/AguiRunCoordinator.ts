@@ -149,6 +149,7 @@ export class AguiRunCoordinator implements AguiRunner {
       case 'changes.changed':
       case 'surface.removed':
       case 'transcript.cleared':
+      case 'transcript.upserted':
         return this.threads.get(message.payload.sessionId)?.onAppEvent(message)
       default:
         return
