@@ -1,6 +1,5 @@
 /** Pure window geometry for the window manager (no DOM, no state). */
 import type { Bounds } from '@shared/desktop'
-import { TOP_BAR_HEIGHT } from '@shared/desktop-views'
 
 export type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 export const RESIZE_EDGES: readonly ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
@@ -11,8 +10,6 @@ export interface Size {
 }
 
 export const MIN_WINDOW_SIZE: Size = { width: 280, height: 160 }
-/** Height of the top agent strip that maximised windows stay below. */
-export { TOP_BAR_HEIGHT }
 /** How much of a window must stay reachable when it is dragged towards an edge. */
 const GRAB_MARGIN = 90
 const TITLE_HEIGHT = 30
@@ -61,8 +58,8 @@ export function fitToArea(b: Bounds, area: Size, min: Size = MIN_WINDOW_SIZE): B
   return moveBounds({ ...b, width, height }, 0, 0, area)
 }
 
-/** CSS box of a window frame: its bounds, or the whole desktop below the top bar when maximised. */
+/** CSS box of a window frame: its bounds, or the whole desktop when maximised (the top bar floats over it). */
 export function frameStyle(bounds: Bounds, maximized: boolean): string {
-  if (maximized) return `left:0;top:${TOP_BAR_HEIGHT}px;right:0;bottom:0;`
+  if (maximized) return 'left:0;top:0;right:0;bottom:0;'
   return `left:${bounds.x}px;top:${bounds.y}px;width:${bounds.width}px;height:${bounds.height}px;`
 }

@@ -414,15 +414,9 @@
 
   // ---- menu, lists -------------------------------------------------------------------------------
 
-  /** Review changes: Code Review for the drive of the open file (else the first project), against HEAD. */
-  async function reviewChanges(): Promise<void> {
-    const drive = active ? parseVPath(active)?.drive : undefined
-    const root = drive ? driveRoot(drive) : (roots[0]?.path ?? host.state.home)
-    try {
-      await host.api.desktop.openReview(desktopId, root)
-    } catch (error) {
-      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
-    }
+  /** Review changes: asks what to review, with the project of the open file preselected. */
+  function reviewChanges(): void {
+    host.chooseReview(active)
   }
 
   /** The project root of a path: its drive. */

@@ -330,6 +330,7 @@ async function main() {
     // ---- Event Viewer -------------------------------------------------------------------------------------------------------
     console.log('event viewer')
     await page.getByTestId('taskbar-start').click()
+    await page.getByTestId('start-menu-all').click()
     await page.getByTestId('start-menu-group-system-tools').click()
     await page.getByTestId('start-menu-item-event-viewer').click()
     const ev = page.getByTestId('window-event-viewer')

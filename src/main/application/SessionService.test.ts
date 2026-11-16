@@ -71,7 +71,7 @@ describe('SessionService.create', () => {
     expect(session).toMatchObject({ title: DEFAULT_SESSION_TITLE, status: 'idle', acpSessionId: 'acp-1', currentModeId: 'default', cwd: 'C:\\Users\\Agent' })
     expect(connector.launches[0]).toMatchObject({ cwd: join(f.desktopsDir, String(f.desktop.id), 'C', 'Users', 'Agent'), agent: { id: f.agentId } })
     expect(connector.connections[0]!.mcpServers[0]).toMatchObject({ name: 'a2ui', env: { KEY: String(session.id) } })
-    expect(session.modes.map((m) => m.id)).toEqual(['default'])
+    expect(session.modes.map((m) => m.id)).toEqual(['default', 'acceptEdits'])
   })
 
   it('starts the agent in a plugged-in project when the chat\'s cwd is on its drive', async () => {
@@ -96,6 +96,23 @@ describe('SessionService.create', () => {
 
   it('fails readably for unknown agents', async () => {
     await expect(service.create(f.desktop.id, 999)).rejects.toThrow('Agent not found')
+  })
+})
+
+describe('SessionService.create default mode', () => {
+  it('starts a new session in the default mode of its agent', async () => {
+    const agent = f.repos.agents.create({ name: 'Auto', command: 'x', args: [], env: {}, defaultModeId: 'acceptEdits' })
+    const session = await service.create(f.desktop.id, agent.id)
+    expect(connector.connections[0]!.calls).toContain('setMode:acceptEdits')
+    expect(f.repos.sessions.get(session.id)?.currentModeId).toBe('acceptEdits')
+  })
+
+  it('leaves the mode alone when the agent has none set, or does not offer the mode', async () => {
+    await service.create(f.desktop.id)
+    const unknown = f.repos.agents.create({ name: 'Odd', command: 'x', args: [], env: {}, defaultModeId: 'nope' })
+    const session = await service.create(f.desktop.id, unknown.id)
+    expect(connector.connections.flatMap((c) => c.calls).some((c) => c.startsWith('setMode'))).toBe(false)
+    expect(f.repos.sessions.get(session.id)?.currentModeId).toBe('default')
   })
 })
 

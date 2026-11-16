@@ -13,7 +13,8 @@ const clean = (input: AgentInput): AgentInput => {
   if (!command) throw new AppError('The agent needs a command')
   // The name is optional: without one the agent is listed by its command line ("node my-agent.js").
   const name = input.name.trim() || [command, ...input.args].join(' ')
-  return { name, command, args: input.args, env: input.env }
+  const defaultModeId = input.defaultModeId?.trim() || null
+  return { name, command, args: input.args, env: input.env, defaultModeId }
 }
 
 export class AgentService {

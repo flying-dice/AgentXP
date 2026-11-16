@@ -53,7 +53,18 @@ The agent dialog box has these parts:
 - **Command** – The program to run, for example `node`. Click **Test** to see if Agent7 finds the program. The line under the box says **Found 'node'.** or **Could not find 'node'.**
 - **Arguments** – One per line, for example `my-agent.js`.
 - **Environment** – KEY=VALUE, one per line.
+- **Start mode** – The mode that every new chat of the agent starts in. See below.
 - **Make this the default agent for new desktops and chats** – A check box. It is on when you add an agent.
+
+**Start mode** is the mode that every new chat of the agent starts in. This is how you reduce the permission prompts. Choose **Agent default** to keep the mode that the agent chooses itself. For Claude Code the modes are:
+
+- **Default** – Asks before risky actions.
+- **Accept Edits** – Does not ask before file edits.
+- **Plan** – Plans only and runs no tools.
+- **Don't Ask** – Does not ask. It refuses what is not pre-approved.
+- **Bypass Permissions** – Does not ask at all.
+
+Other agents can have other modes. You can type the id of a mode in the box. If the agent does not offer the mode, the chat starts in the mode of the agent. The setting does not change chats that already exist. In a chat you can still change the mode at any time.
 
 ### The Permissions Page
 

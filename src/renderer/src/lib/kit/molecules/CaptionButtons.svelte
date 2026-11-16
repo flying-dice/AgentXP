@@ -111,6 +111,7 @@
   }
   .cb.close:hover:not(:disabled) {
     background: var(--w7-caption-close-hover-face);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 8px 2px rgba(255, 120, 90, 0.9);
   }
   .cb:active:not(:disabled) {
     filter: brightness(0.82);

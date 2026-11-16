@@ -86,3 +86,14 @@ export function cwdLabel(cwd: VPath, drives: readonly DriveDto[]): string {
   if (parsed.segments.length === 0) return drive ? drive.label : `${parsed.drive}:`
   return parsed.segments[parsed.segments.length - 1]
 }
+
+/**
+ * The root to review or work on for a path: the plugged-in (project) drive of the path, else the first project drive,
+ * else `home`. The system drive (C:) is never preferred while a project is plugged in, since it holds no repository.
+ */
+export function projectRootOf(drives: readonly DriveDto[], home: VPath, path?: string | null): VPath {
+  const removable = sortDrives(drives).filter((d) => d.kind === 'removable')
+  const letter = path ? parseVPath(path)?.drive : undefined
+  const drive = removable.find((d) => d.letter === letter) ?? removable[0]
+  return drive ? driveRoot(drive.letter) : home
+}

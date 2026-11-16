@@ -14,6 +14,8 @@ import type { DriveDto } from '@shared/vfs'
 import { chooseFolder } from './shared/chooseFolder'
 import { addRemoved, type RemovedProject } from '../desktop/projectDrives'
 import type { DesktopHost } from './types'
+import { projectRootOf } from './explorer/explorerModel'
+import type { VPath } from '@shared/vfs'
 
 export class StoryHost implements DesktopHost {
   readonly api: Agent7Api
@@ -30,6 +32,14 @@ export class StoryHost implements DesktopHost {
     base.watchDrives((drives) => desktop.setDrives(drives))
     this.current = desktop.state()
     this.api = { ...base, desktop, ...(options.state || options.messages ? { agui: fakeAgui(options.state, options.messages) } : {}) }
+  }
+
+  chooseReview(path?: string | null): void {
+    void this.api.desktop.openReview(this.current.desktopId, this.projectRootOf(path))
+  }
+
+  projectRootOf(path?: string | null): VPath {
+    return projectRootOf(this.current.drives, this.current.home, path)
   }
 
   get state(): DesktopState {

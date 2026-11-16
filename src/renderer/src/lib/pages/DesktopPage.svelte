@@ -25,6 +25,7 @@
   import TrayFlag from '../desktop/TrayFlag.svelte'
   import UacDialog from '../desktop/UacDialog.svelte'
   import NewChatDialog from '../desktop/NewChatDialog.svelte'
+  import NewReviewDialog from '../desktop/NewReviewDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { cycleRegion, focusRegion, tabOutOfWindow } from '../desktop/shellRegions'
@@ -114,8 +115,10 @@
   ]
 
   function runApp(id: string): void {
+    // Code Review asks what to review first (project and ref); every other app opens with feedback.
+    if (id === 'code-review') return desktop.chooseReview()
     const item = programs.find((p) => p.id === id) ?? groups.flatMap((g) => g.items).find((i) => i.id === id)
-    const open = (): Promise<unknown> => (id === 'chat' ? desktop.newChatFlow() : id === 'code-review' ? desktop.openReview() : desktop.openApp({ app: id as AppKind }))
+    const open = (): Promise<unknown> => (id === 'chat' ? desktop.newChatFlow() : desktop.openApp({ app: id as AppKind }))
     void desktop.openWithFeedback(item?.title ?? id, item?.icon, open)
   }
 
@@ -327,6 +330,17 @@
         onstart={(cwd) => {
           desktop.newChatDialogOpen = false
           void desktop.newChatIn(cwd)
+        }}
+      />
+    {/if}
+    {#if desktop.reviewDialog}
+      <NewReviewDialog
+        drives={desktop.state.drives}
+        root={desktop.reviewDialog.root}
+        oncancel={() => (desktop.reviewDialog = null)}
+        onstart={(root, baseRef) => {
+          desktop.reviewDialog = null
+          void desktop.openWithFeedback('Code Review', 'changes', () => desktop.openReview(root, baseRef))
         }}
       />
     {/if}

@@ -19,6 +19,17 @@
   })
 </script>
 
-<GroupBox text={title}>
-  <A2uiSurface {messages} {sessionId} {onaction} busy={running} />
-</GroupBox>
+<!-- The surface paints the window face (Panel), the transcript is white: one face-coloured frame keeps the box filled. -->
+<div class="frame">
+  <GroupBox text={title}>
+    <A2uiSurface {messages} {sessionId} {onaction} busy={running} />
+  </GroupBox>
+</div>
+
+<style>
+  .frame {
+    padding: 6px;
+    border-radius: 3px;
+    background: var(--w7-face);
+  }
+</style>

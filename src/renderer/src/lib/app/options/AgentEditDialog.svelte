@@ -6,8 +6,9 @@
   import Button from '../../kit/atoms/Button.svelte'
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
-  import { checkMessage, commandLine, emptyAgentForm, inputFromForm, validateAgentForm, type AgentFormValues } from './agentForm'
+  import { COMMON_MODES, checkMessage, commandLine, emptyAgentForm, inputFromForm, validateAgentForm, type AgentFormValues } from './agentForm'
 
   interface Props {
     title?: string
@@ -74,6 +75,9 @@
     </LabeledField>
     <LabeledField label="Environment:" for="agent-env" labelWidth={90}>
       <TextBox id="agent-env" data-testid="agents-dialog-env" multiline rows={3} bind:value={form.env} placeholder="KEY=VALUE, one per line" />
+    </LabeledField>
+    <LabeledField label="Start mode:" for="agent-mode" labelWidth={90}>
+      <ComboBox testid="agent-mode" items={COMMON_MODES} dropDownStyle="DropDown" bind:value={form.defaultModeId} aria-label="Start mode of new chats" />
     </LabeledField>
     <div class="default"><CheckBox testid="agents-dialog-default" bind:checked={form.makeDefault} label="Make this the default agent for new desktops and chats" /></div>
     <div class="problem" role="alert">{touched && problem ? problem : ''}</div>

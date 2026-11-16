@@ -54,13 +54,19 @@ export class DesktopPage {
     await this.page.getByTestId('start-menu').waitFor()
   }
 
-  /** Opens an app from the Start menu and waits for its window. `chat` starts a new chat. */
+  /** Opens an app from the Start menu and waits for its window. `chat` starts a new chat; `code-review` confirms its box. */
   async openApp(app: AppId): Promise<Locator> {
     await this.openStart()
     const group = START_GROUP[app]
-    if (group && !(await this.page.getByTestId(`start-menu-item-${app}`).isVisible())) await this.page.getByTestId(`start-menu-group-${group}`).click()
+    if (group && !(await this.page.getByTestId(`start-menu-item-${app}`).isVisible())) {
+      const folder = this.page.getByTestId(`start-menu-group-${group}`)
+      if (!(await folder.isVisible())) await this.page.getByTestId('start-menu-all').click()
+      await folder.click()
+    }
     const before = await this.windows(app).count()
     await this.page.getByTestId(`start-menu-item-${app}`).click()
+    // Code Review first asks what to review: the project drive that is preselected, against HEAD.
+    if (app === 'code-review') await this.page.getByTestId('new-review-start').click()
     const created = this.windows(app).nth(before)
     await created.waitFor()
     return created

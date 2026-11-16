@@ -30,8 +30,15 @@ Each Code Review window has its own review chat with an agent. The chat ends whe
 
 ## 2 - Open It
 
-- Click **Start -> Code Review**. The window opens on the plugged-in project.
+- Click **Start -> Code Review**.
 - In **[Code](code.md)**, click **Review changes** or choose **Tools -> Review changes**.
+- In **[Chat](chat.md)**, choose **Tools -> Review changes**.
+
+Each of these first opens the **Code Review** box. It asks what to review:
+
+1. Click the project. The project of the file you have open is already selected. The private system disk (C:) is in the list, but it is not a git repository.
+2. In **Compare against**, choose what to compare with: **Uncommitted changes (HEAD)**, the last commit, or type a branch, tag or commit.
+3. Click **Review**.
 
 The window opens without starting anything. The reviewer only works when you click **Ask the reviewer**, and it can read your files but never change them.
 
@@ -75,7 +82,13 @@ The status bar shows the folder, the number of files, the number of open comment
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Code Review window | The root of the window. The attribute `data-session-id` is the id of the review chat. | `code-review-app` |
+| Code Review box | The box that asks what to review before the window opens. | `new-review-dialog` |
+| Project | One row for each drive. Double-click a row to start the review. | `new-review-drive-*` |
+| Compare against | The branch, tag or commit to compare with. You can type in it. | `new-review-ref` |
+| Review | Opens the Code Review window for the chosen project and ref. | `new-review-start` |
+| Cancel | Closes the box without a review. | `new-review-cancel` |
+| Show thinking and tool details (menu) | Opens every Thinking line of the Reviewer pane. The same setting as in Chat. | `review-menu-details` |
+| Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
 | Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |
 | Close (menu) | Closes the window and ends the review. Alt+F4. | `code-review-menu-close` |

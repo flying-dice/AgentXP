@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS } from './migrations'
 import { openRaw } from './sql'
-import { SqliteAgentRepository } from './sqlite-agent-repository'
 
 function database(upTo: number) {
   const db = openRaw(':memory:')
@@ -13,7 +12,7 @@ function database(upTo: number) {
 
 /** A desktop with an existing chat, inserted the way the earlier migrations store it. */
 function seed(db: ReturnType<typeof openRaw>) {
-  const agentId = new SqliteAgentRepository(db).getDefault()!.id
+  const agentId = (db.prepare('SELECT id FROM agents WHERE is_default = 1').get() as { id: number }).id
   db.exec(`INSERT INTO desktops (title, is_open, created_at) VALUES ('D', 0, '2026-01-01T00:00:00.000Z')`)
   db.exec(`INSERT INTO sessions (agent_id, desktop_id, title) VALUES (${agentId}, 1, 'old chat')`)
   return agentId

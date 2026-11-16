@@ -6,9 +6,9 @@
     id: string
     title: string
     icon?: IconName
-    /** Custom 22px icon art; wins over `icon`. */
+    /** Custom icon art (28px); wins over `icon`. */
     iconSnippet?: Snippet
-    /** Pinned buttons show only the icon. */
+    /** A launcher that stays on the taskbar. Every button shows only its icon (the name is the tooltip and the accessible name). */
     pinned?: boolean
     /** A window of this app is open (pinned items without it are plain launchers). */
     running?: boolean
@@ -98,8 +98,7 @@
           onitemcontext?.(item, { x: r.left, y: r.top })
         }}
       >
-        {#if item.iconSnippet}{@render item.iconSnippet()}{:else if item.icon}<Icon name={item.icon} size={item.pinned && !item.running ? 22 : 18} />{/if}
-        {#if item.running && !item.pinned}<span class="label">{item.title}</span>{/if}
+        {#if item.iconSnippet}{@render item.iconSnippet()}{:else if item.icon}<Icon name={item.icon} size={28} />{/if}
       </button>
     {/each}
   </div>
@@ -119,7 +118,9 @@
     gap: 8px;
     padding: 0 8px 0 6px;
     background: var(--w7-taskbar-face);
-    border-top: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: var(--w7-glass-blur);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     font: var(--w7-font);
     color: #000;
     user-select: none;
@@ -129,18 +130,20 @@
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
   }
   .orb {
     position: relative;
     flex: none;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    margin: -3px 2px -3px 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid #0a2a58;
-    background: radial-gradient(circle at 50% 22%, #c4e8ff 0, #4a9be6 38%, #14509a 70%, #0a2f66 100%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 0 6px rgba(120, 190, 255, 0.6);
+    border: 1px solid rgba(8, 24, 52, 0.9);
+    background: radial-gradient(circle at 50% 120%, rgba(120, 220, 255, 0.95) 0, rgba(40, 130, 220, 0.9) 35%, rgba(12, 52, 112, 0.95) 75%),
+      #0a2f66;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 -6px 10px rgba(100, 210, 255, 0.45), 0 0 6px rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -148,53 +151,48 @@
   }
   .orb-gloss {
     position: absolute;
-    left: 6px;
-    right: 6px;
+    left: 5px;
+    right: 5px;
     top: 2px;
-    height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+    height: 17px;
+    border-radius: 50% 50% 46% 46%;
+    background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.08));
     pointer-events: none;
   }
   .orb:hover,
   .orb.open {
-    background: radial-gradient(circle at 50% 22%, #e2f4ff 0, #7bbcf5 38%, #2a70c4 70%, #0f3f80 100%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 10px rgba(160, 220, 255, 0.95);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 -6px 12px rgba(150, 235, 255, 0.85), 0 0 12px rgba(150, 220, 255, 0.95);
   }
   .orb:active {
-    filter: brightness(0.85);
+    filter: brightness(0.9);
   }
   .task {
+    position: relative;
     flex: none;
-    height: 34px;
+    width: 50px;
+    height: 38px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 0 9px;
+    justify-content: center;
+    padding: 0;
     border-radius: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+    border: 1px solid transparent;
+    background: transparent;
     color: #000;
     font: inherit;
     cursor: default;
-    overflow: hidden;
   }
-  .task.pinned {
-    width: 46px;
-    justify-content: center;
-    padding: 0;
-  }
+  /* A running app gets the glass frame; the focused one is brighter. Pinned launchers have none until hovered. */
   .task.running {
-    width: 130px;
-    min-width: 46px;
-    border-color: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.4);
     background: var(--w7-taskbtn-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(160, 215, 255, 0.55);
   }
   .task.running.active {
-    border-color: rgba(255, 255, 255, 0.8);
-    background: linear-gradient(rgba(255, 255, 255, 0.72), rgba(200, 228, 252, 0.45) 50%, rgba(160, 205, 245, 0.42));
+    border-color: rgba(255, 255, 255, 0.7);
+    background: linear-gradient(rgba(255, 255, 255, 0.6), rgba(210, 232, 252, 0.28) 50%, rgba(170, 210, 245, 0.3));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(190, 230, 255, 0.85);
   }
   .task.flashing {
     animation: task-flash 1s steps(1, end) infinite;
@@ -207,17 +205,17 @@
     }
     50% {
       background: var(--w7-taskbtn-face);
-      border-color: rgba(255, 255, 255, 0.65);
+      border-color: rgba(255, 255, 255, 0.4);
     }
   }
   .task:hover {
-    border-color: rgba(255, 255, 255, 0.85);
-    background: radial-gradient(ellipse at 50% 100%, rgba(190, 235, 255, 0.85), rgba(255, 255, 255, 0.28) 70%),
-      linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.2));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 0 4px rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.75);
+    background: radial-gradient(ellipse at 50% 100%, rgba(190, 235, 255, 0.8), rgba(255, 255, 255, 0.18) 70%),
+      linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.12));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 0 4px rgba(255, 255, 255, 0.3);
   }
   .task:active {
-    background: linear-gradient(rgba(120, 160, 205, 0.7), rgba(150, 190, 235, 0.55));
+    background: linear-gradient(rgba(120, 160, 205, 0.6), rgba(150, 190, 235, 0.45));
   }
   /* A dotted ring in black on white, so it shows (3:1) on the light glass and on the dark one. */
   .orb:focus-visible,
@@ -225,12 +223,6 @@
     outline: 1px dotted #000;
     outline-offset: -3px;
     box-shadow: 0 0 0 1px #fff, inset 0 0 0 2px rgba(255, 255, 255, 0.9);
-  }
-  .label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .tray {
     flex: none;
@@ -241,6 +233,7 @@
   .clock {
     text-align: center;
     color: #fff;
+    font-size: 12px;
     line-height: 1.25;
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
   }

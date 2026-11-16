@@ -111,8 +111,8 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Revert hunk (toolbar) | Reverts the open block or the block under the caret. | `code-toolbar-revert-hunk` |
 | Refresh git status | Reads the git status again. | `code-refresh` |
 | Management (button) | Shows or hides the left pane. | `code-management-toggle` |
-| Review changes (menu) | Opens Code Review on the changes of the project. | `code-menu-review` |
-| Review changes (button) | Opens Code Review on the changes of the project. | `code-review-changes` |
+| Review changes (menu) | Opens the Code Review box, where you choose what to review. | `code-menu-review` |
+| Review changes (button) | Opens the Code Review box, where you choose what to review. | `code-review-changes` |
 | Logs (button) | Shows or hides the bottom pane. | `code-changes-toggle` |
 | Agent is editing | Shows that the agent writes the open file. | `code-editing` |
 | Management pane | The left pane. | `code-management` |

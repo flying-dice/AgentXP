@@ -85,10 +85,11 @@ Press F6 to move the focus to the next part of the desktop: the desktop icons, t
 Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 
 - **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser.
-- **Accessories** – A folder with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
-- **System Tools** – A folder with Event Viewer, Task Manager, and Control Center.
+- **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
+- **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
+- **System Tools** – A folder (under All Programs) with Event Viewer, Task Manager, and Control Center.
 - **Recent chats** – Lists your latest chats.
-- **Search apps and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
+- **Search programs and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
 - **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
 - **Pause all agents or Resume agents** – Stops every agent or lets them work again.
 - **Disconnect** – Closes the window. Its arrow opens **Disconnect**, **Switch desktop...**, and **Delete desktop...**.
@@ -186,9 +187,10 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 |---|---|---|
 | Start menu | Holds all Start menu items. | `start-menu` |
 | App item | Opens an app. | `start-menu-item-*` |
+| All Programs | Shows or hides the folders of apps, for example Accessories. | `start-menu-all` |
 | Folder | Opens or closes a folder of apps. | `start-menu-group-*` |
 | Recent chat | Opens a chat. | `start-menu-recent` |
-| Search apps and chats | Filters the items. | `start-menu-search` |
+| Search programs and chats | Filters the items. | `start-menu-search` |
 | Place | Opens a place, for example Documents or Help and Support. | `start-menu-place-*` |
 | Pause agent, Resume agent | Pauses the agent or lets it work. | `start-menu-power` |
 | Disconnect | Closes the window. | `start-menu-disconnect` |
@@ -275,7 +277,7 @@ Right-click a taskbar button to open its menu.
 To open an app, follow the steps below:
 
 1. Click **Start**. The Start menu opens.
-2. Click the app, or type its name in **Search apps and chats**.
+2. Click the app, or type its name in **Search programs and chats**.
 
 To pause the agent, click **Pause all agents** in the top bar. Click **Resume agents** to let the agents work again. A step that was stopped stays stopped: click **Continue** in the Action Center, or send a message in the chat.
 

@@ -42,6 +42,8 @@
   const shownRecent = $derived(filterStartItems(recent, query))
   const searching = $derived(query.trim().length > 0)
   let openGroups = $state<Record<string, boolean>>({})
+  /** "All Programs": shows the folders under the programs; a search always shows the matching ones. */
+  let allOpen = $state(false)
   const shownGroups = $derived(groups.map((g) => ({ ...g, items: filterStartItems(g.items, query) })).filter((g) => !searching || g.items.length > 0))
   const empty = $derived(searching && shownPrograms.length + shownRecent.length + shownGroups.length === 0)
 
@@ -69,17 +71,19 @@
     <ul class="programs" role="menu" aria-label="Programs">
       {#each shownPrograms as item (item.id)}
         <li role="none">
-          <button type="button" role="menuitem" class="entry" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
-            {#if item.icon}<Icon name={item.icon} size={28} />{/if}
-            <span class="text">
-              <span class="title">{item.title}</span>
-              {#if item.description}<span class="desc">{item.description}</span>{/if}
-            </span>
+          <button type="button" role="menuitem" class="entry" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
+            {#if item.icon}<Icon name={item.icon} size={32} />{/if}
+            <span class="text"><span class="title">{item.title}</span></span>
           </button>
         </li>
       {/each}
     </ul>
-    {#if shownGroups.length > 0}
+    {#if groups.length > 0 && !searching}
+      <button type="button" role="menuitem" class="entry all" data-testid="start-menu-all" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
+        <span class="tri" class:open={allOpen} aria-hidden="true"></span><span class="title">All Programs</span>
+      </button>
+    {/if}
+    {#if shownGroups.length > 0 && (allOpen || searching)}
       <ul class="groups" role="menu" aria-label="Program folders">
         {#each shownGroups as group (group.id)}
           {@const open = searching || openGroups[group.id]}
@@ -116,7 +120,7 @@
     {/if}
     {#if empty}<div class="none">No items match your search.</div>{/if}
     <div class="search">
-      <input data-testid="start-menu-search" bind:this={search} bind:value={query} type="search" placeholder="Search apps and chats" aria-label="Search apps and chats" />
+      <input data-testid="start-menu-search" bind:this={search} bind:value={query} type="search" placeholder="Search programs and chats" aria-label="Search programs and chats" />
       <Icon name="search" size={14} />
     </div>
   </div>
@@ -159,11 +163,12 @@
     width: 410px;
     height: 500px;
     display: flex;
-    padding: 2px 3px 3px;
+    padding: 3px;
     border: 1px solid var(--w7-glass-border);
-    border-radius: 6px 6px 0 0;
+    border-radius: 8px;
     background: var(--w7-glass-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 4px 4px 14px rgba(0, 0, 0, 0.55);
+    backdrop-filter: var(--w7-glass-blur);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 2px 2px 14px rgba(0, 0, 0, 0.55);
     font: var(--w7-font);
     user-select: none;
   }
@@ -177,10 +182,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #e8f0fa;
-    border-radius: 5px;
-    background: linear-gradient(#f3f8ff, #c9ddf4);
-    box-shadow: 0 0 0 1px #5d7899, 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(235, 244, 255, 0.95);
+    border-radius: 6px;
+    background: linear-gradient(#f9fcff, #bcd5f0);
+    box-shadow: 0 0 0 1px rgba(20, 44, 84, 0.8), 0 2px 8px rgba(0, 0, 0, 0.45);
   }
   .left {
     flex: none;
@@ -190,8 +195,8 @@
     display: flex;
     flex-direction: column;
     background: #fff;
-    border: 1px solid #7d93b4;
-    border-radius: 4px;
+    border: 1px solid rgba(20, 44, 84, 0.7);
+    border-radius: 5px;
     padding: 6px 4px 6px;
     overflow: hidden;
   }
@@ -209,7 +214,7 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 4px 6px;
+    padding: 2px 6px;
     border: 1px solid transparent;
     border-radius: 3px;
     background: transparent;
@@ -225,8 +230,27 @@
   .entry:hover,
   .entry:focus-visible {
     outline: none;
-    border-color: var(--w7-menu-hot-border);
-    background: var(--w7-menu-hot-face);
+    border-color: #b8d6fb;
+    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(214, 232, 252, 0.9));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  }
+  .all {
+    margin-top: 4px;
+    padding: 4px 6px;
+    gap: 12px;
+  }
+  .tri {
+    width: 0;
+    height: 0;
+    margin: 0 5px 0 4px;
+    border-style: solid;
+    border-width: 4px 0 4px 6px;
+    border-color: transparent transparent transparent #000;
+  }
+  .tri.open {
+    border-width: 6px 4px 0 4px;
+    border-color: #000 transparent transparent transparent;
+    margin: 2px 4px 0 3px;
   }
   .text {
     display: flex;
@@ -234,13 +258,6 @@
     min-width: 0;
   }
   .title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .desc {
-    font-size: 11px;
-    color: var(--w7-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -267,7 +284,6 @@
     margin-left: auto;
     color: #6b7a90;
     font-size: 10px;
-    transition: transform 0.1s;
   }
   .caret.open {
     transform: rotate(90deg);
@@ -328,16 +344,17 @@
     font: inherit;
     color: #fff;
     text-align: left;
-    text-shadow: 0 0 3px rgba(0, 20, 60, 0.7);
     cursor: default;
+  }
+  .right li + li {
+    margin-top: 1px;
   }
   .place:hover,
   .place:focus-visible {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.7);
-    background: var(--w7-start-hover);
-    color: #000;
-    text-shadow: none;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   .power {
     padding-bottom: 6px;
@@ -348,13 +365,12 @@
     gap: 6px;
     height: 24px;
     padding: 0 12px;
-    border: 1px solid #5a2a14;
+    border: 1px solid rgba(8, 24, 52, 0.85);
     border-radius: 3px;
-    background: linear-gradient(#f0a070, #d0602e 48%, #b84818 52%, #d86a34);
+    background: linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 50%, rgba(0, 20, 60, 0.18) 52%, rgba(255, 255, 255, 0.12));
     color: #fff;
     font: inherit;
-    text-shadow: 0 0 2px rgba(60, 20, 0, 0.8);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
     cursor: default;
   }
   .shutdown {
@@ -403,9 +419,10 @@
     background: var(--w7-menu-hot-face);
   }
   .power-btn:hover {
-    filter: brightness(1.12);
+    background: linear-gradient(rgba(190, 235, 255, 0.6), rgba(120, 190, 240, 0.3) 50%, rgba(40, 120, 200, 0.35) 52%, rgba(150, 215, 255, 0.45));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 6px rgba(150, 220, 255, 0.7);
   }
   .power-btn:active {
-    filter: brightness(0.9);
+    filter: brightness(0.85);
   }
 </style>

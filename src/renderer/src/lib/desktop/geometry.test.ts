@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, TOP_BAR_HEIGHT, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -56,7 +56,7 @@ describe('snap and fit', () => {
     expect(fitToArea({ x: 2000, y: -40, width: 5000, height: 50 }, area)).toEqual({ x: 910, y: 0, width: 1000, height: MIN_WINDOW_SIZE.height })
   })
   it('maximised frames start below the top bar', () => {
-    expect(frameStyle(b, true)).toContain(`top:${TOP_BAR_HEIGHT}px`)
+    expect(frameStyle(b, true)).toContain('top:0;')
     expect(frameStyle(b, false)).toBe('left:100px;top:100px;width:400px;height:300px;')
   })
 })

@@ -161,7 +161,7 @@
     align-items: center;
     height: 24px;
     padding: 0 2px;
-    background: linear-gradient(#fdfefe, #e3ebf6);
+    background: var(--w7-menubar-face);
     border-bottom: 1px solid #b4bfcf;
     outline: none;
   }
