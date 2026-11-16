@@ -46,9 +46,9 @@ The status area of the top bar always shows one of these:
 - **Waiting for you: 2 requests to approve** – An agent waits for your answer to a request.
 - **Idle** – No agent works.
 
-When you take control, Agent7 stops the step that runs now. The Activity list shows **Stopped: you took control** when a step was running. If nothing was running, it shows **You are in control. All tools ask first until you resume.** The chat status reads **Waiting for you**, not **Working**. The button **Resume** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
+When you take control, Agent7 stops the step that runs now. The Activity list shows **You are in control. The agent asks first.** when a step was running. If nothing was running, it shows **You are in control. All tools ask first until you resume.** Below it, the list says **This is not saved. To keep a tool on Ask, change it in Control Center.** The words **Control Center** are a link to the Permissions page. The check box is for this desktop only. A setting in Control Center stays. The chat status reads **Waiting for you**, not **Working**. The button **Resume** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
 
-The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask**, **Run commands: Ask (no Terminal open)**. See **[Using Control Center](control-centre.md)** for what the part in brackets means. Point to a chip to read its tooltip. Click a chip to change the setting.
+The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask**, **Run commands: Ask (Terminal is closed)**. While **Ask before every action** is on, a chip that is not on Ask in Control Center reads **Ask (now)**. See **[Using Control Center](control-centre.md)** for what the part in brackets means. Point to a chip to read its tooltip. Click a chip to change the setting.
 
 ## 5 - Troubleshooting
 
@@ -61,7 +61,7 @@ The tool chips show one pattern, for example **Read files: Allow**, **Write file
 | Name | What it does | data-testid |
 |---|---|---|
 | Resume | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
-| Stopped: you took control | The first line of the Activity list while you are in control. It says what happened and that all tools ask first until you resume. | `gadget-activity-control` |
+| You are in control | The first line of the Activity list while you are in control. It says that the agent asks first. | `gadget-activity-control` |
 | Activity list | The list of what the agent did. Double-click it to open Event Viewer. | `gadget-activity` |
 | Event Viewer (link) | Opens Event Viewer. | `gadget-activity-open-event-viewer` |
 | Event Viewer (menu) | Right-click the Activity list, then click Event Viewer. | `gadget-activity-menu-event-viewer` |

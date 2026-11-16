@@ -28,6 +28,18 @@ describe('DesktopController', () => {
     controller.dispose()
   })
 
+  it('startChat with a draft holds the text for the message box of the new chat window (UX-175)', async () => {
+    const { controller } = await started()
+    await controller.startChat('C:\\', 'please do the slow job')
+    const chat = controller.state.windows.filter((w) => w.view.app === 'chat').at(-1)
+    expect(chat).toBeDefined()
+    expect(controller.prefills[chat!.id]?.text).toBe('please do the slow job')
+    controller.prefillApplied(chat!.id, controller.prefills[chat!.id]!.id)
+    expect(controller.prefills[chat!.id]).toBeUndefined()
+    await controller.startChat('C:\\')
+    expect(Object.keys(controller.prefills)).toHaveLength(0)
+  })
+
   it('needs a desktop when current() is null', async () => {
     const api = createFakeApi()
     api.desktop.current = async () => null

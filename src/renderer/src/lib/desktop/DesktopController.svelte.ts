@@ -626,8 +626,10 @@ export class DesktopController implements DesktopHost {
     return this.api.desktop.newChat(this.state.desktopId)
   }
 
-  async startChat(cwd: VPath): Promise<void> {
-    await this.newChatIn(cwd)
+  /** A new chat on `cwd`; `draft` (the message that failed in another chat) waits in its message box (UX-175). */
+  async startChat(cwd: VPath, draft?: string): Promise<void> {
+    const chat = await this.newChatIn(cwd)
+    if (draft !== undefined && chat.view.app === 'chat') this.prefillPane(chat.id, draft)
   }
 
   /**

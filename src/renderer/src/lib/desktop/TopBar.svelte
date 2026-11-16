@@ -2,7 +2,7 @@
   import Button from '../kit/atoms/Button.svelte'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
   import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
-  import { RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, barStatus, chipAriaLabel, closedAppNames, toolChips, toolsLine } from './activity'
+  import { NOT_SAVED_NOTE, PAUSE_TIP, RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, TAKE_CONTROL_LABEL, barStatus, chipAriaLabel, closedAppNames, toolChips, toolsLine } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
@@ -43,6 +43,8 @@
   let { title, working, waiting = 0, waitingFor = null, chatsOpen = 0, paused, userInControl, tools, policy = null, notice = null, onpause, onopenrequest, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
+  /** The tooltip of the chip that has the keyboard focus, shown in a line of the bar (a tooltip needs a pointer to appear). */
+  let focusTip = $state<string | null>(null)
 
   const chips = $derived(toolChips(tools, policy, userInControl))
   const toolsNote = $derived(toolsLine(tools, chatsOpen))
@@ -67,20 +69,24 @@
     <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use" title="The agent can use only what is open here. Closing an app takes its tool away.">
       <span class="lead">Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)} onfocus={(e) => (focusTip = e.currentTarget.matches(':focus-visible') ? chip.tooltip : null)} onblur={() => (focusTip = null)}>{chip.label}</button>
       {/each}
       {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
     <span class="pause-slot">
       <Button
         data-testid="topbar-pause"
-        title={paused ? 'Let every agent act again. A step that Pause stopped is asked to continue where it stopped.' : 'Pause every agent on this desktop. Each one stops now and does nothing until you click Resume agents and continue. Chats and files stay as they are.'}
+        title={paused ? 'Let every agent act again. A step that Pause stopped is asked to continue where it stopped.' : `${PAUSE_TIP}. Each one stops now and does nothing until you click Resume agents and continue. Chats and files stay as they are.`}
         onclick={() => onpause?.()}>{paused ? RESUME_BUTTON : 'Pause all agents'}</Button>
     </span>
-    <span class="ask-slot" title="You decide on every action. The agent asks first, even for reading.">
-      <CheckBox testid="topbar-take-control" label="Ask before every action" checked={userInControl} onchange={() => ontakecontrol?.()} />
+    <span class="ask-slot" data-testid="topbar-ask-slot" title="You decide on every action. The agent asks first, even for reading. This lasts until you untick the box. It is not saved.">
+      <CheckBox testid="topbar-take-control" label={TAKE_CONTROL_LABEL} checked={userInControl} onchange={() => ontakecontrol?.()} />
     </span>
   </div>
+  {#if userInControl && !paused}
+    <p class="note" data-testid="topbar-control-note">{NOT_SAVED_NOTE.before}<button type="button" class="link" data-testid="topbar-control-note-link" onclick={() => onopenpermissions?.('')}>{NOT_SAVED_NOTE.link}</button>{NOT_SAVED_NOTE.after}</p>
+  {/if}
+  {#if focusTip}<p class="note tip" role="status" data-testid="topbar-chip-tip">{focusTip}</p>{/if}
 </div>
 
 <style>
@@ -268,9 +274,19 @@
     width: 100%;
     min-width: 0;
   }
+  .note {
+    margin: 2px 0 0;
+    padding: 0 2px;
+    font-size: 11px;
+    color: #5f4300;
+  }
+  .note.tip {
+    color: #1b2433;
+    white-space: pre-line;
+  }
   .ask-slot {
     flex: none;
-    width: 168px;
+    width: 252px;
     padding-top: 3px;
   }
 </style>

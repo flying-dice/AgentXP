@@ -66,6 +66,10 @@ export interface SessionProblemDto {
   cause?: string
   /** How many times in a row this chat's agent failed since it last worked (1 on the first failure); set by main. */
   failures?: number
+  /** `start-failed`: the name of the agent that could not start. */
+  agentName?: string
+  /** `start-failed`: an agent other than the one of the failure before could not start either (the default agent was changed in between). */
+  agentChanged?: boolean
 }
 
 export interface SessionDto {

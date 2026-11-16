@@ -96,7 +96,7 @@ export class ChatWindow {
     await this.frame.getByTestId(`permission-option-${optionId}`).click()
   }
 
-  /** Opens the Tasks and changes pane and its Changes tab. */
+  /** Opens the Changes pane and its Changes tab. */
   async showChanges(): Promise<void> {
     if (!(await this.frame.getByTestId('chat-side-panel').isVisible())) await this.frame.getByTestId('chat-panel-toggle').click()
     await this.frame.getByTestId('chat-tab-changes').click()
@@ -107,7 +107,7 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-reasoning')
   }
 
-  /** Opens the Tasks and changes pane and its Tasks tab. */
+  /** Opens the Changes pane and its Tasks tab. */
   async showTasks(): Promise<void> {
     if (!(await this.frame.getByTestId('chat-side-panel').isVisible())) await this.frame.getByTestId('chat-panel-toggle').click()
     await this.frame.getByTestId('chat-tab-tasks').click()

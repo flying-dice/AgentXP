@@ -21,7 +21,7 @@ export function effectiveStatus(inState: SessionStatus | null | undefined, inRow
 
 export const statusLabel = (status: SessionStatus): string => LABELS[status]
 
-export type ConnectionLabel = 'Ready' | 'Connecting…' | 'Connected' | 'Working…' | 'Waiting for permission' | 'Waiting for you' | 'Disconnected'
+export type ConnectionLabel = 'Ready' | 'Connecting…' | 'Connected' | 'Working…' | 'Waiting for your answer' | 'Waiting for you' | 'Disconnected'
 
 /**
  * The status strip's connection text for a session status. "Ready" until there is a session (nothing has failed yet),
@@ -39,7 +39,7 @@ export function connectionLabel(status: SessionStatus | null, userInControl = fa
     case 'working':
       return 'Working…'
     case 'awaiting_permission':
-      return 'Waiting for permission'
+      return 'Waiting for your answer'
     case 'error':
       return 'Disconnected'
     default:

@@ -50,7 +50,7 @@ describe('pause, resume and taking control (stepping agent)', () => {
     await control.waitForPause()
     await ctx.desktopPage.getByTestId('topbar-take-control').click()
     await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume. Terminal and Browser are not open.')
-    await see.text(ctx.desktopPage.getByTestId('gadget-activity-control'), 'Stopped: you took control. All tools ask first until you resume.')
+    await see.text(ctx.desktopPage.getByTestId('gadget-activity-control'), 'You are in control. The agent asks first.')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.eventually(async () => expect(await chat.frame.getByTestId('chat-status').innerText()).not.toContain('Working'))
     await ctx.desktopPage.getByTestId('topbar-give-back').click()
