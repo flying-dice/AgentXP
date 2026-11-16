@@ -1,0 +1,30 @@
+{
+  "task": "T20.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 4,
+  "checkerStatus": "PASS",
+  "reason": "agent processes left on the desktop: 0; the app still runs",
+  "notes": [],
+  "steps": 11,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:07:39.605Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:07:39.605Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "agent processes left on the desktop: 0; the app still runs",
+      "steps": 11,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

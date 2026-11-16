@@ -1,0 +1,30 @@
+{
+  "task": "T23.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the last turn ended success (want success); a new request was sent after the crash; the assistant answered and the chat is idle",
+  "notes": [],
+  "steps": 1,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:08:09.088Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:08:09.088Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the last turn ended success (want success); a new request was sent after the crash; the assistant answered and the chat is idle",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

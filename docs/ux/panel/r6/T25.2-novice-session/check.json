@@ -1,0 +1,30 @@
+{
+  "task": "T25.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the Code Review window is still open; answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 8,
+  "answer": "Changes requested; it wants more work and left 2 remarks (1 blocker)",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:10:02.512Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:10:02.512Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Code Review window is still open; answer ok",
+      "steps": 1,
+      "answer": "Changes requested; it wants more work and left 2 remarks (1 blocker)",
+      "noAnswer": false
+    }
+  ]
+}

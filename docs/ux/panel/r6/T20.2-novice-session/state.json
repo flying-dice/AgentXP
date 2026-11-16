@@ -1,0 +1,25 @@
+{
+  "task": "T20.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-BRsVOK",
+  "testPagePort": 34887,
+  "testPageUrl": "http://127.0.0.1:34887/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:06:39.467Z",
+  "options": {
+    "taskManagerClosed": true
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-BRsVOK/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "messagesAtStart": 1,
+  "progressAtStart": 0,
+  "toolCallsAtStart": 0,
+  "preset": "long-turn-running",
+  "note": null
+}
