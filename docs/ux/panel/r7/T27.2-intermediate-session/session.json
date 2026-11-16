@@ -1,0 +1,27 @@
+{
+  "task": "T27.2",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-3kjcSH/ux.sock",
+  "admin": "/tmp/a7ux-3kjcSH/admin.sock",
+  "pid": 15557,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "tmp": "/tmp/a7ux-3kjcSH",
+  "userData": "/tmp/a7ux-3kjcSH/user-data",
+  "testPageUrl": "http://127.0.0.1:38433/",
+  "home": "/tmp/a7ux-3kjcSH/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-3kjcSH/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-3kjcSH/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-3kjcSH/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "aside-code",
+  "note": "Code with index.ts, chat pane open",
+  "context": {
+    "previousTasks": []
+  }
+}

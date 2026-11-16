@@ -1,0 +1,42 @@
+{
+  "task": "T11.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "take over: userInControl true",
+  "notes": [
+    "no prompt was sent, so no request was raised (optional: the scenario does not ask for a prompt)",
+    "banner against chips: consistent"
+  ],
+  "steps": 1,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:12:17.251Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:12:17.251Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "take over: userInControl true",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

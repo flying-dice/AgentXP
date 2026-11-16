@@ -1,0 +1,27 @@
+{
+  "task": "T14.1",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-0fIRR9/ux.sock",
+  "admin": "/tmp/a7ux-0fIRR9/admin.sock",
+  "pid": 22246,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "tmp": "/tmp/a7ux-0fIRR9",
+  "userData": "/tmp/a7ux-0fIRR9/user-data",
+  "testPageUrl": "http://127.0.0.1:40813/",
+  "home": "/tmp/a7ux-0fIRR9/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-0fIRR9/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-0fIRR9/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-0fIRR9/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "four-desktops",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

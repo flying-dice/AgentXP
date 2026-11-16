@@ -1,0 +1,41 @@
+{
+  "task": "T27.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+  "notes": [
+    "question: I have a question about a selection from E:\\index.ts (lines 1-2).\n\n```ts\nexport const answer = 42\nexport const question "
+  ],
+  "steps": 5,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:26:04.665Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:26:04.665Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}

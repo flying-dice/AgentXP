@@ -1,0 +1,15 @@
+{
+  "task": "T14.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-IB577j",
+  "testPagePort": 33413,
+  "testPageUrl": "http://127.0.0.1:33413/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:14:32.734Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Try new ideas",
+  "projectPaths": [],
+  "preset": "three-desktops",
+  "note": null
+}

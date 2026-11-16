@@ -1,0 +1,27 @@
+{
+  "task": "T25.1",
+  "level": "novice",
+  "socket": "/tmp/a7ux-baNd9G/ux.sock",
+  "admin": "/tmp/a7ux-baNd9G/admin.sock",
+  "pid": 8855,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "tmp": "/tmp/a7ux-baNd9G",
+  "userData": "/tmp/a7ux-baNd9G/user-data",
+  "testPageUrl": "http://127.0.0.1:35451/",
+  "home": "/tmp/a7ux-baNd9G/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-baNd9G/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-baNd9G/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-baNd9G/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "review-ready",
+  "note": "Code Review open with two reviewer comments; a chat is open",
+  "context": {
+    "previousTasks": []
+  }
+}

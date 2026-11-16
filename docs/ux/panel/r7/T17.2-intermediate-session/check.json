@@ -1,0 +1,39 @@
+{
+  "task": "T17.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the app is still the same process (pid 28307, was 28307); answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 9,
+  "answer": "The assistant could not start because the program 'not-a-real-command' was not found; click Try again, or open Agents / Choose another agent to pick a working one",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:17:37.483Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:17:37.483Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the app is still the same process (pid 28307, was 28307); answer ok",
+      "steps": 1,
+      "answer": "The assistant could not start because the program 'not-a-real-command' was not found; click Try again, or open Agents / Choose another agent to pick a working one",
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

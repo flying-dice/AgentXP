@@ -1,0 +1,39 @@
+{
+  "task": "T18.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "1 surface window(s) open (want exactly one)",
+  "notes": [],
+  "steps": 1,
+  "budget": 8,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:19:18.665Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:19:18.665Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "1 surface window(s) open (want exactly one)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

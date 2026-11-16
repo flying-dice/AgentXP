@@ -1,0 +1,15 @@
+{
+  "commands": 5,
+  "steps": 3,
+  "byCmd": {
+    "shot": 2,
+    "click": 2,
+    "type": 1
+  },
+  "errors": 0,
+  "seconds": 14,
+  "screenshots": 5,
+  "task": "T18.1-inline",
+  "level": "novice",
+  "archivedAt": "2026-11-16T20:18:24.267Z"
+}

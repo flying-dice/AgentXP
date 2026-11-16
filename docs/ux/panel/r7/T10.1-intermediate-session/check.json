@@ -1,0 +1,39 @@
+{
+  "task": "T10.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Terminal policy is Deny (Permissions route); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 8,
+  "answer": "Run commands is set to Deny; the top bar shows Run commands: Deny and Control Center says Deny: never runs.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:11:30.187Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:11:30.187Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Terminal policy is Deny (Permissions route); answer ok",
+      "steps": 4,
+      "answer": "Run commands is set to Deny; the top bar shows Run commands: Deny and Control Center says Deny: never runs.",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

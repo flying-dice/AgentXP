@@ -1,0 +1,39 @@
+{
+  "task": "T17.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 2,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "state ok but the answer lacks: agents page|agents|agent manager|settings",
+  "notes": [],
+  "steps": 9,
+  "budget": 12,
+  "answer": "The default agent points to not-a-real-command; after I set Claude Code as default, it fails with npx stopped before it was ready.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:18:03.114Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:18:03.114Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "state ok but the answer lacks: agents page|agents|agent manager|settings",
+      "steps": 9,
+      "answer": "The default agent points to not-a-real-command; after I set Claude Code as default, it fails with npx stopped before it was ready.",
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}
