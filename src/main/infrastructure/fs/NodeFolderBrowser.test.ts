@@ -7,7 +7,7 @@ import { NodeFolderBrowser, parseHead } from './NodeFolderBrowser'
 describe('gitBranch', () => {
   let root: string
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), 'axp-git-'))
+    root = await mkdtemp(join(tmpdir(), 'a7-git-'))
   })
   afterEach(() => rm(root, { recursive: true, force: true }))
 

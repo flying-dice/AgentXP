@@ -43,7 +43,7 @@
   })
 </script>
 
-<div class="xp-dialog-buttons {className}" bind:this={root}>
+<div class="w7-dialog-buttons {className}" bind:this={root}>
   {#each specs as spec (spec.result)}
     <Button
       isDefault={spec.result === accept}
@@ -57,7 +57,7 @@
 </div>
 
 <style>
-  .xp-dialog-buttons {
+  .w7-dialog-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 6px;

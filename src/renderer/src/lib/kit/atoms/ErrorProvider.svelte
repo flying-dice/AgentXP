@@ -12,15 +12,15 @@
 
 {#if message}
   <ToolTip text={message} delay={150} class={className}>
-    <span class="xp-error" role="img" aria-label="Error: {message}">
+    <span class="w7-error" role="img" aria-label="Error: {message}">
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
         <defs>
-          <radialGradient id="xp-ep-g" cx=".35" cy=".3" r=".85">
+          <radialGradient id="w7-ep-g" cx=".35" cy=".3" r=".85">
             <stop offset="0" stop-color="#ff9d94" />
             <stop offset="1" stop-color="#d12a22" />
           </radialGradient>
         </defs>
-        <circle cx="8" cy="8" r="6.8" fill="url(#xp-ep-g)" stroke="#8f1d18" />
+        <circle cx="8" cy="8" r="6.8" fill="url(#w7-ep-g)" stroke="#8f1d18" />
         <path d="M8 3.8v5" stroke="#fff" stroke-width="2.2" />
         <circle cx="8" cy="11.6" r="1.2" fill="#fff" />
       </svg>
@@ -29,7 +29,7 @@
 {/if}
 
 <style>
-  .xp-error {
+  .w7-error {
     display: inline-flex;
     width: 16px;
     height: 16px;

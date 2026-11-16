@@ -15,7 +15,7 @@
 </script>
 
 <div
-  class="xp-toolstrip {className}"
+  class="w7-toolstrip {className}"
   role="toolbar"
   aria-label={ariaLabel}
   use:rovingFocus={{ selector: 'button:not(:disabled)', loop: false }}
@@ -28,7 +28,7 @@
 </div>
 
 <style>
-  .xp-toolstrip {
+  .w7-toolstrip {
     flex: none;
     display: flex;
     align-items: center;

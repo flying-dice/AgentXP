@@ -1,6 +1,6 @@
 import { prepare, transaction, type Database, type Statement } from './sql'
 import type { FileChangeDto, FileChangeKind, Id } from '@shared/models'
-import { countLineChanges } from '../../domain/line-diff'
+import { countLineChanges } from '@shared/diff'
 import type { FileChangeRepository, FileWrite } from '../../domain/repositories/file-change-repository'
 import { NOW_SQL } from './sql'
 

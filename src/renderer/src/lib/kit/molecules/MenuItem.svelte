@@ -83,7 +83,7 @@
   .mi.disabled {
     color: var(--w7-text-disabled);
   }
-  .mi.disabled :global(.xp-icon) {
+  .mi.disabled :global(.w7-icon) {
     opacity: 0.45;
   }
   .icon {

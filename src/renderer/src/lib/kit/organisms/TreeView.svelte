@@ -163,7 +163,7 @@
 
 <div
   bind:this={root}
-  class="xp-tree w7-scroll {className}"
+  class="w7-tree w7-scroll {className}"
   role="tree"
   tabindex="0"
   aria-label={ariaLabel}
@@ -205,7 +205,7 @@
 </div>
 
 <style>
-  .xp-tree {
+  .w7-tree {
     width: 100%;
     height: 100%;
     min-height: 0;

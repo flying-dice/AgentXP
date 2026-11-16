@@ -11,11 +11,11 @@
 <div
   role="separator"
   aria-orientation={orientation}
-  class="xp-sep {orientation} {variant} {className}"
+  class="w7-sep {orientation} {variant} {className}"
 ></div>
 
 <style>
-  .xp-sep {
+  .w7-sep {
     flex: none;
   }
   .toolbar.vertical {

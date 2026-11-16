@@ -10,8 +10,8 @@ const { _electron: electron } = require('playwright')
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const fixture = join(root, 'src/main/infrastructure/acp/__fixtures__/fake-agent.ts')
 
-const userData = await mkdtemp(join(tmpdir(), 'axp-smoke-data-'))
-const workspace = await mkdtemp(join(tmpdir(), 'axp-smoke-ws-'))
+const userData = await mkdtemp(join(tmpdir(), 'a7-smoke-data-'))
+const workspace = await mkdtemp(join(tmpdir(), 'a7-smoke-ws-'))
 const app = await electron.launch({
   executablePath: require('electron'),
   args: [join(root, 'out/main/index.js'), '--no-sandbox'],

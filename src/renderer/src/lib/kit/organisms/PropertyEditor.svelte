@@ -66,17 +66,17 @@
     height: 100%;
     display: flex;
   }
-  .editor :global(.xp-textbox),
-  .editor :global(.xp-combo) {
+  .editor :global(.w7-textbox),
+  .editor :global(.w7-combo) {
     flex: 1;
     min-width: 0;
     height: 100%;
   }
-  .editor :global(.xp-textbox) {
+  .editor :global(.w7-textbox) {
     padding: 0 3px;
     border-color: transparent;
   }
-  .editor.invalid :global(.xp-textbox) {
+  .editor.invalid :global(.w7-textbox) {
     border-color: #d33;
     background: #fff4f4;
   }

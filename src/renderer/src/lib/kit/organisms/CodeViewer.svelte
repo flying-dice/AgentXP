@@ -63,7 +63,7 @@
   }
 </script>
 
-<div class="xp-codeviewer {className}" style:max-height={maxHeight}>
+<div class="w7-codeviewer {className}" style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <CheckBox label="Word wrap" bind:checked={wordWrap} />
@@ -91,7 +91,7 @@
 </div>
 
 <style>
-  .xp-codeviewer {
+  .w7-codeviewer {
     display: flex;
     flex-direction: column;
     min-height: 0;

@@ -141,7 +141,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role, a11y_no_noninteractive_tabindex -->
 <div
   bind:this={root}
-  class="xp-listview w7-scroll {view} {className}"
+  class="w7-listview w7-scroll {view} {className}"
   role={details ? 'grid' : 'listbox'}
   tabindex="0"
   aria-label={ariaLabel}
@@ -216,7 +216,7 @@
 </div>
 
 <style>
-  .xp-listview {
+  .w7-listview {
     position: relative;
     width: 100%;
     height: 100%;
@@ -321,7 +321,7 @@
     white-space: normal;
     word-break: break-word;
   }
-  .xp-listview:not(.Details) .empty {
+  .w7-listview:not(.Details) .empty {
     width: 100%;
   }
 </style>

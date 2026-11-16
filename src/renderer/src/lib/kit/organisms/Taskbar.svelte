@@ -59,18 +59,11 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="xp-taskbar {className}" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
+<div class="w7-taskbar {className}" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
   <div class="strip" bind:this={strip}>
     <button type="button" class="orb" class:open={startOpen} aria-label="Start" aria-haspopup="menu" aria-expanded={startOpen} onclick={() => onstart?.()}>
       <span class="orb-gloss"></span>
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-        <g stroke="#fff" stroke-width=".6">
-          <path d="M3 4.4c2.4-1.3 4.2-.4 6.2.2v5.2C7.2 9.2 5.4 8.4 3 9.6z" fill="#f25022" />
-          <path d="M10.2 4.9c2.2.6 4 1.4 6.6.2v5.2c-2.6 1.2-4.4.4-6.6-.2z" fill="#7fba00" />
-          <path d="M3 10.6c2.4-1.2 4.2-.4 6.2.2V16C7.2 15.4 5.4 14.6 3 15.8z" fill="#00a4ef" />
-          <path d="M10.2 11.3c2.2.6 4 1.4 6.6.2v5.2c-2.6 1.2-4.4.4-6.6-.2z" fill="#ffb900" />
-        </g>
-      </svg>
+      <Icon name="agent7" size={22} />
     </button>
     {#each items as item (item.id)}
       <button
@@ -96,7 +89,7 @@
 </div>
 
 <style>
-  .xp-taskbar {
+  .w7-taskbar {
     flex: none;
     height: 40px;
     box-sizing: border-box;

@@ -17,7 +17,7 @@ let publisher: RecordingPublisher
 let db: ReturnType<typeof openDatabase>
 
 beforeEach(async () => {
-  workspace = await realpath(await mkdtemp(join(tmpdir(), 'axp-int-')))
+  workspace = await realpath(await mkdtemp(join(tmpdir(), 'a7-int-')))
   db = openDatabase(':memory:')
   publisher = new RecordingPublisher()
   app = composeApp({

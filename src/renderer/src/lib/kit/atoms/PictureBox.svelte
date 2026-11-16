@@ -27,7 +27,7 @@
   )
 </script>
 
-<div class="xp-picturebox {borderStyle} {className}" style={boxStyle} class:auto={sizeMode === 'AutoSize'}>
+<div class="w7-picturebox {borderStyle} {className}" style={boxStyle} class:auto={sizeMode === 'AutoSize'}>
   {#if src}
     <img
       {src}
@@ -41,7 +41,7 @@
 </div>
 
 <style>
-  .xp-picturebox {
+  .w7-picturebox {
     position: relative;
     display: inline-block;
     overflow: hidden;

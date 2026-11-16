@@ -58,7 +58,7 @@ export const VS2010_THEME: ThemeRegistrationRaw = {
 
 /** Common file extensions to shiki language ids. */
 const EXTENSIONS: Record<string, string> = {
-  ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx', mjs: 'javascript', cjs: 'javascript', json: 'json',
+  ts: 'typescript', mts: 'typescript', cts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx', mjs: 'javascript', cjs: 'javascript', json: 'json',
   svelte: 'svelte', vue: 'vue', html: 'html', htm: 'html', css: 'css', scss: 'scss', md: 'markdown', py: 'python',
   rs: 'rust', go: 'go', java: 'java', cs: 'csharp', cpp: 'cpp', cc: 'cpp', c: 'c', h: 'c', sh: 'bash', bash: 'bash',
   ps1: 'powershell', yml: 'yaml', yaml: 'yaml', toml: 'toml', sql: 'sql', xml: 'xml', diff: 'diff', patch: 'diff'

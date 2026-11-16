@@ -9,7 +9,7 @@ const marked = new Marked({
     // Fenced blocks get a data-lang hook; highlightCodeBlocks() fills them in asynchronously.
     code({ text, lang }) {
       const language = (lang ?? '').split(/\s+/)[0]
-      return `<pre class="xp-md-code" data-lang="${escapeHtml(language)}"><code>${escapeHtml(text)}</code></pre>\n`
+      return `<pre class="w7-md-code" data-lang="${escapeHtml(language)}"><code>${escapeHtml(text)}</code></pre>\n`
     }
   }
 })
@@ -24,7 +24,7 @@ export const renderMarkdown = (source: string): string =>
 
 /** Replaces the plain text of every fenced block under `root` with highlighted markup. */
 export const highlightCodeBlocks = async (root: HTMLElement, isStale: () => boolean = () => false): Promise<void> => {
-  const blocks = Array.from(root.querySelectorAll<HTMLElement>('pre.xp-md-code'))
+  const blocks = Array.from(root.querySelectorAll<HTMLElement>('pre.w7-md-code'))
   await Promise.all(
     blocks.map(async (pre) => {
       const code = pre.querySelector('code')

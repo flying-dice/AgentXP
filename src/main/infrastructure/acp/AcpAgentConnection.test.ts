@@ -18,7 +18,7 @@ let connection: AcpAgentConnection | null
 let terminals: TerminalManager
 
 beforeEach(async () => {
-  workspace = await realpath(await mkdtemp(join(tmpdir(), 'axp-e2e-')))
+  workspace = await realpath(await mkdtemp(join(tmpdir(), 'a7-e2e-')))
   proc = null
   connection = null
 })

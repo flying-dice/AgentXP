@@ -186,7 +186,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 <div
   bind:this={root}
-  class="xp-grid w7-scroll {className}"
+  class="w7-grid w7-scroll {className}"
   role="grid"
   tabindex="0"
   aria-label={ariaLabel}
@@ -264,7 +264,7 @@
 </div>
 
 <style>
-  .xp-grid {
+  .w7-grid {
     position: relative;
     width: 100%;
     height: 100%;
@@ -332,7 +332,7 @@
   .cell.ro:not(.sel) {
     color: var(--w7-text-muted);
   }
-  .cell :global(.xp-check) {
+  .cell :global(.w7-check) {
     margin: 0 auto;
   }
   .t {
@@ -345,18 +345,18 @@
     inset: 0;
     display: flex;
   }
-  .editor :global(.xp-textbox),
-  .editor :global(.xp-combo) {
+  .editor :global(.w7-textbox),
+  .editor :global(.w7-combo) {
     flex: 1;
     width: 100%;
     height: 100%;
     min-width: 0;
   }
-  .editor :global(.xp-textbox) {
+  .editor :global(.w7-textbox) {
     padding: 0 3px;
     border-width: 1px;
   }
-  .editor.invalid :global(.xp-textbox) {
+  .editor.invalid :global(.w7-textbox) {
     border-color: #d33;
     background: #fff4f4;
   }

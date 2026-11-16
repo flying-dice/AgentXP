@@ -53,8 +53,8 @@
   }
 </script>
 
-<div class="xp-dtp-wrap" use:clickOutside={{ handler: () => (open = false) }}>
-  <div class="xp-dtp {className}" class:disabled class:open style="width:{width}px">
+<div class="w7-dtp-wrap" use:clickOutside={{ handler: () => (open = false) }}>
+  <div class="w7-dtp {className}" class:disabled class:open style="width:{width}px">
     <span
       class="field"
       role="spinbutton"
@@ -62,8 +62,6 @@
       aria-label={label}
       aria-valuetext={text}
       aria-disabled={disabled}
-      aria-haspopup="dialog"
-      aria-expanded={open}
       onkeydown={adjust}
     >
       {text}
@@ -74,6 +72,8 @@
         {disabled}
         tabindex="-1"
         aria-label="Open calendar"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         class="drop"
         onclick={() => (open = !open)}
       >
@@ -89,7 +89,7 @@
 </div>
 
 <style>
-  .xp-dtp {
+  .w7-dtp {
     display: inline-flex;
     align-items: stretch;
     box-sizing: border-box;
@@ -99,11 +99,11 @@
     border-top-color: var(--w7-input-border-top);
     font: var(--w7-font);
   }
-  .xp-dtp:hover:not(.disabled),
-  .xp-dtp.open {
+  .w7-dtp:hover:not(.disabled),
+  .w7-dtp.open {
     border-color: #3c7fb1;
   }
-  .xp-dtp.disabled {
+  .w7-dtp.disabled {
     background: var(--w7-face);
     color: var(--w7-text-disabled);
     border-color: var(--w7-border-disabled);
@@ -146,7 +146,7 @@
     z-index: 50;
     box-shadow: var(--w7-shadow-popup);
   }
-  .xp-dtp-wrap {
+  .w7-dtp-wrap {
     position: relative;
     display: inline-block;
   }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Button from '../atoms/Button.svelte'
-  import { computeDiff, diffStats, parseUnifiedDiff, toSplitRows, type DiffFile, type DiffLine } from './diff'
+  import { computeDiff, diffStats, parseUnifiedDiff, toSplitRows, type DiffFile, type DiffLine } from '@shared/diff'
 
   interface Props {
     /** Text input pair; ignored when `unified` is given. */
@@ -45,7 +45,7 @@
   const title = (file: DiffFile): string => file.newPath ?? file.oldPath ?? ''
 </script>
 
-<div class="xp-diffviewer {className}" style:max-height={maxHeight}>
+<div class="w7-diffviewer {className}" style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <span class="summary">
@@ -100,7 +100,7 @@
 </div>
 
 <style>
-  .xp-diffviewer {
+  .w7-diffviewer {
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -141,7 +141,7 @@
     display: inline-flex;
     gap: 4px;
   }
-  .toggle :global(.xp-btn) {
+  .toggle :global(.w7-btn) {
     min-width: 0;
     height: 21px;
   }

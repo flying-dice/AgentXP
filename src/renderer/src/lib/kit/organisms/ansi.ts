@@ -108,6 +108,3 @@ export const parseAnsi = (text: string): AnsiSpan[] => {
   push(text.slice(last))
   return spans
 }
-
-/** Removes every escape sequence. */
-export const stripAnsi = (text: string): string => text.replace(ESCAPE, '')

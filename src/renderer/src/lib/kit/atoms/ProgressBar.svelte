@@ -31,7 +31,7 @@
   aria-valuemin={min}
   aria-valuemax={max}
   aria-valuenow={marquee ? undefined : value}
-  class="xp-progress {state} {className}"
+  class="w7-progress {state} {className}"
   style="width:{dim}"
 >
   {#if marquee}
@@ -42,7 +42,7 @@
 </div>
 
 <style>
-  :global(.xp-progress) {
+  :global(.w7-progress) {
     --fill: var(--w7-progress-fill);
     position: relative;
     display: block;
@@ -54,10 +54,10 @@
     background: linear-gradient(#e0e0e0, var(--w7-progress-track) 30%, #f1f1f1);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.12);
   }
-  :global(.xp-progress.paused) {
+  :global(.w7-progress.paused) {
     --fill: var(--w7-progress-fill-paused);
   }
-  :global(.xp-progress.error) {
+  :global(.w7-progress.error) {
     --fill: var(--w7-progress-fill-error);
   }
   .fill {
@@ -68,10 +68,10 @@
     box-sizing: border-box;
     overflow: hidden;
   }
-  :global(.xp-progress.paused) .fill {
+  :global(.w7-progress.paused) .fill {
     border-right-color: rgba(120, 90, 0, 0.35);
   }
-  :global(.xp-progress.error) .fill {
+  :global(.w7-progress.error) .fill {
     border-right-color: rgba(120, 0, 0, 0.35);
   }
   /* Moving Aero glow. */
@@ -85,8 +85,8 @@
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 60%, transparent);
     animation: glow 2s linear infinite;
   }
-  :global(.xp-progress.paused) .fill::after,
-  :global(.xp-progress.error) .fill::after {
+  :global(.w7-progress.paused) .fill::after,
+  :global(.w7-progress.error) .fill::after {
     animation: none;
     display: none;
   }

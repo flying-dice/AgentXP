@@ -47,7 +47,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="xp-titlebar {className}" class:inactive={!active} class:drag={draggable} ondblclick={toggle}>
+<div class="w7-titlebar {className}" class:inactive={!active} class:drag={draggable} ondblclick={toggle}>
   <span class="app-icon">
     {#if icon}{@render icon()}{:else if iconName}<Icon name={iconName} />{/if}
   </span>
@@ -66,7 +66,7 @@
 </div>
 
 <style>
-  .xp-titlebar {
+  .w7-titlebar {
     flex: none;
     height: 30px;
     display: flex;

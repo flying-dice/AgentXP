@@ -17,7 +17,7 @@
 </script>
 
 <div
-  class="xp-panel {borderStyle} {className}"
+  class="w7-panel {borderStyle} {className}"
   class:w7-scroll={autoScroll}
   class:clip={!autoScroll}
   {style}
@@ -26,7 +26,7 @@
 </div>
 
 <style>
-  .xp-panel {
+  .w7-panel {
     position: relative;
     background: var(--w7-face);
     font: var(--w7-font);

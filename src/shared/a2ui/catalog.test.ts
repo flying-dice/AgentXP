@@ -1,7 +1,7 @@
 import { Catalog } from '@a2ui/web_core/v0_9'
 import { describe, expect, it } from 'vitest'
 import { A2UI_CATALOG_ID } from '../a2ui'
-import { A2UI_COMPONENT_NAMES, createWinformsCatalog, winformsCatalog } from './catalog'
+import { createWinformsCatalog, winformsCatalog } from './catalog'
 import document from './winforms-catalog.json'
 
 const EXPECTED = [
@@ -13,7 +13,7 @@ const EXPECTED = [
 
 describe('WinForms catalog', () => {
   it('keeps the component set and the catalog id', () => {
-    expect([...A2UI_COMPONENT_NAMES].sort()).toEqual([...EXPECTED].sort())
+    expect([...winformsCatalog.components.keys()].sort()).toEqual([...EXPECTED].sort())
     expect(winformsCatalog.id).toBe(A2UI_CATALOG_ID)
     expect(document.catalogId).toBe(A2UI_CATALOG_ID)
     expect(winformsCatalog.protocolVersion).toBe('0.9')

@@ -55,7 +55,7 @@
   }
 </script>
 
-<span class="xp-updown {className}" class:disabled {style}>
+<span class="w7-updown {className}" class:disabled {style}>
   <input
     type="text"
     role="spinbutton"
@@ -78,7 +78,7 @@
 </span>
 
 <style>
-  .xp-updown {
+  .w7-updown {
     display: inline-flex;
     align-items: stretch;
     height: 21px;
@@ -87,13 +87,13 @@
     border-top-color: var(--w7-input-border-top);
     background: var(--w7-window);
   }
-  .xp-updown:hover:not(.disabled) {
+  .w7-updown:hover:not(.disabled) {
     border-color: #3d7bad;
   }
-  .xp-updown:focus-within {
+  .w7-updown:focus-within {
     border-color: #569de5;
   }
-  .xp-updown.disabled {
+  .w7-updown.disabled {
     border-color: var(--w7-border-disabled);
     background: #f4f4f4;
   }

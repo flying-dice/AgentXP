@@ -8,8 +8,8 @@ let root: string
 let outside: string
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), 'axp-ws-'))
-  outside = await mkdtemp(join(tmpdir(), 'axp-out-'))
+  root = await mkdtemp(join(tmpdir(), 'a7-ws-'))
+  outside = await mkdtemp(join(tmpdir(), 'a7-out-'))
 })
 afterEach(async () => {
   await rm(root, { recursive: true, force: true })

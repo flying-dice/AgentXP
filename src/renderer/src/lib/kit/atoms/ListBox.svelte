@@ -114,7 +114,7 @@
   aria-multiselectable={selectionMode !== 'One'}
   aria-disabled={disabled}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
-  class="xp-listbox w7-scroll {className}"
+  class="w7-listbox w7-scroll {className}"
   class:disabled
   class:focused
   style="width:{dim(width)};height:{dim(height)}"
@@ -144,7 +144,7 @@
 </div>
 
 <style>
-  .xp-listbox {
+  .w7-listbox {
     display: block;
     box-sizing: border-box;
     padding: 1px 0;
@@ -155,7 +155,7 @@
     outline: none;
     overflow-x: hidden;
   }
-  .xp-listbox.disabled {
+  .w7-listbox.disabled {
     background: var(--w7-face);
     color: var(--w7-text-disabled);
     border-color: var(--w7-border-disabled);

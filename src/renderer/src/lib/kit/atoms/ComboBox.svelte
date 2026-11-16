@@ -161,7 +161,7 @@
 
 <div
   bind:this={root}
-  class="xp-combo {className}"
+  class="w7-combo {className}"
   class:open
   class:disabled
   class:editable
@@ -242,7 +242,7 @@
 </div>
 
 <style>
-  .xp-combo {
+  .w7-combo {
     position: relative;
     display: inline-flex;
     align-items: stretch;
@@ -293,7 +293,7 @@
     border-color: var(--w7-btn-active-border);
     background: var(--w7-btn-active-face);
   }
-  .xp-combo:not(.open) .face:focus-visible .label {
+  .w7-combo:not(.open) .face:focus-visible .label {
     background: #3399ff;
     color: #fff;
   }

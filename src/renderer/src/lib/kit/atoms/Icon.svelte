@@ -16,7 +16,7 @@
 </script>
 
 <svg
-  class="xp-icon {className}"
+  class="w7-icon {className}"
   width={size}
   height={size}
   viewBox="0 0 16 16"
@@ -30,7 +30,7 @@
 </svg>
 
 <style>
-  .xp-icon {
+  .w7-icon {
     display: inline-block;
     flex: none;
     vertical-align: middle;

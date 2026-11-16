@@ -92,7 +92,7 @@
   .tb:disabled {
     color: var(--w7-text-disabled);
   }
-  .tb:disabled :global(.xp-icon),
+  .tb:disabled :global(.w7-icon),
   .tb:disabled .glyph {
     opacity: 0.45;
   }

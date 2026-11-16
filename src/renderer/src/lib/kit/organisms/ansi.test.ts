@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ANSI_PALETTE, parseAnsi, stripAnsi } from './ansi'
+import { ANSI_PALETTE, parseAnsi } from './ansi'
 
 const ESC = '\u001b'
 
@@ -47,11 +47,5 @@ describe('parseAnsi', () => {
 
   it('drops non-SGR sequences', () => {
     expect(parseAnsi(`a${ESC}[2Kb${ESC}[1;1Hc${ESC}]0;title\u0007d`)).toEqual([{ text: 'abcd' }])
-  })
-})
-
-describe('stripAnsi', () => {
-  it('removes all escapes', () => {
-    expect(stripAnsi(`${ESC}[1;31mfail${ESC}[0m`)).toBe('fail')
   })
 })

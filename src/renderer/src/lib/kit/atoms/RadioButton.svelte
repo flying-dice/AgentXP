@@ -21,7 +21,7 @@
 </script>
 
 <!-- Must be rendered inside a RadioButtonGroup. -->
-<label class="xp-radio {className}" class:disabled>
+<label class="w7-radio {className}" class:disabled>
   <button
     type="button"
     class="dot"
@@ -39,7 +39,7 @@
 </label>
 
 <style>
-  .xp-radio {
+  .w7-radio {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -47,14 +47,14 @@
     color: var(--w7-text);
     cursor: default;
   }
-  .xp-radio.disabled {
+  .w7-radio.disabled {
     color: var(--w7-text-disabled);
   }
   .text {
     padding: 0 1px;
     line-height: 15px;
   }
-  .xp-radio .dot {
+  .w7-radio .dot {
     flex: none;
     width: 13px;
     height: 13px;
@@ -67,19 +67,19 @@
     background: radial-gradient(circle at 70% 70%, #fff 30%, #e4e4e4 75%, #d2d2d2 100%);
     outline: none;
   }
-  .xp-radio:hover:not(.disabled) .dot {
+  .w7-radio:hover:not(.disabled) .dot {
     border-color: var(--w7-btn-hover-border);
     background: radial-gradient(circle at 70% 70%, #fff 20%, #cfeafa 70%, #aedbf3 100%);
   }
-  .xp-radio:active:not(.disabled) .dot {
+  .w7-radio:active:not(.disabled) .dot {
     border-color: var(--w7-btn-active-border);
     background: radial-gradient(circle at 60% 60%, #d6eefb 10%, #8cc8e8 100%);
   }
-  .xp-radio.disabled .dot {
+  .w7-radio.disabled .dot {
     border-color: #bcbcbc;
     background: #f4f4f4;
   }
-  .xp-radio:has(.dot:focus-visible) .text {
+  .w7-radio:has(.dot:focus-visible) .text {
     outline: var(--w7-focus-outline);
   }
   .center {

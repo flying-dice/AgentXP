@@ -69,7 +69,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.xp-listview) {
+  .list :global(.w7-listview) {
     flex: 1;
     min-height: 0;
   }

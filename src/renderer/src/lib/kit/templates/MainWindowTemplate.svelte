@@ -99,7 +99,7 @@
   {onrestore}
   {onclose}
   {onactivate}
-  class="xp-mainwindow {className}"
+  class="w7-mainwindow {className}"
 >
   <div class="panes" bind:clientWidth={bodyWidth}>
     <section class="pane left" style="width:{leftWidth}px" aria-label="Explorer">{@render left()}</section>

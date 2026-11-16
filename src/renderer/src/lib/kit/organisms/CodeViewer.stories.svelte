@@ -18,14 +18,14 @@
     }
   })
 
-  const css = `.xp-btn {
+  const css = `.w7-btn {
   min-width: 75px;
   height: 23px;
   border: 1px solid #707070;
   border-radius: 3px;
   background: linear-gradient(#f2f2f2 0, #cfcfcf 100%);
 }
-.xp-btn:hover { border-color: #3c7fb1; }`
+.w7-btn:hover { border-color: #3c7fb1; }`
 
   const cs = `using System;
 

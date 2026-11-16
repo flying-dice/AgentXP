@@ -10,6 +10,8 @@
     /** Length along the scroll axis in px. */
     length?: number
     label?: string
+    /** Id of the scrolled region this bar controls. */
+    controls?: string
     onchange?: (value: number) => void
     class?: string
   }
@@ -23,6 +25,7 @@
     disabled = false,
     length = 160,
     label = 'Scroll',
+    controls,
     onchange,
     class: className = ''
   }: Props = $props()
@@ -100,13 +103,13 @@
   role="scrollbar"
   tabindex={inactive ? -1 : 0}
   aria-orientation={orientation}
- 
+  aria-controls={controls}
   aria-label={label}
   aria-valuemin={min}
   aria-valuemax={top}
   aria-valuenow={value}
   aria-disabled={inactive}
-  class="xp-sb {orientation} {className}"
+  class="w7-sb {orientation} {className}"
   class:inactive
   style="{horizontal ? 'width' : 'height'}:{length}px"
   {onkeydown}
@@ -144,7 +147,7 @@
 </div>
 
 <style>
-  .xp-sb {
+  .w7-sb {
     display: flex;
     flex: none;
     box-sizing: border-box;
@@ -159,7 +162,7 @@
     height: 17px;
     flex-direction: row;
   }
-  .xp-sb:focus-visible .thumb {
+  .w7-sb:focus-visible .thumb {
     border-color: #3399ff;
   }
   .track {

@@ -38,7 +38,7 @@
   const toggle = (): void => (maximized ? onrestore?.() : onmaximize?.())
 </script>
 
-<div class="xp-caption {className}" class:inactive={!active} role="group" aria-label="Window controls">
+<div class="w7-caption {className}" class:inactive={!active} role="group" aria-label="Window controls">
   {#if minimizeBox || maximizeBox}
     <button type="button" class="cb min" aria-label="Minimize" title="Minimize" disabled={!minimizeBox} onclick={() => onminimize?.()}>
       <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8" /></svg>
@@ -75,7 +75,7 @@
 </div>
 
 <style>
-  .xp-caption {
+  .w7-caption {
     display: inline-flex;
     align-self: flex-start;
     margin-top: -1px;

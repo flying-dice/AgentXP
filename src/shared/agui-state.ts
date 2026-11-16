@@ -97,17 +97,6 @@ export interface PermissionInterruptMetadata {
   options: PermissionOptionDto[]
 }
 
-/** `ResumeEntry.payload` of a resolved permission interrupt. A cancelled entry carries none. */
-export interface PermissionResumePayload {
-  optionId: string
-}
-
-/** `RunAgentInput.forwardedProps` keys understood by the backend. */
-export interface AguiForwardedProps {
-  /** An A2UI user action to deliver to the agent (an `A2uiClientEvent`). */
-  a2uiAction?: unknown
-}
-
 export const emptyAguiState = (): AguiSessionState => ({
   session: {
     title: '',

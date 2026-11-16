@@ -35,7 +35,7 @@
   }
 </script>
 
-<label class="xp-check {className}" class:disabled class:readonly>
+<label class="w7-check {className}" class:disabled class:readonly>
   <button
     type="button"
     class="box"
@@ -61,7 +61,7 @@
 </label>
 
 <style>
-  .xp-check {
+  .w7-check {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -69,7 +69,7 @@
     color: var(--w7-text);
     cursor: default;
   }
-  .xp-check.disabled {
+  .w7-check.disabled {
     color: var(--w7-text-disabled);
   }
   .text {
@@ -90,23 +90,23 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     outline: none;
   }
-  .xp-check:hover:not(.disabled):not(.readonly) .box {
+  .w7-check:hover:not(.disabled):not(.readonly) .box {
     border-color: var(--w7-btn-hover-border);
     background: linear-gradient(135deg, #c4e5f6 0%, #e4f4fc 50%, #fff 100%);
   }
-  .xp-check:active:not(.disabled):not(.readonly) .box {
+  .w7-check:active:not(.disabled):not(.readonly) .box {
     border-color: var(--w7-btn-active-border);
     background: linear-gradient(135deg, #8cc8e8 0%, #c4e5f6 100%);
   }
-  .xp-check.disabled .box {
+  .w7-check.disabled .box {
     border-color: #bcbcbc;
     background: #f4f4f4;
     box-shadow: none;
   }
-  .xp-check.disabled svg {
+  .w7-check.disabled svg {
     opacity: 0.4;
   }
-  .xp-check:has(.box:focus-visible) .text {
+  .w7-check:has(.box:focus-visible) .text {
     outline: var(--w7-focus-outline);
   }
   .mixed {

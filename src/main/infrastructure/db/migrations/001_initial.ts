@@ -270,10 +270,4 @@ CREATE TABLE a2ui_components (
   UNIQUE (surface_id, component_id),
   UNIQUE (surface_id, position)
 );
-
-CREATE TABLE settings (
-  key        TEXT PRIMARY KEY,
-  value      TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (${NOW_SQL})
-);
 `

@@ -36,11 +36,6 @@ export function mnemonicKey(label?: string): string {
   return parseMnemonic(label).key.toLowerCase()
 }
 
-export function plainText(label?: string): string {
-  const { before, key, after } = parseMnemonic(label)
-  return before + key + after
-}
-
 export function isSelectable(item: MenuItemDef): boolean {
   return !item.separator && !item.disabled
 }

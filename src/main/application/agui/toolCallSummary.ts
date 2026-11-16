@@ -1,6 +1,6 @@
 import type { AguiTerminalState } from '@shared/agui-state'
 import type { ToolCallContentDto, ToolCallStatus } from '@shared/models'
-import { countLineChanges } from '../../domain/line-diff'
+import { countLineChanges } from '@shared/diff'
 import { blockToText } from './contentText'
 
 const MAX_RESULT_LENGTH = 8000

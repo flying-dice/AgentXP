@@ -51,12 +51,14 @@
   }
 </script>
 
+<!-- A focusable separator is the WAI-ARIA "window splitter" widget; svelte-check only knows it as static. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
   role="separator"
   tabindex={disabled ? -1 : 0}
   aria-orientation={orientation}
   aria-disabled={disabled}
-  class="xp-splitter {orientation} {className}"
+  class="w7-splitter {orientation} {className}"
   class:dragging
   onpointerdown={down}
   onpointermove={move}
@@ -66,7 +68,7 @@
 ></div>
 
 <style>
-  .xp-splitter {
+  .w7-splitter {
     flex: none;
     background: var(--w7-face);
     touch-action: none;
@@ -79,15 +81,15 @@
     height: 4px;
     cursor: row-resize;
   }
-  .xp-splitter:hover,
+  .w7-splitter:hover,
   .dragging {
     background: #bcc7d8;
   }
-  .xp-splitter:focus-visible {
+  .w7-splitter:focus-visible {
     outline: var(--w7-focus-outline);
     outline-offset: -1px;
   }
-  .xp-splitter[aria-disabled='true'] {
+  .w7-splitter[aria-disabled='true'] {
     cursor: default;
     pointer-events: none;
   }

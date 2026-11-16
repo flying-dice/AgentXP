@@ -109,7 +109,7 @@
 
 <style>
   /* The tab page already draws the border. */
-  :global(.xp-tree.session-tree.session-tree) {
+  :global(.w7-tree.session-tree.session-tree) {
     flex: 1;
     border: 0;
   }

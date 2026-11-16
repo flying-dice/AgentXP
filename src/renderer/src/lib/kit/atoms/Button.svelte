@@ -26,7 +26,7 @@
 </script>
 
 <button
-  class="xp-btn {variant} {className}"
+  class="w7-btn {variant} {className}"
   class:def={isDefault}
   {type}
   {disabled}
@@ -37,7 +37,7 @@
 </button>
 
 <style>
-  .xp-btn {
+  .w7-btn {
     min-width: 75px;
     height: 23px;
     padding: 0 10px;
@@ -54,57 +54,57 @@
     gap: 5px;
     white-space: nowrap;
   }
-  .xp-btn:hover:not(:disabled) {
+  .w7-btn:hover:not(:disabled) {
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
   }
-  .xp-btn:active:not(:disabled) {
+  .w7-btn:active:not(:disabled) {
     border-color: var(--w7-btn-active-border);
     background: var(--w7-btn-active-face);
   }
-  .xp-btn.def {
+  .w7-btn.def {
     border-color: var(--w7-btn-default-border);
     box-shadow:
       inset 0 0 0 1px #bfe3ff,
       0 0 3px rgba(51, 153, 255, 0.7);
   }
-  .xp-btn.def:hover:not(:disabled) {
+  .w7-btn.def:hover:not(:disabled) {
     border-color: var(--w7-btn-hover-border);
   }
-  .xp-btn:focus-visible {
+  .w7-btn:focus-visible {
     outline: var(--w7-focus-outline);
     outline-offset: -4px;
   }
-  .xp-btn:disabled {
+  .w7-btn:disabled {
     border-color: var(--w7-border-disabled);
     background: #f4f4f4;
     box-shadow: none;
     color: var(--w7-text-disabled);
   }
-  .xp-btn:disabled :global(.xp-icon) {
+  .w7-btn:disabled :global(.w7-icon) {
     opacity: 0.45;
   }
 
   /* FlatStyle.Flat */
-  .xp-btn.flat {
+  .w7-btn.flat {
     border-radius: 0;
     border-color: var(--w7-border);
     background: var(--w7-face);
     box-shadow: none;
   }
-  .xp-btn.flat:hover:not(:disabled) {
+  .w7-btn.flat:hover:not(:disabled) {
     border-color: var(--w7-border);
     background: #e5e5e5;
   }
-  .xp-btn.flat:active:not(:disabled) {
+  .w7-btn.flat:active:not(:disabled) {
     border-color: var(--w7-border);
     background: #cdcdcd;
   }
-  .xp-btn.flat.def {
+  .w7-btn.flat.def {
     border-color: #000;
     box-shadow: inset 0 0 0 1px #000;
   }
-  .xp-btn.flat:disabled {
+  .w7-btn.flat:disabled {
     background: var(--w7-face);
     border-color: var(--w7-border-disabled);
   }

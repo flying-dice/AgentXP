@@ -23,7 +23,7 @@
 </script>
 
 <label
-  class="xp-label {className}"
+  class="w7-label {className}"
   class:disabled
   class:ellipsis={autoEllipsis}
   for={forId}
@@ -33,15 +33,15 @@
 </label>
 
 <style>
-  .xp-label {
+  .w7-label {
     display: inline-block;
     color: var(--w7-text);
     cursor: default;
   }
-  .xp-label.disabled {
+  .w7-label.disabled {
     color: var(--w7-text-disabled);
   }
-  .xp-label.ellipsis {
+  .w7-label.ellipsis {
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;

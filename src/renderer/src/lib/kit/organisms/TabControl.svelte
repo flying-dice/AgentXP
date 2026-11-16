@@ -46,7 +46,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="xp-tabcontrol {className}" onkeydown={onControlKeydown}>
+<div class="w7-tabcontrol {className}" onkeydown={onControlKeydown}>
   <div bind:this={tablist} class="tabs" role="tablist" tabindex="-1" aria-label={ariaLabel} onkeydown={onTabsKeydown}>
     {#each tabs as tab (tab.id)}
       <TabHeader
@@ -74,7 +74,7 @@
 </div>
 
 <style>
-  .xp-tabcontrol {
+  .w7-tabcontrol {
     display: flex;
     width: 100%;
     height: 100%;

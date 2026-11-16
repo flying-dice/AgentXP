@@ -9,13 +9,13 @@
   let { text = '', disabled = false, class: className = '', children }: Props = $props()
 </script>
 
-<fieldset class="xp-groupbox {className}" class:disabled {disabled}>
+<fieldset class="w7-groupbox {className}" class:disabled {disabled}>
   {#if text}<legend>{text}</legend>{/if}
   {@render children?.()}
 </fieldset>
 
 <style>
-  .xp-groupbox {
+  .w7-groupbox {
     margin: 0;
     padding: 6px 9px 9px;
     min-width: 0;

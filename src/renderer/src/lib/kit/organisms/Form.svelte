@@ -87,7 +87,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-  class="xp-form {className}"
+  class="w7-form {className}"
   class:frameless
   class:inactive={!active}
   class:maximized
@@ -135,7 +135,7 @@
 </div>
 
 <style>
-  .xp-form {
+  .w7-form {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -150,12 +150,12 @@
     min-width: 0;
     min-height: 0;
   }
-  .xp-form.inactive {
+  .w7-form.inactive {
     border-color: var(--w7-frame-inactive-border);
     background: var(--w7-frame-inactive);
     box-shadow: var(--w7-frame-shadow-inactive);
   }
-  .xp-form.maximized {
+  .w7-form.maximized {
     position: absolute;
     inset: 0;
     width: auto;
@@ -164,10 +164,10 @@
     border: 0;
     border-radius: 0;
   }
-  .xp-form.maximized :global(.form-title) {
+  .w7-form.maximized :global(.form-title) {
     padding-left: 6px;
   }
-  .xp-form.frameless {
+  .w7-form.frameless {
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -188,10 +188,10 @@
   .client.window {
     background: var(--w7-window);
   }
-  .xp-form.frameless .client {
+  .w7-form.frameless .client {
     border: 0;
   }
-  .xp-form.maximized .client {
+  .w7-form.maximized .client {
     border-left: 0;
     border-right: 0;
     border-bottom: 0;

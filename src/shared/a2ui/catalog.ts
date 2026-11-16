@@ -12,9 +12,6 @@ import document from './winforms-catalog.json'
 
 export type WinformsCatalog = Catalog<ComponentApi, FunctionImplementation>
 
-/** A2UI protocol version the catalog and the whole pipeline speak. */
-export const A2UI_PROTOCOL_VERSION = 'v0.9'
-
 export function createWinformsCatalog(): WinformsCatalog {
   const schemaOnly = Catalog.fromJson(document)
   return schemaOnly.withEntries([...schemaOnly.components.values()], [...basicCatalog.functions.values()]) as WinformsCatalog
@@ -22,8 +19,6 @@ export function createWinformsCatalog(): WinformsCatalog {
 
 /** Shared immutable instance for code that has no reason to build its own. */
 export const winformsCatalog: WinformsCatalog = createWinformsCatalog()
-
-export const A2UI_COMPONENT_NAMES: readonly string[] = [...winformsCatalog.components.keys()]
 
 /** Union of the component names in `winforms-catalog.json`; the renderer registry must cover all of them. */
 export type WinformsComponentName = keyof (typeof document)['components']

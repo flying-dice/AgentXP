@@ -8,49 +8,64 @@ behaves like a Windows 7 WinForms application (see `docs/design/`).
 
 ```
 src/
-  shared/          Pure TypeScript contracts: DTOs (models.ts), IPC (ipc.ts), A2UI (a2ui.ts).
+  shared/          Pure TypeScript contracts and pure logic used by main and renderer.
                    No Node, no Electron, no DOM.
+                   models.ts (DTOs), ipc.ts + ipc-channels.ts (Agent7Api, push events),
+                   agui-state.ts (the AG-UI shared state), a2ui.ts + a2ui/ (A2UI catalog,
+                   validation and message processor built on @a2ui/web_core), diff.ts (line diff,
+                   line-change counting, unified diff parsing).
   main/            Electron main process.
     domain/        Entities, value objects and ports (interfaces). Depends on nothing.
-    application/   Use cases / services. Depend on domain ports only.
+    application/   Use cases / services. Depend on domain ports and shared only: never on
+                   electron, node:sqlite, the ACP SDK or infrastructure.
+      agui/        The AG-UI backend: run coordinator, event translator, shared state, interrupts.
     infrastructure/
       db/          SQLite (built-in `node:sqlite`): connection, migrations, repositories
                    implementing domain ports.
-      acp/         ACP client: agent process spawning, connection, client-side
-                   handlers (fs, terminals, permissions), session update mapping.
-      a2ui/        Stdio MCP server handed to agents + bridge into the app.
+      acp/         ACP client built on @agentclientprotocol/sdk: agent process, connection,
+                   client-side handlers (fs, terminals, permissions), session update mapping.
+      a2ui/        Stdio MCP server (@modelcontextprotocol/sdk) handed to agents + bridge into the app.
       fs/          Workspace file system access, sandboxed to registered folders.
-    application/agui/  The AG-UI backend: run coordinator, event translator, shared state, interrupts.
-    ipc/           ipcMain handlers that adapt Agent7Api calls to application services,
-                   the AG-UI stream transport, and the event publisher that pushes the
-                   renderer-facing Agent7Events (session list, status bar) to windows.
-    index.ts       Composition root: builds everything and wires it together.
+    ipc/           ipcMain handlers that adapt Agent7Api calls to application services, the AG-UI
+                   stream transport (streamAguiRun), window caption handlers, Electron dialogs and
+                   the event publisher that pushes the renderer-facing events to windows.
+    compose.ts     Composition root: builds the services from ports and adapters.
+    index.ts       Electron entry: frameless BrowserWindow, opens the database, wires IPC.
   preload/         contextBridge implementation of Agent7Api.
   renderer/src/
-    lib/kit/       WinForms UI kit, atomic design:
+    App.svelte     Mounts the main window page and the message box host.
+    lib/kit/       WinForms UI kit (Windows 7 look), pure Svelte, atomic design:
       atoms/       One standard WinForms control per component (Button, TextBox, ...).
-      molecules/   Small compositions (LabeledField, ToolbarButton with icon, ...).
-      organisms/   Large controls (MenuStrip, TreeView, DataGridView, CodeViewer, ...).
-      templates/   Window layouts (Form, SplitContainer layouts, MainWindow template).
-      tokens.css   Win7 design tokens. Components use these variables.
-      actions/     Shared behaviour (click-outside, popup positioning, roving focus).
-    lib/a2ui/      A2UI surface store + renderer mapping catalog components to kit components.
-    lib/stores/    Svelte 5 rune stores over window.agent7 (one store per concern).
+      molecules/   Small compositions of atoms (LabeledField, TitleBar, MenuItem, ...).
+      organisms/   Large controls (MenuStrip, TreeView, DataGridView, CodeViewer, Taskbar, ...).
+      templates/   Window layouts (Desktop, MainWindowTemplate).
+      actions/     Shared behaviour (click-outside, popup positioning, roving focus, focus trap).
+      tokens.css   Win7 design tokens (`--w7-*`). Components use these variables.
+      The kit knows nothing about the app. Atoms import no molecules or organisms; molecules
+      import no organisms.
+    lib/app/       Agent7-specific components and logic built from the kit: shell (trees, panes,
+                   dialogs), session (transcript, composer, tool calls, permissions), options,
+                   changes, files, menus, shortcuts and AppController (UI orchestration).
+    lib/stores/    Svelte 5 rune stores over `window.agent7` (one store per concern).
     lib/agui/      AG-UI client: IpcAgent (AbstractAgent over IPC) and SessionAgentStore.
-    lib/pages/     Pages (the main window) composed from kit templates/organisms.
+    lib/a2ui/      A2UI surface renderer: SurfaceController drives @a2ui/web_core's processor and
+                   the registry maps catalog components to Svelte components (a2ui/components).
+    lib/pages/     Pages (the main window) composed from kit templates and app components.
 ```
 
-Dependency rule: arrows point inwards. `domain` imports nothing from other
-layers; `application` imports `domain`; `infrastructure` implements domain
-ports; `ipc` and `index.ts` wire it all. The renderer talks to main only via
-`window.agent7` (typed by `src/shared/ipc.ts`).
+Dependency rule: arrows point inwards. `domain` imports nothing from other layers;
+`application` imports `domain` and `shared`; `infrastructure` implements domain and application
+ports; `ipc`, `compose.ts` and `index.ts` wire it all. The renderer talks to main only via
+`window.agent7` (typed by `src/shared/ipc.ts`) and never imports main code. The kit never
+imports `lib/app`, stores or pages.
 
 ## Principles
 
 - SRP: one reason to change per module. Small files, small functions.
 - DRY: shared shapes live in `src/shared`; Win7 visuals live in `tokens.css`
   and kit atoms, never duplicated in pages.
-- KISS: no frameworks beyond what is listed in package.json. No global singletons
+- KISS: official SDKs for protocols (@agentclientprotocol/sdk, @ag-ui/core + @ag-ui/client, @a2ui/web_core,
+  @modelcontextprotocol/sdk) instead of hand-rolled protocol code; no UI libraries, no frameworks beyond what is listed in package.json. No global singletons
   outside the composition root; pass dependencies via constructors.
 - Svelte 5 runes only (`$state`, `$derived`, `$props`, `$effect`, snippets).
 - Every kit component has a Storybook story (`*.stories.svelte`, addon-svelte-csf).
@@ -69,9 +84,8 @@ component properties and data models). Images from agents are stored as BLOB.
    `npx -y @zed-industries/claude-code-acp`) via `AgentProcess`, initialises ACP,
    and calls `session/new` with the folder as `cwd` and the A2UI MCP server in
    `mcpServers`.
-3. `session/update` notifications are mapped to repository writes and pushed
-   to the renderer as `Agent7Events`: message chunks, tool calls, plan (tasks),
-   modes, commands, usage.
+3. `session/update` notifications are mapped to domain events, projected into repository writes (transcript,
+   tool calls, plan, modes, commands, usage) and translated into the AG-UI stream (see below).
 4. Client-side ACP requests (`fs/read_text_file`, `fs/write_text_file`,
    `terminal/*`, `session/request_permission`) are served by the harness,
    sandboxed to the session folder. Writes are recorded as file changes for the
@@ -97,5 +111,21 @@ cancels the session's turn. One thread per session (`threadId` = session id).
   STATE_SNAPSHOT of the persisted session). A permission request ends the run with a
   RUN_FINISHED `interrupt` outcome; the ACP turn stays suspended until a run with a matching
   `resume` entry continues it.
-- Transcript, tasks, changes, terminals and surfaces are therefore no longer pushed as separate
-  events: services still publish them internally (`InternalEvents`), the coordinator consumes them.
+- Transcript, tasks, changes, terminals and surfaces are not pushed as separate events: services
+  publish them internally (`InternalEvents` in `application/ports.ts`), the coordinator consumes them.
+  The only events sent straight to the renderer are the `Agent7Events` (session list, folders, status bar).
+
+## A2UI
+
+The agent draws surfaces with the A2UI MCP tool. `shared/a2ui` holds the WinForms catalog
+(`winforms-catalog.json`, loaded through `@a2ui/web_core`), validates messages and processes them;
+surfaces are stored relationally and travel to the renderer as `a2ui-surface` activity messages.
+In the renderer, `SurfaceController` feeds the messages to web_core's `MessageProcessor` and
+`registry.ts` maps each catalog component to a Svelte component built from the kit. User actions go
+back to the agent through an AG-UI run (`forwardedProps.a2uiAction`).
+
+## Window
+
+The main window is frameless (`frame: false`). The kit's `TitleBar` and `CaptionButtons` draw the
+Windows 7 caption; `ipc/registerWindowHandlers.ts` implements minimise, maximise and close and
+publishes the window state. Storybook renders the same components against `lib/app/fakeApi.ts`.

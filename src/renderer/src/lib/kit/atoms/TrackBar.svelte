@@ -108,7 +108,7 @@
   aria-valuemax={max}
   aria-valuenow={value}
   aria-disabled={disabled}
-  class="xp-trackbar {orientation} {className}"
+  class="w7-trackbar {orientation} {className}"
   class:disabled
   class:dragging
   style={horizontal ? `width:${length}px` : `height:${length}px`}
@@ -143,7 +143,7 @@
 </div>
 
 <style>
-  .xp-trackbar {
+  .w7-trackbar {
     outline: none;
     position: relative;
     display: block;
@@ -151,10 +151,10 @@
     user-select: none;
     box-sizing: border-box;
   }
-  .xp-trackbar.horizontal {
+  .w7-trackbar.horizontal {
     height: 40px;
   }
-  .xp-trackbar.vertical {
+  .w7-trackbar.vertical {
     width: 40px;
   }
   .defs {
@@ -221,21 +221,21 @@
     fill: var(--g);
     stroke: #707070;
   }
-  .xp-trackbar:hover:not(.disabled) polygon {
+  .w7-trackbar:hover:not(.disabled) polygon {
     fill: var(--gh);
     stroke: #3c7fb1;
   }
-  .xp-trackbar.dragging polygon {
+  .w7-trackbar.dragging polygon {
     fill: var(--gp);
     stroke: #2c628b;
   }
-  .xp-trackbar:focus-visible polygon {
+  .w7-trackbar:focus-visible polygon {
     stroke: #3399ff;
   }
-  .xp-trackbar.disabled {
+  .w7-trackbar.disabled {
     opacity: 0.6;
   }
-  .xp-trackbar.disabled polygon {
+  .w7-trackbar.disabled polygon {
     fill: #f4f4f4;
     stroke: var(--w7-border-disabled);
   }

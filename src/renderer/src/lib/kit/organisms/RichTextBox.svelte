@@ -51,7 +51,7 @@
   }
 </script>
 
-<div class="xp-richtextbox {className}" class:disabled style:height>
+<div class="w7-richtextbox {className}" class:disabled style:height>
   {#if showMarkdown}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div class="scroll w7-scroll" tabindex="0" role="region" aria-label={label}>
@@ -79,7 +79,7 @@
 </div>
 
 <style>
-  .xp-richtextbox {
+  .w7-richtextbox {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -89,11 +89,11 @@
     border-top-color: var(--w7-input-border-top);
     font: var(--w7-font);
   }
-  .xp-richtextbox:focus-within {
+  .w7-richtextbox:focus-within {
     border-color: #569de5;
     border-top-color: #569de5;
   }
-  .xp-richtextbox.disabled {
+  .w7-richtextbox.disabled {
     background: var(--w7-face);
     border-color: var(--w7-border-disabled);
     color: var(--w7-text-disabled);

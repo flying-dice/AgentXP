@@ -43,7 +43,7 @@
   {role}
   closable={cancel !== undefined}
   onclose={() => cancel && onresult?.(cancel)}
-  class="xp-messagebox"
+  class="w7-messagebox"
 >
   <div class="message">
     {#if icon !== 'none'}<MessageIcon kind={icon} />{/if}
@@ -55,7 +55,7 @@
 </Dialog>
 
 <style>
-  :global(.xp-messagebox) {
+  :global(.w7-messagebox) {
     min-width: 260px;
     max-width: 520px;
   }

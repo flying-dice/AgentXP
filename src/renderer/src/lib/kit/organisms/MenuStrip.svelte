@@ -110,7 +110,7 @@
 
 <div
   bind:this={root}
-  class="xp-menustrip {className}"
+  class="w7-menustrip {className}"
   role="menubar"
   aria-label={ariaLabel}
   tabindex="-1"
@@ -154,7 +154,7 @@
 </div>
 
 <style>
-  .xp-menustrip {
+  .w7-menustrip {
     flex: none;
     display: flex;
     align-items: center;

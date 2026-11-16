@@ -114,7 +114,7 @@
     outline: var(--w7-focus-outline);
     outline-offset: -3px;
   }
-  .cmd :global(.xp-icon) {
+  .cmd :global(.w7-icon) {
     margin-top: 1px;
   }
   .body {

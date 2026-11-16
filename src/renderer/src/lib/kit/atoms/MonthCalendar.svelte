@@ -96,7 +96,7 @@
   }
 </script>
 
-<div class="xp-cal {className}" class:disabled>
+<div class="w7-cal {className}" class:disabled>
   <div class="head">
     <button type="button" class="nav" aria-label="Previous" {disabled} onclick={() => step(-1)}>
       <svg width="6" height="9"><path d="M6 0 0 4.5 6 9z" fill="currentColor" /></svg>
@@ -163,7 +163,7 @@
 </div>
 
 <style>
-  .xp-cal {
+  .w7-cal {
     display: inline-block;
     width: 196px;
     box-sizing: border-box;
@@ -173,7 +173,7 @@
     font: var(--w7-font);
     color: var(--w7-text);
   }
-  .xp-cal.disabled {
+  .w7-cal.disabled {
     color: var(--w7-text-disabled);
   }
   .head {

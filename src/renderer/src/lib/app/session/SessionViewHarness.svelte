@@ -10,6 +10,8 @@
 
   let { init, ...view }: Props = $props()
 
+  // One store per mount: `init` is deliberately read once.
+  // svelte-ignore state_referenced_locally
   const store = new FakeSessionStore(init)
   const pickFiles = async (): Promise<string[]> => ['C:\\Users\\jonathan\\notes\\login-bug.md']
   const setMode = async (): Promise<void> => {}

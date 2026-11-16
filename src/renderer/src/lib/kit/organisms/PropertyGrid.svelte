@@ -120,7 +120,7 @@
   </svg>
 {/snippet}
 
-<div class="xp-propgrid {className}">
+<div class="w7-propgrid {className}">
   <ToolStrip class="pgtools" aria-label="Property grid tools">
     <ToolStripButton glyph={catGlyph} title="Categorized" checked={categorized} onclick={() => (sort = 'categorized')} />
     <ToolStripButton glyph={azGlyph} title="Alphabetical" checked={!categorized} onclick={() => (sort = 'alphabetical')} />
@@ -187,7 +187,7 @@
 </div>
 
 <style>
-  .xp-propgrid {
+  .w7-propgrid {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -196,7 +196,7 @@
     background: var(--w7-face);
     border: 1px solid var(--w7-list-border);
   }
-  .xp-propgrid :global(.pgtools) {
+  .w7-propgrid :global(.pgtools) {
     height: 30px;
     border-bottom-color: var(--w7-border-light);
   }
@@ -245,7 +245,7 @@
     width: 4px;
     display: flex;
   }
-  .divider :global(.xp-splitter) {
+  .divider :global(.w7-splitter) {
     background: transparent !important;
   }
   .desc {
@@ -262,7 +262,7 @@
   .dtext {
     color: var(--w7-text);
   }
-  .xp-propgrid :global(.pgr.selected .editor) {
+  .w7-propgrid :global(.pgr.selected .editor) {
     background: var(--w7-window);
   }
 </style>

@@ -26,7 +26,7 @@
 
 {#if multiline}
   <textarea
-    class="xp-textbox multiline {className}"
+    class="w7-textbox multiline {className}"
     bind:this={ref}
     bind:value
     {readonly}
@@ -35,7 +35,7 @@
   ></textarea>
 {:else}
   <input
-    class="xp-textbox {className}"
+    class="w7-textbox {className}"
     bind:this={ref}
     bind:value
     type={password ? 'password' : 'text'}
@@ -45,7 +45,7 @@
 {/if}
 
 <style>
-  .xp-textbox {
+  .w7-textbox {
     height: 21px;
     padding: 2px 3px;
     border: 1px solid var(--w7-input-border);
@@ -58,23 +58,23 @@
     user-select: text;
     cursor: text;
   }
-  .xp-textbox:hover:not(:disabled) {
+  .w7-textbox:hover:not(:disabled) {
     border-color: #3d7bad;
     border-top-color: #3d7bad;
   }
-  .xp-textbox:focus {
+  .w7-textbox:focus {
     border-color: #569de5;
     border-top-color: #569de5;
   }
-  .xp-textbox:disabled {
+  .w7-textbox:disabled {
     border-color: var(--w7-border-disabled);
     background: #f4f4f4;
     color: var(--w7-text-disabled);
   }
-  .xp-textbox:read-only:not(:disabled) {
+  .w7-textbox:read-only:not(:disabled) {
     background: var(--w7-face);
   }
-  .xp-textbox::placeholder {
+  .w7-textbox::placeholder {
     color: #8a8a8a;
   }
   .multiline {

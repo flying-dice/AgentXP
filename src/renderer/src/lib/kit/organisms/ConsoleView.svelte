@@ -35,7 +35,7 @@
   })
 </script>
 
-<div class="xp-console {className}" style:max-height={maxHeight}>
+<div class="w7-console {className}" style:max-height={maxHeight}>
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
     class="scroll w7-scroll"
@@ -57,7 +57,7 @@
 </div>
 
 <style>
-  .xp-console {
+  .w7-console {
     display: flex;
     flex-direction: column;
     min-height: 0;

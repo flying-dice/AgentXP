@@ -2,7 +2,7 @@
   import Dialog from '../../kit/organisms/Dialog.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
-  import { languageForPath } from '../files/language'
+  import { languageFromPath } from '$lib/kit/organisms/highlighter'
 
   interface Props {
     /** Relative path shown in the title bar. */
@@ -22,7 +22,7 @@
   {:else if text === null}
     <div class="note">Loading…</div>
   {:else}
-    <CodeViewer code={text} language={languageForPath(path)} toolbar maxHeight="60vh" label={path} />
+    <CodeViewer code={text} language={languageFromPath(path)} toolbar maxHeight="60vh" label={path} />
   {/if}
   {#snippet buttons()}
     <DialogButtons buttons={[{ result: 'ok', label: 'Close' }]} onresult={() => onclose?.()} />
