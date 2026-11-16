@@ -21,7 +21,7 @@
   import LauncherHelpDialog from '../launcher/LauncherHelpDialog.svelte'
   import NewDesktopDialog from '../launcher/NewDesktopDialog.svelte'
   import RenameDesktopDialog from '../launcher/RenameDesktopDialog.svelte'
-  import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
+  import { accessKeyCommand, AGENT_CHECK_MS, connectLabel, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -62,7 +62,12 @@
   }
 
   onMount(() => {
+    document.title = LAUNCHER_WINDOW_TITLE
     const off = api.on('launcher.changed', apply)
+    // Is the agent program of each desktop there? Looked up when the launcher opens and every 30 seconds while it is open.
+    const check = (): void => void api.launcher.checkAgents().catch(() => {})
+    check()
+    const timer = setInterval(check, AGENT_CHECK_MS)
     void api.launcher.list().then(
       (items) => {
         apply(items)
@@ -73,7 +78,10 @@
         void fail(error)
       }
     )
-    return off
+    return () => {
+      off()
+      clearInterval(timer)
+    }
   })
 
   // The New dialog needs the project folders and the agents.
@@ -229,6 +237,7 @@
             <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
           {:else}
             <p class="empty" data-testid="launcher-empty">{loaded ? 'No desktops yet. A desktop is a workspace where an agent works on your projects. Click New... to create one.' : 'Loading...'}</p>
+            {#if loaded}<p class="empty" data-testid="launcher-empty-help">{EMPTY_LAUNCHER_HELP}</p>{/if}
           {/each}
         </div>
         {#if options}

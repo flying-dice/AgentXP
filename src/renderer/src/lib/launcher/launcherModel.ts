@@ -17,6 +17,18 @@ export function stateLabel(d: Pick<DesktopSummaryDto, 'runState' | 'pendingAppro
   }
 }
 
+/** The launcher looks for the agent program of each desktop this often while it is open (milliseconds). */
+export const AGENT_CHECK_MS = 30_000
+
+/** Second paragraph of the empty launcher: what the product does. */
+export const EMPTY_LAUNCHER_HELP = 'What you can do: plug in a project folder, ask the agent to read or change it, and approve each change yourself.'
+
+/** Title of the launcher's operating system window (it is not the title of a desktop window). */
+export const LAUNCHER_WINDOW_TITLE = 'Agent7 Desktop Connection'
+
+/** Title of a desktop's operating system window: the desktop's own name. */
+export const desktopWindowTitle = (desktopTitle: string): string => `${desktopTitle.trim() || 'Desktop'} - Agent7`
+
 /** Tooltip of the error state: where to change the agent. */
 export const ERROR_HINT = 'Open the desktop, then Control Center > Agents, to change the command.'
 
@@ -88,12 +100,20 @@ export function suggestDesktopName(name: string, existing: readonly string[]): s
   }
 }
 
-/** The name is taken: the suggestion to offer, else null. */
+/** The name is taken: the numbered suggestion to offer, else null. */
 export const nameSuggestion = (name: string, existing: readonly string[]): string | null => (name.trim() !== '' && isTaken(name, existing) ? suggestDesktopName(name, existing) : null)
+
+/** `Fix login redirect - docs-site`: the name plus the project folder, when that name is free. */
+export function projectSuggestion(name: string, project: string | undefined, existing: readonly string[]): string | null {
+  const base = name.trim().replace(/\s*\(\d+\)$/, '')
+  if (!project?.trim() || base === '' || !isTaken(name, existing)) return null
+  const candidate = `${base} - ${project.trim()}`
+  return candidate.length <= 60 && !isTaken(candidate, existing) ? candidate : null
+}
 
 /** The warning shown before a desktop is deleted. */
 export const DELETE_WARNING =
-  'Deleting this desktop removes its C: drive, chats, notes and logs. Plugged-in projects are removed from this desktop; the folders and files stay on your disk.'
+  'Deleting this desktop removes its private C: drive (files made on this desktop), chats, notes and logs. Project folders (plugged in) are removed from this desktop; the folders and files stay on your disk.'
 
 export type LauncherCommand = 'new' | 'connect' | 'rename' | 'delete'
 

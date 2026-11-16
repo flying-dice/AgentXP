@@ -38,9 +38,27 @@ export const TOP_BAR_HEIGHT = 30
 /** The lowest `y` a new window is placed at. */
 export const WINDOW_MIN_Y = TOP_BAR_HEIGHT + 4
 
+/**
+ * Windows that show the same title (two Explorer windows on Computer) get " (2)", " (3)" in the order they were opened,
+ * so the window frames and taskbar buttons of one desktop can be told apart. The first keeps its title.
+ */
+export function numberDuplicateTitles<T extends { id: number; title: string }>(windows: readonly T[]): T[] {
+  const seen = new Map<string, number>()
+  const counts = new Map<number, number>()
+  for (const w of [...windows].sort((a, b) => a.id - b.id)) {
+    const n = (seen.get(w.title) ?? 0) + 1
+    seen.set(w.title, n)
+    counts.set(w.id, n)
+  }
+  return windows.map((w) => ((counts.get(w.id) ?? 1) > 1 ? { ...w, title: `${w.title} (${counts.get(w.id)})` } : w))
+}
+
+/** Each new window starts this many pixels right of and below the previous one. */
+export const CASCADE_STEP = 32
+
 /** Default bounds of a new window, cascaded by the number of windows already open. */
 export function cascadedBounds(app: AppKind, openCount: number, size?: { width: number; height: number }): Bounds {
-  const offset = (openCount % 6) * 24
+  const offset = (openCount % 6) * CASCADE_STEP
   const b = DEFAULT_BOUNDS[app]
   return { ...b, ...(size ?? {}), x: b.x + offset, y: b.y + offset }
 }
@@ -155,15 +173,20 @@ export const HELP_PROGRAM_NAME = 'Agent7 Help and Support'
 
 /** "Agent7 Help and Support: Using Notepad" for the topic of an app, "Agent7 Help and Support" for the home, desktop, launcher and Help topics. */
 export function helpWindowTitle(topic: string): string {
-  const kind = (APP_KINDS as readonly string[]).includes(topic) ? (topic as AppKind) : null
+  const base = topic.split('#')[0] // "browser#troubleshooting": the title comes from the topic
+  const kind = (APP_KINDS as readonly string[]).includes(base) ? (base as AppKind) : null
   return kind && kind !== 'help' ? `${HELP_PROGRAM_NAME}: Using ${APP_DISPLAY_NAMES[kind]}` : HELP_PROGRAM_NAME
 }
+
+/** The title of the window of an agent's form: "<title> - from the agent". */
+export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
 
 export function windowTitle(view: AppView): string {
   switch (view.app) {
     case 'chat':
-    case 'surface':
       return view.title
+    case 'surface':
+      return surfaceWindowTitle(view.title)
     case 'explorer':
       return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'
     case 'notepad':

@@ -4,7 +4,7 @@ import type { SessionProblemDto } from '@shared/models'
 import type { FailedSend } from '../../agui/SessionAgentStore.svelte'
 
 /** What a button of the error row does (the hosts of `SessionView` carry them out). */
-export type ProblemActionId = 'send-again' | 'restart-send' | 'restart' | 'details' | 'event-viewer'
+export type ProblemActionId = 'send-again' | 'restart-send' | 'restart' | 'details' | 'event-viewer' | 'open-agents' | 'choose-agent' | 'new-chat'
 
 export interface ProblemAction {
   id: ProblemActionId
@@ -19,8 +19,15 @@ export interface ChatProblem {
   actions: ProblemAction[]
 }
 
+/** How long "The agent is running again." stays after a restart. */
+export const RESTART_DONE_MS = 4000
+
 const DETAILS: ProblemAction = { id: 'details', label: 'Details...' }
 const EVENT_VIEWER: ProblemAction = { id: 'event-viewer', label: 'Show in Event Viewer' }
+/** Both open Control Center > Agents: one to correct the command of the agent, one to pick another agent as the default. */
+const OPEN_AGENTS: ProblemAction = { id: 'open-agents', label: 'Open Agents' }
+const CHOOSE_AGENT: ProblemAction = { id: 'choose-agent', label: 'Choose another agent' }
+const NEW_CHAT: ProblemAction = { id: 'new-chat', label: 'Start a new chat' }
 
 export interface ProblemInput {
   /** The error of the last run (technical text), or null. */
@@ -29,30 +36,46 @@ export interface ProblemInput {
   problem: SessionProblemDto | null | undefined
   /** The send that did not go through, or null. */
   failed: Pick<FailedSend, 'unanswered'> | null
+  /** The name of the desktop's default agent when it is not the agent of this chat ("Try again with Claude Code"); else null. */
+  newDefaultAgent?: string | null
+}
+
+const lowerFirst = (text: string): string => (/^[A-Z][a-z]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text)
+
+/** The line a second failure in a row adds: "It stopped again: the program 'x' was not found. Show in Event Viewer shows the details." */
+export function repeatLine(problem: SessionProblemDto): string {
+  const cause = lowerFirst((problem.cause ?? problem.message).trim().replace(/\.$/, ''))
+  return `It stopped again: ${cause}. Show in Event Viewer shows the details.`
 }
 
 /**
  * The error row of a chat. The technical text (ACP, JSON-RPC, exit codes) never shows in the row, only behind
  * "Details...". A failure that is not about the agent program (the agent reported an error of its own) is shown as it came.
+ * After a second failure in a row the row adds the cause and swaps "Restart and send again" for "Start a new chat", so the
+ * message is not sent into the same failure over and over.
  */
-export function describeProblem({ error, problem, failed }: ProblemInput): ChatProblem | null {
+export function describeProblem({ error, problem, failed, newDefaultAgent = null }: ProblemInput): ChatProblem | null {
   if (problem) {
     const detail = problem.detail || error
+    const again = (problem.failures ?? 1) >= 2
+    const tail = again ? `\n${repeatLine(problem)}` : ''
     switch (problem.kind) {
-      case 'start-failed':
+      case 'start-failed': {
+        const retry: ProblemAction = failed ? { id: 'send-again', label: 'Send again' } : { id: 'restart', label: newDefaultAgent ? `Try again with ${newDefaultAgent}` : 'Try again' }
         return {
-          text: failed ? `${problem.message} Your message was not sent.` : problem.message,
+          text: `${failed ? `${problem.message} Your message was not sent.` : problem.message}${tail}`,
           detail,
-          actions: failed ? [{ id: 'send-again', label: 'Send again' }, DETAILS] : [{ id: 'restart', label: 'Try again' }, DETAILS]
+          actions: [retry, OPEN_AGENTS, CHOOSE_AGENT, ...(again ? [NEW_CHAT, EVENT_VIEWER] : []), DETAILS]
         }
-      case 'agent-stopped':
-        return {
-          text: problem.message,
-          detail,
-          actions: [{ id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }, DETAILS, EVENT_VIEWER]
-        }
-      case 'agent-ended':
-        return { text: problem.message, detail, actions: [{ id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }] }
+      }
+      case 'agent-stopped': {
+        const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
+        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [NEW_CHAT] : []), DETAILS, EVENT_VIEWER] }
+      }
+      case 'agent-ended': {
+        const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
+        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [NEW_CHAT, EVENT_VIEWER] : [])] }
+      }
     }
   }
   if (error === null) return null

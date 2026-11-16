@@ -29,7 +29,7 @@ export function treeMenu(target: TreeMenuTarget, ops: TreeMenuOps, state: { canE
         item('start-chat', '&Start a chat here', ops.startChat, { icon: 'session' }),
         item('open-explorer', 'Open in &Explorer', ops.openInExplorer, { icon: 'folder' }),
         { separator: true },
-        item('eject', 'E&ject', ops.eject, { icon: 'usb', disabled: !state.canEject, title: 'Remove this project from the desktop. Its folder stays on your disk.' })
+        item('eject', 'E&ject (remove from this desktop)', ops.eject, { icon: 'usb', disabled: !state.canEject, title: 'Remove this project from the desktop. Its folder stays on your disk.' })
       ]
     case 'folder':
       return [

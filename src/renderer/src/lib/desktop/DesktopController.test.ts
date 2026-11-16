@@ -4,7 +4,8 @@ import { createFakeApi } from '../app/fakeApi'
 import { folderBrowsers } from '../kit/organisms/folderBrowser'
 import { messageBoxes } from '../kit/organisms/messageBox'
 import { emptyAguiState } from '@shared/agui-state'
-import { CONTINUE_TEXT, DesktopController, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
+import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE } from '../app/session/resumeNote'
+import { DesktopController, NOTICE_MS, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
 
 async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
   const api = createFakeApi()
@@ -108,29 +109,43 @@ describe('DesktopController', () => {
     expect(controller.state.userInControl).toBe(true)
   })
 
-  it('Resume leaves a Continue message for each chat that Pause stopped, and Continue asks the agent to carry on', async () => {
-    const { controller } = await started()
-    controller.sessions.items = controller.sessions.items.map((s) => (s.id === 1 ? { ...s, status: 'working' as const } : s))
+  it('Resume sends each chat Pause stopped the continue message, and the Action Center says so', async () => {
+    const { api, controller } = await started()
     const send = vi.fn(async () => true)
     controller.inbox.register(1, { state: emptyAguiState(), pendingInterrupt: null, running: false, resolveInterrupt: async () => {}, send })
     await controller.togglePaused()
-    expect(controller.messages).toHaveLength(0)
+    expect(controller.state.paused).toBe(true)
+    vi.spyOn(api.desktop, 'resumeAgents').mockResolvedValue([1])
     await controller.togglePaused()
-    expect(controller.messages).toHaveLength(1)
-    expect(controller.messages[0]).toMatchObject({ continueChat: 1 })
-    expect(controller.messages[0].text).toContain('The step that was stopped stays stopped')
-    expect(controller.balloon?.title).toBe('Agents resumed')
-    await controller.continueChat(1)
+    expect(controller.state.paused).toBe(false)
     expect(send).toHaveBeenCalledWith(CONTINUE_TEXT)
-    expect(controller.messages).toHaveLength(0)
+    expect(controller.messages).toHaveLength(1)
+    expect(controller.messages[0].text).toContain('Resumed. Continuing where you stopped.')
+    expect(controller.notice).toBeNull()
   })
 
-  it('Resume with nothing stopped adds no message', async () => {
+  it('the paused note and the Action Center line come from the saved list in the desktop state', async () => {
+    const { controller } = await started()
+    controller.current = { ...controller.state, paused: true, stoppedByPause: [1] }
+    expect(controller.stoppedByPause(1)).toBe(true)
+    expect(controller.stoppedByPause(2)).toBe(false)
+    expect(controller.centreMessages.map((m) => m.id)).toEqual([-1])
+    expect(controller.centreMessages[0].text).toContain('Paused. The step that was running was stopped')
+    controller.current = { ...controller.state, paused: false, stoppedByPause: [1] }
+    expect(controller.stoppedByPause(1)).toBe(false)
+    expect(controller.centreMessages).toEqual([])
+  })
+
+  it('Resume with nothing stopped says so on the bar for a moment, adds no message and no balloon', async () => {
+    vi.useFakeTimers()
     const { controller } = await started()
     await controller.togglePaused()
     await controller.togglePaused()
+    expect(controller.notice).toBe(NOTHING_STOPPED_NOTICE)
     expect(controller.messages).toHaveLength(0)
     expect(controller.balloon).toBeNull()
+    vi.advanceTimersByTime(NOTICE_MS)
+    expect(controller.notice).toBeNull()
   })
 
   it('opens Control Center at a page', async () => {
@@ -230,7 +245,22 @@ describe('DesktopController projects and shell feedback', () => {
     expect(drive?.label).toBe('login-app')
     expect(controller.state.drives.some((d) => d.label === 'login-app')).toBe(true)
     expect(controller.balloon?.title).toBe('Project plugged in')
-    expect(controller.balloon?.text).toBe(`login-app (${drive?.letter}:) is ready to use.`)
+    expect(controller.balloon?.text).toBe(`Project plugged in: login-app (${drive?.letter}:) is ready to use.`)
+  })
+
+  it('Plug in a project opens Explorer on the drive and no AutoPlay; the tray route keeps AutoPlay', async () => {
+    const { controller } = await started()
+    const pending = controller.plugInProject()
+    await answerBrowser('C:\\Users\\jonathan\\source\\login-app')
+    const drive = await pending
+    expect(controller.autoPlay).toBeNull()
+    const explorer = controller.state.windows.find((w) => w.view.app === 'explorer')
+    expect(explorer?.view).toMatchObject({ path: `${drive?.letter}:\\` })
+    expect(controller.state.focusedWindowId).toBe(explorer?.id)
+    const letter = drive!.letter
+    await controller.ejectDrive(letter)
+    await controller.plugInAgain(controller.recentlyRemoved[0].folderId, { autoPlay: true })
+    expect(controller.autoPlay?.label).toBe('login-app')
   })
 
   it('Cancel plugs nothing in', async () => {

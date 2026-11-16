@@ -50,7 +50,11 @@ describe('Explorer and USB drives', () => {
     await ctx.desktop.ejectDrive('e')
     await see.gone(explorer.drive('e'))
     await see.visible(explorer.drive('c'))
-    await see.gone(ctx.desktop.usbTray)
+    // The tray stays while a removed project can be plugged in again.
+    await see.visible(ctx.desktop.usbTray)
+    await ctx.desktop.usbTray.click()
+    await see.text(ctx.desktopPage.getByTestId('usb-plug-again'), `Plug in ${workspace.name} (E:) again`)
+    await ctx.desktopPage.keyboard.press('Escape')
   })
 
   it('plugging a project into the running desktop shows AutoPlay and the new drive', async () => {

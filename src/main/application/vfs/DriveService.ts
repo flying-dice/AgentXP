@@ -1,4 +1,4 @@
-import { SYSTEM_DRIVE, nextDriveLetter, type DriveDto, type DriveLetter } from '@shared/vfs'
+import { REMOVED_PROJECTS_KEPT, SYSTEM_DRIVE, nextDriveLetter, type DriveDto, type DriveLetter, type RemovedProjectDto } from '@shared/vfs'
 import type { FolderDto, Id } from '@shared/models'
 import type { DesktopRepository } from '../../domain/repositories/desktop-repository'
 import type { DriveRepository } from '../../domain/repositories/drive-repository'
@@ -38,6 +38,16 @@ export class DriveService {
     return [{ letter: SYSTEM_DRIVE, label: SYSTEM_DRIVE_LABEL, kind: 'system', folderId: null, pluggedAt: null }, ...removable]
   }
 
+  /** Projects removed from the desktop, newest first (any route: Computer, the tray, the agent's API). */
+  removed(desktopId: Id): RemovedProjectDto[] {
+    return this.deps.drives.listRemoved(desktopId)
+  }
+
+  /** The name of the project that was removed from `letter`, for the message the agent gets. */
+  removedLabelOn(desktopId: Id, letter: DriveLetter): string | null {
+    return this.removed(desktopId).find((r) => r.letter === letter.toUpperCase())?.label ?? null
+  }
+
   /** Plugs a project in under the first free letter (E:, F:, ...). Plugging the same project again returns its drive. */
   async plugIn(desktopId: Id, folderId?: Id): Promise<DriveDto | null> {
     required(this.deps.desktops.get(desktopId), 'Desktop')
@@ -53,6 +63,7 @@ export class DriveService {
     const letter = nextDriveLetter(this.list(desktopId).map((d) => d.letter))
     if (!letter) throw new AppError('All drive letters (E: to Z:) are in use. Eject a drive first.')
     this.deps.drives.add(desktopId, letter, folderId)
+    this.deps.drives.clearRemoved(desktopId, folderId)
     this.deps.folders.touch(folderId)
     this.changed(desktopId)
     return this.list(desktopId).find((d) => d.letter === letter)!
@@ -63,7 +74,10 @@ export class DriveService {
     const drive = letter.toUpperCase()
     if (drive === SYSTEM_DRIVE) throw new AppError('The system disk (C:) cannot be removed.')
     required(this.deps.desktops.get(desktopId), 'Desktop')
-    if (!this.deps.drives.remove(desktopId, drive)) throw new AppError(`Drive ${drive}: is not plugged in.`)
+    const plugged = this.deps.drives.list(desktopId).find((d) => d.letter === drive)
+    if (!plugged || !this.deps.drives.remove(desktopId, drive)) throw new AppError(`Drive ${drive}: is not plugged in.`)
+    const label = this.deps.folders.get(plugged.folderId)?.name ?? `Drive ${drive}`
+    this.deps.drives.addRemoved(desktopId, { folderId: plugged.folderId, letter: drive, label }, REMOVED_PROJECTS_KEPT)
     this.changed(desktopId)
   }
 

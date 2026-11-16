@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REVERTED_LABEL, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
+import { REVERTED_KIND, REVERTED_LABEL, splitFileName, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
 
 describe('changeFormat', () => {
   it('labels kinds and line counts', () => {
@@ -28,6 +28,16 @@ describe('changes list (UX-40)', () => {
 
   it('tells where a reverted file can be found', () => {
     expect(revertConfirmText('E:\\a.ts')).toContain('You can get it back from the Recycle Bin.')
-    expect(REVERTED_LABEL).toBe('Reverted (in the Recycle Bin)')
+    expect(REVERTED_LABEL).toBe('Reverted. Restore from the Recycle Bin')
+    expect(REVERTED_KIND).toBe('Reverted')
+  })
+})
+
+describe('file names in the list (UX-79)', () => {
+  it('keeps the extension apart so only the stem is cut', () => {
+    expect(splitFileName('redirect.ts')).toEqual({ stem: 'redirect', ext: '.ts' })
+    expect(splitFileName('a.test.ts')).toEqual({ stem: 'a.test', ext: '.ts' })
+    expect(splitFileName('.gitignore')).toEqual({ stem: '.gitignore', ext: '' })
+    expect(splitFileName('Makefile')).toEqual({ stem: 'Makefile', ext: '' })
   })
 })

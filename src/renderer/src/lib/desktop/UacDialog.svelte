@@ -3,7 +3,9 @@
   import Icon from '../kit/atoms/Icon.svelte'
   import { focusTrap } from '../kit/actions/focusTrap'
   import ApprovalDetail from '../app/session/ApprovalDetail.svelte'
+  import { AltHeld, moveBetweenAnswers } from '../app/session/answerKeys.svelte'
   import CommandLink from '../app/session/CommandLink.svelte'
+  import { KEY_HINT, accessKeyIndex, decisionForKey } from '../app/session/permissionOptions'
   import { approvalQuestion, optionDescription, type PendingApproval } from './approval'
 
   interface Props {
@@ -22,6 +24,24 @@
   const allow = $derived(approval.options.filter((o) => o.kind.startsWith('allow')))
   const deny = $derived(approval.options.filter((o) => o.kind.startsWith('reject')))
   const ordered = $derived([...allow, ...deny])
+  const alt = new AltHeld()
+
+  /** Alt+A takes the first Allow answer, Alt+D the first refusal; Left and Right move between the answers. */
+  function onkeydown(event: KeyboardEvent): void {
+    alt.keydown(event)
+    if (event.key === 'Escape') {
+      event.stopPropagation()
+      onclose?.()
+      return
+    }
+    const decision = decisionForKey(event)
+    const option = decision === 'allow' ? allow[0] : decision === 'deny' ? deny[0] : undefined
+    if (option) {
+      event.preventDefault()
+      event.stopPropagation()
+      onanswer?.(option.optionId)
+    } else moveBetweenAnswers(event)
+  }
 </script>
 
 <div class="dim" role="presentation" data-testid="uac-dim">
@@ -33,11 +53,10 @@
     aria-labelledby="uac-q"
     tabindex="-1"
     use:focusTrap
-    onkeydown={(e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation()
-        onclose?.()
-      }
+    {onkeydown}
+    onkeyup={alt.keyup}
+    onfocusout={(e) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) alt.reset()
     }}
   >
     <div class="band" class:risky>
@@ -49,17 +68,22 @@
       <div class="reason" data-testid="uac-reason">Reason: {reason}</div>
       <ApprovalDetail toolCall={approval.toolCall} testid="uac" />
     </div>
-    <div class="links">
+    <div class="links" data-answers role="group" aria-label="Your answer">
       {#each ordered as option (option.optionId)}
+        {@const decision = option.kind.startsWith('allow') ? 'allow' : 'deny'}
+        {@const first = option === allow[0] || option === deny[0]}
         <CommandLink
-          kind={option.kind.startsWith('allow') ? 'allow' : 'deny'}
+          kind={decision}
           testid={option === allow[0] ? 'uac-allow' : `uac-option-${option.optionId}`}
           title={option.name}
+          keyIndex={first ? accessKeyIndex(option.name, decision) : -1}
+          showKey={alt.held}
           description={optionDescription(option.kind)}
           autofocus={option === deny[0]}
           onclick={() => onanswer?.(option.optionId)}
         />
       {/each}
+      {#if ordered.length > 0}<p class="hint" data-testid="uac-hint">{KEY_HINT}</p>{/if}
     </div>
     <div class="bar">
       {#if ordered.length === 0}
@@ -127,6 +151,11 @@
   .links {
     padding: 4px 12px 8px;
     background: #fff;
+  }
+  .hint {
+    margin: 6px 0 0 2px;
+    font-size: 12px;
+    color: var(--w7-text-muted);
   }
   .bar {
     display: flex;

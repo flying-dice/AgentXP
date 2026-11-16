@@ -3,7 +3,7 @@
    * Code Review: a WinDiff-style diff of a working tree against a base ref (outline of the changed files, expanded
    * view with the coloured margin bar, side by side, or every file in one page), with a dedicated ACP session beside
    * it (the embedded chat panel in role `review`) whose agent leaves inline comments like a merge request gets them.
-   * Opening the window is read only: no agent starts reviewing until the user clicks "Ask the agent to review...".
+   * Opening the window is read only: no agent starts reviewing until the user clicks "Start a new review...".
    * The comments can be passed to a chat to fix. See manuals/code-review.md.
    */
   import { onMount, tick, untrack } from 'svelte'
@@ -12,7 +12,6 @@
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import type { SessionDto } from '@shared/models'
   import {
-    VERDICT_LABELS,
     isSafeRef,
     reviewKickoffPrompt,
     type NewReviewComment,
@@ -52,6 +51,8 @@
     changeTotals,
     commentCounts,
     fileView,
+    filesStatusLabel,
+    verdictLine,
     neighbourFile,
     openCounts,
     openingFile,
@@ -135,8 +136,10 @@
   // svelte-ignore state_referenced_locally
   sync.mark({ baseRef, selectedPath: chosenPath })
 
+  // Only what was chosen is reported: the file shown by default is not a choice, and reporting it would overwrite a file
+  // another window asked for while this one was still loading (the Git list of the Code window, UX-78).
   $effect(() => {
-    const view = { baseRef, selectedPath }
+    const view = { baseRef, selectedPath: chosenPath }
     untrack(() => {
       if (sync.mark(view)) host.updateView(win.id, { app: 'code-review', root, sessionId, ...view })
     })
@@ -438,8 +441,8 @@
       label: '&File',
       items: [
         { id: 'review-refresh', testid: 'review-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void loadChanges() },
-        { id: 'review-send-all', testid: 'review-menu-send-all', label: 'Send all open comments to &chat...', disabled: counts.open === 0, action: () => void openSend('open') },
-        { id: 'review-ask', testid: 'review-menu-ask-agent', label: '&Ask the agent to review...', disabled: !store || reviewing, action: () => void askAgent() },
+        { id: 'review-send-all', testid: 'review-menu-send-all', label: 'Send comments to &chat...', disabled: counts.open === 0, action: () => void openSend('open') },
+        { id: 'review-ask', testid: 'review-menu-ask-agent', label: 'Start a &new review...', disabled: !store || reviewing, action: () => void askAgent() },
         ...closeItems('code-review', () => void host.closeWindow(win.id))
       ]
     },
@@ -522,14 +525,15 @@
       <ComboBox aria-label="File" testid="review-file-select" items={fileItems} value={selectedPath ?? ''} onchange={(path) => void goToFile(path, null)} disabled={changes.length === 0} style="width:230px" />
     {/if}
     <span class="spring"></span>
-    <ToolStripButton icon="agent" text="Ask the agent to review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={ASK_HINT} />
+    <ToolStripButton icon="agent" text="Start a new review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={ASK_HINT} />
     <ToolStripButton icon="properties" text="Comments ({counts.open})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" title="Show or hide the list of comments" />
+    <ToolStripButton icon="session" text="Send comments to chat..." onclick={() => void openSend('open')} disabled={counts.open === 0} data-testid="review-send-comments" title={counts.open === 0 ? 'There are no open comments to send.' : 'Send the open comments to a chat, so the agent can fix them'} />
   </div>
 
   {#if review.summary}
     <div class="banner {review.summary.verdict}" data-testid="review-verdict" data-verdict={review.summary.verdict} role="status">
-      <b>{VERDICT_LABELS[review.summary.verdict]}</b>
-      {#if review.summary.body}<span class="body">{review.summary.body}</span>{/if}
+      <b data-testid="review-verdict-line">{verdictLine(review.summary.verdict, review.comments)}</b>
+      {#if review.summary.body}<span class="body" title={review.summary.body}>{review.summary.body}</span>{:else}<span class="body"></span>{/if}
       {@render commentsLink()}
     </div>
   {:else}
@@ -537,7 +541,7 @@
       <span class="body">
         {reviewing
           ? 'The agent is reading the changes. It cannot change files.'
-          : 'Nobody has reviewed these changes yet. Click a line number to comment yourself, or click "Ask the agent to review...".'}
+          : 'Nobody has reviewed these changes yet. Click a line number to comment yourself, or click "Start a new review...".'}
       </span>
       {@render commentsLink()}
     </div>
@@ -629,7 +633,7 @@
 
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="review-status-root" text="{root} against {baseLabel(baseRef)}" spring />
-    <StatusStripLabel testid="review-status-files" text="{changes.length} {changes.length === 1 ? 'file' : 'files'}" borders={['left']} />
+    <StatusStripLabel testid="review-status-files" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />
     {#if mode === 'expanded' && positionLabel}
       <StatusStripLabel testid="review-status-change" text={positionLabel} borders={['left']} />
     {/if}

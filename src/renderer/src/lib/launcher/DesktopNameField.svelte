@@ -6,22 +6,31 @@
   import Icon from '../kit/atoms/Icon.svelte'
   import Label from '../kit/atoms/Label.svelte'
   import TextBox from '../kit/atoms/TextBox.svelte'
-  import { nameSuggestion, validateDesktopName } from './launcherModel'
+  import { nameSuggestion, projectSuggestion, validateDesktopName } from './launcherModel'
 
   interface Props {
     value: string
     label: string
     /** Names of the other desktops. */
     existingNames?: string[]
-    /** Prefix of the test ids: `<idPrefix>-name`, `<prefix>-error`, `<prefix>-use-suggestion`. */
+    /** Prefix of the test ids: `<idPrefix>-name`, `<prefix>-error`, `<prefix>-use-suggestion` (numbered) and `<prefix>-use-project-suggestion`. */
     idPrefix: string
+    /** Name of the first chosen project folder: a taken name then also offers "name - project". */
+    project?: string
   }
 
-  let { value = $bindable(), label, existingNames = [], idPrefix }: Props = $props()
+  let { value = $bindable(), label, existingNames = [], idPrefix, project }: Props = $props()
 
   const uid = $props.id()
   const error = $derived(validateDesktopName(value, existingNames))
   const suggestion = $derived(nameSuggestion(value, existingNames))
+  const withProject = $derived(projectSuggestion(value, project, existingNames))
+
+  /** Fills the name box and leaves the focus in it. */
+  function use(name: string): void {
+    value = name
+    document.getElementById(`${uid}-name`)?.focus()
+  }
 </script>
 
 <div class="field">
@@ -41,8 +50,11 @@
       <span>{error}</span>
     {/if}
   </div>
+  {#if withProject}
+    <button type="button" class="use" data-testid="{idPrefix}-use-project-suggestion" onclick={() => use(withProject)}>Use '{withProject}'</button>
+  {/if}
   {#if suggestion}
-    <button type="button" class="use" data-testid="{idPrefix}-use-suggestion" onclick={() => (value = suggestion)}>Use '{suggestion}'</button>
+    <button type="button" class="use" data-testid="{idPrefix}-use-suggestion" onclick={() => use(suggestion)}>Use '{suggestion}'</button>
   {/if}
 </div>
 

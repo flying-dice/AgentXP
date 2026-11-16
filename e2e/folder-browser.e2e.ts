@@ -66,7 +66,7 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
     await openDialog()
     await browser.path.fill(`${workspace.path}/nowhere`)
     await browser.ok.click()
-    await see.text(browser.status, 'cannot be opened')
+    await see.text(browser.status, `The folder '${workspace.path}/nowhere' does not exist. Check the spelling, or select the parent folder and click Make New Folder.`)
     await see.visible(browser.dialog)
     await browser.path.fill(`${workspace.path}/src`)
     await browser.ok.click()
@@ -100,6 +100,34 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
     await browser.makeNewFolder.click()
     await see.eventually(async () => expect(await browser.path.inputValue()).toBe(`${workspace.path}/New Folder`))
     await see.visible(browser.node('New Folder'))
+    await browser.cancel.click()
+    await see.gone(browser.dialog)
+  })
+
+  // UX-51: the dialog finds the folders Agent7 already knows, and accepts a bare folder name.
+  it('lists "Projects you used before" first and open, with no folder selected', async () => {
+    await openDialog()
+    await see.visible(browser.group('Projects you used before'))
+    await see.visible(browser.node(workspace.name))
+    expect(await browser.path.inputValue()).toBe('')
+    expect(await browser.ok.isDisabled()).toBe(true)
+    await browser.cancel.click()
+    await see.gone(browser.dialog)
+  })
+
+  it('a bare folder name is found in the recent projects: the Folder box shows the full path and OK accepts it', async () => {
+    await openDialog()
+    await browser.path.fill(workspace.name)
+    await see.eventually(async () => expect(await browser.path.inputValue()).toBe(workspace.path))
+    await browser.ok.click()
+    await see.gone(browser.dialog)
+  })
+
+  it('a bare name that no folder has is refused with the places that were searched', async () => {
+    await openDialog()
+    await browser.path.fill('no-such-folder-anywhere')
+    await browser.ok.click()
+    await see.text(browser.status, "No folder called 'no-such-folder-anywhere' was found in your recent folders, Documents, Desktop or Home.")
     await browser.cancel.click()
     await see.gone(browser.dialog)
   })

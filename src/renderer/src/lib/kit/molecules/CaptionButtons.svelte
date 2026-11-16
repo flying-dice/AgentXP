@@ -76,47 +76,68 @@
 </div>
 
 <style>
+  /* The face of a button is 19 px high; its hit area is 24 px (the extra 5 px are transparent), so the buttons meet the 24 px target size (UX-83). */
   .w7-caption {
+    position: relative;
+    z-index: 2;
     display: inline-flex;
     align-self: flex-start;
     margin-top: -1px;
     border: 1px solid var(--w7-caption-border);
     border-top: 0;
     border-radius: 0 0 5px 5px;
-    overflow: hidden;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     -webkit-app-region: no-drag;
   }
   .cb {
+    position: relative;
     width: 29px;
-    height: 19px;
-    padding: 0;
+    height: 24px;
+    margin-bottom: -5px;
+    padding: 0 0 5px;
     border: 0;
-    border-right: 1px solid var(--w7-caption-border);
-    background: var(--w7-caption-face);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: default;
     -webkit-app-region: no-drag;
   }
+  .cb::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 5px 0;
+    border-right: 1px solid var(--w7-caption-border);
+    background: var(--w7-caption-face);
+  }
+  .cb:first-child::before {
+    border-bottom-left-radius: 4px;
+  }
+  .cb:last-child::before {
+    border-bottom-right-radius: 4px;
+  }
+  .cb > :global(svg) {
+    position: relative;
+  }
   .cb.close {
     width: 47px;
+  }
+  .cb.close::before {
     border-right: 0;
     background: var(--w7-caption-close-face);
   }
-  .cb:hover:not(:disabled) {
+  .cb:hover:not(:disabled)::before {
     background: var(--w7-caption-hover-face);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
   }
-  .cb.close:hover:not(:disabled) {
+  .cb.close:hover:not(:disabled)::before {
     background: var(--w7-caption-close-hover-face);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 8px 2px rgba(255, 120, 90, 0.9);
   }
-  .cb:active:not(:disabled) {
+  .cb:active:not(:disabled)::before {
     filter: brightness(0.82);
   }
-  .cb.close:active:not(:disabled) {
+  .cb.close:active:not(:disabled)::before {
     background: var(--w7-caption-close-active-face);
     filter: none;
   }
@@ -130,7 +151,7 @@
   .inactive .cb:not(:hover) {
     opacity: 0.7;
   }
-  .inactive .cb.close:not(:hover) {
+  .inactive .cb.close:not(:hover)::before {
     background: linear-gradient(#e6cfcb 0, #cf9d96 48%, #bf7a71 50%, #cfa098 100%);
   }
 </style>

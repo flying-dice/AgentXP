@@ -3,8 +3,8 @@ import { ToolRefusedError } from '../../domain/agent/ToolGate'
 
 /** The agent touched a drive that is not plugged in (ejected or never there). Refused like a closed app. */
 export class DriveUnavailableError extends ToolRefusedError {
-  constructor(readonly letter: DriveLetter) {
-    super(noDriveMessage(letter))
+  constructor(readonly letter: DriveLetter, removedProject?: string) {
+    super(noDriveMessage(letter, removedProject))
     this.name = 'DriveUnavailableError'
   }
 }
@@ -12,7 +12,7 @@ export class DriveUnavailableError extends ToolRefusedError {
 /** A real path that is on no drive of the desktop (neither C: nor a plugged-in project). */
 export class OutsideDrivesError extends ToolRefusedError {
   constructor(path: string) {
-    super(`Path is outside the drives of this desktop (C: and the plugged-in projects): ${path}`)
+    super(`Path is outside the drives of this desktop (the private C: drive and the project folders that are plugged in): ${path}`)
     this.name = 'OutsideDrivesError'
   }
 }

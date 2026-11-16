@@ -36,6 +36,13 @@
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 
+<Story name="WaitingForYou" args={{ working: 'Waiting for you' }}>
+  {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
+</Story>
+<Story name="ResumedNothingStopped" args={{ working: null, notice: 'Resumed. Nothing was stopped.' }}>
+  {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
+</Story>
+
 <Story name="AsksBeforeEveryAction" args={{ userInControl: true, tools: ['shell', 'fs.read', 'terminal'], policy: DEFAULT_TOOL_POLICY }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>

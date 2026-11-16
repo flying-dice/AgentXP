@@ -1,6 +1,6 @@
 // J05-J07, J11: prompts, permissions, stopping, pausing.
 import { REDIRECT_FIXED } from '../lib/fixtures.mjs'
-import { agentMessages, all, fail, manual, pass, projectRoot, readText, textOf, userMessages, withAnswer } from './util.mjs'
+import { agentMessages, all, fail, manual, pass, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
 
 const permissions = (entries) => entries.filter((e) => e.kind === 'tool_call' && e.permission)
 
@@ -9,7 +9,7 @@ export const checks = {
     const entries = await ctx.transcript(ctx.state.sessionId)
     const session = (await ctx.sessions()).find((s) => s.id === ctx.state.sessionId)
     const state = all([
-      [userMessages(entries).some((m) => /deep links/i.test(textOf(m))), 'the prompt is in the chat'],
+      [userMessages(entries).some((m) => /deep links/i.test(userText(m))), 'the prompt is in the chat'],
       [agentMessages(entries).length > 0, 'the assistant answered'],
       [session?.status === 'idle', 'the turn ended']
     ])
@@ -28,17 +28,19 @@ export const checks = {
     ])
   },
 
-  async 'T06.1'(ctx) {
+  async 'T06.1'(ctx, { answer } = {}) {
     const entries = await ctx.transcript(ctx.state.sessionId)
     const request = permissions(entries).at(0)
     const disk = readText(projectRoot(ctx), 'src/auth/redirect.ts')
-    return all(
+    const state = all(
       [
         [request?.permission.outcome === 'selected' && request.permission.selectedOptionId === 'allow', `the request was answered ${request?.permission.selectedOptionId ?? request?.permission.outcome ?? 'never'} (want allow)`],
         [disk === REDIRECT_FIXED, 'redirect.ts on disk contains the fix']
       ],
-      ['researcher: the panelist should name the changed lines (answer or think-aloud); opening the details is optional because the diff is inline']
+      ['opening the details is optional because the diff is inline']
     )
+    // H-44: the scenario asks which lines change; the answer must say so.
+    return withAnswer(state, answer, { keywords: [['line', 'searchparams', 'next']], expect: 'the answer says which lines of redirect.ts change (the "next" address is read from the URL instead of dropped)' })
   },
 
   async 'T06.2'(ctx) {

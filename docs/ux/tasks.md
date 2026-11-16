@@ -79,9 +79,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J06 Approve or deny a request
 
 **T06.1 - Allow after reading**
-- Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts."
+- Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts. Tell me which lines it changes."
 - Start state: `demo` script; Write files = Ask.
-- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist names the changed lines (the diff is inline; opening the details is optional).
+- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the word "line", "searchParams" or "next"; the diff is inline; opening the details is optional; answer check, H-44).
 - Min 1 (Allow). Budget 3 / 4.
 
 **T06.2 - Deny**
@@ -113,9 +113,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Min 5 (Tasks and changes, Changes tab, select, Revert, Yes). Budget 15 / 20.
 
 **T08.2 - Review everything [planned]**
-- Scenario: "Before you accept the work, look at every line that the assistant changed and tell me how many files changed and which one changed most."
+- Scenario: "Before you accept the work, look at every line that the assistant changed and tell me how many files changed, which one changed most and which lines of that file changed."
 - Start state: chat with five agent changes in a Git project; new Code app.
-- Success check: the panelist's answer matches the data (researcher check); the panelist used Code or the Changes pane (session log).
+- Success check: the answer gives the file count (digits or words), the file that changed most and says which lines (the word "line"); the panelist used Code or the Changes pane (session log; researcher check).
 - Min 6. Budget 18 / 24.
 
 ### J09 Restore from the Recycle Bin
@@ -191,9 +191,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J14 Manage several desktops
 
 **T14.1 - Which one needs me?**
-- Scenario: "You have four workspaces running. Find the one that is waiting for you and open it."
+- Scenario: "You have four workspaces running. Find the one that is waiting for you and open it, and tell me which workspace has a problem."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected. The error desktop is not asked for (the launcher cannot show an error until UX-06); the researcher records whether the waiting row was preselected.
+- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher shows "Idle" for it until UX-58, so the panelist must look inside); the researcher records whether the waiting row was preselected.
 - Min 2. Budget 6 / 8.
 
 **T14.2 - Rename**
@@ -235,7 +235,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T17.2 - It does not start**
 - Scenario: "You started a chat and the assistant does not answer. Find out why and tell me what to do."
 - Start state: the default agent has a bad command (`not-a-real-command`).
-- Success check: the answer names the wrong command or "not found" and points to the Agents page; the panelist did not restart the app.
+- Success check: the answer names the wrong command or "not found", points to the Agents page and says what to do (edit or change it, choose another agent, set a default, new chat; H-42); the panelist did not restart the app.
 - Min 3. Budget 9 / 12.
 
 ### J18 A2UI surfaces
@@ -286,14 +286,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Your mouse is broken. Open a new conversation, send 'hello', and answer a request from the assistant with Allow."
 - Start state: desktop open; `demo`; Write files = Ask. Driver mouse actions are disabled.
 - Success check: message sent, request answered Allow, using keys only.
-- Min 12. Budget 36 / 48.
+- Min 6 (Ctrl+N starts the chat, UX-57). Budget 18 / 18.
 
 ### J22 Help and discoverability
 
 **T22.1 - Ask for help**
 - Scenario: "You are in the Explorer window and do not know what the button called 'Plug in a project' does. Find out without leaving the program."
 - Start state: Explorer open.
-- Success check: a help topic for Explorer is open, and the panelist's answer states what the button does (answer check).
+- Success check: the answer states what the button does ("project folder", "drive" or "see its files"). A tooltip answer is enough; a Help topic for Explorer open is the other valid route and is the Min (H-24).
 - Min 2 (F1 + read). Budget 6 / 8.
 
 **T22.2 - Find a topic by search**
@@ -369,7 +369,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T27.2 - More room for the file**
 - Scenario: "The side panel next to the file takes too much room. Make the file use the whole window."
 - Start state: Code window with the chat pane open.
-- Success check: the pane is hidden and the window still offers a way to bring it back.
+- Success check: the pane is hidden, the window still offers a way to bring it back, and the file area is at least 90 percent as wide as the Code window (H-26).
 - Min 1. Budget 3 / 4.
 
 ### J28 Let the agent use a web app in the Browser
@@ -383,15 +383,15 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T28.2 - Take back the page**
 - Scenario: "The assistant is busy in the web page and you want to use the page yourself right now. Make the assistant leave it alone."
 - Start state: `browser-slow` script running for about a minute; the Browser shows the activity bar.
-- Success check: the desktop is in user control (the agent no longer acts on its own).
+- Success check: the desktop is in user control (Take over) or paused (Pause all agents), and no tool call starts in the next 3 seconds (H-33). The note records which control was used.
 - Min 1. Budget 3 / 4.
 
 ### J29 Browse with tabs
 
 **T29.1 - Two pages side by side**
-- Scenario: "Keep the page you see now. Open a second page at http://127.0.0.1:4173/second so that both stay open, then go back to the first page."
-- Start state: Browser open on the test page (port 4173).
-- Success check: two tabs exist and the first one is active.
+- Scenario: "Keep the page you see now. Open a second page at {TEST_PAGE_URL}second so that both stay open, then go back to the first page."
+- Start state: Browser open on the test page (per-session port; the facilitator substitutes `{TEST_PAGE_URL}`, as for T19.1). The server also answers `/second` ("Second page").
+- Success check: two tabs exist, the first (test page) is active, the second has the address `{TEST_PAGE_URL}second` and loaded (its title is not an error page).
 - Min 5 (new tab, click address, type, Enter, click first tab). Budget 15 / 20.
 
 ### J30 Menus, right-click and About

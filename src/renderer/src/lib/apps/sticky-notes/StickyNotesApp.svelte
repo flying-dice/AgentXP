@@ -98,7 +98,8 @@
     <ToolStripDropDownButton text="Color" items={colorItems} />
     <ToolStripDropDownButton icon="tasks" text="Plan note" items={planItems} />
   </ToolStrip>
-  <div class="list w7-scroll" role="list" aria-label="Notes">
+  <!-- Only a list with items is a list: the empty message is not a list item (UX-83). -->
+  <div class="list w7-scroll" role={notes.length > 0 ? 'list' : undefined} aria-label={notes.length > 0 ? 'Notes' : undefined}>
     {#each notes as note (note.id)}
       <div class="row" role="listitem" class:sel={selected === note.id} oncontextmenu={(e) => ((selected = note.id), ctx.show(e, contextItems()))}>
         <button type="button" class="pick" onclick={() => (selected = note.id)}>
@@ -181,8 +182,8 @@
     font-size: 11px;
   }
   .del {
-    width: 22px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: 1px solid transparent;
     background: transparent;

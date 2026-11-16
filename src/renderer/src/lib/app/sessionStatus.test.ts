@@ -9,6 +9,11 @@ describe('sessionStatus', () => {
     expect(connectionLabel('awaiting_permission')).toBe('Waiting for permission')
   })
 
+  it('reads Waiting for you, not Working, while the user is in control', () => {
+    expect(connectionLabel('working', true)).toBe('Waiting for you')
+    expect(connectionLabel('idle', true)).toBe('Connected')
+  })
+
   it('says Ready before a chat exists and after an idle agent went away, Disconnected only after a failure', () => {
     expect(connectionLabel(null)).toBe('Ready')
     expect(connectionLabel('closed')).toBe('Ready')

@@ -13,6 +13,11 @@ export class TerminalWindow {
     return this.frame.getByTestId('terminal-picker')
   }
 
+  /** The note a key press shows at the bottom of the screen: the Terminal is read-only. */
+  get readOnlyNotice(): Locator {
+    return this.frame.getByTestId('terminal-readonly-notice')
+  }
+
   get status(): Locator {
     return this.frame.getByTestId('terminal-status')
   }

@@ -23,10 +23,13 @@ export const visibleWindows = (windows: readonly AppWindowState[]): AppWindowSta
 
 export type TaskbarAction = 'focus' | 'minimize' | 'restore'
 
-/** Click on a taskbar button: minimised -> restore, focused -> minimise, otherwise bring to front. */
-export function taskbarAction(w: AppWindowState, focusedId: Id | null): TaskbarAction {
+/**
+ * Click on a taskbar button: minimised -> restore; the window on top (focused and in front of every other shown window)
+ * -> minimise; any other window, also a focused one that something covers -> bring to front.
+ */
+export function taskbarAction(w: AppWindowState, focusedId: Id | null, windows: readonly AppWindowState[] = [w]): TaskbarAction {
   if (w.windowState === 'minimized') return 'restore'
-  return w.id === focusedId ? 'minimize' : 'focus'
+  return w.id === focusedId && nextFocus(windows) === w.id ? 'minimize' : 'focus'
 }
 
 /** The caption of a taskbar button: a chat that waits for an answer starts with "Waiting: ". */

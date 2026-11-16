@@ -7,6 +7,8 @@ import { sql as helpApp } from './006_help_app'
 import { sql as codeReview } from './007_code_review'
 import { sql as asideWindows } from './008_aside_windows'
 import { sql as agentDefaultMode } from './009_agent_default_mode'
+import { sql as removedProjects } from './010_removed_projects'
+import { sql as stoppedByPause } from './011_stopped_by_pause'
 
 export interface Migration {
   /** Strictly increasing; stored in `PRAGMA user_version`. */
@@ -29,5 +31,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 6, name: 'help_app', sql: helpApp },
   { version: 7, name: 'code_review', sql: codeReview },
   { version: 8, name: 'aside_windows', sql: asideWindows },
-  { version: 9, name: 'agent_default_mode', sql: agentDefaultMode }
+  { version: 9, name: 'agent_default_mode', sql: agentDefaultMode },
+  { version: 10, name: 'removed_projects', sql: removedProjects },
+  { version: 11, name: 'stopped_by_pause', sql: stoppedByPause }
 ]

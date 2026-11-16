@@ -1,13 +1,16 @@
 <script lang="ts">
+  import { onDestroy, untrack } from 'svelte'
   import { effectiveStatus, isStarting } from '../sessionStatus'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
   import { describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
   import PermissionDialog from './PermissionDialog.svelte'
+  import { PAUSED_NOTE, STOPPED_BY_PAUSE_NOTE } from './resumeNote'
   import { permissionMetadata } from './permissionOptions'
   import SessionHeader from './SessionHeader.svelte'
   import type { SessionStoreLike } from './SessionStoreLike'
   import type { SurfaceControls } from './surfaceRow'
+  import { RESTART_DONE_MS } from './chatProblem'
   import Transcript from './Transcript.svelte'
 
   interface Props {
@@ -37,16 +40,21 @@
     dense?: boolean
     /** The desktop is paused: a banner above the message box says so. */
     paused?: boolean
-    /** Resume left a note for this chat: "Resumed. The step that was stopped stays stopped." with a Continue button. */
-    resumed?: boolean
-    oncontinue?: () => void
+    /** Pause stopped a step of this chat (the saved list of the desktop): the banner says it continues on Resume. */
+    stoppedByPause?: boolean
     /** The desktop's "Ask before every action" state, shown (and switched) in the Mode menu. */
     askFirst?: boolean
     onaskfirst?: (on: boolean) => void
-    /** "Details..." of the error row: the technical text, for the host to show with the log. */
-    ondetails?: (detail: string | null) => void
+    /** "Details..." of the error row: the technical text and the last lines of the log, shown inline under the buttons. */
+    loadDetails?: (detail: string | null) => Promise<string>
     /** "Show in Event Viewer" of the error row. */
     onshowevents?: () => void
+    /** "Open Agents" and "Choose another agent" of the error row: Control Center at Agents. */
+    onopenagents?: () => void
+    /** "Start a new chat" after a second failure in a row. */
+    onnewchat?: () => void
+    /** The name of the desktop's default agent when the chat's own agent is another one: "Try again with <name>". */
+    newDefaultAgent?: string | null
   }
 
   let {
@@ -66,12 +74,14 @@
     onprefilled,
     dense = false,
     paused = false,
-    resumed = false,
-    oncontinue,
+    stoppedByPause = false,
     askFirst = false,
     onaskfirst,
-    ondetails,
-    onshowevents
+    loadDetails,
+    onshowevents,
+    onopenagents,
+    onnewchat,
+    newDefaultAgent = null
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -85,17 +95,53 @@
   const starting = $derived(isStarting(effectiveStatus(info.status, session.status)))
 
   // ---- what went wrong: the error row, the state of the failed message -------------------------------------
-  const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend }))
+  const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent }))
   const sendStates = $derived.by((): ReadonlyMap<string, SendState> => {
     const failed = store.failedSend
     return failed ? new Map([[failed.messageId, sendStateOf(failed.messageId, failed, !!session.problem)]]) : new Map()
   })
 
+  /** "Details...": opens the technical text under the buttons, or closes it. */
+  let detailsText = $state<string | null>(null)
+  async function toggleDetails(): Promise<void> {
+    if (detailsText !== null) {
+      detailsText = null
+      return
+    }
+    const detail = problem?.detail ?? null
+    detailsText = loadDetails ? await loadDetails(detail) : (detail ?? 'There is nothing more to show.')
+  }
+  // A new problem starts with its details closed.
+  $effect(() => {
+    void problem?.text
+    untrack(() => (detailsText = null))
+  })
+
+  /** A restart shows "Restarting the agent..." with progress, then "The agent is running again." for a moment. */
+  let restart = $state<'working' | 'done' | null>(null)
+  let restartTimer: ReturnType<typeof setTimeout> | null = null
+  onDestroy(() => {
+    if (restartTimer) clearTimeout(restartTimer)
+  })
+  /** Starts a new agent program; `then` runs once it is up (sending the message again). */
+  async function restartThen(then?: () => Promise<unknown>): Promise<void> {
+    if (restart === 'working') return
+    if (restartTimer) clearTimeout(restartTimer)
+    restart = 'working'
+    await store.reconnect()
+    const up = !session.problem && !store.error
+    restart = up ? 'done' : null
+    if (up) restartTimer = setTimeout(() => (restart = null), RESTART_DONE_MS)
+    if (up && then) await then()
+  }
+
   function onproblem(id: ProblemActionId): void {
-    if (id === 'send-again') void store.resend({ restart: !!session.problem })
-    else if (id === 'restart-send') void store.resend({ restart: true })
-    else if (id === 'restart') void store.reconnect()
-    else if (id === 'details') ondetails?.(problem?.detail ?? null)
+    if (id === 'send-again') void (session.problem ? restartThen(() => store.resend()) : store.resend())
+    else if (id === 'restart-send') void restartThen(() => store.resend())
+    else if (id === 'restart') void restartThen()
+    else if (id === 'details') void toggleDetails()
+    else if (id === 'open-agents' || id === 'choose-agent') onopenagents?.()
+    else if (id === 'new-chat') onnewchat?.()
     else onshowevents?.()
   }
 
@@ -120,6 +166,8 @@
     running={store.running}
     {problem}
     {onproblem}
+    problemDetails={detailsText}
+    {restart}
     {sendStates}
     onresend={() => onproblem('send-again')}
     onedit={() => void editFailed()}
@@ -136,14 +184,11 @@
       {/each}
     </div>
   {/if}
-  {#if paused}
-    <div class="paused" role="status" data-testid="chat-paused-banner">This desktop is paused. Click Resume agents on the bar.</div>
+  {#if store.lastDecision}
+    <div class="decision" role="status" data-testid="chat-permission-result" data-allowed={store.lastDecision.allowed}>{store.lastDecision.text}</div>
   {/if}
-  {#if resumed && !paused}
-    <div class="paused resumed" role="status" data-testid="chat-resume-note">
-      <span>Resumed. The step that was stopped stays stopped. Send a message to continue.</span>
-      <button type="button" class="chip" data-testid="chat-resume-continue" onclick={() => oncontinue?.()}>Continue</button>
-    </div>
+  {#if paused}
+    <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>
   {/if}
   <Composer
     {agentName}
@@ -193,6 +238,14 @@
     font-size: 11px;
     cursor: pointer;
   }
+  .decision {
+    flex: none;
+    margin-top: 4px;
+    padding: 3px 8px;
+    border: 1px solid #b9c7da;
+    background: #f4f7fb;
+    color: #1d3a63;
+  }
   .paused {
     flex: none;
     margin-top: 4px;
@@ -200,11 +253,6 @@
     border: 1px solid #e0c97a;
     background: #fffbe6;
     color: #4a3b00;
-  }
-  .resumed {
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
   .chip:hover {
     border-color: var(--w7-btn-hover-border);

@@ -41,7 +41,7 @@ The row at the top has **Back**, **Up**, the address bar, and **Refresh**. The a
 
 ### The Command Bar
 
-The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
+The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. Press F1 for more. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
 
 ### The Navigation Pane
 
@@ -53,9 +53,9 @@ The list shows the files of the folder. It has the columns **Name**, **Type**, a
 
 ### The Computer Window
 
-The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the C: drive. The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
+The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the private C: drive (files made on this desktop). The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
 
-The group **Recently removed** shows the last three projects that you ejected from this desktop. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
+The group **Recently removed** shows the last five projects that you ejected from this desktop. The newest one is selected when you open the group. If nothing was removed yet, the dimmed button says so in its tooltip. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
 
 After you plug in a project, its drive is selected here. If the project is plugged in already, a message names its drive and the drive is selected.
 
@@ -93,13 +93,13 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | File or folder | One row of the list. | `explorer-item` |
 | Computer window | Holds the drive tiles. | `explorer-computer` |
 | Drive tile | One drive. | `explorer-drive-*` |
-| Recently removed | The group of the last three ejected projects. | `explorer-removed-group` |
+| Recently removed | The group of the last five ejected projects. | `explorer-removed-group` |
 | Removed project | One ejected project. Double-click it to plug it in again. | `explorer-removed-item` |
 | Item count | Shows how many items the folder has. | `explorer-item-count` |
 | Selection | Describes the selected items. | `explorer-selection` |
 | Open (menu) | Opens a folder or a drive. | `menu-item-explorer-folder-open`, `menu-item-explorer-drive-open` |
 | Start a chat here | Starts a chat in that folder or drive. | `menu-item-explorer-folder-chat`, `menu-item-explorer-drive-chat` |
-| Eject (menu) | Ejects the drive. | `menu-item-explorer-drive-eject` |
+| Eject (menu) | Ejects the drive. The menu entry reads "Eject (remove from this desktop)". | `menu-item-explorer-drive-eject` |
 
 ### Menu Bar and Context Menu
 
@@ -114,6 +114,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `explorer-menu-chat-pane` |
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: open | File menu: opens the selected file, folder or drive. | `explorer-menu-open` |
+| Menu: new chat | File menu: starts a chat on the default drive. Ctrl+N. | `explorer-menu-new-chat` |
 | Menu: plug in | File menu: plugs in a project as a USB drive. | `explorer-menu-plug-in` |
 | Menu: plug in again | File menu: plugs the selected recently removed project in again. | `explorer-menu-plug-in-again` |
 | Menu: eject | File menu: ejects the selected USB drive. | `explorer-menu-eject` |
@@ -151,7 +152,7 @@ To plug in a project, follow the steps below:
 
 1. Open **Computer**. The command bar appears.
 2. Click **Plug in a project...** The **Browse For Folder** dialog box appears.
-3. Select the folder of your project and click **OK**. The project appears as a drive and is selected. A balloon says that it is ready to use, and AutoPlay asks what to do.
+3. Select the folder of your project and click **OK**. The project appears as a drive and is selected. A balloon says that it is ready to use, and the window shows the files of the new drive. AutoPlay does not appear, because you chose the folder yourself.
 
 To plug in a project that you ejected, select it under **Recently removed** and click **Plug in again**.
 
@@ -169,7 +170,7 @@ To eject a project, select it in **Computer** and click **Eject**, or right-clic
 
 - **A message says that Windows cannot find the path.** Fix the spelling of the path. Make sure that the drive is plugged in.
 - **The window went back to Computer.** Someone ejected the drive that you looked at.
-- **Eject is dimmed.** Select a USB drive. The C: drive cannot be ejected.
+- **Eject is dimmed.** Select a USB drive. The private C: drive cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
 
 ## 7 - Need Help?

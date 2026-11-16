@@ -32,6 +32,8 @@
   import type { SurfaceActivity } from '../../agui/activities'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import SurfaceSidebar from './SurfaceSidebar.svelte'
+  import { lastReply } from '../surface/lastReply'
+  import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
 
   let { window: win, host, focused }: AppProps<'chat'> = $props()
 
@@ -49,6 +51,9 @@
   let selectedChangeId = $state<number | null>(null)
 
   const info = $derived(store?.state.session)
+
+  // A revert from anywhere (another window, the agent) updates the Changes list at once (UX-79).
+  $effect(() => refreshOnRevert(host.api, host.state.desktopId, () => (store ? [store] : [])))
 
   // The chats of this desktop: chats with the same title get " (2)", " (3)" in the title bar and on the taskbar.
   let chatList = $state.raw<SessionDto[]>([])
@@ -135,34 +140,8 @@
     { id: 'tasks', title: 'Tasks', testid: 'chat-tab-tasks' }
   ])
 
-  // ---- the agent could not start: say so over the chat (the same text stays in the transcript) --------------------
-  let announced = ''
-  $effect(() => {
-    const problem = session?.problem
-    if (problem?.kind !== 'start-failed') return
-    const key = `${session!.id}:${problem.message}`
-    if (announced === key) return
-    announced = key
-    void announceStartFailure(problem.message)
-  })
-
-  async function announceStartFailure(text: string): Promise<void> {
-    const choice = await showMessageBox({
-      text,
-      caption: 'Agent7',
-      icon: 'error',
-      actions: [
-        { id: 'agents', label: 'Open Agents' },
-        { id: 'other', label: 'Choose another agent...' },
-        { id: 'close', label: 'Close' }
-      ]
-    })
-    if (choice === 'close') return
-    const centre = await host.openApp({ app: 'control-centre' })
-    host.updateView(centre.id, { app: 'control-centre', page: 'agents' })
-    // New chats start the default agent: a chat whose agent cannot start has no use once another one is chosen.
-    if (choice === 'other') await host.closeWindow(win.id)
-  }
+  // The agent could not start: the chat itself says so, with its own buttons (Try again, Open Agents, Choose another agent,
+  // Details), in the transcript. No dialog box covers them (UX-63).
 
   // ---- reopening a chat: a one-time line, then the composer takes over -----------------------------------------
   let reopened = $state<string | null>(null)
@@ -263,6 +242,16 @@
     })
   }
 
+  /** "New chat" (File menu, Ctrl+N): a new chat on the folder of this one, also when this chat's agent is broken. */
+  const newChat = (): Promise<void> => host.startChat(session?.cwd ?? host.state.home)
+
+  /** Ctrl+N works wherever the focus is inside the Chat window. */
+  function newChatKey(event: KeyboardEvent): void {
+    if (!event.ctrlKey || event.shiftKey || event.altKey || event.key.toLowerCase() !== 'n') return
+    event.preventDefault()
+    void newChat()
+  }
+
   /** Review changes: asks what to review, with the project drive of this chat preselected. */
   const reviewChanges = (): void => host.chooseReview(session?.cwd)
 
@@ -271,8 +260,10 @@
       {
         label: '&File',
         items: [
+          { id: 'chat-new', testid: 'chat-menu-new', label: 'New &chat', shortcut: 'Ctrl+N', action: () => void newChat() },
+          { separator: true },
           { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
-          ...closeItems('chat', () => void host.closeWindow(win.id))
+          ...closeItems('chat', () => void host.closeWindow(win.id), '&Close', 'Close this window. The agent keeps working.')
         ]
       },
       { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }) },
@@ -300,7 +291,10 @@
   data-session-id={sessionId}
   bind:this={root}
   oncontextmenu={(e) => ctx.show(e, contextItems(e.target))}
-  onkeydown={(e) => ctx.key(e, () => contextItems(e.target))}
+  onkeydown={(e) => {
+    newChatKey(e)
+    ctx.key(e, () => contextItems(e.target))
+  }}
 >
   <MenuStrip {menus} aria-label="Chat menu" />
   <div class="bar">
@@ -336,6 +330,7 @@
       onclose={(s) => surfaceControls.close(s)}
       onaction={(event) => void store?.sendA2uiAction(event)}
       running={store?.running}
+      reply={lastReply(store?.messages ?? [])}
     />
     {#if panelOpen}
       <aside class="side" data-testid="chat-side-panel" aria-label="Changes and tasks">
@@ -368,7 +363,7 @@
         <span class="pct">{percent}%</span>
       </StatusStripLabel>
     {/if}
-    <StatusStripLabel testid="chat-status" text={connectionLabel(status)} borders={['left']} />
+    <StatusStripLabel testid="chat-status" text={connectionLabel(status, host.state.userInControl)} borders={['left']} />
     {#if isDisconnected(status)}
       <StatusStripLabel borders={['left']}>
         <button type="button" class="reconnect" data-testid="chat-reconnect" title="Start the agent again" onclick={() => void store?.reconnect()}>Reconnect</button>

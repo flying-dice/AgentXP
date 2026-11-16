@@ -1,6 +1,10 @@
 // J16, J17, J22: permissions, agents, help.
 import { all, fail, helpInfo, manual, pass, withAnswer } from './util.mjs'
 
+/** H-24: the tooltip of Plug in a project says "Plug in a project folder as a drive so that the agent can see its files." */
+export const TOOLTIP_MEANING = /project folder|\bdrive\b|see (its|the|your) files|folder as a drive/i
+const TOOLTIP_MEANING_TEXT = '"project folder", "drive" or "see its files"'
+
 export const checks = {
   async 'T16.1'(ctx) {
     const policy = await ctx.policy()
@@ -30,14 +34,19 @@ export const checks = {
     const same = ctx.state.appPid == null || pid === ctx.state.appPid
     const state = all([[same, `the app is still the same process (pid ${pid}, was ${ctx.state.appPid ?? 'not recorded'})`]])
     return withAnswer(state, answer, {
-      keywords: [['not-a-real-command', 'not found'], ['agents page', 'agents', 'agent manager', 'settings']],
-      expect: 'the answer names the wrong command ("not-a-real-command" or "not found") and points to the Agents page; the panelist did not restart the app'
+      // H-42: the cause, the place (Agents page) and what to do (edit/change it, choose another agent, set a default, new chat).
+      keywords: [['not-a-real-command', 'not found'], ['agents page', 'agents', 'agent manager', 'settings'], ['edit', 'change', 'choose another', 'set as default', 'new chat']],
+      expect: 'the answer names the wrong command ("not-a-real-command" or "not found"), points to the Agents page and says what to do (edit or change it, choose another agent, set a default); the panelist did not restart the app'
     })
   },
 
   async 'T22.1'(ctx, { answer }) {
     const help = await helpInfo(ctx)
-    if (!help) return fail('no Help window is open (neither "Help and Support" nor "Chat Help"; no window with app help)')
+    if (!help) {
+      // H-24: the scenario says "find out"; the button's tooltip (UX-11) answers it, so a correct answer is enough without a Help window.
+      if (!answer) return manual('no Help window is open and no answer was given; a tooltip answer must contain the meaning: ' + TOOLTIP_MEANING_TEXT)
+      return TOOLTIP_MEANING.test(answer) ? pass('no Help window, but the answer gives the tooltip meaning of Plug in a project') : fail(`no Help window and the answer does not say what the button does (${TOOLTIP_MEANING_TEXT})`)
+    }
     return withAnswer(all([[help.topic === 'explorer' || /explorer/i.test(help.text), `a help topic about Explorer is open (topic ${help.topic ?? '?'})`]]), answer, { keywords: [['plug', 'project', 'folder', 'drive']], expect: 'the panelist states what Plug in a project does' })
   },
 

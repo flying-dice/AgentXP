@@ -5,13 +5,15 @@
 
   interface Props {
     summary: string
+    /** A second, muted line under the summary ("First: ... Last: ..."); the Browser's steps in plain words. */
+    detail?: string | null
     /** The turn is still working on this group. */
     live?: boolean
     open?: boolean
     children: Snippet
   }
 
-  let { summary, live = false, open = $bindable(false), children }: Props = $props()
+  let { summary, detail = null, live = false, open = $bindable(false), children }: Props = $props()
 </script>
 
 <div class="activity" data-testid="chat-activity-group" data-open={open} data-live={live}>
@@ -26,12 +28,17 @@
     {#if live}<Spinner size={12} label="Working" />{/if}
     <span>{summary}</span>
   </button>
+  {#if detail}<div class="detail" data-testid="chat-activity-detail">{detail}</div>{/if}
   {#if open}<div class="inside">{@render children()}</div>{/if}
 </div>
 
 <style>
   .activity {
     color: var(--w7-text-muted);
+  }
+  .detail {
+    margin: 2px 0 0 14px;
+    font-size: 11px;
   }
   .toggle {
     display: inline-flex;

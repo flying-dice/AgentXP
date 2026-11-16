@@ -13,6 +13,7 @@ let notified: Array<[number, string]>
 let removedChats: number[]
 let captured: number[]
 let launcher: LauncherService
+let installed: Set<string>
 
 const exists = (path: string): Promise<boolean> => stat(path).then(() => true, () => false)
 const pendingFor = (sessionId: number): PermissionRequestDto => ({ id: 1, sessionId, toolCallId: 't', options: [], outcome: 'pending', selectedOptionId: null })
@@ -24,10 +25,12 @@ beforeEach(async () => {
   notified = []
   removedChats = []
   captured = []
+  installed = new Set()
   launcher = new LauncherService({
     desktops: f.repos.desktops,
     sessions: f.repos.sessions,
     agents: f.repos.agents,
+    programs: { exists: async (command) => installed.has(command) },
     drives: f.drives,
     vfs: f.vfs,
     desktopService: { rename: (id, title) => f.repos.desktops.rename(id, title), forget: () => {} } as never,
@@ -150,6 +153,22 @@ describe('LauncherService', () => {
     expect(launcher.list()[0]).toMatchObject({ runState: 'error', lastError: 'spawn claude ENOENT' })
     launcher.clearStartFailure(id)
     expect(launcher.list()[0]).toMatchObject({ runState: 'idle', lastError: null })
+  })
+
+  it('checks the default agent program of each desktop without starting it and shows the problem on the row', async () => {
+    const agent = f.repos.agents.getDefault()!
+    const { id } = await launcher.create({ title: 'Docs site', folderIds: [] })
+    await launcher.checkAgents()
+    expect(launcher.list()[0]).toMatchObject({
+      runState: 'error',
+      agentProblem: `The agent could not start. The program '${agent.command}' was not found.`
+    })
+    const changes = f.publisher.payloads('launcher.changed').length
+    await launcher.checkAgents()
+    expect(f.publisher.payloads('launcher.changed')).toHaveLength(changes)
+    installed.add(agent.command)
+    await launcher.checkAgents()
+    expect(launcher.list().find((d) => d.id === id)).toMatchObject({ runState: 'idle', agentProblem: null })
   })
 
   it('show asks the host for the launcher window', () => {

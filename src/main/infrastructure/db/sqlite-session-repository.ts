@@ -49,6 +49,7 @@ export class SqliteSessionRepository implements SessionRepository {
     'title' | 'status' | 'acp_session_id' | 'current_mode_id' | 'current_model_id',
     Statement<[string | null, Id]>
   >
+  private readonly updateAgent: Statement<[Id, Id]>
   private readonly updateUsage: Statement<[number, number, Id]>
   private readonly touchSession: Statement<[Id]>
   private readonly deleteSession: Statement<[Id]>
@@ -71,6 +72,7 @@ export class SqliteSessionRepository implements SessionRepository {
     this.insertSession = prepare(db, 'INSERT INTO sessions (agent_id, desktop_id, cwd, title, role) VALUES (?, ?, ?, ?, ?)')
     const setter = (column: string): Statement<[string | null, Id]> =>
       prepare(db, `UPDATE sessions SET ${column} = ?, updated_at = ${NOW_SQL} WHERE id = ?`)
+    this.updateAgent = prepare(db, `UPDATE sessions SET agent_id = ?, acp_session_id = NULL, current_mode_id = NULL, current_model_id = NULL, updated_at = ${NOW_SQL} WHERE id = ?`)
     this.updateColumn = {
       title: setter('title'),
       status: setter('status'),
@@ -138,6 +140,10 @@ export class SqliteSessionRepository implements SessionRepository {
 
   setStatus(id: Id, status: SessionStatus): void {
     this.updateColumn.status.run(status, id)
+  }
+
+  setAgent(id: Id, agentId: Id): void {
+    this.updateAgent.run(agentId, id)
   }
 
   setAcpSessionId(id: Id, acpSessionId: string | null): void {

@@ -28,7 +28,7 @@
     <Icon name={icon} size={32} />
     <div class="text">
       <div class="name">{name}</div>
-      <div>Agent7{version ? ` version ${version}` : ''}</div>
+      <div>{name}, part of Agent7{version ? ` version ${version}` : ''}</div>
       {#if description}<p>{description}</p>{/if}
     </div>
   </div>

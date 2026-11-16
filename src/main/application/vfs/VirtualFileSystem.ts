@@ -38,7 +38,7 @@ export interface VirtualFileSystemDeps {
   host: HostFiles
   folders: Pick<FolderRepository, 'get'>
   /** The drives of a desktop, C: first (`DriveService.list`). */
-  drives: { list(desktopId: Id): DriveDto[] }
+  drives: { list(desktopId: Id): DriveDto[]; removedLabelOn?(desktopId: Id, letter: DriveLetter): string | null }
   /** `<userData>/desktops`: each desktop's system disk is `<desktopsDir>/<id>/C`. */
   desktopsDir: string
 }
@@ -81,8 +81,14 @@ export class VirtualFileSystem {
   /** The mount of a drive letter; throws `DriveUnavailableError` when it is not plugged in. */
   mountOf(desktopId: Id, letter: DriveLetter): Mount {
     const mount = this.mounts(desktopId).find((m) => m.letter === letter.toUpperCase())
-    if (!mount) throw new DriveUnavailableError(letter.toUpperCase())
+    if (!mount) throw this.unavailable(desktopId, letter)
     return mount
+  }
+
+  /** The refusal for a drive that is not plugged in; it names the project when the drive was ejected. */
+  unavailable(desktopId: Id, letter: DriveLetter): DriveUnavailableError {
+    const drive = letter.toUpperCase()
+    return new DriveUnavailableError(drive, this.deps.drives.removedLabelOn?.(desktopId, drive) ?? undefined)
   }
 
   /** The mount a stored (folder, path) lives on: C: for null, else the drive the folder is plugged in as. */

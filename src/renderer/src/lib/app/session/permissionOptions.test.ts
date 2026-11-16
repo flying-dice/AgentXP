@@ -1,6 +1,6 @@
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { PermissionOptionDto } from '@shared/models'
-import { asPredicate, canRemember, captionFor, optionFor, permissionMetadata } from './permissionOptions'
+import { accessKeyIndex, asPredicate, canRemember, captionFor, decisionForKey, decisionText, isAllow, optionFor, permissionMetadata } from './permissionOptions'
 
 const all: PermissionOptionDto[] = [
   { optionId: 'r', name: 'Reject', kind: 'reject_once' },
@@ -45,4 +45,26 @@ it('lowercases a verb title for the sentence', () => {
   expect(asPredicate('Edit src/a.ts')).toBe('edit src/a.ts')
   expect(asPredicate('npm test')).toBe('npm test')
   expect(asPredicate('`ls`')).toBe('`ls`')
+})
+
+describe('keys and announcement', () => {
+  it('maps Alt+A and Alt+D to the two answers and ignores everything else', () => {
+    expect(decisionForKey({ key: 'a', altKey: true })).toBe('allow')
+    expect(decisionForKey({ key: 'D', altKey: true })).toBe('deny')
+    expect(decisionForKey({ key: 'a', altKey: false })).toBeNull()
+    expect(decisionForKey({ key: 'a', altKey: true, ctrlKey: true })).toBeNull()
+    expect(decisionForKey({ key: 'x', altKey: true })).toBeNull()
+  })
+  it('finds the letter to underline in a caption', () => {
+    expect(accessKeyIndex('Allow', 'allow')).toBe(0)
+    expect(accessKeyIndex('Always allow', 'allow')).toBe(0)
+    expect(accessKeyIndex('Never allow', 'deny')).toBe(-1)
+    expect(accessKeyIndex('Deny', 'deny')).toBe(0)
+  })
+  it('says what the user answered', () => {
+    expect(decisionText(true, 'Change NOTE.md')).toBe('You allowed: Change NOTE.md.')
+    expect(decisionText(false, 'Run a command')).toBe('You denied: Run a command.')
+    expect(isAllow('allow_always')).toBe(true)
+    expect(isAllow('reject_once')).toBe(false)
+  })
 })

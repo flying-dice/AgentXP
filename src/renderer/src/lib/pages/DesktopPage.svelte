@@ -4,6 +4,7 @@
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
+  import { CONTROL_NOTE } from '../desktop/activity'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
@@ -28,6 +29,8 @@
   import NewReviewDialog from '../desktop/NewReviewDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
+  import { desktopWindowTitle } from '../launcher/launcherModel'
+  import { ctrlNStartsChat, isCtrlN } from '../desktop/shellKeys'
   import { cycleRegion, focusRegion, tabOutOfWindow } from '../desktop/shellRegions'
   import { taskbarItems } from '../desktop/windowOrder'
   import { taskbarMenuItems } from '../desktop/taskbarMenu'
@@ -79,7 +82,7 @@
   ])
 
   const desktopIcons = $derived<DesktopIconDef[]>([
-    { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the plugged-in projects' },
+    { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the project folders (plugged in)' },
     { id: 'chats', label: 'Chats', icon: 'session', title: 'Chats: talk to the agent' },
     { id: 'code', label: 'Code', icon: 'file-code', title: 'Code: read the files of a project' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
@@ -158,7 +161,7 @@
   const centreApprovals = $derived(
     approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt) }))
   )
-  const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text, continueId: m.continueChat })))
+  const messages = $derived(desktop.centreMessages)
   const policy = $derived(desktop.state.policy ?? desktop.policy)
 
   // The taskbar button menu: Restore, Minimize, Close window.
@@ -174,6 +177,10 @@
       event.preventDefault()
       const id = desktop.state.focusedWindowId
       if (id !== null) void desktop.closeWindow(id)
+    } else if (isCtrlN(event) && ctrlNStartsChat(desktop.focusedWindow?.app)) {
+      // Ctrl+N: a new chat on the default drive, from the desktop and from Code, Explorer and Chat (not from Notepad's own New).
+      event.preventDefault()
+      void desktop.startDefaultChat()
     } else if (event.ctrlKey && event.key === 'Escape') {
       event.preventDefault()
       desktop.toggleStart()
@@ -205,10 +212,15 @@
   $effect(() => {
     if (desktop.startOpen) untrack(() => (query = ''))
   })
+
+  // The operating system window is named after the desktop, so it is not mistaken for the launcher or another desktop.
+  $effect(() => {
+    if (desktop.state.title) document.title = desktopWindowTitle(desktop.state.title)
+  })
 </script>
 
 <!-- The browser's own context menu never shows on the desktop: every app and the desktop have their own. -->
-<svelte:window onkeydown={onKeydown} oncontextmenu={(e) => e.preventDefault()} />
+<svelte:window onkeydown={onKeydown} onkeydowncapture={() => desktop.noteUserActivity()} onpointerdowncapture={() => desktop.noteUserActivity()} oncontextmenu={(e) => e.preventDefault()} />
 
 <div class="page" class:busy={desktop.opening.length > 0} bind:this={root}>
   <Desktop
@@ -231,7 +243,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} {since} />
+      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={desktop.state.userInControl ? CONTROL_NOTE : null} {since} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
@@ -243,6 +255,7 @@
         agentProblem={desktop.agentProblem}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
+        notice={desktop.notice}
         tools={desktop.state.tools}
         {policy}
         onpause={() => void desktop.togglePaused()}
@@ -299,10 +312,6 @@
             const a = approvals.find((x) => x.key === key)
             if (a) void desktop.review(a)
           }}
-          oncontinue={(id) => {
-            const chat = desktop.messages.find((m) => m.id === id)?.continueChat
-            if (chat !== undefined) void desktop.continueChat(chat)
-          }}
           onopencontrolcentre={() => {
             desktop.actionCenterOpen = false
             void desktop.openApp({ app: 'control-centre' })
@@ -354,7 +363,7 @@
     {/if}
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />
     {#snippet tray()}
-      <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} />
+      <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} removed={desktop.recentlyRemoved} onplugagain={(id) => void desktop.plugInAgain(id, { autoPlay: true })} />
       <TrayFlag count={approvals.length} open={desktop.actionCenterOpen} bind:element={flag} onclick={() => desktop.toggleActionCenter()} />
     {/snippet}
   </Desktop>

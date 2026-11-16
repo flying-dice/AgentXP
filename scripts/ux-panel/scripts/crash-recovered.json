@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "crash-recovered",
+  "description": "T23.1 retry (H-31): the restarted agent finishes the request in under 5 seconds with a plain sentence.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [{ "id": "retry", "match": { "any": true }, "steps": [{ "type": "message", "text": "Working on it...\n" }, { "type": "wait", "ms": 1500 }, { "type": "message", "text": "Done. The slow job is finished." }] }],
+  "fallback": [{ "type": "message", "text": "Done. The slow job is finished." }]
+}

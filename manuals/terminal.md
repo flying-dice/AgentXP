@@ -40,7 +40,7 @@ The screen shows the working folder, each command, and its output. It follows th
 
 ### The Status Bar
 
-The status bar says that the shell is read-only. It also shows **Running**, **Exit code** with a number, or **No terminals**.
+The status bar says that the shell is read-only. The cursor on the screen is a hollow block, a sign that you cannot type. If you press a key on the screen, a note appears at the bottom of the screen for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
 
 ### The Chat Pane
 
@@ -54,6 +54,8 @@ Each Terminal window has a chat pane at its right edge. The pane starts closed, 
 | Terminal | Selects which terminal the screen shows. | `terminal-picker` |
 | Screen | Shows the output. The attribute `data-running` tells if a command runs. | `terminal-output` |
 | Status | Shows Running, the exit code, or No terminals. | `terminal-status` |
+| Read-only note | Appears for 4 seconds at the bottom of the screen when you press a key. | `terminal-readonly-notice` |
+| Locked cursor | The hollow block cursor of the screen. | `console-cursor-locked` |
 
 ### Menu Bar and Context Menu
 
@@ -95,7 +97,7 @@ To see an older terminal, select it in the **Terminal** list. The list appears w
 - **The screen is empty.** No agent ran a command yet. The status bar says **No terminals**.
 - **The agent says that Terminal is closed.** Open this app. The agent can then run commands.
 - **The agent asks before it runs a command.** Terminal is set to **Ask** in **[Control Center](control-centre.md)**. Answer in the **Action Center**.
-- **I cannot type.** The window is read-only by design.
+- **I cannot type.** The window is read-only by design. The agent runs the commands. Ask the agent in **[Chat](chat.md)** to run the command for you, and watch the output here.
 
 ## 7 - Need Help?
 

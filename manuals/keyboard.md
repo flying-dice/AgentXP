@@ -19,7 +19,8 @@ The desktop has a few parts: the desktop icons, the active window, the Workspace
 ## 2 - Move Between Parts of the Desktop
 
 - **F6** – Moves to the next part of the desktop. Press Shift+F6 to move back.
-- **Ctrl+Esc** – Opens or closes the Start menu.
+- **Ctrl+Esc** – Opens or closes the Start menu. Use the Up and Down arrow keys and Enter inside it.
+- **Ctrl+N** – Starts a new chat on the default drive. It works on the desktop and in Code, Explorer, and Chat. In Notepad, WordPad, and Paint it keeps its own meaning, New.
 - **Ctrl+Alt+Tab** – Switches to the next window on the desktop. Press Ctrl+Alt+Shift+Tab to go back.
 - **Alt+Tab** – Does the same when your computer passes the key to Agent7. If nothing happens, use Ctrl+Alt+Tab.
 - **Arrow keys** – Move between desktop icons or taskbar buttons.
@@ -29,7 +30,7 @@ The desktop has a few parts: the desktop icons, the active window, the Workspace
 
 - **Alt** – Moves to the menu bar of the window. Press an underlined letter to open a menu.
 - **Alt+F4** – Closes the window that has the focus.
-- **F1** – Opens the manual of the window that has the focus.
+- **F1** – Opens the manual of the window that has the focus. If no window has the focus, it opens this topic. The Help window takes the keyboard focus, so you can type a search at once. Press Esc to close Help and go back to the window you came from. Press Page Down to scroll a page.
 - **Shift+F10** or the Menu key – Opens the context menu of the selected item.
 - **Esc** – Closes a menu, a dialog box, or the Action Center.
 
@@ -40,6 +41,8 @@ The desktop has a few parts: the desktop icons, the active window, the Workspace
 - **Ctrl+Shift+C** – Shows or hides the chat pane of a window.
 - **F7** – Goes to the next change in Code Review. Press Shift+F7 to go to the previous change.
 - **Ctrl+S** – Saves the open file in Notepad, Code, or WordPad.
+- **Ctrl+Shift+F** – In Code, closes every pane so the file fills the window. Press it again to show the panes.
+- **Ctrl+Alt+M** – In Code Review, writes a comment on the selected line.
 
 ## 5 - Need Help?
 

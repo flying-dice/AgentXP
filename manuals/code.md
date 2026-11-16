@@ -48,7 +48,7 @@ The toolbar has the buttons for files, for changes, and for the panes. Some butt
 
 The pane is at the left. It has three tabs.
 
-- **Projects** – Shows the tree of each plugged-in project. A colored mark shows the git status of a file.
+- **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file.
 - **Files** – Lists the open files, then the files that git or the agent changed.
 - **Changes** – Lists each change of the agent.
 
@@ -65,7 +65,11 @@ The peek shows the old lines and the new lines of a block. **Revert hunk** write
 The pane is at the bottom. It has two tabs.
 
 - **Agent changes** – The same list as the chat, with **Revert** and **Open in editor**.
-- **Git** – Shows the branch and lists each changed file with its status.
+- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Double-click a file, or select it and press Enter, to see its changes in Code Review. If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
+
+### Focus on the File
+
+The file uses all the room that the open panes leave. Choose **View -> Focus on the file** (Ctrl+Shift+F) to close every pane in one step, so the file fills the whole window. Choose **View -> Show all panels** to bring them back. Ctrl+Shift+F does the same as the two menu items.
 
 ### The Status Bar
 
@@ -92,6 +96,8 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Management | Shows or hides the left pane. | `menu-item-code-view-management` |
 | Logs and others | Shows or hides the bottom pane. | `menu-item-code-view-logs` |
 | Overview ruler | Shows or hides the ruler at the right. | `menu-item-code-view-ruler` |
+| Focus on the file | Closes every pane, so the file fills the window. Ctrl+Shift+F. | `code-menu-focus` |
+| Show all panels | Opens the panes again. | `code-menu-show-all` |
 | Search menu | Opens the Search menu. | `menubar-search` |
 | Next change | Goes to the next block. Alt+F5. | `menu-item-code-next-change` |
 | Previous change | Goes to the last block. Shift+Alt+F5. | `menu-item-code-prev-change` |
@@ -147,6 +153,7 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Diff | The diff of the selected change. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the file in the editor. | `changes-open-editor` |
+| Open Recycle Bin | The link under the list after a revert. It opens the Recycle Bin. | `changes-open-recycle-bin` |
 | Path | Shows the active file. | `code-status-path` |
 | Agent editing | Shows that the agent writes. | `code-status-editing` |
 | Caret | Shows the line and the column. | `code-status-caret` |
@@ -158,6 +165,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 | Name | What it does | data-testid |
 |---|---|---|
+| Menu: new chat | File menu: starts a chat on the default drive. Ctrl+N. | `code-menu-new-chat` |
 | Menu: help | Opens the Help window for this app. F1. | `code-menu-help` |
 | Menu: about | Opens the About Code box. | `code-menu-about` |
 | Dialog: about | The About Code box. | `code-about` |
@@ -180,13 +188,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Tree menu: open with Notepad | Opens the file in Notepad. | `code-ctx-open-notepad` |
 | Tree menu: copy as path | Copies the path of the file or folder. | `code-ctx-copy-path` |
 | Tree menu: ask chat | Asks the chat about this file. | `code-ctx-ask-file` |
-| Tree menu: eject | Takes the project off the desktop. Its folder stays on your disk. | `code-ctx-eject` |
+| Tree menu: eject | Takes the project off the desktop (the entry reads "Eject (remove from this desktop)"). Its folder stays on your disk. | `code-ctx-eject` |
 | Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
 | Project tree | The folders and files of the project. | `code-tree` |
 | Menu: eject | Takes the open project off the desktop. | `code-menu-eject` |
 | Menu: plug in | Plugs in a project. | `code-menu-plug-in` |
-| Git: start | Starts Git in this folder, so changes can be tracked. | `code-git-init` |
-| Git: not a repository | Says this folder does not use Git yet. | `code-git-not-repo` |
+| Turn on Git here | Asks first, then turns on Git in this folder, so changes can be tracked. | `code-git-init` |
+| Git: not tracked | Explains that this folder is not tracked with Git and what turning it on does. | `code-git-not-repo` |
+| Turn on (question) | Turns on Git. | `message-box-action-turn-on` |
+| Cancel (question) | Leaves Git off. This is the default button. | `message-box-action-cancel` |
 | Git menu: open | Opens the file of the row. | `code-git-ctx-open` |
 | Git menu: show changes | Shows what changed in the file. | `code-git-ctx-show` |
 
@@ -197,6 +207,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Ctrl+O | Opens a file. | none |
 | Alt+F5 | Goes to the next change. | none |
 | Shift+Alt+F5 | Goes to the last change. | none |
+| Ctrl+Shift+F | Focus on the file, or show all panes again. | none |
 | Esc | Closes the peek. | none |
 | F1 | Opens this manual. | none |
 
@@ -218,11 +229,19 @@ To revert a whole file, select the change in the **Agent changes** tab and click
 
 To go from block to block, press Alt+F5.
 
+To make the file use the whole window, choose **View -> Focus on the file** or press Ctrl+Shift+F. To get the panes back, choose **View -> Show all panels**.
+
+To see what changed in a file that Git lists, follow the steps below:
+
+1. Click the **Git** tab at the bottom.
+2. Double-click the file, or select it and press Enter. Code Review opens on that file.
+
 ## 6 - Troubleshooting
 
 - **The editor is empty.** The window says to open a file from the tree. Click **Open file**.
 - **The tree is empty.** Plug in a project in **[Explorer](explorer.md)**. Without a project, the tree shows the home folder of the agent.
-- **The Git tab says Not a git repository.** The project has no git folder.
+- **The Git tab says that the folder is not tracked with Git.** The project has no .git folder. Click **Turn on Git here** if you want change marks.
+- **The file is in a narrow column.** Choose **View -> Focus on the file**.
 - **Revert hunk is dimmed.** Move the caret to a changed block, or open its peek.
 - **I cannot type.** Code is read-only. Ask the agent to edit the file.
 

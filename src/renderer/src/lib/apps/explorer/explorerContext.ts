@@ -97,7 +97,7 @@ export function driveItems(drive: { kind: 'system' | 'removable' }, a: DriveActi
     { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask chat a&bout this...', icon: 'session', action: a.askChat },
     { id: 'explorer-ctx-drive-copy-path', testid: 'explorer-ctx-drive-copy-path', label: 'Copy as &path', icon: 'copy', action: a.copyPath },
     { separator: true },
-    { id: 'explorer-drive-eject', label: '&Eject', icon: 'usb', disabled: drive.kind !== 'removable', action: a.eject },
+    { id: 'explorer-drive-eject', label: '&Eject (remove from this desktop)', icon: 'usb', disabled: drive.kind !== 'removable', action: a.eject },
     { id: 'explorer-ctx-drive-properties', testid: 'explorer-ctx-drive-properties', label: 'P&roperties', icon: 'properties', action: a.properties }
   ]
 }

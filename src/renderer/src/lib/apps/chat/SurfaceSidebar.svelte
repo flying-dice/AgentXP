@@ -17,9 +17,11 @@
     onaction?: (event: A2uiClientEvent) => void
     /** True while the agent works on a turn (a form says "Sending..." then "Sent."). */
     running?: boolean
+    /** The agent's latest reply as plain text (a form quotes it after Send). */
+    reply?: string
   }
 
-  let { surfaces, sessionId, selected, width = $bindable(300), onselect, onclose, onaction, running }: Props = $props()
+  let { surfaces, sessionId, selected, width = $bindable(300), onselect, onclose, onaction, running, reply }: Props = $props()
 
   const current = $derived(surfaces.find((s) => s.surfaceId === selected) ?? surfaces[0])
 
@@ -61,22 +63,26 @@
     </div>
     <div class="body w7-scroll" role="tabpanel">
       {#key current.surfaceId}
-        <A2uiSurface messages={current.messages} {sessionId} {onaction} busy={running} />
+        <A2uiSurface messages={current.messages} {sessionId} {onaction} busy={running} {reply} />
       {/key}
     </div>
   </aside>
 {/if}
 
 <style>
+  /* A 24 px wide hit area (WCAG 2.5.8) that takes the room of 5 px; only the middle 5 px is painted. */
   .resizer {
     flex: none;
-    width: 5px;
+    box-sizing: border-box;
+    width: 24px;
+    margin: 0 -9.5px;
+    padding: 0 9.5px;
     cursor: col-resize;
-    background: transparent;
+    background: transparent content-box;
   }
   .resizer:hover,
   .resizer:focus-visible {
-    background: var(--w7-panel-border);
+    background: var(--w7-panel-border) content-box;
   }
   .sidebar {
     flex: none;

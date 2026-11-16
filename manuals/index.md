@@ -33,7 +33,7 @@ This chapter explains the parts of a manual. Each manual has the same chapters, 
 
 ### Get Help in the App
 
-To open the manual of the window that you work in, press F1. Help and Support opens on the topic of that window. If no window has focus, F1 opens the topic **[The Desktop](desktop.md)**.
+To open the manual of the window that you work in, press F1. Help and Support opens on the topic of that window. If no window has focus, F1 opens the topic **[Keyboard](keyboard.md)**.
 
 ## 2 - Start Here
 

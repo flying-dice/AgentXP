@@ -67,6 +67,8 @@ export interface BrowserDriver {
   scroll(windowId: Id, target: { ref?: number; direction: ScrollDirection; amount?: number }, guard: BrowserGuard): Promise<ActionResult>
   wait(windowId: Id, query: WaitQuery, guard: BrowserGuard): Promise<{ found: boolean; waitedMs: number }>
   select(windowId: Id, ref: number, option: string, guard: BrowserGuard): Promise<ActionResult>
+  /** The role and accessible name of the element a ref points to (for the words of the "Agent is using this page" bar). */
+  elementOf(windowId: Id, ref: number): Promise<{ role: string; name: string } | undefined>
   back(windowId: Id): Promise<PageInfo>
   forward(windowId: Id): Promise<PageInfo>
   reload(windowId: Id): Promise<PageInfo>

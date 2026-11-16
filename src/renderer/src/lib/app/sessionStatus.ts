@@ -21,14 +21,16 @@ export function effectiveStatus(inState: SessionStatus | null | undefined, inRow
 
 export const statusLabel = (status: SessionStatus): string => LABELS[status]
 
-export type ConnectionLabel = 'Ready' | 'Connecting…' | 'Connected' | 'Working…' | 'Waiting for permission' | 'Disconnected'
+export type ConnectionLabel = 'Ready' | 'Connecting…' | 'Connected' | 'Working…' | 'Waiting for permission' | 'Waiting for you' | 'Disconnected'
 
 /**
  * The status strip's connection text for a session status. "Ready" until there is a session (nothing has failed yet),
  * "Connecting…" while its agent starts, "Disconnected" only after a failure (`error`). A chat whose agent went away
- * while idle (`closed`) is "Ready": the next message starts the agent again.
+ * while idle (`closed`) is "Ready": the next message starts the agent again. While the user is in control
+ * (Ask before every action, Take over) a step that is still ending reads "Waiting for you", never "Working…".
  */
-export function connectionLabel(status: SessionStatus | null): ConnectionLabel {
+export function connectionLabel(status: SessionStatus | null, userInControl = false): ConnectionLabel {
+  if (userInControl && status === 'working') return 'Waiting for you'
   switch (status) {
     case 'idle':
       return 'Connected'

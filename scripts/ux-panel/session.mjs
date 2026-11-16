@@ -13,12 +13,12 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from './lib/args.mjs'
 import { countSteps, readLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
-import { baseTaskId, budgetFor, budgetVerdict, loadTasks, scenarioText } from './lib/tasktext.mjs'
+import { asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, scenarioText } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', seq: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool' })
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
 const sessionInfo = () => {
   const file = join(outDir(), 'session.json')
@@ -108,17 +108,38 @@ async function check() {
   const level = flags.level ?? info.level
   const budget = t ? budgetFor(t, level) : null
   const lines = [`${result.status}: ${result.reason}`, ...result.notes.map((n) => `  note: ${n}`), `steps: ${steps}${budget ? ` of budget ${budget}` : ''}`]
-  const verdict = budgetVerdict(result.status, steps, budget)
+  const verdict = budgetVerdict(result.status, steps, budget, flags.seq)
   const status = verdict.status
   lines.push(...verdict.lines)
+  // H-29: a question task needs the panelist's `Answer:` line.
+  if (t && asksQuestion(t.scenario) && !flags.answer) lines.push('warning: the scenario asks a question but --answer was not given; pass the "Answer: ..." line of the final report')
   console.log(lines.join('\n'))
-  writeFileSync(join(outDir(), 'check.json'), JSON.stringify({ task, level, status, nearMiss: verdict.nearMiss, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, checkedAt: new Date().toISOString() }, null, 2))
+  writeFileSync(join(outDir(), 'check.json'), JSON.stringify({ task, level, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: flags.seq ?? null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, checkedAt: new Date().toISOString() }, null, 2))
   process.exitCode = status === 'PASS' ? 0 : status === 'FAIL' ? 1 : 2
+}
+
+const isAlive = (pid) => {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function stop() {
   const out = outDir()
   const info = sessionInfo()
+  // H-30: no archive without a verdict (a session lost to an outage must not look finished), and a gone session keeps its folder.
+  if (!isAlive(info.pid)) {
+    console.log(`no running session for ${out} (the server process ${info.pid} is gone). The folder is kept. Start the task again with a new --out folder; use \`stop --no-check\` only to clean up.`)
+    if (!flags['no-check']) {
+      process.exitCode = 1
+      return
+    }
+  } else if (!existsSync(join(out, 'check.json')) && !flags['no-check']) {
+    throw new Error(`no check.json in ${out}: run \`check\` first (or pass --no-check to archive without a verdict)`)
+  }
   await request(info.admin, { op: 'shutdown' }).catch(() => undefined)
   for (let i = 0; i < 100; i++) {
     try {

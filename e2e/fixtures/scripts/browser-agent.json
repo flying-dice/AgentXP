@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "browser-agent",
-  "description": "Uses a local chat web app through the browser_* tools: tree, find, click, scroll, type into a contenteditable, press Enter, iframe, shadow DOM, tabs. The prompt carries the address (\"... chat app at <url>\").",
+  "description": "Uses a local chat web app through the browser_* tools: tree, find, click, scroll, type into a contenteditable, press Enter, iframe, shadow DOM, tabs. The prompt carries the address (\"... chat app at <url>\"). Any prompt about reading, summarising or looking at the open page makes it call browser_read and report (H-40); other prompts get a plain sentence.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -803,6 +803,44 @@
           "text": "DONE {{mine}}"
         }
       ]
+    },
+    {
+      "id": "read-page",
+      "match": {
+        "regex": "summar|read|look|see|page|browser|tell me"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Looking at the page that is open in the Browser.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "text"
+          },
+          "saveAs": "page",
+          "label": "read the open page"
+        },
+        {
+          "type": "expect",
+          "from": "page.isError",
+          "equals": "false",
+          "message": "browser_read failed: {{page}}"
+        },
+        {
+          "type": "message",
+          "text": "I can read the page that is open in the Browser. It says: {{page}}"
+        }
+      ]
+    }
+  ],
+  "fallback": [
+    {
+      "type": "message",
+      "text": "I can read the page that is open in the Browser."
     }
   ]
 }

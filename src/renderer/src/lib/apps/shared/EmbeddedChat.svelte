@@ -20,13 +20,13 @@
   import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import { connectionLabel, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
+  import { OPEN_PANE_TIP, PANE_EMPTY_TEXT } from '../../app/session/chatPaneText'
   import { logLines, problemDetails } from '../../app/session/chatProblem'
   import { folderLabel } from '../../app/session/folderLabel'
   import Composer from '../../app/session/Composer.svelte'
   import SessionView from '../../app/session/SessionView.svelte'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import Icon from '../../kit/atoms/Icon.svelte'
-  import { showMessageBox } from '../../kit/organisms/messageBox'
   import { cwdLabel } from '../explorer/explorerModel'
   import { useSessionStores } from '../sessionStores.svelte'
   import type { DesktopHost } from '../types'
@@ -52,6 +52,10 @@
     resizable?: boolean
     /** Header text; default: the session title. */
     title?: string
+    /** "Open as a chat window" under the header (the chat pane): starts a chat of its own on the same folder. */
+    onopenwindow?: () => void
+    /** The text of the empty pane (no session yet); the chat pane says what it is and what to use for a lasting chat. */
+    blankText?: string
     /** The file open in the host, offered by "Include open file" in the composer. */
     openFilePath?: string | null
     /** Open, close, delete and move for the surface rows (the Chat app). */
@@ -89,6 +93,8 @@
     width = $bindable(340),
     resizable = false,
     title,
+    onopenwindow,
+    blankText,
     openFilePath = null,
     surfaceControls,
     contained = true,
@@ -113,8 +119,15 @@
     store = shared
   })
 
-  let agent = $state.raw<AgentDto | null>(null)
+  let agents = $state.raw<AgentDto[]>([])
   let loadError = $state<string | null>(null)
+  // Derived, so a chat that moved to another agent ("Try again with <agent>") shows the new one.
+  const agent = $derived(agents.find((a) => a.id === session?.agentId) ?? null)
+  /** The desktop's default agent when it is not this chat's agent: the Try again button of a failed start names it. */
+  const newDefaultAgent = $derived.by(() => {
+    const standard = agents.find((a) => a.isDefault)
+    return standard && session && standard.id !== session.agentId ? standard.name : null
+  })
 
   // The row of the session and its agent, followed through `session.changed`.
   $effect(() => {
@@ -123,10 +136,10 @@
     let stale = false
     void (async () => {
       try {
-        const [s, agents] = await Promise.all([host.api.sessions.get(id), host.api.agents.list()])
+        const [s, list] = await Promise.all([host.api.sessions.get(id), host.api.agents.list()])
         if (stale) return
         session = s
-        agent = agents.find((a) => a.id === s.agentId) ?? null
+        agents = list
         loadError = null
       } catch (error) {
         if (stale) return
@@ -135,12 +148,24 @@
       }
     })()
     const off = host.api.on('session.changed', (changed) => {
-      if (changed.id === id) session = changed
+      if (changed.id !== id) return
+      // The default agent can change in Control Center while a failed chat waits, and a chat can move to another agent
+      // (Try again with the new default): read the agents again when the chat's state changes.
+      if (session && (changed.agentId !== session.agentId || changed.problem?.failures !== session.problem?.failures || !!changed.problem !== !!session.problem)) {
+        void host.api.agents.list().then((list) => (agents = list))
+      }
+      session = changed
     })
     return () => {
       stale = true
       off()
     }
+  })
+
+  // A chat with a failed agent follows the default agent: coming back from Control Center (focus moves) reads the list again.
+  $effect(() => {
+    void host.state.focusedWindowId
+    if (untrack(() => sessionId > 0 && !!session?.problem)) void host.api.agents.list().then((list) => (agents = list))
   })
 
   // The host's context rides with every run of this session: desktop state plus `appContext`.
@@ -183,11 +208,18 @@
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   const folderText = $derived(session ? folderLabel(session.cwd, host.state.drives) : undefined)
 
-  /** "Details...": the technical text of the error and the last lines of the chat's log (shown nowhere else). */
-  async function showDetails(detail: string | null): Promise<void> {
+  /** "Details...": the technical text of the error and the last lines of the chat's log, shown inline in the chat. */
+  async function loadDetails(detail: string | null): Promise<string> {
     const events = await host.api.events.query({ desktopId: host.state.desktopId, sessionId, limit: 200 }).catch(() => [])
-    await showMessageBox({ text: problemDetails(detail, logLines(events)), caption: 'Agent7', buttons: 'OK', icon: 'information' })
+    return problemDetails(detail, logLines(events))
   }
+  /** "Open Agents" and "Choose another agent": Control Center at Agents (the chat stays where it is). */
+  async function openAgents(): Promise<void> {
+    const centre = await host.openApp({ app: 'control-centre' })
+    host.updateView(centre.id, { app: 'control-centre', page: 'agents' })
+  }
+  /** "Start a new chat" after a second failure: a chat on the same folder with the current default agent. */
+  const startNewChat = (): void => void (session ? host.startChat(session.cwd) : undefined)
   async function showInEventViewer(): Promise<void> {
     const viewer = await host.openApp({ app: 'event-viewer' })
     host.updateView(viewer.id, { app: 'event-viewer', sessionId, level: 'all', selectedEventId: null })
@@ -223,7 +255,7 @@
 
 {#if collapsible && collapsed}
   <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat pane (collapsed)">
-    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show the chat pane" title="Show chat pane" onclick={() => (collapsed = false)}>
+    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show chat" title={OPEN_PANE_TIP} onclick={() => (collapsed = false)}>
       <Icon name="chevron-left" />
     </button>
     <span class="vertical">{heading}</span>
@@ -237,7 +269,7 @@
       <div class="head">
         <Icon name="session" size={16} />
         <b class="heading" data-testid="embedded-chat-title" title={heading}>{heading}</b>
-        <span class="state" data-testid="embedded-chat-status">{connectionLabel(starting ? 'connecting' : status)}</span>
+        <span class="state" data-testid="embedded-chat-status">{connectionLabel(starting ? 'connecting' : status, host.state.userInControl)}</span>
         {#if isDisconnected(status) && sessionId > 0}
           <button type="button" class="reconnect" data-testid="embedded-chat-reconnect" title="Start the agent again" onclick={reconnect}>Reconnect</button>
         {/if}
@@ -246,18 +278,23 @@
             <Icon name="refresh" />
           </button>
         {/if}
-        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat pane" title="Hide chat pane" onclick={() => (collapsed = true)}>
+        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide chat" title="Hide chat" onclick={() => (collapsed = true)}>
           <Icon name="chevron-right" />
         </button>
       </div>
+      {#if onopenwindow}
+        <div class="sub">
+          <button type="button" class="link" data-testid="embedded-chat-open-window" title="Start a chat in its own window on the same folder. You can come back to it later." onclick={() => onopenwindow?.()}>Open as a chat window</button>
+        </div>
+      {/if}
     {/if}
     <div class="body">
       {#if shared && session}
         {#key sessionId}
-          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} resumed={host.hasResumeNote(sessionId)} oncontinue={() => void host.continueChat(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} ondetails={(detail) => void showDetails(detail)} onshowevents={() => void showInEventViewer()} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
+          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} stoppedByPause={host.stoppedByPause(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} {loadDetails} onshowevents={() => void showInEventViewer()} onopenagents={() => void openAgents()} onnewchat={startNewChat} {newDefaultAgent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
         {/key}
       {:else if sessionId <= 0 && onstart}
-        <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : 'Ask about what you are looking at. The conversation ends when you close this window.')}</div>
+        <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : (blankText ?? PANE_EMPTY_TEXT))}</div>
         {#if suggestionsOpen}
           <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">
             {#each suggestions as s (s.id)}
@@ -332,8 +369,8 @@
   .collapse,
   .expand {
     flex: none;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -347,9 +384,31 @@
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
   }
+  .sub {
+    flex: none;
+    padding: 2px 6px;
+    background: #f3f7fc;
+    border-bottom: 1px solid #c5d1e1;
+    font-size: 11px;
+  }
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #0b4aa6;
+    font: inherit;
+    cursor: pointer;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+  .link:focus-visible {
+    outline: var(--w7-focus-outline);
+    outline-offset: 1px;
+  }
   .strip {
     flex: none;
-    width: 26px;
+    width: 28px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -366,15 +425,19 @@
     max-height: 260px;
     color: var(--w7-text-muted);
   }
+  /* A 24 px wide hit area (WCAG 2.5.8) that takes the room of 5 px; only the middle 5 px is painted. */
   .resizer {
     flex: none;
-    width: 5px;
+    box-sizing: border-box;
+    width: 24px;
+    margin: 0 -9.5px;
+    padding: 0 9.5px;
     cursor: col-resize;
-    background: transparent;
+    background: transparent content-box;
   }
   .resizer:hover,
   .resizer:focus-visible {
-    background: var(--w7-panel-border);
+    background: var(--w7-panel-border) content-box;
   }
   .start {
     flex: 1;

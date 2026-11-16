@@ -313,7 +313,7 @@
     <ToolStripButton text="H2" disabled={!editing} title="Heading 2" aria-label="H2 Heading 2" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 2))} />
     <span class="sep"></span>
     <ToolStripButton text="• List" disabled={!editing} title="Bulleted list" aria-label="Bulleted list" onclick={() => format(toggleBullets)} />
-    <ToolStripButton text="1. List" disabled={!editing} title="Numbered list" aria-label="Numbered list" onclick={() => format(toggleNumbers)} />
+    <ToolStripButton text="1. List" disabled={!editing} title="Numbered list" aria-label="1. List, numbered list" onclick={() => format(toggleNumbers)} />
     <span class="sep"></span>
     <ToolStripButton text="Code" disabled={!editing} title="Code" aria-label="Code" onclick={() => format(toggleCode)} />
     <ToolStripButton text="Link" disabled={!editing} title="Insert link" aria-label="Link" onclick={() => format(insertLink)} />

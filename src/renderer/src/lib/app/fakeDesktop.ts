@@ -126,7 +126,15 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     },
     setPaused: async (_id, paused) => {
       state.paused = paused
+      if (!paused) state.stoppedByPause = []
       changed()
+    },
+    resumeAgents: async () => {
+      const stopped = state.stoppedByPause ?? []
+      state.paused = false
+      state.stoppedByPause = []
+      changed()
+      return stopped
     },
     setUserInControl: async (_id, on) => {
       state.userInControl = on
@@ -149,7 +157,14 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},
-    respondAppRequest: async () => {}
+    respondAppRequest: async () => {},
+    raiseWindow: async (id) => {
+      const w = find(id)
+      if (w.windowState === 'minimized') w.windowState = 'normal'
+      raise(w)
+      changed()
+    },
+    userActive: async () => {}
   }
   for (const app of options.windows ?? []) void api.openWindow({ desktopId: desktop.id, app })
   return api

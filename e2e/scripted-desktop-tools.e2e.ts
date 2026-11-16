@@ -76,10 +76,16 @@ describe('scripted agent: tools follow apps (desktop.json)', () => {
     await see.visible(chat.agentMessage('hello from the scripted agent'))
     await see.visible(ctx.desktop.toolChip('terminal'))
     await see.attribute(chat.toolCalls.last(), 'data-status', 'done')
-    // The agent opened the window behind the chat the user types in: no focus change, a flashing taskbar button, no overlap.
-    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
-    await see.attribute(ctx.desktop.window('terminal'), 'data-focused', 'false')
-    await see.attribute(ctx.desktop.taskbarItem('terminal'), 'data-flashing', 'true')
+    // UX-55: the agent's window comes to the front. It takes the focus, unless the user typed in the last 2 seconds: then the
+    // focus stays in the chat and the taskbar button flashes until the window is focused (the unit tests pin each case).
+    await see.eventually(async () => {
+      const terminalFocused = await ctx.desktop.window('terminal').getAttribute('data-focused')
+      const chatFocused = await ctx.desktop.window('chat').getAttribute('data-focused')
+      const flashing = await ctx.desktop.taskbarItem('terminal').getAttribute('data-flashing')
+      expect([terminalFocused, chatFocused]).toContain('true')
+      expect(terminalFocused).not.toBe(chatFocused)
+      expect(flashing).toBe(terminalFocused === 'true' ? 'false' : 'true')
+    })
     expect(await overlap(ctx.desktop.window('terminal'), ctx.desktop.window('chat'))).toBe(false)
     // Its own tab with the streamed output; the earlier run is still listed.
     await see.text(ctx.desktop.terminal().output, 'hello from the scripted agent')

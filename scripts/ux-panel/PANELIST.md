@@ -51,7 +51,7 @@ and a time limit of 10 minutes. Count your actions. When the budget is used up, 
 ## Finish the whole scenario
 
 A task is done only when **everything** the scenario asks for is done, not after the first plausible step. Read the
-scenario again before you stop and check each part: every action it names (for example press the button, close the
+scenario again before you stop and name each part of it that you did (one short line per part) and check each part: every action it names (for example press the button, close the
 window, pause) and every question it asks (answer it in your report). Look at the screen after your last action to confirm
 the result. Do not stop after one look or after two steps because it seems enough. Any hint that came with the scenario
 (an address, a name) is part of the scenario. Stop early only when the budget is used up or you decide you cannot go on.
@@ -63,9 +63,9 @@ report.
 
 ## Final report (your last message)
 
-1. **Outcome**: done / gave up / out of budget, in one line, and your answer to the question in the task if it asks one.
+1. **Outcome**: done / gave up / out of budget, in one line. If the task asks a question, add a line that starts with `Answer:` and gives your answer (a number, a name or a short sentence). The facilitator needs that line.
 2. **Steps**: a numbered list, per step: what you saw, what you expected, what you did, what happened.
 3. **Stuck points**: where you hesitated or went the wrong way, and why (wording, icon, position, missing feedback).
 4. **Help**: whether you used F1 or Help, and what you found.
-5. **Single Ease Question** (1 = very difficult ... 7 = very easy): "Overall, how easy or difficult was this task?" Give one number.
+5. **Single Ease Question** (1 = very difficult ... 7 = very easy): "Overall, how easy or difficult was this task?" Give one number and one sentence on why.
 6. **Frustrations** and what you would change (a short list).

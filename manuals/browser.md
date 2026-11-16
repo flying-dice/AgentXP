@@ -37,19 +37,19 @@ The toolbar is at the top. It has the round buttons **Back** and **Forward**, an
 
 ### The Tabs
 
-The tab strip is under the toolbar. Each tab shows the title of its page. **New tab** is at the end of the strip.
+The tab strip is under the toolbar. Each tab shows the title of its page and has a small x to close it. **New tab** is at the end of the strip. Use the Left and Right arrow keys to move between tabs.
 
 ### The Page
 
-The page area shows the web page of the active tab. A new tab shows **Type an address above to open a page.** When a page cannot be opened, Browser shows **This page can't be displayed**, the address, the cause, and what to try. Click **Refresh** to try again, or **Help** to read this manual.
+The page area shows the web page of the active tab. A new tab shows **Type an address above to open a page.** When a page cannot be opened, Browser shows **This page can't be displayed**, the address, the cause, and what to try. The page names the real cause and one next step, for example a blocked port, an address that nothing answers, or a name that was not found. Type another address in **Try another address:** and click **Go**, click **Refresh** to try again, or click **Help** to read the troubleshooting section of this manual.
 
 ### The Status Bar
 
-The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer) and the zoom of the page. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the agent can see the page, and the zoom of the page. The part **Agent:** says **can see this page**, **asks first**, **cannot see pages**, or **reading** while the assistant reads the page. Point to it to read where to change it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
-Each Browser window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+Each Browser window has a chat pane at its right edge. Its header says **Chat about this page**. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
@@ -64,17 +64,23 @@ Each Browser window has a chat pane at its right edge. The pane starts closed, a
 | Stop | Stops loading. It shows while a page loads. | `browser-stop` |
 | Tab strip | Holds the tabs. | `browser-tabs` |
 | Tab | One open page. The number is the tab number. | `browser-tab-*` |
-| Close tab | Closes that tab. | `browser-tab-close-*` |
+| Close tab | Closes that tab. It sits at the right end of the tab. | `browser-tab-close-*` |
 | New tab | Opens a blank tab. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
-| Agent bar | Shows "Agent is using this page" while the agent works. | `browser-agent-bar` |
-| Take over | Pauses the agent on this page so that you can use it. The agent must ask before it uses the page again. | `browser-agent-takeover` |
+| Agent bar | Shows "Agent is using this page" with what the agent does, for the whole job and 20 seconds after the last step. After you take over, it says that you have control. | `browser-agent-bar` |
+| Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'"), or that you have control. | `browser-agent-bar-text` |
+| Take over | Pauses the agent on this page so that you can use it. It stays at the right of the bar and then reads **Taken over**. The agent must ask before it uses the page again. | `browser-agent-takeover` |
+| Give control back | Shows after you took over. The agent may use the page again, and it asks first. | `browser-agent-giveback` |
+| Agent status | Says whether the agent can see the page: can see this page, asks first, cannot see pages, or reading. | `browser-assistant-status` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
 | Error page | Shows when a page could not be opened. | `browser-error-page` |
 | Error title | "This page can't be displayed". | `browser-error-title` |
 | Error cause | The address that failed and why. | `browser-error-cause` |
 | Error refresh | Tries to open the address again. | `browser-error-refresh` |
-| Error help | Opens this manual. | `browser-error-help` |
+| Error hint | The next step for this error. | `browser-error-hint` |
+| Error address | The address to try instead. | `browser-error-address` |
+| Error go | Opens the address in the error address box. | `browser-error-go` |
+| Error help | Opens this manual at the section Troubleshooting. | `browser-error-help` |
 | Highlight ring | An orange frame around the item the agent used. | `browser-agent-ring` |
 
 ### Menu Bar and Context Menu
@@ -135,9 +141,9 @@ The agent can use a web app such as a team chat, mail, or documents. Follow the 
 2. Sign in yourself. Agent7 keeps you signed in. The agent never types a password.
 3. Ask the agent to read or send messages.
 
-While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. To use the page yourself, click **Take over**, or click **Pause all agents** on the top bar. After **Take over**, the agent must ask you before each action.
+While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. The bar stays while the agent works, also when it only reads. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says that you have control, and the agent stops and asks before it uses the page again. Click **Give control back** to let the agent go on. You can also click **Pause all agents** on the top bar.
 
-The chip **Browser** on the top bar shows that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one.
+The chip **Browser** on the top bar and the part **Agent:** in the status bar of Browser show that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one. To change what the agent may do, open **Control Center**, click **Permissions**, and set **Browser**.
 
 ### What the Agent Can Do
 
@@ -161,7 +167,7 @@ The agent reads the whole page, also below the fold, in frames, and in shadow ro
 ## 6 - Troubleshooting
 
 - **Back is dimmed.** The window has no earlier page.
-- **The page says "This page can't be displayed".** Make sure the address is right and your computer is online. Then click **Refresh**.
+- **The page says "This page can't be displayed".** Read the line under **Try this**. It depends on the cause. A blocked port needs another address. An address that nothing answers needs the program that serves it to be started. A name that was not found needs a check of the spelling. Without a network, check that your computer is online. Then click **Refresh**, or type another address and click **Go**.
 - **The page stays blank.** Click **Refresh**. Make sure that your computer is online.
 - **The agent cannot browse.** Open Browser. The permission for Browser must be **Allow** or **Ask** in **[Control Center](control-centre.md)**.
 

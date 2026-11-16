@@ -59,7 +59,7 @@ describe('driveItems', () => {
   it('a project drive offers Open, Start a chat here, Eject and Properties', () => {
     const items = driveItems({ kind: 'removable' }, actions)
     expect(items.map((i) => i.id)).toEqual(expect.arrayContaining(['explorer-drive-open', 'explorer-drive-chat', 'explorer-drive-eject', 'explorer-ctx-drive-properties']))
-    expect(items.find((i) => i.id === 'explorer-drive-eject')?.label).toBe('&Eject')
+    expect(items.find((i) => i.id === 'explorer-drive-eject')?.label).toBe('&Eject (remove from this desktop)')
     expect(items.find((i) => i.id === 'explorer-drive-eject')?.disabled).toBe(false)
   })
 

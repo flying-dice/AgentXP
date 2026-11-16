@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { describeLoadFailure, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
+import { assistantStatus, describeLoadFailure, failureHint, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
 
 describe('load failures', () => {
   it('names the cause in plain words and keeps the technical text', () => {
     expect(describeLoadFailure('http://x.invalid/', 'ERR_NAME_NOT_RESOLVED')).toEqual({ url: 'http://x.invalid/', cause: 'The name of the website was not found.', technical: 'ERR_NAME_NOT_RESOLVED' })
-    expect(describeLoadFailure('http://127.0.0.1:9/', 'ERR_CONNECTION_REFUSED').cause).toBe('The website did not answer.')
+    expect(describeLoadFailure('http://127.0.0.1:9/', 'ERR_CONNECTION_REFUSED').cause).toBe('Nothing answered at this address.')
   })
   it('ignores a load that was replaced or stopped, and sub frames', () => {
     expect(isShownFailure(-3, true)).toBe(false)
@@ -23,6 +23,35 @@ describe('pageStatus', () => {
     expect(pageStatus({ url: 'https://a.b', loading: false, failed: false })).toBe('Done')
     expect(pageStatus({ url: 'https://a.b', loading: false, failed: true })).toBe('Could not load the page')
     expect(pageStatus({ url: 'about:blank', loading: false, failed: false })).toBe('Ready')
+  })
+})
+
+describe('failureHint', () => {
+  const hint = (url: string, technical: string): string => failureHint(describeLoadFailure(url, technical))
+  it('names the blocked port and does not blame the network', () => {
+    const text = hint('http://127.0.0.1:9/', 'ERR_UNSAFE_PORT')
+    expect(text).toContain('port that the Browser blocks')
+    expect(text).toContain('(here :9)')
+    expect(text).not.toContain('online')
+  })
+  it('tells what to do for a refused connection, an unknown name and a missing network', () => {
+    expect(hint('http://localhost:3000/', 'ERR_CONNECTION_REFUSED')).toContain('Nothing is listening at this address')
+    expect(hint('http://x.invalid/', 'ERR_NAME_NOT_RESOLVED')).toContain('Check the spelling')
+    expect(hint('http://a.b/', 'ERR_INTERNET_DISCONNECTED')).toBe('Check that your computer is online, then click Refresh.')
+    expect(hint('http://a.b/', 'ERR_CONNECTION_TIMED_OUT')).toBe('Check that your computer is online, then click Refresh.')
+  })
+  it('falls back for an unknown error', () => {
+    expect(hint('http://a.b/', 'ERR_SOMETHING')).toBe('Make sure the address is right, then click Refresh.')
+  })
+})
+
+describe('assistantStatus', () => {
+  it('says whether the agent can see the page', () => {
+    expect(assistantStatus('allow', false)).toBe('Agent: can see this page')
+    expect(assistantStatus('ask', false)).toBe('Agent: asks first')
+    expect(assistantStatus('deny', false)).toBe('Agent: cannot see pages')
+    expect(assistantStatus('allow', true)).toBe('Agent: reading')
+    expect(assistantStatus('deny', true)).toBe('Agent: cannot see pages')
   })
 })
 

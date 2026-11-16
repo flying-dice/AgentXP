@@ -16,42 +16,70 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
-  import { HOME_TOPIC, back, forward, markWords, queryWords, searchHits, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
+  import { HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchHits, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
   import { escapeHtml, renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
 
-  let { window: win, host }: AppProps<'help'> = $props()
+  let { window: win, host, focused = false }: AppProps<'help'> = $props()
   const topics: HelpTopic[] = helpTopics
 
   // svelte-ignore state_referenced_locally
-  let history = $state.raw(startHistory(win.view.topic || HOME_TOPIC))
+  const opening = splitTopic(win.view.topic || HOME_TOPIC)
+  /** The topic of the app that was focused when Help opened: a search lists it first (UX-81). */
+  let preferred = $state(opening.topic)
+  let history = $state.raw(startHistory(opening.topic))
   let query = $state('')
   let article = $state<HTMLElement | null>(null)
   /** The Contents list (the topics) is shown; Contents in the toolbar hides it to give the article room. */
   let contentsOpen = $state(true)
   /** The section a search hit opened (its heading id), scrolled to when the article shows. */
-  let pendingSection = $state<string | null>(null)
+  // svelte-ignore state_referenced_locally
+  let pendingSection = $state<string | null>(opening.section || null)
+  let searchBox = $state<HTMLInputElement | HTMLTextAreaElement | null>(null)
+  let flashTimer: ReturnType<typeof setTimeout> | undefined
 
   const sync = new ViewSync<{ topic: string }>((v) => v.topic)
   const topic = $derived(history.current)
   const current = $derived(topics.find((t) => t.id === topic) ?? null)
-  const hits = $derived(searchHits(topics, query))
+  const hits = $derived(searchHits(topics, query, preferred))
   const words = $derived(queryWords(query))
   const searching = $derived(query.trim() !== '')
   const html = $derived(current ? (searching ? markWords(renderHelpMarkdown(current.body), words) : renderHelpMarkdown(current.body)) : '')
 
+  /** Shows a topic, at a section when one is named. The topic on screen scrolls at once (nothing re-renders for it). */
   function show(next: string, sectionId: string | null = null): void {
-    pendingSection = sectionId || null
-    history = visit(history, next)
+    const { topic: name, section } = splitTopic(next)
+    const wanted = sectionId || section || null
+    if (name === history.current) {
+      if (wanted) void tick().then(() => goToSection(wanted))
+      return
+    }
+    pendingSection = wanted
+    history = visit(history, name)
   }
 
-  /** Scrolls to a heading of the article and marks it. */
-  function goToSection(id: string): void {
+  /** Scrolls to a heading of the article and marks it; the matched line under it is highlighted for 2 seconds. */
+  function goToSection(wanted: string): void {
     if (!article) return
-    for (const old of article.querySelectorAll('.target')) old.classList.remove('target')
-    const heading = article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`)
-    heading?.classList.add('target')
-    heading?.scrollIntoView({ block: 'start' })
+    for (const old of article.querySelectorAll('.target, .flash')) old.classList.remove('target', 'flash')
+    const ids = [...article.querySelectorAll<HTMLElement>('h1[id], h2[id], h3[id], h4[id]')].map((h) => h.id)
+    const id = resolveSection(ids, wanted)
+    const heading = id ? article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) : null
+    if (!heading) return
+    heading.classList.add('target')
+    heading.scrollIntoView({ block: 'start' })
+    flashMatch(heading)
+  }
+
+  /** The first marked word after the heading: its paragraph, item or cell flashes. */
+  function flashMatch(heading: HTMLElement): void {
+    if (!searching || !article) return
+    const mark = [...article.querySelectorAll('mark')].find((m) => heading.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING)
+    const line = mark?.closest('p, li, td, th, blockquote, pre') ?? null
+    if (!line) return
+    line.classList.add('flash')
+    clearTimeout(flashTimer)
+    flashTimer = setTimeout(() => line.classList.remove('flash'), 2000)
   }
 
   // Report the topic (the shell stores it) and follow a topic that arrives from outside (F1 on another window).
@@ -62,8 +90,17 @@
   $effect(() => {
     const incoming = win.view.topic
     if (!incoming || !sync.isExternal({ topic: incoming })) return
-    untrack(() => show(incoming))
+    untrack(() => {
+      preferred = splitTopic(incoming).topic
+      show(incoming)
+    })
   })
+
+  // The window takes the keyboard focus (the search box) when it opens and whenever it comes to the front (UX-80).
+  $effect(() => {
+    if (focused && searchBox && !untrack(() => ctx.open)) searchBox.focus()
+  })
+  $effect(() => () => clearTimeout(flashTimer))
   // A new article starts at the top, or at the section and the first marked word of a search hit.
   $effect(() => {
     void html
@@ -122,13 +159,32 @@
     event.preventDefault()
     const href = anchor.getAttribute('href') ?? ''
     const target = topicOfHref(href)
-    if (target) show(target)
+    if (target) show(target, sectionOfHref(href) || null)
     else if (href.startsWith('#')) goToSection(href.slice(1))
+  }
+
+  const hasSelection = (): boolean => {
+    const sel = window.getSelection()
+    return !!sel && !sel.isCollapsed && sel.toString() !== ''
+  }
+
+  /** Esc clears the search, else closes Help when no text is selected; Page Down and Page Up scroll the article from anywhere (UX-80). */
+  function onKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented || ctx.open || help.about) return
+    if (event.key === 'Escape' && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+      if (query !== '') query = ''
+      else if (!hasSelection()) void host.closeWindow(win.id)
+      else return
+      event.preventDefault()
+    } else if ((event.key === 'PageDown' || event.key === 'PageUp') && article && event.target !== article) {
+      event.preventDefault()
+      article.scrollBy({ top: (event.key === 'PageDown' ? 1 : -1) * article.clientHeight * 0.9 })
+    }
   }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="help" data-testid="help-app" data-topic={topic} oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+<div class="help" data-testid="help-app" data-topic={topic} oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))}>
   <MenuStrip {menus} aria-label="Help menu" />
   <div class="bar" role="toolbar" aria-label="Help toolbar">
     <div class="orbs">
@@ -139,7 +195,7 @@
     <ToolStripButton data-testid="help-contents" icon="file-text" text="Contents" title="Show or hide the list of topics" checked={contentsOpen} onclick={() => (contentsOpen = !contentsOpen)} />
     <span class="spring"></span>
     <label class="search" for="help-search-box">
-      <TextBox id="help-search-box" data-testid="help-search" bind:value={query} placeholder="Search Help" aria-label="Search Help" spellcheck={false} />
+      <TextBox id="help-search-box" data-testid="help-search" bind:value={query} bind:ref={searchBox} placeholder="Search Help" aria-label="Search Help" spellcheck={false} />
       <Icon name="search" size={14} />
     </label>
   </div>
@@ -167,7 +223,8 @@
     </nav>
     {/if}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-    <article class="article w7-scroll" data-testid="help-article" data-topic={topic} aria-label={current?.title ?? 'Help'} bind:this={article} onclick={onArticleClick}>
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <article class="article w7-scroll" data-testid="help-article" data-topic={topic} aria-label={current?.title ?? 'Help'} tabindex="0" bind:this={article} onclick={onArticleClick}>
       {#if current}
         <div class="w7-help-md">{@html html}</div>
       {:else}
@@ -280,6 +337,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 1px;
+    min-height: 24px;
     padding: 3px 10px;
     border: 1px solid transparent;
     background: transparent;
@@ -331,6 +389,10 @@
   .w7-help-md :global(.target) {
     background: #fff3b0;
   }
+  .w7-help-md :global(.flash) {
+    background: #ffe97a;
+    outline: 1px solid #e0b800;
+  }
   .w7-help-md :global(h3) {
     margin: 12px 0 4px;
     font-size: 14px;
@@ -356,10 +418,18 @@
   .w7-help-md :global(li) {
     margin: 2px 0;
   }
+  /* A link is at least 24 px high: padding adds to the hit area without moving the text (UX-83). */
   .w7-help-md :global(a) {
+    padding: 5px 0;
     color: var(--w7-link);
     text-decoration: underline;
     cursor: pointer;
+  }
+  .w7-help-md :global(li > a:only-child) {
+    display: inline-block;
+    min-height: 24px;
+    padding: 3px 0;
+    line-height: 18px;
   }
   .w7-help-md :global(.external) {
     color: var(--w7-text-muted);

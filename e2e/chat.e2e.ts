@@ -78,15 +78,67 @@ describe('chat turn with the fake agent', () => {
     await see.text(ctx.desktopPage.getByTestId('uac-reason'), 'Reason: ')
     expect(await ctx.desktop.uac.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
     await see.eventually(async () => expect(await ctx.desktopPage.getByTestId('uac-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
+    await see.text(ctx.desktopPage.getByTestId('uac-hint'), 'Press Alt+A to allow or Alt+D to deny.')
     await ctx.desktop.uacAllow.click()
     await see.gone(ctx.desktop.uac)
     await see.gone(chat.permissionDialog)
     await see.count(ctx.desktop.approvals, 0)
+    // The chat says what was answered, whichever dialog took the answer.
+    await see.text(chat.permissionResult, 'You allowed: ')
+  })
+
+  it('the permission dialog of the chat answers by key: Alt+D denies, Alt+A allows, and the chat says so', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.send('Write it a third time')
+    await see.visible(chat.permissionDialog)
+    await see.text(chat.permissionHint, 'Press Alt+A to allow or Alt+D to deny.')
+    // Deny keeps the first focus (the safe answer); Left and Right move to Allow and back.
+    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
+    await ctx.desktopPage.keyboard.press('ArrowLeft')
+    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-allow').evaluate((el) => el === document.activeElement)).toBe(true))
+    await ctx.desktopPage.keyboard.press('Alt+d')
+    await see.gone(chat.permissionDialog)
+    await see.text(chat.permissionResult, 'You denied: ')
+    await chat.send('Write it a fourth time')
+    await see.visible(chat.permissionDialog)
+    await ctx.desktopPage.keyboard.press('Alt+a')
+    await see.gone(chat.permissionDialog)
+    await see.text(chat.permissionResult, 'You allowed: ')
   })
 
   it('the Event Viewer logged the traffic of the turn', async () => {
     const viewer = await ctx.desktop.openApp('event-viewer')
     await see.visible(viewer.getByTestId('event-viewer-row'))
     await see.visible(viewer.getByTestId('event-viewer-count'))
+  })
+
+  it('a revert shows "Reverted" in the chat and in Code, and the change stays out of the list of changes (UX-79)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.showChanges()
+    await chat.changes.first().click()
+    await chat.frame.getByTestId('changes-revert').click()
+    await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
+    await see.visible(chat.frame.getByTestId('changes-reverted'))
+    await see.text(chat.frame.getByTestId('changes-reverted-text'), 'Reverted. Restore from the Recycle Bin')
+    await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
+    // The Code window shows the same list: its own Changes pane updates without any action there.
+    const code = ctx.desktop.code()
+    await code.showChanges()
+    await see.visible(code.frame.getByTestId('changes-reverted'))
+  })
+
+  it('typing in the Terminal says it is read-only and what to do instead', async () => {
+    await ctx.desktop.closeWindow('chat') // it is tiled over part of the other windows
+    await ctx.desktop.closeWindow('event-viewer')
+    await ctx.desktop.closeWindow('code')
+    const terminal = ctx.desktop.terminal()
+    // Closing Code can leave the Terminal active already; a taskbar click would then minimise it.
+    if (!(await terminal.output.isVisible())) await ctx.desktop.taskbarItem('terminal').click()
+    await terminal.output.click()
+    await ctx.desktopPage.keyboard.type('dir')
+    await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
+    await see.text(terminal.readOnlyNotice, 'Ask the agent in Chat to run a command.')
+    await see.visible(terminal.frame.getByTestId('console-cursor-locked'))
+    await see.gone(terminal.readOnlyNotice) // it goes after a few seconds
   })
 })

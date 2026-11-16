@@ -4,9 +4,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { normalizeKey, parseArgs, parseCommand } from './lib/args.mjs'
 import { countSteps, createLog, readLog, summarize } from './lib/log.mjs'
-import { baseTaskId, budgetVerdict, loadTasks, parseTasks, scenarioText } from './lib/tasktext.mjs'
+import { asksQuestion, baseTaskId, budgetVerdict, loadTasks, parseTasks, scenarioText } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
-import { countWords, helpInfo, lastProgress, nameWords } from './checks/util.mjs'
+import { countWords, helpInfo, lastProgress, nameWords, resourceText, userText } from './checks/util.mjs'
+import { fillsWindow, judgeTabs } from './checks/features.mjs'
 import { LOGIN_ORIGINAL, REDIRECT_BUG } from './lib/fixtures.mjs'
 import { TASKS } from './tasks.mjs'
 
@@ -101,11 +102,13 @@ describe('tasks.md parsing', () => {
 // ---------------------------------------------------------------- checkers (H-01 .. H-22), run against a fake context
 const msg = (role, text) => ({ kind: 'message', role, blocks: [{ text }] })
 const win = (app, view = {}) => ({ id: `${app}-1`, app, view })
-const fakeCtx = ({ state = {}, desktop, policy = { groups: {} }, entries = [], sessions = [], list = [], changes = [], helpPage } = {}) => ({
+const fakeCtx = ({ state = {}, desktop, policy = { groups: {} }, entries = [], sessions = [], list = [], changes = [], helpPage, page, sleep } = {}) => ({
   state: { desktopId: 'd1', sessionId: 's1', ...state },
   fixtures: { loginApp: '/nonexistent/login-app' },
   desktopState: async () => desktop ?? null,
   desktopWindow: () => helpPage,
+  desktopPage: async () => page,
+  sleep: sleep ?? (async () => undefined),
   policy: async () => policy,
   transcript: async () => entries,
   sessions: async () => sessions,
@@ -133,8 +136,9 @@ describe('H-02 T08.2 file name and count words', () => {
   const changes = ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'README.md'].map((n, i) => ({ path: `E:\\${n}`, additions: i === 4 ? 9 : 1, deletions: 0 }))
   it('accepts the name with or without the extension and a count in words', async () => {
     const ctx = fakeCtx({ changes })
-    expect((await run('T08.2', ctx, 'five files, README changed most')).status).toBe('PASS')
-    expect((await run('T08.2', ctx, '5 files changed, README.md most')).status).toBe('PASS')
+    expect((await run('T08.2', ctx, 'five files, README changed most, lines 3 to 9')).status).toBe('PASS')
+    expect((await run('T08.2', ctx, 'five files, README changed most')).status).toBe('FAIL') // H-44: the lines are part of the answer
+    expect((await run('T08.2', ctx, '5 files changed, README.md most, lines 3 to 9')).status).toBe('PASS')
     expect((await run('T08.2', ctx, 'five files, a.ts most')).status).toBe('FAIL')
   })
   it('helpers', () => {
@@ -185,7 +189,7 @@ describe('H-04 T13.1 progress', () => {
 describe('H-05 T14.1 does not need the error desktop name', () => {
   it('passes on connection alone', async () => {
     const ctx = fakeCtx({ state: { pendingDesktopId: 'p', errorDesktopTitle: 'Docs site' }, list: [{ id: 'p', connected: true }] })
-    expect((await run('T14.1', ctx)).status).toBe('PASS')
+    expect((await run('T14.1', ctx, 'Docs site has the problem')).status).toBe('PASS') // H-39: the answer names the error workspace
     expect((await run('T14.1', fakeCtx({ state: { pendingDesktopId: 'p' }, list: [{ id: 'p', connected: false }] }))).status).toBe('FAIL')
   })
 })
@@ -220,7 +224,9 @@ describe('H-07 T22.x accept the Help window under either title', () => {
     expect((await run('T22.2', fakeCtx({ desktop: { windows: [win('help', { topic: 'paint' })] } }))).status).toBe('FAIL')
   })
   it('fails without a help window', async () => {
-    expect((await run('T22.1', fakeCtx({ desktop: { windows: [] } }))).status).toBe('FAIL')
+    // H-24: without a Help window the tooltip answer decides; no answer at all needs the researcher
+    expect((await run('T22.1', fakeCtx({ desktop: { windows: [] } }), 'no idea')).status).toBe('FAIL')
+    expect((await run('T22.1', fakeCtx({ desktop: { windows: [] } }))).status).toBe('MANUAL')
   })
 })
 
@@ -233,9 +239,12 @@ describe('H-08 T19.1 scenario and checker agree', () => {
     expect(TASKS['T19.1'].options.script).toBe('browser-agent')
     const desktop = (url) => ({ windows: [win('browser', { url })], tools: ['browser'] })
     const state = { testPageUrl: 'http://127.0.0.1:5555/' }
-    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:5555/') }))).status).toBe('MANUAL')
-    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:4173/') }))).status).toBe('FAIL')
-    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('PASS')
+    const read = { sessions: [{ id: 's1' }], entries: [{ kind: 'tool_call', title: 'browser_read', status: 'completed' }] }
+    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }))).status).toBe('MANUAL')
+    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:4173/') }))).status).toBe('FAIL')
+    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('PASS')
+    // H-40: no browser_read call, no pass
+    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('FAIL')
   })
   it('the server takes a configurable port', () => {
     expect(source('server.mjs')).toContain('flags.port')
@@ -334,5 +343,203 @@ describe('H-22 near miss', () => {
     expect(budgetVerdict('PASS', 7, 6).lines.join(' ')).toContain('within +25 percent: review')
     expect(budgetVerdict('PASS', 9, 6)).toMatchObject({ status: 'FAIL', nearMiss: false })
     expect(budgetVerdict('FAIL', 7, 6).nearMiss).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------- round 2 harness fixes (H-23 .. H-46)
+const desktopResource = { kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json', text: '{"windows":[],"appContext":{"openFile":"E:\\\\index.ts","selection":"export const answer = 42"}}' }
+const userWithState = (text) => ({ kind: 'message', role: 'user', blocks: [desktopResource, { kind: 'text', text }] })
+
+describe('H-23 user text excludes the desktop-state resource', () => {
+  it('userText keeps only text blocks; resourceText reads the resource', () => {
+    const m = userWithState('hello')
+    expect(userText(m)).toBe('hello')
+    expect(resourceText(m)).toContain('agent7://desktop/state')
+    expect(userText({ blocks: [{ text: 'old style' }] })).toBe('old style')
+  })
+  it('T21.1 passes for "hello" behind a resource block and an Allow answer', async () => {
+    const entries = [userWithState('hello'), { kind: 'tool_call', permission: { outcome: 'selected', selectedOptionId: 'allow' } }]
+    expect((await run('T21.1', fakeCtx({ sessions: [{ id: 's1' }], entries }))).status).toBe('PASS')
+    expect((await run('T21.1', fakeCtx({ sessions: [{ id: 's1' }], entries: [userWithState('hello there'), entries[1]] }))).status).toBe('FAIL')
+  })
+  it('T27.1 passes with the pane question behind a resource block, and its note is not empty', async () => {
+    const desktop = { windows: [{ id: 'code-1', app: 'code', view: {}, asideSessionId: 'a1' }] }
+    const entries = [userWithState('Explain this'), msg('agent', 'Short answer: lines 1 and 2 of index.ts.')]
+    const result = await run('T27.1', fakeCtx({ desktop, entries }))
+    expect(result.status).toBe('PASS')
+    expect(result.notes.join(' ')).toContain('question: Explain this')
+    // a question that names nothing and carries no selection fails (H-38)
+    const bare = [{ kind: 'message', role: 'user', blocks: [{ kind: 'text', text: 'hi' }] }, msg('agent', 'ok')]
+    expect((await run('T27.1', fakeCtx({ desktop, entries: bare }))).status).toBe('FAIL')
+    const typed = [{ kind: 'message', role: 'user', blocks: [{ kind: 'text', text: 'what do the first two lines do?' }] }, msg('agent', 'ok')]
+    expect((await run('T27.1', fakeCtx({ desktop, entries: typed }))).status).toBe('PASS')
+  })
+})
+
+describe('H-24 T22.1 accepts a tooltip answer, H-25 number words', () => {
+  it('passes without a Help window when the answer gives the tooltip meaning', async () => {
+    const ctx = fakeCtx({ desktop: { windows: [] } })
+    expect((await run('T22.1', ctx, 'It plugs in a project folder as a drive so the agent can see its files')).status).toBe('PASS')
+    expect((await run('T22.1', ctx, 'I do not know')).status).toBe('FAIL')
+    expect((await run('T22.1', ctx)).status).toBe('MANUAL')
+  })
+  it('T25.2 and T24.1 accept digits and words', async () => {
+    const ctx = fakeCtx({ desktop: { windows: [win('code-review')] } })
+    expect((await run('T25.2', ctx, 'Changes requested, two comments')).status).toBe('PASS')
+    expect((await run('T25.2', ctx, 'Changes requested, 2 comments')).status).toBe('PASS')
+    expect((await run('T25.2', ctx, 'Changes requested, five comments')).status).toBe('FAIL')
+    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: three files')).status).toBe('PASS')
+    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: 3 files')).status).toBe('PASS')
+  })
+})
+
+describe('H-26 T27.2 measures the file area', () => {
+  const pageWith = ({ open = 0, edge = 1, editor, app }) => ({
+    locator: (sel) => ({
+      count: async () => (sel.includes('data-collapsed="false"') ? open : edge),
+      first: () => ({ boundingBox: async () => ({ width: sel.includes('code-editor') ? editor : app }) })
+    })
+  })
+  it('fillsWindow needs 90 percent', () => {
+    expect(fillsWindow(900, 1000)).toBe(true)
+    expect(fillsWindow(320, 1000)).toBe(false)
+    expect(fillsWindow(0, 0)).toBe(false)
+  })
+  it('fails when the pane is hidden but the editor is a narrow column; passes when it fills the window', async () => {
+    const narrow = await run('T27.2', fakeCtx({ page: pageWith({ editor: 320, app: 1100 }) }))
+    expect(narrow.status).toBe('FAIL')
+    expect(narrow.reason).toContain('320 px wide of 1100 px')
+    expect((await run('T27.2', fakeCtx({ page: pageWith({ editor: 1050, app: 1100 }) }))).status).toBe('PASS')
+    expect((await run('T27.2', fakeCtx({ page: pageWith({ open: 1, editor: 1050, app: 1100 }) }))).status).toBe('FAIL')
+  })
+})
+
+describe('H-28 T29.1 uses the served per-session address', () => {
+  const base = 'http://127.0.0.1:5555/'
+  const tab = (url, label, active) => ({ id: 'browser-tab-x', active: String(active), url, label })
+  const ok = (tabs) => judgeTabs(tabs, base).every(([good]) => good)
+  it('tasks.md and the scenario use the placeholder; the server answers /second', () => {
+    const t = loadTasks()['T29.1']
+    expect(t.scenario).toContain('{TEST_PAGE_URL}second')
+    expect(scenarioText(t.scenario, { testPageUrl: base })).toContain('http://127.0.0.1:5555/second')
+    expect(source('server.mjs')).toContain('TEST_PAGE_SECOND_HTML')
+  })
+  it('needs two tabs, the first active, the second on /second with a real title', () => {
+    expect(ok([tab(base, 'Fixture page', true), tab(`${base}second`, 'Second page', false)])).toBe(true)
+    expect(ok([tab(base, 'Fixture page', true), tab('http://127.0.0.1:4173/second', 'Second page', false)])).toBe(false)
+    expect(ok([tab(base, 'Fixture page', true), tab(`${base}second`, "This page can't be displayed", false)])).toBe(false)
+    expect(ok([tab(base, 'Fixture page', false), tab(`${base}second`, 'Second page', true)])).toBe(false)
+    expect(ok([tab(base, 'Fixture page', true)])).toBe(false)
+  })
+})
+
+describe('H-33 T28.2 accepts take over or pause', () => {
+  const calls = (n) => Array.from({ length: n }, () => ({ kind: 'tool_call', status: 'completed' }))
+  const steady = (desktop) => ({ ...fakeCtx({ desktop }), transcript: async () => calls(3) })
+  it('passes for userInControl and for paused when no tool call starts', async () => {
+    expect((await run('T28.2', steady({ userInControl: true, paused: false }))).status).toBe('PASS')
+    const paused = await run('T28.2', steady({ userInControl: false, paused: true }))
+    expect(paused.status).toBe('PASS')
+    expect(paused.notes.join(' ')).toContain('control used: paused')
+  })
+  it('fails when neither is set, or when the agent keeps calling tools', async () => {
+    expect((await run('T28.2', steady({ userInControl: false, paused: false }))).status).toBe('FAIL')
+    let n = 0
+    const busy = { ...fakeCtx({ desktop: { userInControl: true } }), transcript: async () => calls(3 + n++) }
+    expect((await run('T28.2', busy)).status).toBe('FAIL')
+  })
+})
+
+describe('H-35 presets act through the UI', () => {
+  it('eject-mid-job uses the tray menu and paused-desktop the top bar button', () => {
+    const chat = source('presets/chat.mjs')
+    expect(chat).toContain("getByTestId('usb-tray')")
+    expect(chat).toContain('dialog-button-yes')
+    expect(chat).not.toContain('window.agent7.drives.eject')
+    expect(chat).toContain("getByTestId('topbar-pause')")
+    expect(chat).not.toContain('desktop.setPaused')
+  })
+})
+
+describe('H-32 fixtures live under a sandbox home', () => {
+  it('the server starts the app with HOME and puts the projects in Documents', () => {
+    const server = source('server.mjs')
+    expect(server).toContain("join(sandboxHome, 'Documents')")
+    expect(server).toContain('home: sandboxHome')
+    const context = source('lib/context.mjs')
+    expect(context).toContain('HOME: home')
+    expect(context).toContain('USERPROFILE: home')
+  })
+})
+
+describe('H-39 T14.1, H-42 T17.2, H-44 T06.1 and T08.2 check the answer', () => {
+  it('T14.1 needs the error workspace in the answer', async () => {
+    const list = [{ id: 'p', connected: true }]
+    const ctx = fakeCtx({ state: { pendingDesktopId: 'p', errorDesktopTitle: 'Docs site' }, list })
+    expect((await run('T14.1', ctx)).status).toBe('MANUAL')
+    expect((await run('T14.1', ctx, 'Docs site has a problem')).status).toBe('PASS')
+    expect((await run('T14.1', ctx, 'Scratch pad has a problem')).status).toBe('FAIL')
+    expect(loadTasks()['T14.1'].scenario).toContain('which workspace has a problem')
+  })
+  it('T17.2 needs cause, place and what to do', async () => {
+    const ctx = fakeCtx({ state: { appPid: 1 } })
+    ctx.app = { process: () => ({ pid: 1 }) }
+    expect((await run('T17.2', ctx, 'The command not-a-real-command was not found; open the Agents page and change it')).status).toBe('PASS')
+    expect((await run('T17.2', ctx, 'The command not-a-real-command was not found, see the Agents page')).status).toBe('FAIL')
+  })
+  it('T06.1 and T08.2 scenarios ask for lines', () => {
+    expect(loadTasks()['T06.1'].scenario).toContain('Tell me which lines it changes')
+    expect(loadTasks()['T08.2'].scenario).toContain('which lines of that file changed')
+  })
+})
+
+describe('H-29 H-30 H-43 H-46 facilitator tools', () => {
+  it('asksQuestion recognises question scenarios', () => {
+    expect(asksQuestion(loadTasks()['T25.2'].scenario)).toBe(true)
+    expect(asksQuestion('Close the window and open a new chat.')).toBe(false)
+    expect(source('session.mjs')).toContain('--answer was not given')
+  })
+  it('stop needs a check.json unless --no-check, and keeps the folder of a gone session', () => {
+    expect(source('session.mjs')).toContain("flags['no-check']")
+    expect(source('session.mjs')).toContain('no running session')
+    expect(source('presets-smoke.mjs')).toContain("'--no-check'")
+  })
+  it('ux windows prints the window kind', () => {
+    expect(source('server.mjs')).toContain('[${kind}]')
+  })
+  it('flags a weak pass at the budget limit or with a low SEQ', () => {
+    expect(budgetVerdict('PASS', 6, 6)).toMatchObject({ status: 'PASS', weak: true })
+    expect(budgetVerdict('PASS', 6, 6).lines.join(' ')).toContain('weak pass: at the budget limit')
+    expect(budgetVerdict('PASS', 2, 6, 4)).toMatchObject({ weak: true })
+    expect(budgetVerdict('PASS', 2, 6, 5)).toMatchObject({ weak: false, lines: [] })
+    expect(budgetVerdict('PASS', 2, 6)).toMatchObject({ weak: false })
+    expect(budgetVerdict('FAIL', 6, 6).weak).toBe(false)
+    expect(budgetVerdict('PASS', 7, 6).weak).toBe(false)
+  })
+})
+
+describe('H-27 H-31 H-38 H-40 scripts', () => {
+  const json = (file) => JSON.parse(source(file))
+  it('browser-slow scrolls in every cycle', () => {
+    const steps = json('scripts/browser-slow.json').rules[0].steps
+    const reads = steps.filter((x) => x.tool === 'browser_read').length
+    expect(reads).toBeGreaterThan(20)
+    expect(steps.filter((x) => x.tool === 'browser_scroll')).toHaveLength(reads)
+  })
+  it('crash-recovery hangs, crash-recovered ends within 5 seconds', () => {
+    const waits = json('scripts/crash-recovered.json').rules[0].steps.filter((x) => x.type === 'wait').map((x) => x.ms)
+    expect(waits.reduce((a, b) => a + b, 0)).toBeLessThan(5000)
+    expect(JSON.stringify(json('scripts/crash-recovered.json'))).toContain('Done. The slow job is finished.')
+    expect(source('presets/chat.mjs')).toContain("script: 'crash-recovery'")
+  })
+  it('aside does not echo the question and answers about the lines', () => {
+    const aside = json('scripts/aside.json')
+    expect(JSON.stringify(aside.fallback)).not.toContain('{{prompt}}')
+    expect(aside.rules.map((r) => r.id)).toContain('explain-lines')
+  })
+  it('browser-agent has a read rule and a fallback', () => {
+    const agent = json('scripts/browser-agent.json')
+    expect(agent.rules.find((r) => r.id === 'read-page').steps.some((x) => x.tool === 'browser_read')).toBe(true)
+    expect(JSON.stringify(agent.fallback)).toContain('I can read the page that is open in the Browser.')
   })
 })

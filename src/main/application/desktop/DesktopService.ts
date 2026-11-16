@@ -17,10 +17,10 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, placeWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
-import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
+import { AGENT_HOME, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
 import type { A2uiSurfaceRepository } from '../../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
 import type { AppWindowRecord, AppWindowRepository } from '../../domain/repositories/app-window-repository'
@@ -49,9 +49,14 @@ export interface DesktopServiceDeps {
   surfaces: Pick<A2uiSurfaceRepository, 'get' | 'list'>
   chats: ChatLifecycle
   /** The drives of a desktop (C: and the plugged-in projects). */
-  drives: { list(desktopId: Id): DriveDto[] }
+  drives: { list(desktopId: Id): DriveDto[]; removed(desktopId: Id): RemovedProjectDto[] }
   events: EventPublisher
+  /** Clock in milliseconds (tests); defaults to `Date.now`. */
+  now?: () => number
 }
+
+/** A window the agent opens does not take the focus from a window the user typed in during this long. */
+export const TYPING_GRACE_MS = 2000
 
 const BUSY_STATUSES: SessionDto['status'][] = ['working', 'awaiting_permission']
 const PATH_APPS: readonly AppKind[] = ['explorer', 'notepad', 'code']
@@ -76,6 +81,8 @@ export class DesktopService implements DesktopStates {
   /** Windows the agent opened or touched behind the user's chat (taskbar flash), per desktop; cleared when focused. */
   private readonly attention = new Map<Id, Set<Id>>()
   /** Aside sessions being created, per window: two quick first messages share one session. */
+  /** When the user last typed or clicked in a window, per desktop. */
+  private readonly userActiveAt = new Map<Id, number>()
   private readonly asideStarts = new Map<Id, Promise<Id>>()
 
   constructor(private readonly deps: DesktopServiceDeps) {}
@@ -91,10 +98,21 @@ export class DesktopService implements DesktopStates {
     this.emit(id)
   }
 
+  /** The user is working in a window of the desktop (the renderer reports typing and clicks). */
+  noteUserActivity(desktopId: Id): void {
+    this.userActiveAt.set(desktopId, (this.deps.now ?? Date.now)())
+  }
+
+  private userIsTyping(desktopId: Id): boolean {
+    const at = this.userActiveAt.get(desktopId)
+    return at !== undefined && (this.deps.now ?? Date.now)() - at < TYPING_GRACE_MS
+  }
+
   /** The desktop is going away (its rows are deleted by the caller): drop what lives only in memory. */
   forget(id: Id): void {
     for (const window of this.deps.windows.list(id)) this.views.delete(window.id)
     this.focus.delete(id)
+    this.userActiveAt.delete(id)
     this.attention.delete(id)
     this.lastPublished.delete(id)
   }
@@ -104,16 +122,18 @@ export class DesktopService implements DesktopStates {
   state(desktopId: Id): DesktopState {
     const desktop = this.record(desktopId)
     const records = this.deps.windows.list(desktopId)
-    const windows = records.map((r) => this.toWindowState(r))
+    const windows = numberDuplicateTitles(records.map((r) => this.toWindowState(r)))
     return {
       desktopId,
       title: desktop.title,
       drives: this.deps.drives.list(desktopId),
+      removedProjects: this.deps.drives.removed(desktopId),
       home: AGENT_HOME,
       focusedWindowId: this.focusedId(desktopId, windows),
       windows,
       tools: enabledToolGroups(windows.map((w) => w.app)),
       paused: desktop.paused,
+      stoppedByPause: this.deps.desktops.stoppedChats(desktopId),
       userInControl: desktop.userInControl,
       policy: this.policy(),
       notes: this.deps.notes.list(desktopId),
@@ -140,13 +160,14 @@ export class DesktopService implements DesktopStates {
 
   /**
    * Opens a window (or brings the existing one of a singleton app / chat forward). A new window is tiled
-   * beside the focused chat instead of over it (`placeWindow`). A window the agent opens does not take
-   * focus from a chat the user is working in: it opens behind that chat and its taskbar button flashes.
+   * beside the focused chat instead of over it (`placeWindow`) and comes to the front with the focus. When the user
+   * typed in another window in the last 2 seconds, an agent's window comes to the front without the focus and its
+   * taskbar button flashes until the user focuses it.
    */
   openWindow(input: OpenWindowInput, openedBy: OpenedBy = 'user', size?: { width?: number; height?: number }): AppWindowState {
     const desktopId = this.record(input.desktopId).id
     const focused = this.focusedRecord(desktopId)
-    const typingChat = openedBy === 'agent' && focused?.app === 'chat' ? focused : null
+    const typing = openedBy === 'agent' && focused !== null && this.userIsTyping(desktopId)
     const existing = this.existingWindow(input)
     if (existing) {
       this.focusWindow(existing.id, openedBy)
@@ -164,9 +185,8 @@ export class DesktopService implements DesktopStates {
       ...this.subtypeOf(input)
     })
     if (input.app === 'help' && input.topic !== undefined) this.views.set(record.id, { app: 'help', topic: input.topic })
-    if (typingChat) {
-      this.deps.windows.raise(typingChat.id) // the new window goes behind the chat
-      this.flag(desktopId, record.id)
+    if (typing) {
+      this.flag(desktopId, record.id) // on top (new rows are), the focus stays where the user types
     } else {
       this.focus.set(desktopId, record.id)
     }
@@ -201,7 +221,7 @@ export class DesktopService implements DesktopStates {
 
   /**
    * Opens (or focuses) the window of a surface on its chat's desktop. Null when the chat has no desktop.
-   * The agent's window follows the usual rules: placed beside the focused chat, behind it, taskbar flash.
+   * The agent's window follows the usual rules: placed beside the focused chat, in front, taskbar flash when the user is typing.
    */
   openSurfaceWindow(sessionId: Id, surfaceId: string, openedBy: OpenedBy, size?: { width?: number; height?: number }): AppWindowState | null {
     const desktopId = this.deps.sessions.get(sessionId)?.desktopId
@@ -218,23 +238,27 @@ export class DesktopService implements DesktopStates {
   }
 
   /**
-   * Brings a window to the front and focuses it. `by: 'agent'` never takes focus from a chat the user is
-   * working in: the window is only flagged (its taskbar button flashes until the user focuses it).
+   * Brings a window to the front and focuses it. `by: 'agent'` does not take the focus from a window the user typed
+   * in during the last 2 seconds: the window comes to the front and its taskbar button flashes until it is focused.
    */
   focusWindow(windowId: Id, by: OpenedBy = 'user'): void {
     const record = this.windowRecord(windowId)
     const focused = this.focusedRecord(record.desktopId)
-    if (by === 'agent' && focused?.app === 'chat' && focused.id !== windowId) {
-      this.flag(record.desktopId, windowId)
-      this.emit(record.desktopId)
-      return
-    }
+    const keepFocus = by === 'agent' && focused !== null && focused.id !== windowId && this.userIsTyping(record.desktopId)
     if (record.windowState === 'minimized') this.deps.windows.setWindowState(windowId, 'normal')
     const top = this.deps.windows.list(record.desktopId).at(-1)
     if (top?.id !== windowId) this.deps.windows.raise(windowId)
-    this.focus.set(record.desktopId, windowId)
-    this.attention.get(record.desktopId)?.delete(windowId)
+    if (keepFocus) this.flag(record.desktopId, windowId)
+    else {
+      this.focus.set(record.desktopId, windowId)
+      this.attention.get(record.desktopId)?.delete(windowId)
+    }
     this.emit(record.desktopId)
+  }
+
+  /** "Show" and "Open": restores the window if needed, raises it and focuses it (always, whoever opened it). */
+  raiseWindow(windowId: Id): void {
+    this.focusWindow(windowId, 'user')
   }
 
   setBounds(windowId: Id, bounds: Bounds): void {
@@ -261,20 +285,50 @@ export class DesktopService implements DesktopStates {
 
   // ---- control flags -----------------------------------------------------------------------------
 
-  /** Pausing also cancels the turns that are running on this desktop. */
+  /**
+   * Pausing cancels the turns that are running on this desktop and saves which chats they were (`stoppedByPause`), so
+   * "Resume agents and continue" can carry each on. Lifting the pause this way forgets the list: the steps stay stopped.
+   */
   async setPaused(desktopId: Id, paused: boolean): Promise<void> {
     this.record(desktopId)
-    this.deps.desktops.setPaused(desktopId, paused)
+    if (!paused) {
+      this.deps.desktops.setPaused(desktopId, false)
+      this.deps.desktops.setStoppedChats(desktopId, [])
+      this.emit(desktopId)
+      return
+    }
+    const busy = this.busyChats(desktopId)
+    if (!this.deps.desktops.get(desktopId)?.paused) this.deps.desktops.setStoppedChats(desktopId, busy.map((s) => s.id))
+    this.deps.desktops.setPaused(desktopId, true)
     this.emit(desktopId)
-    if (!paused) return
-    const busy = this.deps.sessions.listByDesktop(desktopId).filter((s) => BUSY_STATUSES.includes(s.status))
-    await Promise.allSettled(busy.map((s) => this.deps.chats.cancel(s.id)))
+    await this.cancelAll(busy)
   }
 
-  setUserInControl(desktopId: Id, on: boolean): void {
+  /** "Resume agents and continue": lifts the pause and returns the chats that Pause had stopped (the caller continues them). */
+  async resumeAgents(desktopId: Id): Promise<Id[]> {
     this.record(desktopId)
+    const stopped = this.deps.desktops.stoppedChats(desktopId).filter((id) => this.deps.sessions.get(id)?.desktopId === desktopId)
+    await this.setPaused(desktopId, false)
+    return stopped
+  }
+
+  /**
+   * "You are in control" (the check box or the Browser's Take over): the running steps are cancelled at once, so the
+   * agent stops reading, and every later action asks first. Handing control back only clears the flag.
+   */
+  async setUserInControl(desktopId: Id, on: boolean): Promise<void> {
+    const wasOn = this.record(desktopId).userInControl
     this.deps.desktops.setUserInControl(desktopId, on)
     this.emit(desktopId)
+    if (on && !wasOn) await this.cancelAll(this.busyChats(desktopId))
+  }
+
+  private busyChats(desktopId: Id): SessionDto[] {
+    return this.deps.sessions.listByDesktop(desktopId).filter((s) => BUSY_STATUSES.includes(s.status))
+  }
+
+  private async cancelAll(sessions: readonly SessionDto[]): Promise<void> {
+    await Promise.allSettled(sessions.map((s) => this.deps.chats.cancel(s.id)))
   }
 
   // ---- chats -------------------------------------------------------------------------------------

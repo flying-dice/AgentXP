@@ -8,7 +8,7 @@ const labels = (items: MenuItemDef[]): string[] => items.filter((i) => !i.separa
 describe('treeMenu', () => {
   it('a project has no editor verbs, only project verbs ending with Eject', () => {
     const items = treeMenu('project', ops(), { canEject: true })
-    expect(labels(items)).toEqual(['&Open', '&Start a chat here', 'Open in &Explorer', 'E&ject'])
+    expect(labels(items)).toEqual(['&Open', '&Start a chat here', 'Open in &Explorer', 'E&ject (remove from this desktop)'])
     expect(items.some((i) => /Cut|Copy|Paste/.test(i.label ?? ''))).toBe(false)
     expect(items.find((i) => i.testid === 'code-ctx-eject')?.title).toContain('Its folder stays on your disk')
   })

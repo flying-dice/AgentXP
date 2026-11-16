@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick, untrack } from 'svelte'
   import type { Message } from '@ag-ui/core'
   import type { A2uiClientEvent } from '@shared/a2ui'
   import type { AguiSessionState } from '@shared/agui-state'
@@ -6,6 +7,7 @@
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import type { ChatProblem, ProblemActionId, SendState } from './chatProblem'
   import A2uiActivity from './A2uiActivity.svelte'
+  import { lastReply } from '../../apps/surface/lastReply'
   import SurfaceRow from './SurfaceRow.svelte'
   import { noSurfaceControls, surfaceRowModel, type SurfaceControls } from './surfaceRow'
   import AgentMessage from './AgentMessage.svelte'
@@ -16,6 +18,7 @@
   import UserMessage from './UserMessage.svelte'
   import ActivityGroup from './ActivityGroup.svelte'
   import { transcriptDetail } from './transcriptDetail.svelte'
+  import { browserWork } from './browserSteps'
   import { earlierStepRowIds, toolLabel } from './toolSummary'
   import { activityStats, activitySummary, buildTranscriptRows, groupTranscript, type TranscriptRow, type WorkRow } from './transcriptRows'
 
@@ -30,6 +33,10 @@
     /** What went wrong, in plain words with its buttons (see `describeProblem`); null when all is well. */
     problem?: ChatProblem | null
     onproblem?: (id: ProblemActionId) => void
+    /** The technical text under "Details..." while it is open (null: closed). */
+    problemDetails?: string | null
+    /** A restart of the agent: `working` shows "Restarting the agent..." with progress, `done` "The agent is running again.". */
+    restart?: 'working' | 'done' | null
     /** The send state of a user message by message id (`not-sent`, `stopped`); a message not in it was sent. */
     sendStates?: ReadonlyMap<string, SendState>
     /** "Send again" and "Edit" of a message that was not sent. */
@@ -57,6 +64,8 @@
     running = false,
     problem = null,
     onproblem,
+    problemDetails = null,
+    restart = null,
     sendStates = new Map(),
     onresend,
     onedit,
@@ -69,6 +78,8 @@
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
+  /** What the agent said last: an inline form quotes it after Send. */
+  const latestReply = $derived(lastReply(messages))
   const items = $derived(groupTranscript(rows))
   const rowDenied = (rowId: string): boolean => {
     const row = rows.find((r) => r.id === rowId)
@@ -98,12 +109,16 @@
       }
       return 'Thinking…'
     }
-    return activitySummary(activityStats(rows, failed))
+    return browserWork(rows)?.summary ?? activitySummary(activityStats(rows, failed))
+  }
+  /** The first and last step of a finished group that only used the Browser, in plain words. */
+  function detailOf(id: string, rows: readonly WorkRow[]): string | null {
+    return running && id === lastId ? null : (browserWork(rows)?.detail ?? null)
   }
 
   let scroller: HTMLDivElement | undefined = $state()
   let pinned = true
-  /** Content grew while the user had scrolled up: the bar "New messages" offers the way to the end. */
+  /** Content grew while the user had scrolled up: the pill above the message box offers the way to the end. */
   let unseen = $state(false)
 
   const onScroll = (): void => {
@@ -133,6 +148,31 @@
     observer.observe(content)
     toEnd()
     return () => observer.disconnect()
+  })
+
+  // The end of the conversation comes into view after a send (always: it is the user's own action), a finished turn and
+  // a restart (unless the user scrolled up to read something).
+  let seenCount = untrack(() => messages.length)
+  $effect(() => {
+    const count = messages.length
+    const sent = messages.at(-1)?.role === 'user'
+    untrack(() => {
+      if (count > seenCount && sent) toEnd()
+      seenCount = count
+    })
+  })
+  let wasRunning = untrack(() => running)
+  let hadProblem = untrack(() => !!problem)
+  $effect(() => {
+    const idle = !running
+    const fine = !problem
+    untrack(() => {
+      const finished = wasRunning && idle
+      const restarted = hadProblem && fine
+      wasRunning = !idle
+      hadProblem = !fine
+      if (finished || restarted) void tick().then(() => pinned && toEnd())
+    })
   })
 
   /** An inline form that appears is scrolled fully into view, also for a user who had scrolled up. */
@@ -172,7 +212,7 @@
         ondelete={() => surfaceControls.remove(surface)}
         onmove={(target) => surfaceControls.move(surface, target)}
       />
-      {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} /></div>{/if}
+      {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} reply={latestReply} /></div>{/if}
     {/if}
   {/if}
 {/snippet}
@@ -185,6 +225,7 @@
         <div class="row">
           <ActivityGroup
             summary={summaryOf(item.id, item.rows)}
+            detail={detailOf(item.id, item.rows)}
             live={running && item.id === lastId}
             bind:open={() => isOpen(item.id, item.rows), (value) => (overrides[item.id] = value)}
           >
@@ -207,7 +248,17 @@
       <div class="row"><StopNotice reason="cancelled" /></div>
     {/if}
     {#if problem}
-      <div class="row"><ErrorRow message={problem.text} actions={problem.actions} onaction={onproblem} /></div>
+      <div class="row"><ErrorRow message={problem.text} actions={problem.actions} onaction={onproblem} details={problemDetails} /></div>
+    {/if}
+    {#if restart === 'working' || (restart === 'done' && !problem)}
+      <div class="row restart" role="status" data-testid="chat-restart-status" data-state={restart}>
+        {#if restart === 'working'}
+          <span>Restarting the agent...</span>
+          <ProgressBar style="Marquee" width={160} label="Restarting the agent" />
+        {:else}
+          <span>The agent is running again.</span>
+        {/if}
+      </div>
     {/if}
     {#if running}
       <div class="busy">
@@ -218,7 +269,7 @@
   </div>
 </div>
   {#if unseen}
-    <button type="button" class="more" data-testid="chat-new-messages" onclick={toEnd}>New messages. Click to go to the end.</button>
+    <button type="button" class="more" data-testid="chat-new-messages" onclick={toEnd}>Newer messages below. Click to see them.</button>
   {/if}
 </div>
 
@@ -230,11 +281,11 @@
     display: flex;
     flex-direction: column;
   }
+  /* In the flow under the transcript, so it sits above the message box and never covers a message. */
   .more {
-    position: absolute;
-    left: 50%;
-    bottom: 8px;
-    transform: translateX(-50%);
+    flex: none;
+    align-self: center;
+    margin: 4px 0 0;
     padding: 2px 12px;
     border: 1px solid #7a9cc9;
     border-radius: 3px;
@@ -242,6 +293,12 @@
     font: inherit;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+  .restart {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
   }
   .more:hover {
     border-color: var(--w7-btn-hover-border);

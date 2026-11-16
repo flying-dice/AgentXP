@@ -56,6 +56,9 @@ export class AppHelp {
   /** View Help (F1): the Help window on this app's topic. */
   open = (): void => void this.host.openApp({ app: 'help', topic: this.kind })
 
+  /** The Help window on this app's topic, scrolled to one of its sections (`troubleshooting`): the error page's Help link. */
+  openSection = (section: string): void => void this.host.openApp({ app: 'help', topic: `${this.kind}#${section}` })
+
   showAbout = (): void => {
     this.about = true
     if (!this.version) void this.host.api.app.version().then((v) => (this.version = v), () => {})

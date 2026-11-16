@@ -283,6 +283,42 @@ describe('SessionService: starting in the background and problems', () => {
     expect(status(session.id)).toBe('idle')
   })
 
+  it('counts failures in a row: a restart keeps the count, a start that works resets it', async () => {
+    connector.openError = new Error('boom')
+    const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
+    await vi.waitFor(() => expect(problems.get(session.id)?.failures).toBe(1))
+    await service.restartAgent(session.id)
+    expect(problems.get(session.id)).toMatchObject({ kind: 'start-failed', failures: 2 })
+    expect(problems.get(session.id)?.cause).toMatch(/stopped before it was ready/)
+    connector.openError = null
+    await service.restartAgent(session.id)
+    expect(problems.get(session.id)).toBeNull()
+    connector.openError = new Error('boom')
+    await service.restartAgent(session.id)
+    expect(problems.get(session.id)?.failures).toBe(1)
+  })
+
+  it('Try again moves a chat whose agent could not start to the current default agent', async () => {
+    connector.openError = new Error('spawn broken ENOENT')
+    const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
+    await vi.waitFor(() => expect(problems.get(session.id)).not.toBeNull())
+    const other = f.repos.agents.create({ name: 'Other agent', command: 'other', args: [], env: {} })
+    f.repos.agents.setDefault(other.id)
+    connector.openError = null
+    await service.restartAgent(session.id)
+    expect(f.repos.sessions.get(session.id)?.agentId).toBe(other.id)
+    expect(connector.launches.at(-1)?.agent.id).toBe(other.id)
+    expect(status(session.id)).toBe('idle')
+  })
+
+  it('a restart of a chat whose agent works keeps its agent, even when the default changed', async () => {
+    const session = await service.create(f.desktop.id)
+    const other = f.repos.agents.create({ name: 'Other agent', command: 'other', args: [], env: {} })
+    f.repos.agents.setDefault(other.id)
+    await service.restartAgent(session.id)
+    expect(f.repos.sessions.get(session.id)?.agentId).toBe(f.agentId)
+  })
+
   it('retry removes the last user message so that sending again does not duplicate it', async () => {
     const session = await service.create(f.desktop.id)
     f.repos.transcripts.appendMessage(session.id, 'user', [{ kind: 'text', text: 'hello' }])

@@ -35,6 +35,8 @@ export interface DesktopHost {
   readonly recentlyRemoved: readonly RemovedProject[]
   /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
   startChat(cwd: VPath): Promise<void>
+  /** File > New chat, Ctrl+N: starts a chat on the default drive of the desktop and focuses its composer. */
+  startDefaultChat(): Promise<void>
   /**
    * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat): opens the requesting window's chat pane
    * and sends the prompt of `askChatPrompt(request)` there ("Ask chat..." only fills the composer, for the user's
@@ -53,10 +55,8 @@ export interface DesktopHost {
   chatPaneOpen(windowId: Id): boolean
   /** "Send to chat" with a file: the window's chat pane (or a new chat) gets the text with the file attached. */
   sendFileToChat(windowId: Id, filePath: string, text: string): Promise<void>
-  /** True while the chat has a "Resumed" note waiting (Resume agents stopped a step of it); the chat shows it with a Continue button. */
-  hasResumeNote(sessionId: Id): boolean
-  /** The Continue button of that note: asks the chat's agent to carry on and clears the note. */
-  continueChat(sessionId: Id): Promise<void>
+  /** True while the desktop is paused and Pause stopped a step of this chat: the chat says it continues on Resume. */
+  stoppedByPause(sessionId: Id): boolean
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

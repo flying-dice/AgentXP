@@ -15,10 +15,10 @@
 
   let { drive, onchoose }: Props = $props()
 
-  const options: { id: AutoPlayChoice; icon: IconName; title: string; sub: string }[] = [
-    { id: 'open', icon: 'folder-open', title: 'Open folder to view files', sub: 'using Explorer' },
-    { id: 'chat', icon: 'agent7', title: 'Start a chat on this drive', sub: 'using Agent7' },
-    { id: 'none', icon: 'close', title: 'Take no action', sub: '' }
+  const options: { id: AutoPlayChoice; icon: IconName; title: string }[] = [
+    { id: 'open', icon: 'folder-open', title: 'Open folder to view files' },
+    { id: 'chat', icon: 'agent7', title: 'Start a chat on this drive' },
+    { id: 'none', icon: 'close', title: 'Take no action' }
   ]
 </script>
 
@@ -28,13 +28,13 @@
       <Icon name="usb" size={32} />
       <span>{driveTitle(drive)}</span>
     </div>
-    <h3>General options</h3>
+    <p class="line" data-testid="autoplay-text">This project is now a drive on this desktop. What do you want to do?</p>
     <ul>
       {#each options as option (option.id)}
         <li>
           <button type="button" class="option" data-testid={option.id === 'open' ? 'autoplay-open-folder' : option.id === 'chat' ? 'autoplay-start-chat' : 'autoplay-no-action'} data-autofocus={option.id === 'open' ? '' : undefined} onclick={() => onchoose?.(option.id)}>
             <Icon name={option.icon} size={option.id === 'none' ? 16 : 32} />
-            <span class="text"><span class="title">{option.title}</span>{#if option.sub}<span class="sub">{option.sub}</span>{/if}</span>
+            <span class="text"><span class="title">{option.title}</span></span>
           </button>
         </li>
       {/each}
@@ -56,10 +56,8 @@
     font-size: 15px;
     color: #1e3287;
   }
-  h3 {
+  .line {
     margin: 12px 0 6px;
-    font-size: 13px;
-    font-weight: 400;
     color: #1e3287;
   }
   ul {
@@ -92,8 +90,5 @@
   }
   .title {
     color: #0b3b9c;
-  }
-  .sub {
-    color: var(--w7-text-muted);
   }
 </style>

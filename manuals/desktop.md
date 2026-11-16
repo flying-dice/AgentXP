@@ -55,10 +55,10 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
-- **Status** – Shows Idle, Working, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.**
-- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. A chip says **(asks)** when the agent must ask you first, and **(off)** when the agent cannot use it, because you denied it or because its app is closed. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
-- **Pause all agents or Resume agents** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents**. A step that was stopped stays stopped. After you resume, the Action Center has a message for each chat that was stopped, with a **Continue** button.
-- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The top bar then shows **Asking before every action** in amber. Click the box again to go back to the settings in Control Center.
+- **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
+- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask*, *Deny*, or *Off*, for example **Run commands: Ask**. **Off** means that no app which gives the agent this tool is open. Point to a chip to read what it means. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
+- **Pause all agents or Resume agents and continue** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents and continue**. Then each chat that was stopped gets the message **Please continue where you stopped.** and carries on. The Action Center has a line for each chat that was stopped.
+- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads **You are in control: the agent asks before every action.** and the button **Give control back** shows. Click the button, or clear the box, to go back to the settings in Control Center.
 
 ### The Desktop Icons
 
@@ -84,7 +84,7 @@ Press F6 to move the focus to the next part of the desktop: the desktop icons, t
 
 Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 
-- **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser.
+- **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser. The first item is highlighted when the menu opens. Press the Up and Down arrow keys to move and Enter to start the item. Type to search; Enter starts the first match.
 - **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
 - **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
 - **System Tools** – A folder (under All Programs) with Event Viewer, Task Manager, and Control Center.
@@ -122,7 +122,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 
 ### Other Dialog Boxes
 
-- **AutoPlay** – Appears when you plug in a project. It offers to open the folder, to start a chat, or to do nothing.
+- **AutoPlay** – Appears when the agent plugs in a project. It offers to open the folder, to start a chat, or to do nothing. It does not appear when you plug in a project yourself.
 - **New chat** – Asks on which drive the agent works.
 - **Open file** – Lets you select a file in Notepad, Code, and WordPad.
 - **Message box** – Asks a question or reports an error. Its buttons are named **OK**, **Yes**, **No**, and **Cancel**.
@@ -147,7 +147,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Nothing yet | Shows that no app gives the agent a tool. | `topbar-tool-chips-none` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
 | Ask before every action | A check box. Makes the agent ask before every action. | `topbar-take-control` |
-| Asking before every action | The amber chip that shows the check box is on. | `topbar-ask-first-chip` |
+| Give control back | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
 | Agent: not started | A red chip. It shows when the agent of a chat could not start. Open that chat to see why. | `topbar-agent-problem` |
 
 ### Icons, windows, and desktop menu
@@ -173,8 +173,9 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Opening button | Shows while an app opens. | `taskbar-item-opening` |
 | Notification area | Holds the tray icons and the clock. | `taskbar-tray` |
 | Clock | Shows time and date. | `taskbar-clock` |
-| Safely Remove Hardware | Opens the list of USB drives. | `usb-tray` |
+| Safely Remove Hardware | Opens the list of USB drives and recently removed projects. | `usb-tray` |
 | Eject drive | Ejects the USB drive of that letter. | `usb-eject-*` |
+| Plug in again (tray) | Plugs a recently removed project in again. It is listed below the drives. | `usb-plug-again` |
 | Action Center flag | Opens the Action Center. | `action-center-flag` |
 | Balloon | Shows a tray message. | `balloon` |
 | Balloon title | Shows the title of the message. | `balloon-title` |
@@ -190,6 +191,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | All Programs | Shows or hides the folders of apps, for example Accessories. | `start-menu-all` |
 | Folder | Opens or closes a folder of apps. | `start-menu-group-*` |
 | Recent chat | Opens a chat. | `start-menu-recent` |
+| Key hint | Names the keys: Ctrl+Esc, Ctrl+N, and F6. | `start-menu-hint` |
 | Search programs and chats | Filters the items. | `start-menu-search` |
 | Place | Opens a place, for example Documents or Help and Support. | `start-menu-place-*` |
 | Pause agent, Resume agent | Pauses the agent or lets it work. | `start-menu-power` |
@@ -210,7 +212,6 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Request action | Names what the agent wants to do, for example Change src/auth/redirect.ts. | `action-center-approval-title` |
 | Request chat | Names the chat that asked and when it started. | `action-center-approval-chat` |
 | Message | Shows one message. | `action-center-message` |
-| Continue | Asks the chat to carry on after you resumed the agents. | `action-center-continue` |
 | Open Control Center | Opens Control Center. | `action-center-open-control-centre` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |
 | Permission dialog box | Asks if the agent can do the action. | `uac-dialog` |
@@ -235,6 +236,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | AutoPlay | Appears when you plug in a project. | `autoplay-dialog` |
 | Open folder to view files | Opens the drive in Explorer. | `autoplay-open-folder` |
 | Start a chat on this drive | Starts a chat on the drive. | `autoplay-start-chat` |
+| Question | Says that the project is now a drive and asks what to do. | `autoplay-text` |
 | Take no action | Closes the dialog box. | `autoplay-no-action` |
 | New chat | Asks where the agent works. | `new-chat-dialog` |
 | Drive option | Selects the drive for the chat. | `new-chat-drive-*` |
@@ -264,6 +266,7 @@ Right-click a taskbar button to open its menu.
 |---|---|---|
 | F1 | Opens Help and Support on the topic of the focused window. | none |
 | Ctrl+Esc | Opens or closes the Start menu. | none |
+| Ctrl+N | Starts a new chat on the default drive, from the desktop, Code, Explorer, and Chat. The box to type in is ready. | none |
 | Alt+F4 | Closes the focused window. | none |
 | F6, Shift+F6 | Move the focus between the desktop icons, the active window, the bar, the taskbar, and the notification area. | none |
 | Alt+Tab, Alt+Shift+Tab, Ctrl+Alt+Tab | Switch to the next or the previous window. | none |
@@ -279,7 +282,7 @@ To open an app, follow the steps below:
 1. Click **Start**. The Start menu opens.
 2. Click the app, or type its name in **Search programs and chats**.
 
-To pause the agent, click **Pause all agents** in the top bar. Click **Resume agents** to let the agents work again. A step that was stopped stays stopped: click **Continue** in the Action Center, or send a message in the chat.
+To pause the agent, click **Pause all agents** in the top bar. Click **Resume agents and continue** to let the agents work again. Each chat that was stopped carries on by itself.
 
 To answer a permission request, follow the steps below:
 

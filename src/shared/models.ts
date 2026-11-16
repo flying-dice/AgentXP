@@ -62,6 +62,10 @@ export interface SessionProblemDto {
   kind: 'start-failed' | 'agent-stopped' | 'agent-ended'
   message: string
   detail: string
+  /** The plain cause alone ("The program 'x' was not found."), for the line "It stopped again: ..." (no protocol names). */
+  cause?: string
+  /** How many times in a row this chat's agent failed since it last worked (1 on the first failure); set by main. */
+  failures?: number
 }
 
 export interface SessionDto {
@@ -233,4 +237,8 @@ export interface BrowseListingDto {
   path: string
   entries: BrowseEntryDto[]
   places: BrowsePlaceDto[]
+  /** Folders used before that still exist, newest first (only when `path` is ''). */
+  recent?: BrowsePlaceDto[]
+  /** Folders a bare name (no separator) matched, best match first. One entry means the name is resolved. */
+  matches?: BrowsePlaceDto[]
 }

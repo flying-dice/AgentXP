@@ -5,7 +5,7 @@ import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-wi
 import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
 import { createVfsFixture } from '../test-helpers'
-import { DesktopService, type ChatLifecycle } from './DesktopService'
+import { DesktopService, TYPING_GRACE_MS, type ChatLifecycle, type DesktopServiceDeps } from './DesktopService'
 
 class FakeChats implements ChatLifecycle {
   cancelled: number[] = []
@@ -30,23 +30,26 @@ let chats: FakeChats
 let service: DesktopService
 let desktopId: number
 
+const deps = (now?: () => number): DesktopServiceDeps => ({
+  desktops: f.repos.desktops,
+  windows: new SqliteAppWindowRepository(f.db),
+  policies: new SqliteToolPolicyRepository(f.db),
+  agents: f.repos.agents,
+  sessions: f.repos.sessions,
+  notes: new SqliteStickyNoteRepository(f.db),
+  surfaces: f.repos.surfaces,
+  chats,
+  drives: f.drives,
+  events: f.publisher,
+  now
+})
+
 const changes = (): DesktopState[] => f.publisher.payloads('desktop.changed')
 
 beforeEach(async () => {
   f = await createVfsFixture()
   chats = new FakeChats(f)
-  service = new DesktopService({
-    desktops: f.repos.desktops,
-    windows: new SqliteAppWindowRepository(f.db),
-    policies: new SqliteToolPolicyRepository(f.db),
-    agents: f.repos.agents,
-    sessions: f.repos.sessions,
-    notes: new SqliteStickyNoteRepository(f.db),
-    surfaces: f.repos.surfaces,
-    chats,
-    drives: f.drives,
-    events: f.publisher
-  })
+  service = new DesktopService(deps())
   desktopId = f.desktop.id
 })
 
@@ -185,43 +188,73 @@ describe('DesktopService: window placement and focus', () => {
   it('cascades as before when the focused window is not a chat', () => {
     service.openWindow({ desktopId, app: 'terminal' })
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
-    expect(notepad.bounds).toEqual({ x: 224, y: 144, width: 520, height: 380 })
+    expect(notepad.bounds).toEqual({ x: 232, y: 152, width: 520, height: 380 })
   })
 
-  it('a window the agent opens goes behind the focused chat, keeps the chat focused and is flagged until focused', async () => {
+  it('a window the agent opens comes to the front and takes the focus', async () => {
     const chat = await openChat()
+    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
+    const state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(code.id)
+    expect(state.windows.map((w) => w.id)).toEqual([chat.id, code.id]) // back to front: the new window on top
+    expect(state.windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
+  })
+
+  it('while the user types, an agent window is in front without the focus and flashes until focused', async () => {
+    const chat = await openChat()
+    service.noteUserActivity(desktopId)
     const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
     let state = service.state(desktopId)
     expect(state.focusedWindowId).toBe(chat.id)
-    expect(state.windows.map((w) => w.id)).toEqual([code.id, chat.id]) // back to front: chat on top
+    expect(state.windows.at(-1)?.id).toBe(code.id)
     expect(state.windows.find((w) => w.id === code.id)?.attention).toBe(true)
-    expect(state.windows.find((w) => w.id === chat.id)?.attention).toBeUndefined()
     service.focusWindow(code.id)
     state = service.state(desktopId)
     expect(state.focusedWindowId).toBe(code.id)
     expect(state.windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
   })
 
-  it('an agent that reopens or focuses an existing window does not steal focus either', async () => {
+  it('two seconds after the last key the agent takes the focus again', async () => {
+    let now = 10_000
+    service = new DesktopService(deps(() => now))
+    const chat = await openChat()
+    service.noteUserActivity(desktopId)
+    now += TYPING_GRACE_MS + 1
+    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
+    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
+    expect(chat.id).not.toBe(code.id)
+  })
+
+  it('an agent that reopens an existing window raises it; while the user types it only flashes', async () => {
     const code = service.openWindow({ desktopId, app: 'code' })
     const chat = await openChat()
-    expect(service.state(desktopId).focusedWindowId).toBe(chat.id)
     service.openWindow({ desktopId, app: 'code', path: 'C:\\Users\\Agent\\a.ts' }, 'agent')
+    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
+    expect(service.state(desktopId).windows.at(-1)?.id).toBe(code.id)
+    service.focusWindow(chat.id)
+    service.noteUserActivity(desktopId)
     service.focusWindow(code.id, 'agent')
     const state = service.state(desktopId)
     expect(state.focusedWindowId).toBe(chat.id)
-    expect(state.windows.at(-1)?.id).toBe(chat.id)
+    expect(state.windows.at(-1)?.id).toBe(code.id)
     expect(state.windows.find((w) => w.id === code.id)).toMatchObject({ attention: true, view: { activePath: 'C:\\Users\\Agent\\a.ts' } })
   })
 
-  it('an agent window takes focus when no chat is focused, and the user always does', async () => {
-    const terminal = service.openWindow({ desktopId, app: 'terminal' })
-    const browser = service.openWindow({ desktopId, app: 'browser' }, 'agent')
-    expect(service.state(desktopId).focusedWindowId).toBe(browser.id)
+  it('raiseWindow restores a minimized window, raises it and focuses it', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
     await openChat()
+    service.setWindowState(code.id, 'minimized')
+    service.raiseWindow(code.id)
+    const state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(code.id)
+    expect(state.windows.at(-1)).toMatchObject({ id: code.id, windowState: 'normal' })
+  })
+
+  it('a user window always takes the focus', async () => {
+    await openChat()
+    service.noteUserActivity(desktopId)
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
     expect(service.state(desktopId).focusedWindowId).toBe(notepad.id)
-    expect(terminal.openedBy).toBe('user')
   })
 })
 
@@ -237,8 +270,45 @@ describe('DesktopService: control flags and policy', () => {
     expect(service.state(desktopId).paused).toBe(true)
     await service.setPaused(desktopId, false)
     expect(chats.cancelled).toHaveLength(1)
-    service.setUserInControl(desktopId, true)
+    await service.setUserInControl(desktopId, true)
     expect(service.state(desktopId).userInControl).toBe(true)
+  })
+
+  it('saves the chats Pause stopped, and Resume returns them once (the saved list, not window memory)', async () => {
+    const busy = await service.newChat(desktopId)
+    const idle = await service.newChat(desktopId)
+    const id = (w: typeof busy): number => (w.view.app === 'chat' ? w.view.sessionId : 0)
+    f.repos.sessions.setStatus(id(busy), 'awaiting_permission')
+    f.repos.sessions.setStatus(id(idle), 'idle')
+    await service.setPaused(desktopId, true)
+    expect(service.state(desktopId).stoppedByPause).toEqual([id(busy)])
+    // A second Pause (another window, the API) keeps the list: the first one saw the working chats.
+    f.repos.sessions.setStatus(id(busy), 'idle')
+    await service.setPaused(desktopId, true)
+    expect(service.state(desktopId).stoppedByPause).toEqual([id(busy)])
+    expect(await service.resumeAgents(desktopId)).toEqual([id(busy)])
+    expect(service.state(desktopId)).toMatchObject({ paused: false, stoppedByPause: [] })
+    expect(await service.resumeAgents(desktopId)).toEqual([])
+  })
+
+  it('lifting the pause through setPaused(false) forgets the stopped chats', async () => {
+    const busy = await service.newChat(desktopId)
+    f.repos.sessions.setStatus(busy.view.app === 'chat' ? busy.view.sessionId : 0, 'working')
+    await service.setPaused(desktopId, true)
+    await service.setPaused(desktopId, false)
+    expect(service.state(desktopId).stoppedByPause).toEqual([])
+  })
+
+  it('taking control cancels the running steps once and handing control back does not', async () => {
+    const busy = await service.newChat(desktopId)
+    const sessionId = busy.view.app === 'chat' ? busy.view.sessionId : 0
+    f.repos.sessions.setStatus(sessionId, 'working')
+    await service.setUserInControl(desktopId, true)
+    expect(chats.cancelled).toEqual([sessionId])
+    await service.setUserInControl(desktopId, true)
+    await service.setUserInControl(desktopId, false)
+    expect(chats.cancelled).toEqual([sessionId])
+    expect(service.state(desktopId).userInControl).toBe(false)
   })
 
   it('serves the default policy and stores changes', () => {

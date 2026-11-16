@@ -13,24 +13,25 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
+import { parseVPath, REMOVED_PROJECTS_KEPT, type DriveDto, type DriveLetter, type RemovedProjectDto, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
 import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
-import { addRemoved, ejectBalloonText, pluggedBalloonText, type RemovedProject } from './projectDrives'
+import { addRemoved, ejectBalloonText, pluggedBalloonText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
 import { isBusy } from '../app/sessionStatus'
+import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE, resumedLine, stoppedLine } from '../app/session/resumeNote'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
 import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
 import type { PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { cycleTarget, nextFocus, raise } from './windowOrder'
+import { cycleTarget, nextFocus, raise, taskbarAction } from './windowOrder'
 import { ICON_HINT, takeIconHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
@@ -58,12 +59,13 @@ export interface ShellMessage {
   id: number
   text: string
   at: Date
-  /** A button of the message: "Continue" sends the chat `CONTINUE_TEXT`. */
-  continueChat?: Id
 }
 
-/** What "Continue" says to an agent whose step Pause stopped. */
-export const CONTINUE_TEXT = 'Please continue where you stopped.'
+/** How long "Resumed. Nothing was stopped." stands in for "Idle" on the bar. */
+export const NOTICE_MS = 6000
+
+/** `noteUserActivity` tells main at most this often (milliseconds). */
+const ACTIVITY_THROTTLE_MS = 500
 
 const emptyState = (): DesktopState => ({
   desktopId: 0,
@@ -99,6 +101,8 @@ export class DesktopController implements DesktopHost {
   glowing = $state.raw<ReadonlySet<Id>>(new Set())
   messages = $state.raw<ShellMessage[]>([])
   policy = $state.raw<ToolPolicyDto | null>(null)
+  /** A short line that stands in for "Idle" on the top bar ("Resumed. Nothing was stopped."); null when there is none. */
+  notice = $state<string | null>(null)
 
   // shell UI state
   startOpen = $state(false)
@@ -121,8 +125,9 @@ export class DesktopController implements DesktopHost {
   /** Apps being opened (a desktop icon or Start menu was used): the busy cursor and a taskbar button show until the window exists. */
   opening = $state.raw<{ key: number; title: string; icon?: IconName }[]>([])
   private openingKey = 0
-  /** Projects ejected from this desktop since it opened, newest first (at most three): Computer's "Recently removed". */
-  recentlyRemoved = $state.raw<RemovedProject[]>([])
+  /** Plug-ins the user started (Plug in a project, Plug in again): they open Explorer, so AutoPlay stays away. */
+  private chosenPlugIns = 0
+  private lastActivityAt = 0
   /** The tray balloon, auto-hidden after `BALLOON_MS`. */
   balloon = $state.raw<Balloon | null>(null)
   /** The Safely Remove menu of the tray icon is open. */
@@ -139,6 +144,10 @@ export class DesktopController implements DesktopHost {
 
   get state(): DesktopState {
     return this.current ?? emptyState()
+  }
+  /** Projects removed from this desktop, newest first (at most three): Computer's "Recently removed". Saved by main, so it survives a reconnect. */
+  get recentlyRemoved(): RemovedProject[] {
+    return (this.state.removedProjects ?? []).slice(0, RECENTLY_REMOVED_MAX)
   }
   get needsDesktop(): boolean {
     return this.loaded && this.current === null
@@ -191,8 +200,7 @@ export class DesktopController implements DesktopHost {
   private started = false
   private offs: (() => void)[] = []
   private messageId = 0
-  /** The chats whose turn the last Pause stopped; Resume leaves each a "Continue" message. */
-  private stoppedByPause = new Set<Id>()
+  private noticeTimer: ReturnType<typeof setTimeout> | null = null
   private glowTimers = new Set<ReturnType<typeof setTimeout>>()
   private balloonTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -243,6 +251,7 @@ export class DesktopController implements DesktopHost {
     this.glowTimers.forEach(clearTimeout)
     this.glowTimers.clear()
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
   }
 
@@ -282,7 +291,7 @@ export class DesktopController implements DesktopHost {
     if (fresh.length) this.glow(fresh.map((w) => w.id))
     // A drive that was not there before has just been plugged in (not on the first state).
     const plugged = this.current ? next.drives.find((d) => d.kind === 'removable' && !this.current?.drives.some((o) => o.letter === d.letter)) : undefined
-    if (plugged) this.autoPlay = plugged
+    if (plugged && this.chosenPlugIns === 0) this.autoPlay = plugged
     this.current = next
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
@@ -311,8 +320,8 @@ export class DesktopController implements DesktopHost {
     for (const s of this.allSessions) if (isBusy(s.status)) this.inbox.storeFor(s.id)
   }
 
-  private pushMessage(text: string, continueChat?: Id): void {
-    this.messages = [{ id: ++this.messageId, text, at: new Date(), continueChat }, ...this.messages].slice(0, 10)
+  private pushMessage(text: string): void {
+    this.messages = [{ id: ++this.messageId, text, at: new Date() }, ...this.messages].slice(0, 10)
   }
 
   // ---- windows ----------------------------------------------------------------------------------
@@ -330,14 +339,22 @@ export class DesktopController implements DesktopHost {
 
   async openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState> {
     this.startOpen = false
-    if (input.app === 'chat' && input.sessionId) {
-      const existing = this.state.windows.find((w) => w.view.app === 'chat' && w.view.sessionId === input.sessionId)
-      if (existing) {
-        await this.focusWindow(existing.id)
-        return existing
-      }
+    const existing = this.existingWindowFor(input)
+    if (existing) {
+      await this.raiseWindow(existing.id)
+      return this.windowById(existing.id) ?? existing
     }
     return this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
+  }
+
+  /**
+   * The window an open request should raise instead of opening another: the chat's own window, and the single window of
+   * Browser (File > New window asks for a second one with `newWindow`). Main does the same for the other single-window apps.
+   */
+  private existingWindowFor(input: Omit<OpenWindowInput, 'desktopId'>): AppWindowState | undefined {
+    if (input.app === 'chat' && input.sessionId) return this.state.windows.find((w) => w.view.app === 'chat' && w.view.sessionId === input.sessionId)
+    if (input.app === 'browser' && !input.newWindow && input.url === undefined) return this.state.windows.findLast((w) => w.app === 'browser')
+    return undefined
   }
 
   async closeWindow(windowId: Id): Promise<void> {
@@ -350,18 +367,39 @@ export class DesktopController implements DesktopHost {
   }
 
   async focusWindow(windowId: Id): Promise<void> {
+    if (this.bringForward(windowId)) await this.api.desktop.focusWindow(windowId)
+  }
+
+  /** The user typed or clicked: main keeps the focus where it is for 2 seconds when the agent opens a window. At most one call per half second. */
+  noteUserActivity(): void {
+    const now = Date.now()
+    if (now - this.lastActivityAt < ACTIVITY_THROTTLE_MS || this.state.desktopId === 0) return
+    this.lastActivityAt = now
+    void this.api.desktop.userActive(this.state.desktopId).catch(() => {})
+  }
+
+  /** Brings a window to the front, restores it when minimized and focuses it ("Show", "Open", the taskbar). Whoever opened it. */
+  async raiseWindow(windowId: Id): Promise<void> {
+    if (this.bringForward(windowId)) await this.api.desktop.raiseWindow(windowId)
+  }
+
+  /**
+   * Optimistic part of focusing: restore, raise to the top and focus. False when the window does not exist or is
+   * already focused, on top and shown (nothing to ask main for).
+   */
+  private bringForward(windowId: Id): boolean {
     const w = this.windowById(windowId)
-    if (!w) return
+    if (!w || !this.current) return false
     this.startOpen = false
     this.actionCenterOpen = false
-    if (this.current && (this.state.focusedWindowId !== windowId || w.windowState === 'minimized')) {
-      this.current = {
-        ...this.current,
-        windows: raise(this.current.windows.map((x) => (x.id === windowId ? { ...x, windowState: x.windowState === 'minimized' ? 'normal' : x.windowState } : x)), windowId),
-        focusedWindowId: windowId
-      }
-      await this.api.desktop.focusWindow(windowId)
+    const onTop = nextFocus(this.current.windows) === windowId
+    if (this.current.focusedWindowId === windowId && w.windowState !== 'minimized' && onTop) return false
+    this.current = {
+      ...this.current,
+      windows: raise(this.current.windows.map((x) => (x.id === windowId ? { ...x, windowState: x.windowState === 'minimized' ? 'normal' : x.windowState, attention: undefined } : x)), windowId),
+      focusedWindowId: windowId
     }
+    return true
   }
 
   updateView(windowId: Id, view: AppView): void {
@@ -387,13 +425,12 @@ export class DesktopController implements DesktopHost {
   maximize = (id: Id): Promise<void> => this.setWindowState(id, 'maximized')
   restore = (id: Id): Promise<void> => this.setWindowState(id, 'normal')
 
-  /** Taskbar button click. */
+  /** Taskbar button click: a window that is not on top comes forward; the one on top is minimized. */
   async toggleFromTaskbar(windowId: Id): Promise<void> {
     const w = this.windowById(windowId)
     if (!w) return
-    if (w.windowState === 'minimized') await this.focusWindow(w.id)
-    else if (this.state.focusedWindowId === windowId) await this.minimize(windowId)
-    else await this.focusWindow(windowId)
+    if (taskbarAction(w, this.state.focusedWindowId, this.state.windows) === 'minimize') await this.minimize(windowId)
+    else await this.raiseWindow(windowId)
   }
 
   // ---- drag / resize ----------------------------------------------------------------------------
@@ -429,42 +466,63 @@ export class DesktopController implements DesktopHost {
 
   // ---- agent controls ---------------------------------------------------------------------------
 
-  /** Pause all agents / Resume agents. Resuming does not restart a stopped step: each affected chat gets a Continue message. */
   /** Opens Control Center (one window per desktop) at a page, e.g. the top bar chips open Permissions. */
   async openControlCentre(page: ControlCentrePage): Promise<void> {
     const window = await this.openApp({ app: 'control-centre' })
     await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
   }
 
+  /**
+   * Pause all agents / Resume agents and continue. Pause saves in main which chats it stopped; Resume sends each of them
+   * `CONTINUE_TEXT` as the user's message, so the stopped step carries on. With nothing to continue the bar says so.
+   */
   async togglePaused(): Promise<void> {
-    const paused = !this.state.paused
-    if (paused) this.stoppedByPause = new Set(this.allSessions.filter((s) => isBusy(s.status)).map((s) => s.id))
-    if (this.current) this.current = { ...this.current, paused }
-    await this.api.desktop.setPaused(this.state.desktopId, paused)
-    if (!paused) this.noteResumed()
-  }
-
-  private noteResumed(): void {
-    const stopped = [...this.stoppedByPause]
-    this.stoppedByPause = new Set()
-    for (const id of stopped) {
-      const title = this.sessions.byId(id)?.title || 'New chat'
-      this.pushMessage(`In chat '${title}': Resumed. The step that was stopped stays stopped. Send a message to continue.`, id)
+    const desktopId = this.state.desktopId
+    if (!this.state.paused) {
+      if (this.current) this.current = { ...this.current, paused: true }
+      await this.api.desktop.setPaused(desktopId, true)
+      return
     }
-    if (stopped.length > 0) this.showBalloon({ title: 'Agents resumed', text: 'A step that was stopped stays stopped. Open the Action Center and click Continue, or send a message.', icon: 'info' })
+    if (this.current) this.current = { ...this.current, paused: false }
+    await this.continueStopped(await this.api.desktop.resumeAgents(desktopId))
   }
 
-  /** The Continue button of a resume message: asks the chat's agent to carry on, and clears the message. */
-  async continueChat(sessionId: Id): Promise<void> {
-    this.messages = this.messages.filter((m) => m.continueChat !== sessionId)
-    await this.inbox.storeFor(sessionId).send(CONTINUE_TEXT)
+  private async continueStopped(sessionIds: readonly Id[]): Promise<void> {
+    if (sessionIds.length === 0) return this.showNotice(NOTHING_STOPPED_NOTICE)
+    for (const id of sessionIds) this.pushMessage(resumedLine(this.sessions.byId(id)?.title || 'New chat'))
+    await Promise.all(
+      sessionIds.map(async (id) => {
+        const store = this.inbox.storeFor(id) as Partial<Pick<SessionAgentStore, 'send' | 'whenConnected'>>
+        await store.whenConnected?.()
+        await store.send?.(CONTINUE_TEXT)
+      })
+    )
   }
 
-  /** True while the chat has a Resume note that Continue has not cleared. */
-  hasResumeNote(sessionId: Id): boolean {
-    return this.messages.some((m) => m.continueChat === sessionId)
+  private showNotice(text: string): void {
+    this.notice = text
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
+    this.noticeTimer = setTimeout(() => (this.notice = null), NOTICE_MS)
   }
 
+  /** True while the desktop is paused and Pause stopped a step of this chat (the saved list in the desktop state). */
+  stoppedByPause(sessionId: Id): boolean {
+    return this.state.paused && (this.state.stoppedByPause ?? []).includes(sessionId)
+  }
+
+  /** What the Action Center lists besides approvals: the chats Pause stopped (from the saved list), then the pushed messages. */
+  get centreMessages(): { id: number; text: string }[] {
+    const stopped = this.state.paused ? (this.state.stoppedByPause ?? []) : []
+    return [
+      ...stopped.map((id) => ({ id: -id, text: stoppedLine(this.sessions.byId(id)?.title || 'New chat') })),
+      ...this.messages.map((m) => ({ id: m.id, text: m.text }))
+    ]
+  }
+
+  /**
+   * "Ask before every action" and "Give control back". Taking control stops the running steps in main; the bar then reads
+   * "You are in control" and the chats read "Waiting for you" instead of "Working".
+   */
   async toggleUserInControl(): Promise<void> {
     const on = !this.state.userInControl
     if (this.current) this.current = { ...this.current, userInControl: on }
@@ -653,6 +711,18 @@ export class DesktopController implements DesktopHost {
     this.prefills = rest
   }
 
+  /**
+   * Ctrl+N and File > New chat: a chat on the default drive of the desktop, without a question: the drive of the last chat
+   * while it is still plugged in, else the first project, else the agent's home on C:. Its composer gets the focus.
+   */
+  async startDefaultChat(): Promise<void> {
+    this.startOpen = false
+    const projects = this.state.drives.filter((d) => d.kind === 'removable')
+    const drive = projects.find((d) => d.letter === this.lastChatDrive) ?? projects[0]
+    if (drive) await this.newChatIn(`${drive.letter}:\\`)
+    else await this.api.desktop.newChat(this.state.desktopId)
+  }
+
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
   async newChatIn(cwd: VPath): Promise<AppWindowState> {
     this.startOpen = false
@@ -716,8 +786,11 @@ export class DesktopController implements DesktopHost {
       if (answer !== 'yes') return
     }
     await this.api.drives.eject(this.state.desktopId, letter)
-    if (this.current) this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter) }
-    if (drive.folderId !== null) this.recentlyRemoved = addRemoved(this.recentlyRemoved, { folderId: drive.folderId, label: drive.label })
+    if (this.current) {
+      const gone: RemovedProjectDto[] = drive.folderId === null ? [] : [{ folderId: drive.folderId, label: drive.label, letter, removedAt: new Date().toISOString() }]
+      const removedProjects = gone.length > 0 ? addRemoved(this.current.removedProjects ?? [], gone[0], REMOVED_PROJECTS_KEPT) : this.current.removedProjects
+      this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter), removedProjects }
+    }
     this.showBalloon({ title: 'Safe To Remove Hardware', text: ejectBalloonText(title), icon: 'usb-safe' })
   }
 
@@ -731,34 +804,45 @@ export class DesktopController implements DesktopHost {
       await this.plugInFailed('the folder', error)
       return null
     }
-    return folder ? this.plugInFolder(folder) : null
+    return folder ? this.plugInFolder(folder, { explorer: true }) : null
   }
 
-  /** Plugs a recently removed project in again, without the dialog. */
-  async plugInAgain(folderId: Id): Promise<DriveDto | null> {
+  /**
+   * Plugs a recently removed project in again, without the dialog. From Computer the user chose it, so there is no AutoPlay
+   * (Computer selects the drive); from the tray (`autoPlay`) AutoPlay asks what to do with the drive.
+   */
+  async plugInAgain(folderId: Id, options: { autoPlay?: boolean } = {}): Promise<DriveDto | null> {
     const folder = (await this.api.folders.list()).find((f) => f.id === folderId)
     if (!folder) {
-      this.recentlyRemoved = this.recentlyRemoved.filter((r) => r.folderId !== folderId)
+      if (this.current) this.current = { ...this.current, removedProjects: (this.current.removedProjects ?? []).filter((r) => r.folderId !== folderId) }
       return null
     }
-    return this.plugInFolder(folder)
+    return this.plugInFolder(folder, { autoPlay: options.autoPlay })
   }
 
-  private async plugInFolder(folder: FolderDto): Promise<DriveDto | null> {
+  /**
+   * Plugs a folder in. A drive the user just chose does not open AutoPlay; with `explorer` an Explorer window opens on
+   * the drive root (in front, focused).
+   */
+  private async plugInFolder(folder: FolderDto, options: { explorer?: boolean; autoPlay?: boolean } = {}): Promise<DriveDto | null> {
     const already = this.state.drives.find((d) => d.kind === 'removable' && d.folderId === folder.id)
     if (already) {
       await showMessageBox({ text: `${folder.name} is already plugged in as drive ${already.letter}:.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
       return already
     }
+    if (!options.autoPlay) this.chosenPlugIns++
     try {
       const drive = await this.api.drives.plugIn(this.state.desktopId, folder.id)
       if (!drive) return null
-      this.recentlyRemoved = this.recentlyRemoved.filter((r) => r.folderId !== folder.id)
+      if (this.current) this.current = { ...this.current, removedProjects: (this.current.removedProjects ?? []).filter((r) => r.folderId !== folder.id) }
       this.showBalloon({ title: 'Project plugged in', text: pluggedBalloonText(driveTitle(drive)), icon: 'info' })
+      if (options.explorer) await this.openApp({ app: 'explorer', path: driveRoot(drive.letter) })
       return drive
     } catch (error) {
       await this.plugInFailed(folder.name, error)
       return null
+    } finally {
+      if (!options.autoPlay) this.chosenPlugIns--
     }
   }
 
@@ -829,7 +913,7 @@ export class DesktopController implements DesktopHost {
 
   /** Enter or Space on a taskbar button: brings the window forward (restores it) and never minimizes it. */
   async activateFromTaskbar(windowId: Id): Promise<void> {
-    if (this.windowById(windowId)) await this.focusWindow(windowId)
+    await this.raiseWindow(windowId)
   }
 
   toggleStart(): void {

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { normalizeKey, parseArgs } from './lib/args.mjs'
 import { launchApp, makeContext, sleep } from './lib/context.mjs'
-import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
+import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
 import { createLog } from './lib/log.mjs'
 import { serve } from './lib/rpc.mjs'
 import { runCheck } from './checks/index.mjs'
@@ -25,12 +25,16 @@ const log = createLog(join(sessionDir, 'log.jsonl'))
 const WIDTH = 1280
 const HEIGHT = 800
 
-const fixturesBase = join(tmp, 'fixtures')
+// H-32: a sandbox home (<tmp>/home, removed with <tmp> by `session.mjs stop`) holds the projects under Documents, so the
+// in-app Browse For Folder dialog lists them under Home and Documents. The app starts with HOME/USERPROFILE set to it.
+const sandboxHome = join(tmp, 'home')
+const fixturesBase = join(sandboxHome, 'Documents')
 mkdirSync(fixturesBase, { recursive: true })
+mkdirSync(join(sandboxHome, 'Desktop'), { recursive: true })
 const fixtures = {
   base: fixturesBase,
   loginApp: createLoginApp(fixturesBase),
-  loginAppGit: () => createLoginApp(join(tmp, 'fixtures-git'), { git: true }),
+  loginAppGit: () => createLoginApp(join(fixturesBase, 'git-copies'), { git: true }),
   docsSite: createDocsSite(fixturesBase),
   plain: createPlainFolder(fixturesBase)
 }
@@ -39,7 +43,8 @@ mkdirSync(userData, { recursive: true })
 
 const web = createServer((req, res) => {
   res.setHeader('content-type', 'text/html')
-  res.end(TEST_PAGE_HTML)
+  // H-28: /second is served too (T29.1 opens {TEST_PAGE_URL}second).
+  res.end(/^\/second\b/.test(req.url ?? '') ? TEST_PAGE_SECOND_HTML : TEST_PAGE_HTML)
 })
 // Each session serves its own copy of the fixture page on its own port (--port, TEST_PAGE_PORT, default 4173; 0 = any free
 // port), so parallel sessions never share one page and the page does not vanish when another session stops.
@@ -49,7 +54,7 @@ const pagePort = await new Promise((resolvePort, reject) => {
   web.listen(wantedPort, '127.0.0.1', () => resolvePort(web.address().port))
 })
 
-const app = await launchApp({ userData })
+const app = await launchApp({ userData, home: sandboxHome })
 const state = { task: flags.task ?? null, level: flags.level ?? null, sockDir: tmp, testPagePort: pagePort, testPageUrl: testPageUrl(pagePort), noMouse: false, startedAt: new Date().toISOString() }
 const ctx = makeContext({ app, userData, sessionDir, fixtures, state })
 
@@ -122,7 +127,9 @@ async function windowList() {
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i]
     const size = await p.evaluate(() => [innerWidth, innerHeight]).catch(() => [0, 0])
-    rows.push(`${p === cur ? '*' : ' '} ${i}  "${await p.title().catch(() => '')}"  ${size[0]}x${size[1]}${p === cur ? '  (current)' : ''}`)
+    // H-43: every window title is "Agent7"; the kind (launcher or desktop) tells the windows apart.
+    const kind = /[?&]launcher=/.test(p.url()) ? 'launcher' : /[?&]desktop=/.test(p.url()) ? 'desktop' : 'window'
+    rows.push(`${p === cur ? '*' : ' '} ${i}  [${kind}]  "${await p.title().catch(() => '')}"  ${size[0]}x${size[1]}${p === cur ? '  (current)' : ''}`)
   }
   return rows
 }
@@ -250,7 +257,7 @@ process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
 const sessionFile = join(sessionDir, 'session.json')
-const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, tmp, userData, testPageUrl: state.testPageUrl, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
+const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, tmp, userData, testPageUrl: state.testPageUrl, home: sandboxHome, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
 writeSession({ ready: false })
 
 try {

@@ -47,6 +47,13 @@ describe('taskbar', () => {
     expect(taskbarAction(win(1), 2)).toBe('focus')
     expect(taskbarAction(win(1, 'explorer', 'minimized'), 1)).toBe('restore')
   })
+  it('brings a focused window forward when another one covers it, and minimizes only the one on top', () => {
+    const windows = [win(1), win(2)] // back to front: 2 is on top
+    expect(taskbarAction(windows[0], 1, windows)).toBe('focus')
+    expect(taskbarAction(windows[1], 2, windows)).toBe('minimize')
+    expect(taskbarAction(windows[0], 2, windows)).toBe('focus')
+    expect(taskbarAction(win(1), 1, [win(1), win(2, 'explorer', 'minimized')])).toBe('minimize')
+  })
   it('lists one button per window in opening order with the focused one active', () => {
     const items = taskbarItems([win(3), win(1), win(2, 'terminal', 'minimized')], 3, { terminal: 'terminal', explorer: 'folder' })
     expect(items.map((i) => i.id)).toEqual(['1', '2', '3'])

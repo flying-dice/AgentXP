@@ -85,6 +85,7 @@ export function createApi(s: ApiServices): InvokeApi {
       setWindowState: async (windowId, state) => s.desktops.setWindowState(windowId, state),
       updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
       setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
+      resumeAgents: (desktopId) => s.desktops.resumeAgents(desktopId),
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
       newChat: async (desktopId, agentId, cwd) => {
         try {
@@ -102,7 +103,9 @@ export function createApi(s: ApiServices): InvokeApi {
       policy: async () => s.desktops.policy(),
       setPolicy: async (policy) => s.desktops.setPolicy(policy),
       attachBrowser: perWindow('desktop.attachBrowser'),
-      respondAppRequest: async (response) => s.appRequests.respond(response)
+      respondAppRequest: async (response) => s.appRequests.respond(response),
+      raiseWindow: async (windowId) => s.desktops.raiseWindow(windowId),
+      userActive: async (desktopId) => s.desktops.noteUserActivity(desktopId)
     },
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),
@@ -141,7 +144,8 @@ export function createApi(s: ApiServices): InvokeApi {
       disconnect: (id) => s.launcher.disconnect(id),
       rename: async (id, title) => s.launcher.rename(id, title),
       remove: (id) => s.launcher.remove(id),
-      show: async () => s.launcher.show()
+      show: async () => s.launcher.show(),
+      checkAgents: () => s.launcher.checkAgents()
     },
     notes: {
       list: async (desktopId) => s.notes.list(desktopId),

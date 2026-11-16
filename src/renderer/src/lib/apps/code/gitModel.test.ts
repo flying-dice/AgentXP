@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GitLineChange } from '@shared/git'
-import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
+import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, countsByPath, gitLinesLabel, rowReviewPath, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
 
 const changes: GitLineChange[] = [
   { kind: 'added', start: 2, end: 3, oldLines: [] },
@@ -50,16 +50,32 @@ describe('words of the Git list (UX-39)', () => {
   it('names the tab and its tooltip', () => {
     expect(gitTabTitle(3)).toBe('Git (3)')
     expect(gitTabTitle(0)).toBe('Git')
-    expect(gitTabTooltip(3)).toBe('3 files changed since the last commit')
-    expect(gitTabTooltip(1)).toBe('1 file changed since the last commit')
+    expect(gitTabTooltip(3)).toBe('Git: 3 files with changes that are not saved in version control')
+    expect(gitTabTooltip(1)).toBe('Git: 1 file with changes that are not saved in version control')
+    expect(gitTabTooltip(0)).toBe('Git: no file has changes that are not saved in version control')
   })
   it('explains a folder that is not tracked', () => {
-    expect(NOT_A_GIT_REPOSITORY).toContain("Run 'git init'")
+    expect(NOT_A_GIT_REPOSITORY).toContain('hidden folder named .git')
+    expect(NOT_A_GIT_REPOSITORY).toContain('does not change your files')
+    expect(TURN_ON_GIT_TEXT).toContain('Your files do not change')
   })
   it('gives the path of a file below a root with slashes', () => {
     expect(relativeToRoot('E:\\', 'E:\\src\\auth\\redirect.ts')).toBe('src/auth/redirect.ts')
     expect(relativeToRoot('E:\\app', 'E:\\app\\a.ts')).toBe('a.ts')
     expect(relativeToRoot('E:\\', 'F:\\a.ts')).toBeNull()
     expect(relativeToRoot('E:\\app', 'E:\\other\\a.ts')).toBeNull()
+  })
+})
+
+describe('Git rows (UX-78)', () => {
+  it('shows + lines / - lines, empty while the counts are unknown', () => {
+    const counts = countsByPath([{ path: 'src/redirect.ts', additions: 4, deletions: 1 }])
+    expect(gitLinesLabel(counts.get('src/redirect.ts'))).toBe('+4 / -1')
+    expect(gitLinesLabel(counts.get('missing.ts'))).toBe('')
+  })
+  it('opens the path of the row that was activated, not the first row', () => {
+    const rows = [{ id: 'E:\\src\\login.ts' }, { id: 'E:\\src\\redirect.ts' }]
+    expect(rowReviewPath(rows, 'E:\\src\\redirect.ts')).toBe('E:\\src\\redirect.ts')
+    expect(rowReviewPath(rows, 'E:\\gone.ts')).toBeNull()
   })
 })

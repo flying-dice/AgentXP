@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "crash-recovery",
+  "description": "T23.1 first turn (H-31): says it is working and then hangs until the facilitator kills the agent process. The preset then points the agent at crash-recovered.json, so the restarted agent finishes the same request in a few seconds.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [{ "id": "first-turn", "match": { "any": true }, "steps": [{ "type": "message", "text": "Working on it...\n" }, { "type": "wait", "ms": 600000 }, { "type": "message", "text": "Done. The slow job is finished." }] }],
+  "fallback": [{ "type": "message", "text": "Working on it..." }]
+}

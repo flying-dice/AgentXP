@@ -73,8 +73,10 @@ export const checks = {
   async 'T14.1'(ctx, { answer }) {
     const list = await ctx.launcherList()
     const row = list.find((d) => d.id === ctx.state.pendingDesktopId)
-    void answer // the scenario does not ask for the error desktop, so the answer is not checked
-    return all([[row?.connected === true, 'the desktop with the pending request is connected']], ['researcher: record whether the waiting row was preselected when the launcher opened'])
+    // H-39: the scenario also asks which workspace has a problem: the answer must name the error desktop.
+    const title = ctx.state.errorDesktopTitle ?? 'Docs site'
+    const state = all([[row?.connected === true, 'the desktop with the pending request is connected']], ['researcher: record whether the waiting row was preselected when the launcher opened'])
+    return withAnswer(state, answer, { keywords: [title], expect: `the answer names the workspace with the problem: ${title}` })
   },
 
   async 'T14.2'(ctx) {
@@ -101,12 +103,18 @@ export const checks = {
   async 'T19.1'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
+    // H-40: the assistant must really have read the page (a browser_read call), not only be able to.
+    let read = false
+    for (const s of await ctx.sessions(ctx.state.desktopId)) {
+      if ((await ctx.transcript(s.id)).some((e) => e.kind === 'tool_call' && /browser_read/.test(JSON.stringify(e)))) read = true
+    }
     const browser = windowsOf(state, 'browser')[0]
     const host = new URL(ctx.state.testPageUrl ?? TEST_PAGE_URL).host
     return withAnswer(
       all([
         [Boolean(browser) && String(browser.view.url).includes(host), `a Browser window shows the page (${browser?.view.url ?? 'none'}; want ${host})`],
-        [state.tools.includes('browser'), 'the Browser chip is on']
+        [state.tools.includes('browser'), 'the Browser chip is on'],
+        [read, 'the assistant read the page (a browser_read call)']
       ]),
       answer,
       { keywords: [['assistant can', 'agent can', 'can now see', 'can see the page', 'can read the page', 'assistant sees', 'agent sees', 'browser chip', 'chip is on']], expect: 'the panelist said the assistant can now see the page' }

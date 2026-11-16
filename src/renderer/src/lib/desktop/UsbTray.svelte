@@ -3,24 +3,31 @@
    * The "Safely Remove Hardware and Eject Media" tray icon: a USB stick with a green tick. Click opens
    * a menu with one "Eject <drive>" entry per plugged-in project. Hidden while no USB drive is plugged in.
    */
+  import type { Id } from '@shared/models'
   import type { DriveDto } from '@shared/vfs'
   import Icon from '../kit/atoms/Icon.svelte'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import type { MenuItemDef } from '../kit/molecules/MenuItem'
   import { driveTitle, sortDrives } from '../apps/explorer/explorerModel'
   import { projectCountText } from '../apps/explorer/explorerContext'
+  import { plugAgainLabel, type RemovedProject } from './projectDrives'
 
   interface Props {
     drives: DriveDto[]
     open?: boolean
     oneject?: (letter: string) => void
+    /** Projects removed from the desktop, newest first: each gets a "Plug in ... again" entry after the eject entries. */
+    removed?: readonly (RemovedProject & { letter?: string })[]
+    onplugagain?: (folderId: Id) => void
     element?: HTMLButtonElement | null
   }
 
-  let { drives, open = $bindable(false), oneject, element = $bindable(null) }: Props = $props()
+  let { drives, open = $bindable(false), oneject, removed = [], onplugagain, element = $bindable(null) }: Props = $props()
 
   const usb = $derived(sortDrives(drives).filter((d) => d.kind === 'removable'))
-  const items = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
+  const ejectItems = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
+  const againItems = $derived<MenuItemDef[]>(removed.map((p) => ({ testid: 'usb-plug-again', label: plugAgainLabel(p).replaceAll('&', '&&'), icon: 'usb', action: () => onplugagain?.(p.folderId) })))
+  const items = $derived<MenuItemDef[]>(againItems.length > 0 && ejectItems.length > 0 ? [...ejectItems, { separator: true }, ...againItems] : [...ejectItems, ...againItems])
   /** `Safely Remove Hardware: 1 project plugged in`. */
   const tip = $derived(`Safely Remove Hardware: ${projectCountText(usb.length)}`)
   let x = $state(0)
@@ -33,11 +40,11 @@
     const barTop = element.closest('.w7-taskbar')?.getBoundingClientRect().top ?? r.top
     x = r.left - 8
     // The popup sits on top of the taskbar: about 24 px per entry plus the popup frame.
-    y = barTop - usb.length * 24 - 12
+    y = barTop - items.length * 24 - 12
   })
 </script>
 
-{#if usb.length > 0}
+{#if usb.length > 0 || removed.length > 0}
   <button
     bind:this={element}
     type="button"

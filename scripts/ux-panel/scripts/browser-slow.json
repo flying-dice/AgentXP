@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "browser-slow",
-  "description": "A slow Browser job for T28.2: opens the page given in the prompt (\"... chat app at <url>\"), then reads it again every 1.8 seconds for about a minute, so that the Browser activity bar (it stays 2.5 seconds after each tool call) is always on screen and the user can take control. Ends with the message SLOW DONE.",
+  "description": "A slow Browser job for T28.2: opens the page given in the prompt (\"... chat app at <url>\"), then reads it again every 1.8 seconds for about a minute, so that the Browser activity bar (it stays 8 seconds after the last announced action; browser_read does not announce, so every cycle also scrolls to the top, H-27) is always on screen and the user can take control. Ends with the message SLOW DONE.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -42,6 +42,16 @@
           "label": "read 1"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s1",
+          "label": "scroll 1"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -54,6 +64,16 @@
           },
           "saveAs": "r2",
           "label": "read 2"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s2",
+          "label": "scroll 2"
         },
         {
           "type": "wait",
@@ -70,6 +90,16 @@
           "label": "read 3"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s3",
+          "label": "scroll 3"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -82,6 +112,16 @@
           },
           "saveAs": "r4",
           "label": "read 4"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s4",
+          "label": "scroll 4"
         },
         {
           "type": "wait",
@@ -98,6 +138,16 @@
           "label": "read 5"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s5",
+          "label": "scroll 5"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -110,6 +160,16 @@
           },
           "saveAs": "r6",
           "label": "read 6"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s6",
+          "label": "scroll 6"
         },
         {
           "type": "wait",
@@ -126,6 +186,16 @@
           "label": "read 7"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s7",
+          "label": "scroll 7"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -138,6 +208,16 @@
           },
           "saveAs": "r8",
           "label": "read 8"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s8",
+          "label": "scroll 8"
         },
         {
           "type": "wait",
@@ -154,6 +234,16 @@
           "label": "read 9"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s9",
+          "label": "scroll 9"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -166,6 +256,16 @@
           },
           "saveAs": "r10",
           "label": "read 10"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s10",
+          "label": "scroll 10"
         },
         {
           "type": "wait",
@@ -182,6 +282,16 @@
           "label": "read 11"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s11",
+          "label": "scroll 11"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -194,6 +304,16 @@
           },
           "saveAs": "r12",
           "label": "read 12"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s12",
+          "label": "scroll 12"
         },
         {
           "type": "wait",
@@ -210,6 +330,16 @@
           "label": "read 13"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s13",
+          "label": "scroll 13"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -222,6 +352,16 @@
           },
           "saveAs": "r14",
           "label": "read 14"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s14",
+          "label": "scroll 14"
         },
         {
           "type": "wait",
@@ -238,6 +378,16 @@
           "label": "read 15"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s15",
+          "label": "scroll 15"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -250,6 +400,16 @@
           },
           "saveAs": "r16",
           "label": "read 16"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s16",
+          "label": "scroll 16"
         },
         {
           "type": "wait",
@@ -266,6 +426,16 @@
           "label": "read 17"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s17",
+          "label": "scroll 17"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -278,6 +448,16 @@
           },
           "saveAs": "r18",
           "label": "read 18"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s18",
+          "label": "scroll 18"
         },
         {
           "type": "wait",
@@ -294,6 +474,16 @@
           "label": "read 19"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s19",
+          "label": "scroll 19"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -306,6 +496,16 @@
           },
           "saveAs": "r20",
           "label": "read 20"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s20",
+          "label": "scroll 20"
         },
         {
           "type": "wait",
@@ -322,6 +522,16 @@
           "label": "read 21"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s21",
+          "label": "scroll 21"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -334,6 +544,16 @@
           },
           "saveAs": "r22",
           "label": "read 22"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s22",
+          "label": "scroll 22"
         },
         {
           "type": "wait",
@@ -350,6 +570,16 @@
           "label": "read 23"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s23",
+          "label": "scroll 23"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -362,6 +592,16 @@
           },
           "saveAs": "r24",
           "label": "read 24"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s24",
+          "label": "scroll 24"
         },
         {
           "type": "wait",
@@ -378,6 +618,16 @@
           "label": "read 25"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s25",
+          "label": "scroll 25"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -390,6 +640,16 @@
           },
           "saveAs": "r26",
           "label": "read 26"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s26",
+          "label": "scroll 26"
         },
         {
           "type": "wait",
@@ -406,6 +666,16 @@
           "label": "read 27"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s27",
+          "label": "scroll 27"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -418,6 +688,16 @@
           },
           "saveAs": "r28",
           "label": "read 28"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s28",
+          "label": "scroll 28"
         },
         {
           "type": "wait",
@@ -434,6 +714,16 @@
           "label": "read 29"
         },
         {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s29",
+          "label": "scroll 29"
+        },
+        {
           "type": "wait",
           "ms": 1800
         },
@@ -446,6 +736,16 @@
           },
           "saveAs": "r30",
           "label": "read 30"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "direction": "top"
+          },
+          "saveAs": "s30",
+          "label": "scroll 30"
         },
         {
           "type": "message",

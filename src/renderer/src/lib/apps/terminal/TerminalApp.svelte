@@ -15,7 +15,7 @@
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
-  import { collectTerminals, lastLines, renderTerminal, terminalLabel } from './terminalModel'
+  import { collectTerminals, isTypingKey, lastLines, NOTICE_MS, READ_ONLY_NOTICE, renderTerminal, terminalLabel } from './terminalModel'
 
   let { window: win, host }: AppProps<'terminal'> = $props()
 
@@ -48,6 +48,17 @@
   const fullText = $derived(renderTerminal(current, cwd))
   const text = $derived(current ? fullText.slice(Math.min(cleared[current.key] ?? 0, fullText.length)) : fullText)
   let screen = $state<HTMLElement | null>(null)
+
+  /** The read-only notice at the bottom of the screen: shown by a key press, gone after a few seconds. */
+  let notice = $state(false)
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined
+  function typed(event: KeyboardEvent): void {
+    if (!isTypingKey(event)) return
+    notice = true
+    clearTimeout(noticeTimer)
+    noticeTimer = setTimeout(() => (notice = false), NOTICE_MS)
+  }
+  $effect(() => () => clearTimeout(noticeTimer))
 
   // svelte-ignore state_referenced_locally
   const help = new AppHelp(host, 'terminal')
@@ -157,8 +168,12 @@
       />
     {/if}
   </div>
-  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen}>
-    <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" />
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onkeydown={typed}>
+    <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" lockedCursor />
+    {#if notice}
+      <div class="notice" data-testid="terminal-readonly-notice" role="status">{READ_ONLY_NOTICE}</div>
+    {/if}
   </div>
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Terminal" />
   <AppAbout {help} />
@@ -193,11 +208,23 @@
     flex: 1;
   }
   .screen {
+    position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--w7-console-bg);
+  }
+  .notice {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 4px 8px;
+    background: #2b2b2b;
+    border-top: 1px solid #6b6b6b;
+    color: #ffd866;
+    font: var(--w7-font);
   }
   .screen :global(.w7-console) {
     flex: 1;

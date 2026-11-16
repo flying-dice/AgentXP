@@ -1,7 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createWorkspace, FolderBrowserDialog, see, startConnectedDesktop, type ConnectedDesktop, type Workspace } from './fixtures'
 
-/** UX-02, UX-03, UX-11: plug in, eject and plug in again, all through the UI, with no stubbed folder dialog. */
+/**
+ * UX-02, UX-03, UX-11, UX-52, UX-53: plug in, eject and plug in again, all through the UI, with no stubbed folder dialog.
+ * A project the user plugs in opens an Explorer window on its drive (no AutoPlay); the removed list lives in main.
+ */
 describe('plug in and eject a project', () => {
   let ctx: ConnectedDesktop
   let first: Workspace
@@ -41,9 +44,14 @@ describe('plug in and eject a project', () => {
     await see.attribute(explorer.drive('f'), 'aria-selected', 'true')
     await see.text(explorer.itemCount, '2 projects plugged in')
     await see.text(ctx.desktop.balloonTitle, 'Project plugged in')
-    await see.text(ctx.desktop.balloonText, `${second.name} (F:) is ready to use.`)
-    await see.visible(ctx.desktop.autoPlay)
-    await ctx.desktopPage.getByTestId('autoplay-no-action').click()
+    await see.text(ctx.desktop.balloonText, `Project plugged in: ${second.name} (F:) is ready to use.`)
+    // The project is open in an Explorer window on the drive root, and AutoPlay stays away.
+    await see.visible(ctx.desktop.windows('explorer').nth(1))
+    await see.text(ctx.desktop.explorer(1).address, 'F:')
+    await see.attribute(ctx.desktop.windows('explorer').nth(1), 'data-focused', 'true')
+    await see.count(ctx.desktop.windows('explorer'), 2)
+    expect(await ctx.desktop.autoPlay.count()).toBe(0)
+    await ctx.desktop.closeWindow('explorer', 1)
   })
 
   it('Cancel plugs nothing in', async () => {
@@ -89,9 +97,17 @@ describe('plug in and eject a project', () => {
     await see.text(explorer.itemCount, '1 project plugged in')
   })
 
+  it('Plug in again is ready for the removed project, and the tray offers it too', async () => {
+    const explorer = ctx.desktop.explorer()
+    await ctx.desktop.usbTray.click()
+    await see.text(ctx.desktopPage.getByTestId('usb-plug-again'), `Plug in ${second.name} (F:) again`)
+    await ctx.desktopPage.keyboard.press('Escape')
+    // Computer selects the newest removed project, so the button is enabled without a click.
+    await see.enabled(explorer.plugInAgain)
+  })
+
   it('Plug in again brings the project back without a dialog', async () => {
     const explorer = ctx.desktop.explorer()
-    expect(await explorer.plugInAgain.isDisabled()).toBe(true)
     await explorer.removed.filter({ hasText: second.name }).click()
     await explorer.plugInAgain.click()
     await see.visible(explorer.drive('f'))

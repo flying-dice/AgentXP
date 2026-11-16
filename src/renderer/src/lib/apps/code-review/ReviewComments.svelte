@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** The comments list panel: every thread of the review with where it is, its severity and state, and "Send all open comments". */
+  /** The comments list panel: every thread of the review with where it is, its severity and state, and "Send comments to chat". */
   import { SEVERITY_LABELS, commentLocation, sortComments, type ReviewCommentDto } from '@shared/review'
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -31,7 +31,7 @@
     <span class="sentcol" aria-hidden="true">Sent</span>
   </div>
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="list w7-scroll" role="list" tabindex="0" aria-label="Comments">
+  <div class="list w7-scroll" role="group" tabindex="0" aria-label="Comments">
     {#each roots as c (c.id)}
       <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">
@@ -50,7 +50,7 @@
     {/each}
   </div>
   <div class="foot">
-    <Button data-testid="review-send-all" disabled={counts.open === 0} onclick={onsendall}>Send all open comments...</Button>
+    <Button data-testid="review-send-all" disabled={counts.open === 0} onclick={onsendall}>Send comments to chat...</Button>
   </div>
 </section>
 

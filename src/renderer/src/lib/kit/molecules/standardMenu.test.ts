@@ -23,6 +23,10 @@ describe('closeItems', () => {
     expect(items[0].separator).toBe(true)
     expect(items[1]).toMatchObject({ testid: 'code-menu-close', shortcut: 'Alt+F4' })
   })
+
+  it('can carry a tooltip', () => {
+    expect(closeItems('chat', () => {}, '&Close', 'Close this window. The agent keeps working.')[1].title).toBe('Close this window. The agent keeps working.')
+  })
 })
 
 describe('editItems', () => {

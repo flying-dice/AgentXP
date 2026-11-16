@@ -230,7 +230,7 @@
   /* A dotted ring in black on white, so it shows (3:1) on the light glass and on the dark one. */
   .orb:focus-visible,
   .task:focus-visible {
-    outline: 1px dotted #000;
+    outline: 2px dotted #000;
     outline-offset: -3px;
     box-shadow: 0 0 0 1px #fff, inset 0 0 0 2px rgba(255, 255, 255, 0.9);
   }
