@@ -144,10 +144,11 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 0 7px 7px;
+    padding: 0 8px 8px;
     border: 1px solid var(--w7-frame-border);
-    border-radius: 8px 8px 0 0;
+    border-radius: 7px;
     background: var(--w7-frame-active);
+    backdrop-filter: var(--w7-glass-blur);
     box-shadow: var(--w7-frame-shadow);
     font: var(--w7-font);
     color: var(--w7-text);
@@ -157,6 +158,7 @@
   .w7-form.inactive {
     border-color: var(--w7-frame-inactive-border);
     background: var(--w7-frame-inactive);
+    backdrop-filter: none;
     box-shadow: var(--w7-frame-shadow-inactive);
   }
   .w7-form.maximized {
@@ -167,6 +169,7 @@
     padding: 0 0 0;
     border: 0;
     border-radius: 0;
+    backdrop-filter: none;
   }
   .w7-form.maximized :global(.form-title) {
     padding-left: 6px;
@@ -176,6 +179,7 @@
     border: 0;
     border-radius: 0;
     background: none;
+    backdrop-filter: none;
     box-shadow: none;
     width: 100%;
     height: 100%;
