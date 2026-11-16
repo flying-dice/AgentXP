@@ -33,7 +33,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Notepad | `notepad` | no | ACP `fs/write_text_file`; MCP `notepad_open`, `notepad_read` | file path, dirty flag, caret line |
 | Code | `code` | yes | ACP `fs/read_text_file`, `fs/write_text_file`; MCP `code_open`, `code_reveal`, `code_show_diff` | open tabs, active file, visible line range, selection, changes list selection |
 | Terminal | `terminal` | no | ACP `terminal/*`; MCP `terminal_run`, `terminal_read` | cwd, running command, last 20 lines |
-| Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_back` | url, page title, loading |
+| Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_find`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload` | url, page title, loading |
 | Control Centre | `control-centre` | yes | none (system UI) | open page |
 | Task Manager | `agent-manager` | yes | none | none |
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
@@ -42,6 +42,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Event Viewer | `event-viewer` | yes | MCP `events_query` (chat, source, level, text; at most 200 compact lines) | chat filter, level filter, selected event |
 | Snipping Tool | `snipping-tool` | yes | MCP `screen_capture` (whole desktop or one window) | last snip id |
 | Recycle Bin | `recycle-bin` | yes | MCP `recycle_list`, `recycle_restore` | selected item |
+| Code Review | `code-review` | no (one per review) | MCP `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` (only for the review session that owns the window), and `fs.read` | root, base ref, selected file, review session id |
 | Agent window | `surface` | no (one per A2UI surface) | none (the agent opens it by drawing: `a2ui_render` with `target: 'window'`; not agent-openable with `desktop_open_app`) | `surfaceId`, `sessionId`, title |
 
 Default policy: Ask for `wordpad` and `recycle` (and `fs.write`, `terminal` as before), Allow for the rest.
@@ -119,9 +120,35 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 - **Code** - file tree, tabs, `CodeViewer`, changes list with `DiffViewer`, Revert. "Agent is editing" marker when a tool call targets the open file.
   Laid out like Code::Blocks (menu bar, icon toolbar, docked Management / Logs & others panes, status bar). Git awareness (`src/shared/git.ts`, `GitService` in main): `git.status` / `lineChanges` / `headText` / `revertHunk` run the `git` CLI (`execFile`, no shell, `LC_ALL=C`, `GIT_OPTIONAL_LOCKS=0`) in the real path of a VPath, so every drive works and a non-repository or missing git answers null / []. `git.changed { desktopId, root }` is pushed (debounced) after agent changes, user saves and a 5 s poll that only runs while a Code window is open. The tree shows status letters and folder dots, the kit `CodeViewer` a gutter, overview ruler and inline peek (`gutterMarks`); `revertHunk` rewrites the working file through the user write path (no agent change recorded).
 - **Terminal** - `ConsoleView` showing the ACP terminals of the desktop plus an interactive user shell row.
-- **Browser** - address bar, Back/Forward/Refresh, an Electron `<webview>` (partition `persist:agent7-browser`). Main finds its `webContents` through `did-attach-webview` and the window id, and drives it for `browser_*` (navigate, `executeJavaScript` text/accessibility snapshot, `capturePage` PNG returned as MCP image content, synthetic click/type by element ref from the last snapshot).
+- **Browser** - address bar, Back/Forward/Refresh/Stop, an IE9-style tab strip (new tab, close tab; one `<webview>` per tab, all in partition `persist:agent7-browser`, the app's `tabs` request lets the agent list/open/switch/close tabs) and an "Agent is using this page" bar with a highlight ring and a Take control button (the `activity` request). Each tab's `webContents` is reported with `desktop.attachBrowser`; the one attached last is the active tab. Main drives it through the Chrome DevTools Protocol (`webContents.debugger`, attached once per guest, detached on destroy):
+  - **Read**: `Accessibility.getFullAXTree` of every frame (`Page.getFrameTree`, `frameId`; iframe owners resolved with `DOM.describeNode`; shadow roots are part of the AX tree), `DOMSnapshot.captureSnapshot` for off-screen marks. `browser_read` returns outline or text lines, paged (150 lines / 12k characters per page, `nextOffset`).
+  - **Refs**: one number per DOM node (frame id + `backendNodeId`), stable across reads, reset when the page navigates; stale ones give a readable error.
+  - **Input**: `DOM.scrollIntoViewIfNeeded` + `DOM.getBoxModel`, then trusted `Input.dispatchMouseEvent` at the box centre; `Input.dispatchKeyEvent` for `browser_press` (chords such as `Control+K`); `browser_type` focuses the node, selects all and calls `Input.insertText`, so contenteditable and React inputs work; the wheel (`mouseWheel`) scrolls pages and containers. Only `<select>` choice and the password-focus check use a page script.
+  - **Safety**: password values are never returned and typing into a password field is refused; only http(s) navigation; the webview lockdown is unchanged; actions check `paused` and `userInControl` between steps (the tool gate already refuses or asks first).
+  - `capturePage` PNG is still returned as MCP image content.
 - **Control Centre** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
 - **Agent Manager** - running agent processes, chats per process, status, context use, **End process**.
+
+### Code Review and the embedded chat
+
+`code-review` is a WinDiff-style diff tool with its own ACP session. `desktop.openReview(desktopId, root, baseRef?)` creates a session with `role: 'review'` and then the window; `chat_windows` links the window to the session and `path_windows` holds the root and `base_ref` (migration 007). Closing the window deletes the review session and its comments, so a review never outlives its window. Chat lists (launcher, Start menu, chat counts) only count `role: 'chat'` sessions; Task Manager still lists all pooled sessions.
+
+- **Data** - `review_comments` (path, line range, side old/new, severity blocker/major/minor/nit, state open/resolved/sent, author agent/user, `parent_id` for replies) and `review_summaries` (one verdict per session). `ReviewService` (main) reads changes with the read-only `GitCli` (`diff --name-status`, `ls-files --others`, `show <ref>:./path`), stores comments and publishes `review.changed`.
+- **Tools** - the `review` tool group is enabled desktop-wide while a Code Review window is open, so every handler checks ownership (`ReviewService.requireWindow`): the calling session must have role `review` and own an open Code Review window on that desktop. A chat or another review is refused.
+- **View** - the left margin bar shows removed lines red and added lines yellow (`src/shared/windiff.ts`, pure), F7 / Shift+F7 step through the change regions across files, outline and expanded views, unified or side by side. A gutter click adds a user comment; threads show Resolve, Reply, Delete and Send to chat. The window sends the first prompt (`reviewKickoffPrompt`) when its transcript is empty.
+- **Send to chat** - `formatReviewPrompt` builds the prompt (verdict, `path:line [severity] body`, replies indented); the dialog picks an existing chat or a new one, the comments become `sent`.
+- **EmbeddedChat** (`apps/shared/EmbeddedChat.svelte`) - the reusable right-aside chat panel: props `host`, `sessionId`, `contextProvider`, `role` (`chat` | `review` | `aside`), `collapsible`, `collapsed` / `width` (bindable), `resizable`, `compact`, `contained`, and for the chat pane `onstart`, `onnew`, `suggestions`, `prefill`; it shares the desktop's `SessionAgentStore`, and the provider's `appContext` is added to the `agent7.desktop` context entry. ChatApp, Code Review and the chat pane of section 12 use it. See `manuals/embedded-chat.md`.
+- **Menu bar** - Code Review uses the standard helpers (`AppHelp`, `helpMenu`, `closeItems`, `menuBar`) like every app: its test ids are `code-review-menu-close`, `code-review-menu-help` and `code-review-menu-about`. Its reviewer panel stays.
+
+## 7b. Help and context menus
+
+Every app has in-app Help and a context menu.
+
+**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `<App> Help`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
+
+**Context menus.** Right-click, the Menu key and Shift+F10 open a kit `ContextMenuStrip` in every app, on rows and items first and on the window background otherwise. The renderer cancels the browser's own `contextmenu` event on the desktop and the launcher. The taskbar button has its own menu: Restore, Minimize, Close window.
+
+**Ask chat.** Items such as Explain this, Ask chat... and Send selection to chat call `DesktopHost.askChat(AskChatRequest)` (`AskChatRequest` is in `src/shared/desktop.ts`). `DesktopController.askChat` opens the chat pane of the requesting window (section 12), expanded, and sends the prompt of `askChatPrompt` there (the file path and line range, the selection in a fenced block, or the page address and title). `ask` only fills the composer with `askChatDraft`, so the user types the question. The item Open in Chat window (kind `window`, `<app>-ctx-open-chat`) and a window without a pane keep the old behavior: a chat on the drive of the request (or home) in a new Chat window.
 
 ## 8. Data model additions (migrations 002 and 003)
 
@@ -276,6 +303,40 @@ CREATE TABLE surface_windows (
 );
 CREATE TRIGGER trg_surface_window_removed AFTER DELETE ON surface_windows BEGIN DELETE FROM app_windows WHERE id = OLD.window_id; END;
 ```
+
+## 12. The chat pane of every app window (migration 008)
+
+Every app window has a collapsible chat pane at its right edge: short, local and short-lived. The shell hosts it, the apps only supply context.
+
+**Aside sessions (main).** `sessions.role = 'aside'` (migration 007) is the session of a pane. `desktop.openAside(desktopId, windowId)` returns the id of the window's aside and creates it lazily on the first call (the first message of the pane); two quick calls share one creation. The agent works in `asideCwd(view)`: the root of the plugged-in drive the window's view is on, else the agent's home. `desktop.closeAside(windowId)` is "New conversation": the session and its transcript are deleted, the window keeps its blank pane. A window that is closed deletes its aside (`DesktopService.closeWindow`, the same `removeOwnedSession` as for a review). Chat, Code Review and surface windows have none (`supportsAside`, `ASIDE_EXCLUDED_APPS`); `openAside` refuses them.
+
+**The link.** Migration 008 adds `aside_windows (window_id PK -> app_windows ON DELETE CASCADE, session_id UNIQUE -> sessions ON DELETE CASCADE)`. It is not `chat_windows`: a `chat_windows` row owns its window (`trg_chat_window_removed`), but an aside belongs to a window that lives on its own. `AppWindowRecord.asideSessionId` joins it and `AppWindowState.asideSessionId` (absent before the first message) puts it in the desktop state, so the agent and every renderer see it.
+
+**Not a chat.** Launcher counts (`chatCount`), `DesktopController.chats` (Start menu recents, the newest chat) and the "New chat" lists count `role: 'chat'` only. Task Manager lists every session that runs, so an aside shows there while its window is open and disappears with it.
+
+**The agent.** An aside is an ordinary session of the desktop: its prompts carry the desktop state (`agent7://desktop/state`) and it gets the tools of the open apps through the usual tool gate, so the Browser's aside can use the `browser_*` tools on the page. The desktop context of an aside carries `appContext` with the window id, the app, the title and what the app registered. `DESKTOP_INSTRUCTIONS` (`tools/catalog.ts`) tells the agent to keep answers short and local to `appContext` and to pass `window` = `appContext.windowId` to tools that take a window.
+
+**The shell.** `AppWindowFrame` puts the app and `AppChatPane` side by side (`.hosted`). `AppChatPane` shows a slim edge toggle (`chat-pane-toggle`) while collapsed and an `EmbeddedChat` with `role="aside"` while open. `DesktopController` owns what a pane needs: `paneOf` / `setChatPane` / `toggleChatPane` / `setPaneWidth` (collapsed state and width per window, remembered in `localStorage` under `agent7.chatpane.<desktopId>.<windowId>` with a try/catch, `desktop/chatPane.ts`), `openAside` / `closeAside`, the `prefills` of the composer and the app contexts. A window starts collapsed. Ctrl+Shift+C is handled by the frame, so it works in every app. The apps list `View -> Chat pane` with `help.paneItem(win.id)` (`chatPaneItem` in `standardMenu.ts`, test id `<app>-menu-chat-pane`). An app without a View menu gets one with `help.viewMenu(win.id)`.
+
+**Context.** An app calls `useAppContext(host, () => win.id, () => ({ ... }))` (`apps/shared/appContext.svelte.ts`), which registers a provider with `host.setContext(windowId, provider)` and removes it when the app goes away. The provider runs when a prompt is sent and for the suggestion chips, so it must be cheap. `composeAppContext` adds `windowId`, `app` and `title`. What each app gives:
+
+| App | Context |
+|---|---|
+| Code | `openFile`, `openTabs`, `selection` (text) and `range`, `gitStatus`, `changedLines` |
+| Notepad, WordPad | `openFile`, `unsavedChanges`, `selection`, `range` (WordPad: `mode`, `visibleHeading`) |
+| Explorer | `folder`, `selectedItems`, `items` |
+| Terminal | `cwd`, `runningCommand`, `lastOutput`, `selection` |
+| Browser | `url`, `title`, `tabs`, `selection` (the text selected at the last right-click: the guest page does not report it otherwise) |
+| Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
+| Paint | `canvas` (width, height), `tool`, `color` |
+| Sticky Notes | `note` (the selected note) or `notes` |
+| Help, Control Centre, Snipping Tool | `topic`, `page`, `hasSnip` |
+
+**Compact UX.** The pane uses a dense composer and suggestion chips from `suggestionsFor(app, context)` ("Explain this", "Summarise this page", "What changed in this file?"). Before the first message the pane shows a composer without a session: `EmbeddedChat.onstart` creates the aside, then the message is sent to it.
+
+**askChat.** `DesktopController.askChat` expands the pane of `request.windowId` and sends the prompt there (`explain`, `send`) or fills the composer (`ask`, with `askChatDraft`, and focuses it through the `prefill` of `Composer`). If a turn is running in the pane, the text goes to the composer instead. `kind: 'window'` (context menu item "Open in Chat window") and windows without a pane use `askChatWindow`: a full chat in the Chat window, as before.
+
+**Tests.** `DesktopService.test.ts` (lazy creation, one session per window, delete on close and on New conversation, not a chat), `LauncherService.test.ts` (chat counts), `migration-008.test.ts`, `chatPane.test.ts`, `desktop-views.test.ts`, `askChat.test.ts`; `e2e/aside.e2e.ts` and `e2e/context-menus.e2e.ts` with the `aside.json` scripted agent.
 
 ## 9. Build order
 

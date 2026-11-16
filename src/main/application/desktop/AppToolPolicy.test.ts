@@ -27,12 +27,13 @@ describe('enabledToolGroups (open apps -> tool groups)', () => {
     expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes'])
     expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events'])
     expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle'])
+    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'review'])
   })
 
   it('ignores order and duplicates, and every group is reachable', () => {
     expect(enabledToolGroups(['browser', 'browser', 'terminal'])).toEqual(enabledToolGroups(['terminal', 'browser']))
     expect(
-      enabledToolGroups(['explorer', 'notepad', 'code', 'terminal', 'browser', 'paint', 'wordpad', 'sticky-notes', 'event-viewer', 'snipping-tool', 'recycle-bin'])
+      enabledToolGroups(['explorer', 'notepad', 'code', 'terminal', 'browser', 'paint', 'wordpad', 'sticky-notes', 'event-viewer', 'snipping-tool', 'recycle-bin', 'code-review'])
     ).toEqual([...TOOL_GROUPS])
   })
 })

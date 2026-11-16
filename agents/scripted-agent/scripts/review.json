@@ -1,0 +1,102 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "review",
+  "description": "A code reviewer for the Code Review app. The review prompt (\"code review of the changes\") makes it leave two inline comments with review_add_comment on notes.txt (line 1 and line 4, the fixture of e2e/code-review.e2e.ts) and finish with review_submit (request_changes). The prompt a chat gets from \"Send to chat\" (\"fix the following code review comments\") is answered by the first rule, so the same script serves the reviewer and the chat that fixes.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "fix",
+      "match": {
+        "contains": "fix the following code review comments",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Fixing the review comments now."
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "match": {
+        "contains": "code review of the changes",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Reviewing the changes.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_add_comment",
+          "saveAs": "first",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 1,
+            "severity": "minor",
+            "body": "A stray zero line was added at the top. Is it needed?"
+          }
+        },
+        {
+          "type": "expect",
+          "from": "first.isError",
+          "equals": "false"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_add_comment",
+          "saveAs": "second",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 4,
+            "severity": "blocker",
+            "body": "THREE is shouted in capitals; this breaks the naming of the other lines."
+          }
+        },
+        {
+          "type": "expect",
+          "from": "second.isError",
+          "equals": "false"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_submit",
+          "saveAs": "verdict",
+          "arguments": {
+            "verdict": "request_changes",
+            "body": "Two comments, one of them a blocker."
+          }
+        },
+        {
+          "type": "expect",
+          "from": "verdict.isError",
+          "equals": "false"
+        },
+        {
+          "type": "message",
+          "text": "Review done: 2 comments."
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Nothing to review."
+        }
+      ]
+    }
+  ]
+}

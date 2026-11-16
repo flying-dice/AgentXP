@@ -4,6 +4,7 @@ import type {
   SessionDto,
   SessionModeDto,
   SessionModelDto,
+  SessionRole,
   SessionStatus
 } from '@shared/models'
 
@@ -13,6 +14,8 @@ export interface NewSession {
   desktopId?: Id | null
   /** Working directory (VPath); default `AGENT_HOME`. */
   cwd?: string
+  /** Default `chat`. */
+  role?: SessionRole
 }
 
 export interface SessionRepository {

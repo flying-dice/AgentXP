@@ -1,0 +1,134 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "fix-redirect",
+  "description": "Reads src/auth/redirect.ts, asks to change it, writes the fix on Allow. Answers the same way on Deny.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "defaults": {
+    "stepMode": "auto"
+  },
+  "rules": [
+    {
+      "id": "greeting",
+      "match": {
+        "regex": "^(hi|hello|hey)\\b",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Hello! I am the assistant. Ask me to change something in your project."
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I will look at the sign-in code first.\n"
+        },
+        {
+          "type": "readFile",
+          "path": "{{cwd}}/src/auth/redirect.ts",
+          "saveAs": "redirect",
+          "label": "read redirect.ts"
+        },
+        {
+          "type": "message",
+          "text": "I read src/auth/redirect.ts: it always sends people to /home. I want to change that file.\n"
+        },
+        {
+          "type": "toolCall",
+          "id": "edit-1",
+          "title": "Change src/auth/redirect.ts",
+          "kind": "edit",
+          "status": "pending",
+          "rawInput": {
+            "path": "src/auth/redirect.ts"
+          },
+          "locations": [
+            {
+              "path": "{{cwd}}/src/auth/redirect.ts"
+            }
+          ],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/src/auth/redirect.ts",
+                "newText": "// Deep links survive sign-in: go back to the address in ?next=, but only inside this site.\nexport function afterLogin(url: string): string {\n  const next = new URL(url, 'http://app.local').searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/home'\n}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-1",
+          "title": "Change src/auth/redirect.ts",
+          "options": [
+            {
+              "optionId": "allow",
+              "name": "Allow",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "deny",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ],
+          "branches": {
+            "allow": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "in_progress"
+              },
+              {
+                "type": "writeFile",
+                "path": "{{cwd}}/src/auth/redirect.ts",
+                "content": "// Deep links survive sign-in: go back to the address in ?next=, but only inside this site.\nexport function afterLogin(url: string): string {\n  const next = new URL(url, 'http://app.local').searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/home'\n}\n"
+              },
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "completed"
+              },
+              {
+                "type": "message",
+                "text": "Done. I changed src/auth/redirect.ts so that the address after sign-in is kept. The work is finished."
+              }
+            ],
+            "deny": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "failed"
+              },
+              {
+                "type": "message",
+                "text": "Understood. I did not change any file."
+              }
+            ],
+            "cancelled": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "failed"
+              },
+              {
+                "type": "end",
+                "stopReason": "cancelled"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

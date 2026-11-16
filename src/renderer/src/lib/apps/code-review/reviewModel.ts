@@ -1,0 +1,105 @@
+/** Pure model of the Code Review app: rows, where comments hang, which comments a "send to chat" passes on. */
+import type { DiffLine, SplitRow } from '@shared/diff'
+import { changeRegions, fullDiffLines, fullSplitRows, marginBlocks, splitKinds, unifiedKinds, type ChangeRegion, type MarginBlock, type RowKind } from '@shared/windiff'
+import {
+  formatReviewPrompt,
+  threadsOf,
+  type ReviewChangeDto,
+  type ReviewFileDto,
+  type ReviewChangeStatus,
+  type ReviewCommentDto,
+  type ReviewStateDto
+} from '@shared/review'
+
+export type ReviewLayout = 'unified' | 'split'
+export type ReviewViewMode = 'outline' | 'expanded'
+
+export interface ReviewThread {
+  root: ReviewCommentDto
+  replies: ReviewCommentDto[]
+}
+
+export const STATUS_LETTER: Record<ReviewChangeStatus, string> = { modified: 'M', added: 'A', deleted: 'D', renamed: 'R', untracked: 'U' }
+export const STATUS_LABEL: Record<ReviewChangeStatus, string> = {
+  modified: 'Modified',
+  added: 'Added',
+  deleted: 'Deleted',
+  renamed: 'Renamed',
+  untracked: 'Untracked'
+}
+
+/** The row of a unified diff a comment hangs under (the row that shows its last line), or -1 when that line is not in the diff. */
+export function unifiedAnchor(lines: readonly DiffLine[], c: Pick<ReviewCommentDto, 'side' | 'lineEnd'>): number {
+  return lines.findIndex((l) => (c.side === 'old' ? l.oldNo === c.lineEnd : l.newNo === c.lineEnd))
+}
+
+/** The same for the side-by-side rows (old lines are on the left, new lines on the right). */
+export function splitAnchor(rows: readonly SplitRow[], c: Pick<ReviewCommentDto, 'side' | 'lineEnd'>): number {
+  return rows.findIndex((r) => (c.side === 'old' ? r.left?.oldNo === c.lineEnd : r.right?.newNo === c.lineEnd))
+}
+
+/** Groups the threads of one file under their rows; threads whose line is no longer in the diff are `orphans`. */
+export function placeThreads(threads: readonly ReviewThread[], anchor: (c: ReviewCommentDto) => number): { byRow: Map<number, ReviewThread[]>; orphans: ReviewThread[] } {
+  const byRow = new Map<number, ReviewThread[]>()
+  const orphans: ReviewThread[] = []
+  for (const thread of threads) {
+    const row = anchor(thread.root)
+    if (row < 0) orphans.push(thread)
+    else byRow.set(row, [...(byRow.get(row) ?? []), thread])
+  }
+  return { byRow, orphans }
+}
+
+export const fileThreads = (comments: readonly ReviewCommentDto[], path: string): ReviewThread[] => threadsOf(comments, path)
+
+/** Open comments per file path (the badge in the outline). */
+export function openCounts(comments: readonly ReviewCommentDto[]): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const c of comments) if (c.state === 'open') counts.set(c.path, (counts.get(c.path) ?? 0) + 1)
+  return counts
+}
+
+/** The file F7 / Shift+F7 goes to next: the neighbour of `path` in the list (wraps), or null for a single file. */
+export function neighbourFile(changes: readonly ReviewChangeDto[], path: string | null, direction: 1 | -1): string | null {
+  if (changes.length < 2) return null
+  const i = changes.findIndex((c) => c.path === path)
+  if (i < 0) return changes[direction === 1 ? 0 : changes.length - 1].path
+  return changes[(i + direction + changes.length) % changes.length].path
+}
+
+/** The comment ids "send to chat" passes on, and the prompt. `ids` = 'open': every open thread root; else those comments. */
+export function selectForSend(state: ReviewStateDto, ids: readonly number[] | 'open', baseRef?: string): { text: string; ids: number[] } {
+  const all = state.comments
+  const roots = ids === 'open' ? all.filter((c) => c.state === 'open' && c.parentId === null) : all.filter((c) => ids.includes(c.id))
+  if (roots.length === 0) return { text: '', ids: [] }
+  const replies = all.filter((c) => c.parentId !== null && roots.some((r) => r.id === c.parentId) && !roots.includes(c))
+  const text = formatReviewPrompt({ comments: roots, all, summary: state.summary, baseRef })
+  return { text, ids: [...roots, ...replies].map((c) => c.id) }
+}
+
+/** Counts of the comments by state, for the status bar. */
+export function commentCounts(comments: readonly ReviewCommentDto[]): { open: number; resolved: number; sent: number; total: number } {
+  const roots = comments.filter((c) => c.parentId === null)
+  return {
+    open: roots.filter((c) => c.state === 'open').length,
+    resolved: roots.filter((c) => c.state === 'resolved').length,
+    sent: roots.filter((c) => c.state === 'sent').length,
+    total: roots.length
+  }
+}
+
+/** Everything the expanded view draws for one file: both row lists, the margin blocks and the F7 regions of the active layout. */
+export interface FileView {
+  lines: DiffLine[]
+  split: SplitRow[]
+  kinds: RowKind[]
+  blocks: MarginBlock[]
+  regions: ChangeRegion[]
+}
+
+export function fileView(file: ReviewFileDto | null, layout: ReviewLayout): FileView {
+  const lines = file && !file.binary && !file.tooLarge ? fullDiffLines(file.oldText, file.newText) : []
+  const split = layout === 'split' ? fullSplitRows(lines) : []
+  const kinds = layout === 'split' ? splitKinds(split) : unifiedKinds(lines)
+  return { lines, split, kinds, blocks: marginBlocks(kinds), regions: changeRegions(kinds) }
+}

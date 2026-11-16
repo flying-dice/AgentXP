@@ -5,6 +5,7 @@
  */
 import { z } from 'zod'
 import { AGENT_OPENABLE_APPS, type ToolGroup } from '@shared/desktop'
+import { REVIEW_SEVERITIES, REVIEW_VERDICTS } from '@shared/review'
 import type { ToolContext, ToolResult } from './types'
 
 const app = z.enum(AGENT_OPENABLE_APPS)
@@ -21,7 +22,17 @@ export const DESKTOP_INSTRUCTIONS =
   'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more. ' +
   'UI you draw with a2ui_render appears where you choose with target: inline in the chat (short conversational forms), in a sidebar beside the chat ' +
   '(a companion panel), or in its own window (an app-like UI the user keeps open). Sidebar tabs and windows can be closed and reopened by the user, ' +
-  'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window.'
+  'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window. ' +
+  'If you are asked to do a code review, you are the reviewer of a Code Review window and act as a merge-request reviewer: ' +
+  'review_list_changes lists the changed files, review_read_diff shows one file with line numbers, review_add_comment leaves an inline comment ' +
+  '(a specific line, a severity of blocker, major, minor or nit, and what is wrong and why), and review_submit ends the review with a verdict and a summary. ' +
+  'Comment on real problems (bugs, missing tests, unclear code), not on style you cannot justify, and do not edit files while reviewing; the user passes your comments to a chat to fix. ' +
+  'In a chat pane (an aside: the small chat inside an app window, whose prompts carry `appContext` in the desktop state: windowId, app, the open file, the selection, the page) ' +
+  'keep your answers short and local to that app context, a few sentences or a short list: "explain this" means the selection or the open file in appContext. ' +
+  'Do not start side projects there; act only when asked, and pass `window` = appContext.windowId to tools that take a window (the browser_* tools drive that Browser window). ' +
+  'Using web apps (chat, mail, docs) in the Browser: the user signs in themselves in the Browser window and the session persists; you never type passwords or secrets. ' +
+  'Loop: browser_read (tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. browser_read pages through the whole document (follow nextOffset), ' +
+  'refs reset when the page navigates, and long lists load more when you browser_scroll, then read again.'
 
 const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
 
@@ -131,32 +142,101 @@ export const TOOL_DEFS = {
   },
   browser_navigate: {
     group: 'browser',
-    description: 'Load a web page (http or https) in a Browser window and wait until it has loaded.',
+    description:
+      'Load a web page (http or https) in a Browser window and wait until it has loaded. Using a web app (chat, mail, docs): navigate once, then loop browser_read (mode tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. The user signs in themselves in the window (the session is kept); never type passwords.',
     input: z.object({ url: z.string().min(1), window: windowId })
   },
   browser_read: {
     group: 'browser',
-    description: 'Read the page: title, address, visible text and a numbered list of links, buttons and inputs. Use the numbers as `ref` in browser_click and browser_type.',
-    input: z.object({ window: windowId })
+    description:
+      'Read the WHOLE page in pages of lines: all frames and shadow roots, content below the fold included (off-screen nodes are marked [off-screen]). mode "tree" (default) is an accessibility outline: role, name, value, state, and a [ref] on every interactive node; use the refs with browser_click, browser_type, browser_select, browser_scroll and browser_wait. mode "text" is plain readable text. When the result says nextOffset, call again with that offset to read on. Refs stay valid until the page navigates. Lazily loaded lists (older messages) only appear after browser_scroll: scroll, then read again.',
+    input: z.object({
+      mode: z.enum(['tree', 'text']).optional().describe('Default tree'),
+      offset: z.number().int().min(0).optional().describe('First line to return (from nextOffset); default 0'),
+      limit: z.number().int().min(1).max(500).optional().describe('Most lines per page; default 150 (a page also stops at about 12k characters)'),
+      window: windowId
+    })
+  },
+  browser_find: {
+    group: 'browser',
+    description:
+      'Find elements without reading the whole page: by visible `text` (matches names and values; returns the element around the text), or by ARIA `role` (textbox, button, link, tab, option, menuitem, listitem, ...) and optional `name` fragment. Returns refs with the text around each match. Use it to get the ref of a channel, a composer, a button or one message.',
+    input: z.object({
+      text: z.string().min(1).optional(),
+      role: z.string().min(1).optional(),
+      name: z.string().optional().describe('With role: part of the accessible name'),
+      limit: z.number().int().min(1).max(50).optional().describe('Default 20'),
+      window: windowId
+    })
   },
   browser_screenshot: {
     group: 'browser',
-    description: 'Take a PNG screenshot of the page as it is shown.',
+    description: 'Take a PNG screenshot of the page as it is shown (the visible part only). Prefer browser_read to know what is on the page.',
     input: z.object({ window: windowId })
   },
   browser_click: {
     group: 'browser',
-    description: 'Click the element numbered `ref` in the last browser_read.',
-    input: z.object({ ref: z.number().int().min(1), window: windowId })
+    description: 'Click the element `ref` (from browser_read or browser_find) with a real mouse click at the centre of its box, after scrolling it into view. Works on links, buttons, tabs, menu items and custom widgets. Then browser_wait or browser_read to see the result.',
+    input: z.object({
+      ref: z.number().int().min(1),
+      button: z.enum(['left', 'right', 'middle']).optional().describe('Default left'),
+      double: z.boolean().optional().describe('Double click'),
+      window: windowId
+    })
   },
   browser_type: {
     group: 'browser',
-    description: 'Type into the input numbered `ref` in the last browser_read, replacing its value; optionally press Enter.',
-    input: z.object({ ref: z.number().int().min(1), text: z.string(), submit: z.boolean().optional(), window: windowId })
+    description:
+      'Type text with real input events (works on inputs, textareas, rich-text and contenteditable composers, React forms). With `ref` it focuses that field first, without it it types into the element that has the focus. It REPLACES the content (selects all, then inserts); to add to the content press End first via browser_press. `submit` presses Enter afterwards (sends a message, runs a search). Newlines in `text` are inserted as typed; for a composer where Enter sends, use Shift+Enter via browser_press for line breaks. Password fields are refused.',
+    input: z.object({ ref: z.number().int().min(1).optional(), text: z.string(), submit: z.boolean().optional(), window: windowId })
+  },
+  browser_press: {
+    group: 'browser',
+    description:
+      'Press keys on the focused element. A chord joins keys with "+": "Enter", "Escape", "Tab", "ArrowDown", "Control+K" (quick switcher), "Shift+Enter", "Control+A", "F5". Separate chords with spaces to press them one after the other: "ArrowDown ArrowDown Enter". Use it to send with Enter, close dialogs with Escape, move in menus with arrows.',
+    input: z.object({ keys: z.string().min(1), window: windowId })
+  },
+  browser_scroll: {
+    group: 'browser',
+    description:
+      'Scroll with the mouse wheel: the page, or the scrollable container under `ref` (give the ref of the list or one of its items). `direction` up, down, left, right, top or bottom; `amount` in pixels (default 80% of the viewport). Scrolling up in a chat loads older messages; wait a moment and browser_read again.',
+    input: z.object({
+      direction: z.enum(['up', 'down', 'left', 'right', 'top', 'bottom']).optional().describe('Default down'),
+      amount: z.number().int().min(1).max(100000).optional(),
+      ref: z.number().int().min(1).optional(),
+      window: windowId
+    })
+  },
+  browser_wait: {
+    group: 'browser',
+    description:
+      'Wait until `text` appears anywhere on the page (all frames, shadow roots included), or until the element `ref` is visible again, or (with neither) until the page has finished loading. Gives up after `timeoutMs` (default 5000, at most 30000) and says so. Use it after clicking or sending, before reading.',
+    input: z.object({ text: z.string().min(1).optional(), ref: z.number().int().min(1).optional(), timeoutMs: z.number().int().min(100).max(30000).optional(), window: windowId })
+  },
+  browser_select: {
+    group: 'browser',
+    description: 'Choose an option of a native drop-down list (<select>) `ref` by its visible label or value. For custom drop-downs (role combobox, listbox) click the control, then click the option.',
+    input: z.object({ ref: z.number().int().min(1), option: z.string().min(1), window: windowId })
+  },
+  browser_tabs: {
+    group: 'browser',
+    description:
+      'Manage the tabs of a Browser window. action list: the tabs with their numbers (the active one is marked). new: open a tab (optional `url`) and make it active. switch: make tab number `tab` the active one; browser_* tools always act on the active tab. close: close tab number `tab` (default the active one).',
+    input: z.object({ action: z.enum(['list', 'new', 'switch', 'close']), url: z.string().optional(), tab: z.number().int().min(1).optional(), window: windowId })
   },
   browser_back: {
     group: 'browser',
     description: 'Go back one page in the Browser window.',
+    input: z.object({ window: windowId })
+  },
+  browser_forward: {
+    group: 'browser',
+    description: 'Go forward one page in the Browser window.',
+    input: z.object({ window: windowId })
+  },
+  browser_reload: {
+    group: 'browser',
+    description: 'Reload the page and wait until it has loaded. Refs from before the reload are no longer valid.',
     input: z.object({ window: windowId })
   },
   paint_draw: {
@@ -243,6 +323,35 @@ export const TOOL_DEFS = {
     group: 'recycle',
     description: 'Restore a reverted change: its file content is written back and recorded as a new change.',
     input: z.object({ id: z.number().int() })
+  },
+  review_list_changes: {
+    group: 'review',
+    description: 'List the changed files of the review (status, added and removed lines, open comments) against the review\'s base ref. Only works in the review session of a Code Review window.',
+    input: z.object({})
+  },
+  review_read_diff: {
+    group: 'review',
+    description:
+      'Read one changed file as a diff with line numbers: "+ 12 | text" is an added line (new line 12), "- 8 | text" a removed line (old line 8), "  12 | text" context. Comment on new lines with side "new", on removed lines with side "old".',
+    input: z.object({ path: z.string().min(1).describe('Path from review_list_changes (relative to the review folder)') })
+  },
+  review_add_comment: {
+    group: 'review',
+    description: 'Leave an inline review comment on a line (or line range) of a changed file, like a merge-request comment. Returns the comment id.',
+    input: z.object({
+      path: z.string().min(1).describe('Path from review_list_changes'),
+      line: z.number().int().min(1).describe('First line, numbered as in review_read_diff'),
+      endLine: z.number().int().min(1).optional().describe('Last line of a range; default: the same line'),
+      side: z.enum(['old', 'new']).optional().describe('"new" (default) for added and context lines, "old" for removed lines'),
+      severity: z.enum(REVIEW_SEVERITIES).optional().describe('blocker (must fix), major, minor (default) or nit'),
+      body: z.string().min(1).describe('What is wrong and why, and how to fix it'),
+      replyTo: z.number().int().optional().describe('The id of a comment to answer')
+    })
+  },
+  review_submit: {
+    group: 'review',
+    description: 'Finish the review with a verdict and a short summary. The user sees it as the banner of the Code Review window. Submitting again replaces the verdict.',
+    input: z.object({ verdict: z.enum(REVIEW_VERDICTS), body: z.string().describe('A short summary of the review') })
   }
 } as const satisfies Record<string, ToolDefinition>
 

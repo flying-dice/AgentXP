@@ -40,6 +40,7 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
   - USB Drives
   - Safely Remove
 - 9 - The Apps
+  - The Chat Pane
   - The Event Viewer
   - Adding an Agent
 - 10 - Windows That the Agent Draws
@@ -330,13 +331,14 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Code | Read and write files, open a file, show a line, and show a change | `code_open`, `code_reveal`, `code_show_diff` |
 | Notepad | Open and read text files, and write files | `notepad_open`, `notepad_read`, `fs/write_text_file` |
 | Terminal | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
-| Browser | Open web pages, read them, click, type, go back, and take a picture | `browser_navigate`, `browser_read`, `browser_click`, `browser_type`, `browser_back`, `browser_screenshot` |
+| Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
 | Agent Paint | Draw, read the picture, clear it, and resize it | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
 | WordPad | Open, read, and write documents | `wordpad_open`, `wordpad_read`, `wordpad_write` |
 | Sticky Notes | List, add, change, and remove notes, and keep a plan note | `notes_list`, `notes_add`, `notes_update`, `notes_remove` |
 | Event Viewer | Search the messages of the desktop | `events_query` |
 | Snipping Tool | Take a picture of the desktop or of one window | `screen_capture` |
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
+| Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
 
 The Chat, Control Centre, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
 
@@ -448,6 +450,7 @@ An app is a program that opens as a window on the desktop. Click **Start** to op
 The desktop has these apps:
 
 - **Chat** – Shows one chat with an agent. You write your messages here and follow the work of the agent.
+- **Chat pane** – A short chat at the right edge of every other app window. It knows what the window shows. See the section below.
 - **Explorer** – Shows the files on the drives. It shows what the agent did to each file.
 - **Code** – Shows code with colors, lists the changes of the agent, and lets you revert them.
 - **Git in Code** – Shows the git status of a project in the file tree: **M** is a changed file, **A** is an added file, **D** is a deleted file, **U** is a new file, and **!** is a conflict. A folder with a changed file below it has a dot. The status bar shows the branch name and how many commits you are ahead (↑) or behind (↓). A colored bar next to a line number shows a line that is new (green) or changed (blue). A red triangle shows deleted lines. To see the old lines, click the bar. Then click **Revert hunk** to bring the old lines back. To go to the next change, press **Alt+F5**.
@@ -462,6 +465,15 @@ The desktop has these apps:
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
 - **Task Manager** – Lists the chats, the agent processes, the terminals, and the context use. **End process** stops an agent process.
 - **Control Centre** – Sets the agents, the permissions, and the appearance of the desktop.
+- **Help and Support** – Shows the manual of each app. Press F1 to open the manual of the window that has focus. The manuals are in `manuals`.
+
+### The Chat Pane
+
+Every app window has a chat pane at its right edge. Use it to ask a short question about what you look at, for example "Explain this". The pane starts closed, as a thin strip. To open it, click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C.
+
+The agent sees the open file, the selection, or the page, depending on the app. It answers in a few sentences. The pane chat belongs to its window. When you close the window, Agent7 deletes the pane chat. Click **New conversation** to start again. The pane chat is not in your list of chats.
+
+The right-click items **Explain this**, **Send selection to chat**, and **Ask chat...** use the chat pane of the window. **Open in Chat window** starts a full chat instead. Chat and Code Review have no chat pane. The manual **Using the Chat Pane** has the details.
 
 ### The Event Viewer
 
@@ -544,6 +556,7 @@ You can do many tasks in Agent7 with the keyboard. The table below lists the sho
 | Ctrl+B | Make the selected text bold in WordPad |
 | Ctrl+I | Make the selected text italic in WordPad |
 | Ctrl+Z | Undo the last stroke in Agent Paint |
+| Ctrl+Shift+C | Show or hide the chat pane of the window that has the focus |
 
 The keys for Notepad, WordPad, and Agent Paint work when the window of that app has the focus.
 
@@ -581,6 +594,8 @@ Agent7 has three parts that talk to each other:
 - **Main process** – Starts agents with ACP, stores data in SQLite, and serves the files and terminals of each agent. It owns the desktops, the drives, and the permissions.
 - **AG-UI stream** – Sends each turn to the window as AG-UI events over Electron IPC. AG-UI is a protocol for agent user interfaces.
 - **Window** – Shows the desktop with the Windows 7 controls, and draws A2UI forms (in the chat, in the side pane, or in a `surface` window) with the official A2UI engine. The agent chooses with the `target` argument of `a2ui_render`: `inline`, `sidebar`, or `window`.
+
+The chat pane of an app window is a session with the role `aside`. The window owns it: Agent7 creates it with the first message and deletes it when the window closes. Chapter 9 describes it for users and `docs/DESKTOP_DESIGN.md` section 12 describes how it works.
 
 The main process gives the agent an MCP server named `agent7`. The server lists only the tools of the open apps and tells the agent when the list changes. Agent7 serves the file and terminal requests of ACP in the same way. It allows only the paths on `C:` and on the USB drives.
 

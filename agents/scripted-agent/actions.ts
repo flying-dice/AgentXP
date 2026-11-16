@@ -113,6 +113,15 @@ async function callMcp(ctx: ActionContext, step: Of<'mcpCall'>): Promise<void> {
   }
 }
 
+/** Stores the first group (else the whole match) of a regex run on a variable: how a script picks a ref out of a tool result. */
+function extractVar(ctx: ActionContext, step: Of<'extract'>): void {
+  const value = ctx.vars.get(step.from)
+  if (value === undefined) throw new RequestError(INTERNAL_ERROR, `extract failed: variable "${step.from}" does not exist (known: ${[...ctx.vars.keys()].join(', ') || 'none'})`)
+  const match = new RegExp(step.regex, step.flags).exec(value)
+  if (!match) throw new RequestError(INTERNAL_ERROR, `extract failed: /${step.regex}/ does not match variable "${step.from}"; it is ${JSON.stringify(value.slice(0, 300))}`)
+  ctx.vars.set(step.saveAs, match[1] ?? match[0])
+}
+
 function expectVar(ctx: ActionContext, step: Of<'expect'>): void {
   const value = ctx.vars.get(step.from)
   const fail = (why: string): never => {
@@ -182,6 +191,7 @@ export const ACTIONS: Actions = {
     }),
   sessionInfo: (step, ctx) => update(ctx, { sessionUpdate: 'session_info_update', title: step.title }),
   wait: (step, ctx) => sleep(step.ms, ctx.signal),
+  extract: async (step, ctx) => extractVar(ctx, step),
   expect: async (step, ctx) => expectVar(ctx, step),
   error: async (step) => {
     throw new RequestError(step.code ?? INTERNAL_ERROR, step.message)

@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "five-edits",
+  "description": "Writes five files (five agent changes).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Updating five files.\n"
+        },
+        {
+          "type": "writeFile",
+          "path": "{{cwd}}/src/auth/login.ts",
+          "content": "import { afterLogin } from './redirect'\n\nexport function login(user: string, password: string, url: string): string | null {\n  if (!user.trim() || !password) return null // the agent trims the user name\n  return afterLogin(url)\n}\n"
+        },
+        {
+          "type": "writeFile",
+          "path": "{{cwd}}/src/auth/redirect.ts",
+          "content": "// Deep links survive sign-in: go back to the address in ?next=, but only inside this site.\nexport function afterLogin(url: string): string {\n  const next = new URL(url, 'http://app.local').searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/home'\n}\n"
+        },
+        {
+          "type": "writeFile",
+          "path": "{{cwd}}/src/auth/session.ts",
+          "content": "export const sessionMinutes = 30\nexport const refreshMinutes = 5\nexport const idleMinutes = 15\n"
+        },
+        {
+          "type": "writeFile",
+          "path": "{{cwd}}/README.md",
+          "content": "# login-app\n\nA small sign-in page.\n\n## Deep links\n\nThe address after sign-in is kept.\n\nSee src/auth/redirect.ts.\n"
+        },
+        {
+          "type": "writeFile",
+          "path": "{{cwd}}/tests/redirect.test.ts",
+          "content": "import { afterLogin } from '../src/auth/redirect'\n\nconsole.assert(afterLogin('/login?next=/orders') === '/orders')\nconsole.assert(afterLogin('/login') === '/home')\n"
+        },
+        {
+          "type": "message",
+          "text": "I changed five files."
+        }
+      ]
+    }
+  ]
+}

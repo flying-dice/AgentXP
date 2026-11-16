@@ -9,6 +9,14 @@
   import TextBox from '../../kit/atoms/TextBox.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { copyText } from '../shared/contextItems'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
   import Dialog from '../../kit/organisms/Dialog.svelte'
@@ -20,6 +28,7 @@
   import TreeView from '../../kit/organisms/TreeView.svelte'
   import type { TreeNodeData } from '../../kit/organisms/TreeView'
   import { showMessageBox } from '../../kit/organisms/messageBox'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, logTree, nodeScope, summaryOf } from './eventModel'
 
@@ -149,6 +158,65 @@
     { id: 'details', title: 'Details' }
   ]
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'event-viewer')
+  const ctx = new ContextMenu()
+
+  const copyEvent = (): void => void (current && copyText(`${generalLines(current, chatTitle(current.sessionId)).map(([k, v]) => `${k}: ${v}`).join('\n')}\n\n${current.payload}`))
+
+  // The chat pane knows the selected row.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    level,
+    filter: text || undefined,
+    visibleEvents: visible.length,
+    selectedRow: current ? { id: current.id, at: current.at, source: current.source, direction: current.direction, level: current.level, name: current.name, payload: current.payload.slice(0, 2000) } : null
+  }))
+
+  /** The row actions of the Actions pane, plus Copy event for the selected row. */
+  const contextItems = (): MenuItemDef[] => [
+    { id: 'event-viewer-ctx-copy', testid: 'event-viewer-ctx-copy', label: '&Copy event', icon: 'copy', disabled: !current, action: copyEvent },
+    { separator: true },
+    { id: 'event-viewer-ctx-find', testid: 'event-viewer-ctx-find', label: '&Find...', icon: 'search', action: () => (finding = '') },
+    { id: 'event-viewer-ctx-filter', testid: 'event-viewer-ctx-filter', label: 'Fi&lter Current Log...', icon: 'options', action: () => (filtering = { level, text }) },
+    { id: 'event-viewer-ctx-refresh', testid: 'event-viewer-ctx-refresh', label: '&Refresh', icon: 'refresh', shortcut: 'F5', action: () => void refresh() },
+    { separator: true },
+    { id: 'event-viewer-ctx-clear', testid: 'event-viewer-ctx-clear', label: 'Clear Lo&g...', icon: 'delete', action: () => void clearLog() }
+  ]
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      { label: '&File', items: [{ id: 'clear', testid: 'event-viewer-menu-clear', label: 'Clear &Log...', action: () => void clearLog() }, ...closeItems('event-viewer', () => void host.closeWindow(win.id))] },
+      {
+        label: '&Edit',
+        items: [
+          { id: 'copy', testid: 'event-viewer-menu-copy', label: '&Copy event', shortcut: 'Ctrl+C', disabled: !current, action: copyEvent },
+          { id: 'find', testid: 'event-viewer-menu-find', label: '&Find...', shortcut: 'Ctrl+F', action: () => (finding = '') }
+        ]
+      },
+      {
+        label: '&View',
+        items: [
+          { id: 'refresh', testid: 'event-viewer-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void refresh() },
+          { id: 'filter', testid: 'event-viewer-menu-filter', label: 'Fi&lter Current Log...', action: () => (filtering = { level, text }) },
+          { id: 'clear-filter', testid: 'event-viewer-menu-clear-filter', label: 'Clear Fi&lter', disabled: !filterActive, action: () => ((level = 'all'), (text = '')) },
+          { separator: true },
+          { id: 'autoscroll', testid: 'event-viewer-menu-autoscroll', label: '&Autoscroll', checked: autoscroll, action: () => (autoscroll = !autoscroll) },
+          { separator: true },
+          help.paneItem(win.id)
+        ]
+      },
+      help.menu()
+    ])
+  )
+
+  function onkeydown(event: KeyboardEvent): void {
+    if (event.key === 'F5') {
+      event.preventDefault()
+      void refresh()
+    } else ctx.key(event, contextItems)
+  }
+
   const actions: { label: string; icon: 'search' | 'delete' | 'refresh' | 'options'; run: () => void }[] = [
     { label: 'Filter Current Log…', icon: 'options', run: () => (filtering = { level, text }) },
     { label: 'Clear Log', icon: 'delete', run: () => void clearLog() },
@@ -157,7 +225,9 @@
   ]
 </script>
 
-<div class="ev" data-testid="event-viewer-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="ev" data-testid="event-viewer-app" {onkeydown} oncontextmenu={(e) => ctx.show(e, contextItems())}>
+  <MenuStrip {menus} aria-label="Event Viewer menu" />
   <div class="body">
     <SplitContainer splitterDistance={176} panel1MinSize={120} panel2MinSize={300} fixedPanel="panel1">
       {#snippet panel1()}
@@ -176,7 +246,7 @@
                     <CheckBox testid="event-viewer-autoscroll" bind:checked={autoscroll}>Autoscroll</CheckBox>
                   </div>
                   <div class="grid" bind:this={gridEl}>
-                    <ListView testid="event-viewer-list" {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? 'No events.'} />
+                    <ListView testid="event-viewer-list" {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? 'No events.'} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} />
                   </div>
                 </div>
               {/snippet}
@@ -225,6 +295,8 @@
     <StatusStripLabel testid="event-viewer-total" text="Events: {events.length}" borders={['left']} width={100} />
   </StatusStrip>
 
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Event Viewer" />
+  <AppAbout {help} />
   {#if filtering}
     <Dialog testid="event-viewer-filter-dialog" title="Filter Current Log" iconName="options" width="360px" contained onclose={() => (filtering = null)}>
       <div class="filter">

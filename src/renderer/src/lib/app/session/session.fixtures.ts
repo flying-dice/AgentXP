@@ -20,6 +20,7 @@ export const session: SessionDto = {
   id: 1,
   desktopId: 1,
   cwd: 'E:\\',
+  role: 'chat',
   agentId: 1,
   title: 'Fix login redirect bug',
   status: 'idle',

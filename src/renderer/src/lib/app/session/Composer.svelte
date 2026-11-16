@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick, untrack } from 'svelte'
   import type { SessionModeDto } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
@@ -19,6 +20,14 @@
     onmode?: (modeId: string) => void
     /** Native file picker; resolves to absolute paths (empty when cancelled). */
     pickFiles?: () => Promise<string[]>
+    /**
+     * Fills the box (and focuses it) when `id` is one the box has not applied yet; without `text` it only focuses.
+     * The host (the chat pane: "Ask chat...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
+     */
+    prefill?: { id: number; text?: string } | null
+    onprefilled?: (id: number) => void
+    /** A short box for short exchanges (the chat pane of an app window). */
+    dense?: boolean
   }
 
   let {
@@ -30,13 +39,31 @@
     onsend,
     oncancel,
     onmode,
-    pickFiles
+    pickFiles,
+    prefill = null,
+    onprefilled,
+    dense = false
   }: Props = $props()
 
   let draft = $state('')
   let attached = $state<string[]>([])
   let includeFile = $state(true)
   let input = $state<HTMLInputElement | HTMLTextAreaElement | null>(null)
+
+  let appliedPrefill = 0
+  $effect(() => {
+    const request = prefill
+    if (!request || request.id === appliedPrefill) return
+    appliedPrefill = request.id
+    untrack(() => {
+      if (request.text !== undefined) draft = request.text
+      void tick().then(() => {
+        input?.focus()
+        if (request.text !== undefined) input?.setSelectionRange(draft.length, draft.length)
+        onprefilled?.(request.id)
+      })
+    })
+  })
 
   const canSend = $derived(!running && (draft.trim() !== '' || attached.length > 0))
   const modeItems = $derived(modes.map((m) => ({ value: m.id, label: m.name })))
@@ -62,7 +89,7 @@
   }
 </script>
 
-<div class="composer" data-testid="chat-composer">
+<div class="composer" class:dense data-testid="chat-composer">
   <label class="prompt" for="composer-input">
     Message to {agentName} <span class="hint">(Enter to send, Shift+Enter for a new line)</span>
   </label>
@@ -114,6 +141,19 @@
     flex-wrap: wrap;
     gap: 4px;
     margin-bottom: 4px;
+  }
+  .composer.dense {
+    margin-top: 2px;
+    padding: 4px;
+  }
+  .composer.dense .prompt {
+    margin-bottom: 2px;
+  }
+  .composer.dense .hint {
+    display: none;
+  }
+  .composer.dense :global(.input) {
+    height: 44px;
   }
   .composer :global(.input) {
     display: block;

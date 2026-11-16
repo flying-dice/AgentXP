@@ -989,6 +989,47 @@
           "type": "object",
           "properties": {
             "type": {
+              "const": "extract"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "regex": {
+              "type": "string"
+            },
+            "saveAs": {
+              "type": "string"
+            },
+            "flags": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "from",
+            "regex",
+            "saveAs"
+          ],
+          "title": "extract"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
               "const": "expect"
             },
             "step": {

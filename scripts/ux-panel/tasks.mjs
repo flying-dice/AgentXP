@@ -1,0 +1,56 @@
+// Task id -> start-state preset (presets/*.mjs) and its options. Every task of docs/ux/tasks.md is listed.
+// `variant` tasks that tasks.md describes as several runs get a suffix (T18.1-inline, T18.1-sidebar, T18.1-window).
+export const TASKS = {
+  'T01.1': { preset: 'empty' },
+  'T02.1': { preset: 'empty-folder-picker' },
+  'T02.2': { preset: 'one-named-desktop' },
+  'T03.1': { preset: 'project-desktop', options: { picker: 'docsSite' } },
+  'T04.1': { preset: 'project-desktop', options: { script: 'demo' } },
+  'T04.2': { preset: 'closed-chat' },
+  'T05.1': { preset: 'chat-open', options: { script: 'fix-redirect', allowAll: true } },
+  'T05.2': { preset: 'agent-running' },
+  'T06.1': { preset: 'pending-approval', options: { script: 'fix-redirect' } },
+  'T06.2': { preset: 'pending-approval', options: { script: 'run-tests', policy: { terminal: 'ask' }, prompt: 'Run the tests' } },
+  'T06.3': { preset: 'chat-open', options: { script: 'run-tests', policy: { terminal: 'allow' } } },
+  'T07.1': { preset: 'two-chats-pending' },
+  'T08.1': { preset: 'changes-to-review' },
+  'T08.2': { preset: 'changes-to-review', options: { script: 'five-edits', git: true } },
+  'T09.1': { preset: 'recycled-change' },
+  'T10.1': { preset: 'project-desktop', options: { open: ['terminal'] } },
+  'T10.2': { preset: 'project-desktop', options: { open: ['explorer', 'browser'] } },
+  'T11.1': { preset: 'agent-running' },
+  'T11.2': { preset: 'chat-open', options: { script: 'demo', allowAll: true } },
+  'T11.3': { preset: 'paused-desktop' },
+  'T12.1': { preset: 'project-desktop', options: { projects: ['loginApp', 'docsSite'] } },
+  'T12.2': { preset: 'eject-mid-job' },
+  'T13.1': { preset: 'long-turn-running' },
+  'T13.2': { preset: 'disconnected-pending' },
+  'T14.1': { preset: 'four-desktops' },
+  'T14.2': { preset: 'three-desktops' },
+  'T15.1': { preset: 'three-desktops', options: { rich: true } },
+  'T16.1': { preset: 'project-desktop', options: { policy: { 'fs.write': 'allow' } } },
+  'T16.2': { preset: 'project-desktop' },
+  'T17.1': { preset: 'project-desktop', options: { agentFile: true } },
+  'T17.2': { preset: 'bad-default-agent' },
+  'T18.1': { preset: 'a2ui', options: { variant: 'inline' } },
+  'T18.1-inline': { preset: 'a2ui', options: { variant: 'inline' } },
+  'T18.1-sidebar': { preset: 'a2ui', options: { variant: 'sidebar' } },
+  'T18.1-window': { preset: 'a2ui', options: { variant: 'window' } },
+  'T18.2': { preset: 'a2ui', options: { variant: 'window', closeWindow: true } },
+  'T19.1': { preset: 'project-desktop' },
+  'T19.2': { preset: 'project-desktop', options: { open: ['browser'], browserUrl: 'http://127.0.0.1:9/' } },
+  'T20.1': { preset: 'eject-mid-job', options: { keepEjected: true } },
+  'T20.2': { preset: 'long-turn-running', options: { taskManagerClosed: true } },
+  'T21.1': { preset: 'keyboard-only' },
+  'T22.1': { preset: 'project-desktop', options: { open: ['explorer'] } },
+  'T22.2': { preset: 'chat-open', options: { script: 'demo' } },
+  'T23.1': { preset: 'crashed-agent' },
+  'T23.2': { preset: 'chat-open', options: { script: 'flaky' } },
+  'T24.1': { preset: 'project-desktop', options: { git: true, modifyGit: true, open: ['code'] } },
+  'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } }
+}
+
+/** Short notes the facilitator must hand to the panelist when a start state needs a spoken detail. */
+export const TASK_NOTES = {
+  'T19.1': 'The test page is at http://127.0.0.1:4173/ (no real network). Tell the panelist to use that address where the task says example.com.'
+}

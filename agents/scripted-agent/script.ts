@@ -60,6 +60,7 @@ export type Step = StepCommon &
     | { type: 'availableCommands'; commands: CommandSpec[] }
     | { type: 'sessionInfo'; title: string }
     | { type: 'wait'; ms: number }
+    | { type: 'extract'; from: string; regex: string; saveAs: string; flags?: string }
     | { type: 'expect'; from: string; contains?: string; equals?: string; regex?: string; message?: string }
     | { type: 'error'; message: string; code?: number }
     | { type: 'end'; stopReason: StopReason }
@@ -107,7 +108,7 @@ export interface Script {
 
 export const STEP_TYPES: readonly StepType[] = [
   'message', 'thought', 'plan', 'toolCall', 'toolCallUpdate', 'requestPermission', 'readFile', 'writeFile', 'terminal',
-  'mcpCall', 'modeChange', 'usage', 'availableCommands', 'sessionInfo', 'wait', 'expect', 'error', 'end'
+  'mcpCall', 'modeChange', 'usage', 'availableCommands', 'sessionInfo', 'wait', 'extract', 'expect', 'error', 'end'
 ]
 const STOP_REASONS: readonly StopReason[] = ['end_turn', 'max_tokens', 'max_turn_requests', 'refusal', 'cancelled']
 const TOOL_KINDS: readonly ToolKind[] = ['read', 'edit', 'delete', 'move', 'search', 'execute', 'think', 'fetch', 'switch_mode', 'other']
@@ -245,6 +246,7 @@ const STEP_FIELDS: Record<StepType, Spec> = {
   availableCommands: { 'commands!': commandList },
   sessionInfo: { 'title!': 'string' },
   wait: { 'ms!': 'nonneg' },
+  extract: { 'from!': 'string', 'regex!': regexText, 'saveAs!': 'string', flags: 'string' },
   expect: { 'from!': 'string', contains: 'string', equals: 'string', regex: regexText, message: 'string' },
   error: { 'message!': 'string', code: 'int' },
   end: { 'stopReason!': STOP_REASONS }

@@ -1,10 +1,17 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
+  import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import TextBox from '../../kit/atoms/TextBox.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
-  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { askChatItems, selectionLines, textareaOps } from '../shared/contextItems'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
@@ -17,6 +24,7 @@
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
   import { joinVPath, normaliseVPath, vpathName, vpathParent } from '@shared/vfs'
   import { errorText } from '../shared/listing'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { headingAtLine, insertLink, lineOf, toggleBullets, toggleCode, toggleHeading, toggleNumbers, wrapSelection, type Edit } from './markdownEdit'
 
@@ -34,9 +42,9 @@
   let reader = $state<HTMLDivElement | null>(null)
   let heading = $state<string | null>(null)
   let caretLine = $state(1)
-  let menuOpen = $state(false)
-  let menuX = $state(0)
-  let menuY = $state(0)
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'wordpad')
+  const ctx = new ContextMenu()
 
   const dirty = $derived(text !== original)
   const sync = new ViewSync<{ path: string | null; mode: string }>((v) => JSON.stringify([v.path, v.mode]))
@@ -202,13 +210,73 @@
   const newDocument = (): Promise<void> => confirmDiscard().then((ok) => (ok ? load(null) : undefined))
   const openDocument = (): Promise<void> => confirmDiscard().then((ok) => void (ok && (picking = true)))
 
-  const menu = $derived<MenuItemDef[]>([
-    { label: '&New', shortcut: 'Ctrl+N', action: () => void newDocument() },
-    { label: '&Open...', shortcut: 'Ctrl+O', action: () => void openDocument() },
-    { label: '&Save', shortcut: 'Ctrl+S', disabled: !dirty && path !== null, action: () => void save() },
-    { separator: true },
-    { label: 'E&xit', action: () => void host.closeWindow(win.id) }
-  ])
+  const textOps = textareaOps(() => area)
+  /** The edit operations of the source; in read mode Copy and Select All work on the formatted document. */
+  const ops = {
+    ...textOps,
+    copy: () => (area ? textOps.copy() : document.execCommand('copy')),
+    selectAll: () => {
+      if (area) return textOps.selectAll()
+      if (reader) window.getSelection()?.selectAllChildren(reader)
+    }
+  }
+  const selectedText = (): string => (area ? text.slice(Math.min(area.selectionStart, area.selectionEnd), Math.max(area.selectionStart, area.selectionEnd)) : (window.getSelection()?.toString() ?? ''))
+
+  function ask(kind: AskChatRequest['kind'], selected: string): void {
+    void host.askChat({
+      app: 'wordpad',
+      windowId: win.id,
+      kind,
+      ...(selected ? { text: selected } : {}),
+      ...(area && selected ? { range: selectionLines(text, area.selectionStart, area.selectionEnd) } : {}),
+      ...(path ? { path } : {})
+    })
+  }
+
+  const readOnly = (): boolean => mode !== 'edit'
+
+  // The chat pane knows the document and the selection.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => {
+    const selected = selectedText()
+    return {
+      openFile: path,
+      mode,
+      unsavedChanges: dirty,
+      ...(heading ? { visibleHeading: heading } : {}),
+      ...selectionContext(selected, area && selected ? selectionLines(text, area.selectionStart, area.selectionEnd) : null)
+    }
+  })
+  const contextItems = (): MenuItemDef[] => {
+    const selected = selectedText()
+    const hasSelection = selected !== ''
+    return [...editItems('wordpad-ctx', mode === 'edit' ? ops : { copy: ops.copy, selectAll: ops.selectAll }, { hasSelection, readOnly: readOnly() }), ...askChatItems('wordpad', { hasSelection, ask: (kind) => ask(kind, selected) })]
+  }
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      {
+        label: '&File',
+        items: [
+          { id: 'new', testid: 'wordpad-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newDocument() },
+          { id: 'open', testid: 'wordpad-menu-open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void openDocument() },
+          { id: 'save', testid: 'wordpad-menu-save', label: '&Save', shortcut: 'Ctrl+S', disabled: !dirty && path !== null, action: () => void save() },
+          ...closeItems('wordpad', () => void host.closeWindow(win.id))
+        ]
+      },
+      { label: '&Edit', items: editItems('wordpad-menu', mode === 'edit' ? ops : { copy: ops.copy, selectAll: ops.selectAll }, { hasSelection: true, readOnly: readOnly() }) },
+      {
+        label: '&View',
+        items: [
+          { id: 'read', testid: 'wordpad-menu-read', label: '&Read', radio: true, checked: mode === 'read', action: () => setMode('read') },
+          { id: 'edit', testid: 'wordpad-menu-edit', label: '&Edit source', radio: true, checked: mode === 'edit', action: () => setMode('edit') },
+          { separator: true },
+          help.paneItem(win.id)
+        ]
+      },
+      help.menu()
+    ])
+  )
 
   /** Ctrl+N and Ctrl+O work wherever the focus is inside the focused WordPad window. */
   function onWindowKey(event: KeyboardEvent): void {
@@ -241,20 +309,11 @@
 <svelte:window onkeydown={onWindowKey} />
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="wordpad" data-testid="wordpad-app" role="application" aria-label="WordPad" tabindex="-1" {onkeydown}>
-  <div class="tabs">
-    <button
-      type="button"
-      class="appbtn"
-      onclick={(e) => {
-        const r = e.currentTarget.getBoundingClientRect()
-        menuX = r.left
-        menuY = r.bottom
-        menuOpen = true
-      }}>WordPad</button
-    >
-    <span class="tab on">Home</span>
-  </div>
+<div class="wordpad" data-testid="wordpad-app" role="application" aria-label="WordPad" tabindex="-1" onkeydown={(e) => {
+    ctx.key(e, contextItems)
+    onkeydown(e)
+  }} oncontextmenu={(e) => ctx.show(e, contextItems())}>
+  <MenuStrip {menus} aria-label="WordPad menu" />
   <ToolStrip aria-label="Formatting">
     <ToolStripButton data-testid="wordpad-mode-read" text="Read" checked={mode === 'read'} onclick={() => setMode('read')} title="Show the formatted document" />
     <ToolStripButton data-testid="wordpad-mode-edit" text="Edit" checked={mode === 'edit'} onclick={() => setMode('edit')} title="Edit the markdown source" />
@@ -300,7 +359,8 @@
     <StatusStripLabel text="{words} word{words === 1 ? '' : 's'}" borders={['left']} width={90} />
     <StatusStripLabel text={heading ? `§ ${heading}` : ''} borders={['left']} width={170} />
   </StatusStrip>
-  <ContextMenuStrip items={menu} bind:open={menuOpen} x={menuX} y={menuY} label="WordPad menu" />
+  <ContextMenuStrip items={ctx.items} bind:open={ctx.open} x={ctx.x} y={ctx.y} label="WordPad" />
+  <AppAbout {help} />
   {#if picking}
     <OpenFileDialog
       api={host.api}
@@ -336,42 +396,6 @@
     flex-direction: column;
     background: var(--w7-face);
     outline: 0;
-  }
-  .tabs {
-    flex: none;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 24px;
-    padding: 0 4px;
-    background: linear-gradient(#f7faff, #dfe9f6);
-  }
-  .appbtn {
-    align-self: center;
-    height: 19px;
-    margin-right: 6px;
-    padding: 0 14px;
-    border: 1px solid #1e4f8a;
-    border-radius: 3px 3px 0 0;
-    background: linear-gradient(#5b9be0, #2a6cc0 48%, #1f5cae 50%, #3d86d8);
-    color: #fff;
-    font: inherit;
-    font-weight: 600;
-    text-shadow: 0 0 2px rgba(0, 30, 80, 0.6);
-    cursor: default;
-  }
-  .appbtn:hover {
-    filter: brightness(1.12);
-  }
-  .tab {
-    padding: 2px 12px 3px;
-    color: #1e3287;
-  }
-  .tab.on {
-    border: 1px solid #a5b9d5;
-    border-bottom: 0;
-    border-radius: 3px 3px 0 0;
-    background: linear-gradient(#fdfeff, #e6eef9);
   }
   .sep {
     width: 1px;

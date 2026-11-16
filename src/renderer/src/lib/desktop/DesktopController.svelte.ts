@@ -2,8 +2,10 @@ import type { Agent7Api } from '@shared/ipc'
 import type { Id, SessionDto } from '@shared/models'
 import {
   DESKTOP_CONTEXT_DESCRIPTION,
+  supportsAside,
   type AppView,
   type AppWindowState,
+  type AskChatRequest,
   type Bounds,
   type DesktopState,
   type OpenWindowInput,
@@ -12,6 +14,7 @@ import {
 } from '@shared/desktop'
 import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
+import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
@@ -20,6 +23,7 @@ import { isBusy } from '../app/sessionStatus'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
 import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
 import type { PendingApproval } from './approval'
+import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
 import { nextFocus, raise } from './windowOrder'
@@ -102,6 +106,15 @@ export class DesktopController implements DesktopHost {
   balloon = $state.raw<Balloon | null>(null)
   /** The Safely Remove menu of the tray icon is open. */
   usbMenuOpen = $state(false)
+  /** The chat pane of each window: collapsed or open, and its width (remembered in localStorage per window). */
+  panes = $state.raw<Record<Id, PaneState>>({})
+  /** A draft to put into a window's pane composer ("Ask chat..."); the composer reports it applied. */
+  prefills = $state.raw<Record<Id, { id: number; text?: string }>>({})
+  /** What each app registered for its pane (`setContext`); not reactive: it is read when a prompt is sent. */
+  private readonly contexts = new Map<Id, () => Record<string, unknown> | null | undefined>()
+  /** Which window an aside session belongs to, known as soon as `openAside` answers (before `desktop.changed`). */
+  private readonly asideWindows = new Map<Id, Id>()
+  private prefillSeq = 0
 
   get state(): DesktopState {
     return this.current ?? emptyState()
@@ -113,12 +126,16 @@ export class DesktopController implements DesktopHost {
     const id = this.state.focusedWindowId
     return this.state.windows.find((w) => w.id === id) ?? null
   }
-  /** Chats of this desktop, newest first. */
-  get chats(): SessionDto[] {
+  /** Every session of this desktop (chats, reviewers and asides), newest first: what runs, what asks for approval. */
+  get allSessions(): SessionDto[] {
     return this.sessions.items.filter((s) => s.desktopId === this.state.desktopId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }
+  /** Chats (role `chat`) of this desktop, newest first. */
+  get chats(): SessionDto[] {
+    return this.sessions.items.filter((s) => s.desktopId === this.state.desktopId && s.role === 'chat').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  }
   get activityInputs(): ChatActivityInput[] {
-    return this.chats.flatMap((s): ChatActivityInput[] => {
+    return this.allSessions.flatMap((s): ChatActivityInput[] => {
       const store = this.inbox.stores.get(s.id)
       return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: store.state.session.status === 'closed' ? s.status : store.state.session.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
@@ -126,7 +143,7 @@ export class DesktopController implements DesktopHost {
   /** "Read src/a.ts", "Waiting for approval" or null (idle). */
   get working(): string | null {
     const inputs = this.activityInputs
-    return workingText(inputs.length ? inputs : this.chats.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
+    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
   }
   get feed(): FeedItem[] {
     return recentToolCalls(this.activityInputs, 8)
@@ -141,7 +158,7 @@ export class DesktopController implements DesktopHost {
     return { title: session?.title ?? null, used, size, ratio: size > 0 ? Math.min(1, used / size) : 0 }
   }
   get busy(): boolean {
-    return this.chats.some((s) => isBusy(s.status))
+    return this.allSessions.some((s) => isBusy(s.status))
   }
 
   private readonly views: KeyedDebouncer<Id, AppView>
@@ -161,7 +178,7 @@ export class DesktopController implements DesktopHost {
 
   private createStore(id: Id): SessionAgentStore {
     const store = new SessionAgentStore(id, this.api.agui)
-    store.contextProvider = () => [{ description: DESKTOP_CONTEXT_DESCRIPTION, value: JSON.stringify(this.state) }]
+    store.contextProvider = () => [{ description: DESKTOP_CONTEXT_DESCRIPTION, value: JSON.stringify(this.contextFor(id)) }]
     void store.connect()
     return store
   }
@@ -172,7 +189,7 @@ export class DesktopController implements DesktopHost {
     this.started = true
     this.offs = [
       this.api.on('desktop.changed', (s) => this.apply(s)),
-      this.sessions.start(this.api, (id) => this.inbox.unregister(id)),
+      this.sessions.start(this.api, (id) => this.forgetSession(id)),
       this.api.on('session.changed', () => this.syncStores()),
       this.api.on('status.message', ({ text }) => this.pushMessage(text)),
       this.api.on('recycle.changed', () => void this.refreshRecycle()),
@@ -258,8 +275,12 @@ export class DesktopController implements DesktopHost {
 
   /** Opens a store for every chat that has a window or is busy, so approvals of hidden chats still show up. */
   syncStores(): void {
-    for (const w of this.state.windows) if (w.view.app === 'chat' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
-    for (const s of this.chats) if (isBusy(s.status)) this.inbox.storeFor(s.id)
+    for (const w of this.state.windows) {
+      if (w.view.app === 'chat' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
+      // A review session's approvals (the reviewer may ask to read files) show up in the Action Center too.
+      else if (w.view.app === 'code-review' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
+    }
+    for (const s of this.allSessions) if (isBusy(s.status)) this.inbox.storeFor(s.id)
   }
 
   private pushMessage(text: string): void {
@@ -401,6 +422,136 @@ export class DesktopController implements DesktopHost {
     await this.newChatIn(cwd)
   }
 
+  /**
+   * "Ask chat about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
+   * "Send selection to chat" send it, "Ask chat..." fills the composer so the user adds the question. A window without
+   * a pane (or one that is gone) starts a full chat instead, like `askChatWindow`.
+   */
+  async askChat(request: AskChatRequest): Promise<void> {
+    const window = this.state.windows.find((w) => w.id === request.windowId)
+    if (!window || !supportsAside(window.app) || request.kind === 'window') return this.askChatWindow(request)
+    this.setChatPane(window.id, true)
+    if (request.kind === 'ask') {
+      this.prefillPane(window.id, askChatDraft(request))
+      return
+    }
+    const sessionId = await this.openAside(window.id)
+    const store = this.inbox.storeFor(sessionId) as Partial<Pick<SessionAgentStore, 'send' | 'running' | 'whenConnected'>>
+    await store.whenConnected?.()
+    if (store.running) this.prefillPane(window.id, askChatPrompt(request)) // a turn is running: keep the text for the user to send
+    else await store.send?.(askChatPrompt(request))
+  }
+
+  /** "Open in Chat window": a new chat on the drive of the request (or home) gets the prompt and its window opens. */
+  async askChatWindow(request: AskChatRequest): Promise<void> {
+    const cwd = askChatCwd(request, this.state.windows, this.state.home)
+    const window = await this.newChatIn(cwd)
+    if (window.view.app !== 'chat') return
+    const store = this.inbox.storeFor(window.view.sessionId) as Partial<Pick<SessionAgentStore, 'send'>>
+    await store.send?.(askChatPrompt(request))
+  }
+
+  /** A session was deleted (a chat, or the aside of a window): its store stops listening and the id is forgotten (ids are reused). */
+  private forgetSession(id: Id): void {
+    ;(this.inbox.stores.get(id) as { dispose?: () => void } | undefined)?.dispose?.()
+    this.inbox.unregister(id)
+    this.asideWindows.delete(id)
+  }
+
+  // ---- chat panes ---------------------------------------------------------------------------------
+
+  setContext(windowId: Id, provider: (() => Record<string, unknown> | null | undefined) | null): void {
+    if (provider) this.contexts.set(windowId, provider)
+    else this.contexts.delete(windowId)
+  }
+
+  /** The app context of a window as the agent gets it (`composeAppContext`); a provider that throws counts as none. */
+  contextOf(windowId: Id): Record<string, unknown> | null {
+    const window = this.state.windows.find((w) => w.id === windowId)
+    if (!window) return null
+    let provided: Record<string, unknown> | null | undefined
+    try {
+      provided = this.contexts.get(windowId)?.()
+    } catch {
+      provided = null
+    }
+    return composeAppContext(window, provided)
+  }
+
+  /** What a session's runs carry as the desktop context: the state, plus `appContext` for the aside of a window. */
+  private contextFor(sessionId: Id): DesktopState & { appContext?: Record<string, unknown> } {
+    const windowId = this.asideWindows.get(sessionId) ?? this.state.windows.find((w) => w.asideSessionId === sessionId)?.id
+    const appContext = windowId === undefined ? null : this.contextOf(windowId)
+    return appContext ? { ...this.state, appContext } : this.state
+  }
+
+  /** The window's aside session (created on the first call, see `DesktopApi.openAside`). */
+  async openAside(windowId: Id): Promise<Id> {
+    const id = await this.api.desktop.openAside(this.state.desktopId, windowId)
+    this.asideWindows.set(id, windowId)
+    return id
+  }
+
+  /** "New conversation": the aside session is deleted (its window keeps the pane, blank). */
+  async closeAside(windowId: Id): Promise<void> {
+    await this.api.desktop.closeAside(windowId)
+  }
+
+  paneOf(windowId: Id): PaneState {
+    return this.panes[windowId] ?? DEFAULT_PANE
+  }
+
+  chatPaneOpen(windowId: Id): boolean {
+    return !this.paneOf(windowId).collapsed
+  }
+
+  /** Reads the remembered pane state of a window (call once when its frame appears). */
+  loadPane(windowId: Id): void {
+    if (windowId in this.panes) return
+    this.panes = { ...this.panes, [windowId]: readPane(localStore(), paneKey(this.state.desktopId, windowId)) }
+  }
+
+  private patchPane(windowId: Id, patch: Partial<PaneState>): void {
+    this.loadPane(windowId)
+    const next = { ...this.paneOf(windowId), ...patch }
+    this.panes = { ...this.panes, [windowId]: next }
+    writePane(localStore(), paneKey(this.state.desktopId, windowId), next)
+  }
+
+  /** Shows or hides a window's chat pane; showing it focuses its composer. Windows without a pane ignore it. */
+  setChatPane(windowId: Id, open: boolean): void {
+    const window = this.state.windows.find((w) => w.id === windowId)
+    if (!window || !supportsAside(window.app)) return
+    this.patchPane(windowId, { collapsed: !open })
+    if (open) this.focusPane(windowId)
+  }
+
+  toggleChatPane(windowId: Id): void {
+    this.loadPane(windowId)
+    this.setChatPane(windowId, !this.chatPaneOpen(windowId))
+  }
+
+  setPaneWidth(windowId: Id, width: number): void {
+    this.patchPane(windowId, { width })
+  }
+
+  /** Puts the cursor in the pane's composer. */
+  focusPane(windowId: Id): void {
+    this.prefills = { ...this.prefills, [windowId]: { id: ++this.prefillSeq } }
+  }
+
+  /** Fills the pane's composer with a draft and focuses it. */
+  prefillPane(windowId: Id, text: string): void {
+    this.prefills = { ...this.prefills, [windowId]: { id: ++this.prefillSeq, text } }
+  }
+
+  /** The composer applied a prefill: forget it, so a remount does not apply it again. */
+  prefillApplied(windowId: Id, id: number): void {
+    if (this.prefills[windowId]?.id !== id) return
+    const { [windowId]: _applied, ...rest } = this.prefills
+    this.prefills = rest
+  }
+
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
   async newChatIn(cwd: VPath): Promise<AppWindowState> {
     this.startOpen = false
@@ -438,7 +589,7 @@ export class DesktopController implements DesktopHost {
 
   /** Chats that still run and have their working directory on the drive. */
   chatsOnDrive(letter: DriveLetter): SessionDto[] {
-    return this.chats.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
+    return this.allSessions.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
   }
 
   /** Safely Remove: warns when chats work on the drive, ejects it, then shows the balloon. */
@@ -503,6 +654,22 @@ export class DesktopController implements DesktopHost {
     this.startOpen = false
     this.actionCenterOpen = false
     this.usbMenuOpen = false
+  }
+
+  /**
+   * Starts a code review (Start menu, the Code app's "Review changes"): the review session and its Code Review window.
+   * `root` defaults to the folder of the Code window the user is in, else the first plugged-in drive, else the agent's home.
+   */
+  async openReview(root?: VPath, baseRef?: string): Promise<AppWindowState> {
+    this.startOpen = false
+    return this.api.desktop.openReview(this.state.desktopId, root ?? this.defaultReviewRoot(), baseRef)
+  }
+
+  defaultReviewRoot(): VPath {
+    const code = this.state.windows.find((w) => w.view.app === 'code' && w.id === this.state.focusedWindowId) ?? this.state.windows.find((w) => w.view.app === 'code')
+    const active = code?.view.app === 'code' ? code.view.activePath : null
+    const drive = (active && parseVPath(active)?.drive) || this.state.drives.find((d) => d.kind === 'removable')?.letter
+    return drive ? driveRoot(drive) : this.state.home
   }
 
   /** Opens the UAC-style dialog for an approval (loads the policy for the reason line). */

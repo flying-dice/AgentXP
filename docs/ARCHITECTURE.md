@@ -165,7 +165,7 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   (`agent7://desktop/state`). The block is stored but left out of the AG-UI messages and the Markdown export.
 - **Browser.** The Browser app renders a `<webview partition="persist:agent7-browser">` and reports its
   `getWebContentsId()` with `desktop.attachBrowser(windowId, id)`; main checks the guest belongs to the caller and hands it to
-  `ElectronBrowserDriver` (navigate, read with numbered refs, screenshot, click, type, back).
+  `ElectronBrowserDriver` (Chrome DevTools Protocol: accessibility-tree read with stable refs, trusted click/type/keys/wheel, tabs through app requests; pure helpers `ax.ts`, `keys.ts`, `refs.ts`, `paging.ts`).
 - **App requests.** Some tools need what only the renderer has (the Paint canvas, WordPad's unsaved text). `AppRequestBroker`
   (application/desktop) pushes `desktop.appRequest` `{ requestId, desktopId, windowId, method, params }` to the owning window and
   resolves when the app answers with `desktop.respondAppRequest`; it rejects after 10 s with a readable message. Methods:

@@ -2,8 +2,8 @@
  * Pure helpers shared by main (`DesktopService`) and the renderer's fake desktop:
  * default window bounds, the initial view of a new window and window titles.
  */
-import { AGENT_HOME, vpathName } from './vfs'
-import { APP_DISPLAY_NAMES, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
+import { AGENT_HOME, parseVPath, vpathName, type VPath } from './vfs'
+import { APP_DISPLAY_NAMES, APP_KINDS, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
 
 /** Window title of a surface that has no `theme.title`. */
 export const SURFACE_FALLBACK_TITLE = 'Agent window'
@@ -23,7 +23,9 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'event-viewer': { x: 130, y: 90, width: 860, height: 520 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
   'recycle-bin': { x: 240, y: 120, width: 600, height: 400 },
-  surface: { x: 260, y: 100, width: 480, height: 360 }
+  surface: { x: 260, y: 100, width: 480, height: 360 },
+  help: { x: 150, y: 70, width: 760, height: 540 },
+  'code-review': { x: 50, y: 30, width: 1120, height: 650 }
 }
 
 /** Default bounds of a new window, cascaded by the number of windows already open. */
@@ -91,7 +93,7 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -131,7 +133,17 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'recycle-bin', selectedId: null }
     case 'surface':
       return { app: 'surface', surfaceId: input.surfaceId ?? '', sessionId: input.sessionId ?? 0, title: SURFACE_FALLBACK_TITLE }
+    case 'help':
+      return { app: 'help', topic: input.topic ?? 'index' }
+    case 'code-review':
+      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: null, sessionId: input.sessionId ?? 0 }
   }
+}
+
+/** "Notepad Help" for the topic of an app, "Help and Support" for the home, desktop, launcher and Help topics. */
+export function helpWindowTitle(topic: string): string {
+  const kind = (APP_KINDS as readonly string[]).includes(topic) ? (topic as AppKind) : null
+  return kind && kind !== 'help' ? `${APP_DISPLAY_NAMES[kind]} Help` : APP_DISPLAY_NAMES.help
 }
 
 export function windowTitle(view: AppView): string {
@@ -151,8 +163,28 @@ export function windowTitle(view: AppView): string {
       return `${view.path ? vpathName(view.path) : 'Untitled'} - Agent Paint`
     case 'wordpad':
       return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
+    case 'help':
+      return helpWindowTitle(view.topic)
+    case 'code-review':
+      return `${view.root.length <= 3 ? view.root : vpathName(view.root)} - Code Review`
     default:
       return APP_DISPLAY_NAMES[view.app]
   }
 }
 
+
+/** The file or folder a window shows, when its view has one (Terminal: its working directory). */
+export function viewPath(view: AppView): VPath | null {
+  if ('path' in view && typeof view.path === 'string' && view.path) return view.path
+  if (view.app === 'code') return view.activePath
+  if (view.app === 'code-review') return view.root
+  if (view.app === 'terminal') return view.cwd
+  return null
+}
+
+/** Where the aside of a window works: the root of the plugged-in drive its view is on, else the agent's home. */
+export function asideCwd(view: AppView, home: VPath = AGENT_HOME): VPath {
+  const source = viewPath(view)
+  const parsed = source ? parseVPath(source) : null
+  return parsed && parsed.drive !== 'C' ? `${parsed.drive}:\\` : home
+}

@@ -16,6 +16,10 @@ export interface AppWindowRecord {
   path: string | null
   /** browser windows */
   url: string | null
+  /** code-review windows: the ref the working tree is compared with (null = HEAD) */
+  baseRef: string | null
+  /** any app window with a chat pane: its `aside` session (null until the first message) */
+  asideSessionId: Id | null
   /** surface windows: the surface shown and the chat that owns it */
   surface: { sessionId: Id; surfaceId: string } | null
 }
@@ -29,6 +33,7 @@ export interface NewAppWindow {
   sessionId?: Id
   path?: string | null
   url?: string
+  baseRef?: string
   surface?: { sessionId: Id; surfaceId: string }
 }
 
@@ -47,4 +52,7 @@ export interface AppWindowRepository {
   raise(id: Id): void
   setPath(id: Id, path: string | null): void
   setUrl(id: Id, url: string): void
+  setBaseRef(id: Id, baseRef: string): void
+  /** Links the window to its aside session (replaces an earlier link). */
+  setAside(id: Id, sessionId: Id): void
 }

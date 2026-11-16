@@ -4,6 +4,14 @@
   import type { AppProps } from '../types'
   import Icon from '../../kit/atoms/Icon.svelte'
   import type { IconName } from '../../kit/atoms/icons'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { ViewSync } from '../viewSync'
   import AboutPage from './AboutPage.svelte'
   import AgentsPage from './AgentsPage.svelte'
@@ -36,10 +44,31 @@
     if (sync.isExternal({ page: incoming })) untrack(() => (page = incoming))
   })
 
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'control-centre')
+  const ctx = new ContextMenu()
+
+  const pageItems = (prefix: string): MenuItemDef[] => pages.map((p) => ({ id: `${prefix}-page-${p.id}`, testid: `${prefix}-page-${p.id}`, label: p.title, icon: p.icon, radio: true, checked: p.id === page, action: () => choose(p.id) }))
+
+  // The chat pane knows the page.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ page }))
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
+      { label: '&File', items: closeItems('control-centre', () => void host.closeWindow(win.id)).slice(1) },
+      { label: '&View', items: [...pageItems('control-centre-menu'), { separator: true }, help.paneItem(win.id)] },
+      help.menu()
+    ])
+  )
+
   const current = $derived(pages.find((p) => p.id === page) ?? pages[0])
 </script>
 
-<div class="cc" data-testid="control-centre-app">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="cc" data-testid="control-centre-app" oncontextmenu={(e) => ctx.show(e, pageItems('control-centre-ctx'))} onkeydown={(e) => ctx.key(e, () => pageItems('control-centre-ctx'))}>
+  <MenuStrip {menus} aria-label="Control Centre menu" />
+  <div class="row">
   <nav class="tasks" aria-label="Control Centre">
     <div class="caption">Control Centre Home</div>
     <ul>
@@ -66,6 +95,9 @@
       {/if}
     </div>
   </main>
+  </div>
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Control Centre" />
+  <AppAbout {help} />
 </div>
 
 <style>
@@ -74,7 +106,13 @@
     flex: 1;
     min-height: 0;
     display: flex;
+    flex-direction: column;
     background: var(--w7-window);
+  }
+  .row {
+    flex: 1;
+    min-height: 0;
+    display: flex;
   }
   .tasks {
     flex: none;

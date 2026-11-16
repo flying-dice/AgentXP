@@ -2,13 +2,21 @@
   import { tick, untrack } from 'svelte'
   import type { FileChangeDto } from '@shared/models'
   import { GIT_STATE_INFO, formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
+  import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import FileTree from '../../app/shell/FileTree.svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
   import Separator from '../../kit/atoms/Separator.svelte'
-  import type { MenuDef } from '../../kit/molecules/MenuItem'
+  import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, editItems } from '../../kit/molecules/standardMenu'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
+  import { askChatItems } from '../shared/contextItems'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
@@ -403,6 +411,70 @@
 
   // ---- menu, lists -------------------------------------------------------------------------------
 
+  /** Review changes: Code Review for the drive of the open file (else the first project), against HEAD. */
+  async function reviewChanges(): Promise<void> {
+    const drive = active ? parseVPath(active)?.drive : undefined
+    const root = drive ? driveRoot(drive) : (roots[0]?.path ?? host.state.home)
+    try {
+      await host.api.desktop.openReview(desktopId, root)
+    } catch (error) {
+      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'code')
+  const ctx = new ContextMenu()
+
+  /** The text selected in the editor (the viewer is plain DOM text), '' outside it. */
+  function selectedText(): string {
+    const sel = window.getSelection()
+    if (!sel || sel.isCollapsed || !host_el || !sel.anchorNode || !host_el.contains(sel.anchorNode)) return ''
+    return sel.toString()
+  }
+  const copySelection = (): void => void document.execCommand('copy')
+  const selectAllText = (): void => {
+    const code = host_el?.querySelector('.w7-codeviewer .scroll')
+    if (code) window.getSelection()?.selectAllChildren(code)
+  }
+
+  function ask(kind: AskChatRequest['kind'], selected: string): void {
+    void host.askChat({
+      app: 'code',
+      windowId: win.id,
+      kind,
+      ...(active ? { path: active } : {}),
+      ...(selected ? { text: selected } : {}),
+      range: selection ?? { startLine: caret.line, endLine: caret.line }
+    })
+  }
+
+  /** Cut, Copy, Paste, Select All (the viewer is read only), Revert hunk when on a hunk, Go to file and the Ask chat group. */
+  const contextItems = (): MenuItemDef[] => {
+    const selected = selectedText()
+    const hasSelection = selected !== ''
+    return [
+      ...editItems('code-ctx', { cut: () => {}, copy: copySelection, paste: () => {}, selectAll: selectAllText }, { hasSelection, readOnly: true }),
+      ...(revertTarget !== null ? [{ separator: true } as MenuItemDef, { id: 'code-ctx-revert-hunk', testid: 'code-ctx-revert-hunk', label: '&Revert hunk...', icon: 'recycle', action: () => void revertHunk(revertTarget) } as MenuItemDef] : []),
+      { separator: true },
+      { id: 'code-ctx-goto-file', testid: 'code-ctx-goto-file', label: '&Go to file...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
+      ...askChatItems('code', { hasSelection, ask: (kind) => ask(kind, selected) })
+    ]
+  }
+
+  /** The text of the selected lines: the DOM selection is gone once the focus moved to the chat pane, the range stays. */
+  const linesOf = (source: string | null | undefined, range: { startLine: number; endLine: number } | null): string =>
+    source && range ? source.split('\n').slice(range.startLine - 1, range.endLine).join('\n') : ''
+
+  // The chat pane knows the open file, all tabs, the selection and the git status of the file.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    openFile: active,
+    openTabs: [...tabs],
+    ...selectionContext(selectedText() || linesOf(text, selection), selection),
+    ...(active ? { gitStatus: stateOf(active), changedLines: lineChanges.length } : {})
+  }))
+
   const menus = $derived<MenuDef[]>([
     {
       label: '&File',
@@ -411,14 +483,14 @@
         { separator: true },
         { id: 'code-close-file', label: '&Close file', disabled: active === null, action: () => active && close(active) },
         { id: 'code-close-all', label: 'Close &all files', disabled: tabs.length === 0, action: () => [...tabs].forEach(close) },
-        { separator: true },
-        { id: 'code-exit', label: 'E&xit', action: () => void host.closeWindow(win.id) }
+        ...closeItems('code', () => void host.closeWindow(win.id))
       ]
     },
     {
       label: '&Edit',
       items: [
-        { id: 'code-copy', label: '&Copy', icon: 'copy', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
+        { id: 'code-copy', label: '&Copy', icon: 'copy', shortcut: 'Ctrl+C', action: copySelection },
+        { id: 'code-select-all', label: 'Select &All', shortcut: 'Ctrl+A', action: selectAllText },
         { separator: true },
         { id: 'code-revert-hunk', label: '&Revert hunk...', disabled: revertTarget === null, action: () => void revertHunk(revertTarget) }
       ]
@@ -428,7 +500,9 @@
       items: [
         { id: 'code-view-management', label: '&Management', checked: showManagement, action: () => (showManagement = !showManagement) },
         { id: 'code-view-logs', label: '&Logs & others', checked: showLogs, action: () => (showLogs = !showLogs) },
-        { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) }
+        { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) },
+        { separator: true },
+        help.paneItem(win.id)
       ]
     },
     {
@@ -438,18 +512,14 @@
         { id: 'code-prev-change', label: '&Previous change', icon: 'chevron-up', shortcut: 'Shift+Alt+F5', disabled: lineChanges.length === 0, action: () => step(-1) }
       ]
     },
-    { label: '&Tools', items: [{ id: 'code-refresh', label: '&Refresh git status', icon: 'refresh', action: () => void refreshGit() }] },
     {
-      label: '&Help',
+      label: '&Tools',
       items: [
-        {
-          id: 'code-about',
-          label: '&About Code...',
-          action: () =>
-            void showMessageBox({ text: 'Code shows the files of the plugged-in projects. The agent edits them; you review the changes here, with git status in the tree and the margin.', caption: 'About Code', buttons: 'OK', icon: 'information' })
-        }
+        { id: 'code-refresh', label: '&Refresh git status', icon: 'refresh', action: () => void refreshGit() },
+        { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: () => void reviewChanges() }
       ]
-    }
+    },
+    help.menu()
   ])
 
   const mgmtTabs = [
@@ -521,8 +591,10 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="code" data-testid="code-app" onkeydown={onKeydown}>
+<div class="code" data-testid="code-app" onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))} oncontextmenu={(e) => ctx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Code menu" />
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Code" />
+  <AppAbout {help} />
   <ToolStrip aria-label="Code toolbar" class="cb-tools">
     <ToolStripButton data-testid="code-new" icon="new" title="New file (the agent creates files)" disabled />
     <ToolStripButton data-testid="code-open" icon="open-folder" title="Open file (Ctrl+O)" onclick={() => (openDialog = true)} />
@@ -537,6 +609,7 @@
     <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title="Revert hunk" aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-refresh" icon="refresh" title="Refresh git status" aria-label="Refresh git status" onclick={() => void refreshGit()} />
+    <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Open Code Review for this project" onclick={() => void reviewChanges()} />
     <ToolStripButton text="Management" icon="folder" bind:checked={showManagement} checkOnClick data-testid="code-management-toggle" title="Show or hide the Management pane" />
     <ToolStripButton text={changes.length > 0 ? `Logs (${changes.length})` : 'Logs'} icon="changes" bind:checked={showLogs} checkOnClick data-testid="code-changes-toggle" title="Show or hide the Logs & others pane" />
     {#snippet trailing()}

@@ -1,5 +1,7 @@
 import type { Locator, Page } from 'playwright'
+import { AsidePane } from './AsidePane'
 import { ChatWindow } from './ChatWindow'
+import { CodeReviewWindow } from './CodeReviewWindow'
 import { CodeWindow } from './CodeWindow'
 import { ExplorerWindow } from './ExplorerWindow'
 import { TerminalWindow } from './TerminalWindow'
@@ -8,6 +10,7 @@ export type AppId =
   | 'chat'
   | 'explorer'
   | 'code'
+  | 'code-review'
   | 'terminal'
   | 'browser'
   | 'notepad'
@@ -20,6 +23,7 @@ export type AppId =
   | 'control-centre'
   | 'recycle-bin'
   | 'surface'
+  | 'help'
 
 /** Apps the Start menu hides in a collapsible group. */
 const START_GROUP: Partial<Record<AppId, string>> = {
@@ -72,6 +76,15 @@ export class DesktopPage {
     return new ExplorerWindow(created)
   }
 
+  /** Opens Help and Support from the Start menu "places" column. */
+  async openHelp(): Promise<Locator> {
+    await this.openStart()
+    await this.page.getByTestId('start-menu-place-help').click()
+    const created = this.windows('help').first()
+    await created.waitFor()
+    return created
+  }
+
   /** All windows of an app, oldest first. */
   windows(app: AppId): Locator {
     return this.page.getByTestId(`window-${app}`)
@@ -106,8 +119,17 @@ export class DesktopPage {
     return new CodeWindow(this.window('code', index))
   }
 
+  codeReview(index = 0): CodeReviewWindow {
+    return new CodeReviewWindow(this.window('code-review', index))
+  }
+
   terminal(index = 0): TerminalWindow {
     return new TerminalWindow(this.window('terminal', index))
+  }
+
+  /** The chat pane of an app window. */
+  aside(app: AppId, index = 0): AsidePane {
+    return new AsidePane(this.window(app, index))
   }
 
   chat(index = 0): ChatWindow {

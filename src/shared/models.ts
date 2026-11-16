@@ -45,9 +45,17 @@ export interface AvailableCommandDto {
   hint: string | null
 }
 
+/**
+ * What a session is for: `chat` (a Chat window), `review` (the reviewer of a Code Review window) or `aside`
+ * (the short-lived embedded chat panel of another app). Review and aside sessions are owned by their window.
+ */
+export type SessionRole = 'chat' | 'review' | 'aside'
+
 export interface SessionDto {
   id: Id
   agentId: Id
+  /** What the session is for (see `SessionRole`). */
+  role: SessionRole
   /** The desktop this chat lives on. */
   desktopId?: Id | null
   /** The chat's working directory (the agent's `cwd`): a VPath on C: or a plugged-in drive. */

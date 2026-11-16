@@ -1,0 +1,263 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "long-turn",
+  "description": "A turn of about two minutes with a progress message every four seconds.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Progress 1 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 2 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 3 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 4 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 5 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 6 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 7 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 8 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 9 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 10 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 11 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 12 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 13 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 14 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 15 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 16 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 17 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 18 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 19 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 20 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 21 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 22 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 23 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 24 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 25 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 26 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 27 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 28 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 29 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "Progress 30 of 30.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 4000
+        },
+        {
+          "type": "message",
+          "text": "The long job is finished."
+        }
+      ]
+    }
+  ]
+}

@@ -42,6 +42,16 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 - Do not run git commands and do not install npm packages; if you need a
   package, say so in your final report.
 
+## Help and context menus
+
+Every app has in-app Help and a context menu. A new app is not finished without both.
+
+- **Menu bar.** Every app window has a classic menu bar (kit `MenuStrip`): `File`, `Edit`, `View`, app menus, and `Help`, in that order. Include only the menus that have real items. `Help` is always last: `View Help` (F1), a separator, `About <App>`. Build the menus with `menuBar([...])`, `closeItems(app, close)` (File > Close, Alt+F4) and `editItems(prefix, ops, state)` from `kit/molecules/standardMenu.ts`.
+- **Help.** `new AppHelp(host, '<appKind>')` (`lib/apps/shared/AppHelp.svelte.ts`) gives `help.menu()` (the Help menu) and the About state; render `<AppAbout {help} />`. View Help opens the one Help window on the topic of the app; the window is titled `<App> Help` (`helpWindowTitle` in `@shared/desktop-views`). F1 on the focused window does the same, also inside the app's own inputs.
+- **Context menu.** `const ctx = new ContextMenu()` (`lib/apps/shared/ContextMenu.svelte.ts`) with the kit `ContextMenuStrip`: `oncontextmenu={(e) => ctx.show(e, items())}` and `onkeydown={(e) => ctx.key(e, items)}` on the app root (Menu key and Shift+F10 open it; arrows, Enter and Esc work in the strip). Put the handler on the root so the whole window has a menu, and on rows or items that have their own. The browser's own menu never shows on the desktop. Items are built by pure functions (`explorerContext.ts`, `shared/contextItems.ts`) with tests.
+- **Ask chat.** Items that hand text or a location to a chat call `host.askChat({ app, windowId, kind, text?, path?, range?, url?, title? })` and nothing else; the prompt format lives in `lib/apps/askChat.ts`.
+- **Test ids.** Menu bar items `<app>-menu-<action>`, context items `<app>-ctx-<action>`, About `<app>-about` and `<app>-about-ok`. Document them in `manuals/<app>.md`.
+
 ## Test ids
 
 End-to-end specs (`e2e/`, Playwright driving the built app; see "Running e2e" below) find elements
@@ -86,6 +96,11 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   `<app>-app` (`notepad-app`, `code-app`, ...).
 - New UI gets test ids as part of the change, with the same naming; do not rename existing ones lightly (specs
   depend on them).
+- **Every new `data-testid` must be documented in `manuals`**: add a row to the Controls reference table of the
+  manual of its app (`manuals/<appKind>.md`, `desktop.md` or `launcher.md`). `npm run help:coverage`
+  (`scripts/check-help-coverage.mjs`) fails when a static id of `src/renderer/src/lib/{apps,desktop,launcher,pages}`
+  is in no manual. A template id is written with its static prefix and `*` (`chat-message-*`). Kit internals
+  that need no manual go on the ignore list of the script, with a reason.
 
 **Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry

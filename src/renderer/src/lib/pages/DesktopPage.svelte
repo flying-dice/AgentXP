@@ -4,6 +4,7 @@
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
+  import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
   import { joinVPath } from '@shared/vfs'
@@ -27,6 +28,9 @@
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { taskbarItems } from '../desktop/windowOrder'
+  import { taskbarMenuItems } from '../desktop/taskbarMenu'
+  import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
+  import { HOME_TOPIC, topicForApp } from '../apps/help/helpModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -78,7 +82,7 @@
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle' }
   ])
 
-  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'terminal', 'browser']
+  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser']
   const groupOf = (id: string, title: string, kinds: AppKind[]): StartGroup => ({
     id,
     title,
@@ -98,12 +102,14 @@
     { id: 'control-centre', title: 'Control Centre' },
     { id: 'agent-manager', title: 'Task Manager' },
     { id: 'recycle-bin', title: 'Recycle Bin' },
+    { id: 'help', title: 'Help and Support' },
     { id: 'chat-on', title: 'New chat on a drive…' },
     { id: 'desktops', title: 'Agent7 Desktops…' }
   ]
 
   function runApp(id: string): void {
     if (id === 'chat') void desktop.newChat()
+    else if (id === 'code-review') void desktop.openReview()
     else void desktop.openApp({ app: id as AppKind })
   }
 
@@ -126,6 +132,7 @@
     desktop.startOpen = false
     if (id === 'desktops') void desktop.showLauncher()
     else if (id === 'chat-on') desktop.newChatDialogOpen = true
+    else if (id === 'help') void desktop.openApp({ app: 'help', topic: HOME_TOPIC })
     else if (id === 'computer') void desktop.openApp({ app: 'explorer', path: '' })
     else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
@@ -136,6 +143,14 @@
   const centreApprovals = $derived(approvals.map((a) => ({ key: a.key, title: a.title, detail: a.chatTitle })))
   const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text })))
 
+  // The taskbar button menu: Restore, Minimize, Close window.
+  const taskbarMenu = new ContextMenu()
+  function taskbarContext(item: { id: string }, at: { x: number; y: number }): void {
+    const w = desktop.state.windows.find((x) => x.id === Number(item.id))
+    if (!w) return
+    taskbarMenu.showAt(at.x, at.y, taskbarMenuItems(w.windowState, { restore: () => void desktop.restore(w.id).then(() => desktop.focusWindow(w.id)), minimize: () => void desktop.minimize(w.id), close: () => void desktop.closeWindow(w.id) }))
+  }
+
   function onKeydown(event: KeyboardEvent): void {
     if (event.altKey && event.key === 'F4') {
       event.preventDefault()
@@ -144,11 +159,16 @@
     } else if (event.ctrlKey && event.key === 'Escape') {
       event.preventDefault()
       desktop.toggleStart()
+    } else if (event.key === 'F1') {
+      event.preventDefault()
+      const focused = desktop.state.windows.find((w) => w.id === desktop.state.focusedWindowId && w.windowState !== 'minimized')
+      void desktop.openApp({ app: 'help', topic: topicForApp(focused?.app) })
     }
   }
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<!-- The browser's own context menu never shows on the desktop: every app and the desktop have their own. -->
+<svelte:window onkeydown={onKeydown} oncontextmenu={(e) => e.preventDefault()} />
 
 <div class="page" bind:this={root}>
   <Desktop
@@ -156,6 +176,7 @@
     startOpen={desktop.startOpen}
     onstart={() => desktop.toggleStart()}
     onitemclick={(item) => void desktop.toggleFromTaskbar(Number(item.id))}
+    onitemcontext={taskbarContext}
   >
     <DesktopSurface
       icons={desktopIcons}
@@ -270,6 +291,7 @@
         <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} onclose={() => desktop.dismissBalloon()} />
       </div>
     {/if}
+    <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />
     {#snippet tray()}
       <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} />
       <TrayFlag count={approvals.length} open={desktop.actionCenterOpen} bind:element={flag} onclick={() => desktop.toggleActionCenter()} />

@@ -1,0 +1,65 @@
+import { describe, expect, it } from 'vitest'
+import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, composeAppContext, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
+
+const memory = (initial: Record<string, string> = {}): Storage => {
+  const data = new Map(Object.entries(initial))
+  return { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) } as Storage
+}
+
+describe('pane state', () => {
+  it('starts collapsed with the default width', () => {
+    expect(readPane(memory(), 'k')).toEqual({ collapsed: true, width: PANE_DEFAULT_WIDTH })
+    expect(DEFAULT_PANE.collapsed).toBe(true)
+  })
+
+  it('remembers collapsed state and width per window key', () => {
+    const storage = memory()
+    writePane(storage, paneKey(1, 7), { collapsed: false, width: 400 })
+    expect(readPane(storage, paneKey(1, 7))).toEqual({ collapsed: false, width: 400 })
+    expect(readPane(storage, paneKey(1, 8)).collapsed).toBe(true)
+    expect(paneKey(1, 7)).not.toBe(paneKey(2, 7))
+  })
+
+  it('clamps the width and ignores junk', () => {
+    expect(readPane(memory({ k: JSON.stringify({ collapsed: false, width: 9000 }) }), 'k')).toEqual({ collapsed: false, width: PANE_MAX_WIDTH })
+    expect(readPane(memory({ k: 'not json' }), 'k')).toEqual(DEFAULT_PANE)
+    expect(readPane(memory({ k: JSON.stringify({ width: 'wide' }) }), 'k')).toEqual(DEFAULT_PANE)
+  })
+
+  it('survives storage that throws or is missing', () => {
+    const broken = { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('blocked') } }
+    expect(readPane(broken, 'k')).toEqual(DEFAULT_PANE)
+    expect(() => writePane(broken, 'k', DEFAULT_PANE)).not.toThrow()
+    expect(readPane(null, 'k')).toEqual(DEFAULT_PANE)
+    expect(() => writePane(null, 'k', DEFAULT_PANE)).not.toThrow()
+  })
+})
+
+describe('composeAppContext', () => {
+  it('names the window and lets the app add to it (or override the title)', () => {
+    const win = { id: 4, app: 'code' as const, title: 'a.ts - Code' }
+    expect(composeAppContext(win, undefined)).toEqual({ windowId: 4, app: 'code', title: 'a.ts - Code' })
+    expect(composeAppContext(win, { openFile: 'E:\\a.ts', title: 'A' })).toEqual({ windowId: 4, app: 'code', title: 'A', openFile: 'E:\\a.ts' })
+  })
+})
+
+describe('suggestionsFor', () => {
+  it('offers file questions in Code once a file is open', () => {
+    expect(suggestionsFor('code', { openFile: 'E:\\a.ts' }).map((s) => s.label)).toEqual(['Explain this', 'What changed in this file?', 'Any bugs here?'])
+    expect(suggestionsFor('code', {}).map((s) => s.label)).toEqual(['What can I do here?'])
+  })
+
+  it('follows the selection in the text apps and the Browser', () => {
+    expect(suggestionsFor('notepad', { selection: 'x' }).map((s) => s.label)).toContain('Summarise the selection')
+    expect(suggestionsFor('browser', {}).map((s) => s.label)).toEqual(['Summarise this page', 'What are the main links?'])
+    expect(suggestionsFor('browser', { selection: 'x' }).map((s) => s.label)).toEqual(['Summarise this page', 'Explain this'])
+  })
+
+  it('has chips for every app and sends a text for each', () => {
+    for (const app of ['code', 'notepad', 'wordpad', 'explorer', 'terminal', 'browser', 'event-viewer', 'agent-manager', 'recycle-bin', 'paint', 'sticky-notes', 'help', 'control-centre', 'snipping-tool'] as const) {
+      const chips = suggestionsFor(app, null)
+      expect(chips.length).toBeGreaterThan(0)
+      for (const c of chips) expect(c.text.length).toBeGreaterThan(0)
+    }
+  })
+})

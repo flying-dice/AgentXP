@@ -24,7 +24,9 @@ export const APP_KINDS = [
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
-  'surface'
+  'surface',
+  'help',
+  'code-review'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
@@ -52,8 +54,13 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'sticky-notes',
   'event-viewer',
   'snipping-tool',
-  'recycle-bin'
+  'recycle-bin',
+  'help'
 ]
+
+/** Windows that have no chat pane: Chat is the chat, Code Review has its reviewer panel, a surface is the agent's own UI. */
+export const ASIDE_EXCLUDED_APPS: readonly AppKind[] = ['chat', 'code-review', 'surface']
+export const supportsAside = (app: AppKind): boolean => !ASIDE_EXCLUDED_APPS.includes(app)
 
 export type WindowState = 'normal' | 'minimized' | 'maximized'
 export type OpenedBy = 'user' | 'agent'
@@ -91,6 +98,13 @@ export type AppView =
   | { app: 'recycle-bin'; selectedId: Id | null }
   /** An A2UI surface the agent drew with `a2ui_render` (target `window`), one window per surface. */
   | { app: 'surface'; surfaceId: string; sessionId: Id; title: string }
+  /** Help and Support: `topic` is the file name of a manual in `manuals` without `.md` (`index` is the home page). */
+  | { app: 'help'; topic: string }
+  /**
+   * Code Review: the working tree at `root` against `baseRef`, with the comments of its review session (`sessionId`,
+   * role `review`, owned by this window). `selectedPath` is relative to `root`, with `/`.
+   */
+  | { app: 'code-review'; root: VPath; baseRef: string; selectedPath: string | null; sessionId: Id }
 
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
@@ -108,6 +122,8 @@ export interface AppWindowState {
   openedBy: OpenedBy
   /** The agent opened or touched this window behind the chat the user is working in: its taskbar button flashes until it is focused. Absent when false. */
   attention?: boolean
+  /** The window's chat pane session (role `aside`), once the first message created it. Absent before. */
+  asideSessionId?: Id
   view: AppView
 }
 
@@ -166,14 +182,15 @@ export const TOOL_GROUPS = [
   'notes', // notes_list, notes_add, notes_update, notes_remove
   'events', // events_query
   'snip', // screen_capture
-  'recycle' // recycle_list, recycle_restore
+  'recycle', // recycle_list, recycle_restore
+  'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (only for the session that owns a Code Review window)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
 
 /** Which app kinds provide each tool group. `shell` needs no app. */
 export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   shell: [],
-  'fs.read': ['explorer', 'code'],
+  'fs.read': ['explorer', 'code', 'code-review'],
   'fs.write': ['notepad', 'code'],
   notepad: ['notepad'],
   code: ['code'],
@@ -184,11 +201,12 @@ export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   notes: ['sticky-notes'],
   events: ['event-viewer'],
   snip: ['snipping-tool'],
-  recycle: ['recycle-bin']
+  recycle: ['recycle-bin'],
+  review: ['code-review']
 }
 
 /** The app suggested to the agent when a group is missing. */
-export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AgentOpenableApp> = {
+export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
   'fs.read': 'explorer',
   'fs.write': 'code',
   notepad: 'notepad',
@@ -200,7 +218,8 @@ export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AgentOpenableAp
   notes: 'sticky-notes',
   events: 'event-viewer',
   snip: 'snipping-tool',
-  recycle: 'recycle-bin'
+  recycle: 'recycle-bin',
+  review: 'code-review'
 }
 
 export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
@@ -218,7 +237,9 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   'event-viewer': 'Event Viewer',
   'snipping-tool': 'Snipping Tool',
   'recycle-bin': 'Recycle Bin',
-  surface: 'Agent window'
+  surface: 'Agent window',
+  help: 'Help and Support',
+  'code-review': 'Code Review'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -229,6 +250,8 @@ export function enabledToolGroups(openApps: Iterable<AppKind>): ToolGroup[] {
 
 /** The message an agent gets when it uses a tool whose app is closed. */
 export function closedAppMessage(group: Exclude<ToolGroup, 'shell'>): string {
+  // The agent cannot open a review window itself: the user starts a review (Start menu, Code app "Review changes").
+  if (group === 'review') return 'There is no Code Review window on this desktop. The user opens one (Start menu, Code Review) and the review tools only work in the review session that window belongs to.'
   const app = TOOL_GROUP_APP[group]
   return `The ${APP_DISPLAY_NAMES[app]} app is closed on this desktop. Call desktop_open_app with app "${app}" to open it.`
 }
@@ -244,7 +267,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', review: 'allow' },
   openApps: 'allow'
 }
 
@@ -266,6 +289,37 @@ export interface OpenWindowInput {
   sessionId?: Id
   /** The A2UI surface of a `surface` window (with `sessionId`: the chat that owns it). */
   surfaceId?: string
+  /** The topic of a `help` window (a file name in `manuals` without `.md`). */
+  topic?: string
+  /** The base ref of a `code-review` window (default `HEAD`). */
+  baseRef?: string
+}
+
+/**
+ * "Ask chat about this": what an app hands to the desktop when the user picks Explain this, Ask chat... or Send
+ * selection to chat from a context menu. `DesktopHost.askChat` turns it into a chat prompt; a chat side panel can
+ * take the same request later, so the apps never change.
+ */
+export interface AskChatRequest {
+  /** The app the request comes from. */
+  app: AppKind
+  /** The window it comes from (its drive decides where a new chat works). */
+  windowId: Id
+  /**
+   * explain: "Explain this"; ask: "Ask chat..." (the user adds the question); send: "Send selection to chat"; window: "Open in Chat
+   * window" (like send, but in a new full chat instead of the window's chat pane).
+   */
+  kind: 'explain' | 'ask' | 'send' | 'window'
+  /** The selected text, the output or the page text. */
+  text?: string
+  /** The file or folder the request is about (a VPath). */
+  path?: VPath
+  /** The 1-based, inclusive line range the text covers. */
+  range?: { startLine: number; endLine: number }
+  /** The page address of a Browser request. */
+  url?: string
+  /** The page title of a Browser request. */
+  title?: string
 }
 
 /** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */
@@ -284,6 +338,19 @@ export interface DesktopApi {
   setUserInControl(desktopId: Id, on: boolean): Promise<void>
   /** Starts a chat (ACP session) on the desktop and opens its Chat window. `cwd` (a VPath on a plugged-in drive or C:) defaults to `AGENT_HOME`. */
   newChat(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<AppWindowState>
+  /**
+   * Starts a code review of the folder `root` (a VPath on a plugged-in drive or C:) against `baseRef` (default `HEAD`):
+   * creates the review session (role `review`, `cwd` = `root`), opens its Code Review window and asks the agent for a review.
+   */
+  openReview(desktopId: Id, root: VPath, baseRef?: string, agentId?: Id): Promise<AppWindowState>
+  /**
+   * The chat pane of an app window (not Chat, Code Review or a surface): returns the id of the window's `aside` session,
+   * creating it on the first call (cwd = the window's drive, else the agent's home). The session lives and dies with the
+   * window: closing the window deletes it.
+   */
+  openAside(desktopId: Id, windowId: Id, agentId?: Id): Promise<Id>
+  /** "New conversation": deletes the window's aside session (its transcript goes too); the next `openAside` starts a fresh one. */
+  closeAside(windowId: Id): Promise<void>
   policy(): Promise<ToolPolicyDto>
   setPolicy(policy: ToolPolicyDto): Promise<void>
   /**

@@ -1,12 +1,15 @@
 export { launchAgent7, WAIT_MS, type Agent7Instance } from './launch'
 export { addProject, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, type Workspace } from './setup'
+export { AsidePane } from './pages/AsidePane'
 export { ChatWindow } from './pages/ChatWindow'
+export { CodeReviewWindow } from './pages/CodeReviewWindow'
 export { CodeWindow } from './pages/CodeWindow'
 export { DesktopPage, type AppId } from './pages/DesktopPage'
 export { ExplorerWindow } from './pages/ExplorerWindow'
 export { LauncherPage } from './pages/LauncherPage'
 export { TerminalWindow } from './pages/TerminalWindow'
 export { see } from './expect'
+export { serveFixtureWeb, type WebServer } from './webServer'
 export { startConnectedDesktop, type ConnectedDesktop } from './session'
 export {
   aguiRuns,

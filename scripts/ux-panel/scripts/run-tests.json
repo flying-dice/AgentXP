@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "run-tests",
+  "description": "Runs the project tests in a terminal (the app asks first when Terminal = Ask) and reports the result, also when the command was refused.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "greeting",
+      "match": {
+        "regex": "^(hi|hello|hey)\\b",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Hello! I am the assistant. Ask me to change something in your project."
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I will run the tests now.\n"
+        },
+        {
+          "type": "toolCall",
+          "id": "test-1",
+          "title": "Run the tests (node)",
+          "kind": "execute",
+          "status": "in_progress"
+        },
+        {
+          "type": "terminal",
+          "command": "node",
+          "args": [
+            "-e",
+            "console.log('3 tests passed')"
+          ],
+          "cwd": "{{cwd}}",
+          "saveAs": "tests"
+        },
+        {
+          "type": "toolCallUpdate",
+          "id": "test-1",
+          "status": "completed"
+        },
+        {
+          "type": "message",
+          "text": "Test run result: {{tests}}"
+        }
+      ]
+    }
+  ]
+}

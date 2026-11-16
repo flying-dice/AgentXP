@@ -39,7 +39,8 @@ const RENDERER_EVENTS = {
   'events.appended': true,
   'recycle.changed': true,
   'launcher.changed': true,
-  'git.changed': true
+  'git.changed': true,
+  'review.changed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -80,6 +81,9 @@ const INVOKE_METHODS = {
     setPaused: true,
     setUserInControl: true,
     newChat: true,
+    openReview: true,
+    openAside: true,
+    closeAside: true,
     policy: true,
     setPolicy: true,
     attachBrowser: true,
@@ -87,6 +91,7 @@ const INVOKE_METHODS = {
   },
   vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true },
+  review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },
   drives: { list: true, plugIn: true, eject: true },
   launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },
   notes: { list: true, add: true, update: true, remove: true },

@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { AppWindowState, Bounds } from '@shared/desktop'
+  import { supportsAside, type AppWindowState, type Bounds } from '@shared/desktop'
   import type { AppDefinition } from '../apps/types'
   import Icon from '../kit/atoms/Icon.svelte'
   import Form from '../kit/organisms/Form.svelte'
+  import AppChatPane from './AppChatPane.svelte'
   import type { DesktopController } from './DesktopController.svelte'
   import { RESIZE_EDGES, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize, type ResizeEdge, type Size } from './geometry'
   import UnknownApp from './UnknownApp.svelte'
@@ -28,6 +29,16 @@
   const bounds = $derived(desktop.boundsOf(w))
   const glowing = $derived(desktop.glowing.has(w.id))
   const App = $derived(definition?.component)
+  const hasPane = $derived(supportsAside(w.app))
+  let hostedWidth = $state(0)
+
+  /** Ctrl+Shift+C anywhere inside the window: show or hide its chat pane (the shortcut of View > Chat pane). */
+  function onKeyDown(event: KeyboardEvent): void {
+    if (!hasPane || !event.ctrlKey || !event.shiftKey || event.altKey || event.metaKey || event.key.toLowerCase() !== 'c') return
+    event.preventDefault()
+    event.stopPropagation()
+    desktop.toggleChatPane(w.id)
+  }
 
   function onPointerDown(event: PointerEvent): void {
     if (!focused) void desktop.focusWindow(w.id)
@@ -74,6 +85,7 @@
   data-window-state={w.windowState}
   data-focused={focused}
   onpointerdowncapture={onPointerDown}
+  onkeydowncapture={onKeyDown}
   onpointermove={onPointerMove}
   onpointerup={onPointerUp}
   onpointercancel={() => {
@@ -92,11 +104,18 @@
     onclose={() => void desktop.closeWindow(w.id)}
     bodyColor="window"
   >
-    {#if App}
-      <App window={w} host={desktop} {focused} />
-    {:else}
-      <UnknownApp window={w} />
-    {/if}
+    <div class="hosted" bind:clientWidth={hostedWidth}>
+      <div class="client-app">
+        {#if App}
+          <App window={w} host={desktop} {focused} />
+        {:else}
+          <UnknownApp window={w} />
+        {/if}
+      </div>
+      {#if hasPane}
+        <AppChatPane window={w} {desktop} available={hostedWidth} />
+      {/if}
+    </div>
   </Form>
   {#if w.openedBy === 'agent'}
     <span class="badge" class:inactive={!focused} title="The agent opened this window"><Icon name="agent7" size={12} />opened by agent</span>
@@ -115,6 +134,20 @@
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+  }
+  .hosted {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+  }
+  .client-app {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   .appframe.minimized {
     display: none;

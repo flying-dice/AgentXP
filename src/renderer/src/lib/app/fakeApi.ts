@@ -5,6 +5,7 @@ import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
 import { createFakeVfs } from './fakeVfs'
 import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
+import { createFakeReview } from './fakeReview'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
@@ -54,6 +55,7 @@ const session = (id: number, desktopId: number, title: string, over: Partial<Ses
   id,
   desktopId,
   cwd: 'E:\\',
+  role: 'chat',
   agentId: 1,
   title,
   status: 'idle',
@@ -224,11 +226,12 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     },
     vfs: fakeVfs.vfs,
     git: createFakeGit({ vfs: fakeVfs.vfs, head: cleanHead(), changed: (root) => emit('git.changed', { desktopId: 1, root }) }),
+    review: createFakeReview({ vfs: fakeVfs.vfs, head: sampleHead(), emit: emit as never }),
     drives: fakeVfs.drives,
     launcher,
     sessions: {
       list: async (desktopId) => (desktopId === undefined ? sessions : sessions.filter((s) => s.desktopId === desktopId)),
-      get: async (id) => sessions.find((s) => s.id === id)!,
+      get: async (id) => sessions.find((s) => s.id === id) ?? session(id, 1, 'Fake session'),
       create: async (desktopId, agentId, cwd) => {
         const created = session(nextId++, desktopId, 'New session', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
         sessions = [...sessions, created]
@@ -256,7 +259,16 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       clearTranscript: async () => {},
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
     },
-    desktop: (desktopApi = createFakeDesktop({ windows: options.empty ? [] : ['chat'], drives: fakeVfs.list(), onChange: (state) => emit('desktop.changed', state) })),
+    desktop: (desktopApi = createFakeDesktop({
+      windows: options.empty ? [] : ['chat'],
+      drives: fakeVfs.list(),
+      onChange: (state) => emit('desktop.changed', state),
+      createReviewSession: (cwd) => {
+        const created = session(nextId++, 1, 'Review of the changes', { cwd, role: 'review' })
+        sessions = [...sessions, created]
+        return created.id
+      }
+    })),
     notes: extras.notes,
     events: extras.events,
     recycle: extras.recycle,

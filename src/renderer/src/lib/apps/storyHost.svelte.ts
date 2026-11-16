@@ -6,7 +6,7 @@
 import type { Message } from '@ag-ui/core'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
-import type { AppKind, AppView, AppWindowState, DesktopState, OpenWindowInput } from '@shared/desktop'
+import type { AppKind, AskChatRequest, AppView, AppWindowState, DesktopState, OpenWindowInput } from '@shared/desktop'
 import type { AguiSessionState } from '@shared/agui-state'
 import { createFakeApi, fakeAgui, type FakeApi } from '../app/fakeApi'
 import { createFakeDesktop } from '../app/fakeDesktop'
@@ -52,6 +52,25 @@ export class StoryHost implements DesktopHost {
   ejectDrive = (letter: string): Promise<void> => this.api.drives.eject(this.current.desktopId, letter)
 
   startChat = async (cwd: string): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId, undefined, cwd))
+
+  /** Records the request (stories show it) and starts a chat like the real desktop, without a prompt. */
+  askRequests = $state.raw<AskChatRequest[]>([])
+  askChat = async (request: AskChatRequest): Promise<void> => {
+    this.askRequests = [...this.askRequests.slice(-9), request]
+    await this.api.desktop.newChat(this.current.desktopId)
+  }
+
+  /** Contexts the apps registered (stories show them), and which panes are open. */
+  contexts = $state.raw<Record<number, () => Record<string, unknown> | null | undefined>>({})
+  panes = $state.raw<Record<number, boolean>>({})
+  setContext = (windowId: Id, provider: (() => Record<string, unknown> | null | undefined) | null): void => {
+    const next = { ...this.contexts }
+    if (provider) next[windowId] = provider
+    else delete next[windowId]
+    this.contexts = next
+  }
+  toggleChatPane = (windowId: Id): void => void (this.panes = { ...this.panes, [windowId]: !this.panes[windowId] })
+  chatPaneOpen = (windowId: Id): boolean => this.panes[windowId] === true
 
   updateView(windowId: Id, view: AppView): void {
     this.reports = [...this.reports.slice(-9), view]

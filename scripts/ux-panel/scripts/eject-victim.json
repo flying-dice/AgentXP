@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "eject-victim",
+  "description": "Reads the README of the working folder and reports; the facilitator ejects the drive before the read so the read is refused.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Working on it...\n",
+          "label": "start"
+        },
+        {
+          "type": "readFile",
+          "path": "{{cwd}}/README.md",
+          "saveAs": "readme",
+          "label": "read README"
+        },
+        {
+          "type": "message",
+          "text": "Reading README.md finished. Error: {{readme.isError}}. Result: {{readme}}"
+        }
+      ]
+    }
+  ]
+}

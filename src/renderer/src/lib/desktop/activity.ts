@@ -60,7 +60,8 @@ const CHIP_LABELS: Record<Exclude<ToolGroup, 'shell'>, string> = {
   notes: 'Notes',
   events: 'Events',
   snip: 'Screen capture',
-  recycle: 'Recycle Bin'
+  recycle: 'Recycle Bin',
+  review: 'Code review'
 }
 
 /** Chips for the top bar: the tool groups the agent can use right now (the always-on shell group is left out). */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Bounds } from './desktop'
-import { cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, placeWindow } from './desktop-views'
+import { supportsAside, type AppView, type Bounds } from './desktop'
+import { asideCwd, cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, placeWindow, viewPath, windowTitle } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -62,5 +62,44 @@ describe('placeWindow', () => {
   it('keeps windows that are larger than the desktop inside it', () => {
     const b = placeWindow('code', 0, null, { width: 700, height: 400 })
     expect(b).toEqual({ x: 0, y: 0, width: 700, height: 400 })
+  })
+})
+
+describe('helpWindowTitle', () => {
+  it('titles a help window after the app of its topic', () => {
+    expect(helpWindowTitle('notepad')).toBe('Notepad Help')
+    expect(helpWindowTitle('agent-manager')).toBe('Task Manager Help')
+    expect(helpWindowTitle('explorer')).toBe('Explorer Help')
+  })
+
+  it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
+    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Help and Support')
+  })
+
+  it('is what windowTitle gives a help view', () => {
+    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Terminal Help')
+  })
+})
+
+describe('the chat pane of a window', () => {
+  const code = (activePath: string | null): AppView => ({ app: 'code', tabs: [], activePath, visibleLines: null, selection: null, selectedChangeId: null })
+
+  it('has none in Chat, Code Review or a surface', () => {
+    expect(['chat', 'code-review', 'surface'].map((a) => supportsAside(a as never))).toEqual([false, false, false])
+    expect(['code', 'notepad', 'browser', 'explorer', 'terminal', 'paint', 'help'].every((a) => supportsAside(a as never))).toBe(true)
+  })
+
+  it('finds the path a view shows', () => {
+    expect(viewPath(code('E:\\a.ts'))).toBe('E:\\a.ts')
+    expect(viewPath({ app: 'terminal', terminalId: null, cwd: 'F:\\x', runningCommand: null, lastLines: [] })).toBe('F:\\x')
+    expect(viewPath({ app: 'explorer', path: '', selected: [] })).toBeNull()
+    expect(viewPath({ app: 'browser', url: 'about:blank', title: '', loading: false })).toBeNull()
+  })
+
+  it('works on the drive root of a plugged-in drive, else at home', () => {
+    expect(asideCwd(code('E:\\src\\a.ts'))).toBe('E:\\')
+    expect(asideCwd(code('C:\\Users\\Agent\\a.ts'))).toBe('C:\\Users\\Agent')
+    expect(asideCwd(code(null))).toBe('C:\\Users\\Agent')
+    expect(asideCwd({ app: 'browser', url: 'about:blank', title: '', loading: false }, 'C:\\Home')).toBe('C:\\Home')
   })
 })
