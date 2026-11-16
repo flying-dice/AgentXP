@@ -1,4 +1,214 @@
-# Agent7 UX Scorecard (round 7)
+# Agent7 UX Scorecard (round 8)
+
+Status: round 8 re-score by the researcher who wrote `panel/r8/SYNTHESIS.md` (not a fixer of the round 7 backlog). Scores are from the round 8 panel evidence (120 records: 60 novice, 60 intermediate, a full pass at both levels, run on the packaged build, one commit `662b12c8ef`, with a fresh panelist per session; no expert tier), the researcher decisions of that file, 27 screenshots that I viewed, the code behind the open findings, and the help coverage script (540 of 540 ids documented, run for this scorecard). The round 7 score of each cell is kept in brackets: `7 (8)` means 7 now, 8 in round 7. A cell without brackets did not change. The round 7 scorecard is kept below, then rounds 6, 5, 4, 3 and 2.
+
+Cell format: the score from 1 to 10, or `n/a` (reason below the table). Dimensions: D1 Usability, D2 Learnability, D3 Efficiency, D4 Error prevention and recovery, D5 Accessibility, D6 Visual consistency, D7 Trust and transparency, D8 Content and copy, D9 Feedback and state, D10 Performance perception, D11 Documentation. Findings are in `findings.md` (F-069 to F-092 for this round); the new problems of this round are the themes TH-123 to TH-143 of `panel/r8/SYNTHESIS.md` and the items UX-193 to UX-216 of `FIX-BACKLOG-R8.md`.
+
+**Result: 0 of 31 journeys at 10/10. The release gate is not met.** Details in "Release gate status, round 8" below.
+
+**What 10/10 means here (same strict rules as round 7).** The rubric decides (`rubric.md`, rule 6): a journey is 10/10 only when all eleven cells are 10, and a cell is 10 only with zero known issues on that dimension and linked evidence. That requires no open S1, S2 or S3 finding, and every S4 finding either fixed or accepted in `findings.md` with a written reason (an unaccepted S4 caps its cell at 9). No S4 is accepted yet (acceptance is the UX lead's decision, not mine). Panel part of the rule (the "Panel gate" column): every task of the journey passes at both levels and every one of them has SEQ 6 or more. The cap rule applies: an open S2 caps its dimension at 6, an open S3 at 8, an S4 not yet accepted at 9. A passed task at SEQ 4, after dead ends, or at its budget is 7 or lower on D1 and D3 for that journey. A failed task of the novice or the intermediate panelist is at least S2 on D1 (rubric, "User panel result as a gate"); T28.1 intermediate fails with its first cause in the harness (H-108), so J28 D1 takes the rubric cap 6 until a rerun shows the cause (below).
+
+**How the scores were set.**
+- Evidence: the round 8 records and `check.json` of every row, the shots named below and in `SYNTHESIS.md` 2.5, the source files named in `FIX-BACKLOG-R8.md`, the Performance (UX-84) section (not edited), and `scripts/check-help-coverage.mjs`. I did not run the app, git or npm, and I did not run axe.
+- SEQ values are the values of the records (equal to `check.json` in 119 of 120 rows; T25.1 novice has `seq: null` in `check.json`, H-111). Researcher decisions: T03.1 (both levels) PASS† (facilitator override: stale checker, H-106, done); T28.1 intermediate stays FAIL (`SYNTHESIS.md` 2.1). Pass rates after decisions: novice 60 of 60, intermediate 59 of 60.
+- A cell that has no round 8 evidence keeps its round 7 value. Where round 8 shows the round 7 cause unchanged, the cell stays.
+- **Fresh panelists** (all 120 sessions): D2 and the step counts are valid evidence. Two sessions are reruns (T28.1 novice, T29.1 novice) and one was finished by the facilitator (T13.2 novice); the results stand.
+
+**Global notes (each applies to every journey).**
+- **Packaged build.** `build.packaged` is true in 120 of 120 files and the commit is `662b12c8ef` in all 120. The R7 caveat (two commit ids) is gone (H-100 verified).
+- **D5 (axe).** No axe result for round 8. The round 5 scan has not been re-run, the manual checklist and the screen reader pass are not done. Every D5 cell stays at its round 7 value (7 or 8). **No journey can reach 10 until D5 is done.**
+- **D10.** Still waits for the reference-machine run (Performance (UX-84), not edited). **No D10 cell can be 10**; all 31 keep their round 7 values (8 or 9).
+- **D11.** Coverage is 540 of 540 ids (R7: 527). F1 opens the right topic (T01.1 novice, T22.1, T31.1, T31.2). Residue: the Help text above a jump target is still cut (`T22.1-novice 004`, UX-205). No procedure was followed word for word by a fresh reviewer, so no D11 cell is above 8.
+- **Journeys at 10 by cell count.** D5 and D10 are below 10 in all 31 journeys, so 0 of 31 reach 10 whatever the panel does.
+- **Nothing in this round is an S2.** The two R7 S2 items (UX-173, UX-174) are fixed or fixed in part with no failed novice task. Nine S3 items are open (UX-193 to UX-198, UX-207, UX-212, UX-213), so every affected dimension is capped at 8.
+
+## Scorecard, round 8
+
+| Journey | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9 | D10 | D11 | Panel gate | At 10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| J01 First launch and empty launcher | 7 | 8 | 7 | n/a | 8 | 9 | n/a | 8 | 8 | 9 | 8 | no, min SEQ 5 | 0 of 11 |
+| J02 Create a desktop | 8 | 7 | 8 | 9 | 8 | 9 | n/a | 8 | 8 | 8 | 7 | yes, min SEQ 6 | 0 of 11 |
+| J03 Plug in a project | 9 (8) | 8 | 9 (8) | 8 | 7 | 9 | 8 | 8 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J04 Start a chat | 9 | 8 | 9 | 8 | 7 | 8 | 8 | 8 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J05 Send a prompt and follow progress | 8 | 7 | 9 | 8 | 7 | 8 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J06 Approve or deny a request (chat and UAC dialog) | 7 (6) | 7 (6) | 7 | 8 | 7 | 8 | 8 (7) | 8 | 7 | 8 | 8 | no, min SEQ 5 | 0 of 11 |
+| J07 Approve from the Action Center | 8 | 7 | 9 | 8 | 7 | 8 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J08 Review and revert changes (Chat, Code) | 8 | 7 | 8 | 8 | 7 | 8 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J09 Restore from the Recycle Bin | 8 | 8 (7) | 8 | 9 (8) | 7 | 8 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J10 Tools follow apps | 9 | 7 | 8 | n/a | 7 | 8 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J11 Pause and take control | 9 | 7 | 9 | 8 | 7 | 9 | 8 | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J12 Eject a drive | 8 | 8 | 9 | 8 | 7 | 9 | 8 | 8 | 8 | 8 | 7 | yes, min SEQ 6 | 0 of 11 |
+| J13 Disconnect and reconnect while the agent runs | 8 | 8 (7) | 8 | 8 | 7 | 8 | 8 | 7 | 7 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J14 Manage several desktops | 9 | 8 | 9 | 8 | 8 | 9 | n/a | 8 | 8 | 9 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J15 Delete a desktop | 9 | 8 | 9 | 8 | 8 | 9 | n/a | 8 | 8 | 9 | 8 | yes, min SEQ 7 | 0 of 11 |
+| J16 Choose permissions (Control Center) | 7 (6) | 7 (6) | 8 | 8 | 8 | 8 | 8 (7) | 7 | 8 | 9 | 8 | no, min SEQ 5 | 0 of 11 |
+| J17 Add and choose agents | 7 (6) | 7 | 6 (7) | 7 (6) | 8 | 9 | 8 | 7 (6) | 8 | 8 | 8 | no, T17.2 novice SEQ 2 | 0 of 11 |
+| J18 A2UI surfaces: inline, sidebar, window | 9 | 8 | 9 | 8 | 7 | 8 | 8 | 8 | 8 | 8 | 8 | yes, min SEQ 7 | 0 of 11 |
+| J19 Browse with the Browser | 8 | 7 | 8 | 8 | 7 | 9 | 8 | 7 | 7 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J20 Investigate a problem (Event Viewer, Task Manager) | 7 | 7 (6) | 7 (6) | 8 | 7 | 9 | 8 | 7 (8) | 7 (8) | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J21 Keyboard-only operation | 8 | 7 | 9 | 8 | 7 | 9 | n/a | 8 | 8 | 8 | 7 | yes, min SEQ 6 | 0 of 11 |
+| J22 First-time help and discoverability | 8 | 8 | 8 | n/a | 7 | 9 | n/a | 7 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J23 Recover from errors | 8 | 7 | 8 | 8 (7) | 7 | 8 | 8 | 8 (7) | 7 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J24 Read code, git status and the gutter | 8 | 7 | 9 | 8 | 7 | 8 | 8 | 8 | 8 | 8 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J25 Review the agent's changes in Code Review | 8 (9) | 8 | 9 | 9 | 7 | 8 | 8 | 7 | 8 | 8 | 8 | no, min SEQ 5 | 0 of 11 |
+| J26 Send review comments to a chat, and comment yourself | 8 | 7 | 8 | 8 | 7 | 8 | 8 | 7 | 7 | 8 | 7 | yes, min SEQ 6 | 0 of 11 |
+| J27 Ask the chat pane about what you are looking at | 8 | 7 | 8 | 9 | 7 | 8 | 8 | 7 | 7 | 8 | 8 | no, min SEQ 5 | 0 of 11 |
+| J28 Let the agent use a web app in the Browser | 6 (7) | 7 | 7 | 8 | 7 | 8 | 8 | 7 (8) | 8 | 8 | 8 | no, T28.1 intermediate fails | 0 of 11 |
+| J29 Browse with tabs and recover from a bad page | 9 | 8 | 9 | 7 | 7 | 9 | 7 | 7 | 8 | 9 | 7 | yes, min SEQ 7 | 0 of 11 |
+| J30 Use menus, right-click and About in any app | 9 | 8 | 9 | 9 | 7 | 8 | 8 | 7 | 8 | 9 | 8 | yes, min SEQ 6 | 0 of 11 |
+| J31 Get help from inside an app (Help menu and F1) | 9 | 8 | 8 | n/a | 7 | 9 | n/a | 7 | 8 | 9 | 8 | yes, min SEQ 6 | 0 of 11 |
+
+Mean cell 7.88 (R7: 7.85). Of the 330 cells that have a number in both rounds, 18 are higher, 6 are lower and 306 are equal.
+
+## Round 7 to round 8 movement
+
+| Dimension | Higher | Lower | Why |
+|---|---|---|---|
+| D1 Usability | 4 | 2 | up: J03 (UX-182 and UX-181 for Plug in fixed, T03.1 in 5 actions), J06 and J16 (T06.3 passes, no failed task), J17 (no failed task); down: J25 (UX-193: the chat cannot do the review), J28 (T28.1 intermediate fails) |
+| D2 Learnability | 5 | 0 | up: J06 and J16 (the note under the take-control box sends the user to Control Center), J09 (Restore on the row), J13 (the way back to a closed chat works, T13.1 SEQ 6 and 7), J20 (End the agent program in the File menu) |
+| D3 Efficiency | 2 | 1 | up: J03, J20 (T20.2 7 of 16 and 4 of 12 actions, R7 15 and 7); down: J17 (9 of 12 actions, SEQ 2) |
+| D4 Recovery | 3 | 0 | up: J09 (Restore), J17 ("Choose another agent" highlighted), J23 ("Start a new chat with your text") |
+| D5 Accessibility | 0 | 0 | no axe run, no manual checklist |
+| D6 Visual consistency | 0 | 0 | unchanged |
+| D7 Trust | 2 | 0 | up: J06 and J16 (the box says it is not saved) |
+| D8 Copy | 2 | 2 | up: J17 ("Check that it is installed, or choose another agent."), J23 (no "RUN_ERROR"); down: J20 (Event Viewer shows protocol names, "Nothing has happened yet." beside a warning), J28 ("The agent did not answer in time." cut at "Click D") |
+| D9 Feedback | 0 | 1 | down: J20 (the Activity gadget contradicts Event Viewer) |
+| D10 Performance | 0 | 0 | unchanged, see the global note |
+| D11 Documentation | 0 | 0 | unchanged |
+
+| Journey group | Round 7 to round 8 |
+|---|---|
+| Getting set up (J01 to J04, J12) | J01 unchanged: the balloon works now (UX-179) and T01.1 intermediate is SEQ 6, but T01.1 novice is SEQ 5 at its budget. J03 higher on D1 and D3 (no duplicate folders, no Explorer window over the tree). J02, J04, J12 equal. |
+| Working with the agent (J05 to J11, J13) | J06 higher on D1, D2, D7 (T06.3 passes; the note "This is not saved" works). J05, J07 equal: a new S3 item holds them (UX-194, "Show the whole change" does nothing). J08 equal on D1 and D3: T08.2 takes 2 actions (R7 10) but the Status and Path columns are still cut (UX-207, S3). J09 higher on D2, D4 (Restore on the row). J13 higher on D2 (T13.1 SEQ 6 and 7). J10, J11 equal. |
+| Desktops and agents (J14 to J17) | J16 higher on D1, D2, D7 (T06.3 passes). J17 higher on D1, D4, D8, lower on D3: T17.2 novice passes at SEQ 2 (the first row of the Agents list cannot start). J14, J15 equal. |
+| Web, errors and help (J18 to J24, J29) | J20 higher on D2, D3 (UX-176 works), lower on D8, D9 (the Activity gadget says nothing happened beside a warning: UX-212). J23 higher on D4, D8 ("Start a new chat with your text", no "RUN_ERROR"). J18, J19, J21, J22, J24, J29 equal. |
+| New features (J25 to J31) | J25 lower on D1 (UX-193). J26 equal (D1 already 8). J28 lower on D1, D8 (T28.1 intermediate fails: H-108, UX-195). J27 equal (T27.1 intermediate SEQ 5). J30, J31 equal. |
+
+## Reasons for the changed scores, round 8
+
+Only cells that moved are listed with the new reason. Every cell that did not move keeps its reason from "Reasons for the changed scores, round 7 (kept)", unless a line says otherwise. Lines that quote a shot name it as `<task>-<level> <number>`.
+
+**J01 First launch and empty launcher.** No cell moved. T01.1 intermediate: SEQ 6 (R7 3), the balloon button "Open Computer" opens Computer (UX-179 fixed). T01.1 novice: SEQ 5, four actions end at the folder dialog; the check held at the first action (`stepsToPass` 1, H-101), so neither row is weak. D1 and D3 stay 7 because the novice used all four actions, and the panel gate fails at SEQ 5.
+
+**J02 Create a desktop.** No cell moved. T02.1 and T02.2 pass (SEQ 6 and 6 at both levels). "Agent can use nothing yet. Open an app to give it a tool." reads like a failure (`T02.1-novice` 007, UX-200); "Scripted demo" stays (R4 words).
+
+**J03 Plug in a project.** D1 9 (8), D3 9 (8): T03.1 passes at both levels in 5 actions (PASS†: the checker was stale, H-106). The folder list shows Documents and Desktop once (`T03.1-novice 005`, UX-182 fixed) and Plug in opens no Explorer window: the project shows in the tree (`T03.1-novice 007`, UX-181 for this case). D5 7 stays. The folder field still shows the fixture path (H-104).
+
+**J04 Start a chat.** No cell moved. T04.1 SEQ 6 and 7, T04.2 SEQ 6 and 6. The Chats - Task Manager window does not say it reopens closed chats (UX-204, S4).
+
+**J05 Send a prompt and follow progress.** No cell moved. T05.1 SEQ 6 and 7, T05.2 SEQ 6 and 7. The status bar now says "Waiting for your answer" (`T06.1-novice 001`). UX-194 is a new S3 item (the link "Show the whole change" does nothing), so D7 and D9 stay 8.
+
+**J06 Approve or deny a request (chat and UAC dialog).** D1 7 (6), D2 7 (6), D7 8 (7): T06.3 passes at both levels (novice 9 of 24, SEQ 5; intermediate 8 of 18, SEQ 6) and no task failed. The take-control box says "(until I untick it)", the chips read "Ask (now)" and the note "This is not saved. To keep a tool on Ask, change it in Control Center." sends the user to the right place (`T06.3-novice 002`; UX-173 fixed). The novice lost four actions because the label and the note disagree (UX-199, S4). T06.1 intermediate is weak (3 of 3: the link does nothing, UX-194, S3). D1 stays 7 (T06.1 weak, T06.3 SEQ 5, open S3), D3 7, D9 7.
+
+**J07 Approve from the Action Center.** No cell moved. T07.1 SEQ 6 and 7 in 5 and 2 actions. The second chat window is about 450 px wide, its Send wraps to a second row and its diff shows three rows (`T07.1-novice 001`; UX-203, UX-194).
+
+**J08 Review and revert changes (Chat, Code).** No cell moved. T08.2 takes 2 actions at both levels (R7 novice 10) and the diff pane is tall (`T08.2-novice 002`; UX-184 fixed in part), but D1 and D3 stay 8 because an S3 item caps them: the Status and Path columns are cut ("Modi...", "M...", "A...", "E:\...", UX-207). T08.1 SEQ 6 and 7.
+
+**J09 Restore from the Recycle Bin.** D2 8 (7), D4 9 (8): the reverted row says "This change was undone. Restore it from the Recycle Bin." and has a "Restore..." button (`T09.1-novice 003`; UX-185 fixed). T09.1 SEQ 6 and 7 in 5 and 4 actions. "Restore..." opens the Recycle Bin and does not restore (UX-209, S4), the status reads "R..." (UX-207, S3), so D1 and D3 stay 8 and D4 stays below 10.
+
+**J10 Tools follow apps.** No cell moved. T10.1 and T10.2 pass (SEQ 6 and 7). With the chat pane open in Control Center the Permissions page keeps a 100 px column (`T10.1-novice 006`; UX-198, S3), so D6 and D8 stay at their capped values. "Ask (Terminal is closed)" is unclear (UX-200).
+
+**J11 Pause and take control.** No cell moved. T11.1, T11.2, T11.3 pass at SEQ 6 and 7. "Stop" and "Pause all agents" look alike (UX-200); the box note disagrees with its label (UX-199).
+
+**J12 Eject a drive.** No cell moved. T12.1 and T12.2 pass. Computer opens behind the chat (UX-203).
+
+**J13 Disconnect and reconnect while the agent runs.** D2 8 (7): T13.1 passes at SEQ 6 and 7 in 3 actions (R7 5 and 6); the toast and the Chats tab lead back to the chat ("Reopened ... Your earlier messages are kept.", `T04.2-novice 003`). D9 stays 7: the Activity gadget says "Nothing has happened yet." while the job runs (`T13.1-novice 005`; UX-212, S3). T13.2 passes (SEQ 6 and 7; novice finished by the facilitator).
+
+**J14 Manage several desktops.** No cell moved. T14.1 and T14.2 pass at SEQ 6 and 7. The launcher selects "Scratch pad", not the waiting row (`T14.1-novice 001`; UX-202, S4).
+
+**J15 Delete a desktop.** No cell moved. T15.1 passes at SEQ 7 and 7.
+
+**J16 Choose permissions (Control Center).** D1 7 (6), D2 7 (6), D7 8 (7): no failed task (T06.3 passes), the take-control note says it is not saved. T16.1 SEQ 6 and 6, T16.2 SEQ 5 (novice) and 6. D1 stays 7: T16.2 and T06.3 novice are SEQ 5 and the Permissions page is squeezed when the pane is open (UX-198, S3). The chips have no visible tooltip (UX-200, H-112).
+
+**J17 Add and choose agents.** D1 7 (6), D3 6 (7), D4 7 (6), D8 7 (6): T17.2 novice passes at SEQ 2 (9 of 12 actions, three check runs): the box now highlights "Choose another agent" and says "Check that it is installed, or choose another agent." (`T17.2-novice 001`, `008`; UX-174 fixed in part), but the novice picked Claude Code, the first row of the list, which cannot start (`002`), and found only "Internal error" in Details and Event Viewer (`009`, `011`, `012`; UX-196, UX-197, UX-213, S3; H-107). T17.2 intermediate chose a working agent and passed (5 of 9, SEQ 6). D3 6: 9 of 12 actions and SEQ 2. T17.1 passes (SEQ 6 and 7).
+
+**J18 A2UI surfaces: inline, sidebar, window.** No cell moved. All four tasks pass at SEQ 7. The "Sent." line vanishes (UX-216, S4); the form's "Send" and the chat's "Send" share a label (fixture, H-117).
+
+**J19 Browse with the Browser.** No cell moved. T19.1 SEQ 6 and 7, T19.2 SEQ 6 and 7. The chat pane covers part of the page (UX-214).
+
+**J20 Investigate a problem (Event Viewer, Task Manager).** D2 7 (6), D3 7 (6), D8 7 (8), D9 7 (8): T20.2 passes at SEQ 6 and 6 in 7 of 16 and 4 of 12 actions (R7 15 and 7): File > "End the agent program..." opens Task Manager, the launcher says "To end them, use Task Manager" (`T14.1-novice 001`, `T20.2-novice 008`; UX-176 fixed). T20.1 novice is SEQ 6 (R7 7): the Activity gadget says "Nothing has happened yet." beside the Warning in Event Viewer (`T20.1-novice 001`, `002`; UX-212, S3; R7 showed the warning), and Event Viewer rows carry protocol names ("-> fs/read_text_file (response)", UX-213, S3). D1 7, D4 8 stay.
+
+**J21 Keyboard-only operation.** No cell moved. T21.1 passes at SEQ 6 and 6. Deny keeps the focus (decision TH-87, keep). No focus cue on the desktop icons until the first Tab (T21.1 novice; D5 manual checklist).
+
+**J22 First-time help and discoverability.** No cell moved. T22.1 SEQ 7 and 7; T22.2 passes at SEQ 6 and 7 without a Help window (H-96 works); Revert says "Nothing to revert yet." (`T22.2-novice 002`). The Help text is cut above a jump target and the topic is 4284 px high (`T22.1-novice 004`; UX-205).
+
+**J23 Recover from errors.** D4 8 (7), D8 8 (7): "Start a new chat with your text" opens a New chat with the text in its box (UX-175 fixed) and the Activity gadget no longer shows "RUN_ERROR" (T23.1 intermediate record). T23.1 SEQ 7 and 7, T23.1b SEQ 6 and 7, T23.2 SEQ 7 and 7. D9 stays 7: after a crash and a restart the gadget says "Nothing has happened yet." (`T23.1-novice 002`; UX-212, S3). D4 stays capped by UX-195 (S3) and UX-196 (S3). Restart does not resend (UX-201, S4).
+
+**J24 Read code, git status and the gutter.** No cell moved. T24.1 and T24.2 pass (SEQ 6 and 7). "This chat did not change any file" beside "Git (3)" (UX-208), the diff pane is small for a short hunk and the Changes columns are cut (UX-207).
+
+**J25 Review the agent's changes in Code Review.** D1 8 (9): the owner reported that a chat asked for a review cannot use the review tools and lists the comments as text (UX-193, S3, in progress): the advertised flow does not work, and an open S3 caps D1 at 8. T25.1 passes at SEQ 7 and 7 with no action; T25.2 passes at SEQ 5 (novice) and 7. The banner is one sentence across the window (`T25.2-novice 001`; UX-191 fixed).
+
+**J26 Send review comments to a chat, and comment yourself.** No cell moved (D1 was 8; UX-193 holds it there). T26.1 and T26.2 pass (SEQ 6 and 7). After "Send comments to chat..." no line says the comments arrived (`T26.1-novice 005`; UX-211, S4).
+
+**J27 Ask the chat pane about what you are looking at.** No cell moved. T27.1 intermediate SEQ 5 (the drag works, the question quotes half of line 2, `T27.1-intermediate 003`; UX-210), novice SEQ 6; T27.2 SEQ 6 and 7.
+
+**J28 Let the agent use a web app in the Browser.** D1 6 (7), D8 7 (8): T28.1 intermediate FAILED (5 of 9, SEQ 5) and the novice lost an attempt (SEQ 4): "The agent did not answer in time." with a cut status line, no "Send again" and a Reconnect that sends nothing (`T28.1-intermediate 006`, `T28.1-novice 006`; UX-195, S3). The first cause is the scripted agent's step "older messages load (2)" (H-108), so D1 is the rubric cap for a failed task and is meant to be restored by the rerun. D3 7, D4 8 stay. T28.2 passes (SEQ 6 and 7). "Taken over" reads like a status (UX-214).
+
+**J29 Browse with tabs and recover from a bad page.** No cell moved. T29.1 passes at SEQ 7 and 7 (novice rerun). The "+" has no label (UX-214).
+
+**J30 Use menus, right-click and About in any app.** No cell moved. T30.1 and T30.2 pass (SEQ 6 and 7). Two Notepad entries in the context menu; About names no Notepad version (UX-206).
+
+**J31 Get help from inside an app (Help menu and F1).** No cell moved. T31.1 SEQ 7 and 7, T31.2 SEQ 6 and 7. The read-only note shows at open (`T31.2-novice 003`; UX-190 fixed in part); typing still gives no sign (UX-215).
+
+## Why every journey is below 10, round 8
+
+Every journey has D5 (no axe, no manual checklist, no screen reader pass) and D10 (no reference-machine run) below 10. The reasons below are the product reasons beyond those two.
+
+- **J01** UX-183 and UX-205 (Help residue), T01.1 novice SEQ 5 at its budget, R4 words ("Agent", "Scripted demo").
+- **J02** R4 words (UX-133 to UX-137, "Scripted demo"), UX-200 ("Agent can use nothing yet"), not accepted.
+- **J03** UX-203 (window placement elsewhere), R4 word "plug in", H-104 (fixture path).
+- **J04** UX-204 (Task Manager title and list), UX-203.
+- **J05** UX-194 (S3), UX-200 (words), UX-201.
+- **J06** UX-194 (S3), UX-199 (label against note), UX-200, TH-87 (Deny default, decision keep); panel gate not met (T06.3 novice SEQ 5).
+- **J07** UX-194 (S3), UX-203 (second window narrow).
+- **J08** UX-207 (S3, Status and Path cut), UX-208.
+- **J09** UX-207 (S3), UX-209 ("Restore..." opens the Recycle Bin), UX-203.
+- **J10** UX-198 (S3, Permissions page squeezed), UX-200 (chip words).
+- **J11** UX-199, UX-200 (Stop against Pause all agents).
+- **J12** UX-203 (Computer behind the chat).
+- **J13** UX-212 (S3, Activity gadget), UX-204.
+- **J14** UX-202 (launcher preselect), R5 reasons kept ("waiting" read two ways).
+- **J15** R5 reasons kept, no new item.
+- **J16** UX-198 (S3), UX-199, UX-200; panel gate not met (T06.3 and T16.2 novice SEQ 5).
+- **J17** UX-196, UX-197, UX-213 (S3 each, T17.2 novice SEQ 2), H-107.
+- **J18** R4 words ("Notes", "Board" against "Form"), UX-216.
+- **J19** UX-214 (the chat pane covers the page), "port" (UX-133 to UX-137).
+- **J20** UX-212 (S3), UX-213 (S3), UX-201, UX-203.
+- **J21** TH-87 (Deny default, decision keep), D5 (focus cue on the desktop).
+- **J22** UX-205, UX-208, UX-200.
+- **J23** UX-195 (S3), UX-196 (S3), UX-212 (S3), UX-201.
+- **J24** UX-207 (S3), UX-208.
+- **J25** UX-193 (S3, in progress), UX-211; panel gate not met (T25.2 novice SEQ 5).
+- **J26** UX-193 (S3), UX-211.
+- **J27** UX-210 (S4); panel gate not met (T27.1 intermediate SEQ 5).
+- **J28** UX-195 (S3), UX-214; T28.1 intermediate fails (H-108).
+- **J29** UX-214 ("+" has no label).
+- **J30** UX-206 (S4).
+- **J31** UX-205, UX-215.
+
+Journeys with an open S2 or S3 item: J05, J06, J07, J08, J09, J10, J13, J16, J17, J20, J23, J24, J25, J26, J28 (15; R7: nine, of which three had an S2). The other 16 are held by S4 items, D5 and D10 only.
+
+## Release gate status, round 8
+
+Gate of `process.md` (exit criteria), as stated by the lead: every task passes at both levels, median SEQ at least 6 at each level, every journey 10/10, no open severity-3 item, packaged build.
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Every task passes at both levels | **Not met: novice 60 of 60 (100%), intermediate 59 of 60 (98%)** | T28.1 intermediate fails (H-108 first, UX-195 for the route). T03.1 (both) is PASS†: the checker was stale (H-106, done). Raw tally 59 and 58. R7: 58 and 60. |
+| Median SEQ at least 6 at each level | **Met** | novice 6 (mean 6.05), intermediate 7 (mean 6.73). Below 5: novice T17.2 (2) and T28.1 (4); intermediate none. "No task below 5" is not met at the novice level (R7: three tasks at novice, one at intermediate). |
+| Every journey 10/10 | **Not met: 0 of 31** | 16 journeys have no open S2 or S3 (R7: 22); 15 have an S3. 24 meet the panel part (R7: 22). Each is held by open S4 items, D5 and D10. |
+| No S1 to S3 finding open | **Not met: 0 S1, 0 S2, 9 S3** | S3: UX-193 (in progress), UX-194, UX-195, UX-196, UX-197, UX-198, UX-207, UX-212, UX-213. S4 (15): UX-199 to UX-206, UX-208 to UX-211, UX-214 to UX-216, and the R4 S4 items UX-133 to UX-137. No S4 accepted. R7: 2 S2 and 5 S3. |
+| Documentation gate | Partly | coverage 540 of 540; F1 opens the right topic; Help text cut after a jump (UX-205). No procedure followed by a fresh reviewer. |
+| Accessibility scan (D5) | **Not met: no scan** | the R5 axe run was not repeated; manual checklist and screen reader pass not done. |
+| Performance (UX-84, D10) | **Not met: waits for the reference machine** | not measured. |
+| Packaged build, fresh panelists | **Met, no caveat** | `build.packaged` true in 120 of 120, fresh panelists in 120 of 120, one commit `662b12c8ef` (H-100 verified). Two reruns and one facilitator finish, flags missing (H-110). |
+| Code Review by the chat (UX-193, owner report) | **Open** | Fix in progress. The re-test is task T25.3 in round 9 (H-115). |
+
+**The gate is not met.** The panel part is better than in R7: no S2 item is open, no task fails for a product cause, both medians hold, the novice pass rate is 100% and the packaged-build clause is clean. What is left: the failed intermediate task (H-108), two novice tasks below SEQ 5, nine S3 items, 15 S4 items and the S4 acceptance by the UX lead, the harness fixes (H-107 to H-119), the axe re-scan with the manual checklist (D5), the reference-machine run (D10), and the UX-193 re-test. `FIX-BACKLOG-R8.md` has four work packages.
+
+---
+
+# Round 7 scorecard (kept)
 
 Status: round 7 re-score by the researcher who wrote `panel/r7/SYNTHESIS.md` (not a fixer of the round 6 backlog). Scores are from the round 7 panel evidence (120 records: 60 novice, 60 intermediate, a full pass at both levels, run on the packaged build with a fresh panelist per session; no expert tier), the researcher decisions of that file, 38 screenshots that I viewed, the code behind the open findings, and the help coverage script (527 of 527 ids documented, run for this scorecard). The round 6 score of each cell is kept in brackets: `7 (8)` means 7 now, 8 in round 6. A cell without brackets did not change. The round 6 scorecard is kept below, then rounds 5, 4, 3 and 2.
 
@@ -21,7 +231,7 @@ Cell format: the score from 1 to 10, or `n/a` (reason below the table). Dimensio
 - **D11.** Coverage is 527 of 527 ids (R6: 520). F1 now opens "Using the Desktop" on the new desktop (`T01.1-novice 004`, UX-165 fixed) and the chat's welcome text answers the undo question in place (`T22.2-novice 002`, UX-161 fixed). Residue: the Help text is cut at the top after a jump and the contents have no "Save" entry (`T31.2-novice 005`, UX-183); "Tasks and changes" in the View menu against "Changes" on the button (UX-178). No procedure was followed word for word by a fresh reviewer, so no D11 cell is above 8.
 - **Journeys at 10 by cell count.** D5 and D10 are below 10 in all 31 journeys, so 0 of 31 reach 10 whatever the panel does.
 
-## Scorecard, round 7
+## Scorecard, round 7 (kept)
 
 | Journey | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9 | D10 | D11 | Panel gate | At 10 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -58,7 +268,7 @@ Cell format: the score from 1 to 10, or `n/a` (reason below the table). Dimensio
 | J31 Get help from inside an app (Help menu and F1) | 9 | 8 | 8 | n/a | 7 | 9 | n/a | 7 | 8 (7) | 9 | 8 | no, min SEQ 5 | 0 of 11 |
 Mean cell 7.85 (R6: 7.84). Of the 330 cells that have a number in both rounds, 21 are higher, 17 are lower and 292 are equal.
 
-## Round 6 to round 7 movement
+## Round 6 to round 7 movement (kept)
 
 | Dimension | Higher | Lower | Why |
 |---|---|---|---|
@@ -82,7 +292,7 @@ Mean cell 7.85 (R6: 7.84). Of the 330 cells that have a number in both rounds, 2
 | Web, errors and help (J18 to J24, J29) | J18, J21, J29 equal. J19 higher on D7. J20 lower on D3 (T20.2 novice 15 of 16 actions, UX-176). J22 higher (T22.2 passes in one action at both levels). J23 lower on D8 ("Error: RUN_ERROR", UX-188). J24 equal. |
 | New features (J25 to J31) | J25, J26, J30 equal. J27 lower on D3 (T27.1 intermediate, the line number column, UX-186). J28 lower on D1, D3 (T28.1 novice SEQ 3: scenario wording and the scripted reply, H-98) and higher on D8 (UX-170). J31 higher on D9. |
 
-## Reasons for the changed scores, round 7
+## Reasons for the changed scores, round 7 (kept)
 
 Only cells that moved are listed with the new reason. Every cell that did not move keeps its reason from "Reasons for the changed scores, round 6 (kept)", unless a line says otherwise. Lines that quote a shot name it as `<task>-<level> <number>`.
 
@@ -148,7 +358,7 @@ Only cells that moved are listed with the new reason. Every cell that did not mo
 
 **J31 Get help from inside an app (Help menu and F1).** D9 8 (7): the Help window is about 750 px wide, inside the screen, with a 200 px topic list (`T31.2-novice 005`; UX-165 fixed). T31.1 and T31.2 pass at both levels (min SEQ 5: T31.2 novice typed into the read-only Terminal first, UX-190). The text above a jump target is cut (UX-183).
 
-## Why every journey is below 10, round 7
+## Why every journey is below 10, round 7 (kept)
 
 Every journey has D5 (no axe, no manual checklist, no screen reader pass) and D10 (no reference-machine run) below 10. The reasons below are the product reasons beyond those two.
 
@@ -186,7 +396,7 @@ Every journey has D5 (no axe, no manual checklist, no screen reader pass) and D1
 
 Journeys with an open S2 or S3 item: J01, J06, J08, J09, J16, J17, J20, J23, J24 (9). The other 22 are held by S4 items, D5 and D10 only.
 
-## Release gate status, round 7
+## Release gate status, round 7 (kept)
 
 Gate of `process.md` (exit criteria), as stated by the lead: every task passes at both levels, median SEQ at least 6 at each level, every journey 10/10, no open severity-3 item, packaged build.
 

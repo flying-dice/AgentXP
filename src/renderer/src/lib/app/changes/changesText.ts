@@ -1,7 +1,7 @@
 /** The words of the Changes pane that depend on what the list holds (UX-185, UX-187). Pure, so they are tested. */
 
 /** The list's empty text. It says only what this chat did, so it never contradicts a Git list (UX-187). */
-export const CHANGES_EMPTY = 'This chat did not change any file.'
+export const CHANGES_EMPTY = 'No uncommitted changes from this chat.'
 
 /** What the pane shows in place of a diff when a reverted row is selected (UX-185). */
 export const UNDONE_TEXT = 'This change was undone. Restore it from the Recycle Bin.'

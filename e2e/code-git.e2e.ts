@@ -228,7 +228,7 @@ describe('Code app git awareness', () => {
     await see.text(code.frame.getByTestId('changes-git-note'), 'Git shows 2 changed files from before.')
     await see.count(code.frame.getByTestId('changes-item'), 0)
     const listText = await code.frame.getByTestId('changes-list').innerText()
-    expect(listText).toContain('This chat did not change any file.')
+    expect(listText).toContain('No uncommitted changes from this chat.')
     expect(listText).not.toContain('No pending changes')
     // Nothing to revert yet, said under the buttons (UX-187).
     await see.text(code.frame.getByTestId('changes-reason'), 'Nothing to revert yet.')
@@ -300,5 +300,34 @@ describe('Code app: turn on Git', () => {
     await ctx.desktopPage.getByTestId('message-box-action-turn-on').click()
     await see.visible(code.frame.getByTestId('code-git-branch'))
     await see.gone(code.frame.getByTestId('code-git-not-repo'))
+  })
+})
+
+describe('Code app after a commit made outside the app', () => {
+  let ctx: ConnectedDesktop
+  let workspace: Workspace
+
+  beforeAll(async () => {
+    workspace = await createWorkspace({ 'notes.txt': 'one\n' })
+    git(workspace.path, 'init', '-q', '-b', 'main')
+    git(workspace.path, 'add', '-A')
+    git(workspace.path, 'commit', '-q', '-m', 'initial')
+    await writeFile(join(workspace.path, 'notes.txt'), 'two\n')
+    ctx = await startConnectedDesktop({ title: 'Commit desktop', workspace })
+  })
+  afterAll(async () => {
+    await ctx?.app.close()
+    await workspace?.remove()
+  })
+
+  it('Refresh reads the status at once: the committed file leaves the Git list', async () => {
+    await ctx.desktop.openApp('code')
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-logs-tab-git').click()
+    await see.count(code.frame.getByTestId('code-git-entry'), 1)
+    git(workspace.path, 'commit', '-q', '-a', '-m', 'second')
+    await code.frame.getByTestId('code-refresh').click()
+    await see.count(code.frame.getByTestId('code-git-entry'), 0)
+    await see.text(code.frame.getByTestId('code-git-summary'), 'no changes since the last commit')
   })
 })

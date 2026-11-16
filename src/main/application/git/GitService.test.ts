@@ -143,3 +143,18 @@ describe('in a repository', () => {
   })
 })
 
+describe('after a commit', () => {
+  it('status reads the live repository: a commit made outside the app empties the list at once', async () => {
+    await init()
+    await writeFile(join(f.projectDir, 'keep.txt'), 'changed\n')
+    await writeFile(join(f.projectDir, 'new.txt'), 'new\n')
+    expect((await service.status(id, 'E:\\'))?.entries.map((e) => e.path).sort()).toEqual(['E:\\keep.txt', 'E:\\new.txt'])
+    git(f.projectDir, 'add', '-A')
+    git(f.projectDir, 'commit', '-q', '-m', 'second')
+    expect((await service.status(id, 'E:\\'))?.entries).toEqual([])
+    expect(await service.lineChanges(id, 'E:\\keep.txt')).toEqual([])
+    await writeFile(join(f.projectDir, 'keep.txt'), 'again\n')
+    expect((await service.status(id, 'E:\\'))?.entries.map((e) => e.path)).toEqual(['E:\\keep.txt'])
+  })
+})
+
