@@ -191,6 +191,6 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
 
 ## Window
 
-The main window is frameless (`frame: false`). The kit's `TitleBar` and `CaptionButtons` draw the
+Desktop windows keep the native title bar (`frame: true`), so maximize and full screen follow the OS rules; the launcher is frameless (`frame: false`). Inside the page the kit's `TitleBar` and `CaptionButtons` draw the
 Windows 7 caption; `ipc/registerWindowHandlers.ts` implements minimise, maximise and close and
 publishes the window state. Storybook renders the same components against `lib/app/fakeApi.ts`.

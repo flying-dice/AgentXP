@@ -28,7 +28,10 @@ function secureWebviews(window: BrowserWindow): void {
   })
 }
 
-/** One frameless desktop OS window; `loadDesktop` fills it. */
+/**
+ * One desktop OS window; `loadDesktop` fills it. It keeps the native title bar (the OS draws the frame, so maximize and
+ * full screen follow the OS rules without a gap); Agent7's own connection bar sits below it.
+ */
 export function createDesktopWindow(): BrowserWindow {
   const window = new BrowserWindow({
     width: 1280,
@@ -37,7 +40,7 @@ export function createDesktopWindow(): BrowserWindow {
     minHeight: 600,
     show: false,
     title: 'Agent7',
-    frame: false,
+    frame: true,
     backgroundColor: '#1e5aa8',
     icon: join(__dirname, '../../resources/icon-256.png'),
     autoHideMenuBar: true,
