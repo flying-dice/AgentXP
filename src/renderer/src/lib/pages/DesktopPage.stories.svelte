@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf'
   import DesktopPage from './DesktopPage.svelte'
+  import FolderBrowserHost from '../kit/organisms/FolderBrowserHost.svelte'
   import MessageBoxHost from '../kit/organisms/MessageBoxHost.svelte'
   import { prepareDesktop } from '../desktop/stories.fixtures'
 
@@ -13,7 +14,7 @@
 
 <Story name="Default" asChild>
   {#await prepareDesktop() then { api, controller }}
-    <div class="stage"><DesktopPage {api} {controller} /><MessageBoxHost contained /></div>
+    <div class="stage"><DesktopPage {api} {controller} /><MessageBoxHost contained /><FolderBrowserHost contained /></div>
   {/await}
 </Story>
 
@@ -79,7 +80,7 @@
 
 <Story name="EjectWarning" asChild>
   {#await prepareDesktop({ eject: true }) then { api, controller }}
-    <div class="stage"><DesktopPage {api} {controller} /><MessageBoxHost contained /></div>
+    <div class="stage"><DesktopPage {api} {controller} /><MessageBoxHost contained /><FolderBrowserHost contained /></div>
   {/await}
 </Story>
 

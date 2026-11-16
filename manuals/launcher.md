@@ -12,6 +12,7 @@ This manual describes the Agent7 Desktop Connection window. The window lists you
   - The Buttons
   - The New Desktop Dialog Box
   - The Rename Desktop Dialog Box
+  - The Browse For Folder Dialog Box
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -23,7 +24,9 @@ This manual describes the Agent7 Desktop Connection window. The window lists you
 
 A desktop is a long-lived virtual computer for one or more projects. Desktop Connection is the first window that you see when you start Agent7. Use it to pick the desktop that you work on.
 
-Closing a desktop window only disconnects. The agents keep running.
+Closing a desktop window only disconnects it. Its agents keep running.
+
+**Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own C: drive, its own chats, and the project folders that you plug in as drives.
 
 ## 2 - Open It
 
@@ -36,9 +39,9 @@ The window opens when you start Agent7. To open it again from a desktop, click *
 The list is in the middle of the window. Each row shows a picture of the desktop, its name, its state, its drives, and when you used it last.
 
 - **Name** – The name of the desktop. The word **Connected** appears next to the name while a window shows the desktop.
-- **State** – Running, Needs your approval, Idle, or Error.
+- **State** – Working, Needs your approval, Idle, or The agent could not start. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop whose agent could not start has a red error icon and bold text. Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**.
 
-If you have no desktop, the list says that you have no desktops yet.
+When the window opens, the desktop that needs your approval is already selected. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
 
 ### The Details Pane
 
@@ -46,20 +49,34 @@ Click **Show Options** to see the details of the selected desktop. The pane list
 
 ### The Buttons
 
-The buttons are at the bottom of the window. **Show Options** is at the left. **New...**, **Rename...**, **Delete...**, and **Connect** are at the right.
+The buttons are at the bottom of the window. **Show Options** is at the left. **New...**, **Rename...**, **Delete...**, and **Connect** are at the right. Press Alt and the underlined letter to use a button: Alt+N, Alt+R, Alt+D, and Alt+C.
+
+When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
+
+Press F1 to read this manual.
 
 ### The New Desktop Dialog Box
 
 The dialog box has a name box, a list of projects, and an agent list.
 
-- **Desktop name** – The name of the new desktop. The name must have 1 to 60 characters and must be new.
-- **Projects to plug in as USB drives** – A list of folders. Select the projects that the desktop gets.
-- **Browse...** – Adds a folder to the list.
+- **Desktop name** – The name of the new desktop. The name must have 1 to 60 characters and must be new. Agent7 checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. **Create** stays dimmed until the name is good.
+- **Project folders the agent can use (they appear as drives)** – A list of folders. Select the projects that the desktop gets.
+- **Browse...** – Opens the **Browse For Folder** dialog box and adds the folder that you select to the list.
 - **Agent** – The agent that the chats of the desktop start. The default agent is selected first.
 
 ### The Rename Desktop Dialog Box
 
-The dialog box has one box for the new name. The same name rules apply.
+The dialog box has one box for the new name. The same name rules apply, and the same check and link appear while you type. **OK** stays dimmed until the name is good.
+
+### The Browse For Folder Dialog Box
+
+The dialog box is part of Agent7. It is not a window of your computer. It says **Select a folder for the agent to work on.** (New desktop) or **Select the project folder to plug in to this desktop.** (Plug in a project).
+
+- The tree shows **Computer** (your drives, or `/`) and the shortcuts **Home**, **Documents**, and **Desktop**. Folders only. Click the arrow, or press Enter or the Right arrow, to open a folder.
+- **Folder** shows the path of the selected folder. You can type or paste a path instead.
+- **Make New Folder** creates a folder named **New Folder** inside the selected folder and selects it.
+- **OK** is dimmed until a folder is selected. **Cancel**, or Esc, closes the box. You can change the size of the box.
+- While the list loads, the box says **Opening the folder list...** and the pointer shows that Agent7 is busy.
 
 ## 4 - Controls Reference
 
@@ -80,7 +97,8 @@ The dialog box has one box for the new name. The same name rules apply.
 | Connect | Opens the selected desktop. | `launcher-connect` |
 | New desktop | The New desktop dialog box. | `new-desktop-dialog` |
 | Desktop name (new) | Names the new desktop. | `new-desktop-name` |
-| Name error | Shows why the name is not valid. | `new-desktop-error` |
+| Name error | Shows why the name is not valid, with an error icon. | `new-desktop-error` |
+| Use a free name | Fills in the suggested name (New desktop dialog box). | `new-desktop-use-suggestion` |
 | Projects | The list of projects. | `new-desktop-projects` |
 | Project | One project in the list. | `new-desktop-project` |
 | Project option | The box of one project. | `new-desktop-project-check` |
@@ -91,6 +109,18 @@ The dialog box has one box for the new name. The same name rules apply.
 | Rename desktop | The Rename desktop dialog box. | `rename-desktop-dialog` |
 | New name | The new name. | `rename-desktop-name` |
 | Name error (rename) | Shows why the name is not valid. | `rename-desktop-error` |
+| Use a free name (rename) | Fills in the suggested name (Rename desktop dialog box). | `rename-desktop-use-suggestion` |
+| Opening | Shows on the row of a desktop that is opening. | `launcher-desktop-opening` |
+| Help and Support (launcher) | The box that F1 opens. | `launcher-help` |
+| Help text | The manual in that box. | `launcher-help-article` |
+| Browse For Folder | The dialog box that chooses a folder. | `folder-browser-dialog` |
+| Instruction | Says what the folder is for. | `folder-browser-instruction` |
+| Folder tree | The tree of folders. | `folder-browser-tree` |
+| Folder (tree) | One folder or shortcut of the tree. | `folder-browser-node` |
+| Status | Shows **Opening the folder list...** or a problem. | `folder-browser-status` |
+| Folder (path) | The path of the selected folder. You can type a path. | `folder-browser-path` |
+| Make New Folder | Creates a folder in the selected folder. | `folder-browser-new-folder` |
+| OK (folder) | Chooses the folder. | `dialog-button-ok` |
 
 ### Keys
 
@@ -98,6 +128,8 @@ The dialog box has one box for the new name. The same name rules apply.
 |---|---|---|
 | Up and Down arrows | Select the previous or next desktop. | none |
 | Enter | Connects the selected desktop. | none |
+| F1 | Opens this manual in a Help and Support box. | none |
+| Alt+N, Alt+C, Alt+R, Alt+D | Press **New...**, **Connect**, **Rename...**, or **Delete...**. | none |
 | F2 | Opens the Rename desktop dialog box. | none |
 | Delete | Starts the deletion of the selected desktop. | none |
 
@@ -107,7 +139,7 @@ To create a desktop for a project, follow the steps below:
 
 1. Click **New...**. The **New desktop** dialog box appears.
 2. Type a name in **Desktop name**.
-3. Click **Browse...** and select the folder of your project. The project appears in the list with its option selected.
+3. Click **Browse...**. The **Browse For Folder** dialog box appears. Select the folder of your project and click **OK**. The project appears in the list with its option selected.
 4. Click **Create**. The desktop appears in the list.
 
 To connect to a desktop, select it and click **Connect**.
@@ -121,15 +153,15 @@ To rename a desktop, follow the steps below:
 To delete a desktop, follow the steps below:
 
 1. Select the desktop and click **Delete...**. A question appears.
-2. Read the warning. Agent7 removes the C: drive, the chats, the notes, and the logs of the desktop. Agent7 only ejects the projects.
+2. Read the warning. Agent7 removes the C: drive, the chats, the notes, and the logs of the desktop. Plugged-in projects are removed from this desktop. The folders and files stay on your disk.
 3. Click **Yes**.
 
 ## 6 - Troubleshooting
 
-- **The name is not accepted.** Type a name of 1 to 60 characters. Use a name that no other desktop has.
+- **The name is not accepted.** Type a name of 1 to 60 characters. Use a name that no other desktop has, or click the link under the name box.
 - **Connect is dimmed.** Select a desktop in the list first.
 - **The desktop shows Needs your approval.** Connect and answer the request in the **Action Center**.
-- **The desktop shows Error.** Connect and open **Event Viewer** to read the messages.
+- **The desktop shows The agent could not start.** Connect, open **Control Center**, and click **Agents** to change the command. Open **Event Viewer** to read the messages.
 
 ## 7 - Need Help?
 

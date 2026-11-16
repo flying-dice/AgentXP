@@ -149,6 +149,8 @@ export interface DesktopSummaryDto {
   /** True while an OS window shows it. Closing the window disconnects; agents keep running. */
   connected: boolean
   runState: DesktopRunState
+  /** Why the desktop's agent could not start (run state `error`), else null. */
+  lastError?: string | null
   pendingApprovals: number
   chatCount: number
   drives: DriveDto[]

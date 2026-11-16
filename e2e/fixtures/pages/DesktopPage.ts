@@ -167,6 +167,28 @@ export class DesktopPage {
     await this.page.getByTestId(`usb-eject-${letter.toLowerCase()}`).click()
   }
 
+  /** The tray balloon and its parts. */
+  get balloon(): Locator {
+    return this.page.getByTestId('balloon')
+  }
+
+  get balloonTitle(): Locator {
+    return this.page.getByTestId('balloon-title')
+  }
+
+  get balloonText(): Locator {
+    return this.page.getByTestId('balloon-text')
+  }
+
+  /** Desktop icon (`computer`, `chats`, `code`, `terminal`, `browser`, `control-centre`, `recycle`). */
+  icon(id: string): Locator {
+    return this.page.getByTestId(`desktop-icon-${id}`)
+  }
+
+  get startSearch(): Locator {
+    return this.page.getByTestId('start-menu-search')
+  }
+
   get autoPlay(): Locator {
     return this.page.getByTestId('autoplay-dialog')
   }

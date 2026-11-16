@@ -1,5 +1,7 @@
+import { get } from 'svelte/store'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createFakeApi } from '../app/fakeApi'
+import { folderBrowsers } from '../kit/organisms/folderBrowser'
 import { messageBoxes } from '../kit/organisms/messageBox'
 import { emptyAguiState } from '@shared/agui-state'
 import { CONTINUE_TEXT, DesktopController, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
@@ -192,7 +194,9 @@ describe('DesktopController', () => {
       await pending
       expect(controller.state.drives.map((d) => d.letter)).toEqual(['C'])
       expect(controller.balloon?.title).toBe('Safe To Remove Hardware')
-      expect(controller.balloon?.text).toContain("'claude-code-win (E:)'")
+      expect(controller.balloon?.text).toContain('claude-code-win (E:) can now be removed. Its files on disk were not changed.')
+      expect(controller.balloon?.text).toContain('Plug in a project...')
+      expect(controller.recentlyRemoved.map((r) => r.label)).toEqual(['claude-code-win'])
       controller.dismissBalloon()
       expect(controller.balloon).toBeNull()
     })
@@ -203,5 +207,126 @@ describe('DesktopController', () => {
       await controller.ejectDrive('C')
       expect(spy).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('DesktopController projects and shell feedback', () => {
+  const answerBrowser = async (path: string | null): Promise<void> => {
+    await vi.waitFor(() => expect(get(folderBrowsers.queue)).toHaveLength(1))
+    folderBrowsers.settle(get(folderBrowsers.queue)[0].id, path)
+  }
+  const answerBox = async (result: 'ok' | 'yes' | 'no'): Promise<string> => {
+    await vi.waitFor(() => expect(get(messageBoxes.queue)).toHaveLength(1))
+    const [box] = get(messageBoxes.queue)
+    messageBoxes.settle(box.id, result)
+    return box.options.text
+  }
+
+  it('Plug in a project: the Browse For Folder dialog, then the drive and a balloon', async () => {
+    const { controller } = await started()
+    const pending = controller.plugInProject()
+    await answerBrowser('C:\\Users\\jonathan\\source\\login-app')
+    const drive = await pending
+    expect(drive?.label).toBe('login-app')
+    expect(controller.state.drives.some((d) => d.label === 'login-app')).toBe(true)
+    expect(controller.balloon?.title).toBe('Project plugged in')
+    expect(controller.balloon?.text).toBe(`login-app (${drive?.letter}:) is ready to use.`)
+  })
+
+  it('Cancel plugs nothing in', async () => {
+    const { controller } = await started()
+    const before = controller.state.drives.length
+    const pending = controller.plugInProject()
+    await answerBrowser(null)
+    expect(await pending).toBeNull()
+    expect(controller.state.drives).toHaveLength(before)
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('says so when the project is plugged in already, and shows its drive', async () => {
+    const { controller } = await started()
+    const plugged = controller.state.drives.find((d) => d.kind === 'removable')!
+    const pending = controller.plugInAgain(plugged.folderId!)
+    const text = await answerBox('ok')
+    expect(text).toBe(`${plugged.label} is already plugged in as drive ${plugged.letter}:.`)
+    expect((await pending)?.letter).toBe(plugged.letter)
+  })
+
+  it('names the project and the reason when plugging in fails', async () => {
+    const { api, controller } = await started()
+    vi.spyOn(api.drives, 'plugIn').mockRejectedValue(new Error('All drive letters are in use.'))
+    const pending = controller.plugInProject()
+    await answerBrowser('C:\\Users\\jonathan\\source\\login-app')
+    const text = await answerBox('ok')
+    expect(text).toBe("Could not plug in 'login-app'. All drive letters are in use.")
+    expect(await pending).toBeNull()
+  })
+
+  it('plugs a recently removed project in again without a dialog', async () => {
+    const { controller } = await started()
+    const letter = controller.state.drives.find((d) => d.kind === 'removable')!.letter
+    const ejecting = controller.ejectDrive(letter)
+    await answerBox('yes')
+    await ejecting
+    expect(controller.recentlyRemoved).toHaveLength(1)
+    const drive = await controller.plugInAgain(controller.recentlyRemoved[0].folderId)
+    expect(drive?.kind).toBe('removable')
+    expect(controller.recentlyRemoved).toHaveLength(0)
+    expect(get(folderBrowsers.queue)).toHaveLength(0)
+  })
+
+  it('Eject a project... opens the tray list, or says that nothing is plugged in', async () => {
+    const { controller } = await started()
+    controller.openEjectList()
+    expect(controller.usbMenuOpen).toBe(true)
+    const letter = controller.state.drives.find((d) => d.kind === 'removable')!.letter
+    controller.usbMenuOpen = false
+    const ejecting = controller.ejectDrive(letter)
+    await answerBox('yes')
+    await ejecting
+    controller.dismissBalloon()
+    controller.openEjectList()
+    expect(controller.usbMenuOpen).toBe(false)
+    expect(controller.balloon?.text).toBe('No project is plugged in.')
+  })
+
+  it('shows the busy state while an app opens and a message when it cannot', async () => {
+    const { controller } = await started()
+    let release: () => void = () => {}
+    const slow = controller.openWithFeedback('Chats', 'session', () => new Promise<void>((resolve) => (release = resolve)))
+    expect(controller.opening.map((o) => o.title)).toEqual(['Chats'])
+    release()
+    expect(await slow).toBe(true)
+    expect(controller.opening).toEqual([])
+
+    const failed = controller.openWithFeedback('Chats', 'session', () => Promise.reject(new Error('The agent could not be started.')))
+    const text = await answerBox('ok')
+    expect(text).toBe('Could not open Chats. The agent could not be started.')
+    expect(await failed).toBe(false)
+    expect(controller.opening).toEqual([])
+  })
+
+  it('shows the icon hint once', async () => {
+    const { controller } = await started()
+    const data = new Map<string, string>()
+    const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) }
+    controller.showIconHint(storage)
+    expect(controller.balloon?.text).toBe('Double-click an icon to open it.')
+    controller.dismissBalloon()
+    controller.showIconHint(storage)
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('Alt+Tab cycles through the windows', async () => {
+    const { controller } = await started()
+    const a = await controller.openApp({ app: 'notepad' })
+    const b = await controller.openApp({ app: 'terminal' })
+    expect(controller.state.focusedWindowId).toBe(b.id)
+    await controller.cycleWindows(1)
+    expect(controller.state.focusedWindowId).toBe(a.id)
+    // Alt+Shift+Tab: the window that was used longest ago (the chat the desktop started with).
+    await controller.cycleWindows(-1)
+    expect(controller.state.focusedWindowId).not.toBe(a.id)
+    expect(controller.state.focusedWindowId).not.toBe(b.id)
   })
 })

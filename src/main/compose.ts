@@ -40,6 +40,7 @@ import type {
   A2uiMcpConfigFactory,
   AgentConnector,
   EventPublisher,
+  DirectoryBrowser,
   FilePicker,
   FolderPicker,
   ScreenCapturer,
@@ -89,6 +90,7 @@ import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
 import { FileThumbnailStore } from './infrastructure/fs/FileThumbnailStore'
+import { NodeDirectoryBrowser } from './infrastructure/fs/NodeDirectoryBrowser'
 import { NodeFolderBrowser } from './infrastructure/fs/NodeFolderBrowser'
 import { NodeHostFiles } from './infrastructure/fs/NodeHostFiles'
 import { NodeWorkspaceFileSystem } from './infrastructure/fs/NodeWorkspaceFileSystem'
@@ -98,7 +100,12 @@ import type { InvokeApi } from '../shared/ipc-channels'
 export interface ComposeOptions {
   db: Database
   publisher: EventPublisher
+  /** The native folder dialog; only used when `nativePicker` is set (the app shows its own Browse For Folder dialog). */
   picker: FolderPicker
+  /** Lists folders for the in-app Browse For Folder dialog; defaults to the real disk. */
+  directories?: DirectoryBrowser
+  /** `AGENT7_NATIVE_PICKER=1`: the renderer asks the native dialog instead of the in-app one. */
+  nativePicker?: boolean
   saver: TextFileSaver
   opener: PathOpener
   /** Native multi-file picker for attachments; defaults to "nothing picked". */
@@ -385,6 +392,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
+    directories: options.directories ?? new NodeDirectoryBrowser(),
+    nativePicker: options.nativePicker ?? false,
     appRequests,
     notes,
     eventLog,

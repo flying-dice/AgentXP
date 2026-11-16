@@ -11,6 +11,7 @@
   import Button from '../kit/atoms/Button.svelte'
   import { handleAppRequest } from './appRequests'
   import Form from '../kit/organisms/Form.svelte'
+  import FolderBrowserHost from '../kit/organisms/FolderBrowserHost.svelte'
   import MessageBoxHost from '../kit/organisms/MessageBoxHost.svelte'
   import { appRegistry } from './registry'
   import { StoryHost, storyViews } from './storyHost.svelte'
@@ -76,6 +77,7 @@
     </div>
   {/if}
   <MessageBoxHost />
+  <FolderBrowserHost />
 </div>
 
 <style>

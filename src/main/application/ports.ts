@@ -2,6 +2,7 @@ import type { A2uiSurfaceDto } from '@shared/a2ui'
 import type { Bounds } from '@shared/desktop'
 import type {
   AgentDto,
+  BrowseListingDto,
   ContentBlockDto,
   FileChangeDto,
   FileNodeDto,
@@ -45,6 +46,14 @@ export interface EventPublisher {
 /** Native "choose a folder" dialog. Resolves to the chosen path or null when cancelled. */
 export interface FolderPicker {
   pickFolder(): Promise<string | null>
+}
+
+/** Lists the sub-folders of any folder on the user's disk, for the in-app Browse For Folder dialog. */
+export interface DirectoryBrowser {
+  /** Folders only. '' lists the drives (or `/`) and returns the shortcuts. */
+  browse(path: string): Promise<BrowseListingDto>
+  /** Creates `<parent>/<name>` (with " (2)" and so on when taken) and resolves its path. */
+  makeFolder(parent: string, name: string): Promise<string>
 }
 
 /** Native "choose files" dialog. Resolves to the chosen absolute paths (empty when cancelled). */

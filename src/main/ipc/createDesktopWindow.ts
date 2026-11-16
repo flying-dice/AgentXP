@@ -48,7 +48,12 @@ export function createDesktopWindow(): BrowserWindow {
     }
   })
   publishWindowState(window)
-  window.on('ready-to-show', () => window.show())
+  // A desktop opens in front of the launcher and has the keyboard focus.
+  window.on('ready-to-show', () => {
+    window.show()
+    window.moveTop()
+    window.focus()
+  })
   window.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)
     return { action: 'deny' }

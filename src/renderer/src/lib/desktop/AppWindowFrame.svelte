@@ -5,6 +5,7 @@
   import Form from '../kit/organisms/Form.svelte'
   import AppChatPane from './AppChatPane.svelte'
   import type { DesktopController } from './DesktopController.svelte'
+  import { minWindowSize } from '@shared/desktop-views'
   import { RESIZE_EDGES, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize, type ResizeEdge, type Size } from './geometry'
   import UnknownApp from './UnknownApp.svelte'
 
@@ -59,7 +60,7 @@
     if (!gesture.moved && Math.abs(dx) + Math.abs(dy) < 3) return
     gesture.moved = true
     const a = area()
-    desktop.moveLocal(w.id, gesture.kind === 'move' ? moveBounds(gesture.start, dx, dy, a) : resizeBounds(gesture.start, gesture.edge, dx, dy, a))
+    desktop.moveLocal(w.id, gesture.kind === 'move' ? moveBounds(gesture.start, dx, dy, a) : resizeBounds(gesture.start, gesture.edge, dx, dy, a, minWindowSize(w.app)))
   }
 
   function onPointerUp(event: PointerEvent): void {
@@ -84,6 +85,7 @@
   data-window-id={w.id}
   data-window-state={w.windowState}
   data-focused={focused}
+  data-region={focused ? 'window' : undefined}
   onpointerdowncapture={onPointerDown}
   onkeydowncapture={onKeyDown}
   onpointermove={onPointerMove}

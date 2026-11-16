@@ -54,6 +54,7 @@ async function bootstrap(): Promise<Running> {
     notifier: new ElectronNotifier((desktopId) => services?.launcher.connect(desktopId)),
     screen: new ElectronScreenCapturer(windows),
     picker: new ElectronFolderPicker(),
+    nativePicker: process.env.AGENT7_NATIVE_PICKER === '1',
     filePicker: new ElectronFilePicker(),
     saver: new ElectronTextFileSaver(),
     opener: new ElectronPathOpener(),

@@ -144,6 +144,14 @@ describe('LauncherService', () => {
     expect(f.repos.desktops.get(id)?.isOpen).toBe(false)
   })
 
+  it('shows a failed agent start as an error until a start works', async () => {
+    const { id } = await launcher.create({ title: 'd', folderIds: [] })
+    launcher.recordStartFailure(id, 'spawn claude ENOENT')
+    expect(launcher.list()[0]).toMatchObject({ runState: 'error', lastError: 'spawn claude ENOENT' })
+    launcher.clearStartFailure(id)
+    expect(launcher.list()[0]).toMatchObject({ runState: 'idle', lastError: null })
+  })
+
   it('show asks the host for the launcher window', () => {
     launcher.show()
     expect(host.launcherShown).toBe(1)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, placeWindow, viewPath, windowTitle } from './desktop-views'
+import { asideCwd, cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeWindow, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -61,7 +61,7 @@ describe('placeWindow', () => {
 
   it('keeps windows that are larger than the desktop inside it', () => {
     const b = placeWindow('code', 0, null, { width: 700, height: 400 })
-    expect(b).toEqual({ x: 0, y: 0, width: 700, height: 400 })
+    expect(b).toEqual({ x: 0, y: WINDOW_MIN_Y, width: 700, height: 400 - WINDOW_MIN_Y })
   })
 })
 
@@ -101,5 +101,33 @@ describe('the chat pane of a window', () => {
     expect(asideCwd(code('C:\\Users\\Agent\\a.ts'))).toBe('C:\\Users\\Agent')
     expect(asideCwd(code(null))).toBe('C:\\Users\\Agent')
     expect(asideCwd({ app: 'browser', url: 'about:blank', title: '', loading: false }, 'C:\\Home')).toBe('C:\\Home')
+  })
+})
+
+describe('window sizes and placement below the top bar', () => {
+  it('opens the wide apps big enough for their content', () => {
+    const size = (app: keyof typeof DEFAULT_BOUNDS): [number, number] => [DEFAULT_BOUNDS[app].width, DEFAULT_BOUNDS[app].height]
+    expect(size('control-centre')).toEqual([760, 540])
+    expect(size('event-viewer')).toEqual([980, 560])
+    expect(size('agent-manager')).toEqual([640, 440])
+    expect(size('recycle-bin')).toEqual([680, 420])
+    expect(size('help')).toEqual([800, 560])
+    expect(size('chat')).toEqual([680, 560])
+  })
+
+  it('keeps every default window inside the desktop and below the bar, whatever the cascade step', () => {
+    for (const app of Object.keys(DEFAULT_BOUNDS) as (keyof typeof DEFAULT_BOUNDS)[]) {
+      for (let open = 0; open < 8; open++) {
+        const b = placeWindow(app, open, null)
+        expect(b.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
+        expect(b.x + b.width).toBeLessThanOrEqual(DESKTOP_AREA.width)
+        expect(b.y + b.height).toBeLessThanOrEqual(DESKTOP_AREA.height)
+      }
+    }
+  })
+
+  it('has minimum sizes: 480 x 320, Control Center 640 x 420', () => {
+    expect(minWindowSize('notepad')).toEqual({ width: 480, height: 320 })
+    expect(minWindowSize('control-centre')).toEqual({ width: 640, height: 420 })
   })
 })

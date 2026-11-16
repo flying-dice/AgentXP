@@ -8,6 +8,7 @@
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import type { MenuItemDef } from '../kit/molecules/MenuItem'
   import { driveTitle, sortDrives } from '../apps/explorer/explorerModel'
+  import { projectCountText } from '../apps/explorer/explorerContext'
 
   interface Props {
     drives: DriveDto[]
@@ -20,6 +21,8 @@
 
   const usb = $derived(sortDrives(drives).filter((d) => d.kind === 'removable'))
   const items = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
+  /** `Safely Remove Hardware: 1 project plugged in`. */
+  const tip = $derived(`Safely Remove Hardware: ${projectCountText(usb.length)}`)
   let x = $state(0)
   let y = $state(0)
 
@@ -41,15 +44,15 @@
     class="usb"
     data-testid="usb-tray"
     class:open
-    aria-label="Safely Remove Hardware and Eject Media"
+    aria-label={tip}
     aria-haspopup="menu"
     aria-expanded={open}
-    title="Safely Remove Hardware and Eject Media"
+    title={tip}
     onclick={() => (open = !open)}
   >
     <Icon name="usb-safe" size={16} />
   </button>
-  <ContextMenuStrip {items} bind:open {x} {y} label="Safely Remove Hardware and Eject Media" />
+  <ContextMenuStrip {items} bind:open {x} {y} label={tip} />
 {/if}
 
 <style>

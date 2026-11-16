@@ -1,5 +1,6 @@
 /** Pure window geometry for the window manager (no DOM, no state). */
 import type { Bounds } from '@shared/desktop'
+import { TOP_BAR_HEIGHT } from '@shared/desktop-views'
 
 export type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 export const RESIZE_EDGES: readonly ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
@@ -11,7 +12,7 @@ export interface Size {
 
 export const MIN_WINDOW_SIZE: Size = { width: 280, height: 160 }
 /** Height of the top agent strip that maximised windows stay below. */
-export const TOP_BAR_HEIGHT = 30
+export { TOP_BAR_HEIGHT }
 /** How much of a window must stay reachable when it is dragged towards an edge. */
 const GRAB_MARGIN = 90
 const TITLE_HEIGHT = 30
