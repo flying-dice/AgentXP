@@ -1,0 +1,32 @@
+{
+  "task": "T06.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the request was answered allow (want allow); redirect.ts on disk contains the fix; answer ok",
+  "notes": [
+    "opening the details is optional because the diff is inline"
+  ],
+  "steps": 3,
+  "budget": 4,
+  "answer": "Lines 1, 3 and 4 change: a comment is added on line 1, and lines 3 and 4 (the function body) are replaced.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:42:28.939Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:42:28.939Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the request was answered allow (want allow); redirect.ts on disk contains the fix; answer ok",
+      "steps": 3,
+      "answer": "Lines 1, 3 and 4 change: a comment is added on line 1, and lines 3 and 4 (the function body) are replaced.",
+      "noAnswer": false
+    }
+  ]
+}
