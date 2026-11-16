@@ -75,14 +75,14 @@ const clean = (text: string): string => text.replace(/\s+/g, ' ').trim()
 const cut = (text: string, max: number): string => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
 const str = (v: AxValue | undefined): string => (v?.value === undefined || v.value === null ? '' : String(v.value))
 
-function states(node: AxNode, redacted: boolean): string[] {
+function states(node: AxNode, redacted: boolean, role: string): string[] {
   const out: string[] = []
   const prop = new Map((node.properties ?? []).map((p) => [p.name, p.value?.value]))
   const flag = (name: string, label = name): void => {
     if (prop.get(name) === true) out.push(label)
   }
   const level = prop.get('level')
-  if (level !== undefined) out.push(`level ${String(level)}`)
+  if (level !== undefined && role === 'heading') out.push(`level ${String(level)}`)
   flag('disabled')
   flag('focused')
   flag('required')
@@ -141,7 +141,7 @@ export function collectItems(source: OutlineSource): OutlineItem[] {
         backendNodeId: backend,
         role: role === 'StaticText' ? 'text' : role === 'Iframe' ? 'iframe' : role,
         name,
-        states: states(node, redacted),
+        states: states(node, redacted, role),
         interactive: role !== 'StaticText' && (INTERACTIVE.has(role) || ((editable || (focusable && name !== '')) && role !== 'Iframe' && role !== 'heading')),
         offscreen: backend !== undefined && source.offscreen?.(frameId, backend) === true,
         parent

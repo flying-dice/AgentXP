@@ -139,6 +139,16 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 - **Send to chat** - `formatReviewPrompt` builds the prompt (verdict, `path:line [severity] body`, replies indented); the dialog picks an existing chat or a new one, the comments become `sent`.
 - **EmbeddedChat** (`apps/shared/EmbeddedChat.svelte`) - the reusable right-aside chat panel: props `host`, `sessionId`, `contextProvider`, `role` (`chat` | `review` | `aside`), `collapsible`, `collapsed` / `width` (bindable), `resizable`, `compact`, `contained`; it shares the desktop's `SessionAgentStore`, and the provider's `appContext` is added to the `agent7.desktop` context entry. ChatApp and Code Review both use it. See `manuals/embedded-chat.md`.
 
+## 7b. Help and context menus
+
+Every app has in-app Help and a context menu.
+
+**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `<App> Help`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
+
+**Context menus.** Right-click, the Menu key and Shift+F10 open a kit `ContextMenuStrip` in every app, on rows and items first and on the window background otherwise. The renderer cancels the browser's own `contextmenu` event on the desktop and the launcher. The taskbar button has its own menu: Restore, Minimize, Close window.
+
+**Ask chat.** Items such as Explain this, Ask chat... and Send selection to chat call `DesktopHost.askChat(AskChatRequest)` (`AskChatRequest` is in `src/shared/desktop.ts`). Today `DesktopController.askChat` starts a chat on the drive of the request (or home), opens its Chat window and sends the prompt of `askChatPrompt` (the file path and line range, the selection in a fenced block, or the page address and title). A chat side panel can later take the same request without any app changing.
+
 ## 8. Data model additions (migrations 002 and 003)
 
 ```sql

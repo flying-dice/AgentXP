@@ -110,6 +110,7 @@ describe('ElectronBrowserDriver', () => {
   it('fails when the main frame fails to load, ignores aborted loads and sub-frames', async () => {
     const g = guest()
     g.onLoad = () => {
+      g.url = 'https://a.example/'
       queueMicrotask(() => {
         g.emit('did-fail-load', {}, -3, 'ERR_ABORTED', 'x', true)
         g.emit('did-fail-load', {}, -105, 'ERR_NAME_NOT_RESOLVED', 'x', false)

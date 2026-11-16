@@ -21,10 +21,11 @@ export interface WebServer {
 export async function serveFixtureWeb(): Promise<WebServer> {
   const server: Server = createServer((request, response) => {
     void (async () => {
-      const path = normalize(decodeURIComponent((request.url ?? '/').split('?')[0])).replace(/^([/\\])+/, '')
+      const requested = normalize(decodeURIComponent((request.url ?? '/').split('?')[0])).replace(/^([/\\])+/, '')
+      const path = requested || 'chat-app.html'
       if (path.includes('..')) return void response.writeHead(403).end()
       try {
-        const file = await readFile(join(root, path || 'chat-app.html'))
+        const file = await readFile(join(root, path))
         const extension = path.slice(path.lastIndexOf('.'))
         response.writeHead(200, { 'content-type': TYPES[extension] ?? 'application/octet-stream', 'cache-control': 'no-store' }).end(file)
       } catch {

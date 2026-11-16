@@ -7,7 +7,7 @@ This manual describes WordPad. WordPad reads and writes markdown documents.
 - 1 - What It Is For
 - 2 - Open It
 - 3 - The Window
-  - The Menu Button
+  - The Menu Bar
   - The Toolbar
   - The Page
   - The Status Bar

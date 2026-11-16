@@ -131,8 +131,15 @@
   $effect(() => {
     const incoming = win.view.url
     if (!sync.isExternal({ url: incoming })) return
+    const loadingByAgent = win.view.loading
     untrack(() => {
-      if (incoming !== active.url) navigate(incoming || BLANK)
+      if (incoming === active.url) return
+      // browser_navigate loads the page itself (main) and marks the view as loading: only show the address. A second load
+      // of the same address from here would cancel the first and leave the page blank.
+      if (loadingByAgent) {
+        address = incoming === BLANK ? '' : incoming
+        patch(activeId, { url: incoming, loading: true })
+      } else navigate(incoming || BLANK)
     })
   })
 

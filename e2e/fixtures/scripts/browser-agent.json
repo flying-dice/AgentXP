@@ -174,49 +174,49 @@
           "type": "expect",
           "from": "tree.isError",
           "equals": "false",
-          "message": "browser_read failed: {{tree}}"
+          "message": "browser_read failed"
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "heading \"#general\"",
-          "message": "tree misses heading \"#general\": {{tree}}"
+          "message": "tree misses heading \"#general\""
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "textbox \"Message composer\"",
-          "message": "tree misses textbox \"Message composer\": {{tree}}"
+          "message": "tree misses textbox \"Message composer\""
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "iframe \"Search\"",
-          "message": "tree misses iframe \"Search\": {{tree}}"
+          "message": "tree misses iframe \"Search\""
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "searchbox \"Search messages\"",
-          "message": "tree misses searchbox \"Search messages\": {{tree}}"
+          "message": "tree misses searchbox \"Search messages\""
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "button \"Add reaction\"",
-          "message": "tree misses button \"Add reaction\": {{tree}}"
+          "message": "tree misses button \"Add reaction\""
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "Message 200 from",
-          "message": "tree misses Message 200 from: {{tree}}"
+          "message": "tree misses Message 200 from"
         },
         {
           "type": "expect",
           "from": "tree",
           "contains": "button \"random\"",
-          "message": "tree misses button \"random\": {{tree}}"
+          "message": "tree misses button \"random\""
         },
         {
           "type": "mcpCall",

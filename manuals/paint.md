@@ -7,7 +7,7 @@ This manual describes Agent Paint. Agent Paint is a small drawing app. You can d
 - 1 - What It Is For
 - 2 - Open It
 - 3 - The Window
-  - The Menu Button
+  - The Menu Bar
   - The Ribbon
   - The Canvas
   - The Status Bar
