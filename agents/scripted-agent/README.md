@@ -102,7 +102,7 @@ refusals such as an ejected drive.
 | Script | Shows |
 |--------|-------|
 | `demo.json` | greeting rule; plan, read README, edit proposal with allow/deny/cancelled branches, `npm test` in a terminal, usage, done |
-| `a2ui.json` | `agent7.a2ui_render` with a small WinForms form, `expect` on the `ok` answer |
+| `a2ui.json` | `agent7.a2ui_render` with a small WinForms form; the prompt picks the `target`: "window" (own desktop window), "sidebar" (beside the chat), "update" (changes the window surface, reports the tool's note about a closed window), anything else inline. `expect` on the `ok` answer |
 | `desktop.json` | `desktop_open_app` then `terminal_run`; a prompt containing "closed" calls `terminal_run` with the Terminal closed and expects `is closed` |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |

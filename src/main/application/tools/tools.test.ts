@@ -109,6 +109,7 @@ beforeEach(async () => {
     agents: f.repos.agents,
     sessions: f.repos.sessions,
     notes: new SqliteStickyNoteRepository(f.db),
+    surfaces: f.repos.surfaces,
     chats: {
       create: async (desktop, agentId, cwd) => f.repos.sessions.create({ agentId: agentId ?? f.agentId, desktopId: desktop, cwd, title: 'chat' }),
       cancel: async () => {},

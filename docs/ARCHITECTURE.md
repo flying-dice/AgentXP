@@ -91,7 +91,8 @@ component properties and data models). Images from agents are stored as BLOB.
    allowed inside C: and the plugged-in drives only. Writes are recorded as file changes for the
    Changes pane (with revert).
 5. The A2UI MCP tool lets the agent draw WinForms surfaces inline in the
-   transcript; user actions on a surface are delivered back to the agent as a
+   transcript, in a sidebar of the Chat window or in its own desktop window
+   (`target`, see DESKTOP_DESIGN section 10); user actions on a surface are delivered back to the agent as a
    prompt.
 
 ## AG-UI (renderer <-> main)
@@ -122,7 +123,9 @@ The agent draws surfaces with the A2UI MCP tool. `shared/a2ui` holds the WinForm
 surfaces are stored relationally and travel to the renderer as `a2ui-surface` activity messages.
 In the renderer, `SurfaceController` feeds the messages to web_core's `MessageProcessor` and
 `registry.ts` maps each catalog component to a Svelte component built from the kit. User actions go
-back to the agent through an AG-UI run (`forwardedProps.a2uiAction`).
+back to the agent through an AG-UI run (`forwardedProps.a2uiAction`). Where a surface is shown
+(`inline`, `sidebar`, `window`) is stored on the surface; windows are `surface` apps (`surface_windows`),
+sidebar tabs live in the Chat app.
 
 ## Desktop
 

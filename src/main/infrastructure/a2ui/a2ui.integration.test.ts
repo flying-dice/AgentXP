@@ -9,9 +9,11 @@ import { createAgent7McpServer } from './mcp-tools'
 
 class FakeSink implements A2uiMessageSink {
   calls: { sessionKey: string; messages: A2uiServerMessage[] }[] = []
+  targets: Array<string | undefined> = []
   result: A2uiSinkResult = { ok: true }
-  async apply(sessionKey: string, messages: A2uiServerMessage[]): Promise<A2uiSinkResult> {
+  async apply(sessionKey: string, messages: A2uiServerMessage[], options?: { target?: string }): Promise<A2uiSinkResult> {
     this.calls.push({ sessionKey, messages })
+    this.targets.push(options?.target)
     return this.result
   }
 }
@@ -60,6 +62,24 @@ describe('A2UI MCP <-> bridge', () => {
     const res = await client.callTool({ name: 'a2ui_render', arguments: { messages } })
     expect(textOf(res)).toBe('ok')
     expect(sink.calls).toEqual([{ sessionKey: 'sess-1', messages }])
+  })
+
+  it('passes the target (chat is an alias of inline) and returns the sink notes to the agent', async () => {
+    const messages = [{ version: 'v0.9', createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } }]
+    sink.result = { ok: true, notes: ['Shown in its own window "S".'] }
+    expect(textOf(await client.callTool({ name: 'a2ui_render', arguments: { messages, target: 'window' } }))).toBe('ok\nShown in its own window "S".')
+    await client.callTool({ name: 'a2ui_render', arguments: { messages, target: 'chat' } })
+    await client.callTool({ name: 'a2ui_render', arguments: { messages } })
+    expect(sink.targets).toEqual(['window', 'inline', undefined])
+    const bad = await client.callTool({ name: 'a2ui_render', arguments: { messages, target: 'moon' } })
+    expect(bad.isError).toBe(true)
+    expect(sink.targets).toHaveLength(3)
+  })
+
+  it('describes the three targets in the tool', async () => {
+    const render = (await client.listTools()).tools.find((t) => t.name === 'a2ui_render')!
+    expect(render.description).toMatch(/sidebar/)
+    expect(JSON.stringify(render.inputSchema)).toMatch(/inline.*sidebar.*window/s)
   })
 
   it('adds the default protocol version', async () => {

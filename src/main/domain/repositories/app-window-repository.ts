@@ -16,6 +16,8 @@ export interface AppWindowRecord {
   path: string | null
   /** browser windows */
   url: string | null
+  /** surface windows: the surface shown and the chat that owns it */
+  surface: { sessionId: Id; surfaceId: string } | null
 }
 
 export interface NewAppWindow {
@@ -27,6 +29,7 @@ export interface NewAppWindow {
   sessionId?: Id
   path?: string | null
   url?: string
+  surface?: { sessionId: Id; surfaceId: string }
 }
 
 export interface AppWindowRepository {
@@ -34,6 +37,7 @@ export interface AppWindowRepository {
   list(desktopId: Id): AppWindowRecord[]
   get(id: Id): AppWindowRecord | null
   findChatWindow(sessionId: Id): AppWindowRecord | null
+  findSurfaceWindow(sessionId: Id, surfaceId: string): AppWindowRecord | null
   /** The new window goes on top (highest z-order). */
   create(input: NewAppWindow): AppWindowRecord
   remove(id: Id): boolean

@@ -3,6 +3,7 @@
  * (`createFakeDesktop`). Reading `state` is reactive, and `updateView` is applied at once, so the
  * two-way flow (app reports, agent changes the view) can be played in Storybook.
  */
+import type { Message } from '@ag-ui/core'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { AppKind, AppView, AppWindowState, DesktopState, OpenWindowInput } from '@shared/desktop'
@@ -19,13 +20,13 @@ export class StoryHost implements DesktopHost {
   /** Every `updateView` the apps made, newest last (for stories that show the traffic). */
   reports = $state.raw<AppView[]>([])
 
-  constructor(options: { empty?: boolean; state?: () => AguiSessionState } = {}) {
+  constructor(options: { empty?: boolean; state?: () => AguiSessionState; messages?: () => Message[] } = {}) {
     const base = createFakeApi({ empty: options.empty })
     this.fake = base
     const desktop = createFakeDesktop({ drives: base.driveList(), onChange: (state) => void (this.current = state) })
     base.watchDrives((drives) => desktop.setDrives(drives))
     this.current = desktop.state()
-    this.api = { ...base, desktop, ...(options.state ? { agui: fakeAgui(options.state) } : {}) }
+    this.api = { ...base, desktop, ...(options.state || options.messages ? { agui: fakeAgui(options.state, options.messages) } : {}) }
   }
 
   get state(): DesktopState {

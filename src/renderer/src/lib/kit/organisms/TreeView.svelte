@@ -190,6 +190,12 @@
       disabled={row.node.disabled}
       bold={row.node.bold}
       badge={row.node.badge}
+      title={row.node.title}
+      attrs={row.node.attrs}
+      tone={row.node.tone}
+      strike={row.node.strike}
+      dot={row.node.dot}
+      marker={row.node.marker}
       loading={loading.has(row.node.id)}
       lines={showLines ? { ancestors: row.ancestors, last: row.last } : undefined}
       ariaSetSize={row.setSize}

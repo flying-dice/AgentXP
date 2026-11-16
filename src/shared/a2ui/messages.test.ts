@@ -2,7 +2,8 @@ import { MessageProcessor } from '@a2ui/web_core/v0_9'
 import { describe, expect, it } from 'vitest'
 import { A2UI_CATALOG_ID, type A2uiSurfaceDto } from '../a2ui'
 import { winformsCatalog } from './catalog'
-import { a2uiSurfaceToMessages, surfaceTitle } from './messages'
+import { normaliseSurfaceTarget } from '../a2ui'
+import { a2uiSurfaceToMessages, surfaceSizeHint, surfaceTitle } from './messages'
 import { A2uiMessageValidator } from './validation'
 
 const dto = (extra: Partial<A2uiSurfaceDto> = {}): A2uiSurfaceDto => ({
@@ -10,6 +11,8 @@ const dto = (extra: Partial<A2uiSurfaceDto> = {}): A2uiSurfaceDto => ({
   sessionId: 1,
   title: 'Form',
   catalogId: A2UI_CATALOG_ID,
+  target: 'inline',
+  hidden: false,
   components: [
     { id: 'root', component: 'Panel', children: ['name'] },
     { id: 'name', component: 'TextBox', value: { path: '/name' } }
@@ -51,5 +54,18 @@ describe('surfaceTitle', () => {
     expect(surfaceTitle({ theme: { title: '' } })).toBeNull()
     expect(surfaceTitle({ theme: 'x' })).toBeNull()
     expect(surfaceTitle({})).toBeNull()
+  })
+})
+
+describe('surface targets and size hints', () => {
+  it('normalises the target; chat is inline', () => {
+    expect(['inline', 'chat', 'sidebar', 'window', 'x', undefined].map(normaliseSurfaceTarget)).toEqual(['inline', 'inline', 'sidebar', 'window', null, null])
+  })
+
+  it('reads theme.width and theme.height, clamped, and ignores junk', () => {
+    expect(surfaceSizeHint({ theme: { width: 600, height: 300 } })).toEqual({ width: 600, height: 300 })
+    expect(surfaceSizeHint({ theme: { width: 5000, height: 10 } })).toEqual({ width: 900, height: 160 })
+    expect(surfaceSizeHint({ theme: { width: '600' } })).toEqual({})
+    expect(surfaceSizeHint({})).toEqual({})
   })
 })

@@ -39,3 +39,24 @@ export function surfaceTitle(createSurface: { theme?: unknown }): string | null 
   const title = (theme as { title?: unknown }).title
   return typeof title === 'string' && title !== '' ? title : null
 }
+
+/** Smallest and largest window a size hint may ask for (CSS px). */
+const HINT_LIMITS = { width: [240, 900], height: [160, 640] } as const
+
+/**
+ * The window size a surface asks for with `theme.width` / `theme.height` (the catalog theme allows extra
+ * properties). Missing or invalid values are left out; the caller falls back to its default.
+ */
+export function surfaceSizeHint(createSurface: { theme?: unknown }): { width?: number; height?: number } {
+  const theme = createSurface.theme
+  if (typeof theme !== 'object' || theme === null) return {}
+  const out: { width?: number; height?: number } = {}
+  for (const key of ['width', 'height'] as const) {
+    const value = (theme as Record<string, unknown>)[key]
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const [lo, hi] = HINT_LIMITS[key]
+      out[key] = Math.round(Math.min(hi, Math.max(lo, value)))
+    }
+  }
+  return out
+}

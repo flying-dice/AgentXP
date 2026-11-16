@@ -1,5 +1,6 @@
 /** Realistic fake data for the session stories: the "Fix login redirect bug" session of the design. */
 import type { Interrupt, Message } from '@ag-ui/core'
+import type { A2uiServerMessage, A2uiSurfaceTarget } from '@shared/a2ui'
 import { A2UI_ACTIVITY_TYPE, emptyAguiState, PERMISSION_INTERRUPT_REASON, type AguiSessionState, type PermissionInterruptMetadata } from '@shared/agui-state'
 import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
 import { testResults } from '../../a2ui/A2uiSurface.fixtures'
@@ -143,12 +144,16 @@ export const runningTurn = (): { messages: Message[]; state: AguiSessionState } 
 }
 
 /** A turn that drew an A2UI surface (test results) with the replayable messages. */
-export const surfaceTurn = (): { messages: Message[]; state: AguiSessionState; activities: Map<string, SurfaceActivity> } => {
+export const surfaceTurn = (
+  target: A2uiSurfaceTarget = 'inline',
+  hidden = false,
+  surface: A2uiServerMessage[] = testResults
+): { messages: Message[]; state: AguiSessionState; activities: Map<string, SurfaceActivity> } => {
   const state = baseState()
   const messages: Message[] = [
     { id: 'u1', role: 'user', content: 'Show me the test results as a table' },
-    { id: 'a1', role: 'assistant', content: 'Here are the results of the last run:' },
-    { id: 'a2ui:tests', role: 'activity', activityType: A2UI_ACTIVITY_TYPE, content: { surfaceId: 'tests', messages: testResults } }
+    { id: 'a1', role: 'assistant', content: target === 'inline' ? 'Here are the results of the last run:' : `The results are in ${target === 'window' ? 'their own window' : 'the sidebar'}.` },
+    { id: 'a2ui:tests', role: 'activity', activityType: A2UI_ACTIVITY_TYPE, content: { surfaceId: 'tests', target, hidden, messages: surface } }
   ]
   return { messages, state, activities: surfacesOf(messages) }
 }

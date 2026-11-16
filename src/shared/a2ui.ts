@@ -11,6 +11,18 @@ import type { A2uiMessage } from '@a2ui/web_core/v0_9'
 /** Id of the Agent7 WinForms catalog; equals `catalogId` in `a2ui/winforms-catalog.json`. */
 export const A2UI_CATALOG_ID = 'https://agent7.dev/a2ui/catalogs/winforms/v1'
 
+/**
+ * Where a surface is shown. `inline` draws it in the transcript (default); `sidebar` puts it in a panel
+ * beside the Chat window (the chat's "extended surface", several become tabs); `window` gives it its own
+ * desktop window. For the last two the transcript shows a row with Open, Close, Delete and Move to.
+ */
+export const A2UI_SURFACE_TARGETS = ['inline', 'sidebar', 'window'] as const
+export type A2uiSurfaceTarget = (typeof A2UI_SURFACE_TARGETS)[number]
+
+/** The agent may still say `chat` for `inline` (the first name of the parameter). */
+export const normaliseSurfaceTarget = (value: unknown): A2uiSurfaceTarget | null =>
+  value === 'chat' ? 'inline' : (A2UI_SURFACE_TARGETS as readonly unknown[]).includes(value) ? (value as A2uiSurfaceTarget) : null
+
 /** An A2UI v0.9 server message: createSurface, updateComponents, updateDataModel or deleteSurface. */
 export type A2uiServerMessage = A2uiMessage
 
@@ -51,6 +63,9 @@ export interface A2uiSurfaceDto {
   /** `createSurface.theme.title`. */
   title: string | null
   catalogId: string
+  target: A2uiSurfaceTarget
+  /** Sidebar surfaces only: the user closed the tab (the surface keeps updating in the background). */
+  hidden: boolean
   components: A2uiComponent[]
   dataModel: unknown
 }

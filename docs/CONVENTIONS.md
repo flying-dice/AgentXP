@@ -63,7 +63,7 @@ attributes of a located element (`getAttribute('data-status')`); that is not sel
 `action-center-flag`, `uac-allow`, `chat-composer-input`, `chat-send`, `chat-transcript`,
 `chat-message-agent`, `tool-call-card`, `permission-option-<optionId>`, `explorer-item`,
 `explorer-drive-e`, `code-tab`, `code-editor`, `terminal-output`, `paint-canvas`, `notes-sticky`,
-`event-viewer-row`, `usb-tray`, `usb-eject-e`, `autoplay-open-folder`.
+`chat-surface-row` (`data-surface-id`, `data-state` open|closed, `data-target` inline|sidebar|window; with `chat-surface-title`, `chat-surface-state`, `chat-surface-open`, `chat-surface-close`, `chat-surface-delete`, `chat-surface-move` and `chat-surface-move-inline|sidebar|window`), `chat-sidebar`, `chat-sidebar-tab` (+ `chat-sidebar-tab-close`, `chat-sidebar-resizer`), `window-surface` with `surface-app`, `event-viewer-row`, `usb-tray`, `usb-eject-e`, `autoplay-open-folder`.
 
 **Repeated items.** A repeated item shares one id (`explorer-item`, `code-tab`, `launcher-desktop-row`,
 `window-chat` for two chats) and tests pick one with `.filter({ hasText })`, `.filter({ has })` or `.nth()`.
@@ -127,7 +127,7 @@ each step. Fixtures in `e2e/fixtures/scripted.ts`:
   order of protocol messages. Helpers: `aguiRuns` (split at RUN_STARTED; run 0 is the connect/attach run),
   `messageShape` (names without `STATE_*`, repeated streaming events collapsed), `deltaPaths`, `outcomeOf`,
   `containsInOrder`, `collapseRuns`, `payloadOf`. ACP names are the JSON-RPC method, responses `<method> (response)`.
-- `ChatWindow`: `sessionId()`, `stop`, `errors`, `surfaces`, `reasoning`, `tasks`, `showTasks()`; A2UI controls are
+- `ChatWindow`: `sessionId()`, `stop`, `errors`, `surfaces`, `surfaceRows`, `surfaceRow(title)`, `sidebar`, `sidebarTabs`, `reasoning`, `tasks`, `showTasks()`; A2UI controls are
   `a2ui-surface`, `a2ui-button`, `a2ui-textbox`, `a2ui-checkbox`.
 
 Pattern: start the desktop, open a chat (`desktop.openApp('chat')`, or plug a project in and start from AutoPlay when the

@@ -42,10 +42,11 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Event Viewer | `event-viewer` | yes | MCP `events_query` (chat, source, level, text; at most 200 compact lines) | chat filter, level filter, selected event |
 | Snipping Tool | `snipping-tool` | yes | MCP `screen_capture` (whole desktop or one window) | last snip id |
 | Recycle Bin | `recycle-bin` | yes | MCP `recycle_list`, `recycle_restore` | selected item |
+| Agent window | `surface` | no (one per A2UI surface) | none (the agent opens it by drawing: `a2ui_render` with `target: 'window'`; not agent-openable with `desktop_open_app`) | `surfaceId`, `sessionId`, title |
 
 Default policy: Ask for `wordpad` and `recycle` (and `fs.write`, `terminal` as before), Allow for the rest.
 
-Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, `desktop_focus_app`, and the A2UI tools `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws inside the calling chat).
+Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, `desktop_focus_app`, and the A2UI tools `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws where `target` says, see section 10).
 
 `desktop_open_app` is governed by the Control Centre policy **Agent may open apps**: Always (default), Ask (permission dialog), Never.
 
@@ -112,10 +113,11 @@ Built from kit organisms, matching the mockup:
 
 Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered in `apps/registry.ts` with `{ kind, title, icon, singleton, defaultBounds, component }`. An app receives `{ window: AppWindowState, desktop: DesktopController }` and reports view changes with `desktop.updateView(windowId, view)`.
 
-- **Chat** - the current session transcript, composer, tasks and per-chat changes, reused from `lib/app/session`. A2UI surfaces render inline as today.
+- **Chat** - the current session transcript, composer, tasks and per-chat changes, reused from `lib/app/session`. A2UI surfaces render inline (rows with Move to / Delete), in the chat's sidebar, or as rows for sidebar and window surfaces (section 10).
 - **Explorer** - address bar, folder tree, details `ListView` with a "Agent status" column (read / changed / created this chat).
 - **Notepad** - plain `TextBox` multiline editor, File menu (Open, Save), status bar line/col.
 - **Code** - file tree, tabs, `CodeViewer`, changes list with `DiffViewer`, Revert. "Agent is editing" marker when a tool call targets the open file.
+  Laid out like Code::Blocks (menu bar, icon toolbar, docked Management / Logs & others panes, status bar). Git awareness (`src/shared/git.ts`, `GitService` in main): `git.status` / `lineChanges` / `headText` / `revertHunk` run the `git` CLI (`execFile`, no shell, `LC_ALL=C`, `GIT_OPTIONAL_LOCKS=0`) in the real path of a VPath, so every drive works and a non-repository or missing git answers null / []. `git.changed { desktopId, root }` is pushed (debounced) after agent changes, user saves and a 5 s poll that only runs while a Code window is open. The tree shows status letters and folder dots, the kit `CodeViewer` a gutter, overview ruler and inline peek (`gutterMarks`); `revertHunk` rewrites the working file through the user write path (no agent change recorded).
 - **Terminal** - `ConsoleView` showing the ACP terminals of the desktop plus an interactive user shell row.
 - **Browser** - address bar, Back/Forward/Refresh, an Electron `<webview>` (partition `persist:agent7-browser`). Main finds its `webContents` through `did-attach-webview` and the window id, and drives it for `browser_*` (navigate, `executeJavaScript` text/accessibility snapshot, `capturePage` PNG returned as MCP image content, synthetic click/type by element ref from the last snapshot).
 - **Control Centre** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
@@ -238,6 +240,42 @@ CREATE TABLE desktop_drives (
 
 Migration: every existing desktop's folder becomes its drive `E:`, existing chats get cwd `E:\`, change paths get the folder of their chat, window paths become
 `E:\...`. `desktops` and `sessions` are rebuilt, so the migration runs with foreign keys off (`Migration.rebuildsTables`) and `migrate` runs `PRAGMA foreign_key_check` before committing.
+
+## 10. A2UI surfaces: inline, sidebar, window
+
+The agent draws with the MCP tool `a2ui_render({ messages, target? })`. `target` (default `inline`; `chat` is accepted as an alias) says where a **new** surface (`createSurface`) appears. Existing surfaces stay where they are.
+
+| Target | Where | Use for |
+|---|---|---|
+| `inline` | in the Chat transcript (a2ui-surface activity, as before) | short conversational forms and answers |
+| `sidebar` | a resizable panel on the right of the Chat window, tabs when there are several | a companion tied to this chat: status, checklist, a preview |
+| `window` | its own `surface` app window on the chat's desktop | app-like UIs the user keeps open: dashboards, tools, editors |
+
+The target is stored on the surface (`a2ui_surfaces.target`, CHECK `inline|sidebar|window`) and travels in the `a2ui-surface` activity content (`target`, `hidden`). A chat without a desktop only gets inline surfaces.
+
+**Window surfaces.** `A2uiService` opens the window when the surface is created (through the `SurfaceWindows` port, implemented by `DesktopService.openSurfaceWindow`): `opened_by = agent`, placed with `placeWindow` beside the focused chat, behind it, taskbar button flashes (the same rule as every agent-opened window). The title is `theme.title` (fallback "Agent window"); the size comes from `theme.width` / `theme.height` (clamped 240..900 x 160..640) or 480x360. Later `updateComponents` / `updateDataModel` update the same window (the renderer replays the activity messages). The window row and its `surface_windows` row are the whole state: **closing the window hides the surface** (the surface and its data model stay). A re-render by the agent does not reopen it (the user's choice wins); the tool result then says "The user closed this window; it updates in the background." The chat row **Open** opens (or focuses) the window with `opened_by = user`. Deleting the surface (`a2ui_delete_surface`, the row's **Delete**, clearing the chat, deleting the chat) removes the window: the service closes it first and trigger `trg_surface_window_removed` covers cascades.
+
+**Sidebar surfaces.** The user closes a tab with its X; that sets `a2ui_surfaces.hidden = 1` (the row says Closed, **Open** shows the tab again). Hidden surfaces keep updating; the tool result says "The user closed this sidebar tab...".
+
+**Chat rows.** The transcript shows, for sidebar and window surfaces, one compact row per surface (`chat-surface-row`, `data-surface-id`, `data-state` open|closed, `data-target`): icon, title, state, **Open**, **Close**, **Delete** (confirm), **Move to** (Inline / Sidebar / Window, `chat-surface-move-<target>`). Inline surfaces keep the transcript rendering and get a slim toolbar with **Delete** and **Move to**. IPC: `a2ui.deleteSurface`, `a2ui.moveSurface`, `a2ui.setSidebarHidden` (the Chat app then reloads its AG-UI store with `connect()`, because changes outside a turn are not streamed). Delete uses the same removal as `a2ui_delete_surface`; the agent is not prompted, it finds out because the surface is gone (`unknown surface`) and from `desktop_state`.
+
+**Actions.** A control in a sidebar or window calls `store.sendA2uiAction` of the owning chat's store (`lib/apps/sessionStores`, shared with the Chat window), so it is exactly the inline path: an AG-UI run with `forwardedProps.a2uiAction`, delivered as a hidden prompt. If the chat is mid-turn the action is ignored (as before; the run guard `The agent is still working on the previous turn`). If the Chat window is closed the action still works, because the store belongs to the desktop, not to the window.
+
+**What the agent sees.** `desktop_state` lists surface windows as windows with view `{ app: 'surface', surfaceId, sessionId, title }` and `DesktopState.surfaces` (`{ sessionId, surfaceId, title, target, state: open|closed }` for every surface of the desktop's chats). `a2ui_render` answers `ok` plus a note when a surface is shown in its own window / sidebar ("Shown in its own window "<title>"") or was closed by the user. The MCP tool descriptions and `DESKTOP_INSTRUCTIONS` explain the three targets. `desktop_close_app` cannot close an agent window (it is not an agent-openable app); `a2ui_delete_surface` closes it.
+
+**Restart.** Window rows are persisted: after a restart or reconnect the surface windows come back with their surface and the chat rows read their state from the desktop state and the activity messages.
+
+```sql
+-- migration 005
+INSERT INTO app_kinds (kind) VALUES ('surface');
+ALTER TABLE a2ui_surfaces ADD COLUMN target TEXT NOT NULL DEFAULT 'inline' CHECK (target IN ('inline','sidebar','window'));
+ALTER TABLE a2ui_surfaces ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0,1));
+CREATE TABLE surface_windows (
+  window_id  INTEGER PRIMARY KEY REFERENCES app_windows(id) ON DELETE CASCADE,
+  surface_id INTEGER NOT NULL UNIQUE REFERENCES a2ui_surfaces(id) ON DELETE CASCADE
+);
+CREATE TRIGGER trg_surface_window_removed AFTER DELETE ON surface_windows BEGIN DELETE FROM app_windows WHERE id = OLD.window_id; END;
+```
 
 ## 9. Build order
 

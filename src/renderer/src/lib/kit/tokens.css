@@ -122,3 +122,16 @@
   --w7-uac-band-warn: linear-gradient(#f6c94a, #d79a12);
   --w7-agent-glow: 0 0 0 2px rgba(255, 196, 80, 0.9), 0 0 22px 4px rgba(255, 190, 70, 0.75);
 }
+
+/* Version control (Code app git status): file tree letters, gutter marks, overview ruler. */
+:root {
+  --w7-git-modified: #1f5fb4;
+  --w7-git-added: #2c8a2c;
+  --w7-git-deleted: #c0302a;
+  --w7-git-renamed: #7a4bb0;
+  --w7-git-gutter-added: #4caf50;
+  --w7-git-gutter-modified: #3b82d6;
+  --w7-git-gutter-deleted: #d9382e;
+  --w7-git-old-bg: #ffe3e0;
+  --w7-git-new-bg: #e4f6df;
+}

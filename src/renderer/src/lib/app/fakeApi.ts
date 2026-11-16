@@ -1,8 +1,9 @@
 /** An in-memory `Agent7Api` for Storybook: the "Fix login redirect bug" session of the design. */
-import { EventType, type BaseEvent, type RunAgentInput } from '@ag-ui/core'
+import { EventType, type BaseEvent, type Message, type RunAgentInput } from '@ag-ui/core'
 import { createFakeDesktop } from './fakeDesktop'
 import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
 import { createFakeVfs } from './fakeVfs'
+import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
@@ -107,6 +108,13 @@ export function sampleProjectFiles(folder: Pick<FolderDto, 'name'>): Record<stri
   return { 'README.md': `# ${folder.name}\n` }
 }
 
+/** HEAD of the sample repository: the project files as they are, except those that differ (`sampleHead`). */
+const cleanHead = (): Record<VPath, string> => {
+  const files = Object.fromEntries(Object.entries(sampleProjectFiles(sampleFolders[0])).map(([rel, text]) => [`E:\\${rel.replaceAll('/', '\\')}`, text]))
+  for (const path of ['E:\\src\\auth\\session.ts', 'E:\\docs\\guide.md']) delete files[path]
+  return { ...files, ...sampleHead() }
+}
+
 export const sampleState = (): AguiSessionState => {
   const { state } = completedTurn()
   return { ...state, session: { ...state.session, title: 'Fix login redirect bug' }, changes: sampleChanges, tasks: sampleTasks }
@@ -115,12 +123,12 @@ export const sampleState = (): AguiSessionState => {
 const noop = (): void => {}
 
 /** Fake AG-UI transport: every run (connect included) answers with the sample transcript and `stateOf()` (default: the sample state). */
-export function fakeAgui(stateOf: () => AguiSessionState = sampleState): Agent7Api['agui'] {
+export function fakeAgui(stateOf: () => AguiSessionState = sampleState, messagesOf: () => Message[] = () => completedTurn().messages): Agent7Api['agui'] {
   const listeners = new Map<string, (event: BaseEvent) => void>()
   return {
     run: async (input: RunAgentInput) => {
       const emit = listeners.get(input.runId)
-      const { messages } = completedTurn()
+      const messages = messagesOf()
       const events: BaseEvent[] = [
         { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
         { type: EventType.STATE_SNAPSHOT, snapshot: stateOf() } as BaseEvent,
@@ -215,6 +223,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       writeFile: async (id, path, text) => fakeVfs.vfs.writeFile(1, `${driveRoot(id)}${path.replaceAll('/', '\\')}`, text)
     },
     vfs: fakeVfs.vfs,
+    git: createFakeGit({ vfs: fakeVfs.vfs, head: cleanHead(), changed: (root) => emit('git.changed', { desktopId: 1, root }) }),
     drives: fakeVfs.drives,
     launcher,
     sessions: {
@@ -256,7 +265,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
       end: async () => {}
     },
-    a2ui: { dispatch: async () => {} },
+    a2ui: { dispatch: async () => {}, deleteSurface: async () => {}, moveSurface: async () => {}, setSidebarHidden: async () => {} },
     dialogs: { pickFiles: async () => [] },
     shell: { openPath: async () => {} },
     app: { version: async () => '0.1.0' },

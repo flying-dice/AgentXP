@@ -18,6 +18,9 @@
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useSessionStores } from '../sessionStores.svelte'
+  import type { SurfaceActivity } from '../../agui/activities'
+  import type { SurfaceControls } from '../../app/session/surfaceRow'
+  import SurfaceSidebar from './SurfaceSidebar.svelte'
 
   let { window: win, host }: AppProps<'chat'> = $props()
 
@@ -72,6 +75,58 @@
   const percent = $derived(contextPercent(info?.contextUsed ?? session?.contextUsed ?? 0, info?.contextSize ?? session?.contextSize ?? 0))
   const codeWindow = $derived(host.state.windows.find((w) => w.view.app === 'code'))
   const openFilePath = $derived(codeWindow?.view.app === 'code' ? codeWindow.view.activePath : null)
+  // ---- A2UI surfaces of this chat: sidebar tabs, windows and the transcript rows ------------------------------
+  const sidebarSurfaces = $derived([...(store?.activities.values() ?? [])].filter((s) => s.target === 'sidebar' && !s.hidden))
+  let sidebarSelected = $state<string | null>(null)
+  let sidebarWidth = $state(300)
+  let knownSidebar = new Set<string>()
+  // A sidebar surface that appears (or comes back) is brought to the front.
+  $effect(() => {
+    const ids = sidebarSurfaces.map((s) => s.surfaceId)
+    const fresh = ids.find((id) => !knownSidebar.has(id))
+    knownSidebar = new Set(ids)
+    if (fresh) sidebarSelected = fresh
+  })
+  const surfaceWindow = (surfaceId: string) =>
+    host.state.windows.find((w) => w.view.app === 'surface' && w.view.sessionId === sessionId && w.view.surfaceId === surfaceId)
+  /** Changes made outside a turn (hide a tab, move, delete) are not streamed: load the persisted surfaces again. */
+  const resync = async (change: Promise<void>): Promise<void> => {
+    await change
+    await store?.connect()
+  }
+  const surfaceControls: SurfaceControls = {
+    windowOpen: (s) => surfaceWindow(s.surfaceId) !== undefined,
+    open: (s) => {
+      if (s.target === 'window') void host.openApp({ app: 'surface', sessionId, surfaceId: s.surfaceId })
+      else if (s.target === 'sidebar') {
+        sidebarSelected = s.surfaceId
+        void resync(host.api.a2ui.setSidebarHidden(sessionId, s.surfaceId, false))
+      }
+    },
+    close: (s) => {
+      const w = surfaceWindow(s.surfaceId)
+      if (s.target === 'window' && w) void host.closeWindow(w.id)
+      else if (s.target === 'sidebar') void resync(host.api.a2ui.setSidebarHidden(sessionId, s.surfaceId, true))
+    },
+    remove: (s) => void deleteSurface(s),
+    move: (s, target) => void resync(host.api.a2ui.moveSurface(sessionId, s.surfaceId, target))
+  }
+
+  async function deleteSurface(s: SurfaceActivity): Promise<void> {
+    const answer = await showMessageBox({
+      text: 'Delete this surface?\n\nIt is removed from the chat and its window closes. The agent can draw it again.',
+      caption: 'Agent7',
+      buttons: 'YesNo',
+      icon: 'warning'
+    })
+    if (answer !== 'yes') return
+    try {
+      await resync(host.api.a2ui.deleteSurface(sessionId, s.surfaceId))
+    } catch (error) {
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+    }
+  }
+
   const tabs = $derived<TabDef[]>([
     { id: 'changes', title: changes.length > 0 ? `Changes (${changes.length})` : 'Changes', testid: 'chat-tab-changes' },
     { id: 'tasks', title: 'Tasks', testid: 'chat-tab-tasks' }
@@ -151,12 +206,21 @@
     <div class="main">
       {#if store && session}
         {#key sessionId}
-          <SessionView {store} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} contained />
+          <SessionView {store} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} contained />
         {/key}
       {:else}
         <div class="blank">{sessionId > 0 ? 'Opening the chat...' : 'This chat has no session yet.'}</div>
       {/if}
     </div>
+    <SurfaceSidebar
+      surfaces={sidebarSurfaces}
+      {sessionId}
+      selected={sidebarSelected}
+      bind:width={sidebarWidth}
+      onselect={(id) => (sidebarSelected = id)}
+      onclose={(s) => surfaceControls.close(s)}
+      onaction={(event) => void store?.sendA2uiAction(event)}
+    />
     {#if panelOpen}
       <aside class="side" data-testid="chat-side-panel" aria-label="Tasks and changes">
         <TabControl {tabs} bind:selected={panelTab} aria-label="Inspector">

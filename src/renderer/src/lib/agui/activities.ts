@@ -1,4 +1,5 @@
 import type { Message } from '@ag-ui/core'
+import type { A2uiSurfaceTarget } from '@shared/a2ui'
 import { A2UI_ACTIVITY_TYPE, type A2uiSurfaceActivity } from '@shared/agui-state'
 
 /** An A2UI surface as a view of its activity message. */
@@ -6,6 +7,10 @@ export interface SurfaceActivity {
   /** The AG-UI activity message id (also the key to place it among the messages). */
   messageId: string
   surfaceId: string
+  /** `inline` in the transcript, `sidebar` beside the chat, `window` in its own desktop window. */
+  target: A2uiSurfaceTarget
+  /** Sidebar surfaces: the user closed the tab. */
+  hidden: boolean
   /** The replayable A2UI server messages that build the surface. */
   messages: A2uiSurfaceActivity['messages']
 }
@@ -29,6 +34,8 @@ export function surfacesOf(messages: readonly Message[]): Map<string, SurfaceAct
     surfaces.set(message.content.surfaceId, {
       messageId: message.id,
       surfaceId: message.content.surfaceId,
+      target: message.content.target ?? 'inline',
+      hidden: message.content.hidden ?? false,
       messages: message.content.messages
     })
   }

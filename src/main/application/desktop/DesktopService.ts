@@ -10,13 +10,15 @@ import {
   type DesktopState,
   type OpenWindowInput,
   type OpenedBy,
+  type SurfaceStateDto,
   type PolicyDecision,
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { initialView, placeWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, initialView, placeWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto } from '@shared/models'
 import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
+import type { A2uiSurfaceRepository } from '../../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
 import type { AppWindowRecord, AppWindowRepository } from '../../domain/repositories/app-window-repository'
 import type { DesktopRecord, DesktopRepository } from '../../domain/repositories/desktop-repository'
@@ -41,6 +43,7 @@ export interface DesktopServiceDeps {
   agents: AgentRepository
   sessions: SessionRepository
   notes: StickyNoteRepository
+  surfaces: Pick<A2uiSurfaceRepository, 'get' | 'list'>
   chats: ChatLifecycle
   /** The drives of a desktop (C: and the plugged-in projects). */
   drives: { list(desktopId: Id): DriveDto[] }
@@ -49,6 +52,13 @@ export interface DesktopServiceDeps {
 
 const BUSY_STATUSES: SessionDto['status'][] = ['working', 'awaiting_permission']
 const PATH_APPS: readonly AppKind[] = ['explorer', 'notepad', 'code']
+
+/** The size a window asks for (a surface's hint), completed with the app's default. */
+function sizeOf(app: AppKind, size?: { width?: number; height?: number }): { width: number; height: number } | undefined {
+  if (!size || (size.width === undefined && size.height === undefined)) return undefined
+  const base = DEFAULT_BOUNDS[app]
+  return { width: size.width ?? base.width, height: size.height ?? base.height }
+}
 
 /**
  * The source of truth for desktops. Window rows are persisted; focus and the transient view
@@ -100,7 +110,8 @@ export class DesktopService implements DesktopStates {
       tools: enabledToolGroups(windows.map((w) => w.app)),
       paused: desktop.paused,
       userInControl: desktop.userInControl,
-      notes: this.deps.notes.list(desktopId)
+      notes: this.deps.notes.list(desktopId),
+      surfaces: this.surfacesOf(desktopId, records)
     }
   }
 
@@ -126,7 +137,7 @@ export class DesktopService implements DesktopStates {
    * beside the focused chat instead of over it (`placeWindow`). A window the agent opens does not take
    * focus from a chat the user is working in: it opens behind that chat and its taskbar button flashes.
    */
-  openWindow(input: OpenWindowInput, openedBy: OpenedBy = 'user'): AppWindowState {
+  openWindow(input: OpenWindowInput, openedBy: OpenedBy = 'user', size?: { width?: number; height?: number }): AppWindowState {
     const desktopId = this.record(input.desktopId).id
     const focused = this.focusedRecord(desktopId)
     const typingChat = openedBy === 'agent' && focused?.app === 'chat' ? focused : null
@@ -140,7 +151,7 @@ export class DesktopService implements DesktopStates {
     const record = this.deps.windows.create({
       desktopId,
       app: input.app,
-      bounds: placeWindow(input.app, this.deps.windows.list(desktopId).length, avoid),
+      bounds: placeWindow(input.app, this.deps.windows.list(desktopId).length, avoid, undefined, sizeOf(input.app, size)),
       windowState: 'normal',
       openedBy,
       ...this.subtypeOf(input)
@@ -162,6 +173,31 @@ export class DesktopService implements DesktopStates {
     this.attention.get(record.desktopId)?.delete(windowId)
     if (this.focus.get(record.desktopId) === windowId) this.focus.delete(record.desktopId)
     this.emit(record.desktopId)
+  }
+
+  // ---- surface windows ---------------------------------------------------------------------------
+
+  /** True when the surface has a window. */
+  hasSurfaceWindow(sessionId: Id, surfaceId: string): boolean {
+    return this.deps.windows.findSurfaceWindow(sessionId, surfaceId) !== null
+  }
+
+  /**
+   * Opens (or focuses) the window of a surface on its chat's desktop. Null when the chat has no desktop.
+   * The agent's window follows the usual rules: placed beside the focused chat, behind it, taskbar flash.
+   */
+  openSurfaceWindow(sessionId: Id, surfaceId: string, openedBy: OpenedBy, size?: { width?: number; height?: number }): AppWindowState | null {
+    const desktopId = this.deps.sessions.get(sessionId)?.desktopId
+    if (desktopId == null) return null
+    return this.openWindow({ desktopId, app: 'surface', sessionId, surfaceId }, openedBy, size)
+  }
+
+  /** Closes the window of a surface (the surface stays). False when it had none. */
+  closeSurfaceWindow(sessionId: Id, surfaceId: string): boolean {
+    const record = this.deps.windows.findSurfaceWindow(sessionId, surfaceId)
+    if (!record) return false
+    this.closeWindow(record.id)
+    return true
   }
 
   /**
@@ -296,11 +332,32 @@ export class DesktopService implements DesktopStates {
       const session = record.sessionId === null ? null : this.deps.sessions.get(record.sessionId)
       return { app: 'chat', sessionId: record.sessionId ?? 0, title: session?.title ?? 'Chat' }
     }
+    if (record.app === 'surface') {
+      const { sessionId, surfaceId } = record.surface ?? { sessionId: 0, surfaceId: '' }
+      const surface = this.deps.surfaces.get(sessionId, surfaceId)
+      return { app: 'surface', sessionId, surfaceId, title: surface?.title ?? SURFACE_FALLBACK_TITLE }
+    }
     const live = this.views.get(record.id)
     if (live) return live
     const view = initialView({ app: record.app, path: record.path || undefined, url: record.url ?? undefined, sessionId: record.sessionId ?? undefined })
     this.views.set(record.id, view)
     return view
+  }
+
+  /** Every surface of the desktop's chats and where it is. */
+  private surfacesOf(desktopId: Id, records: AppWindowRecord[]): SurfaceStateDto[] {
+    const open = new Set(records.flatMap((r) => (r.surface ? [`${r.surface.sessionId}/${r.surface.surfaceId}`] : [])))
+    return this.deps.sessions
+      .listByDesktop(desktopId)
+      .flatMap((s) => this.deps.surfaces.list(s.id))
+      .map((s) => ({
+        sessionId: s.sessionId,
+        surfaceId: s.surfaceId,
+        title: s.title ?? SURFACE_FALLBACK_TITLE,
+        target: s.target,
+        state:
+          s.target === 'inline' || (s.target === 'sidebar' && !s.hidden) || open.has(`${s.sessionId}/${s.surfaceId}`) ? ('open' as const) : ('closed' as const)
+      }))
   }
 
   private flag(desktopId: Id, windowId: Id): void {
@@ -331,17 +388,28 @@ export class DesktopService implements DesktopStates {
       if (open && open.desktopId !== input.desktopId) throw new AppError('The chat belongs to another desktop')
       return open
     }
+    if (input.app === 'surface') {
+      if (input.sessionId === undefined || input.surfaceId === undefined) throw new AppError('A surface window needs a session and a surface')
+      return this.deps.windows.findSurfaceWindow(input.sessionId, input.surfaceId)
+    }
     if (!SINGLETON_APPS.includes(input.app)) return null
     return this.deps.windows.list(input.desktopId).find((w) => w.app === input.app) ?? null
   }
 
-  private subtypeOf(input: OpenWindowInput): { sessionId?: Id; path?: string | null; url?: string } {
+  private subtypeOf(input: OpenWindowInput): { sessionId?: Id; path?: string | null; url?: string; surface?: { sessionId: Id; surfaceId: string } } {
     if (input.app === 'chat') {
       const session = required(this.deps.sessions.get(input.sessionId ?? 0), 'Session')
       if (session.desktopId !== input.desktopId) throw new AppError('The chat belongs to another desktop')
       return { sessionId: session.id }
     }
     if (PATH_APPS.includes(input.app)) return { path: input.path ?? null }
+    if (input.app === 'surface') {
+      const { sessionId, surfaceId } = input
+      const session = required(this.deps.sessions.get(sessionId ?? 0), 'Session')
+      if (session.desktopId !== input.desktopId) throw new AppError('The chat belongs to another desktop')
+      if (surfaceId === undefined || !this.deps.surfaces.get(session.id, surfaceId)) throw new AppError('The surface does not exist')
+      return { surface: { sessionId: session.id, surfaceId } }
+    }
     if (input.app === 'browser') return { url: input.url ?? 'about:blank' }
     return {}
   }

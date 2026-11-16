@@ -7,7 +7,7 @@ import type { BridgePush, BridgeRequest, BridgeResponse } from './protocol'
 
 /** What the MCP child needs from the app. */
 export interface BridgeClient {
-  forward(messages: unknown[]): Promise<BridgeResponse>
+  forward(messages: unknown[], target?: string): Promise<BridgeResponse>
   /** The tool groups enabled on this chat's desktop right now. */
   tools(): Promise<ToolGroup[]>
   call(tool: string, args: unknown): Promise<ToolResult>
@@ -38,8 +38,8 @@ export class SocketBridgeClient implements BridgeClient {
     private readonly timeoutMs = 10_000
   ) {}
 
-  forward(messages: unknown[]): Promise<BridgeResponse> {
-    return this.request({ type: 'a2ui', id: randomUUID(), sessionKey: this.sessionKey, messages }, this.timeoutMs)
+  forward(messages: unknown[], target?: string): Promise<BridgeResponse> {
+    return this.request({ type: 'a2ui', id: randomUUID(), sessionKey: this.sessionKey, messages, ...(target === undefined ? {} : { target }) }, this.timeoutMs)
   }
 
   async tools(): Promise<ToolGroup[]> {

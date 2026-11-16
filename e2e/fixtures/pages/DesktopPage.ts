@@ -19,6 +19,7 @@ export type AppId =
   | 'agent-manager'
   | 'control-centre'
   | 'recycle-bin'
+  | 'surface'
 
 /** Apps the Start menu hides in a collapsible group. */
 const START_GROUP: Partial<Record<AppId, string>> = {

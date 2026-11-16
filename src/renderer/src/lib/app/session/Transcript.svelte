@@ -5,6 +5,8 @@
   import type { SurfaceActivity } from '../../agui/activities'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import A2uiActivity from './A2uiActivity.svelte'
+  import SurfaceRow from './SurfaceRow.svelte'
+  import { noSurfaceControls, surfaceRowModel, type SurfaceControls } from './surfaceRow'
   import AgentMessage from './AgentMessage.svelte'
   import ErrorRow from './ErrorRow.svelte'
   import StopNotice from './StopNotice.svelte'
@@ -25,6 +27,8 @@
     /** The tool call a permission request is open for. */
     waitingToolCallId?: string | null
     onaction?: (event: A2uiClientEvent) => void
+    /** What the surface rows can do (open, close, delete, move); the Chat app provides it. */
+    surfaceControls?: SurfaceControls
     onlink?: (href: string) => void
   }
 
@@ -39,6 +43,7 @@
     error = null,
     waitingToolCallId = null,
     onaction,
+    surfaceControls = noSurfaceControls,
     onlink
   }: Props = $props()
 
@@ -88,7 +93,16 @@
           <StopNotice reason={row.reason} />
         {:else}
           {@const surface = activities.get(row.surfaceId)}
-          {#if surface}<A2uiActivity messages={surface.messages} {sessionId} {onaction} />{/if}
+          {#if surface}
+            <SurfaceRow
+              model={surfaceRowModel(surface, surfaceControls.windowOpen(surface))}
+              onopen={() => surfaceControls.open(surface)}
+              onclose={() => surfaceControls.close(surface)}
+              ondelete={() => surfaceControls.remove(surface)}
+              onmove={(target) => surfaceControls.move(surface, target)}
+            />
+            {#if surface.target === 'inline'}<A2uiActivity messages={surface.messages} {sessionId} {onaction} />{/if}
+          {/if}
         {/if}
       </div>
     {:else}

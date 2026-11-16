@@ -35,6 +35,10 @@
   {#snippet template(args)}<SessionViewHarness {...args} init={surfaceTurn()} />{/snippet}
 </Story>
 
+<Story name="SidebarAndWindowRows">
+  {#snippet template(args)}<SessionViewHarness {...args} init={surfaceTurn('window')} />{/snippet}
+</Story>
+
 <Story name="Error">
   {#snippet template(args)}
     <SessionViewHarness {...args} init={{ ...completedTurn(), error: 'The agent process exited unexpectedly (code 1).' }} />

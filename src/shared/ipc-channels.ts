@@ -38,7 +38,8 @@ const RENDERER_EVENTS = {
   'notes.changed': true,
   'events.appended': true,
   'recycle.changed': true,
-  'launcher.changed': true
+  'launcher.changed': true,
+  'git.changed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -85,6 +86,7 @@ const INVOKE_METHODS = {
     respondAppRequest: true
   },
   vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
+  git: { status: true, lineChanges: true, headText: true, revertHunk: true },
   drives: { list: true, plugIn: true, eject: true },
   launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },
   notes: { list: true, add: true, update: true, remove: true },
@@ -93,7 +95,7 @@ const INVOKE_METHODS = {
   snip: { capture: true },
   processes: { list: true, end: true },
   app: { version: true },
-  a2ui: { dispatch: true },
+  a2ui: { dispatch: true, deleteSurface: true, moveSurface: true, setSidebarHidden: true },
   shell: { openPath: true },
   dialogs: { pickFiles: true }
 } as const satisfies { [G in keyof InvokeApi]: { [M in keyof InvokeApi[G]]: true } }

@@ -16,9 +16,10 @@ import type {
   TerminalDto,
   TranscriptEntryDto
 } from './models'
-import type { A2uiClientEvent, A2uiSurfaceDto } from './a2ui'
+import type { A2uiClientEvent, A2uiSurfaceDto, A2uiSurfaceTarget } from './a2ui'
 import type { AgentProcessDto, DesktopApi, DesktopEvents, DesktopExtrasApi } from './desktop'
 import type { DrivesApi, LauncherApi, LauncherEvents, VPath, VfsApi } from './vfs'
+import type { GitApi, GitEvents } from './git'
 
 export interface PromptInput {
   sessionId: Id
@@ -114,6 +115,12 @@ export interface Agent7Api {
   }
   a2ui: {
     dispatch(event: A2uiClientEvent): Promise<void>
+    /** The chat row's Delete: removes the surface like the agent's a2ui_delete_surface (its window closes). */
+    deleteSurface(sessionId: Id, surfaceId: string): Promise<void>
+    /** The chat row's Move to: relocates the surface (to `window` its window opens, away from it the window closes). */
+    moveSurface(sessionId: Id, surfaceId: string, target: A2uiSurfaceTarget): Promise<void>
+    /** Closes (true) or reopens (false) the sidebar tab of a surface. */
+    setSidebarHidden(sessionId: Id, surfaceId: string, hidden: boolean): Promise<void>
   }
   shell: {
     openPath(path: string): Promise<void>
@@ -124,6 +131,7 @@ export interface Agent7Api {
   }
   desktop: DesktopApi
   vfs: VfsApi
+  git: GitApi
   drives: DrivesApi
   launcher: LauncherApi
   notes: DesktopExtrasApi['notes']
@@ -150,7 +158,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents, LauncherEvents {
+export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

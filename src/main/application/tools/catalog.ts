@@ -18,7 +18,10 @@ export const DESKTOP_INSTRUCTIONS =
   'You work on a virtual Windows desktop. All paths are virtual paths with a drive letter and backslashes: C:\\ is your private system disk ' +
   '(your home is C:\\Users\\Agent) and projects are USB drives the user plugs in (E:\\, F:\\, ...). Call drives_list to see which drives exist. ' +
   'A drive can be ejected at any time; then every path on it is refused until the user plugs the project in again. ' +
-  'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more.'
+  'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more. ' +
+  'UI you draw with a2ui_render appears where you choose with target: inline in the chat (short conversational forms), in a sidebar beside the chat ' +
+  '(a companion panel), or in its own window (an app-like UI the user keeps open). Sidebar tabs and windows can be closed and reopened by the user, ' +
+  'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window.'
 
 const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
 

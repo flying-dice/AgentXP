@@ -59,7 +59,7 @@ describe('buildTranscriptRows', () => {
       { id: 'a2ui:s1', role: 'activity', activityType: 'a2ui-surface', content: { surfaceId: 's1', messages: [] } },
       { id: 'a2ui:s2', role: 'activity', activityType: 'a2ui-surface', content: { surfaceId: 's2', messages: [] } }
     ]
-    const surfaces = new Map([['s1', { messageId: 'a2ui:s1', surfaceId: 's1', messages: [] }]])
+    const surfaces = new Map([['s1', { messageId: 'a2ui:s1', surfaceId: 's1', target: 'inline' as const, hidden: false, messages: [] }]])
     const rows = buildTranscriptRows(messages, surfaces)
     expect(rows.map((r) => r.kind)).toEqual(['agent', 'surface'])
   })

@@ -2,8 +2,24 @@
   import { defineMeta } from '@storybook/addon-svelte-csf'
   import FileTree from './FileTree.svelte'
   import { createFakeApi } from '../fakeApi'
+  import { indexGitStatus } from '../../apps/code/gitModel'
 
   const api = createFakeApi()
+  const git = indexGitStatus([
+    {
+      branch: 'main',
+      ahead: 0,
+      behind: 0,
+      entries: [
+        { path: 'E:\\src\\auth\\redirect.ts', index: ' ', worktree: 'M' },
+        { path: 'E:\\src\\auth\\session.ts', index: 'A', worktree: ' ' },
+        { path: 'E:\\docs\\guide.md', index: '?', worktree: '?' },
+        { path: 'E:\\tests\\auth.test.ts', index: ' ', worktree: 'D' },
+        { path: 'E:\\package.json', index: 'U', worktree: 'U' },
+        { path: 'E:\\README.md', index: 'R', worktree: ' ' }
+      ]
+    }
+  ])
 
   const { Story } = defineMeta({
     title: 'App/FileTree',
@@ -12,6 +28,12 @@
     argTypes: { onopen: { action: 'open' } }
   })
 </script>
+
+<Story name="GitStatus" args={{ git }}>
+  {#snippet template(args)}
+    <div class="frame"><FileTree {...args} /></div>
+  {/snippet}
+</Story>
 
 <Story name="Default">
   {#snippet template(args)}

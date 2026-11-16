@@ -42,7 +42,8 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     tools: enabledToolGroups([]),
     paused: false,
     userInControl: false,
-    notes: []
+    notes: [],
+    surfaces: []
   }
   const changed = (): void => {
     state.tools = enabledToolGroups(state.windows.map((w) => w.app))
