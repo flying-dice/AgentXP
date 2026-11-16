@@ -45,6 +45,7 @@
     color: #1e395b;
   }
   .x {
+    flex: none;
     width: 24px;
     height: 24px;
     padding: 0;

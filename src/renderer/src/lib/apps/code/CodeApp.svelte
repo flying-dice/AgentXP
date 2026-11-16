@@ -39,8 +39,9 @@
   import { closeTab, openTab, reconcileTabs, sameRange, scrollTopForLine, visibleRange } from './codeModel'
   import { treeMenu, type TreeMenuTarget } from './codeContext'
   import DockPane from './DockPane.svelte'
-  import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
+  import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
   import { revertConfirmText } from '../../app/changes/changeFormat'
+  import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
   import type { FileTreeTarget } from '../../app/files/fileTree'
 
   let { window: win, host, focused = false }: AppProps<'code'> = $props()
@@ -68,6 +69,8 @@
   // Git: the status of every drive's repository, the changes of the active file and the open peek.
   let gitStatuses = $state.raw<(GitStatusDto | null)[]>([])
   let lineChanges = $state.raw<GitLineChange[]>([])
+  /** The lines added and removed per changed file, per project (the Git list's last column). */
+  let gitCounts = $state.raw<{ root: string; counts: ReturnType<typeof countsByPath> }[]>([])
   let peek = $state<number | null>(null)
   let caret = $state({ line: 1, col: 1 })
   let files = $state.raw<Record<string, { text: string | null; error: string | null }>>({})
@@ -89,6 +92,8 @@
   // svelte-ignore state_referenced_locally
   const desktop = useDesktopStores(host)
   const stores = $derived(desktop.list)
+  // A revert from anywhere updates the Changes list at once (UX-79).
+  $effect(() => refreshOnRevert(host.api, desktopId, () => untrack(() => stores)))
   const changes = $derived<FileChangeDto[]>(stores.flatMap((s) => s.state.changes))
   const changedPaths = $derived(changes.map((c) => normaliseVPath(c.path) ?? c.path))
   const editing = $derived(
@@ -158,6 +163,14 @@
         refreshAgain = false
         const next = await Promise.all(untrack(() => roots).map((r) => host.api.git.status(desktopId, r.path).catch(() => null)))
         if (JSON.stringify(next) !== JSON.stringify(untrack(() => gitStatuses))) gitStatuses = next
+        const rootsNow = untrack(() => roots)
+        const counted = await Promise.all(
+          rootsNow.map(async (r, i) => ({
+            root: r.path,
+            counts: countsByPath(next[i]?.entries.length ? await host.api.review.changes(desktopId, r.path, 'HEAD').catch(() => []) : [])
+          }))
+        )
+        if (JSON.stringify(counted.map((c) => [c.root, [...c.counts]])) !== JSON.stringify(untrack(() => gitCounts).map((c) => [c.root, [...c.counts]]))) gitCounts = counted
         await refreshActive()
       } while (refreshAgain)
     } finally {
@@ -405,6 +418,31 @@
     }
   }
 
+  /** View > Focus on the file: every panel closes and the file uses the whole window; Show all panels brings them back (UX-75). */
+  let chatHiddenByFocus = $state(false)
+  const anyPanelOpen = $derived(showManagement || showLogs || host.chatPaneOpen(win.id))
+  const allPanelsOpen = $derived(showManagement && showLogs)
+  function focusOnFile(): void {
+    showManagement = false
+    showLogs = false
+    chatHiddenByFocus = host.chatPaneOpen(win.id)
+    if (chatHiddenByFocus) host.toggleChatPane(win.id)
+  }
+  function showAllPanels(): void {
+    showManagement = true
+    showLogs = true
+    if (chatHiddenByFocus && !host.chatPaneOpen(win.id)) host.toggleChatPane(win.id)
+    chatHiddenByFocus = false
+  }
+
+  /** Ctrl+Shift+F works from the whole window, also after the panes closed and took the keyboard focus with them. */
+  function onFocusKey(event: KeyboardEvent): void {
+    if (!focused || event.key.toLowerCase() !== 'f' || !event.ctrlKey || !event.shiftKey || event.altKey) return
+    event.preventDefault()
+    if (anyPanelOpen) focusOnFile()
+    else showAllPanels()
+  }
+
   function onKeydown(event: KeyboardEvent): void {
     if (event.key === 'F5' && event.altKey) {
       event.preventDefault()
@@ -453,6 +491,17 @@
 
   async function initGit(): Promise<void> {
     const root = activeRoot()
+    const answer = await showMessageBox({
+      text: TURN_ON_GIT_TEXT,
+      caption: 'Code',
+      icon: 'question',
+      actions: [
+        { id: 'turn-on', label: 'Turn on' },
+        { id: 'cancel', label: 'Cancel' }
+      ],
+      defaultButton: 1
+    })
+    if (answer !== 'turn-on') return
     try {
       await host.api.git.init(desktopId, root)
       await refreshGit()
@@ -573,6 +622,9 @@
         { id: 'code-view-logs', label: '&Changes and Git', checked: showLogs, action: () => (showLogs = !showLogs) },
         { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) },
         { separator: true },
+        { id: 'code-view-focus', testid: 'code-menu-focus', label: '&Focus on the file', shortcut: 'Ctrl+Shift+F', disabled: !anyPanelOpen, action: focusOnFile },
+        { id: 'code-view-show-all', testid: 'code-menu-show-all', label: 'Show all &panels', disabled: allPanelsOpen && !chatHiddenByFocus, action: showAllPanels },
+        { separator: true },
         help.paneItem(win.id)
       ]
     },
@@ -630,6 +682,14 @@
     { key: 'name', header: 'File' },
     { key: 'status', header: 'State', width: 84 }
   ]
+  const countsOf = (path: string): { additions: number; deletions: number } | undefined => {
+    for (const { root, counts } of gitCounts) {
+      const rel = relativeToRoot(root, normaliseVPath(path) ?? path)
+      const found = rel ? counts.get(rel) : undefined
+      if (found) return found
+    }
+    return undefined
+  }
   const gitRows = $derived<ListRow[]>(
     gitEntries.map((e) => {
       const state = gitFileState(e)
@@ -639,13 +699,15 @@
         icon: 'file-code',
         attrs: { 'data-path': e.path, 'data-git-status': state },
         text: GIT_STATE_WORD[state],
-        file: e.path
+        file: e.path,
+        lines: gitLinesLabel(countsOf(e.path))
       }
     })
   )
   const gitColumns: ListColumn[] = [
     { key: 'text', header: 'Status', width: 90 },
-    { key: 'file', header: 'File' }
+    { key: 'file', header: 'File' },
+    { key: 'lines', header: 'Lines', width: 84, align: 'right' }
   ]
 
   /** Git list: double-click and the menu show the change (Code Review against the last commit) or open the file. */
@@ -661,6 +723,8 @@
   /** "Line 1 of 6": short enough that the status bar never cuts it. */
   const lineLabel = $derived(active && text !== null ? `Line ${caret.line} of ${totalLines}` : '')
 </script>
+
+<svelte:window onkeydown={onFocusKey} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="code" data-testid="code-app" onkeydown={(e) => (ctx.key(e, contextItems), onKeydown(e))} oncontextmenu={(e) => ctx.show(e, contextItems())}>
@@ -784,7 +848,7 @@
                     &mdash; {gitEntries.length === 0 ? 'no changes since the last commit' : `${gitEntries.length} changed ${gitEntries.length === 1 ? 'file' : 'files'}`}
                   {:else}
                     <span data-testid="code-git-not-repo">{NOT_A_GIT_REPOSITORY}</span>
-                    <Button data-testid="code-git-init" onclick={() => void initGit()}>Initialize Git here</Button>
+                    <Button data-testid="code-git-init" onclick={() => void initGit()}>Turn on Git here...</Button>
                   {/if}
                 </div>
                 <ListView
@@ -793,7 +857,10 @@
                   testid="code-git-list"
                   emptyText={activeStatus ? 'Nothing to commit.' : ''}
                   aria-label="Git status"
-                  onactivate={(row) => void showChanges(row.id)}
+                  onactivate={(row) => {
+                    const path = rowReviewPath(gitRows, row.id)
+                    if (path) void showChanges(path)
+                  }}
                   oncontextmenu={gitRowMenu}
                 />
               </div>
@@ -892,6 +959,8 @@
     background: var(--w7-window);
   }
   .editor {
+    flex: 1;
+    min-width: 0;
     height: 100%;
     min-height: 0;
     display: flex;
@@ -929,6 +998,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    min-height: 24px;
     padding: 0 2px;
     border: 0;
     background: transparent;

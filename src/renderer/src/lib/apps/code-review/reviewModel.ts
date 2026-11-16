@@ -2,13 +2,15 @@
 import type { DiffLine, SplitRow } from '@shared/diff'
 import { changeRegions, fullDiffLines, fullSplitRows, marginBlocks, splitKinds, unifiedKinds, type ChangeRegion, type MarginBlock, type RowKind } from '@shared/windiff'
 import {
+  VERDICT_LABELS,
   formatReviewPrompt,
   threadsOf,
   type ReviewChangeDto,
   type ReviewFileDto,
   type ReviewChangeStatus,
   type ReviewCommentDto,
-  type ReviewStateDto
+  type ReviewStateDto,
+  type ReviewVerdict
 } from '@shared/review'
 
 export type ReviewLayout = 'unified' | 'split'
@@ -145,3 +147,24 @@ export function chatLabel(chat: { id: number; title?: string | null }): string {
   const title = chat.title?.trim() ?? ''
   return title && title !== 'New session' && title !== 'New chat' ? title : `Chat ${chat.id}`
 }
+
+const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
+
+/** "Changes requested. 2 comments, 1 is a blocker.": the verdict bar says every number in digits (UX-77). */
+export function verdictLine(verdict: ReviewVerdict, comments: readonly Pick<ReviewCommentDto, 'parentId' | 'severity'>[]): string {
+  const roots = comments.filter((c) => c.parentId === null)
+  if (roots.length === 0) return `${VERDICT_LABELS[verdict]}.`
+  const blockers = roots.filter((c) => c.severity === 'blocker').length
+  const tail = blockers === 0 ? '' : blockers === 1 ? ', 1 is a blocker' : `, ${blockers} are blockers`
+  return `${VERDICT_LABELS[verdict]}. ${plural(roots.length, 'comment', 'comments')}${tail}.`
+}
+
+/** The status bar: "2 files changed", and "2 files changed, 1 shown" when one file is open (UX-77). */
+export const filesStatusLabel = (total: number, shown: number): string =>
+  `${plural(total, 'file', 'files')} changed${shown > 0 && total > 0 ? `, ${shown} shown` : ''}`
+
+/** The words under the severity list of the comment box (UX-76). */
+export const SEVERITY_HELP = 'Minor is the usual choice for a suggestion. Use Blocker only when the change must not be accepted as it is.'
+
+/** The tooltip of the "+" in the gutter. */
+export const addCommentTitle = (line: number | undefined): string => (line === undefined ? 'There is no line to comment on here' : `Add a comment on line ${line}`)

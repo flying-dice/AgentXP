@@ -49,6 +49,37 @@ describe('Code Review', () => {
     await see.text(review.threads.first(), 'stray zero')
   })
 
+  it('says every number in digits and shows how many files are shown (UX-77)', async () => {
+    const review = ctx.desktop.codeReview()
+    await see.text(review.verdict.getByTestId('review-verdict-line'), /Changes requested\. 2 comments/)
+    await see.text(review.frame.getByTestId('review-status-files'), '2 files changed, 1 shown')
+    await see.visible(review.frame.getByTestId('review-send-comments'))
+    await see.enabled(review.frame.getByTestId('review-send-comments'))
+  })
+
+  it('a comment opens from the + , the right-click menu and a double click, and the box explains Minor (UX-76)', async () => {
+    const review = ctx.desktop.codeReview()
+    const row = review.rows.nth(1)
+    // The blue + of the gutter.
+    await row.hover()
+    await row.getByTestId('review-gutter-plus').click()
+    await see.visible(review.frame.getByTestId('review-compose'))
+    await see.text(review.frame.getByTestId('review-compose-severity-help'), 'Minor is the usual choice for a suggestion')
+    await review.frame.getByTestId('review-compose-cancel').click()
+    await see.gone(review.frame.getByTestId('review-compose'))
+    // The right-click menu.
+    await row.click({ button: 'right' })
+    await ctx.desktopPage.getByTestId('review-ctx-add-comment').click()
+    await see.visible(review.frame.getByTestId('review-compose'))
+    await review.frame.getByTestId('review-compose-cancel').click()
+    await see.gone(review.frame.getByTestId('review-compose'))
+    // A double click on the line.
+    await row.dblclick()
+    await see.visible(review.frame.getByTestId('review-compose'))
+    await review.frame.getByTestId('review-compose-cancel').click()
+    await see.gone(review.frame.getByTestId('review-compose'))
+  })
+
   it('the margin bar marks removed lines red and added lines yellow, and F7 steps through the changes', async () => {
     const review = ctx.desktop.codeReview()
     await see.visible(review.margin)

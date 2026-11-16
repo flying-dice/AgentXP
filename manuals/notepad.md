@@ -13,6 +13,7 @@ This manual describes Notepad. Notepad reads and edits plain text files.
   - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
+  - Saving a file
 - 6 - Troubleshooting
 - 7 - Need Help?
 
@@ -119,13 +120,15 @@ To open a file, follow the steps below:
 2. Select the file.
 3. Click **OK**.
 
-To save a change, press Ctrl+S. Save works only for a file that has a name and a change.
-
 To wrap long lines, click **Format -> Word Wrap**.
+
+### Saving a file
+
+To save a change, press Ctrl+S. Save works for a file that has a name and a change. To save a new file, press Ctrl+S too: a box asks for the name. To keep the text under another name, choose **File -> Save As...** (Ctrl+Shift+S).
 
 ## 6 - Troubleshooting
 
-- **Save is dimmed.** The file has no change, or the file has no name. Notepad cannot save a new file under a name.
+- **Save is dimmed.** The file has no change. Use **Save As...** to keep the text under another name.
 - **A question asks about discarding changes.** You changed the text. Click **No** to keep working. Click **Yes** to lose the change.
 - **The status bar shows an error.** Notepad could not read the file. Make sure that the drive is plugged in.
 

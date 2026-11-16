@@ -72,4 +72,88 @@ describe('Code app git awareness', () => {
     await see.text(code.frame.getByTestId('code-hunk-peek'), 'THREE')
     await see.text(code.frame.getByTestId('code-hunk-peek'), 'three')
   })
+
+  it('View > Focus on the file closes every pane and the file fills the window; Show all panels brings them back (UX-75)', async () => {
+    const code = ctx.desktop.code()
+    await code.openFile('keep.txt')
+    await see.visible(code.frame.getByTestId('code-management'))
+    await code.frame.getByTestId('menubar-view').click()
+    await ctx.desktopPage.getByTestId('code-menu-focus').click()
+    await see.gone(code.frame.getByTestId('code-management'))
+    await see.gone(code.frame.getByTestId('code-logs'))
+    await see.eventually(async () => {
+      const app = await code.frame.getByTestId('code-app').boundingBox()
+      const editor = await code.editor.boundingBox()
+      expect(editor!.width / app!.width).toBeGreaterThanOrEqual(0.9)
+    })
+    await code.frame.getByTestId('menubar-view').click()
+    await ctx.desktopPage.getByTestId('code-menu-show-all').click()
+    await see.visible(code.frame.getByTestId('code-management'))
+    await see.visible(code.frame.getByTestId('code-logs'))
+  })
+
+  it('Ctrl+Shift+F does the same as the menu item', async () => {
+    const code = ctx.desktop.code()
+    await code.editor.click()
+    await ctx.desktopPage.keyboard.press('Control+Shift+F')
+    await see.gone(code.frame.getByTestId('code-management'))
+    await ctx.desktopPage.keyboard.press('Control+Shift+F')
+    await see.visible(code.frame.getByTestId('code-management'))
+  })
+
+  it('the Git list shows the lines of each file and double-click opens the file that was clicked (UX-78)', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-logs-tab-git').click()
+    const title = await code.frame.getByTestId('code-logs-tab-git').getAttribute('title')
+    expect(title).toContain('with changes that are not saved in version control')
+    const rows = code.frame.getByTestId('code-git-entry')
+    await see.count(rows, 2)
+    await see.text(rows.filter({ hasText: 'fresh.txt' }), '+1 / -0')
+    // Nothing is selected until the user picks a row.
+    expect(await rows.evaluateAll((els) => els.filter((e) => e.getAttribute('aria-selected') === 'true').length)).toBe(0)
+    await rows.filter({ hasText: 'fresh.txt' }).dblclick()
+    const review = ctx.desktop.codeReview()
+    await see.visible(review.app)
+    await see.text(review.frame.getByTestId('review-file-head'), 'fresh.txt')
+    await ctx.desktop.closeWindow('code-review')
+  })
+})
+
+/** UX-82: turning on Git asks first. */
+describe('Code app: turn on Git', () => {
+  let ctx: ConnectedDesktop
+  let workspace: Workspace
+
+  beforeAll(async () => {
+    workspace = await createWorkspace({ 'a.txt': 'one\n' })
+    ctx = await startConnectedDesktop({ title: 'No git desktop', workspace })
+  })
+  afterAll(async () => {
+    await ctx?.app.close()
+    await workspace?.remove()
+  })
+
+  it('explains Git in plain words, asks, and Cancel is the default', async () => {
+    await ctx.desktop.openApp('code')
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-logs-tab-git').click()
+    const note = code.frame.getByTestId('code-git-not-repo')
+    await see.text(note, 'hidden folder named .git')
+    await see.text(note, 'does not change your files')
+    await code.frame.getByTestId('code-git-init').click()
+    const box = ctx.desktopPage.getByTestId('message-box')
+    await see.visible(box)
+    await see.visible(box.getByTestId('message-box-action-turn-on'))
+    await ctx.desktopPage.keyboard.press('Enter') // Cancel is the default button
+    await see.gone(box)
+    await see.visible(note)
+  })
+
+  it('Turn on starts Git in the folder', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-git-init').click()
+    await ctx.desktopPage.getByTestId('message-box-action-turn-on').click()
+    await see.visible(code.frame.getByTestId('code-git-branch'))
+    await see.gone(code.frame.getByTestId('code-git-not-repo'))
+  })
 })

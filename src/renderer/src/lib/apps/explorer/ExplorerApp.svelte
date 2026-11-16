@@ -422,7 +422,7 @@
   </div>
   {#if path === ''}
     <div class="commands" role="toolbar" aria-label="Commands">
-      <ToolTip text="Plug in a project folder as a drive so that the agent can see its files.">
+      <ToolTip text="Plug in a project folder as a drive so that the agent can see its files. Press F1 for more.">
         <ToolStripButton data-testid="explorer-plug-in" icon="plus" text="Plug in a project..." onclick={() => void plugIn()} />
       </ToolTip>
       <ToolTip text="Plug the selected removed project in again, without choosing its folder.">

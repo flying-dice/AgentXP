@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** The comments list panel: every thread of the review with where it is, its severity and state, and "Send all open comments". */
+  /** The comments list panel: every thread of the review with where it is, its severity and state, and "Send comments to chat". */
   import { SEVERITY_LABELS, commentLocation, sortComments, type ReviewCommentDto } from '@shared/review'
   import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -50,7 +50,7 @@
     {/each}
   </div>
   <div class="foot">
-    <Button data-testid="review-send-all" disabled={counts.open === 0} onclick={onsendall}>Send all open comments...</Button>
+    <Button data-testid="review-send-all" disabled={counts.open === 0} onclick={onsendall}>Send comments to chat...</Button>
   </div>
 </section>
 

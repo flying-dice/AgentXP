@@ -437,7 +437,8 @@
     </section>
   </div>
 
-  <div class="workspace w7-scroll">
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div class="workspace w7-scroll" role="region" tabindex="0" aria-label="Drawing area">
     {#if agentDrawing}<div class="pill" data-testid="paint-agent-drawing" role="status">The agent is drawing…</div>{/if}
     <div class="sheet" style:width="{width}px" style:height="{height}px">
       <input
@@ -574,15 +575,16 @@
     background: linear-gradient(#cfdff5, #e3ecf9);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
   }
+  /* Four 36 x 24 px buttons in two columns: every target is at least 24 px (UX-83). */
   .sizes {
-    flex-direction: column;
-    align-items: stretch !important;
-    justify-content: center;
-    gap: 1px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 36px);
+    align-content: center;
+    gap: 4px !important;
   }
   .size {
-    width: 62px;
-    height: 17px;
+    width: 36px;
+    height: 24px;
     padding: 0 6px;
     display: flex;
     align-items: center;
@@ -641,13 +643,13 @@
   }
   .palette {
     display: grid;
-    grid-template-columns: repeat(10, 18px);
-    grid-auto-rows: 18px;
+    grid-template-columns: repeat(10, 24px);
+    grid-auto-rows: 24px;
     gap: 2px;
   }
   .sw {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: 1px solid #6e7f99;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);

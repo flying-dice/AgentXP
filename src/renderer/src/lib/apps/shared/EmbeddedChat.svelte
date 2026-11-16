@@ -223,7 +223,7 @@
 
 {#if collapsible && collapsed}
   <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat pane (collapsed)">
-    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show the chat pane" title="Show chat pane" onclick={() => (collapsed = false)}>
+    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show chat" title="Show chat" onclick={() => (collapsed = false)}>
       <Icon name="chevron-left" />
     </button>
     <span class="vertical">{heading}</span>
@@ -246,7 +246,7 @@
             <Icon name="refresh" />
           </button>
         {/if}
-        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat pane" title="Hide chat pane" onclick={() => (collapsed = true)}>
+        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide chat" title="Hide chat" onclick={() => (collapsed = true)}>
           <Icon name="chevron-right" />
         </button>
       </div>
@@ -332,8 +332,8 @@
   .collapse,
   .expand {
     flex: none;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     display: inline-flex;
     align-items: center;

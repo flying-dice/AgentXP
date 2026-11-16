@@ -89,4 +89,19 @@ describe('chat turn with the fake agent', () => {
     await see.visible(viewer.getByTestId('event-viewer-row'))
     await see.visible(viewer.getByTestId('event-viewer-count'))
   })
+
+  it('a revert shows "Reverted" in the chat and in Code, and the change stays out of the list of changes (UX-79)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.showChanges()
+    await chat.changes.first().click()
+    await chat.frame.getByTestId('changes-revert').click()
+    await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
+    await see.visible(chat.frame.getByTestId('changes-reverted'))
+    await see.text(chat.frame.getByTestId('changes-reverted-text'), 'Reverted. Restore from the Recycle Bin')
+    await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
+    // The Code window shows the same list: its own Changes pane updates without any action there.
+    const code = ctx.desktop.code()
+    await code.showChanges()
+    await see.visible(code.frame.getByTestId('changes-reverted'))
+  })
 })

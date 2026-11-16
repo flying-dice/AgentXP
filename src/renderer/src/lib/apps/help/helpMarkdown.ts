@@ -8,7 +8,7 @@
  * Headings get an `id` so the Table of Contents links (`#the-window`) can scroll to them.
  */
 import { Marked, type Renderer, type Tokens } from 'marked'
-import { slugOf, topicOfHref } from './helpModel'
+import { sectionOfHref, slugOf, topicOfHref } from './helpModel'
 
 export { slugOf }
 
@@ -27,7 +27,10 @@ const marked = new Marked({
     link(this: Renderer, { href, tokens }: Tokens.Link): string {
       const inner = this.parser.parseInline(tokens)
       const topic = topicOfHref(href)
-      if (topic) return `<a href="${escapeHtml(topic)}.md" data-topic="${escapeHtml(topic)}" data-testid="help-link">${inner}</a>`
+      if (topic) {
+        const section = sectionOfHref(href)
+        return `<a href="${escapeHtml(topic)}.md${section ? `#${escapeHtml(section)}` : ''}" data-topic="${escapeHtml(topic)}"${section ? ` data-section="${escapeHtml(section)}"` : ''} data-testid="help-link">${inner}</a>`
+      }
       if (href.startsWith('#')) return `<a href="${escapeHtml(href)}" data-anchor="${escapeHtml(href.slice(1))}">${inner}</a>`
       return `<span class="external">${inner} (${escapeHtml(href)})</span>`
     },

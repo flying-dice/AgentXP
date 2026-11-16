@@ -4,6 +4,7 @@
   import Button from '../../kit/atoms/Button.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import { SEVERITY_HELP } from './reviewModel'
 
   interface Props {
     /** Shown above the box, e.g. `src/a.ts:12`. */
@@ -61,6 +62,7 @@
     <Button data-testid="review-compose-submit" isDefault disabled={!body.trim()} onclick={submit}>{submitText}</Button>
     <Button data-testid="review-compose-cancel" onclick={oncancel}>Cancel</Button>
   </div>
+  {#if withSeverity}<div class="help" data-testid="review-compose-severity-help">{SEVERITY_HELP}</div>{/if}
 </div>
 
 <style>
@@ -84,5 +86,8 @@
   }
   .spring {
     flex: 1;
+  }
+  .help {
+    color: var(--w7-text-muted);
   }
 </style>

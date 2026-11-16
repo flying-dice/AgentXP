@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { back, forward, locate, markWords, parseTopics, plainText, queryWords, searchHits, searchTopics, slugOf, startHistory, titleOf, topicForApp, topicOfHref, visit } from './helpModel'
+import { back, forward, locate, markWords, parseTopics, plainText, queryWords, searchHits, searchTopics, slugOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
 
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
@@ -51,8 +51,8 @@ describe('searchTopics', () => {
 describe('topicForApp and topicOfHref', () => {
   it('uses the app kind as the topic and the desktop topic without a window', () => {
     expect(topicForApp('notepad')).toBe('notepad')
-    expect(topicForApp(null)).toBe('desktop')
-    expect(topicForApp(undefined)).toBe('desktop')
+    expect(topicForApp(null)).toBe('keyboard')
+    expect(topicForApp(undefined)).toBe('keyboard')
   })
   it('accepts links to other manuals only', () => {
     expect(topicOfHref('notepad.md')).toBe('notepad')
@@ -128,5 +128,28 @@ describe('search that finds the answer (UX-44)', () => {
 
   it('makes slugs the way the article ids are made', () => {
     expect(slugOf('3 - The Window')).toBe('3-the-window')
+  })
+})
+
+describe('sections and ranking (UX-80, UX-81)', () => {
+  const topics = parseTopics({ ...files, '/manuals/chat.md': '# Using Chat\n\nSave your work.', '/manuals/code.md': '# Using Code\n\nSave nothing.' })
+
+  it('splits a topic with a section and reads the section of a link', () => {
+    expect(splitTopic('browser#troubleshooting')).toEqual({ topic: 'browser', section: 'troubleshooting' })
+    expect(splitTopic('browser')).toEqual({ topic: 'browser', section: '' })
+    expect(sectionOfHref('notepad.md#saving-a-file')).toBe('saving-a-file')
+    expect(sectionOfHref('notepad.md')).toBe('')
+  })
+
+  it('finds the numbered heading for a plain section name', () => {
+    expect(resolveSection(['1-what-it-is-for', '6-troubleshooting'], 'troubleshooting')).toBe('6-troubleshooting')
+    expect(resolveSection(['6-troubleshooting'], '6-troubleshooting')).toBe('6-troubleshooting')
+    expect(resolveSection(['a'], 'b')).toBeNull()
+  })
+
+  it('puts the topic of the focused app first', () => {
+    expect(searchTopics(topics, 'save').map((t) => t.id)).toEqual(['chat', 'notepad', 'code'])
+    expect(searchTopics(topics, 'save', 'code')[0].id).toBe('code')
+    expect(searchHits(topics, 'save', 'chat')[0].topic.id).toBe('chat')
   })
 })

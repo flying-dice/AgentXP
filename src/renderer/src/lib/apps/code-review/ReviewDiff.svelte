@@ -5,9 +5,12 @@
    * Clicking a line number (the gutter) opens the box for a new user comment.
    */
   import type { ReviewCommentDto, ReviewFileDto, ReviewSeverity, ReviewSide } from '@shared/review'
+  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import { ContextMenu } from '../shared/ContextMenu.svelte'
   import ReviewComposer from './ReviewComposer.svelte'
   import ReviewThreadView from './ReviewThread.svelte'
-  import { fileThreads, placeThreads, splitAnchor, unifiedAnchor, type FileView, type ReviewLayout } from './reviewModel'
+  import { addCommentTitle, fileThreads, placeThreads, splitAnchor, unifiedAnchor, type FileView, type ReviewLayout } from './reviewModel'
 
   interface Props {
     file: ReviewFileDto
@@ -74,6 +77,43 @@
     if (line !== undefined) composing = { row, side, line }
   }
 
+  // Hover "+", the number, a double click, the right-click menu and Ctrl+Alt+M all open the same box (UX-76).
+  const ctx = new ContextMenu()
+
+  /** The line a row offers to comment on: a unified row has one (old on a removed line), a split row one per half. */
+  const unifiedTarget = (i: number): { row: number; side: ReviewSide; line: number | undefined } => {
+    const line = view.lines[i]
+    return line.kind === 'del' ? { row: i, side: 'old', line: line.oldNo } : { row: i, side: 'new', line: line.newNo }
+  }
+
+  const lineMenu = (event: MouseEvent, target: { row: number; side: ReviewSide; line: number | undefined }): void => {
+    onselectrow?.(target.row)
+    ctx.show(event, [
+      {
+        id: 'review-ctx-add-comment',
+        testid: 'review-ctx-add-comment',
+        label: 'Add &comment on this line',
+        shortcut: 'Ctrl+Alt+M',
+        disabled: target.line === undefined,
+        action: () => startComment(target.row, target.side, target.line)
+      } satisfies MenuItemDef
+    ])
+  }
+
+  /** Ctrl+Alt+M with a line selected opens the box for it. */
+  function onrowskey(event: KeyboardEvent): void {
+    if (!(event.ctrlKey && event.altKey && event.key.toLowerCase() === 'm') || selectedRow === null) return
+    event.preventDefault()
+    if (layout === 'split') {
+      const row = view.split[selectedRow]
+      if (row?.right) startComment(selectedRow, 'new', row.right.newNo)
+      else if (row?.left) startComment(selectedRow, 'old', row.left.oldNo)
+    } else {
+      const target = unifiedTarget(selectedRow)
+      startComment(target.row, target.side, target.line)
+    }
+  }
+
   const label = (side: ReviewSide, line: number): string => `${file.path}:${line}${side === 'old' ? ' (before the change)' : ''}`
 </script>
 
@@ -94,6 +134,22 @@
     <ReviewThreadView {thread} {reviewer} {onresolve} {onreply} {ondelete} {onsend} />
   {/each}
 {/snippet}
+
+{#snippet plus(target: { row: number; side: ReviewSide; line: number | undefined })}
+  <button
+    type="button"
+    class="plus"
+    data-testid="review-gutter-plus"
+    data-side={target.side}
+    data-line={target.line}
+    disabled={target.line === undefined}
+    aria-label={addCommentTitle(target.line)}
+    title={addCommentTitle(target.line)}
+    onclick={() => startComment(target.row, target.side, target.line)}>+</button
+  >
+{/snippet}
+
+<ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Diff line" />
 
 <div class="diff" class:flow data-testid="review-diff" data-path={file.path} data-layout={layout}>
   <div class="margin" data-testid="review-margin" role="presentation" onclick={clickMargin}>
@@ -118,13 +174,13 @@
 
   <div class="body">
   {#if layout === 'unified' && rowCount > 0}
-    <div class="cols" data-testid="review-columns" aria-hidden="true"><span class="no">Old</span><span class="no">New</span><span class="mark"></span><span class="text">Text</span></div>
+    <div class="cols" data-testid="review-columns" aria-hidden="true"><span class="plus"></span><span class="no">Old</span><span class="no">New</span><span class="mark"></span><span class="text">Text</span></div>
   {:else if layout === 'split' && rowCount > 0}
-    <div class="cols split" data-testid="review-columns" aria-hidden="true"><span class="half"><span class="no">Old</span><span class="text">Before the change</span></span><span class="half"><span class="no">New</span><span class="text">After the change</span></span></div>
+    <div class="cols split" data-testid="review-columns" aria-hidden="true"><span class="half"><span class="plus"></span><span class="no">Old</span><span class="text">Before the change</span></span><span class="half"><span class="plus"></span><span class="no">New</span><span class="text">After the change</span></span></div>
   {/if}
   <!-- A scrolling region is reachable by keyboard (tabindex) and has a name. -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="rows w7-scroll" bind:this={scroller} {onscroll} role="region" tabindex={flow ? -1 : 0} aria-label="Diff of {file.path}">
+  <div class="rows w7-scroll" bind:this={scroller} {onscroll} onkeydown={onrowskey} role="region" tabindex={flow ? -1 : 0} aria-label="Diff of {file.path}">
     {#if file.binary}
       <div class="note">Binary file: there is no text diff.</div>
     {:else if file.tooLarge}
@@ -133,7 +189,18 @@
       <div class="note">The file is empty.</div>
     {:else if layout === 'unified'}
       {#each view.lines as line, i (i)}
-        <div class="row {line.kind}" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={line.kind}>
+        {@const target = unifiedTarget(i)}
+        <div
+          class="row {line.kind}"
+          class:selected={selectedRow === i}
+          data-testid="review-row"
+          data-row={i}
+          data-kind={line.kind}
+          role="presentation"
+          ondblclick={() => startComment(target.row, target.side, target.line)}
+          oncontextmenu={(e) => lineMenu(e, target)}
+        >
+          {@render plus(target)}
           <!-- One number column: the new line number, or the old one on a removed line (it has no new number). -->
           <button
             type="button"
@@ -153,11 +220,23 @@
     {:else}
       {#each view.split as row, i (i)}
         <div class="row split" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={row.left && row.right ? (row.left.kind === 'context' ? 'context' : 'both') : row.left ? 'del' : 'add'}>
-          <div class="half {row.left && row.left.kind !== 'context' ? 'del' : ''} {row.left ? '' : 'blank'}">
+          <div
+            class="half {row.left && row.left.kind !== 'context' ? 'del' : ''} {row.left ? '' : 'blank'}"
+            role="presentation"
+            ondblclick={() => startComment(i, 'old', row.left?.oldNo)}
+            oncontextmenu={(e) => lineMenu(e, { row: i, side: 'old', line: row.left?.oldNo })}
+          >
+            {@render plus({ row: i, side: 'old', line: row.left?.oldNo })}
             <button type="button" class="no" data-testid="review-gutter-add" data-side="old" data-line={row.left?.oldNo} disabled={!row.left} aria-label="Comment on old line {row.left?.oldNo}" onclick={() => startComment(i, 'old', row.left?.oldNo)}>{row.left?.oldNo ?? ''}</button>
             <span class="text" role="presentation" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.left?.text ?? ''}</span>
           </div>
-          <div class="half {row.right && row.right.kind !== 'context' ? 'add' : ''} {row.right ? '' : 'blank'}">
+          <div
+            class="half {row.right && row.right.kind !== 'context' ? 'add' : ''} {row.right ? '' : 'blank'}"
+            role="presentation"
+            ondblclick={() => startComment(i, 'new', row.right?.newNo)}
+            oncontextmenu={(e) => lineMenu(e, { row: i, side: 'new', line: row.right?.newNo })}
+          >
+            {@render plus({ row: i, side: 'new', line: row.right?.newNo })}
             <button type="button" class="no" data-testid="review-gutter-add" data-side="new" data-line={row.right?.newNo} disabled={!row.right} aria-label="Comment on line {row.right?.newNo}" onclick={() => startComment(i, 'new', row.right?.newNo)}>{row.right?.newNo ?? ''}</button>
             <span class="text" role="presentation" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.right?.text ?? ''}</span>
           </div>
@@ -277,7 +356,10 @@
   }
   .no {
     flex: none;
+    align-self: center;
     width: 44px;
+    height: 24px;
+    margin: -4px 0;
     padding: 0 6px 0 0;
     border: 0;
     background: var(--w7-code-gutter-bg, #f3f3f3);
@@ -285,6 +367,33 @@
     font: inherit;
     text-align: right;
     cursor: default;
+  }
+  /* The "+" shows on hover and on focus; its box is 24 x 24 px, centred on the 17 px row. */
+  .plus {
+    flex: none;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    margin: -4px 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #0b5bd3;
+    font: inherit;
+    font-weight: 700;
+    cursor: default;
+    opacity: 0;
+  }
+  .row:hover > .plus:not(:disabled),
+  .half:hover > .plus:not(:disabled),
+  .plus:focus-visible {
+    opacity: 1;
+  }
+  .plus:not(:disabled):hover {
+    background: #cfe1f7;
+  }
+  span.plus {
+    pointer-events: none;
   }
   .no:not(:disabled):hover {
     background: #cfe1f7;

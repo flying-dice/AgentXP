@@ -16,6 +16,8 @@ export interface HelpTopic {
 /** The topic that shows first and the one F1 opens when no window has focus. */
 export const HOME_TOPIC = 'index'
 export const DESKTOP_TOPIC = 'desktop'
+/** The topic F1 opens on the desktop when no app has the focus: the keys that work everywhere (UX-81). */
+export const KEYBOARD_TOPIC = 'keyboard'
 
 /** Topics in reading order: Home, the desktop, the launcher, the apps in the order of `APP_KINDS`, the rest by name. */
 /** The task topics that are not about one app, after the app manuals. */
@@ -37,8 +39,17 @@ export const slugOf = (text: string): string =>
     .trim()
     .replace(/[\s-]+/g, '-')
 
-/** The topic F1 opens for the focused window; a desktop without a focused window gets the desktop topic. */
-export const topicForApp = (app: AppKind | null | undefined): string => (app ? app : DESKTOP_TOPIC)
+/** The topic F1 opens for the focused window; a desktop without a focused window gets the keyboard topic. */
+export const topicForApp = (app: AppKind | null | undefined): string => (app ? app : KEYBOARD_TOPIC)
+
+/**
+ * A topic with a section: `browser#troubleshooting` is the topic `browser` scrolled to its heading
+ * `troubleshooting` (the slug of the heading). Without `#` the section is empty.
+ */
+export function splitTopic(value: string): { topic: string; section: string } {
+  const at = value.indexOf('#')
+  return at < 0 ? { topic: value, section: '' } : { topic: value.slice(0, at), section: value.slice(at + 1) }
+}
 
 /** The first `# ` heading of a Markdown text, else the fallback. */
 export function titleOf(markdown: string, fallback: string): string {
@@ -96,13 +107,15 @@ function score(topics: readonly HelpTopic[], words: readonly string[]): Scored[]
  * A topic with the words in the title comes first. When no topic has every word, the topics that have at least half of
  * the words follow, the best first. An empty query keeps all topics in order.
  */
-export function searchTopics(topics: readonly HelpTopic[], query: string): HelpTopic[] {
+export function searchTopics(topics: readonly HelpTopic[], query: string, preferred?: string): HelpTopic[] {
   const words = queryWords(query)
   if (words.length === 0) return [...topics]
   const scored = score(topics, words)
   const all = scored.filter((s) => s.matched === words.length)
   const hits = all.length > 0 || words.length < 2 ? all : scored.filter((s) => s.matched >= Math.ceil(words.length / 2))
-  return hits.sort((a, b) => Number(b.inTitle) - Number(a.inTitle) || b.matched - a.matched || a.at - b.at).map((h) => h.topic)
+  // The topic of the app that was focused when Help opened comes first (UX-81).
+  const first = (s: Scored): number => (preferred !== undefined && s.topic.id === preferred ? 0 : 1)
+  return hits.sort((a, b) => first(a) - first(b) || Number(b.inTitle) - Number(a.inTitle) || b.matched - a.matched || a.at - b.at).map((h) => h.topic)
 }
 
 /** One search result: the topic, the section where the words are, and a line of text around them. */
@@ -145,9 +158,9 @@ export function locate(topic: HelpTopic, words: readonly string[]): { section: s
 }
 
 /** The results of a search with their section and snippet (same order as `searchTopics`). */
-export function searchHits(topics: readonly HelpTopic[], query: string): HelpHit[] {
+export function searchHits(topics: readonly HelpTopic[], query: string, preferred?: string): HelpHit[] {
   const words = queryWords(query)
-  return searchTopics(topics, query).map((topic) => ({ topic, ...locate(topic, words) }))
+  return searchTopics(topics, query, preferred).map((topic) => ({ topic, ...locate(topic, words) }))
 }
 
 const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -170,6 +183,21 @@ export function markWords(html: string, words: readonly string[]): string {
 export function topicOfHref(href: string): string | null {
   const match = /^(?:\.\/)?([a-z0-9-]+)\.md(?:#.*)?$/i.exec(href.trim())
   return match ? match[1].toLowerCase() : null
+}
+
+/** The section a link points to: `notepad.md#saving-a-file` gives `saving-a-file`, a link without `#` gives ''. */
+export function sectionOfHref(href: string): string {
+  const match = /^(?:\.\/)?[a-z0-9-]+\.md#(.+)$/i.exec(href.trim())
+  return match ? match[1] : ''
+}
+
+/**
+ * The heading a section name points to, among the heading ids of an article: the exact id, else the id without its
+ * number (`troubleshooting` finds `6-troubleshooting`, the way the manuals number their sections); null when none fits.
+ */
+export function resolveSection(ids: readonly string[], wanted: string): string | null {
+  if (ids.includes(wanted)) return wanted
+  return ids.find((id) => id.replace(/^\d+-/, '') === wanted) ?? null
 }
 
 /** Back and Forward history of the topics a window showed. */

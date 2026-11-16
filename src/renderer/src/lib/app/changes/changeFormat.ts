@@ -24,8 +24,17 @@ export function splitChangePath(path: string): { name: string; dir: string } {
 export const revertConfirmText = (path: string): string =>
   `Revert the changes to ${path}?\n\nThe file goes back to how it was before the agent edited it. You can get it back from the Recycle Bin.`
 
-/** What a reverted row says in place of its change kind. */
-export const REVERTED_LABEL = 'Reverted (in the Recycle Bin)'
+/** What a reverted row says in place of its change kind (UX-79). */
+export const REVERTED_LABEL = 'Reverted. Restore from the Recycle Bin'
+
+/** The short word in the Change column of a reverted row. */
+export const REVERTED_KIND = 'Reverted'
+
+/** `redirect` and `.ts` for `redirect.ts`: the stem may be cut with an ellipsis, the extension never is (UX-79). */
+export function splitFileName(name: string): { stem: string; ext: string } {
+  const dot = name.lastIndexOf('.')
+  return dot <= 0 ? { stem: name, ext: '' } : { stem: name.slice(0, dot), ext: name.slice(dot) }
+}
 
 /** Joins a folder path and a relative change path with the separator the folder path uses. */
 export function absolutePath(folderPath: string, relative: string): string {
