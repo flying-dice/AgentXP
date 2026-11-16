@@ -1,0 +1,39 @@
+{
+  "task": "T28.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "not met: the assistant finished the web app job (its last reply says it found the message in #general; H-71)",
+  "notes": [],
+  "steps": 5,
+  "budget": 9,
+  "answer": "A yellow bar in the browser said Agent is using this page: Scrolling top with a Take over button, and an orange frame highlighted the messages; the agent opened the page, read it, clicked the random and general channel buttons, scrolled and waited, then ended with an error that it did not answer in time",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T22:05:32.373Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T22:05:32.373Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "not met: the assistant finished the web app job (its last reply says it found the message in #general; H-71)",
+      "steps": 5,
+      "answer": "A yellow bar in the browser said Agent is using this page: Scrolling top with a Take over button, and an orange frame highlighted the messages; the agent opened the page, read it, clicked the random and general channel buttons, scrolled and waited, then ended with an error that it did not answer in time",
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}

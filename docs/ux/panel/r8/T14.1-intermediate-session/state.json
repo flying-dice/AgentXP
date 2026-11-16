@@ -1,0 +1,22 @@
+{
+  "task": "T14.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-YqzOhQ",
+  "testPagePort": 38509,
+  "testPageUrl": "http://127.0.0.1:38509/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:35:26.004Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-YqzOhQ/home/Documents/login-app"
+  ],
+  "preselectedTitle": "Scratch pad",
+  "pendingDesktopId": 1,
+  "errorDesktopId": 2,
+  "errorDesktopTitle": "Docs site",
+  "preset": "four-desktops",
+  "note": null
+}

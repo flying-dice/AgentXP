@@ -1,0 +1,39 @@
+{
+  "task": "T12.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "login-app is plugged in again; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 18,
+  "answer": "I could not read README.md: Drive E: is not plugged in on this desktop. login-app was removed. Ask the user to open Computer and choose Plug in again.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:33:46.722Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:33:46.722Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "login-app is plugged in again; answer ok",
+      "steps": 2,
+      "answer": "I could not read README.md: Drive E: is not plugged in on this desktop. login-app was removed. Ask the user to open Computer and choose Plug in again.",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

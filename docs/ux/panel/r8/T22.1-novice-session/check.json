@@ -1,0 +1,39 @@
+{
+  "task": "T22.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 8,
+  "answer": "Plug in a project folder as a drive so that the agent can see its files.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:45:26.276Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:45:26.276Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+      "steps": 4,
+      "answer": "Plug in a project folder as a drive so that the agent can see its files.",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

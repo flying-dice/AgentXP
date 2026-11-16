@@ -1,0 +1,23 @@
+{
+  "task": "T12.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-zSxpLA",
+  "testPagePort": 36753,
+  "testPageUrl": "http://127.0.0.1:36753/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:33:02.559Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-zSxpLA/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 2,
+  "ejectedFolderId": 1,
+  "ejectedLetter": "E",
+  "keepEjected": false,
+  "preset": "eject-mid-job",
+  "note": null
+}

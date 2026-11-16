@@ -1,0 +1,9 @@
+{"ts":"2026-11-16T21:43:13.967Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/001.png","window":"Fix login redirect - Agent7","ok":true,"ms":645}
+{"ts":"2026-11-16T21:43:19.617Z","cmd":"click","args":[50,500],"flags":{"double":true},"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/002.png","window":"Fix login redirect - Agent7","ok":true,"ms":2272}
+{"ts":"2026-11-16T21:43:25.422Z","cmd":"click","args":[242,164],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/003.png","window":"Fix login redirect - Agent7","ok":true,"ms":2258}
+{"ts":"2026-11-16T21:43:29.144Z","cmd":"key","args":["Escape"],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/004.png","window":"Fix login redirect - Agent7","ok":true,"ms":750}
+{"ts":"2026-11-16T21:43:31.547Z","cmd":"click","args":[130,140],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/005.png","window":"Fix login redirect - Agent7","ok":true,"ms":2354}
+{"ts":"2026-11-16T21:43:36.160Z","cmd":"click","args":[216,190],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/006.png","window":"Fix login redirect - Agent7","ok":true,"ms":2216}
+{"ts":"2026-11-16T21:43:41.788Z","cmd":"click","args":[1164,482],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/007.png","window":"Fix login redirect - Agent7","ok":true,"ms":2249}
+{"ts":"2026-11-16T21:43:46.809Z","cmd":"click","args":[759,447],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/008.png","window":"Fix login redirect - Agent7","ok":true,"ms":2160}
+{"ts":"2026-11-16T21:43:51.101Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r8/T20.2-novice/shots/009.png","window":"Fix login redirect - Agent7","ok":true,"ms":494}

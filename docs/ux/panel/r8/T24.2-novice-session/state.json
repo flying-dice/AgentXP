@@ -1,0 +1,25 @@
+{
+  "task": "T24.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-Gjnif3",
+  "testPagePort": 45693,
+  "testPageUrl": "http://127.0.0.1:45693/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:48:04.543Z",
+  "options": {
+    "projects": [
+      "plain"
+    ],
+    "open": [
+      "code"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-Gjnif3/home/Documents/notes-folder"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

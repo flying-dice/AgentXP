@@ -1,0 +1,20 @@
+{
+  "task": "T28.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-6IgI0Q",
+  "testPagePort": 44113,
+  "testPageUrl": "http://127.0.0.1:44113/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T22:01:56.270Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-6IgI0Q/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "webAppUrl": "http://127.0.0.1:4174/",
+  "preset": "web-app-ready",
+  "note": "team chat web app at http://127.0.0.1:4174/"
+}

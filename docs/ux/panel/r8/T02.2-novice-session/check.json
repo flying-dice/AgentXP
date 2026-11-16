@@ -1,0 +1,39 @@
+{
+  "task": "T02.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 9,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "two desktops exist (Fix login redirect - docs-site, Fix login redirect); the names differ; the second desktop has docs-site plugged in; answer ok",
+  "notes": [],
+  "steps": 9,
+  "budget": 28,
+  "answer": "Refused: a desktop named 'Fix login redirect' already exists; created 'Fix login redirect - docs-site' instead.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:22:57.856Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:22:57.856Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "two desktops exist (Fix login redirect - docs-site, Fix login redirect); the names differ; the second desktop has docs-site plugged in; answer ok",
+      "steps": 9,
+      "answer": "Refused: a desktop named 'Fix login redirect' already exists; created 'Fix login redirect - docs-site' instead.",
+      "noAnswer": false,
+      "stepsToPass": 9
+    }
+  ]
+}

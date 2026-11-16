@@ -1,0 +1,39 @@
+{
+  "task": "T30.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the About dialog was closed; judge by the answer; answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 8,
+  "answer": "Notepad is part of Agent7, version 0.1.0",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T22:03:20.659Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T22:03:20.659Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the About dialog was closed; judge by the answer; answer ok",
+      "steps": 3,
+      "answer": "Notepad is part of Agent7, version 0.1.0",
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

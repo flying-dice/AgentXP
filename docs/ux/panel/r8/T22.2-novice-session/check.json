@@ -1,0 +1,39 @@
+{
+  "task": "T22.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "no Help window; the answer decides; answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 16,
+  "answer": "To undo a change, open Changes and click Revert.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:45:41.078Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:45:41.078Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "no Help window; the answer decides; answer ok",
+      "steps": 1,
+      "answer": "To undo a change, open Changes and click Revert.",
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

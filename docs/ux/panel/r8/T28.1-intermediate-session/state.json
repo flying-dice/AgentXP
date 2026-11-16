@@ -1,0 +1,20 @@
+{
+  "task": "T28.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-VFSJNi",
+  "testPagePort": 44211,
+  "testPageUrl": "http://127.0.0.1:44211/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T22:04:19.559Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-VFSJNi/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "webAppUrl": "http://127.0.0.1:4174/",
+  "preset": "web-app-ready",
+  "note": "team chat web app at http://127.0.0.1:4174/"
+}

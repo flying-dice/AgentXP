@@ -1,0 +1,17 @@
+{
+  "commands": 7,
+  "steps": 3,
+  "byCmd": {
+    "shot": 3,
+    "move": 1,
+    "wait": 1,
+    "click": 1,
+    "scroll": 1
+  },
+  "errors": 0,
+  "seconds": 39,
+  "screenshots": 7,
+  "task": "T16.2",
+  "level": "intermediate",
+  "archivedAt": "2026-11-16T21:38:30.674Z"
+}

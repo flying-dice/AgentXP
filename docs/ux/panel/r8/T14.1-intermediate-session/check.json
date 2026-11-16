@@ -1,0 +1,41 @@
+{
+  "task": "T14.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the desktop with the pending request is connected; answer ok",
+  "notes": [
+    "researcher: record whether the waiting row was preselected when the launcher opened"
+  ],
+  "steps": 1,
+  "budget": 6,
+  "answer": "Docs site has the problem: Agent problem, program 'not-a-real-command' was not found",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:35:46.855Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:35:46.855Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop with the pending request is connected; answer ok",
+      "steps": 1,
+      "answer": "Docs site has the problem: Agent problem, program 'not-a-real-command' was not found",
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

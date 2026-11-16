@@ -1,0 +1,27 @@
+{
+  "task": "T11.3",
+  "level": "novice",
+  "socket": "/tmp/a7ux-fghBOu/ux.sock",
+  "admin": "/tmp/a7ux-fghBOu/admin.sock",
+  "pid": 3538,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "tmp": "/tmp/a7ux-fghBOu",
+  "userData": "/tmp/a7ux-fghBOu/user-data",
+  "testPageUrl": "http://127.0.0.1:33819/",
+  "home": "/tmp/a7ux-fghBOu/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-fghBOu/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-fghBOu/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-fghBOu/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "paused-desktop",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

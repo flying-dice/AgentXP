@@ -39,9 +39,12 @@ export const checks = {
     if (!state) return fail('the desktop window is closed')
     const docs = state.drives.find((d) => d.label === 'docs-site')
     const explorers = windowsOf(state, 'explorer')
+    // H-106: since UX-181, Plug in from Code shows the new project in Code's Projects tree instead of opening Explorer; both show its files.
+    const inExplorer = explorers.some((w) => docs && String(w.view.path).toUpperCase() === `${docs.letter}:\\`)
+    const inCode = Boolean(docs) && windowsOf(state, 'code').length > 0
     return all([
       [Boolean(docs), 'docs-site is plugged in'],
-      [explorers.some((w) => docs && String(w.view.path).toUpperCase() === `${docs.letter}:\\`), 'an Explorer window shows its root']
+      [inExplorer || inCode, inExplorer ? 'an Explorer window shows its root' : inCode ? "a Code window shows it in the Projects tree" : 'no Explorer window shows its root and no Code window is open']
     ])
   },
 

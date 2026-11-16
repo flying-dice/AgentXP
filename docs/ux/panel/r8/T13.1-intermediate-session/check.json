@@ -1,0 +1,43 @@
+{
+  "task": "T13.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the desktop is connected again; the chat shows new progress (last \"N of 30\" is 11, was 0 at the start; 0 tool calls, was 0)",
+  "notes": [
+    "run state at reconnect: working",
+    "chat window is open",
+    "reopened: true"
+  ],
+  "steps": 3,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:34:48.490Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:34:48.490Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop is connected again; the chat shows new progress (last \"N of 30\" is 11, was 0 at the start; 0 tool calls, was 0)",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}
