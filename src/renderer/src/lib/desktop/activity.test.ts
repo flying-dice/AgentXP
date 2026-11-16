@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
 import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
-import { CONTROL_IDLE_NOTE, CONTROL_NOTE, barStatus, closedAppNames, controlNote, controlText, feedText, noToolsOpen, recentToolCalls, toolChips, toolsLine, waitingText, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import { CONTROL_IDLE_NOTE, CONTROL_NOTE, barStatus, closedAppNames, controlNote, TAKE_OVER_TIP, chipAriaLabel, controlText, feedText, noToolsOpen, recentToolCalls, toolChips, toolsLine, waitingText, workingText, type ChatActivityInput, type FeedItem } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -26,9 +26,48 @@ describe('workingText', () => {
   })
 })
 
+describe('workingText follows the focused chat (UX-145)', () => {
+  it('says Starting the agent only while the focused chat itself is connecting', () => {
+    expect(workingText([chat(1, { status: 'connecting' })], undefined, 1)).toBe('Starting the agent...')
+    expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'connecting' })], undefined, 1)).toBeNull()
+    expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'connecting' })], undefined, 2)).toBe('Starting the agent...')
+  })
+  it('never says Starting the agent for a chat that is ready for input', () => {
+    expect(workingText([chat(1, { status: 'idle' })], undefined, 1)).toBeNull()
+    expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'idle' })])).toBeNull()
+  })
+  it('reads the running tool of the focused chat, and is ready for a ready chat whatever another one does', () => {
+    const working = chat(2, { status: 'working', toolCalls: { a: call('Read a.ts', 'in_progress') } })
+    expect(workingText([chat(1), working], undefined, 2)).toBe('Read a.ts')
+    expect(workingText([chat(1), working], undefined, 1)).toBeNull()
+  })
+  it('without a focused chat a chat that is only starting is not mentioned', () => {
+    expect(workingText([chat(1, { status: 'connecting' })])).toBeNull()
+    expect(workingText([chat(1, { status: 'connecting' })], undefined, null)).toBeNull()
+  })
+  it('requests that wait count whichever chat has the focus', () => {
+    expect(workingText([chat(1), chat(2, { status: 'awaiting_permission' })], undefined, 1)).toBe('Waiting for you: 1 request to approve')
+    expect(workingText([chat(1)], 2, 1)).toBe('Waiting for you: 2 requests to approve')
+  })
+})
+
+describe('the waiting link and the take-over text', () => {
+  it('names the chat in the link when the bar is given its words', () => {
+    expect(barStatus({ paused: false, userInControl: false, working: null, waiting: 1, waitingFor: 'Fix login is waiting: run a command' })).toEqual({ state: 'waiting', text: 'Fix login is waiting: run a command' })
+  })
+  it('one sentence says what taking control does, in the bar, the Activity tile and the Take over tooltip', () => {
+    expect(TAKE_OVER_TIP).toBe('You are in control. All tools ask first until you resume.')
+    expect(CONTROL_IDLE_NOTE).toBe(TAKE_OVER_TIP)
+    expect(CONTROL_NOTE).toContain('All tools ask first until you resume.')
+  })
+  it('a chip tells a screen reader that it opens Control Center', () => {
+    expect(chipAriaLabel(toolChips(['shell', 'terminal'], null, false)[1])).toBe('Run commands: Allow. Open Control Center to change.')
+  })
+})
+
 describe('workingText while a chat starts (UX-125)', () => {
-  it('reads Starting the agent only while no chat is ready for input', () => {
-    expect(workingText([chat(1, { status: 'connecting' })])).toBe('Starting the agent...')
+  it('without a focused chat a chat that is starting is not reported (the desktop has nothing to say yet)', () => {
+    expect(workingText([chat(1, { status: 'connecting' })])).toBeNull()
   })
   it('is idle when one chat is connected and ready while another is still connecting', () => {
     expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'connecting' })])).toBeNull()
@@ -70,8 +109,8 @@ describe('barStatus', () => {
   })
   it('Paused wins over You are in control, which wins over Working; a notice never hides them', () => {
     const busy = { ...base, working: 'Read a.ts', notice: 'x' }
-    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. Every tool asks first until you resume.' })
-    expect(barStatus({ ...busy, userInControl: true, closedApps: ['Terminal', 'Browser'] }).text).toBe('You are in control. Tools that need an app ask first. Terminal and Browser are not open.')
+    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. All tools ask first until you resume.' })
+    expect(barStatus({ ...busy, userInControl: true, closedApps: ['Terminal', 'Browser'] }).text).toBe('You are in control. All tools ask first until you resume. Terminal and Browser are not open.')
     expect(barStatus({ ...busy, userInControl: true, paused: true })).toEqual({ state: 'paused', text: 'Paused: no agent will act until you resume.' })
   })
 })
@@ -118,11 +157,11 @@ describe('toolChips', () => {
   })
   it('keeps the setting word while no app that gives the tool is open, and the tooltip names the setting and the reason', () => {
     const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({ terminal: 'ask' }))
-    expect(read.tooltip).toBe('Read files is set to Allow. Click to change it in Control Center.')
+    expect(read.tooltip).toBe('Open Control Center. Read files is set to Allow.')
     expect(run).toMatchObject({ label: 'Run commands: Ask (no Terminal open)', word: 'Ask', closed: true, state: 'off' })
-    expect(run.tooltip).toBe('Run commands is set to Ask. The agent cannot use it yet because no Terminal is open. Click to change it in Control Center.')
-    expect(browser.tooltip).toBe('Browser is set to Allow. The agent cannot use it yet because no Browser is open. Click to change it in Control Center.')
-    expect(toolChips([], policy({}))[0].tooltip).toBe('Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open. Click to change it in Control Center.')
+    expect(run.tooltip).toBe('Open Control Center. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
+    expect(browser.tooltip).toBe('Open Control Center. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
+    expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
   })
   it('never reads Off, and never says Off against an Ask or Deny setting', () => {
     for (const askFirst of [false, true]) for (const setting of ['allow', 'ask', 'deny'] as const) {
@@ -134,8 +173,8 @@ describe('toolChips', () => {
     const chips = toolChips(['shell', 'fs.read'], policy({}), true)
     expect(chips.map((c) => c.label)).toEqual(['Read files: Ask', 'Run commands: Ask (no Terminal open)', 'Browser: Ask (no Browser open)'])
     expect(closedAppNames(chips)).toEqual(['Terminal', 'Browser'])
-    expect(controlText(closedAppNames(chips))).toBe('You are in control. Tools that need an app ask first. Terminal and Browser are not open.')
-    expect(controlText(['Terminal'])).toBe('You are in control. Tools that need an app ask first. Terminal is not open.')
+    expect(controlText(closedAppNames(chips))).toBe('You are in control. All tools ask first until you resume. Terminal and Browser are not open.')
+    expect(controlText(['Terminal'])).toBe('You are in control. All tools ask first until you resume. Terminal is not open.')
     expect(closedAppNames(toolChips([], policy({ terminal: 'deny' })))).toEqual(['Browser'])
   })
   it('a Deny setting reads Deny even when its app is closed', () => {

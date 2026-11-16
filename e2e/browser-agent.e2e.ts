@@ -74,7 +74,11 @@ describe('Browser agent: a local chat web app', () => {
     await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
-    // Give control back is one button, on the top bar; the page bar only shows the state.
+    // UX-143: the sentence says what the click did to every tool, in the tooltip of the button and on the top bar, with a Resume button.
+    await see.attribute(browser.getByTestId('browser-agent-takeover'), 'title', 'You are in control. All tools ask first until you resume.')
+    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume.')
+    await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
+    // Resume is one button, on the top bar; the page bar only shows the state.
     await see.count(browser.getByTestId('browser-agent-giveback'), 0)
     await ctx.desktopPage.getByTestId('topbar-give-back').click()
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'false')

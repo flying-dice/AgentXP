@@ -259,6 +259,7 @@
         title={desktop.state.title}
         working={desktop.working}
         waiting={desktop.waitingCount}
+        waitingFor={desktop.waitingLinkText}
         chatsOpen={desktop.chatsOpen}
         onopenrequest={() => void desktop.openNextRequest()}
         agentProblem={desktop.agentProblem}

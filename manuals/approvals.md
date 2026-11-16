@@ -30,12 +30,11 @@ To approve every action, follow the steps below:
 
 To answer a request, follow the steps below:
 
-1. Click the flag in the notification area. The Action Center opens.
-2. Click **Review** next to the request. The permission dialog box appears.
-3. Click **Show details** to see the file or the command.
-4. Click **Allow** to let the agent go on, or click **Deny** to stop the action. You can also press Alt+A to allow or Alt+D to deny. The Left and Right arrow keys move between the two choices.
+1. Click the status in the top bar, for example **Fix login redirect is waiting: run a command**. The chat that waits comes to the front. With more than one request, the link opens the oldest first, and the box says **1 of 2 waiting**. You can also click the flag in the notification area, and then **Review** next to the request.
+2. Read the box above the message box. It shows the file or the command. If the text is long, scroll inside the box. **Allow** and **Deny** always stay in the window.
+3. Click **Allow** to let the agent go on, or click **Deny** to stop the action. You can also press A to allow. The Left and Right arrow keys move between the two choices.
 
-The focus starts on **Deny**, because Deny is the safe answer. The line **Press Alt+A to allow or Alt+D to deny.** shows under the choices. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
+The focus starts on **Deny**, because Deny is the safe answer. Enter denies. The line **Enter denies. Press A to allow.** shows beside the two choices. When Agent7 asks because of a setting, for example **Run commands is set to Ask in Control Center.**, the box shows this on its own line under the command. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
 
 If you click **Deny**, the agent tells you that it could not do the action. The request leaves the Action Center.
 
@@ -43,8 +42,11 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Keys line | Tells which keys answer the request in the permission dialog box of the Action Center: Alt+A and Alt+D. | `uac-hint` |
-| Keys line (chat) | The same line in the permission dialog box of a chat. | `permission-hint` |
+| Keys line | Tells which keys answer the request in the permission dialog box of the Action Center: Enter denies, A allows. | `uac-hint` |
+| Keys line (chat) | The same line in the permission box of a chat. | `permission-hint` |
+| Waiting count | The line **1 of 2 waiting** in the box, when more than one request waits. | `permission-queue` |
+| Waiting count (Action Center) | The same line in the permission dialog box of the Action Center. | `uac-queue` |
+| Setting line | The setting that made Agent7 ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |
 
 ## 5 - Troubleshooting

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '../../kit/atoms/Button.svelte'
   import type { SendState } from './chatProblem'
-  import { RESUMED_NOTE, isContinueMessage } from './resumeNote'
+  import { AUTOMATIC_SENDER, RESUMED_NOTE, isContinueMessage } from './resumeNote'
 
   interface Props {
     text: string
@@ -21,8 +21,8 @@
   const resumed = $derived(isContinueMessage(text))
 </script>
 
-<div class="user-message" class:failed={state !== 'sent'} data-testid="chat-message-user" data-send-state={state}>
-  <div class="who">You</div>
+<div class="user-message" class:failed={state !== 'sent'} class:automatic={resumed} data-testid="chat-message-user" data-send-state={state}>
+  <div class="who" data-testid="chat-message-sender">{resumed ? AUTOMATIC_SENDER : 'You'}</div>
   {#if resumed}<div class="resumed" role="status" data-testid="chat-resume-note">{RESUMED_NOTE}</div>{/if}
   {#if text}<div class="body" data-message-body>{text}</div>{/if}
   {#if attachments.length > 0}
@@ -46,6 +46,10 @@
     font-weight: 700;
     color: var(--w7-accent-user, #1b3f8b);
     margin-bottom: 2px;
+  }
+  .automatic .who,
+  .automatic .body {
+    color: var(--w7-text-muted, #555);
   }
   .resumed {
     margin-bottom: 2px;

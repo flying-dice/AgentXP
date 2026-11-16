@@ -60,16 +60,20 @@ export const asPredicate = (title: string): string => {
 
 // ---- keys and the announcement of the answer ------------------------------------------------------------------
 
-/** The access keys of the two answers (Alt+A, Alt+D); the dialogs underline them while Alt is held. */
+/** The access keys of the two answers (Alt+A, Alt+D); the dialogs underline them while Alt is held. A alone allows too. */
 export const ACCESS_KEYS: Record<PermissionDecision, string> = { allow: 'a', deny: 'd' }
 
 /** The line under the answers of both permission dialogs. */
-export const KEY_HINT = 'Press Alt+A to allow or Alt+D to deny.'
+export const KEY_HINT = 'Enter denies. Press A to allow.'
 
-/** The answer an Alt+key press stands for, or null. */
-export function decisionForKey(event: { key: string; altKey: boolean; ctrlKey?: boolean; metaKey?: boolean }): PermissionDecision | null {
-  if (!event.altKey || event.ctrlKey || event.metaKey) return null
+/**
+ * The answer a key press stands for, or null: A allows; Alt+A and Alt+D answer from anywhere in the box. Enter is not here: it
+ * presses the focused button, and the first focus is on Deny.
+ */
+export function decisionForKey(event: { key: string; altKey: boolean; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean }): PermissionDecision | null {
+  if (event.ctrlKey || event.metaKey) return null
   const key = event.key.toLowerCase()
+  if (!event.altKey) return key === ACCESS_KEYS.allow && !event.shiftKey ? 'allow' : null
   return key === ACCESS_KEYS.allow ? 'allow' : key === ACCESS_KEYS.deny ? 'deny' : null
 }
 

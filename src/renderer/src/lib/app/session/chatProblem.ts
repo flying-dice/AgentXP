@@ -21,9 +21,6 @@ export interface ChatProblem {
   status: string
 }
 
-/** The line under the message box after "Restart" put the last message back as a draft. */
-export const RESTARTED_NOTE = 'Restarted. Press Send to try again.'
-
 /** True for text that only a developer reads: protocol names, error codes, process words. */
 const isTechnical = (text: string): boolean => /\bACP\b|JSON-RPC|AG-UI|\bMCP\b|-32\d{3}|exit code|spawn|stack|\bat .+\(.+:\d+/i.test(text) || /\bE[A-Z]{3,}\b/.test(text)
 const isTimeout = (text: string): boolean => /time(d)? ?out|ETIMEDOUT/i.test(text)
@@ -59,7 +56,8 @@ const EVENT_VIEWER: ProblemAction = { id: 'event-viewer', label: 'Show in Event 
 /** Both open Control Center > Agents: one to correct the command of the agent, one to pick another agent as the default. */
 const OPEN_AGENTS: ProblemAction = { id: 'open-agents', label: 'Open Agents' }
 const CHOOSE_AGENT: ProblemAction = { id: 'choose-agent', label: 'Choose another agent' }
-const NEW_CHAT: ProblemAction = { id: 'new-chat', label: 'Start a new chat' }
+/** With a message that was not answered, the button says its text stays in the message box. */
+const newChat = (failed: unknown): ProblemAction => ({ id: 'new-chat', label: failed ? 'Start a new chat (your text is kept in the box)' : 'Start a new chat' })
 
 export interface ProblemInput {
   /** The error of the last run (technical text), or null. */
@@ -131,16 +129,16 @@ function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName
         return {
           text: `${failed ? `${namedStartFailure(problem.message, agentName)} Your message was not sent.` : namedStartFailure(problem.message, agentName)}${tail}`,
           detail,
-          actions: [retry, OPEN_AGENTS, CHOOSE_AGENT, ...(again ? [NEW_CHAT, EVENT_VIEWER] : []), DETAILS]
+          actions: [retry, OPEN_AGENTS, CHOOSE_AGENT, ...(again ? [newChat(failed), EVENT_VIEWER] : []), DETAILS]
         }
       }
       case 'agent-stopped': {
         const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
-        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [NEW_CHAT] : []), DETAILS, EVENT_VIEWER] }
+        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [newChat(failed)] : []), DETAILS, EVENT_VIEWER] }
       }
       case 'agent-ended': {
         const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
-        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [NEW_CHAT, EVENT_VIEWER] : [])] }
+        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [newChat(failed), EVENT_VIEWER] : [])] }
       }
     }
   }

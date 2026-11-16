@@ -15,6 +15,7 @@
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
+  import { TAKE_OVER_TIP } from '../../desktop/activity'
   import { ViewSync } from '../viewSync'
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
@@ -61,7 +62,7 @@
   let readDone = $state(false)
   /** The address of the page that the agent read (the status bar says so while that page is open). */
   let readUrl = $state<string | null>(null)
-  /** The user took control while the agent worked: the bar stays, with Give control back, until the user gives it back. */
+  /** The user took control while the agent worked: the bar stays, with Resume, until the user gives it back. */
   let engaged = $state(false)
   let ring = $state<{ x: number; y: number; width: number; height: number } | null>(null)
   let activityTimer: ReturnType<typeof setTimeout> | undefined
@@ -399,7 +400,7 @@
           class="bar-button takeover"
           data-testid="browser-agent-takeover"
           disabled={userInControl}
-          title="Pause the agent on this page so that you can use it. The agent must ask before it uses the page again."
+          title={TAKE_OVER_TIP}
           onclick={() => setControl(true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
       </div>
     {/if}

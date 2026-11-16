@@ -14,11 +14,13 @@
     reason: string
     /** The chosen option id, or null to cancel the turn. */
     onanswer?: (optionId: string | null) => void
+    /** "1 of 2 waiting" when more than one request waits; null when this is the only one. */
+    queueText?: string | null
     /** Esc or "Not now": close without answering; the request stays in the Action Center. */
     onclose?: () => void
   }
 
-  let { approval, reason, onanswer, onclose }: Props = $props()
+  let { approval, reason, queueText = null, onanswer, onclose }: Props = $props()
 
   const risky = $derived(approval.toolKind === 'execute' || approval.toolKind === 'delete')
   const allow = $derived(approval.options.filter((o) => o.kind.startsWith('allow')))
@@ -66,7 +68,8 @@
     <div class="body">
       <div class="from" data-testid="uac-from">Requested by the agent in <em>{approval.chatTitle}</em></div>
       <div class="reason" data-testid="uac-reason">Reason: {reason}</div>
-      <ApprovalDetail toolCall={approval.toolCall} testid="uac" />
+      {#if queueText}<div class="queue" data-testid="uac-queue">{queueText}</div>{/if}
+      <ApprovalDetail toolCall={approval.toolCall} testid="uac" note={false} />
     </div>
     <div class="links" data-answers role="group" aria-label="Your answer">
       {#each ordered as option (option.optionId)}
@@ -74,6 +77,7 @@
         {@const first = option === allow[0] || option === deny[0]}
         <CommandLink
           kind={decision}
+          compact
           testid={option === allow[0] ? 'uac-allow' : `uac-option-${option.optionId}`}
           title={option.name}
           keyIndex={first ? accessKeyIndex(option.name, decision) : -1}
@@ -148,12 +152,22 @@
     margin-top: 4px;
     color: #1e395b;
   }
+  /* The answers and the key hint share one row, so the hint is never below the fold (UX-139). */
   .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
     padding: 4px 12px 8px;
     background: #fff;
   }
+  .queue {
+    margin-bottom: 4px;
+    color: var(--w7-text-muted);
+    font-size: 12px;
+  }
   .hint {
-    margin: 6px 0 0 2px;
+    margin: 0;
     font-size: 12px;
     color: var(--w7-text-muted);
   }

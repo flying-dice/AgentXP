@@ -3,6 +3,7 @@
   import type { AguiToolCallState } from '@shared/agui-state'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
+  import { gateReasonOf } from '@shared/gateReason'
   import { changeSummary } from './changeSummary'
   import { toolArgument } from './toolSummary'
 
@@ -10,9 +11,11 @@
     toolCall?: AguiToolCallState
     /** Test id prefix: `<prefix>-detail`, `<prefix>-detail-path`, `<prefix>-detail-summary`, `<prefix>-detail-more`. */
     testid: string
+    /** Show the setting that made Agent7 ask ("Run commands is set to Ask in Control Center.") on its own line under the command. */
+    note?: boolean
   }
 
-  let { toolCall, testid }: Props = $props()
+  let { toolCall, testid, note = true }: Props = $props()
 
   /** Rows shown before "Show all N lines" appears. */
   const CLIP_ROWS = 10
@@ -22,6 +25,8 @@
   const diff = $derived(toolCall?.contents.find((c) => c.kind === 'diff'))
   const summary = $derived(diff?.kind === 'diff' ? changeSummary(diff.oldText, diff.newText, { path: diff.path, error: diff.oldTextError }) : null)
   const argument = $derived(toolCall ? toolArgument(toolCall.kind, toolCall.rawInput, toolCall.locations, toolCall.title) : '')
+  /** Why Agent7 asks, apart from the command (it is never part of the command text). */
+  const setting = $derived(note ? gateReasonOf(toolCall?.rawInput) : null)
   const clipped = $derived(!!summary && summary.rows > CLIP_ROWS)
 </script>
 
@@ -41,6 +46,7 @@
 {:else if argument}
   <div class="detail" data-testid="{testid}-detail">
     <CodeViewer code={argument} language={toolCall?.kind === 'execute' ? 'bash' : 'text'} wordWrap maxHeight="140px" label="Details" />
+    {#if setting}<div class="setting" data-testid="{testid}-detail-setting">{setting}</div>{/if}
   </div>
 {/if}
 
@@ -57,6 +63,11 @@
   }
   .summary {
     margin: 2px 0 6px;
+    color: var(--w7-text-muted);
+  }
+  .setting {
+    margin-top: 3px;
+    font-size: 11px;
     color: var(--w7-text-muted);
   }
   .more {

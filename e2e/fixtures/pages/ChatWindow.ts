@@ -22,7 +22,7 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-permission-result')
   }
 
-  /** The line under the answers of the permission dialog box ("Press Alt+A to allow or Alt+D to deny."). */
+  /** The line under the answers of the permission dialog box ("Enter denies. Press A to allow."). */
   get permissionHint(): Locator {
     return this.frame.getByTestId('permission-hint')
   }

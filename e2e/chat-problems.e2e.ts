@@ -82,6 +82,8 @@ describe('chat: the agent program is stopped from Task Manager', () => {
     await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
 
     await see.text(chat.errors, 'The agent program was stopped.')
+    // One end is the first stop: the row does not say "again" (UX-141).
+    expect(await chat.frame.getByTestId('chat-error-text').innerText()).not.toMatch(/again/i)
     await chat.frame.getByTestId('chat-error-restart').click()
     await see.visible(chat.frame.getByTestId('chat-restart-status'))
     await see.gone(chat.errors)
