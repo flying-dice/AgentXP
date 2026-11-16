@@ -1,2 +1,2 @@
-/** The line of an About box (UX-192): the program and the suite apart, so 0.1.0 is clearly the version of the suite. */
-export const aboutLine = (name: string, version = ''): string => `${name}, part of Agent7.${version ? ` Agent7 version ${version}.` : ''}`
+/** The line of an About box (UX-192, UX-206): the program is part of Agent7, and the one version number is the version of Agent7. */
+export const aboutLine = (name: string, version = ''): string => (version ? `${name} is part of Agent7 (version ${version}). It has no separate version.` : `${name} is part of Agent7.`)

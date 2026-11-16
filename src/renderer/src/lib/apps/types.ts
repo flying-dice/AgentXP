@@ -28,6 +28,8 @@ export interface DesktopHost {
   /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */
   chooseReview(path?: string | null): void
   closeWindow(windowId: Id): Promise<void>
+  /** Gives the focus back to the window that opened this one (Control Center after OK); nothing happens when it is gone or minimized. */
+  returnToOpener(windowId: Id): Promise<void>
   focusWindow(windowId: Id): Promise<void>
   /** Debounced (300 ms) per window; the latest view wins. */
   updateView(windowId: Id, view: AppView): void

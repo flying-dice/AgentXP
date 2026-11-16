@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { SessionDto } from '@shared/models'
 import { sampleAgents, sampleSessions } from '../../app/fakeApi'
 import type { TerminalDto } from '@shared/models'
-import { chatSelection, chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, runningToolTitle, terminalRows, withProgress } from './processRows'
+import { CHATS_HINT, chatSelection, chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, runningToolTitle, terminalRows, withProgress } from './processRows'
 
 describe('processRows', () => {
   it('describes processes', () => {
@@ -22,6 +22,14 @@ describe('processRows', () => {
     const [row] = chatRows([busy], sampleAgents)
     expect(row).toMatchObject({ agent: 'Claude Code', status: 'Working', context: '75%', percent: 75, tokens: '150k / 200k', busy: true })
     expect(chatRows([{ ...busy, contextSize: 0 }], [])[0]).toMatchObject({ context: '-', agent: 'Removed agent (1)' })
+  })
+
+  it('says whether the window of a chat is open or closed (UX-204)', () => {
+    const [a, b] = chatRows([sampleSessions[0], { ...sampleSessions[0], id: 2 }], sampleAgents, () => null, (id) => id === 2)
+    expect(a.window).toBe('Closed')
+    expect(b.window).toBe('Open')
+    expect(chatRows([sampleSessions[0]], sampleAgents)[0].window).toBe('Closed')
+    expect(CHATS_HINT).toBe('Closed chats stay here. Double-click a chat to open it again.')
   })
 
   it('picks the bar state and formats tokens', () => {

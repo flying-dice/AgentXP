@@ -439,12 +439,37 @@ describe('DesktopController projects and shell feedback', () => {
     const { controller } = await started()
     controller.workArea = () => ({ width: 1280, height: 730 })
     const first = await controller.newChat()
-    const second = await controller.openApp({ app: 'event-viewer' })
+    const second = await controller.openApp({ app: 'notepad' })
     const a = controller.boundsOf(controller.windowById(first.id)!)
     const b = controller.boundsOf(controller.windowById(second.id)!)
     expect(a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height).toBe(false)
     expect(b.x + b.width).toBeLessThanOrEqual(1280)
     expect(b.y + b.height).toBeLessThanOrEqual(730)
+    expect(controller.state.focusedWindowId).toBe(second.id)
+  })
+
+  it('a window with no room beside its opener cascades 24 px from it and is in front (UX-203)', async () => {
+    const { controller } = await started()
+    controller.workArea = () => ({ width: 1280, height: 730 })
+    const first = await controller.newChat()
+    // Event Viewer is 980 px wide: the room beside a 680 px chat is too small, so it cascades.
+    const second = await controller.openApp({ app: 'event-viewer' })
+    const a = controller.boundsOf(controller.windowById(first.id)!)
+    const b = controller.boundsOf(controller.windowById(second.id)!)
+    expect(b.x).toBe(a.x + 24)
+    expect(b.y).toBe(a.y + 24)
+    expect(controller.state.focusedWindowId).toBe(second.id)
+    expect(controller.state.windows.at(-1)?.id).toBe(second.id)
+  })
+
+  it('returnToOpener gives the focus back to the window that opened this one (UX-203)', async () => {
+    const { controller } = await started()
+    controller.workArea = () => ({ width: 1280, height: 730 })
+    const chat = await controller.newChat()
+    const cc = await controller.openApp({ app: 'control-centre' })
+    expect(controller.state.focusedWindowId).toBe(cc.id)
+    await controller.returnToOpener(cc.id)
+    expect(controller.state.focusedWindowId).toBe(chat.id)
   })
 
   it('Alt+Tab cycles through the windows', async () => {

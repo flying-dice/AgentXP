@@ -25,9 +25,11 @@
     host: DesktopHost
     /** The row a top bar chip asked for ("terminal"): highlighted and scrolled into view. */
     selectedRow?: string | null
+    /** The window this page is in: OK gives the focus back to the window that opened it. */
+    windowId?: number
   }
 
-  let { host, selectedRow = null }: Props = $props()
+  let { host, selectedRow = null, windowId }: Props = $props()
 
   /** Scrolls the requested row into view once the rows exist. */
   function reveal(node: HTMLElement, selected: boolean): { update: (selected: boolean) => void } {
@@ -76,13 +78,15 @@
     statusTimer = setTimeout(() => (status = ''), SAVED_MS)
   }
 
-  async function apply(): Promise<void> {
+  /** `done`: OK was pressed, so the window it came from gets the focus back (UX-203). */
+  async function apply(done = false): Promise<void> {
     if (!draft) return
     busy = true
     try {
       await host.api.desktop.setPolicy(draft)
       saved = draft
       showSaved()
+      if (done && windowId !== undefined) await host.returnToOpener(windowId)
     } catch (error) {
       await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Control Center', buttons: 'OK', icon: 'error' })
     } finally {
@@ -120,9 +124,9 @@
 </div>
 <div class="footer">
   <span class="note" role="status" data-testid="permissions-status" data-kind={dirty ? 'pending' : status ? 'saved' : 'none'}>{dirty ? 'Not applied yet' : status}</span>
-  <Button data-testid="permissions-ok" isDefault disabled={!dirty || busy} onclick={apply}>OK</Button>
+  <Button data-testid="permissions-ok" isDefault disabled={!dirty || busy} onclick={() => void apply(true)}>OK</Button>
   <Button data-testid="permissions-cancel" disabled={!dirty} onclick={() => (draft = saved)}>Cancel</Button>
-  <Button data-testid="permissions-apply" disabled={!dirty || busy} onclick={apply}>Apply</Button>
+  <Button data-testid="permissions-apply" disabled={!dirty || busy} onclick={() => void apply()}>Apply</Button>
 </div>
 
 <style>

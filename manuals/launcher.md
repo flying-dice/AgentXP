@@ -41,7 +41,7 @@ The list is in the middle of the window. Each row shows a picture of the desktop
 - **Name** – The name of the desktop. The word **Connected** appears next to the name while a window shows the desktop.
 - **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has a red error icon, red bold text, and a light red row, so that it differs from the amber row of a desktop that needs your approval, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. Agent7 looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
 
-When the window opens, the desktop that needs your approval is already selected. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
+Desktops that need you are at the top of the list: first the ones that wait for your approval, then the ones with an agent problem. The rest follow, the one you used last first. When the window opens, the first row is already selected, so one click on **Connect** opens the desktop that waits for you. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
 
 ### The Details Pane
 

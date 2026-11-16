@@ -84,4 +84,13 @@ describe('launcher: empty text, name suggestions and a start error on the row', 
     await see.attribute(state, 'data-state', 'error')
     await see.attribute(state, 'title', 'Open the desktop, then Control Center > Agents, to change the command.')
   })
+
+  it('rows that need you come first, and the first row is selected when the launcher opens (UX-202)', async () => {
+    await page.reload()
+    const first = launcher.rows.first()
+    await see.attribute(first.getByTestId('launcher-desktop-state'), 'data-state', 'error')
+    await see.attribute(first, 'aria-selected', 'true')
+    // Connect opens the selected desktop at once: one click on the button needs no click on a row first.
+    await see.enabled(page.getByTestId('launcher-connect'))
+  })
 })

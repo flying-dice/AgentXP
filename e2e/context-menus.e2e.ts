@@ -22,9 +22,13 @@ describe('Context menus and in-app Help', () => {
     await explorer.openDrive('e')
     await see.visible(explorer.item('README.md'))
     await explorer.item('README.md').click({ button: 'right' })
-    // Open says which program it uses for this file (UX-192).
-    await see.text(ctx.desktopPage.getByTestId('explorer-ctx-open'), 'Open (default: Notepad)')
-    await ctx.desktopPage.getByTestId('explorer-ctx-open-notepad').click()
+    // Notepad is named at most once: Open is just Open, and Open with lists the other program only (UX-206).
+    await see.text(ctx.desktopPage.getByTestId('explorer-ctx-open'), 'Open')
+    await see.visible(ctx.desktopPage.getByTestId('explorer-ctx-open-with'))
+    await ctx.desktopPage.getByTestId('explorer-ctx-open-with').hover()
+    await see.visible(ctx.desktopPage.getByTestId('explorer-ctx-open-code'))
+    await see.count(ctx.desktopPage.getByTestId('explorer-ctx-open-notepad'), 0)
+    await ctx.desktopPage.getByTestId('explorer-ctx-open').click()
     const notepad = ctx.desktop.window('notepad')
     await see.visible(notepad.getByTestId('notepad-app'))
     await see.eventually(async () => {

@@ -1,31 +1,38 @@
 import { describe, expect, it, vi } from 'vitest'
-import { backgroundItems, defaultOpener, driveItems, driveProperties, entryItems, projectCountText, propertiesText, type EntryActions } from './explorerContext'
+import { backgroundItems, defaultOpener, otherOpener, OPEN_LABEL, driveItems, driveProperties, entryItems, projectCountText, propertiesText, type EntryActions } from './explorerContext'
 
 const actions = (): EntryActions => ({ open: vi.fn(), openWith: vi.fn(), copyPath: vi.fn(), properties: vi.fn(), startChat: vi.fn(), askChat: vi.fn() })
 const ids = (items: { testid?: string }[]): (string | undefined)[] => items.filter((i) => i.testid).map((i) => i.testid)
 
+const sub = (items: { testid?: string; items?: { testid?: string }[] }[]): (string | undefined)[] => items.find((i) => i.testid === 'explorer-ctx-open-with')?.items?.map((i) => i.testid) ?? []
+
 describe('entryItems', () => {
-  it('a file offers Open, Open with Notepad and Code, Copy path, Start chat, Ask the agent about this and Properties', () => {
+  it('a file offers Open, Open with, Copy path, Start chat, Ask the agent about this and Properties', () => {
     const items = entryItems({ path: 'E:\\a.ts', kind: 'file' }, actions())
-    expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-notepad', 'explorer-ctx-open-code', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
+    expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-with', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
   })
 
   it('a folder has no Open with and keeps the ids of its Open and Start a chat here items', () => {
     const items = entryItems({ path: 'E:\\src', kind: 'directory' }, actions())
-    expect(ids(items)).not.toContain('explorer-ctx-open-code')
+    expect(ids(items)).not.toContain('explorer-ctx-open-with')
     expect(items.map((i) => i.id)).toEqual(expect.arrayContaining(['explorer-folder-open', 'explorer-folder-chat']))
   })
 
-  it('Open says which program it uses for the file (UX-192)', () => {
-    const label = (path: string): unknown => entryItems({ path, kind: 'file' }, actions()).find((i) => i.testid === 'explorer-ctx-open')?.label
-    expect(label('E:\\notes.md')).toBe('&Open (default: Notepad)')
-    expect(label('E:\\a.ts')).toBe('&Open (default: Code)')
+  it('Open is just Open, and Notepad shows once at most (UX-206)', () => {
+    const open = (path: string): unknown => entryItems({ path, kind: 'file' }, actions()).find((i) => i.testid === 'explorer-ctx-open')?.label
+    expect(open('E:\\notes.md')).toBe(OPEN_LABEL)
+    expect(open('E:\\a.ts')).toBe(OPEN_LABEL)
+    // A text file opens in Notepad: Open with offers Code only. A code file opens in Code: Open with offers Notepad only.
+    expect(sub(entryItems({ path: 'E:\\notes.md', kind: 'file' }, actions()))).toEqual(['explorer-ctx-open-code'])
+    expect(sub(entryItems({ path: 'E:\\a.ts', kind: 'file' }, actions()))).toEqual(['explorer-ctx-open-notepad'])
+    expect(otherOpener('E:\\notes.md')).toBe('code')
+    expect(otherOpener('E:\\a.ts')).toBe('notepad')
   })
 
   it('runs the matching action', () => {
     const a = actions()
     const items = entryItems({ path: 'E:\\a.ts', kind: 'file' }, a)
-    items.find((i) => i.testid === 'explorer-ctx-open-notepad')?.action?.()
+    items.find((i) => i.testid === 'explorer-ctx-open-with')?.items?.[0].action?.()
     items.find((i) => i.testid === 'explorer-ctx-copy-path')?.action?.()
     expect(a.openWith).toHaveBeenCalledWith('notepad')
     expect(a.copyPath).toHaveBeenCalled()

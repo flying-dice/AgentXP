@@ -17,7 +17,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
   - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
-- Save a file
+  - Save a file
 - 6 - Troubleshooting
 - 7 - Need Help?
 

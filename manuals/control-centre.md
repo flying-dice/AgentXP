@@ -132,7 +132,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Set every permission entry | One choice of that list, for example `allow`, `ask` or `deny`. | `permissions-set-all-value-option-*` |
 | Set all | Sets every row to that setting. | `permissions-set-all` |
 | Permission status | Shows Not applied yet, or Saved. | `permissions-status` |
-| OK | Saves the permissions. | `permissions-ok` |
+| OK | Saves the permissions and brings back the window that opened Control Center. | `permissions-ok` |
 | Apply | Saves the permissions. | `permissions-apply` |
 | Cancel | Drops the changes. | `permissions-cancel` |
 | Show gadgets on the desktop | Shows or hides the gadgets. | none |

@@ -20,10 +20,8 @@ describe('Help and Support', () => {
     await see.visible(help.getByTestId('help-app'))
     await see.attribute(help.getByTestId('help-article'), 'data-topic', 'notepad')
     await see.text(help.getByTestId('help-article'), 'Using Notepad')
-    // F1 opens the topic at its top, so its title is the first line (UX-148).
-    await see.eventually(async () => {
-      expect(await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)).toBe(0)
-    })
+    // The focus is in the text of Notepad, which the manual lists: Help opens at that row (UX-205; with no listed control it opens at the top, UX-148).
+    await see.text(help.getByTestId('help-target'), 'Text editor')
     // The whole Help window lies inside the desktop (UX-148).
     await see.eventually(async () => {
       const frame = (await help.boundingBox())!
@@ -35,6 +33,26 @@ describe('Help and Support', () => {
     })
     // The Table of Contents lists the sections of one chapter only (the other chapters are one line each).
     expect(await help.getByTestId('help-toc-open').count()).toBeLessThanOrEqual(1)
+  })
+
+  it('F1 on a control opens its topic at the row of that control, with space above it (UX-205)', async () => {
+    await ctx.desktop.closeWindow('help')
+    const notepad = ctx.desktop.window('notepad')
+    await notepad.getByTestId('notepad-text').click()
+    await ctx.desktopPage.keyboard.press('F1')
+    const help = ctx.desktop.window('help')
+    const target = help.getByTestId('help-target')
+    await see.visible(target)
+    await see.text(target, 'Text editor')
+    await see.eventually(async () => {
+      const article = (await help.getByTestId('help-article').boundingBox())!
+      const row = (await target.boundingBox())!
+      // The row is whole inside the article and has about 24 px above it.
+      expect(row.y).toBeGreaterThanOrEqual(article.y)
+      expect(row.y + row.height).toBeLessThanOrEqual(article.y + article.height)
+      expect(row.y - article.y).toBeGreaterThanOrEqual(20)
+    })
+    await ctx.desktop.closeWindow('help')
   })
 
   it('F1 on another window moves the same Help window to its topic', async () => {
@@ -70,6 +88,8 @@ describe('Help and Support', () => {
     await see.attribute(help.getByTestId('help-article'), 'data-topic', 'notepad')
     await see.text(help.getByTestId('help-status'), 'Using Notepad')
     expect(await help.getByTestId('help-status-topic').innerText()).not.toContain('Using Notepad')
+    // "Save a file" is a section of "5 - Common Tasks" (UX-205): the chapter shows its sections once it is open.
+    await help.getByTestId('help-contents-link').filter({ hasText: /^5 - Common Tasks$/ }).first().click()
     await help.getByTestId('help-contents-link').filter({ hasText: /^Save a file$/ }).first().click()
     await see.visible(help.getByTestId('help-target'))
     await see.text(help.getByTestId('help-status-topic'), 'Save a file')

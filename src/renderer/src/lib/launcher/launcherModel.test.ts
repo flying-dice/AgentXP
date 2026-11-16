@@ -23,9 +23,9 @@ describe('launcherModel', () => {
 
   it('sorts the most recently used first', () => {
     const list = [
-      { title: 'b', lastUsedAt: '2026-11-10T00:00:00Z' },
-      { title: 'a', lastUsedAt: '2026-11-12T00:00:00Z' },
-      { title: 'c', lastUsedAt: '2026-11-12T00:00:00Z' }
+      { title: 'b', runState: 'idle' as const, lastUsedAt: '2026-11-10T00:00:00Z' },
+      { title: 'a', runState: 'idle' as const, lastUsedAt: '2026-11-12T00:00:00Z' },
+      { title: 'c', runState: 'idle' as const, lastUsedAt: '2026-11-12T00:00:00Z' }
     ]
     expect(sortDesktops(list).map((d) => d.title)).toEqual(['a', 'c', 'b'])
   })
@@ -84,10 +84,15 @@ describe('launcherModel', () => {
     expect(rowStatus({ runState: 'working', pendingApprovals: 0, connected: false }, true).label).toBe('Working')
   })
 
-  it('preselects a desktop that waits for approval, else the most recent', () => {
-    const d = (id: number, runState: 'idle' | 'awaiting_approval', lastUsedAt: string) => ({ id, title: String(id), runState, lastUsedAt })
-    expect(initialSelection([d(1, 'idle', '2026-11-12T00:00:00Z'), d(2, 'awaiting_approval', '2026-11-01T00:00:00Z')])).toBe(2)
-    expect(initialSelection([d(1, 'idle', '2026-11-01T00:00:00Z'), d(2, 'idle', '2026-11-12T00:00:00Z')])).toBe(2)
+  it('puts the rows that need the user first and preselects the first of them', () => {
+    const d = (id: number, runState: 'idle' | 'working' | 'awaiting_approval' | 'error', lastUsedAt: string) => ({ id, title: String(id), runState, lastUsedAt })
+    const idle = d(1, 'idle', '2026-11-12T00:00:00Z')
+    const waiting = d(2, 'awaiting_approval', '2026-11-01T00:00:00Z')
+    const failed = d(3, 'error', '2026-11-13T00:00:00Z')
+    expect(sortDesktops([idle, failed, waiting]).map((x) => x.id)).toEqual([2, 3, 1])
+    expect(initialSelection([idle, failed, waiting])).toBe(2)
+    expect(initialSelection([idle, failed])).toBe(3)
+    expect(initialSelection([d(1, 'idle', '2026-11-01T00:00:00Z'), d(2, 'working', '2026-11-12T00:00:00Z')])).toBe(2)
     expect(initialSelection([])).toBeNull()
   })
 

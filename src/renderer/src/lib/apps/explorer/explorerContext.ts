@@ -20,11 +20,19 @@ export interface EntryActions {
   askChat: () => void
 }
 
-/** "Open (default: Notepad)": the item says which program Open uses for this file, next to Open with Notepad and Open with Code (UX-192). */
-export const openLabel = (path: VPath): string => `&Open (default: ${defaultOpener(path) === 'notepad' ? 'Notepad' : 'Code'})`
+/** The caption of Open: just "Open". The program that Open uses is not named, so Notepad shows once, in Open with or not at all (UX-206). */
+export const OPEN_LABEL = '&Open'
+
+/** The program of a file that is not its default: the only one in Open with (there are two programs). */
+export const otherOpener = (path: VPath): 'code' | 'notepad' => (defaultOpener(path) === 'notepad' ? 'code' : 'notepad')
+
+const OPENERS = {
+  notepad: { id: 'explorer-ctx-open-notepad', label: '&Notepad', icon: 'file-text' },
+  code: { id: 'explorer-ctx-open-code', label: '&Code', icon: 'file-code' }
+} as const
 
 /**
- * Open, Open with Notepad / Code (files), Copy as path, Start a chat here, Ask the agent about this, Properties.
+ * Open, Open with > the other program (files), Copy as path, Start a chat here, Ask the agent about this, Properties.
  * Explorer only views files, so there are no editing verbs (Cut, Copy, Paste, Delete, Rename).
  */
 export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] {
@@ -32,14 +40,9 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
   return [
     // A folder keeps the ids `explorer-folder-open` and `explorer-folder-chat` (test ids `menu-item-<id>`) that specs use.
     file
-      ? { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: openLabel(target.path), icon: 'file-text', action: a.open }
+      ? { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: OPEN_LABEL, icon: 'file-text', action: a.open }
       : { id: 'explorer-folder-open', label: '&Open', icon: 'open-folder', action: a.open },
-    ...(file
-      ? [
-          { id: 'explorer-ctx-open-notepad', testid: 'explorer-ctx-open-notepad', label: 'Open with &Notepad', icon: 'file-text', action: () => a.openWith('notepad') } as MenuItemDef,
-          { id: 'explorer-ctx-open-code', testid: 'explorer-ctx-open-code', label: 'Open with &Code', icon: 'file-code', action: () => a.openWith('code') } as MenuItemDef
-        ]
-      : []),
+    ...(file ? [openWithItem(target.path, a)] : []),
     { separator: true },
     { id: 'explorer-ctx-copy-path', testid: 'explorer-ctx-copy-path', label: 'Copy as &path', icon: 'copy', action: a.copyPath },
     { separator: true },
@@ -50,6 +53,13 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
     { separator: true },
     { id: 'explorer-ctx-properties', testid: 'explorer-ctx-properties', label: 'P&roperties', icon: 'properties', action: a.properties }
   ]
+}
+
+/** Open with > the program that is not the default one (UX-206). */
+function openWithItem(path: VPath, a: EntryActions): MenuItemDef {
+  const other = otherOpener(path)
+  const { id, label, icon } = OPENERS[other]
+  return { id: 'explorer-ctx-open-with', testid: 'explorer-ctx-open-with', label: 'Open &with', icon: 'open-folder', items: [{ id, testid: id, label, icon, action: () => a.openWith(other) } as MenuItemDef] } as MenuItemDef
 }
 
 export interface BackgroundActions {

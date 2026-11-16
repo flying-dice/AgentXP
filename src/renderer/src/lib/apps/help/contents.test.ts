@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chapterOf, collapsedLines, scrollTopFor } from './contents'
+import { chapterOf, collapsedLines, scrollTopFor, tailPadding } from './contents'
 
 describe('Help contents (UX-132)', () => {
   it('finds the chapter of a heading', () => {
@@ -15,9 +15,15 @@ describe('Help contents (UX-132)', () => {
     expect(chapterOf(headings, 'missing')).toBeNull()
   })
 
-  it('leaves 8 px above a heading, so no text above it is cut (UX-183)', () => {
-    expect(scrollTopFor(1000)).toBe(992)
+  it('leaves 24 px above a heading, so no text above it is cut (UX-183, UX-205)', () => {
+    expect(scrollTopFor(1000)).toBe(976)
     expect(scrollTopFor(5)).toBe(0)
+  })
+
+  it('adds room at the end when a heading near it could not reach the top (UX-205)', () => {
+    expect(tailPadding(900, 1200, 400)).toBe(76)
+    expect(tailPadding(100, 1200, 400)).toBe(0)
+    expect(tailPadding(900, 1276, 400, 76)).toBe(76)
   })
 
   it('keeps the sections of the current chapter only', () => {
