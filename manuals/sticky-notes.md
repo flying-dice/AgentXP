@@ -10,6 +10,7 @@ This manual describes Sticky Notes. Sticky Notes puts notes on the desktop. You 
   - The Toolbar
   - The Note List
   - The Notes on the Desktop
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -45,6 +46,10 @@ The list shows one row for each note. A row has the color, the first line of the
 
 Each note is a small window on the desktop. Drag its title bar to move it. Drag the grip at the lower right corner to change its size. Right-click a note to change its color or to delete it. The title bar has a **+** button for a new note and an **x** button to delete the note.
 
+### The Chat Pane
+
+Each Sticky Notes window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -71,6 +76,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Sticky Notes box. | `sticky-notes-menu-about` |
 | Dialog: about | The About Sticky Notes box. | `sticky-notes-about` |
 | Dialog: about ok | Closes the About box. | `sticky-notes-about-ok` |
+| Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `sticky-notes-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | File menu: adds a note. Ctrl+N. | `sticky-notes-menu-new` |
 | Menu: close | Closes the window. Alt+F4. | `sticky-notes-menu-close` |
 | Menu: delete | Edit menu: deletes the selected note. | `sticky-notes-menu-delete` |

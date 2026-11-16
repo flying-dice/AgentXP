@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AppView, AskChatRequest } from '@shared/desktop'
-import { askChatCwd, askChatPrompt, fenced, rangeLabel } from './askChat'
+import { askChatCwd, askChatDraft, askChatPrompt, fenced, rangeLabel } from './askChat'
 
 const base: AskChatRequest = { app: 'code', windowId: 1, kind: 'explain' }
 
@@ -59,5 +59,17 @@ describe('askChatCwd', () => {
     expect(askChatCwd({ ...base, windowId: 9 }, windows, home)).toBe('F:\\')
     expect(askChatCwd({ ...base, windowId: 99 }, windows, home)).toBe(home)
     expect(askChatCwd({ ...base, path: 'C:\\Users\\Agent\\x' }, windows, home)).toBe(home)
+  })
+})
+
+describe('askChatDraft', () => {
+  it('is what the composer gets for Ask chat...: the subject and the selection, then room for the question', () => {
+    const draft = askChatDraft({ ...base, kind: 'ask', path: 'E:\\src\\a.ts', range: { startLine: 3, endLine: 5 }, text: 'const x = 1' })
+    expect(draft).toBe('I have a question about a selection from E:\\src\\a.ts (lines 3-5).\n\n```ts\nconst x = 1\n```\n\n')
+    expect(draft).not.toContain('My question follows')
+  })
+
+  it('names the page when there is no selection', () => {
+    expect(askChatDraft({ app: 'browser', windowId: 2, kind: 'ask', url: 'https://example.com/', title: 'Example' })).toBe('I have a question about the page "Example" at https://example.com/.\n\n')
   })
 })

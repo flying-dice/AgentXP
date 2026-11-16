@@ -106,6 +106,7 @@ refusals such as an ejected drive.
 | `a2ui.json` | `agent7.a2ui_render` with a small WinForms form; the prompt picks the `target`: "window" (own desktop window), "sidebar" (beside the chat), "update" (changes the window surface, reports the tool's note about a closed window), anything else inline. `expect` on the `ok` answer |
 | `desktop.json` | `desktop_open_app` then `terminal_run`; a prompt containing "closed" calls `terminal_run` with the Terminal closed and expects `is closed` |
 | `review.json` | the Code Review reviewer: a prompt with "code review of the changes" calls `agent7.review_add_comment` twice (`notes.txt` lines 1 and 4) and `review_submit`; a prompt with "fix the following code review comments" (what Send to chat sends) is answered with a message |
+| `aside.json` | the chat pane of an app window: a prompt with "explain this" `expect`s `appContext` (with `selection`) in the desktop state, `extract`s the open file name from it and answers naming the file; "summarise" answers for the Browser pane |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |
 

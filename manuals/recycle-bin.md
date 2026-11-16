@@ -11,6 +11,7 @@ This manual describes Recycle Bin. Recycle Bin keeps the changes that you revert
   - The List
   - The Preview
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -45,6 +46,10 @@ Select a row to see a note and a diff. The diff shows what **Restore this item**
 
 The status bar shows the number of items.
 
+### The Chat Pane
+
+Each Recycle Bin window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -66,6 +71,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Recycle Bin box. | `recycle-bin-menu-about` |
 | Dialog: about | The About Recycle Bin box. | `recycle-bin-about` |
 | Dialog: about ok | Closes the About box. | `recycle-bin-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `recycle-bin-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: restore | File menu: restores the selected item. | `recycle-bin-menu-restore` |
 | Menu: restore all | File menu: restores all items. | `recycle-bin-menu-restore-all` |
 | Menu: empty | File menu: empties the Recycle Bin. | `recycle-bin-menu-empty` |

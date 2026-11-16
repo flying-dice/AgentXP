@@ -10,6 +10,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
@@ -70,6 +71,10 @@
     { id: 'help-ctx-home', testid: 'help-ctx-home', label: '&Home', icon: 'help', action: () => show(HOME_TOPIC) }
   ]
 
+  // The chat pane knows the topic on screen.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ topic, topicTitle: current?.title ?? null }))
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       { label: '&File', items: closeItems('help', () => void host.closeWindow(win.id)).slice(1) },
@@ -79,7 +84,9 @@
         items: [
           { id: 'back', testid: 'help-menu-back', label: '&Back', shortcut: 'Alt+Left', disabled: history.past.length === 0, action: () => (history = back(history)) },
           { id: 'forward', testid: 'help-menu-forward', label: '&Forward', shortcut: 'Alt+Right', disabled: history.future.length === 0, action: () => (history = forward(history)) },
-          { id: 'home', testid: 'help-menu-home', label: '&Home', action: () => show(HOME_TOPIC) }
+          { id: 'home', testid: 'help-menu-home', label: '&Home', action: () => show(HOME_TOPIC) },
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       help.menu()

@@ -1,18 +1,20 @@
-import { afterAll, beforeAll, describe, it } from 'vitest'
-import { createWorkspace, see, startConnectedDesktop, type ConnectedDesktop, type Workspace } from './fixtures'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { createWorkspace, see, startScriptedDesktop, type ScriptedDesktop, type Workspace } from './fixtures'
 
-/** Every app has a context menu and a Help menu; F1 opens the Help of the focused app. */
+/**
+ * Every app has a context menu and a Help menu; F1 opens the Help of the focused app. The agent is the scripted one (aside.json): a
+ * session of its own per chat, which the fake agent (one fixed ACP session id) cannot give a chat pane and a chat window together.
+ */
 describe('Context menus and in-app Help', () => {
-  let ctx: ConnectedDesktop
+  let ctx: ScriptedDesktop
   let workspace: Workspace
 
   beforeAll(async () => {
     workspace = await createWorkspace({ 'README.md': '# Hello from the readme\n' })
-    ctx = await startConnectedDesktop({ title: 'Context menu desktop', workspace })
+    ctx = await startScriptedDesktop({ script: 'aside', title: 'Context menu desktop', workspace })
   })
   afterAll(async () => {
-    await ctx?.app.close()
-    await workspace?.remove()
+    await ctx?.close()
   })
 
   it('Explorer: the file menu opens the file with Notepad', async () => {
@@ -29,17 +31,44 @@ describe('Context menus and in-app Help', () => {
     })
   })
 
-  it('Notepad: Explain this on a selection opens a chat with the selected text', async () => {
+  it('Notepad: Explain this on a selection opens the Notepad chat pane with the selected text', async () => {
     const notepad = ctx.desktop.window('notepad')
     const text = notepad.getByTestId('notepad-text')
     await text.click()
     await ctx.desktopPage.keyboard.press('Control+A')
     await text.click({ button: 'right' })
     await ctx.desktopPage.getByTestId('notepad-ctx-explain').click()
+    const aside = ctx.desktop.aside('notepad')
+    await see.visible(aside.panel)
+    await see.attribute(aside.panel, 'data-role', 'aside')
+    await see.text(aside.userMessages.first(), 'Hello from the readme')
+    await see.count(ctx.desktop.windows('chat'), 0) // the old behaviour (a new Chat window) is "Open in Chat window"
+  })
+
+  it('Notepad: Open in Chat window starts a full chat with the selected text', async () => {
+    const notepad = ctx.desktop.window('notepad')
+    const text = notepad.getByTestId('notepad-text')
+    await text.click()
+    await ctx.desktopPage.keyboard.press('Control+A')
+    await text.click({ button: 'right' })
+    await ctx.desktopPage.getByTestId('notepad-ctx-open-chat').click()
     const chat = ctx.desktop.window('chat')
     await see.visible(chat.getByTestId('chat-app'))
     await see.text(chat.getByTestId('chat-message-user'), 'Hello from the readme')
     await chat.getByTestId('window-close').first().click()
+  })
+
+  it('Notepad: Ask chat... fills the composer of the pane and does not send', async () => {
+    const notepad = ctx.desktop.window('notepad')
+    await ctx.desktop.focusWindow('notepad')
+    const aside = ctx.desktop.aside('notepad')
+    await aside.newConversation.click() // a fresh pane: the first conversation is over
+    await see.visible(aside.blank)
+    const text = notepad.getByTestId('notepad-text')
+    await text.click({ button: 'right' })
+    await ctx.desktopPage.getByTestId('notepad-ctx-ask').click()
+    await see.eventually(async () => expect(await aside.composer.inputValue()).toContain('I have a question about'))
+    await see.count(aside.userMessages, 0)
   })
 
   it('Explorer: the Help menu opens Explorer Help', async () => {

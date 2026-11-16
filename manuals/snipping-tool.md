@@ -11,6 +11,7 @@ This manual describes Snipping Tool. Snipping Tool captures a part of the screen
   - The Snip Area
   - The Selection Overlay
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -50,6 +51,10 @@ For a rectangular snip, the desktop dims. Drag to select the area. For a window 
 
 The status bar tells what to do and what happened, for example **Captured** with the size.
 
+### The Chat Pane
+
+Each Snipping Tool window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -72,6 +77,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Snipping Tool box. | `snipping-tool-menu-about` |
 | Dialog: about | The About Snipping Tool box. | `snipping-tool-about` |
 | Dialog: about ok | Closes the About box. | `snipping-tool-about-ok` |
+| Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `snipping-tool-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | File menu: takes a rectangular snip. Ctrl+N. | `snipping-tool-menu-new` |
 | Menu: window | File menu: takes a window snip. | `snipping-tool-menu-window` |
 | Menu: full | File menu: takes a full-screen snip. | `snipping-tool-menu-full` |

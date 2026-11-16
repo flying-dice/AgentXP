@@ -9,6 +9,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
@@ -104,6 +105,10 @@
   const help = new AppHelp(host, 'snipping-tool')
   const ctx = new ContextMenu()
 
+  // The chat pane knows whether there is a snip.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ hasSnip: !!image }))
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       {
@@ -123,6 +128,7 @@
           { id: 'options', testid: 'snipping-tool-menu-options', label: '&Options...', action: () => (options = true) }
         ]
       },
+      help.viewMenu(win.id),
       help.menu()
     ])
   )

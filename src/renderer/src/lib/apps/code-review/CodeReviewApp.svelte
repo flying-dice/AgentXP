@@ -27,11 +27,14 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import type { MenuDef } from '../../kit/molecules/MenuItem'
+  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { ViewSync } from '../viewSync'
   import { useSessionStores } from '../sessionStores.svelte'
+  import AppAbout from '../shared/AppAbout.svelte'
+  import { AppHelp } from '../shared/AppHelp.svelte'
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import type { AppProps } from '../types'
   import ReviewComments from './ReviewComments.svelte'
@@ -363,14 +366,17 @@
   }
 
   // ---- chrome -----------------------------------------------------------------------------------
-  const menus = $derived<MenuDef[]>([
+  // svelte-ignore state_referenced_locally
+  const help = new AppHelp(host, 'code-review')
+
+  const menus = $derived<MenuDef[]>(
+    menuBar([
     {
       label: '&Review',
       items: [
         { id: 'review-send-all', testid: 'review-menu-send-all', label: 'Send all open comments to &chat...', disabled: counts.open === 0, action: () => void openSend('open') },
         { id: 'review-refresh', testid: 'review-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void loadChanges() },
-        { separator: true },
-        { id: 'review-close', testid: 'review-menu-close', label: '&Close', action: () => void host.closeWindow(win.id) }
+        ...closeItems('code-review', () => void host.closeWindow(win.id))
       ]
     },
     {
@@ -386,8 +392,9 @@
         { id: 'view-prev', testid: 'review-menu-prev', label: '&Previous change', shortcut: 'Shift+F7', action: () => step(-1) }
       ]
     },
-    { label: '&Help', items: [{ id: 'review-help', testid: 'review-menu-help', label: '&Help on Code Review', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'code-review' }) }] }
-  ])
+    help.menu()
+    ])
+  )
 
   function toggleLayout(): void {
     layout = layout === 'split' ? 'unified' : 'split'
@@ -516,6 +523,8 @@
     <StatusStripLabel testid="review-status-comments" text="{counts.open} open, {counts.resolved} resolved, {counts.sent} sent" borders={['left']} />
     <StatusStripLabel testid="review-status-agent" text={connectionLabel(status)} borders={['left']} />
   </StatusStrip>
+
+  <AppAbout {help} />
 
   {#if sendDialog}
     <SendToChatDialog chats={sendDialog.chats} count={sendDialog.count} cwd={root} busy={sending} onsend={(target) => void confirmSend(target)} oncancel={() => (sendDialog = null)} />

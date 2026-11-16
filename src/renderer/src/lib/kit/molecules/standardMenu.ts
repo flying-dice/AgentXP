@@ -33,6 +33,17 @@ export function closeItems(app: string, onclose: () => void): MenuItemDef[] {
   return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label: '&Close', shortcut: 'Alt+F4', action: onclose }]
 }
 
+export interface ChatPaneItemOptions {
+  /** The pane is open now (the checkmark). */
+  checked: boolean
+  toggle: () => void
+}
+
+/** `View > Chat pane  Ctrl+Shift+C`: shows or hides the chat pane of the window. Every app with a pane has it in its View menu. */
+export function chatPaneItem(app: string, { checked, toggle }: ChatPaneItemOptions): MenuItemDef {
+  return { id: `${app}-chat-pane`, testid: `${app}-menu-chat-pane`, label: 'Chat &pane', icon: 'session', shortcut: 'Ctrl+Shift+C', checked, action: toggle }
+}
+
 export interface EditOps {
   undo?: () => void
   cut?: () => void

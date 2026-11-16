@@ -11,6 +11,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import DataGridView from '../../kit/organisms/DataGridView.svelte'
@@ -142,6 +143,14 @@
     return [refreshItem]
   }
 
+  // The chat pane knows the tab and the selected row.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    tab,
+    selectedRow: tab === 'chats' ? (selectedChatRow ?? null) : tab === 'processes' ? (selectedProcess ?? null) : null,
+    chats: chats.length
+  }))
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       {
@@ -156,7 +165,9 @@
         items: [
           { id: 'refresh', testid: 'agent-manager-menu-refresh', label: '&Refresh Now', shortcut: 'F5', action: () => void refresh() },
           { separator: true },
-          ...tabs.map((t) => ({ id: `tab-${t.id}`, testid: `agent-manager-menu-tab-${t.id}`, label: t.title, radio: true, checked: tab === t.id, action: () => (tab = t.id) }))
+          ...tabs.map((t) => ({ id: `tab-${t.id}`, testid: `agent-manager-menu-tab-${t.id}`, label: t.title, radio: true, checked: tab === t.id, action: () => (tab = t.id) })),
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       {

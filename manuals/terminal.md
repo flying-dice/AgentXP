@@ -10,6 +10,7 @@ This manual describes Terminal. Terminal shows the commands that the agent runs.
   - The Header
   - The Screen
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -41,6 +42,10 @@ The screen shows the working folder, each command, and its output. It follows th
 
 The status bar says that the shell is read-only. It also shows **Running**, **Exit code** with a number, or **No terminals**.
 
+### The Chat Pane
+
+Each Terminal window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -60,6 +65,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Terminal box. | `terminal-menu-about` |
 | Dialog: about | The About Terminal box. | `terminal-about` |
 | Dialog: about ok | Closes the About box. | `terminal-about-ok` |
+| Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `terminal-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `terminal-menu-close` |
 | Menu: copy | Edit menu: copies the selected output. | `terminal-menu-copy` |
 | Menu: select all | Edit menu: selects all output. | `terminal-menu-select-all` |
@@ -67,7 +75,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: copy | Copies the selected output. | `terminal-ctx-copy` |
 | Context menu: select all | Selects all output. | `terminal-ctx-select-all` |
 | Context menu: clear | Hides the output shown so far. The agent keeps the output. | `terminal-ctx-clear` |
-| Context menu: ask | Starts a chat about the selected output, or the last lines. | `terminal-ctx-ask` |
+| Context menu: ask | Opens the chat pane with a draft about the selected output, or the last lines. | `terminal-ctx-ask` |
+| Context menu: open in Chat window | Starts a full chat with the selected output, or the last lines, in a Chat window. | `terminal-ctx-open-chat` |
 
 ### Keys
 

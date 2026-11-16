@@ -78,14 +78,17 @@ The status bar shows the folder, the number of files, the number of open comment
 | Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
 | Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |
-| Close (menu) | Closes the window and ends the review. | `review-menu-close` |
+| Close (menu) | Closes the window and ends the review. Alt+F4. | `code-review-menu-close` |
 | Outline (menu) | Shows the list of files. | `review-menu-outline` |
 | Expanded (menu) | Shows the whole file. | `review-menu-expanded` |
 | Side by side (menu) | Switches between one column and two columns. | `review-menu-split` |
 | Comments (menu) | Shows or hides the comments pane. | `review-menu-comments` |
 | Next change (menu) | Goes to the next change. | `review-menu-next` |
 | Previous change (menu) | Goes to the previous change. | `review-menu-prev` |
-| Help on Code Review | Opens this manual. | `review-menu-help` |
+| View Help (menu) | Opens this manual. F1. | `code-review-menu-help` |
+| About Code Review (menu) | Opens the About box. | `code-review-menu-about` |
+| About box | The About Code Review box. | `code-review-about` |
+| About box OK | Closes the About box. | `code-review-about-ok` |
 | Outline | Shows the list of files. | `review-view-outline` |
 | Expanded | Shows the whole file. | `review-view-expanded` |
 | Side by side | Shows the old and new text in two columns. | `review-split-toggle` |

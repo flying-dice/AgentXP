@@ -14,6 +14,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
   - The Change Peek
   - The Logs and Others Pane
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -69,6 +70,10 @@ The pane is at the bottom. It has two tabs.
 ### The Status Bar
 
 The status bar shows the path, **Agent editing** while the agent writes, the visible lines, the selection, the caret position, the line ending, the branch, and the language.
+
+### The Chat Pane
+
+Each Code window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
@@ -157,6 +162,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Code box. | `code-menu-about` |
 | Dialog: about | The About Code box. | `code-about` |
 | Dialog: about ok | Closes the About box. | `code-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `code-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `code-menu-close` |
 | Context menu: cut | Cut. Dimmed: the editor is read only. | `code-ctx-cut` |
 | Context menu: copy | Copies the selected code. | `code-ctx-copy` |
@@ -164,9 +171,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: select all | Selects all code in the file. | `code-ctx-select-all` |
 | Context menu: revert hunk | Reverts the change under the caret. Shown only on a change. | `code-ctx-revert-hunk` |
 | Context menu: goto file | Opens the Open dialog box to go to another file. Ctrl+O. | `code-ctx-goto-file` |
-| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `code-ctx-explain` |
-| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `code-ctx-ask` |
-| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `code-ctx-send` |
+| Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `code-ctx-explain` |
+| Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
+| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `code-ctx-send` |
+| Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `code-ctx-open-chat` |
 
 ### Keys
 

@@ -15,13 +15,14 @@ export interface AskChatItemsOptions {
   sendLabel?: string
 }
 
-/** Separator, Explain this, Ask chat..., Send selection to chat. */
+/** Separator, Explain this, Ask chat..., Send selection to chat, Open in Chat window (a full chat instead of the chat pane). */
 export function askChatItems(app: string, { hasSelection, ask, sendLabel = 'Send &selection to chat' }: AskChatItemsOptions): MenuItemDef[] {
   return [
     { separator: true },
     { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: '&Explain this', icon: 'session', disabled: !hasSelection, action: () => ask('explain') },
     { id: `${app}-ctx-ask`, testid: `${app}-ctx-ask`, label: 'Ask &chat...', icon: 'session', action: () => ask('ask') },
-    { id: `${app}-ctx-send`, testid: `${app}-ctx-send`, label: sendLabel, icon: 'session', disabled: !hasSelection, action: () => ask('send') }
+    { id: `${app}-ctx-send`, testid: `${app}-ctx-send`, label: sendLabel, icon: 'session', disabled: !hasSelection, action: () => ask('send') },
+    { id: `${app}-ctx-open-chat`, testid: `${app}-ctx-open-chat`, label: 'Open in Chat &window', icon: 'session', disabled: !hasSelection, action: () => ask('window') }
   ]
 }
 

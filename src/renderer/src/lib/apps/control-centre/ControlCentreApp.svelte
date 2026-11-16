@@ -10,6 +10,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { ViewSync } from '../viewSync'
   import AboutPage from './AboutPage.svelte'
@@ -49,10 +50,14 @@
 
   const pageItems = (prefix: string): MenuItemDef[] => pages.map((p) => ({ id: `${prefix}-page-${p.id}`, testid: `${prefix}-page-${p.id}`, label: p.title, icon: p.icon, radio: true, checked: p.id === page, action: () => choose(p.id) }))
 
+  // The chat pane knows the page.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ page }))
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       { label: '&File', items: closeItems('control-centre', () => void host.closeWindow(win.id)).slice(1) },
-      { label: '&View', items: pageItems('control-centre-menu') },
+      { label: '&View', items: [...pageItems('control-centre-menu'), { separator: true }, help.paneItem(win.id)] },
       help.menu()
     ])
   )

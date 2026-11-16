@@ -9,6 +9,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
@@ -294,10 +295,15 @@
     }
   }
 
+  // The chat pane knows the canvas.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ canvas: { width, height }, tool, color: color1, unsavedChanges: dirty }))
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
       { label: '&Edit', items: editItems('paint-menu', { undo: undoLast, copy: () => void copyImage() }, { hasSelection: true }) },
+      help.viewMenu(win.id),
       help.menu()
     ])
   )

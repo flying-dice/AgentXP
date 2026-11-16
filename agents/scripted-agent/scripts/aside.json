@@ -1,0 +1,30 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "aside",
+  "description": "The chat pane of an app window (e2e/aside.e2e.ts). A prompt containing \"explain this\" proves the app context arrived: the desktop state of the prompt must carry `appContext` with the open file and the selection, and the short answer names the file. A prompt containing \"summarise\" answers for the Browser pane. Anything else gets a one-line answer.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "explain",
+      "match": { "contains": "explain this", "ignoreCase": true },
+      "steps": [
+        { "type": "expect", "from": "desktop", "contains": "\"appContext\"", "message": "the prompt carries no appContext" },
+        { "type": "expect", "from": "desktop", "contains": "\"selection\"", "message": "the appContext has no selection" },
+        { "type": "extract", "from": "desktop", "regex": "\"openFile\":\"[^\"]*?([A-Za-z0-9_-]+\\.[a-z]+)\"", "saveAs": "file" },
+        { "type": "message", "text": "Short answer: {{file}} exports a small constant and a function that returns it." }
+      ]
+    },
+    {
+      "id": "summarise",
+      "match": { "contains": "summarise", "ignoreCase": true },
+      "steps": [
+        { "type": "expect", "from": "desktop", "contains": "\"appContext\"", "message": "the prompt carries no appContext" },
+        { "type": "message", "text": "Short answer: a short summary of the page in view." }
+      ]
+    }
+  ],
+  "fallback": [{ "type": "message", "text": "Short answer: {{prompt}}" }]
+}

@@ -4,8 +4,8 @@
  * View Help opens the shared Help window on the topic of the app (titled "<App> Help").
  */
 import { APP_DISPLAY_NAMES, type AppKind } from '@shared/desktop'
-import type { MenuDef } from '../../kit/molecules/MenuItem'
-import { helpMenu } from '../../kit/molecules/standardMenu'
+import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
+import { chatPaneItem, helpMenu } from '../../kit/molecules/standardMenu'
 import type { IconName } from '../../kit/atoms/icons'
 import type { DesktopHost } from '../types'
 
@@ -59,6 +59,16 @@ export class AppHelp {
   showAbout = (): void => {
     this.about = true
     if (!this.version) void this.host.api.app.version().then((v) => (this.version = v), () => {})
+  }
+
+  /** `View > Chat pane (Ctrl+Shift+C)` of the window `windowId`: the shell hosts the pane, the app only lists the item. */
+  paneItem(windowId: number): MenuItemDef {
+    return chatPaneItem(this.kind, { checked: this.host.chatPaneOpen(windowId), toggle: () => this.host.toggleChatPane(windowId) })
+  }
+
+  /** A View menu that has only the chat pane item (apps without a View menu of their own). */
+  viewMenu(windowId: number): MenuDef {
+    return { label: '&View', items: [this.paneItem(windowId)] }
   }
 
   /** The standard Help menu: always the last menu of the bar. */

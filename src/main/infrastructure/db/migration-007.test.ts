@@ -24,7 +24,7 @@ describe('migration 007 (code review)', () => {
     const db = database(6)
     seed(db)
     expect(migrate(db)).toBe(MIGRATIONS.length)
-    expect(MIGRATIONS.at(-1)).toMatchObject({ version: 7, name: 'code_review' })
+    expect(MIGRATIONS[6]).toMatchObject({ version: 7, name: 'code_review' })
     expect(db.prepare("SELECT kind FROM app_kinds WHERE kind = 'code-review'").all()).toEqual([{ kind: 'code-review' }])
     expect(db.prepare('SELECT role FROM sessions').all()).toEqual([{ role: 'chat' }])
     const columns = (table: string): string[] => (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map((c) => c.name)

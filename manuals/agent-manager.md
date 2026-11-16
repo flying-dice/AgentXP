@@ -12,6 +12,7 @@ This manual describes Task Manager. Task Manager shows the chats, the agent proc
   - The Terminals Tab
   - The Performance Tab
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -49,6 +50,10 @@ The tab shows a bar for each chat. The bar shows how much of the context window 
 
 The window refreshes the lists every two seconds. The status bar shows the number of processes, chats, and terminals, and the average use of the context.
 
+### The Chat Pane
+
+Each Task Manager window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -70,6 +75,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Task Manager box. | `agent-manager-menu-about` |
 | Dialog: about | The About Task Manager box. | `agent-manager-about` |
 | Dialog: about ok | Closes the About box. | `agent-manager-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `agent-manager-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: switch | File menu: opens the selected chat. | `agent-manager-menu-switch` |
 | Menu: close | Closes the window. Alt+F4. | `agent-manager-menu-close` |
 | Menu: refresh | View menu: refreshes the lists. F5. | `agent-manager-menu-refresh` |

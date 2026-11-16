@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, type DesktopState } from '@shared/desktop'
-import type { SessionDto } from '@shared/models'
+import type { SessionDto, SessionRole } from '@shared/models'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
 import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
@@ -11,8 +11,10 @@ class FakeChats implements ChatLifecycle {
   cancelled: number[] = []
   removed: number[] = []
   constructor(private readonly f: Awaited<ReturnType<typeof createVfsFixture>>) {}
-  async create(desktopId: number, agentId: number | undefined, cwd: string | undefined): Promise<SessionDto> {
-    return this.f.repos.sessions.create({ agentId: agentId ?? this.f.agentId, desktopId, cwd, title: 'New session' })
+  created = 0
+  async create(desktopId: number, agentId: number | undefined, cwd: string | undefined, role?: SessionRole): Promise<SessionDto> {
+    this.created++
+    return this.f.repos.sessions.create({ agentId: agentId ?? this.f.agentId, desktopId, cwd, title: 'New session', role })
   }
   async cancel(id: number): Promise<void> {
     this.cancelled.push(id)
@@ -269,5 +271,76 @@ describe('DesktopService: control flags and policy', () => {
     f.drives.eject(desktopId, 'E')
     expect(changes().at(-1)?.drives.map((d) => d.letter)).toEqual(['C', 'F'])
     expect(changes().length).toBeGreaterThan(published)
+  })
+})
+
+describe('DesktopService: the chat pane (aside sessions)', () => {
+  const asideOf = (windowId: number): number | undefined => service.state(desktopId).windows.find((w) => w.id === windowId)?.asideSessionId
+
+  it('creates the aside lazily, once per window, with the role aside and the agent home as its directory', async () => {
+    const notepad = service.openWindow({ desktopId, app: 'notepad', path: 'C:\\Users\\Agent\\a.txt' })
+    expect(asideOf(notepad.id)).toBeUndefined()
+    expect(chats.created).toBe(0)
+    const id = await service.openAside(desktopId, notepad.id)
+    expect(await service.openAside(desktopId, notepad.id)).toBe(id)
+    expect(chats.created).toBe(1)
+    expect(asideOf(notepad.id)).toBe(id)
+    expect(f.repos.sessions.get(id)).toMatchObject({ role: 'aside', cwd: 'C:\\Users\\Agent' })
+    expect(changes().at(-1)?.windows.find((w) => w.id === notepad.id)?.asideSessionId).toBe(id)
+  })
+
+  it('two quick first messages share one session', async () => {
+    const explorer = service.openWindow({ desktopId, app: 'explorer' })
+    const [a, b] = await Promise.all([service.openAside(desktopId, explorer.id), service.openAside(desktopId, explorer.id)])
+    expect(a).toBe(b)
+    expect(chats.created).toBe(1)
+  })
+
+  it('works on the drive the window shows', async () => {
+    const code = service.openWindow({ desktopId, app: 'code', path: 'E:\\src\\index.ts' })
+    const id = await service.openAside(desktopId, code.id)
+    expect(f.repos.sessions.get(id)?.cwd).toBe('E:\\')
+  })
+
+  it('has no pane in Chat, Code Review or a surface window', async () => {
+    const chat = await service.newChat(desktopId)
+    await expect(service.openAside(desktopId, chat.id)).rejects.toThrow(/no chat pane/)
+  })
+
+  it('refuses a window of another desktop', async () => {
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    await expect(service.openAside(desktopId + 99, notepad.id)).rejects.toThrow()
+  })
+
+  it('closing the window deletes its aside session', async () => {
+    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+    const id = await service.openAside(desktopId, terminal.id)
+    service.closeWindow(terminal.id)
+    expect(chats.removed).toContain(id)
+    expect(f.repos.sessions.get(id)).toBeNull()
+  })
+
+  it('New conversation deletes the session, keeps the window and lets the next message start a fresh one', async () => {
+    const browser = service.openWindow({ desktopId, app: 'browser', url: 'https://example.com/' })
+    const first = await service.openAside(desktopId, browser.id)
+    await service.closeAside(browser.id)
+    expect(f.repos.sessions.get(first)).toBeNull()
+    expect(service.state(desktopId).windows.map((w) => w.id)).toContain(browser.id)
+    expect(asideOf(browser.id)).toBeUndefined()
+    expect(changes().at(-1)?.windows.find((w) => w.id === browser.id)?.asideSessionId).toBeUndefined()
+    const second = await service.openAside(desktopId, browser.id)
+    expect(chats.created).toBe(2)
+    expect(f.repos.sessions.get(second)).toMatchObject({ role: 'aside' })
+    expect(asideOf(browser.id)).toBe(second)
+    await expect(service.closeAside(service.openWindow({ desktopId, app: 'paint' }).id)).resolves.toBeUndefined()
+  })
+
+  it('does not delete a chat when its window closes, and an aside is not a chat', async () => {
+    const chat = await service.newChat(desktopId)
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    const aside = await service.openAside(desktopId, notepad.id)
+    expect(f.repos.sessions.listByDesktop(desktopId).filter((s) => s.role === 'chat').map((s) => s.id)).not.toContain(aside)
+    service.closeWindow(chat.id)
+    expect(chats.removed).not.toContain(chat.view.app === 'chat' ? chat.view.sessionId : -1)
   })
 })

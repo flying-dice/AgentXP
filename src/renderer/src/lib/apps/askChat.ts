@@ -1,8 +1,10 @@
 /**
  * "Ask chat about this": the prompt a request becomes and the folder the chat works in. Pure, so the format
- * is tested. `DesktopController.askChat` uses both today; a chat side panel can take the same request later.
+ * is tested. `DesktopController.askChat` sends the prompt in the window's chat pane (the draft for "Ask chat...");
+ * the folder is for "Open in Chat window".
  */
 import { APP_DISPLAY_NAMES, type AppView, type AskChatRequest } from '@shared/desktop'
+import { viewPath } from '@shared/desktop-views'
 import { parseVPath, type VPath } from '@shared/vfs'
 import { extensionOf } from './paths'
 
@@ -46,13 +48,15 @@ export function subjectOf(request: AskChatRequest): string {
 const LEAD: Record<AskChatRequest['kind'], string> = {
   explain: 'Please explain',
   ask: 'I have a question about',
-  send: 'Here is'
+  send: 'Here is',
+  window: 'Here is'
 }
 
 const TAIL: Record<AskChatRequest['kind'], string> = {
   explain: 'Say what it does and why, and point out anything that looks wrong.',
   ask: 'My question follows in my next message.',
-  send: 'Please look at it; I will tell you what I need next.'
+  send: 'Please look at it; I will tell you what I need next.',
+  window: 'Please look at it; I will tell you what I need next.'
 }
 
 /** The prompt text the chat receives. */
@@ -63,13 +67,17 @@ export function askChatPrompt(request: AskChatRequest): string {
   return parts.join('\n\n')
 }
 
-/** The path of a window's view, when it has one. */
-export function viewPath(view: AppView): VPath | null {
-  if ('path' in view && typeof view.path === 'string' && view.path) return view.path
-  if (view.app === 'code') return view.activePath
-  if (view.app === 'code-review') return view.root
-  return null
+/**
+ * What "Ask chat..." puts into the chat pane's composer: what it is about and the selected text, then a blank
+ * line where the user types the question (the pane does not send it).
+ */
+export function askChatDraft(request: AskChatRequest): string {
+  const parts = [`${LEAD.ask} ${subjectOf(request)}.`]
+  if (request.text?.trim()) parts.push(fenced(request.text, request.path ? (FENCE_LANGUAGES[extensionOf(request.path)] ?? '') : ''))
+  return `${parts.join('\n\n')}\n\n`
 }
+
+export { viewPath }
 
 /**
  * Where the chat for a request works: the drive root of its file (or of its window's file or folder) on a

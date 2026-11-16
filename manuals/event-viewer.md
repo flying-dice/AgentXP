@@ -13,6 +13,7 @@ This manual describes Event Viewer. Event Viewer lists the messages between Agen
   - The Actions Pane
   - The Filter and Find Dialog Boxes
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -55,6 +56,10 @@ The pane is at the right. It has **Filter Current Log...**, **Clear Log**, **Ref
 
 The status bar shows the total number of events.
 
+### The Chat Pane
+
+Each Event Viewer window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -89,6 +94,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Event Viewer box. | `event-viewer-menu-about` |
 | Dialog: about | The About Event Viewer box. | `event-viewer-about` |
 | Dialog: about ok | Closes the About box. | `event-viewer-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `event-viewer-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: clear | File menu: clears the log. | `event-viewer-menu-clear` |
 | Menu: close | Closes the window. Alt+F4. | `event-viewer-menu-close` |
 | Menu: copy | Edit menu: copies the selected event. | `event-viewer-menu-copy` |

@@ -305,8 +305,11 @@ export interface AskChatRequest {
   app: AppKind
   /** The window it comes from (its drive decides where a new chat works). */
   windowId: Id
-  /** explain: "Explain this"; ask: "Ask chat..." (the user adds the question); send: "Send selection to chat". */
-  kind: 'explain' | 'ask' | 'send'
+  /**
+   * explain: "Explain this"; ask: "Ask chat..." (the user adds the question); send: "Send selection to chat"; window: "Open in Chat
+   * window" (like send, but in a new full chat instead of the window's chat pane).
+   */
+  kind: 'explain' | 'ask' | 'send' | 'window'
   /** The selected text, the output or the page text. */
   text?: string
   /** The file or folder the request is about (a VPath). */

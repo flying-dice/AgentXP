@@ -28,6 +28,7 @@
   import TreeView from '../../kit/organisms/TreeView.svelte'
   import type { TreeNodeData } from '../../kit/organisms/TreeView'
   import { showMessageBox } from '../../kit/organisms/messageBox'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, logTree, nodeScope, summaryOf } from './eventModel'
 
@@ -163,6 +164,15 @@
 
   const copyEvent = (): void => void (current && copyText(`${generalLines(current, chatTitle(current.sessionId)).map(([k, v]) => `${k}: ${v}`).join('\n')}\n\n${current.payload}`))
 
+  // The chat pane knows the selected row.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    level,
+    filter: text || undefined,
+    visibleEvents: visible.length,
+    selectedRow: current ? { id: current.id, at: current.at, source: current.source, direction: current.direction, level: current.level, name: current.name, payload: current.payload.slice(0, 2000) } : null
+  }))
+
   /** The row actions of the Actions pane, plus Copy event for the selected row. */
   const contextItems = (): MenuItemDef[] => [
     { id: 'event-viewer-ctx-copy', testid: 'event-viewer-ctx-copy', label: '&Copy event', icon: 'copy', disabled: !current, action: copyEvent },
@@ -191,7 +201,9 @@
           { id: 'filter', testid: 'event-viewer-menu-filter', label: 'Fi&lter Current Log...', action: () => (filtering = { level, text }) },
           { id: 'clear-filter', testid: 'event-viewer-menu-clear-filter', label: 'Clear Fi&lter', disabled: !filterActive, action: () => ((level = 'all'), (text = '')) },
           { separator: true },
-          { id: 'autoscroll', testid: 'event-viewer-menu-autoscroll', label: '&Autoscroll', checked: autoscroll, action: () => (autoscroll = !autoscroll) }
+          { id: 'autoscroll', testid: 'event-viewer-menu-autoscroll', label: '&Autoscroll', checked: autoscroll, action: () => (autoscroll = !autoscroll) },
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       help.menu()

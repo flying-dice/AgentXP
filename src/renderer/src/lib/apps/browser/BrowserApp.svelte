@@ -11,6 +11,7 @@
   import { AppHelp } from '../shared/AppHelp.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { copyText } from '../shared/contextItems'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
@@ -194,6 +195,11 @@
   const help = new AppHelp(host, 'browser')
   const ctx = new ContextMenu()
 
+  // The chat pane knows the page. The guest page only reports its selection with a right-click, so that is the selection it gets.
+  let pageSelection = ''
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({ url: active.url, title: active.title, tabs: tabs.length, ...selectionContext(pageSelection) }))
+
   const askAboutPage = (selection?: string): void =>
     void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title, ...(selection ? { text: selection } : {}) })
 
@@ -226,7 +232,9 @@
           { id: 'stop', testid: 'browser-menu-stop', label: '&Stop', shortcut: 'Esc', disabled: !active.loading, action: () => pages[activeId]?.stop() },
           { separator: true },
           { id: 'back', testid: 'browser-menu-back', label: '&Back', shortcut: 'Alt+Left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
-          { id: 'forward', testid: 'browser-menu-forward', label: '&Forward', shortcut: 'Alt+Right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) }
+          { id: 'forward', testid: 'browser-menu-forward', label: '&Forward', shortcut: 'Alt+Right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) },
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       help.menu()
@@ -284,7 +292,7 @@
         testId="browser-page-{tab.id}"
         onpatch={(change) => patch(tab.id, change)}
         onready={(wc) => void ready(tab.id, wc)}
-        oncontext={(info) => ctx.showAt(info.x, info.y, contextItems(info))}
+        oncontext={(info) => ((pageSelection = info.selectionText), ctx.showAt(info.x, info.y, contextItems(info)))}
       />
     {/each}
     {#if activity}

@@ -2,6 +2,7 @@
   import { tick, untrack } from 'svelte'
   import type { FileChangeDto } from '@shared/models'
   import { GIT_STATE_INFO, formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
+  import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import FileTree from '../../app/shell/FileTree.svelte'
@@ -15,6 +16,7 @@
   import { AppHelp } from '../shared/AppHelp.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { askChatItems } from '../shared/contextItems'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
@@ -436,7 +438,7 @@
     if (code) window.getSelection()?.selectAllChildren(code)
   }
 
-  function ask(kind: 'explain' | 'ask' | 'send', selected: string): void {
+  function ask(kind: AskChatRequest['kind'], selected: string): void {
     void host.askChat({
       app: 'code',
       windowId: win.id,
@@ -459,6 +461,19 @@
       ...askChatItems('code', { hasSelection, ask: (kind) => ask(kind, selected) })
     ]
   }
+
+  /** The text of the selected lines: the DOM selection is gone once the focus moved to the chat pane, the range stays. */
+  const linesOf = (source: string | null | undefined, range: { startLine: number; endLine: number } | null): string =>
+    source && range ? source.split('\n').slice(range.startLine - 1, range.endLine).join('\n') : ''
+
+  // The chat pane knows the open file, all tabs, the selection and the git status of the file.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    openFile: active,
+    openTabs: [...tabs],
+    ...selectionContext(selectedText() || linesOf(text, selection), selection),
+    ...(active ? { gitStatus: stateOf(active), changedLines: lineChanges.length } : {})
+  }))
 
   const menus = $derived<MenuDef[]>([
     {
@@ -485,7 +500,9 @@
       items: [
         { id: 'code-view-management', label: '&Management', checked: showManagement, action: () => (showManagement = !showManagement) },
         { id: 'code-view-logs', label: '&Logs & others', checked: showLogs, action: () => (showLogs = !showLogs) },
-        { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) }
+        { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) },
+        { separator: true },
+        help.paneItem(win.id)
       ]
     },
     {

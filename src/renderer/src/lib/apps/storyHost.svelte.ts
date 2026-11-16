@@ -60,6 +60,18 @@ export class StoryHost implements DesktopHost {
     await this.api.desktop.newChat(this.current.desktopId)
   }
 
+  /** Contexts the apps registered (stories show them), and which panes are open. */
+  contexts = $state.raw<Record<number, () => Record<string, unknown> | null | undefined>>({})
+  panes = $state.raw<Record<number, boolean>>({})
+  setContext = (windowId: Id, provider: (() => Record<string, unknown> | null | undefined) | null): void => {
+    const next = { ...this.contexts }
+    if (provider) next[windowId] = provider
+    else delete next[windowId]
+    this.contexts = next
+  }
+  toggleChatPane = (windowId: Id): void => void (this.panes = { ...this.panes, [windowId]: !this.panes[windowId] })
+  chatPaneOpen = (windowId: Id): boolean => this.panes[windowId] === true
+
   updateView(windowId: Id, view: AppView): void {
     this.reports = [...this.reports.slice(-9), view]
     void this.api.desktop.updateView(windowId, view)

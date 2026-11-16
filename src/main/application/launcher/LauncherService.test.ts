@@ -81,6 +81,14 @@ describe('LauncherService', () => {
     expect(removedChats).toEqual([])
   })
 
+  it('counts only chats: a reviewer and an aside are not chats', async () => {
+    const { id } = await launcher.create({ title: 'd', folderIds: [] })
+    f.repos.sessions.create({ agentId: f.agentId, desktopId: id, title: 'chat' })
+    f.repos.sessions.create({ agentId: f.agentId, desktopId: id, title: 'review', role: 'review' })
+    f.repos.sessions.create({ agentId: f.agentId, desktopId: id, title: 'aside', role: 'aside' })
+    expect(launcher.list()[0]).toMatchObject({ chatCount: 1 })
+  })
+
   it('reports awaiting_approval from the broker and notifies only for a disconnected desktop', async () => {
     const { id } = await launcher.create({ title: 'Needy', folderIds: [] })
     const chat = f.repos.sessions.create({ agentId: f.agentId, desktopId: id, title: 'chat' })

@@ -13,6 +13,7 @@ This manual describes Explorer. Explorer shows the drives and the folders of a d
   - The File List
   - The Computer Window
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -56,6 +57,10 @@ The **Computer** window shows a tile for each drive. The group **Hard Disk Drive
 
 The status bar shows the number of items and the selection.
 
+### The Chat Pane
+
+Each Explorer window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -97,6 +102,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Explorer box. | `explorer-menu-about` |
 | Dialog: about | The About Explorer box. | `explorer-about` |
 | Dialog: about ok | Closes the About box. | `explorer-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `explorer-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: open | File menu: opens the selected file, folder or drive. | `explorer-menu-open` |
 | Menu: plug in | File menu: plugs in a project as a USB drive. | `explorer-menu-plug-in` |
 | Menu: eject | File menu: ejects the selected USB drive. | `explorer-menu-eject` |
@@ -111,7 +118,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: open notepad | Opens the file in Notepad. | `explorer-ctx-open-notepad` |
 | Context menu: copy path | Copies the path of the item. | `explorer-ctx-copy-path` |
 | Context menu: start chat | Starts a chat in the folder. | `explorer-ctx-start-chat` |
-| Context menu: ask | Starts a chat about the item or the folder. | `explorer-ctx-ask` |
+| Context menu: ask | Opens the chat pane with a draft about the item or the folder. | `explorer-ctx-ask` |
 | Context menu: properties | Shows the type, location, size and date. | `explorer-ctx-properties` |
 | Context menu: refresh | Background menu: reads the folder again. F5. | `explorer-ctx-refresh` |
 | Context menu: up | Background menu: goes up one level. | `explorer-ctx-up` |

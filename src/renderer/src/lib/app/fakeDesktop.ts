@@ -26,6 +26,8 @@ export interface FakeDesktopOptions {
   onChange?: (state: DesktopState) => void
   /** Creates the review session of `openReview` (the fake backend registers it); returns its id. */
   createReviewSession?: (cwd: string) => number
+  /** Creates the aside session of `openAside` (the fake backend registers it); returns its id. */
+  createAsideSession?: (cwd: string) => number
 }
 
 export type FakeDesktopApi = DesktopApi & { state(): DesktopState; /** Plug in / eject: replaces the drives and pushes `desktop.changed`. */ setDrives(drives: DriveDto[]): void }
@@ -132,6 +134,18 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     },
     newChat: async (_desktopId, _agentId, _cwd) => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
     openReview: async (_desktopId, root, baseRef) => api.openWindow({ desktopId: desktop.id, app: 'code-review', path: root, baseRef, sessionId: options.createReviewSession?.(root) ?? nextId++ }),
+    openAside: async (_desktopId, windowId) => {
+      const w = find(windowId)
+      if (w.asideSessionId === undefined) {
+        w.asideSessionId = options.createAsideSession?.(AGENT_HOME) ?? nextId++
+        changed()
+      }
+      return w.asideSessionId
+    },
+    closeAside: async (windowId) => {
+      delete find(windowId).asideSessionId
+      changed()
+    },
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},

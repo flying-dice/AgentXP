@@ -11,6 +11,7 @@ This manual describes Browser. Browser shows web pages. You and the agent can us
   - The Tabs
   - The Page
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
   - Use a Web App With the Agent
@@ -46,6 +47,10 @@ The page area shows the web page of the active tab.
 
 The status bar shows **Done** or **Opening page** with the address. It also shows the zone (Internet or Computer) and the zoom.
 
+### The Chat Pane
+
+Each Browser window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -76,6 +81,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Browser box. | `browser-menu-about` |
 | Dialog: about | The About Browser box. | `browser-about` |
 | Dialog: about ok | Closes the About box. | `browser-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `browser-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new tab | File menu: opens a new tab. | `browser-menu-new-tab` |
 | Menu: close tab | File menu: closes the tab. | `browser-menu-close-tab` |
 | Menu: close | Closes the window. Alt+F4. | `browser-menu-close` |
@@ -88,7 +95,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: forward | Goes forward. | `browser-ctx-forward` |
 | Context menu: reload | Loads the page again. | `browser-ctx-reload` |
 | Context menu: copy link | Copies the address of the page. | `browser-ctx-copy-link` |
-| Context menu: ask | Starts a chat about the page: its address and title. | `browser-ctx-ask` |
+| Context menu: ask | Opens the chat pane with a draft about the page: its address and title. | `browser-ctx-ask` |
 
 ### Keys
 

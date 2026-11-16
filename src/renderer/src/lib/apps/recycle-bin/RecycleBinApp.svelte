@@ -19,6 +19,7 @@
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import ToolStrip from '../../kit/organisms/ToolStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { recycleRows, restoreSummary } from './recycleModel'
 
@@ -105,6 +106,13 @@
   const help = new AppHelp(host, 'recycle-bin')
   const ctx = new ContextMenu()
 
+  // The chat pane knows the selected row.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    items: items.length,
+    selectedRow: current ? { id: current.id, path: current.path, revertedText: current.revertedText?.slice(0, 2000) ?? null } : null
+  }))
+
   /** The same actions as the toolbar buttons: Restore this item, Restore all items, Empty the Recycle Bin. */
   const contextItems = (): MenuItemDef[] => [
     { id: 'recycle-bin-ctx-restore', testid: 'recycle-bin-ctx-restore', label: '&Restore', icon: 'undo', disabled: !current, action: () => current && void restore(current) },
@@ -124,7 +132,7 @@
           ...closeItems('recycle-bin', () => void host.closeWindow(win.id))
         ]
       },
-      { label: '&View', items: [{ id: 'refresh', testid: 'recycle-bin-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void refresh() }] },
+      { label: '&View', items: [{ id: 'refresh', testid: 'recycle-bin-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void refresh() }, { separator: true }, help.paneItem(win.id)] },
       help.menu()
     ])
   )

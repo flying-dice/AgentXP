@@ -25,11 +25,21 @@ export interface DesktopHost {
   /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
   startChat(cwd: VPath): Promise<void>
   /**
-   * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat). Today it starts a chat on the window's
-   * drive (or home) and opens its Chat window with the prompt of `askChatPrompt(request)`; a chat side panel can take
-   * the request later without any app changing.
+   * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat): opens the requesting window's chat pane
+   * and sends the prompt of `askChatPrompt(request)` there ("Ask chat..." only fills the composer, for the user's
+   * question). A window without a pane (Chat, Code Review, a surface) starts a chat on its drive and opens its Chat window.
    */
   askChat(request: AskChatRequest): Promise<void>
+  /**
+   * Registers what the window's chat pane should know about the app (the open file, the selection, the page): the
+   * provider is called when a prompt is sent and its result rides with the prompt as `appContext`. `null` removes it
+   * (an app does this when its window goes away; `useAppContext` does both).
+   */
+  setContext(windowId: Id, provider: (() => Record<string, unknown> | null | undefined) | null): void
+  /** Shows or hides the chat pane of a window (View > Chat pane, Ctrl+Shift+C); showing it focuses its composer. */
+  toggleChatPane(windowId: Id): void
+  /** True while the window's chat pane is open (for the checkmark of View > Chat pane). */
+  chatPaneOpen(windowId: Id): boolean
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

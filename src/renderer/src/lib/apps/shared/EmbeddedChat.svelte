@@ -10,12 +10,17 @@
    *
    * Collapsible: with `collapsible` the panel has a header with a collapse button; collapsed it is a 26 px strip
    * that expands again. `collapsed` and `width` are bindable so the host can remember them.
+   *
+   * The chat pane of an app window (role `aside`, hosted by the shell: `lib/desktop/AppChatPane.svelte`) adds: a session
+   * that does not exist yet (`onstart` creates it on the first message, so the panel shows a composer and chips first),
+   * "New conversation" (`onnew`), suggestion chips and `prefill` (fills and focuses the composer).
    */
   import { untrack } from 'svelte'
   import { DESKTOP_CONTEXT_DESCRIPTION } from '@shared/desktop'
   import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import { connectionLabel } from '../../app/sessionStatus'
+  import Composer from '../../app/session/Composer.svelte'
   import SessionView from '../../app/session/SessionView.svelte'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -56,6 +61,18 @@
     store?: SessionAgentStore | null
     /** The session row, once loaded. */
     session?: SessionDto | null
+    /**
+     * Without a session (`sessionId` 0) the panel shows a composer; the first message calls this to create the session
+     * (resolves with its id) and is sent to it. Without `onstart` the panel just says there is no session yet.
+     */
+    onstart?: () => Promise<number>
+    /** "New conversation" in the header (only with a session): the host deletes the session, the panel goes blank. */
+    onnew?: () => void | Promise<void>
+    /** Chips above the composer; clicking one sends its text. */
+    suggestions?: readonly { id: string; label: string; text: string }[]
+    /** Fills and focuses the composer (see `Composer`). */
+    prefill?: { id: number; text?: string } | null
+    onprefilled?: (id: number) => void
   }
 
   let {
@@ -75,7 +92,12 @@
     setMode,
     pickFiles,
     store = $bindable(null),
-    session = $bindable(null)
+    session = $bindable(null),
+    onstart,
+    onnew,
+    suggestions = [],
+    prefill = null,
+    onprefilled
   }: Props = $props()
 
   // svelte-ignore state_referenced_locally
@@ -119,9 +141,8 @@
   })
 
   // The host's context rides with every run of this session: desktop state plus `appContext`.
-  $effect(() => {
-    const target = shared
-    if (!target || !contextProvider) return
+  function provide(target: SessionAgentStore): () => void {
+    if (!contextProvider) return () => {}
     const previous = target.contextProvider
     target.contextProvider = () => [
       { description: DESKTOP_CONTEXT_DESCRIPTION, value: JSON.stringify({ ...host.state, appContext: contextProvider() ?? undefined }) }
@@ -129,7 +150,32 @@
     return () => {
       if (target.contextProvider) target.contextProvider = previous
     }
+  }
+  $effect(() => {
+    const target = shared
+    if (!target) return
+    return provide(target)
   })
+
+  let starting = $state(false)
+  let startError = $state<string | null>(null)
+  /** The first message of a panel without a session: create the session, then send. */
+  async function startAndSend(text: string, files: string[] = []): Promise<void> {
+    if (!onstart || starting) return
+    starting = true
+    startError = null
+    try {
+      const id = await onstart()
+      const created = stores.open(id)
+      provide(created)
+      await created.send(text, files)
+    } catch (error) {
+      startError = error instanceof Error ? error.message : String(error)
+    } finally {
+      starting = false
+    }
+  }
+  const suggestionsOpen = $derived(suggestions.length > 0 && !starting)
 
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   const heading = $derived(title ?? shared?.state.session.title ?? session?.title ?? 'Chat')
@@ -174,6 +220,11 @@
         <Icon name="session" size={16} />
         <b class="heading" data-testid="embedded-chat-title" title={heading}>{heading}</b>
         <span class="state" data-testid="embedded-chat-status">{connectionLabel(status)}</span>
+        {#if onnew && sessionId > 0}
+          <button type="button" class="collapse" data-testid="embedded-chat-new" aria-label="New conversation" title="New conversation: deletes this one" onclick={() => void onnew?.()}>
+            <Icon name="refresh" />
+          </button>
+        {/if}
         <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat panel" title="Hide the chat panel" onclick={() => (collapsed = true)}>
           <Icon name="chevron-right" />
         </button>
@@ -182,8 +233,18 @@
     <div class="body">
       {#if shared && session}
         {#key sessionId}
-          <SessionView store={shared} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} />
+          <SessionView store={shared} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
         {/key}
+      {:else if sessionId <= 0 && onstart}
+        <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : 'Ask about what you are looking at. The conversation ends when you close this window.')}</div>
+        {#if suggestionsOpen}
+          <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">
+            {#each suggestions as s (s.id)}
+              <button type="button" class="chip" data-testid="embedded-chat-suggestion" data-suggestion={s.id} onclick={() => void startAndSend(s.text)}>{s.label}</button>
+            {/each}
+          </div>
+        {/if}
+        <Composer agentName="the agent" running={starting} {prefill} {onprefilled} dense={role === 'aside'} {pickFiles} onsend={(text, files) => void startAndSend(text, files)} />
       {:else}
         <div class="blank" data-testid="embedded-chat-blank">{loadError ?? (sessionId > 0 ? 'Opening the chat...' : 'This chat has no session yet.')}</div>
       {/if}
@@ -279,6 +340,29 @@
   .resizer:hover,
   .resizer:focus-visible {
     background: var(--w7-panel-border);
+  }
+  .start {
+    flex: 1;
+  }
+  .chips {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .chip {
+    padding: 1px 8px;
+    border: 1px solid #9aa9bf;
+    border-radius: 9px;
+    background: linear-gradient(#fdfeff, #e6eef8);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .chip:hover {
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
   }
   .blank {
     flex: 1;

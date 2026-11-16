@@ -1,8 +1,10 @@
 import {
   DEFAULT_TOOL_POLICY,
   SINGLETON_APPS,
+  supportsAside,
   TOOL_GROUPS,
   enabledToolGroups,
+  APP_DISPLAY_NAMES,
   type AppKind,
   type AppView,
   type AppWindowState,
@@ -15,7 +17,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, initialView, placeWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, placeWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
@@ -73,6 +75,8 @@ export class DesktopService implements DesktopStates {
   private readonly lastPublished = new Map<Id, string>()
   /** Windows the agent opened or touched behind the user's chat (taskbar flash), per desktop; cleared when focused. */
   private readonly attention = new Map<Id, Set<Id>>()
+  /** Aside sessions being created, per window: two quick first messages share one session. */
+  private readonly asideStarts = new Map<Id, Promise<Id>>()
 
   constructor(private readonly deps: DesktopServiceDeps) {}
 
@@ -177,6 +181,7 @@ export class DesktopService implements DesktopStates {
     if (this.focus.get(record.desktopId) === windowId) this.focus.delete(record.desktopId)
     this.emit(record.desktopId)
     if (record.sessionId !== null) this.removeOwnedSession(record.sessionId)
+    if (record.asideSessionId !== null) this.removeOwnedSession(record.asideSessionId)
   }
 
   /** A review or aside session lives and dies with its window (its comments go with it); a chat outlives its window. */
@@ -295,6 +300,48 @@ export class DesktopService implements DesktopStates {
     }
   }
 
+  /**
+   * The chat pane of a window: its `aside` session, created on the first call (the first message of the pane) with the
+   * agent working on the window's drive (else at home). The session is owned by the window: `closeWindow` deletes it.
+   */
+  async openAside(desktopId: Id, windowId: Id, agentId?: Id): Promise<Id> {
+    const desktop = this.record(desktopId)
+    const record = this.windowRecord(windowId)
+    if (record.desktopId !== desktopId) throw new AppError('The window belongs to another desktop')
+    if (!supportsAside(record.app)) throw new AppError(`A ${APP_DISPLAY_NAMES[record.app]} window has no chat pane`)
+    if (record.asideSessionId !== null && this.deps.sessions.get(record.asideSessionId)) return record.asideSessionId
+    const starting = this.asideStarts.get(windowId)
+    if (starting) return starting
+    const start = this.startAside(desktop, record, agentId)
+    this.asideStarts.set(windowId, start)
+    try {
+      return await start
+    } finally {
+      this.asideStarts.delete(windowId)
+    }
+  }
+
+  private async startAside(desktop: DesktopRecord, record: AppWindowRecord, agentId?: Id): Promise<Id> {
+    const session = await this.deps.chats.create(desktop.id, agentId ?? desktop.agentId ?? undefined, asideCwd(this.viewOf(record), AGENT_HOME), 'aside')
+    if (!this.deps.windows.get(record.id)) {
+      await this.deps.chats.remove(session.id).catch(() => {})
+      throw new AppError('The window was closed')
+    }
+    this.deps.windows.setAside(record.id, session.id)
+    this.emit(desktop.id)
+    return session.id
+  }
+
+  /** "New conversation": the window's aside session is deleted; the window keeps its (now blank) pane. */
+  async closeAside(windowId: Id): Promise<void> {
+    const record = this.windowRecord(windowId)
+    const sessionId = record.asideSessionId
+    if (sessionId === null) return
+    const session = this.deps.sessions.get(sessionId)
+    if (session?.role === 'aside') await this.deps.chats.remove(sessionId)
+    this.emit(record.desktopId)
+  }
+
   /** A chat was renamed: its window title follows. */
   onSessionChanged(session: SessionDto): void {
     if (session.desktopId != null) this.emit(session.desktopId)
@@ -349,6 +396,7 @@ export class DesktopService implements DesktopStates {
       windowState: record.windowState,
       openedBy: record.openedBy,
       ...(this.attention.get(record.desktopId)?.has(record.id) ? { attention: true } : {}),
+      ...(record.asideSessionId !== null ? { asideSessionId: record.asideSessionId } : {}),
       view
     }
   }

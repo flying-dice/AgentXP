@@ -12,6 +12,7 @@ This manual describes Control Centre. Control Centre sets the agents, the permis
   - The Permissions Page
   - The Appearance Page
   - The About Page
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -66,6 +67,10 @@ The page has the option **Show gadgets on the desktop**. The gadgets are the con
 
 The page shows the version of Agent7.
 
+### The Chat Pane
+
+Each Control Centre window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -93,6 +98,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Control Centre box. | `control-centre-menu-about` |
 | Dialog: about | The About Control Centre box. | `control-centre-about` |
 | Dialog: about ok | Closes the About box. | `control-centre-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `control-centre-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `control-centre-menu-close` |
 | Menu: page * | View menu: shows a page. | `control-centre-menu-page-*` |
 | Context menu: page * | Shows a page. | `control-centre-ctx-page-*` |

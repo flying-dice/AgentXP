@@ -12,6 +12,7 @@
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import ConsoleView from '../../kit/organisms/ConsoleView.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
   import { collectTerminals, lastLines, renderTerminal, terminalLabel } from './terminalModel'
@@ -64,6 +65,15 @@
     return sel && !sel.isCollapsed && sel.anchorNode && screen?.contains(sel.anchorNode) ? sel.toString() : ''
   }
 
+  // The chat pane knows the last output lines and the selection.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    cwd,
+    runningCommand: current?.running ? current.command : null,
+    lastOutput: current ? lastLines(current.output, 30) : [],
+    ...selectionContext(selectedText())
+  }))
+
   const contextItems = (): MenuItemDef[] => {
     const selected = selectedText()
     return [
@@ -76,6 +86,13 @@
         label: 'Ask &chat about this output...',
         icon: 'session',
         action: () => void host.askChat({ app: 'terminal', windowId: win.id, kind: 'ask', text: selected || text.trim().split('\n').slice(-40).join('\n') })
+      },
+      {
+        id: 'terminal-ctx-open-chat',
+        testid: 'terminal-ctx-open-chat',
+        label: 'Open in Chat &window',
+        icon: 'session',
+        action: () => void host.askChat({ app: 'terminal', windowId: win.id, kind: 'window', text: selected || text.trim().split('\n').slice(-40).join('\n') })
       }
     ]
   }
@@ -84,6 +101,7 @@
     menuBar([
       { label: '&File', items: closeItems('terminal', () => void host.closeWindow(win.id)).slice(1) },
       { label: '&Edit', items: [...editItems('terminal-menu', { copy, selectAll }, { hasSelection: true }), { separator: true }, { id: 'clear', testid: 'terminal-menu-clear', label: 'C&lear view', action: clearView }] },
+      help.viewMenu(win.id),
       help.menu()
     ])
   )

@@ -24,6 +24,7 @@
   import { useDesktopStores } from '../sessionStores.svelte'
   import { errorText } from '../shared/listing'
   import { opensInNotepad, typeName } from '../paths'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { deriveAgentStatus, statusLabelFor } from './agentStatus'
   import AddressBar from './AddressBar.svelte'
@@ -205,6 +206,14 @@
     }))
   )
   const selectedEntry = $derived(entries.find((e) => e.path === selected[0]) ?? null)
+  // The chat pane knows the folder and what is selected in it.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => ({
+    folder: path === '' ? 'Computer' : path,
+    selectedItems: selected.slice(0, 20),
+    items: entries.slice(0, 40).map((e) => e.name)
+  }))
+
   const selectedDrive = $derived<DriveDto | null>(path === '' && selected[0] ? (drives.find((d) => driveRoot(d.letter) === selected[0]) ?? null) : null)
 
   function activate(row: ListRow): void {
@@ -334,7 +343,9 @@
         label: '&View',
         items: [
           { id: 'up', testid: 'explorer-menu-up', label: '&Up one level', shortcut: 'Alt+Up', disabled: path === '', action: () => go(upPath(path)) },
-          { id: 'refresh', testid: 'explorer-menu-refresh', label: '&Refresh', shortcut: 'F5', action: refresh }
+          { id: 'refresh', testid: 'explorer-menu-refresh', label: '&Refresh', shortcut: 'F5', action: refresh },
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       help.menu()

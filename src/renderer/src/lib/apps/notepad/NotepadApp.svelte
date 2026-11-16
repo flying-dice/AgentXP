@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
+  import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
@@ -15,6 +16,7 @@
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
   import { joinVPath, vpathName, vpathParent } from '@shared/vfs'
   import { errorText } from '../shared/listing'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { caretPosition, offsetOfLine } from './caret'
 
@@ -138,9 +140,18 @@
     report()
   }
 
+  // The chat pane knows the file and the selection.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => {
+    const start = area?.selectionStart ?? 0
+    const end = area?.selectionEnd ?? 0
+    const [lo, hi] = [Math.min(start, end), Math.max(start, end)]
+    return { openFile: path, unsavedChanges: dirty, line: caret.line, ...selectionContext(text.slice(lo, hi), lo === hi ? null : selectionLines(text, start, end)) }
+  })
+
   const hasSelection = (): boolean => !!area && area.selectionStart !== area.selectionEnd
 
-  function ask(kind: 'explain' | 'ask' | 'send'): void {
+  function ask(kind: AskChatRequest['kind']): void {
     const start = area?.selectionStart ?? 0
     const end = area?.selectionEnd ?? 0
     const selected = text.slice(Math.min(start, end), Math.max(start, end))
@@ -171,6 +182,7 @@
       },
       { label: '&Edit', items: [...editItems('notepad-menu', ops, { hasSelection: true }), { separator: true }, { id: 'time', label: 'Time/&Date', shortcut: 'F5', action: insertTimeDate }] },
       { label: 'F&ormat', items: [{ id: 'wrap', label: '&Word Wrap', checked: wrap, action: () => (wrap = !wrap) }] },
+      help.viewMenu(win.id),
       help.menu()
     ])
   )

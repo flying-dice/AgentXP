@@ -10,6 +10,7 @@ This manual describes Notepad. Notepad reads and edits plain text files.
   - The Menu Bar
   - The Text Area
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -30,7 +31,7 @@ Use Notepad to read and change a text file. The agent can open the same window a
 
 ### The Menu Bar
 
-The menu bar has the menus **File**, **Edit**, **Format**, and **Help**.
+The menu bar has the menus **File**, **Edit**, **Format**, **View**, and **Help**.
 
 ### The Text Area
 
@@ -39,6 +40,10 @@ The text area fills the window. Type here. The caret position follows your typin
 ### The Status Bar
 
 The status bar shows **Modified** when you changed the text. After you save, it shows the message **Saved** and the file name. If a file cannot open, it shows the error.
+
+### The Chat Pane
+
+Each Notepad window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
@@ -68,6 +73,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Notepad box. | `notepad-menu-about` |
 | Dialog: about | The About Notepad box. | `notepad-about` |
 | Dialog: about ok | Closes the About box. | `notepad-about-ok` |
+| Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `notepad-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `notepad-menu-close` |
 | Menu: undo | Undoes the last edit. Ctrl+Z. | `notepad-menu-undo` |
 | Menu: cut | Cuts the selected text. Ctrl+X. | `notepad-menu-cut` |
@@ -81,9 +89,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: paste | Pastes the clipboard text. Ctrl+V. | `notepad-ctx-paste` |
 | Context menu: delete | Deletes the selected text. Del. | `notepad-ctx-delete` |
 | Context menu: select all | Selects all text. Ctrl+A. | `notepad-ctx-select-all` |
-| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `notepad-ctx-explain` |
-| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `notepad-ctx-ask` |
-| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `notepad-ctx-send` |
+| Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `notepad-ctx-explain` |
+| Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `notepad-ctx-ask` |
+| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `notepad-ctx-send` |
+| Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `notepad-ctx-open-chat` |
 
 ### Keys
 

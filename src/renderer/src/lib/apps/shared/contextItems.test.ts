@@ -6,14 +6,14 @@ describe('askChatItems', () => {
     const ask = vi.fn()
     const items = askChatItems('notepad', { hasSelection: true, ask })
     expect(items[0].separator).toBe(true)
-    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-explain', 'notepad-ctx-ask', 'notepad-ctx-send'])
+    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-explain', 'notepad-ctx-ask', 'notepad-ctx-send', 'notepad-ctx-open-chat'])
     items.slice(1).forEach((i) => i.action?.())
-    expect(ask.mock.calls.map((c) => c[0])).toEqual(['explain', 'ask', 'send'])
+    expect(ask.mock.calls.map((c) => c[0])).toEqual(['explain', 'ask', 'send', 'window'])
   })
 
   it('needs a selection for Explain this and Send selection only', () => {
     const items = askChatItems('code', { hasSelection: false, ask: () => {} })
-    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain', 'code-ctx-send'])
+    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain', 'code-ctx-send', 'code-ctx-open-chat'])
   })
 })
 

@@ -11,6 +11,7 @@ This manual describes WordPad. WordPad reads and writes markdown documents.
   - The Toolbar
   - The Page
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -44,6 +45,10 @@ In read mode, the page shows the formatted document. A click on a link to anothe
 
 The status bar shows the file path, a message, **Modified**, the number of words, and the heading that you read now.
 
+### The Chat Pane
+
+Each WordPad window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -65,6 +70,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About WordPad box. | `wordpad-menu-about` |
 | Dialog: about | The About WordPad box. | `wordpad-about` |
 | Dialog: about ok | Closes the About box. | `wordpad-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `wordpad-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | Starts an empty document. Ctrl+N. | `wordpad-menu-new` |
 | Menu: open | Opens a document. Ctrl+O. | `wordpad-menu-open` |
 | Menu: save | Saves the document. Ctrl+S. | `wordpad-menu-save` |
@@ -83,9 +90,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: paste | Pastes the clipboard text. Ctrl+V. | `wordpad-ctx-paste` |
 | Context menu: delete | Deletes the selected text. Del. | `wordpad-ctx-delete` |
 | Context menu: select all | Selects all text. Ctrl+A. | `wordpad-ctx-select-all` |
-| Context menu: explain | Asks the chat to explain the selected text. Dimmed when nothing is selected. | `wordpad-ctx-explain` |
-| Context menu: ask | Starts a chat about the text or the file. You type the question in the chat. | `wordpad-ctx-ask` |
-| Context menu: send | Sends the selected text to a chat. Dimmed when nothing is selected. | `wordpad-ctx-send` |
+| Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `wordpad-ctx-explain` |
+| Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `wordpad-ctx-ask` |
+| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `wordpad-ctx-send` |
+| Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `wordpad-ctx-open-chat` |
 
 ### Keys
 

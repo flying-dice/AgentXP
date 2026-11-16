@@ -11,6 +11,7 @@ This manual describes Agent Paint. Agent Paint is a small drawing app. You can d
   - The Ribbon
   - The Canvas
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -30,7 +31,7 @@ Click **Start -> Accessories -> Agent Paint**.
 
 ### The Menu Bar
 
-The menu bar has the menus **File**, **Edit**, and **Help**. It sits above the ribbon.
+The menu bar has the menus **File**, **Edit**, **View**, and **Help**. It sits above the ribbon.
 
 ### The Ribbon
 
@@ -48,6 +49,10 @@ The canvas is the white sheet. Drag on it to draw. With the **Text** tool, click
 ### The Status Bar
 
 The status bar shows the pointer position, the size of the canvas, and a tip.
+
+### The Chat Pane
+
+Each Agent Paint window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
@@ -73,6 +78,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Agent Paint box. | `paint-menu-about` |
 | Dialog: about | The About Agent Paint box. | `paint-about` |
 | Dialog: about ok | Closes the About box. | `paint-about-ok` |
+| Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `paint-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | Starts a new picture. Ctrl+N. | `paint-menu-new` |
 | Menu: close | Closes the window. Alt+F4. | `paint-menu-close` |
 | Menu: undo | Undoes the last stroke. Ctrl+Z. | `paint-menu-undo` |

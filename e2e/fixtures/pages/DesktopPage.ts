@@ -1,4 +1,5 @@
 import type { Locator, Page } from 'playwright'
+import { AsidePane } from './AsidePane'
 import { ChatWindow } from './ChatWindow'
 import { CodeReviewWindow } from './CodeReviewWindow'
 import { CodeWindow } from './CodeWindow'
@@ -124,6 +125,11 @@ export class DesktopPage {
 
   terminal(index = 0): TerminalWindow {
     return new TerminalWindow(this.window('terminal', index))
+  }
+
+  /** The chat pane of an app window. */
+  aside(app: AppId, index = 0): AsidePane {
+    return new AsidePane(this.window(app, index))
   }
 
   chat(index = 0): ChatWindow {

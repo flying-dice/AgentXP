@@ -118,7 +118,7 @@
         {@const bar = barAt.get(no)}
         {@const tri = trianglesBelow.get(no)}
         {@const topTri = i === 0 ? trianglesBelow.get(0) : undefined}
-        <div class="row" class:hl={highlighted.has(no)}>
+        <div class="row" class:hl={highlighted.has(no)} data-testid="code-line" data-line={no}>
           {#if gutterMarks}
             <span class="gutter">
               {#if bar}

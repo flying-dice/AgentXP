@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
+  import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import TextBox from '../../kit/atoms/TextBox.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
@@ -23,6 +24,7 @@
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
   import { joinVPath, normaliseVPath, vpathName, vpathParent } from '@shared/vfs'
   import { errorText } from '../shared/listing'
+  import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { headingAtLine, insertLink, lineOf, toggleBullets, toggleCode, toggleHeading, toggleNumbers, wrapSelection, type Edit } from './markdownEdit'
 
@@ -220,7 +222,7 @@
   }
   const selectedText = (): string => (area ? text.slice(Math.min(area.selectionStart, area.selectionEnd), Math.max(area.selectionStart, area.selectionEnd)) : (window.getSelection()?.toString() ?? ''))
 
-  function ask(kind: 'explain' | 'ask' | 'send', selected: string): void {
+  function ask(kind: AskChatRequest['kind'], selected: string): void {
     void host.askChat({
       app: 'wordpad',
       windowId: win.id,
@@ -232,6 +234,19 @@
   }
 
   const readOnly = (): boolean => mode !== 'edit'
+
+  // The chat pane knows the document and the selection.
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => {
+    const selected = selectedText()
+    return {
+      openFile: path,
+      mode,
+      unsavedChanges: dirty,
+      ...(heading ? { visibleHeading: heading } : {}),
+      ...selectionContext(selected, area && selected ? selectionLines(text, area.selectionStart, area.selectionEnd) : null)
+    }
+  })
   const contextItems = (): MenuItemDef[] => {
     const selected = selectedText()
     const hasSelection = selected !== ''
@@ -254,7 +269,9 @@
         label: '&View',
         items: [
           { id: 'read', testid: 'wordpad-menu-read', label: '&Read', radio: true, checked: mode === 'read', action: () => setMode('read') },
-          { id: 'edit', testid: 'wordpad-menu-edit', label: '&Edit source', radio: true, checked: mode === 'edit', action: () => setMode('edit') }
+          { id: 'edit', testid: 'wordpad-menu-edit', label: '&Edit source', radio: true, checked: mode === 'edit', action: () => setMode('edit') },
+          { separator: true },
+          help.paneItem(win.id)
         ]
       },
       help.menu()

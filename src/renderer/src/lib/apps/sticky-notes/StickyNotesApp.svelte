@@ -11,6 +11,7 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
+  import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import ToolStrip from '../../kit/organisms/ToolStrip.svelte'
@@ -71,11 +72,19 @@
     { id: 'sticky-notes-ctx-new', testid: 'sticky-notes-ctx-new', label: '&New note', icon: 'plus', action: () => void addNote() }
   ]
 
+  // The chat pane knows the selected note (else the first notes).
+  // svelte-ignore state_referenced_locally
+  useAppContext(host, () => win.id, () => {
+    const note = notes.find((n) => n.id === selected)
+    return note ? { note: note.text, color: note.color } : { notes: notes.slice(0, 10).map((n) => n.text) }
+  })
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       { label: '&File', items: [{ id: 'new', testid: 'sticky-notes-menu-new', label: '&New note', shortcut: 'Ctrl+N', action: () => void addNote() }, ...closeItems('sticky-notes', () => void host.closeWindow(win.id))] },
       { label: '&Edit', items: [{ id: 'delete', testid: 'sticky-notes-menu-delete', label: '&Delete note', shortcut: 'Del', disabled: selected === null, action: removeSelected }] },
       { label: '&Note', items: [{ label: '&Color', items: colorItems }, { label: '&Plan note', items: planItems }] },
+      help.viewMenu(win.id),
       help.menu()
     ])
   )

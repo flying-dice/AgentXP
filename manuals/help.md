@@ -11,6 +11,7 @@ This manual describes Help and Support. Help and Support shows the manuals of Ag
   - The Topic List
   - The Article
   - The Status Bar
+  - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
 - 6 - Troubleshooting
@@ -46,6 +47,10 @@ The article is at the right. A link to another manual opens that manual in the s
 
 The status bar shows the title of the topic. During a search, it shows how many topics match.
 
+### The Chat Pane
+
+Each Help and Support window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
@@ -73,6 +78,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: about | Opens the About Help and Support box. | `help-menu-about` |
 | Dialog: about | The About Help and Support box. | `help-about` |
 | Dialog: about ok | Closes the About box. | `help-about-ok` |
+| Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `help-menu-chat-pane` |
+| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `help-menu-close` |
 | Menu: copy | Edit menu: copies the selected text. | `help-menu-copy` |
 | Menu: select all | Edit menu: selects all text. | `help-menu-select-all` |

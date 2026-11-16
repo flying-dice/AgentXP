@@ -24,6 +24,13 @@
     surfaceControls?: SurfaceControls
     /** Without the title bar (a host such as the embedded chat panel shows its own). */
     compact?: boolean
+    /** Chips above the composer (the chat pane): clicking one sends its `text`. */
+    suggestions?: readonly { id: string; label: string; text: string }[]
+    /** See `Composer`: fills and focuses the box. */
+    prefill?: { id: number; text?: string } | null
+    onprefilled?: (id: number) => void
+    /** A short composer (the chat pane). */
+    dense?: boolean
   }
 
   let {
@@ -36,7 +43,11 @@
     pickFiles = () => window.agent7.dialogs.pickFiles(),
     contained = false,
     surfaceControls,
-    compact = false
+    compact = false,
+    suggestions = [],
+    prefill = null,
+    onprefilled,
+    dense = false
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -64,8 +75,18 @@
     onaction={(event) => void store.sendA2uiAction(event)}
     {surfaceControls}
   />
+  {#if suggestions.length > 0 && !store.running && !request}
+    <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">
+      {#each suggestions as s (s.id)}
+        <button type="button" class="chip" data-testid="embedded-chat-suggestion" data-suggestion={s.id} onclick={() => void store.send(s.text)}>{s.label}</button>
+      {/each}
+    </div>
+  {/if}
   <Composer
     {agentName}
+    {prefill}
+    {onprefilled}
+    {dense}
     running={store.running}
     {modes}
     {modeId}
@@ -90,6 +111,26 @@
 </section>
 
 <style>
+  .chips {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .chip {
+    padding: 1px 8px;
+    border: 1px solid #9aa9bf;
+    border-radius: 9px;
+    background: linear-gradient(#fdfeff, #e6eef8);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .chip:hover {
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
+  }
   .session-view {
     display: flex;
     flex-direction: column;
