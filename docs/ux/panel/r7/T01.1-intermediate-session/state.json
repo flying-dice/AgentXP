@@ -1,0 +1,12 @@
+{
+  "task": "T01.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-lvF89Y",
+  "testPagePort": 37039,
+  "testPageUrl": "http://127.0.0.1:37039/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:04:20.402Z",
+  "options": {},
+  "preset": "empty",
+  "note": null
+}

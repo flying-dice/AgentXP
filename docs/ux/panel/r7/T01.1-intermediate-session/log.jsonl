@@ -1,0 +1,10 @@
+{"ts":"2026-11-16T20:04:24.353Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/001.png","window":"Agent7 Desktop Connection","ok":true,"ms":507}
+{"ts":"2026-11-16T20:04:29.939Z","cmd":"click","args":[972,766],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/002.png","window":"Agent7 Desktop Connection","ok":true,"ms":698}
+{"ts":"2026-11-16T20:04:37.153Z","cmd":"click","args":[729,583],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/003.png","window":"Agent7 Desktop Connection","ok":true,"ms":654}
+{"ts":"2026-11-16T20:04:42.052Z","cmd":"windows","args":[],"ok":true,"ms":19}
+{"ts":"2026-11-16T20:04:42.813Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/004.png","window":"New desktop - Agent7","ok":true,"ms":708}
+{"ts":"2026-11-16T20:04:48.901Z","cmd":"click","args":[1064,695],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/005.png","window":"New desktop - Agent7","ok":true,"ms":822}
+{"ts":"2026-11-16T20:04:53.617Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/006.png","window":"New desktop - Agent7","ok":true,"ms":702}
+{"ts":"2026-11-16T20:05:00.274Z","cmd":"wait","args":[1500],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/007.png","window":"New desktop - Agent7","ok":true,"ms":2414}
+{"ts":"2026-11-16T20:05:00.336Z","cmd":"windows","args":[],"ok":true,"ms":8}
+{"ts":"2026-11-16T20:05:01.075Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-intermediate/shots/008.png","window":"New desktop - Agent7","ok":true,"ms":687}

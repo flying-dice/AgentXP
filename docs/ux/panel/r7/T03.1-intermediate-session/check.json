@@ -1,0 +1,39 @@
+{
+  "task": "T03.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "docs-site is plugged in; an Explorer window shows its root",
+  "notes": [],
+  "steps": 5,
+  "budget": 15,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:07:17.781Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:07:17.781Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "docs-site is plugged in; an Explorer window shows its root",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}

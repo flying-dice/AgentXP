@@ -1,0 +1,23 @@
+{
+  "task": "T05.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-25tbhA",
+  "testPagePort": 37225,
+  "testPageUrl": "http://127.0.0.1:37225/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:07:44.008Z",
+  "options": {
+    "script": "fix-redirect",
+    "allowAll": true
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-25tbhA/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 2,
+  "preset": "chat-open",
+  "note": null
+}

@@ -1,0 +1,41 @@
+{
+  "task": "T23.1b",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the start state showed \"It stopped again\"; a turn finished after the second crash (chat 2)",
+  "notes": [
+    "the second-failure box offered \"Start a new chat\""
+  ],
+  "steps": 5,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:59:55.737Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:59:55.737Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the start state showed \"It stopped again\"; a turn finished after the second crash (chat 2)",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}

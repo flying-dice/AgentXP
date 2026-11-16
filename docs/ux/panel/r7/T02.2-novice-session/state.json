@@ -1,0 +1,14 @@
+{
+  "task": "T02.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-TmmhMT",
+  "testPagePort": 45881,
+  "testPageUrl": "http://127.0.0.1:45881/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:05:36.039Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "preset": "one-named-desktop",
+  "note": null
+}

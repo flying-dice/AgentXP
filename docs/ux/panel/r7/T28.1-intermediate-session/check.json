@@ -1,0 +1,39 @@
+{
+  "task": "T28.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 9,
+  "answer": "A yellow banner in the browser said Agent is using this page: Opening http://127.0.0.1:4174/ with a Take over button, and the status bar said The agent read this page; it opened the chat app, typed Standup in the search box, clicked Add reaction, and sent a message found in #general",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:04:29.609Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:04:29.609Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+      "steps": 4,
+      "answer": "A yellow banner in the browser said Agent is using this page: Opening http://127.0.0.1:4174/ with a Take over button, and the status bar said The agent read this page; it opened the chat app, typed Standup in the search box, clicked Add reaction, and sent a message found in #general",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

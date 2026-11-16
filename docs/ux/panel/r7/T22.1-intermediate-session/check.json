@@ -1,0 +1,39 @@
+{
+  "task": "T22.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 6,
+  "answer": "Plug in a project... opens the Browse For Folder dialog box and plugs the folder in as a drive so the agent can see its files",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:02:32.223Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:02:32.223Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+      "steps": 3,
+      "answer": "Plug in a project... opens the Browse For Folder dialog box and plugs the folder in as a drive so the agent can see its files",
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

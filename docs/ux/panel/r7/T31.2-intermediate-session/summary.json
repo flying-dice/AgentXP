@@ -1,0 +1,15 @@
+{
+  "commands": 6,
+  "steps": 3,
+  "byCmd": {
+    "shot": 2,
+    "click": 3,
+    "windows": 1
+  },
+  "errors": 0,
+  "seconds": 27,
+  "screenshots": 5,
+  "task": "T31.2",
+  "level": "intermediate",
+  "archivedAt": "2026-11-16T20:04:42.443Z"
+}
