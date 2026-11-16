@@ -82,6 +82,7 @@ export function normalizeKey(combo) {
   const parts = combo.split('+').filter((p, i, all) => p !== '' || i === all.length - 1)
   return parts
     .map((part, i) => {
+      if (part === '') return '+'
       const lower = part.toLowerCase()
       if (i < parts.length - 1) return MODIFIERS[lower] ?? part
       if (/^f\d{1,2}$/.test(lower)) return lower.toUpperCase()

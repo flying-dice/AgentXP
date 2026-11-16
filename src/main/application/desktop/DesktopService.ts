@@ -427,7 +427,8 @@ export class DesktopService implements DesktopStates {
     }
     if (input.app === 'code-review') {
       if (input.sessionId === undefined) throw new AppError('A Code Review window needs its review session. Start a review with desktop.openReview.')
-      return this.deps.windows.findChatWindow(input.sessionId)
+      const open = this.deps.windows.findChatWindow(input.sessionId)
+      return open?.app === 'code-review' ? open : null
     }
     if (!SINGLETON_APPS.includes(input.app)) return null
     return this.deps.windows.list(input.desktopId).find((w) => w.app === input.app) ?? null

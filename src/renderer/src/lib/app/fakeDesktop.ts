@@ -24,6 +24,8 @@ export interface FakeDesktopOptions {
   drives?: DriveDto[]
   windows?: OpenWindowInput['app'][]
   onChange?: (state: DesktopState) => void
+  /** Creates the review session of `openReview` (the fake backend registers it); returns its id. */
+  createReviewSession?: (cwd: string) => number
 }
 
 export type FakeDesktopApi = DesktopApi & { state(): DesktopState; /** Plug in / eject: replaces the drives and pushes `desktop.changed`. */ setDrives(drives: DriveDto[]): void }
@@ -129,6 +131,7 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
       changed()
     },
     newChat: async (_desktopId, _agentId, _cwd) => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
+    openReview: async (_desktopId, root, baseRef) => api.openWindow({ desktopId: desktop.id, app: 'code-review', path: root, baseRef, sessionId: options.createReviewSession?.(root) ?? nextId++ }),
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},

@@ -76,8 +76,21 @@ export class SessionAgentStore {
     this.subscription = this.agent.subscribe(subscriber)
   }
 
+  private connection: Promise<void> = Promise.resolve()
+
   /** Loads the persisted messages and state (and follows a turn that is still running). */
-  async connect(): Promise<void> {
+  connect(): Promise<void> {
+    const connecting = this.load()
+    this.connection = connecting
+    return connecting
+  }
+
+  /** Resolves when the latest `connect` has loaded the persisted transcript (at once when none is running). */
+  whenConnected(): Promise<void> {
+    return this.connection
+  }
+
+  private async load(): Promise<void> {
     this.error = null
     try {
       await this.agent.connectAgent()

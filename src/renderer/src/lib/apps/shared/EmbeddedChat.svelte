@@ -1,0 +1,290 @@
+<script lang="ts">
+  /**
+   * The embedded chat panel: THE consistent right-hand aside every app can host (docs/help/embedded-chat.md).
+   *
+   * It wraps `SessionView` (transcript, composer, permission dialog) and owns what a host would otherwise repeat:
+   * loading the session row and its agent, following `session.changed`, and the shared `SessionAgentStore` of the
+   * desktop (`useSessionStores`, so the Action Center and a Chat window of the same session answer through the very
+   * same store). The host decides which session it shows (the review session of Code Review, a short-lived `aside`
+   * session of another app, or a chat) and what app context rides along with every prompt (`contextProvider`).
+   *
+   * Collapsible: with `collapsible` the panel has a header with a collapse button; collapsed it is a 26 px strip
+   * that expands again. `collapsed` and `width` are bindable so the host can remember them.
+   */
+  import { untrack } from 'svelte'
+  import { DESKTOP_CONTEXT_DESCRIPTION } from '@shared/desktop'
+  import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
+  import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
+  import { connectionLabel } from '../../app/sessionStatus'
+  import SessionView from '../../app/session/SessionView.svelte'
+  import type { SurfaceControls } from '../../app/session/surfaceRow'
+  import Icon from '../../kit/atoms/Icon.svelte'
+  import { cwdLabel } from '../explorer/explorerModel'
+  import { useSessionStores } from '../sessionStores.svelte'
+  import type { DesktopHost } from '../types'
+
+  interface Props {
+    host: DesktopHost
+    /** The session to show; 0 or less shows "no session yet". */
+    sessionId: number
+    /**
+     * The app's context for every prompt sent from this panel: the open file, the selection, the state. It is added to
+     * the desktop context the agent already gets, under `appContext` (null or undefined: nothing extra).
+     */
+    contextProvider?: () => Record<string, unknown> | null | undefined
+    /** No title bar inside (the panel header or the window already says what it is). */
+    compact?: boolean
+    /** What the session is for; it is only a label of the root element (`data-role`). Default `aside`. */
+    role?: SessionRole
+    /** Shows a header with a collapse button. */
+    collapsible?: boolean
+    collapsed?: boolean
+    /** Panel width in px; a drag handle on its left edge resizes it (only when `resizable`). */
+    width?: number
+    resizable?: boolean
+    /** Header text; default: the session title. */
+    title?: string
+    /** The file open in the host, offered by "Include open file" in the composer. */
+    openFilePath?: string | null
+    /** Open, close, delete and move for the surface rows (the Chat app). */
+    surfaceControls?: SurfaceControls
+    /** Show permission requests inside this panel's window instead of over the whole viewport. */
+    contained?: boolean
+    setMode?: (sessionId: number, modeId: string) => Promise<void>
+    pickFiles?: () => Promise<string[]>
+    /** The shared store of the session, once it exists (bind to read messages or send a prompt from the host). */
+    store?: SessionAgentStore | null
+    /** The session row, once loaded. */
+    session?: SessionDto | null
+  }
+
+  let {
+    host,
+    sessionId,
+    contextProvider,
+    compact = false,
+    role = 'aside',
+    collapsible = false,
+    collapsed = $bindable(false),
+    width = $bindable(340),
+    resizable = false,
+    title,
+    openFilePath = null,
+    surfaceControls,
+    contained = true,
+    setMode,
+    pickFiles,
+    store = $bindable(null),
+    session = $bindable(null)
+  }: Props = $props()
+
+  // svelte-ignore state_referenced_locally
+  const stores = useSessionStores(host)
+  $effect(() => {
+    if (sessionId > 0) untrack(() => stores.open(sessionId))
+  })
+  const shared = $derived(sessionId > 0 ? (stores.peek(sessionId) ?? null) : null)
+  $effect(() => {
+    store = shared
+  })
+
+  let agent = $state.raw<AgentDto | null>(null)
+  let loadError = $state<string | null>(null)
+
+  // The row of the session and its agent, followed through `session.changed`.
+  $effect(() => {
+    const id = sessionId
+    if (id <= 0) return
+    let stale = false
+    void (async () => {
+      try {
+        const [s, agents] = await Promise.all([host.api.sessions.get(id), host.api.agents.list()])
+        if (stale) return
+        session = s
+        agent = agents.find((a) => a.id === s.agentId) ?? null
+        loadError = null
+      } catch (error) {
+        if (stale) return
+        session = null
+        loadError = error instanceof Error ? error.message : String(error)
+      }
+    })()
+    const off = host.api.on('session.changed', (changed) => {
+      if (changed.id === id) session = changed
+    })
+    return () => {
+      stale = true
+      off()
+    }
+  })
+
+  // The host's context rides with every run of this session: desktop state plus `appContext`.
+  $effect(() => {
+    const target = shared
+    if (!target || !contextProvider) return
+    const previous = target.contextProvider
+    target.contextProvider = () => [
+      { description: DESKTOP_CONTEXT_DESCRIPTION, value: JSON.stringify({ ...host.state, appContext: contextProvider() ?? undefined }) }
+    ]
+    return () => {
+      if (target.contextProvider) target.contextProvider = previous
+    }
+  })
+
+  const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
+  const heading = $derived(title ?? shared?.state.session.title ?? session?.title ?? 'Chat')
+  const status = $derived(shared?.state.session.status && shared.state.session.status !== 'closed' ? shared.state.session.status : (session?.status ?? null))
+
+  function startResize(event: PointerEvent): void {
+    const target = event.currentTarget as HTMLElement
+    target.setPointerCapture(event.pointerId)
+    const startX = event.clientX
+    const startWidth = width
+    const move = (e: PointerEvent): void => void (width = Math.min(720, Math.max(260, startWidth + (startX - e.clientX))))
+    const stop = (): void => {
+      target.removeEventListener('pointermove', move)
+      target.removeEventListener('pointerup', stop)
+    }
+    target.addEventListener('pointermove', move)
+    target.addEventListener('pointerup', stop)
+  }
+
+  function resizeKey(event: KeyboardEvent): void {
+    if (event.key === 'ArrowLeft') width = Math.min(720, width + 16)
+    else if (event.key === 'ArrowRight') width = Math.max(260, width - 16)
+    else return
+    event.preventDefault()
+  }
+</script>
+
+{#if collapsible && collapsed}
+  <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat panel (collapsed)">
+    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show the chat panel" title="Show the chat panel" onclick={() => (collapsed = false)}>
+      <Icon name="chevron-left" />
+    </button>
+    <span class="vertical">{heading}</span>
+  </aside>
+{:else}
+  {#if resizable}
+    <div class="resizer" data-testid="embedded-chat-resizer" role="slider" aria-orientation="horizontal" aria-valuemin={260} aria-valuemax={720} aria-valuenow={width} aria-label="Chat panel width" tabindex="0" onpointerdown={startResize} onkeydown={resizeKey}></div>
+  {/if}
+  <aside class="panel" class:padded={collapsible || resizable} data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="false" style={resizable || collapsible ? `width:${width}px` : undefined} aria-label="Chat panel">
+    {#if collapsible}
+      <div class="head">
+        <Icon name="session" size={16} />
+        <b class="heading" data-testid="embedded-chat-title" title={heading}>{heading}</b>
+        <span class="state" data-testid="embedded-chat-status">{connectionLabel(status)}</span>
+        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat panel" title="Hide the chat panel" onclick={() => (collapsed = true)}>
+          <Icon name="chevron-right" />
+        </button>
+      </div>
+    {/if}
+    <div class="body">
+      {#if shared && session}
+        {#key sessionId}
+          <SessionView store={shared} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} />
+        {/key}
+      {:else}
+        <div class="blank" data-testid="embedded-chat-blank">{loadError ?? (sessionId > 0 ? 'Opening the chat...' : 'This chat has no session yet.')}</div>
+      {/if}
+    </div>
+  </aside>
+{/if}
+
+<style>
+  .panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--w7-face);
+  }
+  .panel[style] {
+    flex: none;
+  }
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .padded .body {
+    padding: 4px;
+  }
+  .head {
+    flex: none;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px 0 6px;
+    background: linear-gradient(#f9fbfd, #e4ecf6);
+    border-bottom: 1px solid #9aa9bf;
+  }
+  .heading {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .state {
+    color: var(--w7-text-muted);
+    font-size: 11px;
+  }
+  .collapse,
+  .expand {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+  }
+  .collapse:hover,
+  .expand:hover {
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
+  }
+  .strip {
+    flex: none;
+    width: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 4px;
+    background: linear-gradient(90deg, #f9fbfd, #e4ecf6);
+    border-left: 1px solid #9aa9bf;
+  }
+  .vertical {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 260px;
+    color: var(--w7-text-muted);
+  }
+  .resizer {
+    flex: none;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+  }
+  .resizer:hover,
+  .resizer:focus-visible {
+    background: var(--w7-panel-border);
+  }
+  .blank {
+    flex: 1;
+    padding: 8px;
+    color: var(--w7-text-muted);
+    background: var(--w7-window);
+    border: 1px solid var(--w7-panel-border);
+  }
+</style>

@@ -22,6 +22,8 @@
     contained?: boolean
     /** Open, close, delete and move for the surface rows (the Chat app). */
     surfaceControls?: SurfaceControls
+    /** Without the title bar (a host such as the embedded chat panel shows its own). */
+    compact?: boolean
   }
 
   let {
@@ -33,7 +35,8 @@
     setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
     pickFiles = () => window.agent7.dialogs.pickFiles(),
     contained = false,
-    surfaceControls
+    surfaceControls,
+    compact = false
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -47,7 +50,7 @@
 </script>
 
 <section class="session-view" aria-label={title}>
-  <SessionHeader {title} path={folder?.path} />
+  {#if !compact}<SessionHeader {title} path={folder?.path} />{/if}
   <Transcript
     messages={store.messages}
     agentState={store.state}

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { untrack } from 'svelte'
-  import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
+  import type { FolderDto, SessionDto } from '@shared/models'
   import type { AppProps } from '../types'
   import { cwdLabel } from '../explorer/explorerModel'
   import { connectionLabel, contextPercent } from '../../app/sessionStatus'
-  import SessionView from '../../app/session/SessionView.svelte'
+  import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
+  import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import TasksPane from '../../app/shell/TasksPane.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
@@ -17,7 +17,6 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { useSessionStores } from '../sessionStores.svelte'
   import type { SurfaceActivity } from '../../agui/activities'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import SurfaceSidebar from './SurfaceSidebar.svelte'
@@ -25,45 +24,15 @@
   let { window: win, host }: AppProps<'chat'> = $props()
 
   const sessionId = $derived(win.view.sessionId)
-  // The store is created (and connected) on first use and shared with the other apps of the desktop.
-  // svelte-ignore state_referenced_locally
-  const stores = useSessionStores(host)
-  $effect(() => {
-    if (sessionId > 0) untrack(() => stores.open(sessionId))
-  })
-  const store = $derived(sessionId > 0 ? (stores.peek(sessionId) ?? null) : null)
-
+  // The store (created and connected on first use, shared with the other apps of the desktop) and the session row
+  // are loaded by the embedded chat panel and bound back here.
+  let store = $state.raw<SessionAgentStore | null>(null)
   let session = $state.raw<SessionDto | null>(null)
   /** The chat's working directory shown like the old folder (name and path). */
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
-  let agent = $state.raw<AgentDto | null>(null)
   let panelOpen = $state(false)
   let panelTab = $state('changes')
   let selectedChangeId = $state<number | null>(null)
-
-  // The row of the chat, its folder and agent; followed through `session.changed`.
-  $effect(() => {
-    const id = sessionId
-    if (id <= 0) return
-    let stale = false
-    void (async () => {
-      try {
-        const [s, agents] = await Promise.all([host.api.sessions.get(id), host.api.agents.list()])
-        if (stale) return
-        session = s
-        agent = agents.find((a) => a.id === s.agentId) ?? null
-      } catch {
-        if (!stale) session = null
-      }
-    })()
-    const off = host.api.on('session.changed', (changed) => {
-      if (changed.id === id) session = changed
-    })
-    return () => {
-      stale = true
-      off()
-    }
-  })
 
   const info = $derived(store?.state.session)
   const title = $derived(info?.title || session?.title || win.view.title)
@@ -205,13 +174,7 @@
   </div>
   <div class="row">
     <div class="main">
-      {#if store && session}
-        {#key sessionId}
-          <SessionView {store} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} contained />
-        {/key}
-      {:else}
-        <div class="blank">{sessionId > 0 ? 'Opening the chat...' : 'This chat has no session yet.'}</div>
-      {/if}
+      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} contained bind:store bind:session />
     </div>
     <SurfaceSidebar
       surfaces={sidebarSurfaces}
@@ -297,13 +260,6 @@
     display: flex;
     flex-direction: column;
     padding: 4px 4px 4px 0;
-  }
-  .blank {
-    flex: 1;
-    padding: 8px;
-    color: var(--w7-text-muted);
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
   }
   .pct {
     min-width: 30px;

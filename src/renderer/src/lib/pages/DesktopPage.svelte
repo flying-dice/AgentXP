@@ -79,7 +79,7 @@
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle' }
   ])
 
-  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'terminal', 'browser']
+  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser']
   const groupOf = (id: string, title: string, kinds: AppKind[]): StartGroup => ({
     id,
     title,
@@ -106,6 +106,7 @@
 
   function runApp(id: string): void {
     if (id === 'chat') void desktop.newChat()
+    else if (id === 'code-review') void desktop.openReview()
     else void desktop.openApp({ app: id as AppKind })
   }
 

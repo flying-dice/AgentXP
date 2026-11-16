@@ -242,3 +242,7 @@ If a criterion cannot be met, the release does not ship. The lead may move a jou
 - Day 1: calibration, journey specs for J01 to J08, first scores.
 - Day 2: J09 to J24 specs, cross-cutting audits (keyboard, accessibility, copy, performance), findings triage.
 - Day 3 onward: fix rounds of one day each, followed by independent re-review, until the exit criteria hold.
+
+## Driver (user panel tooling)
+
+The panel driver lives in `scripts/ux-panel/` (test tooling, not product code). It launches the built app (`npx electron-vite build` first) under Playwright `_electron` with an isolated user-data folder and applies the start-state preset of a task (`tasks.mjs`, `presets/*.mjs`; setup uses `window.agent7`, never exposed to panelists). A panelist sees only what a user sees: `ux windows|switch|shot|click|move|drag|scroll|type|key|wait|find`, each action returning a screenshot path (1280x800, CSS px). Every command is appended to `log.jsonl` (step count = action commands). The facilitator runs `session.mjs start|check|stop`; `check` reads the app state and prints PASS, FAIL or MANUAL (answer review). Briefings: `scripts/ux-panel/PANELIST.md` (panelist) and `scripts/ux-panel/FACILITATOR.md` (running a round).

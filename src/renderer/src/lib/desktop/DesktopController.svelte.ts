@@ -113,12 +113,16 @@ export class DesktopController implements DesktopHost {
     const id = this.state.focusedWindowId
     return this.state.windows.find((w) => w.id === id) ?? null
   }
-  /** Chats of this desktop, newest first. */
-  get chats(): SessionDto[] {
+  /** Every session of this desktop (chats, reviewers and asides), newest first: what runs, what asks for approval. */
+  get allSessions(): SessionDto[] {
     return this.sessions.items.filter((s) => s.desktopId === this.state.desktopId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }
+  /** Chats (role `chat`) of this desktop, newest first. */
+  get chats(): SessionDto[] {
+    return this.sessions.items.filter((s) => s.desktopId === this.state.desktopId && s.role === 'chat').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  }
   get activityInputs(): ChatActivityInput[] {
-    return this.chats.flatMap((s): ChatActivityInput[] => {
+    return this.allSessions.flatMap((s): ChatActivityInput[] => {
       const store = this.inbox.stores.get(s.id)
       return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: store.state.session.status === 'closed' ? s.status : store.state.session.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
@@ -126,7 +130,7 @@ export class DesktopController implements DesktopHost {
   /** "Read src/a.ts", "Waiting for approval" or null (idle). */
   get working(): string | null {
     const inputs = this.activityInputs
-    return workingText(inputs.length ? inputs : this.chats.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
+    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
   }
   get feed(): FeedItem[] {
     return recentToolCalls(this.activityInputs, 8)
@@ -141,7 +145,7 @@ export class DesktopController implements DesktopHost {
     return { title: session?.title ?? null, used, size, ratio: size > 0 ? Math.min(1, used / size) : 0 }
   }
   get busy(): boolean {
-    return this.chats.some((s) => isBusy(s.status))
+    return this.allSessions.some((s) => isBusy(s.status))
   }
 
   private readonly views: KeyedDebouncer<Id, AppView>
@@ -258,8 +262,12 @@ export class DesktopController implements DesktopHost {
 
   /** Opens a store for every chat that has a window or is busy, so approvals of hidden chats still show up. */
   syncStores(): void {
-    for (const w of this.state.windows) if (w.view.app === 'chat' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
-    for (const s of this.chats) if (isBusy(s.status)) this.inbox.storeFor(s.id)
+    for (const w of this.state.windows) {
+      if (w.view.app === 'chat' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
+      // A review session's approvals (the reviewer may ask to read files) show up in the Action Center too.
+      else if (w.view.app === 'code-review' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
+    }
+    for (const s of this.allSessions) if (isBusy(s.status)) this.inbox.storeFor(s.id)
   }
 
   private pushMessage(text: string): void {
@@ -438,7 +446,7 @@ export class DesktopController implements DesktopHost {
 
   /** Chats that still run and have their working directory on the drive. */
   chatsOnDrive(letter: DriveLetter): SessionDto[] {
-    return this.chats.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
+    return this.allSessions.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
   }
 
   /** Safely Remove: warns when chats work on the drive, ejects it, then shows the balloon. */
@@ -503,6 +511,22 @@ export class DesktopController implements DesktopHost {
     this.startOpen = false
     this.actionCenterOpen = false
     this.usbMenuOpen = false
+  }
+
+  /**
+   * Starts a code review (Start menu, the Code app's "Review changes"): the review session and its Code Review window.
+   * `root` defaults to the folder of the Code window the user is in, else the first plugged-in drive, else the agent's home.
+   */
+  async openReview(root?: VPath, baseRef?: string): Promise<AppWindowState> {
+    this.startOpen = false
+    return this.api.desktop.openReview(this.state.desktopId, root ?? this.defaultReviewRoot(), baseRef)
+  }
+
+  defaultReviewRoot(): VPath {
+    const code = this.state.windows.find((w) => w.view.app === 'code' && w.id === this.state.focusedWindowId) ?? this.state.windows.find((w) => w.view.app === 'code')
+    const active = code?.view.app === 'code' ? code.view.activePath : null
+    const drive = (active && parseVPath(active)?.drive) || this.state.drives.find((d) => d.kind === 'removable')?.letter
+    return drive ? driveRoot(drive) : this.state.home
   }
 
   /** Opens the UAC-style dialog for an approval (loads the policy for the reason line). */

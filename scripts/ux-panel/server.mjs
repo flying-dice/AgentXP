@@ -41,7 +41,8 @@ const web = createServer((req, res) => {
   res.setHeader('content-type', 'text/html')
   res.end(TEST_PAGE_HTML)
 })
-await new Promise((r) => web.listen(TEST_PAGE_PORT, '127.0.0.1', r)).catch(() => undefined)
+web.on('error', () => undefined) // another session already serves the fixture page
+web.listen(TEST_PAGE_PORT, '127.0.0.1')
 
 const app = await launchApp({ userData })
 const state = { task: flags.task ?? null, level: flags.level ?? null, sockDir: tmp, noMouse: false, startedAt: new Date().toISOString() }

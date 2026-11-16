@@ -191,7 +191,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     vfs,
     cli: gitCli,
     events: publisher,
-    codeDesktops: () => windowHost.connectedIds().filter((id) => desktops.windowsOf(id, 'code').length > 0),
+    codeDesktops: () => windowHost.connectedIds().filter((id) => desktops.windowsOf(id, 'code').length > 0 || desktops.windowsOf(id, 'code-review').length > 0),
     pollMs: options.gitPollMs
   })
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
@@ -329,7 +329,7 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
       ...createCodeTools({ desktops, changes: repos.changes, paths: toolPaths }),
       ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths, terminals: terminalRecorder }),
-      ...createBrowserTools({ desktops, driver: browsers }),
+      ...createBrowserTools({ desktops, driver: browsers, requests: appRequests }),
       ...createPaintTools({ desktops, requests: appRequests }),
       ...createWordpadTools({
         desktops,

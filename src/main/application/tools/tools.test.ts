@@ -12,12 +12,12 @@ import { PAUSED_MESSAGE } from '../desktop/AppToolPolicy'
 import { ToolGateway } from '../desktop/ToolGateway'
 import { createVfsFixture } from '../test-helpers'
 import { TOOL_SPECS, specsForGroups } from './catalog'
-import { createBrowserTools, formatSnapshot, normalizeUrl } from './browserTools'
+import { createBrowserTools, formatRead, formatTabs, normalizeUrl } from './browserTools'
 import { createCodeTools } from './codeTools'
 import { DesktopToolService } from './DesktopToolService'
 import { createFsTools, nameMatcher } from './fsTools'
 import { createNotepadTools } from './notepadTools'
-import type { BrowserDriver, CommandRunner, PageInfo, PageSnapshot } from './ports'
+import type { ActionResult, AppRequests, BrowserDriver, BrowserGuard, CommandRunner, PageContent, PageInfo } from './ports'
 import { createEventsTools } from './eventsTools'
 import { createNotesTools } from './notesTools'
 import { createPaintTools } from './paintTools'
@@ -38,6 +38,7 @@ const textOf = (r: ToolResult): string => r.content.map((c) => (c.type === 'text
 class FakeDriver implements BrowserDriver {
   calls: string[] = []
   fail: string | null = null
+  guards: BrowserGuard[] = []
   private page: PageInfo = { title: 'Example', url: 'https://example.com/' }
   private go(label: string, url?: string): PageInfo {
     if (this.fail) throw new Error(this.fail)
@@ -45,24 +46,52 @@ class FakeDriver implements BrowserDriver {
     if (url) this.page = { title: 'Loaded', url }
     return this.page
   }
+  private act(label: string, guard?: BrowserGuard): ActionResult {
+    if (guard) this.guards.push(guard)
+    return { ...this.go(label), box: { x: 1, y: 2, width: 3, height: 4 } }
+  }
   async navigate(_w: number, url: string) {
     return this.go(`navigate:${url}`, url)
   }
-  async read(): Promise<PageSnapshot> {
-    return { ...this.go('read'), text: 'Hello page', elements: [{ ref: 1, kind: 'link', label: 'More', detail: 'https://example.com/more' }] }
+  async read(_w: number, mode: 'text' | 'tree'): Promise<PageContent> {
+    return { ...this.go(`read:${mode}`), lines: Array.from({ length: 300 }, (_, i) => (i === 0 ? '[1] link "More" -> https://example.com/more' : `text "line ${i}"`)) }
+  }
+  async find(_w: number, query: { text?: string; role?: string }) {
+    this.go(`find:${query.text ?? query.role}`)
+    return query.text === 'none' ? [] : [{ ref: 5, description: 'button "Send"', context: 'composer' }]
   }
   async screenshot() {
     this.go('screenshot')
     return 'UE5H'
   }
-  async click(_w: number, ref: number) {
-    return this.go(`click:${ref}`)
+  async click(_w: number, ref: number, o: { button: string; double: boolean }, guard: BrowserGuard) {
+    return this.act(`click:${ref}:${o.button}:${o.double}`, guard)
   }
-  async type(_w: number, ref: number, text: string, submit: boolean) {
-    return this.go(`type:${ref}:${text}:${submit}`)
+  async type(_w: number, ref: number | undefined, text: string, submit: boolean, guard: BrowserGuard) {
+    return this.act(`type:${ref}:${text}:${submit}`, guard)
+  }
+  async press(_w: number, keys: string, guard: BrowserGuard) {
+    return this.act(`press:${keys}`, guard)
+  }
+  async scroll(_w: number, t: { ref?: number; direction: string; amount?: number }, guard: BrowserGuard) {
+    return { ...this.act(`scroll:${t.direction}:${t.ref}:${t.amount}`, guard), note: 'page scrolled 0 of 100 px down' }
+  }
+  async wait(_w: number, q: { text?: string; ref?: number; timeoutMs: number }, guard: BrowserGuard) {
+    this.guards.push(guard)
+    this.go(`wait:${q.text ?? q.ref}:${q.timeoutMs}`)
+    return { found: q.text !== 'never', waitedMs: 12 }
+  }
+  async select(_w: number, ref: number, option: string, guard: BrowserGuard) {
+    return this.act(`select:${ref}:${option}`, guard)
   }
   async back() {
     return this.go('back')
+  }
+  async forward() {
+    return this.go('forward')
+  }
+  async reload() {
+    return this.go('reload')
   }
 }
 
@@ -72,6 +101,7 @@ let desktops: DesktopService
 let desktopId: number
 let sessionId: number
 let driver: FakeDriver
+let browserRequests: AppRequests & { sent: { method: string; params: unknown }[]; reply: unknown }
 let asked: string[]
 let allowAsk: boolean
 let ran: { command: string; cwd: string }[]
@@ -124,6 +154,14 @@ beforeEach(async () => {
   const chat = await desktops.newChat(desktopId, undefined, 'E:\\')
   sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
   driver = new FakeDriver()
+  browserRequests = {
+    sent: [],
+    reply: { tabs: [{ id: 1, title: 'One', url: 'https://one.example/', active: true }] },
+    request(_d, _w, method, params) {
+      this.sent.push({ method, params })
+      return Promise.resolve(this.reply)
+    }
+  }
   asked = []
   allowAsk = true
   ran = []
@@ -178,7 +216,7 @@ beforeEach(async () => {
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
       ...createCodeTools({ desktops, changes: { list: () => changes }, paths }),
       ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths, terminals: { record: (id, a) => void recorded.push([id, a]) }, newTerminalId: () => `run-${++runCounter}` }),
-      ...createBrowserTools({ desktops, driver }),
+      ...createBrowserTools({ desktops, driver, requests: browserRequests }),
       ...createPaintTools({ desktops, requests }),
       ...createWordpadTools({
         desktops,
@@ -212,7 +250,22 @@ describe('tool catalog', () => {
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
     expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
     expect(byGroup('terminal')).toEqual(['terminal_run', 'terminal_read'])
-    expect(byGroup('browser')).toEqual(['browser_navigate', 'browser_read', 'browser_screenshot', 'browser_click', 'browser_type', 'browser_back'])
+    expect(byGroup('browser')).toEqual([
+      'browser_navigate',
+      'browser_read',
+      'browser_find',
+      'browser_screenshot',
+      'browser_click',
+      'browser_type',
+      'browser_press',
+      'browser_scroll',
+      'browser_wait',
+      'browser_select',
+      'browser_tabs',
+      'browser_back',
+      'browser_forward',
+      'browser_reload'
+    ])
     expect(byGroup('fs.write')).toEqual([])
     expect(byGroup('paint')).toEqual(['paint_draw', 'paint_read', 'paint_clear', 'paint_resize'])
     expect(byGroup('wordpad')).toEqual(['wordpad_open', 'wordpad_read', 'wordpad_write'])
@@ -221,7 +274,7 @@ describe('tool catalog', () => {
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(39)
+    expect(TOOL_SPECS).toHaveLength(47)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -463,12 +516,20 @@ describe('browser tools', () => {
 
   const view = () => desktops.windowsOf(desktopId, 'browser')[0]!.view
 
-  it('navigates, mirrors the page into the window view and reads it', async () => {
+  it('navigates, mirrors the page into the window view and reads it in pages', async () => {
     expect(textOf(await run('browser_navigate', { url: 'example.org' }))).toBe('Loaded https://example.org/ ("Loaded").')
     expect(view()).toMatchObject({ url: 'https://example.org/', title: 'Loaded', loading: false })
     const read = textOf(await run('browser_read'))
-    expect(read).toContain('Hello page')
-    expect(read).toContain('[1] link: More -> https://example.com/more')
+    expect(read).toContain('Lines 1-150 of 300 (tree). nextOffset: 150')
+    expect(read).toContain('[1] link "More" -> https://example.com/more')
+    const second = textOf(await run('browser_read', { offset: 150, limit: 200, mode: 'text' }))
+    expect(second).toContain('Lines 151-300 of 300 (text). End of page.')
+    expect(driver.calls).toContain('read:text')
+  })
+
+  it('formats an empty page and a continued page', () => {
+    expect(formatRead({ title: 'T', url: 'u', lines: [] }, 'tree', undefined, undefined)).toContain('has no accessible content')
+    expect(formatRead({ title: 'T', url: 'u', lines: ['a', 'b', 'c'], viewport: 'viewport 1x1' }, 'text', 1, 1)).toContain('nextOffset: 2')
   })
 
   it('returns the screenshot as image content', async () => {
@@ -476,11 +537,68 @@ describe('browser tools', () => {
     expect(res.content[1]).toEqual({ type: 'image', data: 'UE5H', mimeType: 'image/png' })
   })
 
-  it('clicks, types and goes back', async () => {
+  it('finds elements by text or role and says when nothing matched', async () => {
+    expect(textOf(await run('browser_find', { text: 'Send' }))).toContain('[5] button "Send"  <- composer')
+    expect(textOf(await run('browser_find', { text: 'none' }))).toMatch(/Nothing matched/)
+    expect((await run('browser_find', {})).isError).toBe(true)
+  })
+
+  it('clicks, types, presses keys, scrolls, waits, selects and navigates history', async () => {
     await run('browser_click', { ref: 3 })
+    await run('browser_click', { ref: 3, button: 'right', double: true })
     await run('browser_type', { ref: 2, text: 'hello', submit: true })
+    await run('browser_type', { text: 'no ref' })
+    await run('browser_press', { keys: 'Control+K' })
+    await run('browser_scroll', { direction: 'up', ref: 7 })
+    expect(textOf(await run('browser_scroll', {}))).toContain('page scrolled 0 of 100 px down')
+    await run('browser_select', { ref: 4, option: 'Two' })
+    expect(textOf(await run('browser_wait', { text: 'Hi' }))).toMatch(/Done waiting for "Hi"/)
+    expect(textOf(await run('browser_wait', { text: 'never', timeoutMs: 100 }))).toMatch(/Timed out/)
     await run('browser_back')
-    expect(driver.calls).toEqual(['click:3', 'type:2:hello:true', 'back'])
+    await run('browser_forward')
+    await run('browser_reload')
+    expect(driver.calls).toEqual([
+      'click:3:left:false',
+      'click:3:right:true',
+      'type:2:hello:true',
+      'type:undefined:no ref:false',
+      'press:Control+K',
+      'scroll:up:7:undefined',
+      'scroll:down:undefined:undefined',
+      'select:4:Two',
+      'wait:Hi:5000',
+      'wait:never:100',
+      'back',
+      'forward',
+      'reload'
+    ])
+  })
+
+  it('shows the user what the agent does: an activity request at the start and one with the box at the end', async () => {
+    await run('browser_click', { ref: 3 })
+    expect(browserRequests.sent.map((r) => r.method)).toEqual(['activity', 'activity'])
+    expect(browserRequests.sent[0]!.params).toMatchObject({ label: 'Clicking [3]' })
+    expect(browserRequests.sent[1]!.params).toMatchObject({ box: { x: 1, y: 2, width: 3, height: 4 } })
+  })
+
+  it('stops an action when the user pauses Agent7 or takes control meanwhile', async () => {
+    await run('browser_click', { ref: 1 })
+    const guard = driver.guards[0]!
+    expect(() => guard()).not.toThrow()
+    await desktops.setPaused(desktopId, true)
+    expect(() => guard()).toThrow(/paused/)
+    await desktops.setPaused(desktopId, false)
+    desktops.setUserInControl(desktopId, true)
+    expect(() => guard()).toThrow(/took control/)
+    desktops.setUserInControl(desktopId, false)
+  })
+
+  it('lists, opens, switches and closes tabs through the Browser app', async () => {
+    expect(textOf(await run('browser_tabs', { action: 'list' }))).toContain('* tab 1: One - https://one.example/')
+    await run('browser_tabs', { action: 'new', url: 'example.net' })
+    expect(browserRequests.sent.at(-1)).toEqual({ method: 'tabs', params: { action: 'new', url: 'https://example.net/', tab: undefined } })
+    expect((await run('browser_tabs', { action: 'switch' })).isError).toBe(true)
+    expect(formatTabs({ tabs: [], note: 'Closed.' })).toContain('No tabs.')
   })
 
   it('reports driver failures and clears the loading flag', async () => {
@@ -503,9 +621,6 @@ describe('browser tools', () => {
     expect(() => normalizeUrl('javascript:alert(1)')).toThrow(/http/)
   })
 
-  it('formats a page snapshot', () => {
-    expect(formatSnapshot({ title: 'T', url: 'u', text: 'body', elements: [] })).toContain('No interactive elements.')
-  })
 })
 
 const PNG = 'data:image/png;base64,UE5H'

@@ -4,6 +4,7 @@ import AgentManagerApp from './agent-manager/AgentManagerApp.svelte'
 import BrowserApp from './browser/BrowserApp.svelte'
 import ChatApp from './chat/ChatApp.svelte'
 import CodeApp from './code/CodeApp.svelte'
+import CodeReviewApp from './code-review/CodeReviewApp.svelte'
 import ControlCentreApp from './control-centre/ControlCentreApp.svelte'
 import ExplorerApp from './explorer/ExplorerApp.svelte'
 import HelpApp from './help/HelpApp.svelte'
@@ -34,5 +35,6 @@ export const appRegistry: Record<AppKind, AppDefinition> = {
   'snipping-tool': { kind: 'snipping-tool', title: 'Snipping Tool', icon: 'scissors', description: 'Capture part of the screen', component: SnippingToolApp },
   'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp },
   help: { kind: 'help', title: 'Help and Support', icon: 'help', description: 'Manuals for every app and window', component: HelpApp },
+  'code-review': { kind: 'code-review', title: 'Code Review', icon: 'changes', description: 'Review changes with an agent and send its comments to a chat', component: CodeReviewApp },
   surface: { kind: 'surface', title: 'Agent window', icon: 'computer', description: 'A window the agent drew with A2UI', component: SurfaceApp }
 }
