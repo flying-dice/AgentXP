@@ -9,22 +9,22 @@
     "chrome": "156.0.8078.100",
     "node": "v22.23.4"
   },
-  "launcherCold": 755,
+  "launcherCold": 711,
   "launcherWarmRuns": [
-    687,
-    711,
-    732,
-    680,
-    735
+    695,
+    753,
+    755,
+    679,
+    698
   ],
-  "startedAt": "2026-11-16T14:39:25.932Z",
+  "startedAt": "2026-11-16T15:13:05.802Z",
   "runs": 5,
   "rows": 2000,
   "soakSeconds": 240,
   "load": {
     "windows": 6,
     "transcriptEntries": 2002,
-    "domNodes": 19281
+    "domNodes": 1370
   },
   "metrics": [
     {
@@ -35,33 +35,33 @@
       "value": 10,
       "runs": [
         10,
-        10,
         11,
         10,
+        9,
         10
       ],
       "pass": true,
       "note": "",
-      "worstP95": 18.9,
-      "worstKey": 19.2
+      "worstP95": 18.3,
+      "worstKey": 19.4
     },
     {
       "id": "input_notepad",
       "label": "Input response, Notepad",
       "unit": "ms",
       "target": "<= 100",
-      "value": 11,
+      "value": 10,
       "runs": [
-        11,
-        11,
-        11,
         10,
-        10
+        10,
+        9,
+        11,
+        11
       ],
       "pass": true,
       "note": "",
-      "worstP95": 18.7,
-      "worstKey": 22.6
+      "worstP95": 18.8,
+      "worstKey": 21.7
     },
     {
       "id": "input_composer_loaded",
@@ -70,11 +70,11 @@
       "target": "<= 100",
       "value": 11,
       "runs": [
-        10,
-        12,
         11,
-        12,
-        11
+        11,
+        11,
+        11,
+        10
       ],
       "pass": true,
       "note": ""
@@ -86,11 +86,11 @@
       "target": "<= 200",
       "value": 16,
       "runs": [
-        33,
+        26,
+        20,
+        15,
         16,
-        16,
-        16,
-        17
+        16
       ],
       "pass": true,
       "note": ""
@@ -100,13 +100,13 @@
       "label": "Window open, Start menu click to Notepad visible",
       "unit": "ms",
       "target": "<= 200",
-      "value": 15,
+      "value": 16,
       "runs": [
-        15,
-        15,
+        14,
         16,
         16,
-        12
+        17,
+        16
       ],
       "pass": true,
       "note": ""
@@ -116,13 +116,13 @@
       "label": "Launcher to interactive, warm (process start to launcher usable)",
       "unit": "ms",
       "target": "<= 1500",
-      "value": 711,
+      "value": 698,
       "runs": [
-        687,
-        711,
-        732,
-        680,
-        735
+        695,
+        753,
+        755,
+        679,
+        698
       ],
       "pass": true,
       "note": ""
@@ -132,13 +132,13 @@
       "label": "Desktop connect (Connect click to desktop painted)",
       "unit": "ms",
       "target": "<= 2000",
-      "value": 337,
+      "value": 311,
       "runs": [
-        309,
-        328,
-        349,
-        337,
-        348
+        365,
+        311,
+        329,
+        310,
+        305
       ],
       "pass": true,
       "note": ""
@@ -148,24 +148,24 @@
       "label": "Scroll fps, 2000-row transcript, 6 windows",
       "unit": "fps",
       "target": ">= 57",
-      "value": 55.2,
+      "value": 52.7,
       "runs": [
-        55.2,
-        48.2,
-        51.2,
-        56.8,
-        58.4
+        52.7,
+        51.9,
+        56.4,
+        55.6,
+        48.8
       ],
       "pass": false,
       "note": "Pass at 57 or more (60 fps with half a frame of jitter).",
-      "p95FrameMs": 33.3,
+      "p95FrameMs": 33.4,
       "maxFrameMs": 50,
       "slowFrames": [
-        12,
-        28,
-        22,
-        8,
-        4
+        18,
+        19,
+        9,
+        11,
+        28
       ]
     },
     {
@@ -173,24 +173,24 @@
       "label": "Window drag fps, 2000-row transcript, 6 windows",
       "unit": "fps",
       "target": ">= 57",
-      "value": 44.7,
+      "value": 50.1,
       "runs": [
-        43.1,
-        42.4,
-        44.7,
-        47.1,
-        47.2
+        47.5,
+        50.3,
+        50.1,
+        50.8,
+        48.8
       ],
       "pass": false,
       "note": "Pass at 57 or more.",
       "p95FrameMs": 33.4,
-      "maxFrameMs": 50.1,
+      "maxFrameMs": 33.5,
       "slowFrames": [
-        41,
-        42,
-        38,
-        29,
-        30
+        31,
+        24,
+        25,
+        23,
+        28
       ]
     },
     {
@@ -202,7 +202,7 @@
       "runs": [
         60,
         60,
-        60,
+        59.6,
         60,
         59.2
       ],
@@ -226,11 +226,11 @@
       "note": "The Long Tasks API only reports tasks over 50 ms; 0 means none was reported.",
       "observerSupported": true,
       "turnMsAfterSend": [
-        1735,
-        1828,
-        1813,
-        1717,
-        1725
+        1778,
+        1757,
+        1820,
+        1737,
+        1738
       ],
       "perRun": [
         {
@@ -260,39 +260,39 @@
       "label": "Agent start shows progress (Enter to first progress sign)",
       "unit": "ms",
       "target": "<= 100",
-      "value": 12,
+      "value": 19,
       "runs": [
-        12,
-        9,
-        6,
         13,
-        27
+        26,
+        27,
+        8,
+        19
       ],
       "pass": true,
       "note": "",
       "signs": [
         {
-          "ms": 12.1,
+          "ms": 13.4,
           "sign": "chat-starting",
           "preexisting": "chat-starting"
         },
         {
-          "ms": 9.1,
+          "ms": 26.4,
           "sign": "chat-starting",
           "preexisting": "chat-starting"
         },
         {
-          "ms": 6.1,
+          "ms": 27,
           "sign": "chat-starting",
           "preexisting": "chat-starting"
         },
         {
-          "ms": 13.1,
+          "ms": 7.9,
           "sign": "chat-starting",
           "preexisting": "chat-starting"
         },
         {
-          "ms": 26.7,
+          "ms": 19.1,
           "sign": "chat-starting",
           "preexisting": "chat-starting"
         }
@@ -308,7 +308,7 @@
         7.4
       ],
       "pass": true,
-      "note": "One run of 240 s (the rubric asks for 30 minutes): growth of the median of the last 3 samples over the median of the 3 samples after a 30 s warm-up.",
+      "note": "NOT re-run after virtualisation (this pass used --soak-seconds 0). One run of 240 s (the rubric asks for 30 minutes): growth of the median of the last 3 samples over the median of the 3 samples after a 30 s warm-up.",
       "cycles": 47,
       "soakSeconds": 240,
       "startMB": 1293,
@@ -436,5 +436,60 @@
         }
       ]
     }
-  ]
+  ],
+  "before_virtualisation": {
+    "startedAt": "2026-11-16T14:39:25.932Z",
+    "load": {
+      "windows": 6,
+      "transcriptEntries": 2002,
+      "domNodes": 19281
+    },
+    "scroll_fps": {
+      "value": 55.2,
+      "runs": [
+        55.2,
+        48.2,
+        51.2,
+        56.8,
+        58.4
+      ]
+    },
+    "drag_fps": {
+      "value": 44.7,
+      "runs": [
+        43.1,
+        42.4,
+        44.7,
+        47.1,
+        47.2
+      ]
+    },
+    "note": "Same machine and method, transcript rendered every row."
+  },
+  "short_transcript_control": {
+    "rows": 20,
+    "transcriptEntries": 22,
+    "scroll_fps": {
+      "value": 54.4,
+      "runs": [
+        54.4,
+        54.4,
+        52.4,
+        57.2,
+        56
+      ]
+    },
+    "drag_fps": {
+      "value": 48.4,
+      "runs": [
+        48.4,
+        45.3,
+        50,
+        46.5,
+        51.1
+      ]
+    },
+    "note": "6 windows with a 20-row transcript (--rows 20): the remaining fps gap is the same as with 2,000 virtualised rows, so it no longer depends on the transcript length."
+  },
+  "soakNote": "The soak figure is from the earlier run before the transcript was virtualised (soak not re-run in this pass)."
 }
