@@ -24,7 +24,8 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
   'recycle-bin': { x: 240, y: 120, width: 600, height: 400 },
   surface: { x: 260, y: 100, width: 480, height: 360 },
-  help: { x: 150, y: 70, width: 760, height: 540 }
+  help: { x: 150, y: 70, width: 760, height: 540 },
+  'code-review': { x: 50, y: 30, width: 1120, height: 650 }
 }
 
 /** Default bounds of a new window, cascaded by the number of windows already open. */
@@ -92,7 +93,7 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -134,6 +135,8 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'surface', surfaceId: input.surfaceId ?? '', sessionId: input.sessionId ?? 0, title: SURFACE_FALLBACK_TITLE }
     case 'help':
       return { app: 'help', topic: input.topic ?? 'index' }
+    case 'code-review':
+      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: null, sessionId: input.sessionId ?? 0 }
   }
 }
 
@@ -154,6 +157,8 @@ export function windowTitle(view: AppView): string {
       return `${view.path ? vpathName(view.path) : 'Untitled'} - Agent Paint`
     case 'wordpad':
       return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
+    case 'code-review':
+      return `${view.root.length <= 3 ? view.root : vpathName(view.root)} - Code Review`
     default:
       return APP_DISPLAY_NAMES[view.app]
   }

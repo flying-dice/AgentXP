@@ -207,6 +207,7 @@
     { label: '&Open...', shortcut: 'Ctrl+O', action: () => void openDocument() },
     { label: '&Save', shortcut: 'Ctrl+S', disabled: !dirty && path !== null, action: () => void save() },
     { separator: true },
+    { id: 'wordpad-help', testid: 'wordpad-menu-help', label: '&Help on WordPad', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'wordpad' }) },
     { label: 'E&xit', action: () => void host.closeWindow(win.id) }
   ])
 

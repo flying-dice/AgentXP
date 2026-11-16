@@ -27,6 +27,7 @@
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { taskbarItems } from '../desktop/windowOrder'
+  import { HOME_TOPIC, topicForApp } from '../apps/help/helpModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -98,6 +99,7 @@
     { id: 'control-centre', title: 'Control Centre' },
     { id: 'agent-manager', title: 'Task Manager' },
     { id: 'recycle-bin', title: 'Recycle Bin' },
+    { id: 'help', title: 'Help and Support' },
     { id: 'chat-on', title: 'New chat on a drive…' },
     { id: 'desktops', title: 'Agent7 Desktops…' }
   ]
@@ -126,6 +128,7 @@
     desktop.startOpen = false
     if (id === 'desktops') void desktop.showLauncher()
     else if (id === 'chat-on') desktop.newChatDialogOpen = true
+    else if (id === 'help') void desktop.openApp({ app: 'help', topic: HOME_TOPIC })
     else if (id === 'computer') void desktop.openApp({ app: 'explorer', path: '' })
     else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
@@ -144,6 +147,10 @@
     } else if (event.ctrlKey && event.key === 'Escape') {
       event.preventDefault()
       desktop.toggleStart()
+    } else if (event.key === 'F1') {
+      event.preventDefault()
+      const focused = desktop.state.windows.find((w) => w.id === desktop.state.focusedWindowId && w.windowState !== 'minimized')
+      void desktop.openApp({ app: 'help', topic: topicForApp(focused?.app) })
     }
   }
 </script>

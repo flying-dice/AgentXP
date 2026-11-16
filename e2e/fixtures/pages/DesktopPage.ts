@@ -20,6 +20,7 @@ export type AppId =
   | 'control-centre'
   | 'recycle-bin'
   | 'surface'
+  | 'help'
 
 /** Apps the Start menu hides in a collapsible group. */
 const START_GROUP: Partial<Record<AppId, string>> = {
@@ -70,6 +71,15 @@ export class DesktopPage {
     const created = this.windows('explorer').nth(before)
     await created.waitFor()
     return new ExplorerWindow(created)
+  }
+
+  /** Opens Help and Support from the Start menu "places" column. */
+  async openHelp(): Promise<Locator> {
+    await this.openStart()
+    await this.page.getByTestId('start-menu-place-help').click()
+    const created = this.windows('help').first()
+    await created.waitFor()
+    return created
   }
 
   /** All windows of an app, oldest first. */

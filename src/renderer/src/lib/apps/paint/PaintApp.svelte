@@ -294,6 +294,7 @@
     { label: '&Undo', shortcut: 'Ctrl+Z', disabled: undo.length === 0, action: undoLast },
     { label: '&Copy picture', action: () => void copyImage() },
     { separator: true },
+    { id: 'paint-help', testid: 'paint-menu-help', label: '&Help on Paint', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'paint' }) },
     { label: 'E&xit', action: () => void host.closeWindow(win.id) }
   ])
 

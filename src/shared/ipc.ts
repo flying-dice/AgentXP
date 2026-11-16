@@ -20,6 +20,7 @@ import type { A2uiClientEvent, A2uiSurfaceDto, A2uiSurfaceTarget } from './a2ui'
 import type { AgentProcessDto, DesktopApi, DesktopEvents, DesktopExtrasApi } from './desktop'
 import type { DrivesApi, LauncherApi, LauncherEvents, VPath, VfsApi } from './vfs'
 import type { GitApi, GitEvents } from './git'
+import type { ReviewApi, ReviewEvents } from './review'
 
 export interface PromptInput {
   sessionId: Id
@@ -132,6 +133,7 @@ export interface Agent7Api {
   desktop: DesktopApi
   vfs: VfsApi
   git: GitApi
+  review: ReviewApi
   drives: DrivesApi
   launcher: LauncherApi
   notes: DesktopExtrasApi['notes']
@@ -158,7 +160,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents {
+export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

@@ -252,6 +252,11 @@ try {
   await serve(adminPath, async (req) => {
     if (req.op === 'status') return { ok: true, state }
     if (req.op === 'check') return { ok: true, result: await runCheck(ctx, req.task ?? state.task, { answer: req.answer }) }
+    if (req.op === 'eval') {
+      // Facilitator debugging only: evaluates an async function body in the launcher page with `api` = window.agent7.
+      const page = await ctx.page()
+      return { ok: true, result: await page.evaluate(`(async (api) => { ${req.code} })(window.agent7)`) }
+    }
     if (req.op === 'shutdown') {
       setTimeout(shutdown, 50)
       return { ok: true }
@@ -276,5 +281,5 @@ try {
 } catch (error) {
   writeSession({ ready: false, error: error instanceof Error ? error.stack : String(error) })
   console.error(error)
-  await shutdown()
+  if (!process.env.UX_KEEP) await shutdown()
 }

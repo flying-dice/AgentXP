@@ -1,0 +1,113 @@
+# Using Control Centre
+
+This manual describes Control Centre. Control Centre sets the agents, the permissions, and the look of the desktop.
+
+## Table of Contents
+
+- 1 - What It Is For
+- 2 - Open It
+- 3 - The Window
+  - The Task List
+  - The Agents Page
+  - The Permissions Page
+  - The Appearance Page
+  - The About Page
+- 4 - Controls Reference
+- 5 - Common Tasks
+- 6 - Troubleshooting
+- 7 - Need Help?
+
+---
+
+## 1 - What It Is For
+
+Use Control Centre to add an agent, to choose when Agent7 asks you before the agent acts, and to hide the gadgets.
+
+## 2 - Open It
+
+- Click **Start -> Control Centre**, or double-click **Control Centre** on the desktop.
+- Click **Open Control Centre** in the Action Center.
+- Right-click the desktop and click **Control Centre**.
+
+Only one Control Centre window exists on a desktop.
+
+## 3 - The Window
+
+### The Task List
+
+The list is at the left under the title **Control Centre Home**. It has **Agents**, **Permissions**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
+
+### The Agents Page
+
+The page lists the agents. The columns are **Name**, **Command**, and **Default**. New chats start the default agent. The buttons are at the right of the list:
+
+- **Add...** – Opens the **Add Agent** dialog box.
+- **Edit...** – Opens the **Edit Agent** dialog box for the selected agent.
+- **Remove** – Removes the selected agent after a question.
+- **Set as Default** – Makes the selected agent the default.
+
+The agent dialog box has the boxes **Name**, **Command**, **Arguments** (one per line), and **Environment** (KEY=VALUE, one per line).
+
+### The Permissions Page
+
+The page lists one row for each kind of action: Read files, Write files, Notepad, Code, Terminal, Browser, Paint, WordPad, Notes, Events, Screen capture, Recycle Bin, and Agent may open apps. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
+
+- **Allow** – The agent acts without a question.
+- **Ask** – A request appears in the Action Center.
+- **Deny** – The agent cannot act.
+
+Click **Apply** to save. Click **Cancel** to drop your changes.
+
+### The Appearance Page
+
+The page has the option **Show gadgets on the desktop**. The gadgets are the context meter, the session clock, and the activity list. The theme is Windows 7 Aero Basic. You cannot change it.
+
+### The About Page
+
+The page shows the version of Agent7.
+
+## 4 - Controls Reference
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Control Centre window | The root of the window. | `control-centre-app` |
+| Page button | Opens a page. The name ends with `agents`, `permissions`, `appearance`, or `about`. | `control-centre-page-*` |
+| Heading | Names the page. | `control-centre-heading` |
+| Agents | The list of agents. | none |
+| Add... | Adds an agent. | none |
+| Edit... | Changes the selected agent. | none |
+| Remove | Removes the selected agent. | none |
+| Set as Default | Makes the agent the default. | none |
+| Permission list | Sets Allow, Ask, or Deny for one row. | none |
+| Apply | Saves the permissions. | none |
+| Cancel | Drops the changes. | none |
+| Show gadgets on the desktop | Shows or hides the gadgets. | none |
+
+## 5 - Common Tasks
+
+To add an agent, follow the steps below:
+
+1. Click **Agents**, then **Add...** The **Add Agent** dialog box appears.
+2. Type the name in **Name**.
+3. Type the program in **Command**, for example `npx`.
+4. Type each argument on its own line in **Arguments**.
+5. Click **OK**. The agent appears in the list.
+
+To make Agent7 ask before the agent writes files, follow the steps below:
+
+1. Click **Permissions**.
+2. Select **Ask** in the list of the row **Write files**.
+3. Click **Apply**.
+
+To stop the agent from opening apps, select **Deny** in the row **Agent may open apps** and click **Apply**.
+
+## 6 - Troubleshooting
+
+- **Apply is dimmed.** You made no change.
+- **Set as Default is dimmed.** The selected agent is the default already, or no agent is selected.
+- **The agent dialog box does not close.** Type a name and a command. The box under the fields tells what is missing.
+- **A permission change has no effect.** Click **Apply**.
+
+## 7 - Need Help?
+
+Read **[The Desktop](desktop.md)** to learn the permission prompts.

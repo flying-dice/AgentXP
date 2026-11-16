@@ -17,13 +17,14 @@ interface WindowRow {
   session_id: number | null
   path: string | null
   url: string | null
+  base_ref: string | null
   surface_id: string | null
   surface_session_id: number | null
 }
 
 const SELECT = `
 SELECT w.id, w.desktop_id, w.kind, w.x, w.y, w.width, w.height, w.window_state, w.z_order, w.opened_by,
-       c.session_id AS session_id, p.path AS path, b.url AS url,
+       c.session_id AS session_id, p.path AS path, p.base_ref AS base_ref, b.url AS url,
        sf.surface_id AS surface_id, sf.session_id AS surface_session_id
 FROM app_windows w
 LEFT JOIN chat_windows c ON c.window_id = w.id
@@ -43,6 +44,7 @@ const toRecord = (row: WindowRow): AppWindowRecord => ({
   sessionId: row.session_id,
   path: row.path,
   url: row.url,
+  baseRef: row.base_ref,
   surface: row.surface_id !== null && row.surface_session_id !== null ? { sessionId: row.surface_session_id, surfaceId: row.surface_id } : null
 })
 
@@ -56,6 +58,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
   private readonly insertSurfaceWindow: Statement<[Id, Id, string]>
   private readonly upsertPath: Statement<[Id, string]>
   private readonly upsertUrl: Statement<[Id, string]>
+  private readonly updateBaseRef: Statement<[string, Id]>
   private readonly deletePath: Statement<[Id]>
   private readonly deleteWindow: Statement<[Id]>
   private readonly updateBounds: Statement<[number, number, number, number, Id]>
@@ -87,6 +90,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
       db,
       'INSERT INTO browser_windows (window_id, url) VALUES (?, ?) ON CONFLICT (window_id) DO UPDATE SET url = excluded.url'
     )
+    this.updateBaseRef = prepare(db, 'UPDATE path_windows SET base_ref = ? WHERE window_id = ?')
     this.deletePath = prepare(db, 'DELETE FROM path_windows WHERE window_id = ?')
     this.deleteWindow = prepare(db, 'DELETE FROM app_windows WHERE id = ?')
     this.updateBounds = prepare(db, 'UPDATE app_windows SET x = ?, y = ?, width = ?, height = ? WHERE id = ?')
@@ -130,6 +134,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
       }
       if (input.path != null) this.upsertPath.run(id, input.path)
       if (input.url !== undefined) this.upsertUrl.run(id, input.url)
+      if (input.baseRef !== undefined) this.updateBaseRef.run(input.baseRef, id)
       const record = this.get(id)
       if (!record) throw new Error(`Window ${id} vanished after insert`)
       return record
@@ -160,5 +165,9 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
 
   setUrl(id: Id, url: string): void {
     this.upsertUrl.run(id, url)
+  }
+
+  setBaseRef(id: Id, baseRef: string): void {
+    this.updateBaseRef.run(baseRef, id)
   }
 }

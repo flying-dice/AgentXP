@@ -442,6 +442,8 @@
     {
       label: '&Help',
       items: [
+        { id: 'code-help', testid: 'code-menu-help', label: '&Help on Code', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'code' }) },
+        { separator: true },
         {
           id: 'code-about',
           label: '&About Code...',

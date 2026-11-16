@@ -151,7 +151,8 @@
         { id: 'time', label: 'Time/&Date', shortcut: 'F5', action: insertTimeDate }
       ]
     },
-    { label: 'F&ormat', items: [{ id: 'wrap', label: '&Word Wrap', checked: wrap, action: () => (wrap = !wrap) }] }
+    { label: 'F&ormat', items: [{ id: 'wrap', label: '&Word Wrap', checked: wrap, action: () => (wrap = !wrap) }] },
+    { label: '&Help', items: [{ id: 'help', testid: 'notepad-menu-help', label: '&View Help', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'notepad' }) }] }
   ])
 
   /** Ctrl+N and Ctrl+O work wherever the focus is inside the focused Notepad window. */

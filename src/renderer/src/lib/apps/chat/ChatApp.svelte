@@ -178,7 +178,8 @@
         { separator: true },
         { id: 'chat-close', testid: 'chat-menu-close', label: '&Close', action: () => void host.closeWindow(win.id) }
       ]
-    }
+    },
+    { label: '&Help', items: [{ id: 'chat-help', testid: 'chat-menu-help', label: '&Help on Chat', shortcut: 'F1', action: () => void host.openApp({ app: 'help', topic: 'chat' }) }] }
   ])
 
   const setModel = (id: string): void => void host.api.sessions.setModel(sessionId, id)

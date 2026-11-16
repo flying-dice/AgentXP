@@ -1,6 +1,8 @@
 import { TEST_PAGE_URL } from '../lib/fixtures.mjs'
 
 export const ALL_ALLOW = { 'fs.read': 'allow', 'fs.write': 'allow', notepad: 'allow', code: 'allow', terminal: 'allow', browser: 'allow', paint: 'allow', wordpad: 'allow', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'allow' }
+/** Tools follow apps: the apps a script needs open on the desktop, unless the task names its own `open` list. */
+export const SCRIPT_APPS = { demo: ['code'], 'fix-redirect': ['code'], 'two-edits': ['code'], 'five-edits': ['code'], keyboard: ['code'], 'run-tests': ['code', 'terminal'], 'eject-victim': ['explorer'], errors: [], stepping: [], a2ui: [], flaky: [], 'long-turn': [] }
 export const PROMPT_FIX = 'Fix the login redirect bug so that deep links survive sign-in'
 
 /** Resolves project keys (`loginApp`, `docsSite`, `plain`) to folder paths. */
@@ -10,7 +12,7 @@ export const projectPaths = (ctx, keys) => keys.map((k) => (k === 'loginAppGit' 
  * A scripted agent as the default agent, plus a desktop with projects plugged in and (optionally) connected.
  * Records ids in ctx.state for the checks.
  */
-export async function projectDesktop(ctx, { title = 'Workspace', script = 'demo', stepMode, projects = ['loginApp'], connect = true, policy, allowAll, open = [], browserUrl, git, modifyGit } = {}) {
+export async function projectDesktop(ctx, { title = 'Workspace', script = 'demo', stepMode, projects = ['loginApp'], connect = true, policy, allowAll, open = SCRIPT_APPS[script] ?? [], browserUrl, git, modifyGit } = {}) {
   const keys = git ? projects.map((k) => (k === 'loginApp' ? 'loginAppGit' : k)) : projects
   const paths = projectPaths(ctx, keys)
   if (modifyGit) await modifyGitProject(ctx, paths[0])
