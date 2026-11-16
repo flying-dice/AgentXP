@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3'
+import type { Database } from '../infrastructure/db/sql'
 import type { AgentXpEventName, AgentXpEvents } from '@shared/ipc'
 import type { ContentBlockDto } from '@shared/models'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
@@ -43,7 +43,7 @@ export class RecordingPublisher implements EventPublisher {
   }
 }
 
-export function createRepos(db: Database.Database) {
+export function createRepos(db: Database) {
   return {
     agents: new SqliteAgentRepository(db),
     folders: new SqliteFolderRepository(db),

@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { Id, TaskDto, TaskPriority, TaskStatus } from '@shared/models'
 import type { NewTask, TaskRepository } from '../../domain/repositories/task-repository'
 
@@ -28,11 +28,11 @@ export class SqliteTaskRepository implements TaskRepository {
   private readonly insertTask: Statement<[Id, number, string, string, string]>
 
   constructor(private readonly db: Database) {
-    this.selectBySession = db.prepare(
+    this.selectBySession = prepare(db, 
       'SELECT id, session_id, position, content, priority, status FROM tasks WHERE session_id = ? ORDER BY position'
     )
-    this.deleteBySession = db.prepare('DELETE FROM tasks WHERE session_id = ?')
-    this.insertTask = db.prepare(
+    this.deleteBySession = prepare(db, 'DELETE FROM tasks WHERE session_id = ?')
+    this.insertTask = prepare(db, 
       'INSERT INTO tasks (session_id, position, content, priority, status) VALUES (?, ?, ?, ?, ?)'
     )
   }
@@ -42,10 +42,10 @@ export class SqliteTaskRepository implements TaskRepository {
   }
 
   replace(sessionId: Id, tasks: NewTask[]): TaskDto[] {
-    this.db.transaction(() => {
+    transaction(this.db, () => {
       this.deleteBySession.run(sessionId)
       tasks.forEach((t, position) => this.insertTask.run(sessionId, position, t.content, t.priority, t.status))
-    })()
+    })
     return this.list(sessionId)
   }
 }

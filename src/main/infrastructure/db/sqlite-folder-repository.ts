@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { FolderDto, Id } from '@shared/models'
 import type { FolderRepository } from '../../domain/repositories/folder-repository'
 import { NOW_SQL } from './sql'
@@ -25,14 +25,14 @@ export class SqliteFolderRepository implements FolderRepository {
   private readonly deleteFolder: Statement<[Id]>
 
   constructor(db: Database) {
-    this.selectAll = db.prepare(
+    this.selectAll = prepare(db, 
       `SELECT ${COLUMNS} FROM folders ORDER BY last_opened_at IS NULL, last_opened_at DESC, name COLLATE NOCASE, id`
     )
-    this.selectById = db.prepare(`SELECT ${COLUMNS} FROM folders WHERE id = ?`)
-    this.selectByPath = db.prepare(`SELECT ${COLUMNS} FROM folders WHERE path = ?`)
-    this.insertFolder = db.prepare('INSERT INTO folders (path, name) VALUES (?, ?) ON CONFLICT (path) DO NOTHING')
-    this.touchFolder = db.prepare(`UPDATE folders SET last_opened_at = ${NOW_SQL} WHERE id = ?`)
-    this.deleteFolder = db.prepare('DELETE FROM folders WHERE id = ?')
+    this.selectById = prepare(db, `SELECT ${COLUMNS} FROM folders WHERE id = ?`)
+    this.selectByPath = prepare(db, `SELECT ${COLUMNS} FROM folders WHERE path = ?`)
+    this.insertFolder = prepare(db, 'INSERT INTO folders (path, name) VALUES (?, ?) ON CONFLICT (path) DO NOTHING')
+    this.touchFolder = prepare(db, `UPDATE folders SET last_opened_at = ${NOW_SQL} WHERE id = ?`)
+    this.deleteFolder = prepare(db, 'DELETE FROM folders WHERE id = ?')
   }
 
   list(): FolderDto[] {

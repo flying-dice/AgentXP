@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3'
+import type { Database } from './infrastructure/db/sql'
 import { A2uiService } from './application/A2uiService'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
@@ -42,7 +42,7 @@ import { createApi } from './ipc/createApi'
 import type { InvokeApi } from '../shared/ipc-channels'
 
 export interface ComposeOptions {
-  db: Database.Database
+  db: Database
   publisher: EventPublisher
   picker: FolderPicker
   saver: TextFileSaver

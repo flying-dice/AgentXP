@@ -14,7 +14,7 @@ src/
     domain/        Entities, value objects and ports (interfaces). Depends on nothing.
     application/   Use cases / services. Depend on domain ports only.
     infrastructure/
-      db/          SQLite (better-sqlite3): connection, migrations, repositories
+      db/          SQLite (built-in `node:sqlite`): connection, migrations, repositories
                    implementing domain ports.
       acp/         ACP client: agent process spawning, connection, client-side
                    handlers (fs, terminals, permissions), session update mapping.
@@ -54,7 +54,7 @@ ports; `ipc` and `index.ts` wire it all. The renderer talks to main only via
 
 ## Persistence
 
-SQLite via better-sqlite3, fully relational and normalised (3NF). Foreign keys
+SQLite via `node:sqlite`, fully relational and normalised (3NF). Foreign keys
 on, `ON DELETE CASCADE` where ownership is clear. JSON text is only used where
 the payload is schemaless by nature (raw tool input/output from agents, A2UI
 component properties and data models). Images from agents are stored as BLOB.

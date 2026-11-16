@@ -1,8 +1,8 @@
-import type { Database } from 'better-sqlite3'
+import { readPragma, transaction, type Database } from './sql'
 import { MIGRATIONS, type Migration } from './migrations'
 
 function currentVersion(db: Database): number {
-  return db.pragma('user_version', { simple: true }) as number
+  return Number(readPragma(db, 'user_version'))
 }
 
 function assertOrdered(migrations: readonly Migration[]): void {
@@ -14,10 +14,10 @@ function assertOrdered(migrations: readonly Migration[]): void {
 }
 
 function apply(db: Database, migration: Migration): void {
-  db.transaction(() => {
+  transaction(db, () => {
     db.exec(migration.sql)
-    db.pragma(`user_version = ${Math.trunc(migration.version)}`)
-  })()
+    db.exec(`PRAGMA user_version = ${Math.trunc(migration.version)}`)
+  })
 }
 
 /** Applies pending migrations in order, each atomically. Returns the resulting schema version. */

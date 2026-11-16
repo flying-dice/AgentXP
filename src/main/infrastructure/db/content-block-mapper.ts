@@ -9,7 +9,7 @@ export interface BlockRow {
   mime_type: string | null
   uri: string | null
   name: string | null
-  data: Buffer | null
+  data: Uint8Array | null
 }
 
 export function blockToRow(block: ContentBlockDto): BlockRow {
@@ -37,7 +37,7 @@ export function rowToBlock(row: BlockRow): ContentBlockDto {
     case 'text':
       return { kind: 'text', text: row.text ?? '' }
     case 'image':
-      return { kind: 'image', mimeType: row.mime_type ?? '', data: (row.data ?? Buffer.alloc(0)).toString('base64'), uri: row.uri }
+      return { kind: 'image', mimeType: row.mime_type ?? '', data: Buffer.from(row.data ?? new Uint8Array()).toString('base64'), uri: row.uri }
     case 'resource_link':
       return { kind: 'resource_link', uri: row.uri ?? '', name: row.name ?? '', mimeType: row.mime_type }
     case 'resource':

@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { Id, TerminalDto } from '@shared/models'
 import {
   DEFAULT_TERMINAL_OUTPUT_LIMIT,
@@ -29,29 +29,29 @@ export class SqliteTerminalRepository implements TerminalRepository {
   private readonly exitStmt: Statement<[number | null, string | null, Id, string]>
 
   constructor(private readonly db: Database) {
-    this.selectOne = db.prepare(`SELECT ${COLUMNS} FROM terminals WHERE session_id = ? AND acp_terminal_id = ?`)
-    this.selectBySession = db.prepare(`SELECT ${COLUMNS} FROM terminals WHERE session_id = ? ORDER BY id`)
-    this.selectArgs = db.prepare('SELECT value FROM terminal_args WHERE terminal_id = ? ORDER BY position')
-    this.insertTerminal = db.prepare(
+    this.selectOne = prepare(db, `SELECT ${COLUMNS} FROM terminals WHERE session_id = ? AND acp_terminal_id = ?`)
+    this.selectBySession = prepare(db, `SELECT ${COLUMNS} FROM terminals WHERE session_id = ? ORDER BY id`)
+    this.selectArgs = prepare(db, 'SELECT value FROM terminal_args WHERE terminal_id = ? ORDER BY position')
+    this.insertTerminal = prepare(db, 
       'INSERT INTO terminals (session_id, acp_terminal_id, command, cwd) VALUES (?, ?, ?, ?)'
     )
-    this.insertArg = db.prepare('INSERT INTO terminal_args (terminal_id, position, value) VALUES (?, ?, ?)')
+    this.insertArg = prepare(db, 'INSERT INTO terminal_args (terminal_id, position, value) VALUES (?, ?, ?)')
     // substr with a negative start keeps the last N characters.
-    this.appendStmt = db.prepare(
+    this.appendStmt = prepare(db, 
       'UPDATE terminals SET output = substr(output || ?, -?) WHERE session_id = ? AND acp_terminal_id = ?'
     )
-    this.exitStmt = db.prepare(
+    this.exitStmt = prepare(db, 
       'UPDATE terminals SET exit_code = ?, signal = ? WHERE session_id = ? AND acp_terminal_id = ?'
     )
   }
 
   create(input: NewTerminal): TerminalDto {
-    this.db.transaction(() => {
+    transaction(this.db, () => {
       const id = Number(
         this.insertTerminal.run(input.sessionId, input.terminalId, input.command, input.cwd).lastInsertRowid
       )
       input.args.forEach((value, position) => this.insertArg.run(id, position, value))
-    })()
+    })
     return this.require(input.sessionId, input.terminalId)
   }
 

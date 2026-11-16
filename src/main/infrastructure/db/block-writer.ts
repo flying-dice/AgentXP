@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { ContentBlockDto } from '@shared/models'
 import { blockToRow, type BlockRow } from './content-block-mapper'
 
@@ -15,7 +15,7 @@ export class BlockWriter {
   private readonly insert: Statement<InsertParams>
 
   constructor(db: Database) {
-    this.insert = db.prepare(
+    this.insert = prepare(db, 
       `INSERT INTO content_blocks (message_id, tool_content_id, position, kind, text, mime_type, uri, name, data)
        VALUES (@message_id, @tool_content_id, @position, @kind, @text, @mime_type, @uri, @name, @data)`
     )

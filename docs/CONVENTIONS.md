@@ -32,7 +32,7 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/main-window.pn
 
 - Strict TS, no `any` (use `unknown` and narrow). Small classes/functions, SRP.
   Constructor injection; no module-level mutable singletons.
-- Domain and application code never import `electron`, `better-sqlite3` or the ACP SDK.
+- Domain and application code never import `electron`, `node:sqlite` or the ACP SDK.
 - Tests: vitest, `*.test.ts` next to the code (`npm test`).
 
 ## Verification

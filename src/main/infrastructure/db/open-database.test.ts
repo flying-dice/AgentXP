@@ -5,20 +5,21 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS, type Migration } from './migrations'
 import { openDatabase } from './open-database'
+import { readPragma } from './sql'
 
 describe('openDatabase', () => {
   it('enables foreign keys and migrates to the latest version', () => {
     const db = openDatabase(':memory:')
-    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
-    expect(db.pragma('user_version', { simple: true })).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
-    expect(db.pragma('busy_timeout', { simple: true })).toBeGreaterThan(0)
+    expect(readPragma(db, 'foreign_keys')).toBe(1)
+    expect(readPragma(db, 'user_version')).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
+    expect(readPragma(db, 'busy_timeout')).toBeGreaterThan(0)
   })
 
   it('uses WAL for file databases and creates parent directories', () => {
     const dir = mkdtempSync(join(tmpdir(), 'agentxp-db-'))
     try {
       const db = openDatabase(join(dir, 'nested', 'app.db'))
-      expect(db.pragma('journal_mode', { simple: true })).toBe('wal')
+      expect(readPragma(db, 'journal_mode')).toBe('wal')
       db.close()
     } finally {
       rmSync(dir, { recursive: true, force: true })
@@ -36,7 +37,7 @@ describe('openDatabase', () => {
   })
 
   it('has no foreign key violations after migration', () => {
-    expect(openDatabase(':memory:').pragma('foreign_key_check')).toEqual([])
+    expect(openDatabase(':memory:').prepare('PRAGMA foreign_key_check').all()).toEqual([])
   })
 })
 
@@ -60,7 +61,7 @@ describe('migrate', () => {
     const db = openDatabase(':memory:')
     const bad = m(2, 'CREATE TABLE half (id INTEGER); THIS IS NOT SQL;')
     expect(() => migrate(db, [...MIGRATIONS, bad])).toThrow()
-    expect(db.pragma('user_version', { simple: true })).toBe(1)
+    expect(readPragma(db, 'user_version')).toBe(1)
     expect(db.prepare("SELECT name FROM sqlite_master WHERE name = 'half'").get()).toBeUndefined()
   })
 

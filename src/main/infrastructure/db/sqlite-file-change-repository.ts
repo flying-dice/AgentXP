@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { FileChangeDto, FileChangeKind, Id } from '@shared/models'
 import { countLineChanges } from '../../domain/line-diff'
 import type { FileChangeRepository, FileWrite } from '../../domain/repositories/file-change-repository'
@@ -58,18 +58,18 @@ export class SqliteFileChangeRepository implements FileChangeRepository {
   private readonly deleteChange: Statement<[Id]>
 
   constructor(private readonly db: Database) {
-    this.selectBySession = db.prepare(`SELECT ${COLUMNS} FROM file_changes WHERE session_id = ? ORDER BY path`)
-    this.selectById = db.prepare(`SELECT ${COLUMNS} FROM file_changes WHERE id = ?`)
-    this.selectByPath = db.prepare(`SELECT ${COLUMNS} FROM file_changes WHERE session_id = ? AND path = ?`)
-    this.insertChange = db.prepare(
+    this.selectBySession = prepare(db, `SELECT ${COLUMNS} FROM file_changes WHERE session_id = ? ORDER BY path`)
+    this.selectById = prepare(db, `SELECT ${COLUMNS} FROM file_changes WHERE id = ?`)
+    this.selectByPath = prepare(db, `SELECT ${COLUMNS} FROM file_changes WHERE session_id = ? AND path = ?`)
+    this.insertChange = prepare(db, 
       `INSERT INTO file_changes (session_id, path, kind, original_text, current_text, additions, deletions)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-    this.updateChange = db.prepare(
+    this.updateChange = prepare(db, 
       `UPDATE file_changes SET kind = ?, current_text = ?, additions = ?, deletions = ?, updated_at = ${NOW_SQL}
        WHERE id = ?`
     )
-    this.deleteChange = db.prepare('DELETE FROM file_changes WHERE id = ?')
+    this.deleteChange = prepare(db, 'DELETE FROM file_changes WHERE id = ?')
   }
 
   list(sessionId: Id): FileChangeDto[] {
@@ -82,10 +82,10 @@ export class SqliteFileChangeRepository implements FileChangeRepository {
   }
 
   record(write: FileWrite): FileChangeDto | null {
-    return this.db.transaction(() => {
+    return transaction(this.db, () => {
       const existing = this.selectByPath.get(write.sessionId, write.path)
       return existing ? this.accumulate(existing, write) : this.start(write)
-    })()
+    })
   }
 
   remove(id: Id): boolean {

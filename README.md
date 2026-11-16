@@ -3,14 +3,14 @@
 A Windows 7 era desktop harness for coding agents speaking the
 [Agent Client Protocol](https://agentclientprotocol.com).
 
-Electron + electron-vite + Svelte 5, SQLite (better-sqlite3), our own
+Electron + electron-vite + Svelte 5, SQLite (built-in `node:sqlite`), our own
 complete atomic-design WinForms UI kit (pure Svelte, no UI libraries) in Storybook, and A2UI so agents can
 draw with that kit.
 
 ## Getting started
 
 ```bash
-npm install          # also rebuilds better-sqlite3 for Electron
+npm install          # no native modules to rebuild
 npm run dev          # launch the app
 npm run storybook    # browse the WinForms UI kit
 npm run typecheck

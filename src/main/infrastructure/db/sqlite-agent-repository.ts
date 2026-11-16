@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { AgentDto, Id } from '@shared/models'
 import type { AgentRepository, NewAgent } from '../../domain/repositories/agent-repository'
 
@@ -27,20 +27,20 @@ export class SqliteAgentRepository implements AgentRepository {
 
   constructor(private readonly db: Database) {
     const cols = 'id, name, command, is_default'
-    this.selectAll = db.prepare(`SELECT ${cols} FROM agents ORDER BY id`)
-    this.selectById = db.prepare(`SELECT ${cols} FROM agents WHERE id = ?`)
-    this.selectDefault = db.prepare(`SELECT ${cols} FROM agents WHERE is_default = 1`)
-    this.selectArgs = db.prepare('SELECT value FROM agent_args WHERE agent_id = ? ORDER BY position')
-    this.selectEnv = db.prepare('SELECT key, value FROM agent_env WHERE agent_id = ? ORDER BY key')
-    this.insertAgent = db.prepare('INSERT INTO agents (name, command) VALUES (?, ?)')
-    this.updateAgent = db.prepare('UPDATE agents SET name = ?, command = ? WHERE id = ?')
-    this.insertArg = db.prepare('INSERT INTO agent_args (agent_id, position, value) VALUES (?, ?, ?)')
-    this.insertEnv = db.prepare('INSERT INTO agent_env (agent_id, key, value) VALUES (?, ?, ?)')
-    this.deleteArgs = db.prepare('DELETE FROM agent_args WHERE agent_id = ?')
-    this.deleteEnv = db.prepare('DELETE FROM agent_env WHERE agent_id = ?')
-    this.deleteAgent = db.prepare('DELETE FROM agents WHERE id = ?')
-    this.clearDefault = db.prepare('UPDATE agents SET is_default = 0 WHERE is_default = 1')
-    this.markDefault = db.prepare('UPDATE agents SET is_default = 1 WHERE id = ?')
+    this.selectAll = prepare(db, `SELECT ${cols} FROM agents ORDER BY id`)
+    this.selectById = prepare(db, `SELECT ${cols} FROM agents WHERE id = ?`)
+    this.selectDefault = prepare(db, `SELECT ${cols} FROM agents WHERE is_default = 1`)
+    this.selectArgs = prepare(db, 'SELECT value FROM agent_args WHERE agent_id = ? ORDER BY position')
+    this.selectEnv = prepare(db, 'SELECT key, value FROM agent_env WHERE agent_id = ? ORDER BY key')
+    this.insertAgent = prepare(db, 'INSERT INTO agents (name, command) VALUES (?, ?)')
+    this.updateAgent = prepare(db, 'UPDATE agents SET name = ?, command = ? WHERE id = ?')
+    this.insertArg = prepare(db, 'INSERT INTO agent_args (agent_id, position, value) VALUES (?, ?, ?)')
+    this.insertEnv = prepare(db, 'INSERT INTO agent_env (agent_id, key, value) VALUES (?, ?, ?)')
+    this.deleteArgs = prepare(db, 'DELETE FROM agent_args WHERE agent_id = ?')
+    this.deleteEnv = prepare(db, 'DELETE FROM agent_env WHERE agent_id = ?')
+    this.deleteAgent = prepare(db, 'DELETE FROM agents WHERE id = ?')
+    this.clearDefault = prepare(db, 'UPDATE agents SET is_default = 0 WHERE is_default = 1')
+    this.markDefault = prepare(db, 'UPDATE agents SET is_default = 1 WHERE id = ?')
   }
 
   list(): AgentDto[] {
@@ -58,21 +58,21 @@ export class SqliteAgentRepository implements AgentRepository {
   }
 
   create(input: NewAgent): AgentDto {
-    const id = this.db.transaction(() => {
+    const id = transaction(this.db, () => {
       const newId = Number(this.insertAgent.run(input.name, input.command).lastInsertRowid)
       this.writeChildren(newId, input)
       return newId
-    })()
+    })
     return this.require(id)
   }
 
   update(id: Id, input: NewAgent): AgentDto | null {
-    this.db.transaction(() => {
+    transaction(this.db, () => {
       if (this.updateAgent.run(input.name, input.command, id).changes === 0) return
       this.deleteArgs.run(id)
       this.deleteEnv.run(id)
       this.writeChildren(id, input)
-    })()
+    })
     return this.get(id)
   }
 
@@ -81,12 +81,12 @@ export class SqliteAgentRepository implements AgentRepository {
   }
 
   setDefault(id: Id): boolean {
-    return this.db.transaction(() => {
+    return transaction(this.db, () => {
       if (!this.selectById.get(id)) return false
       this.clearDefault.run()
       this.markDefault.run(id)
       return true
-    })()
+    })
   }
 
   private writeChildren(id: Id, input: NewAgent): void {

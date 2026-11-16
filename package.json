@@ -15,16 +15,16 @@
     "test": "node scripts/test.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "postinstall": "electron-builder install-app-deps",
-    "rebuild:node": "npm rebuild better-sqlite3",
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@a2ui/web_core": "0.15.0",
+    "@ag-ui/client": "1.0.4",
+    "@ag-ui/core": "1.0.4",
     "@agentclientprotocol/sdk": "2.7.0",
     "@electron-toolkit/preload": "3.0.2",
     "@electron-toolkit/utils": "4.0.0",
     "@modelcontextprotocol/sdk": "1.32.2",
-    "better-sqlite3": "12.11.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -36,7 +36,6 @@
     "@storybook/svelte-vite": "10.6.7",
     "@sveltejs/vite-plugin-svelte": "6.2.4",
     "@tailwindcss/vite": "4.3.5",
-    "@types/better-sqlite3": "9.6.0",
     "@types/node": "26.6.6",
     "bits-ui": "2.21.0",
     "clsx": "2.1.1",

@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { SettingsRepository } from '../../domain/repositories/settings-repository'
 import { NOW_SQL } from './sql'
 
@@ -9,13 +9,13 @@ export class SqliteSettingsRepository implements SettingsRepository {
   private readonly remove: Statement<[string]>
 
   constructor(db: Database) {
-    this.selectValue = db.prepare('SELECT value FROM settings WHERE key = ?')
-    this.selectAll = db.prepare('SELECT key, value FROM settings ORDER BY key')
-    this.upsert = db.prepare(
+    this.selectValue = prepare(db, 'SELECT value FROM settings WHERE key = ?')
+    this.selectAll = prepare(db, 'SELECT key, value FROM settings ORDER BY key')
+    this.upsert = prepare(db, 
       `INSERT INTO settings (key, value) VALUES (?, ?)
        ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = ${NOW_SQL}`
     )
-    this.remove = db.prepare('DELETE FROM settings WHERE key = ?')
+    this.remove = prepare(db, 'DELETE FROM settings WHERE key = ?')
   }
 
   get(key: string): string | null {

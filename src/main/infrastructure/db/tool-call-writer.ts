@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { Id, ToolCallContentDto, ToolCallLocationDto } from '@shared/models'
 import type { ToolCallUpsert } from '../../domain/repositories/transcript-repository'
 import { BlockWriter } from './block-writer'
@@ -43,11 +43,11 @@ export class ToolCallWriter {
 
   constructor(db: Database) {
     this.blocks = new BlockWriter(db)
-    this.insertToolCall = db.prepare(
+    this.insertToolCall = prepare(db, 
       `INSERT INTO tool_calls (entry_id, session_id, acp_tool_call_id, title, kind, status, raw_input, raw_output)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    this.updateToolCall = db.prepare(
+    this.updateToolCall = prepare(db, 
       `UPDATE tool_calls SET
          title = COALESCE(@title, title),
          kind = COALESCE(@kind, kind),
@@ -56,12 +56,12 @@ export class ToolCallWriter {
          raw_output = CASE WHEN @setRawOutput = 1 THEN @rawOutput ELSE raw_output END
        WHERE entry_id = @id`
     )
-    this.deleteLocations = db.prepare('DELETE FROM tool_call_locations WHERE tool_call_id = ?')
-    this.insertLocation = db.prepare(
+    this.deleteLocations = prepare(db, 'DELETE FROM tool_call_locations WHERE tool_call_id = ?')
+    this.insertLocation = prepare(db, 
       'INSERT INTO tool_call_locations (tool_call_id, position, path, line) VALUES (?, ?, ?, ?)'
     )
-    this.deleteContents = db.prepare('DELETE FROM tool_call_contents WHERE tool_call_id = ?')
-    this.insertContent = db.prepare(
+    this.deleteContents = prepare(db, 'DELETE FROM tool_call_contents WHERE tool_call_id = ?')
+    this.insertContent = prepare(db, 
       `INSERT INTO tool_call_contents (tool_call_id, position, kind, path, old_text, new_text, terminal_id)
        VALUES (@toolCallId, @position, @kind, @path, @oldText, @newText, @terminalId)`
     )

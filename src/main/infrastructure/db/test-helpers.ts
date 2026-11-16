@@ -1,11 +1,11 @@
-import type Database from 'better-sqlite3'
+import { prepare, type Database } from './sql'
 import { openDatabase } from './open-database'
 import { SqliteFolderRepository } from './sqlite-folder-repository'
 import { SqliteSessionRepository } from './sqlite-session-repository'
 import { SqliteAgentRepository } from './sqlite-agent-repository'
 
 export interface Fixture {
-  db: Database.Database
+  db: Database
   agentId: number
   folderId: number
   sessionId: number
@@ -20,10 +20,10 @@ export function createFixture(): Fixture {
   return { db, agentId, folderId, sessionId }
 }
 
-export function createSession(db: Database.Database, folderId: number, agentId: number, title = 'Other'): number {
+export function createSession(db: Database, folderId: number, agentId: number, title = 'Other'): number {
   return new SqliteSessionRepository(db).create({ folderId, agentId, title }).id
 }
 
-export function count(db: Database.Database, table: string): number {
-  return (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n
+export function count(db: Database, table: string): number {
+  return (prepare(db, `SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n
 }

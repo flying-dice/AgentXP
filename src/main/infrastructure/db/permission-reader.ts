@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { Id, PermissionOptionDto, PermissionRequestDto } from '@shared/models'
 import { idsJson } from './sql'
 
@@ -23,11 +23,11 @@ export class PermissionReader {
   private readonly options: Statement<[Id], { option_id: string; name: string; kind: PermissionOptionDto['kind'] }>
 
   constructor(db: Database) {
-    this.byId = db.prepare(`${SELECT} WHERE pr.id = ?`)
-    this.byToolCalls = db.prepare(`${SELECT} WHERE pr.tool_call_id IN (SELECT value FROM json_each(?)) ORDER BY pr.id`)
-    this.pending = db.prepare(`${SELECT} WHERE pr.outcome = 'pending' ORDER BY pr.id`)
-    this.pendingBySession = db.prepare(`${SELECT} WHERE pr.outcome = 'pending' AND tc.session_id = ? ORDER BY pr.id`)
-    this.options = db.prepare(
+    this.byId = prepare(db, `${SELECT} WHERE pr.id = ?`)
+    this.byToolCalls = prepare(db, `${SELECT} WHERE pr.tool_call_id IN (SELECT value FROM json_each(?)) ORDER BY pr.id`)
+    this.pending = prepare(db, `${SELECT} WHERE pr.outcome = 'pending' ORDER BY pr.id`)
+    this.pendingBySession = prepare(db, `${SELECT} WHERE pr.outcome = 'pending' AND tc.session_id = ? ORDER BY pr.id`)
+    this.options = prepare(db, 
       'SELECT option_id, name, kind FROM permission_options WHERE request_id = ? ORDER BY position'
     )
   }

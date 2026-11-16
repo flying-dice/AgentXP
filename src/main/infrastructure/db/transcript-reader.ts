@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type {
   ContentBlockDto,
   Id,
@@ -81,32 +81,32 @@ export class TranscriptReader {
 
   constructor(db: Database) {
     this.permissions = new PermissionReader(db)
-    this.entriesBySession = db.prepare('SELECT id FROM transcript_entries WHERE session_id = ? ORDER BY seq')
-    this.entries = db.prepare(
+    this.entriesBySession = prepare(db, 'SELECT id FROM transcript_entries WHERE session_id = ? ORDER BY seq')
+    this.entries = prepare(db, 
       `SELECT id, seq, kind, created_at FROM transcript_entries WHERE id IN ${IN_IDS} ORDER BY seq`
     )
-    this.messages = db.prepare(`SELECT entry_id, role FROM messages WHERE entry_id IN ${IN_IDS}`)
-    this.messageBlocks = db.prepare(
+    this.messages = prepare(db, `SELECT entry_id, role FROM messages WHERE entry_id IN ${IN_IDS}`)
+    this.messageBlocks = prepare(db, 
       `SELECT message_id AS owner, ${BLOCK_COLUMNS} FROM content_blocks
        WHERE message_id IN ${IN_IDS} ORDER BY message_id, position`
     )
-    this.toolCalls = db.prepare(
+    this.toolCalls = prepare(db, 
       `SELECT entry_id, acp_tool_call_id, title, kind, status, raw_input, raw_output
        FROM tool_calls WHERE entry_id IN ${IN_IDS}`
     )
-    this.locations = db.prepare(
+    this.locations = prepare(db, 
       `SELECT tool_call_id, path, line FROM tool_call_locations
        WHERE tool_call_id IN ${IN_IDS} ORDER BY tool_call_id, position`
     )
-    this.contents = db.prepare(
+    this.contents = prepare(db, 
       `SELECT id, tool_call_id, kind, path, old_text, new_text, terminal_id FROM tool_call_contents
        WHERE tool_call_id IN ${IN_IDS} ORDER BY tool_call_id, position`
     )
-    this.contentBlocks = db.prepare(
+    this.contentBlocks = prepare(db, 
       `SELECT tool_content_id AS owner, ${BLOCK_COLUMNS} FROM content_blocks
        WHERE tool_content_id IN ${TOOL_CONTENT_IDS} ORDER BY tool_content_id, position`
     )
-    this.surfaces = db.prepare(`SELECT entry_id, surface_id FROM a2ui_surfaces WHERE entry_id IN ${IN_IDS}`)
+    this.surfaces = prepare(db, `SELECT entry_id, surface_id FROM a2ui_surfaces WHERE entry_id IN ${IN_IDS}`)
   }
 
   listBySession(sessionId: Id): TranscriptEntryDto[] {

@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type {
   AvailableCommandDto,
   Id,
@@ -60,13 +60,13 @@ export class SqliteSessionRepository implements SessionRepository {
 
   constructor(private readonly db: Database) {
     const order = 'ORDER BY updated_at DESC, id DESC'
-    this.selectAll = db.prepare(`SELECT ${COLUMNS} FROM sessions ${order}`)
-    this.selectByFolder = db.prepare(`SELECT ${COLUMNS} FROM sessions WHERE folder_id = ? ${order}`)
-    this.selectById = db.prepare(`SELECT ${COLUMNS} FROM sessions WHERE id = ?`)
-    this.selectByAcp = db.prepare(`SELECT ${COLUMNS} FROM sessions WHERE agent_id = ? AND acp_session_id = ?`)
-    this.insertSession = db.prepare('INSERT INTO sessions (folder_id, agent_id, title) VALUES (?, ?, ?)')
+    this.selectAll = prepare(db, `SELECT ${COLUMNS} FROM sessions ${order}`)
+    this.selectByFolder = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE folder_id = ? ${order}`)
+    this.selectById = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE id = ?`)
+    this.selectByAcp = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE agent_id = ? AND acp_session_id = ?`)
+    this.insertSession = prepare(db, 'INSERT INTO sessions (folder_id, agent_id, title) VALUES (?, ?, ?)')
     const setter = (column: string): Statement<[string | null, Id]> =>
-      db.prepare(`UPDATE sessions SET ${column} = ?, updated_at = ${NOW_SQL} WHERE id = ?`)
+      prepare(db, `UPDATE sessions SET ${column} = ?, updated_at = ${NOW_SQL} WHERE id = ?`)
     this.updateColumn = {
       title: setter('title'),
       status: setter('status'),
@@ -74,30 +74,30 @@ export class SqliteSessionRepository implements SessionRepository {
       current_mode_id: setter('current_mode_id'),
       current_model_id: setter('current_model_id')
     }
-    this.updateUsage = db.prepare(
+    this.updateUsage = prepare(db, 
       `UPDATE sessions SET context_used = ?, context_size = ?, updated_at = ${NOW_SQL} WHERE id = ?`
     )
-    this.touchSession = db.prepare(`UPDATE sessions SET updated_at = ${NOW_SQL} WHERE id = ?`)
-    this.deleteSession = db.prepare('DELETE FROM sessions WHERE id = ?')
-    this.selectModes = db.prepare(
+    this.touchSession = prepare(db, `UPDATE sessions SET updated_at = ${NOW_SQL} WHERE id = ?`)
+    this.deleteSession = prepare(db, 'DELETE FROM sessions WHERE id = ?')
+    this.selectModes = prepare(db, 
       'SELECT mode_id AS id, name, description FROM session_modes WHERE session_id = ? ORDER BY position'
     )
-    this.selectModels = db.prepare(
+    this.selectModels = prepare(db, 
       'SELECT model_id AS id, name, description FROM session_models WHERE session_id = ? ORDER BY position'
     )
-    this.selectCommands = db.prepare(
+    this.selectCommands = prepare(db, 
       'SELECT name, description, hint FROM session_commands WHERE session_id = ? ORDER BY position'
     )
-    this.deleteModes = db.prepare('DELETE FROM session_modes WHERE session_id = ?')
-    this.deleteModels = db.prepare('DELETE FROM session_models WHERE session_id = ?')
-    this.deleteCommands = db.prepare('DELETE FROM session_commands WHERE session_id = ?')
-    this.insertMode = db.prepare(
+    this.deleteModes = prepare(db, 'DELETE FROM session_modes WHERE session_id = ?')
+    this.deleteModels = prepare(db, 'DELETE FROM session_models WHERE session_id = ?')
+    this.deleteCommands = prepare(db, 'DELETE FROM session_commands WHERE session_id = ?')
+    this.insertMode = prepare(db, 
       'INSERT INTO session_modes (session_id, position, mode_id, name, description) VALUES (?, ?, ?, ?, ?)'
     )
-    this.insertModel = db.prepare(
+    this.insertModel = prepare(db, 
       'INSERT INTO session_models (session_id, position, model_id, name, description) VALUES (?, ?, ?, ?, ?)'
     )
-    this.insertCommand = db.prepare(
+    this.insertCommand = prepare(db, 
       'INSERT INTO session_commands (session_id, position, name, description, hint) VALUES (?, ?, ?, ?, ?)'
     )
   }
@@ -175,11 +175,11 @@ export class SqliteSessionRepository implements SessionRepository {
   }
 
   private replaceList<T>(id: Id, clear: Statement<[Id]>, items: T[], insert: (position: number, item: T) => void): void {
-    this.db.transaction(() => {
+    transaction(this.db, () => {
       clear.run(id)
       items.forEach((item, position) => insert(position, item))
       this.touchSession.run(id)
-    })()
+    })
   }
 
   private toDto(row: SessionRow): SessionDto {

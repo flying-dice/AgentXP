@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { Id, PermissionOptionDto, PermissionRequestDto } from '@shared/models'
 import type { PermissionRepository } from '../../domain/repositories/permission-repository'
 import { PermissionReader } from './permission-reader'
@@ -17,20 +17,20 @@ export class SqlitePermissionRepository implements PermissionRepository {
 
   constructor(private readonly db: Database) {
     this.reader = new PermissionReader(db)
-    this.selectToolCall = db.prepare('SELECT entry_id FROM tool_calls WHERE session_id = ? AND acp_tool_call_id = ?')
-    this.insertRequest = db.prepare('INSERT INTO permission_requests (tool_call_id) VALUES (?)')
-    this.insertOption = db.prepare(
+    this.selectToolCall = prepare(db, 'SELECT entry_id FROM tool_calls WHERE session_id = ? AND acp_tool_call_id = ?')
+    this.insertRequest = prepare(db, 'INSERT INTO permission_requests (tool_call_id) VALUES (?)')
+    this.insertOption = prepare(db, 
       'INSERT INTO permission_options (request_id, position, option_id, name, kind) VALUES (?, ?, ?, ?, ?)'
     )
-    this.hasOption = db.prepare('SELECT 1 AS found FROM permission_options WHERE request_id = ? AND option_id = ?')
-    this.select = db.prepare('SELECT outcome FROM permission_requests WHERE id = ?')
-    this.markSelected = db.prepare(
+    this.hasOption = prepare(db, 'SELECT 1 AS found FROM permission_options WHERE request_id = ? AND option_id = ?')
+    this.select = prepare(db, 'SELECT outcome FROM permission_requests WHERE id = ?')
+    this.markSelected = prepare(db, 
       `UPDATE permission_requests SET outcome = 'selected', selected_option_id = ?, resolved_at = ${NOW_SQL} WHERE id = ?`
     )
-    this.markCancelled = db.prepare(
+    this.markCancelled = prepare(db, 
       `UPDATE permission_requests SET outcome = 'cancelled', resolved_at = ${NOW_SQL} WHERE id = ?`
     )
-    this.cancelAllPending = db.prepare(
+    this.cancelAllPending = prepare(db, 
       `UPDATE permission_requests SET outcome = 'cancelled', resolved_at = ${NOW_SQL}
        WHERE outcome = 'pending'
          AND tool_call_id IN (SELECT entry_id FROM tool_calls WHERE session_id = ?)`
@@ -38,13 +38,13 @@ export class SqlitePermissionRepository implements PermissionRepository {
   }
 
   create(sessionId: Id, toolCallId: string, options: PermissionOptionDto[]): PermissionRequestDto {
-    const id = this.db.transaction(() => {
+    const id = transaction(this.db, () => {
       const entry = this.selectToolCall.get(sessionId, toolCallId)
       if (!entry) throw new Error(`Unknown tool call ${toolCallId} in session ${sessionId}`)
       const requestId = Number(this.insertRequest.run(entry.entry_id).lastInsertRowid)
       options.forEach((o, position) => this.insertOption.run(requestId, position, o.optionId, o.name, o.kind))
       return requestId
-    })()
+    })
     return this.require(id)
   }
 
@@ -57,13 +57,13 @@ export class SqlitePermissionRepository implements PermissionRepository {
   }
 
   resolve(id: Id, optionId: string | null): PermissionRequestDto | null {
-    return this.db.transaction(() => {
+    return transaction(this.db, () => {
       if (this.select.get(id)?.outcome !== 'pending') return null
       if (optionId === null) this.markCancelled.run(id)
       else if (this.hasOption.get(id, optionId)) this.markSelected.run(optionId, id)
       else return null
       return this.reader.get(id)
-    })()
+    })
   }
 
   cancelPending(sessionId: Id): number {

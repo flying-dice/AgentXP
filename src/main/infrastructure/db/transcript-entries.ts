@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, type Database, type Statement } from './sql'
 import type { Id, TranscriptEntryDto } from '@shared/models'
 
 export type EntryKind = TranscriptEntryDto['kind']
@@ -10,12 +10,12 @@ export class TranscriptEntries {
   private readonly deleteBySession: Statement<[Id]>
 
   constructor(db: Database) {
-    this.insertEntry = db.prepare(
+    this.insertEntry = prepare(db, 
       `INSERT INTO transcript_entries (session_id, seq, kind)
        VALUES (?, (SELECT COALESCE(MAX(seq), 0) + 1 FROM transcript_entries WHERE session_id = ?), ?)`
     )
-    this.deleteEntry = db.prepare('DELETE FROM transcript_entries WHERE id = ?')
-    this.deleteBySession = db.prepare('DELETE FROM transcript_entries WHERE session_id = ?')
+    this.deleteEntry = prepare(db, 'DELETE FROM transcript_entries WHERE id = ?')
+    this.deleteBySession = prepare(db, 'DELETE FROM transcript_entries WHERE session_id = ?')
   }
 
   /** Must run inside the caller's transaction together with the subtype insert. */

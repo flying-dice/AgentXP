@@ -10,7 +10,6 @@ files:
   - '!{electron.vite.config.ts,tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
 asarUnpack:
   - resources/**
-  - node_modules/better-sqlite3/**
 win:
   target: nsis
 linux:

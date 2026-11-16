@@ -1,4 +1,4 @@
-import type { Database, Statement } from 'better-sqlite3'
+import { prepare, transaction, type Database, type Statement } from './sql'
 import type { ContentBlockDto, Id, MessageRole, TranscriptEntryDto } from '@shared/models'
 import type {
   ChunkResult,
@@ -41,17 +41,17 @@ export class SqliteTranscriptRepository implements TranscriptRepository {
     this.reader = new TranscriptReader(db)
     this.blocks = new BlockWriter(db)
     this.toolCalls = new ToolCallWriter(db)
-    this.selectLast = db.prepare(
+    this.selectLast = prepare(db, 
       `SELECT e.id, e.kind, m.role FROM transcript_entries e
        LEFT JOIN messages m ON m.entry_id = e.id
        WHERE e.session_id = ? ORDER BY e.seq DESC LIMIT 1`
     )
-    this.selectLastBlock = db.prepare(
+    this.selectLastBlock = prepare(db, 
       'SELECT id, position, kind FROM content_blocks WHERE message_id = ? ORDER BY position DESC LIMIT 1'
     )
-    this.insertMessage = db.prepare('INSERT INTO messages (entry_id, role) VALUES (?, ?)')
-    this.extendText = db.prepare('UPDATE content_blocks SET text = text || ? WHERE id = ?')
-    this.selectToolCallEntry = db.prepare('SELECT entry_id FROM tool_calls WHERE session_id = ? AND acp_tool_call_id = ?')
+    this.insertMessage = prepare(db, 'INSERT INTO messages (entry_id, role) VALUES (?, ?)')
+    this.extendText = prepare(db, 'UPDATE content_blocks SET text = text || ? WHERE id = ?')
+    this.selectToolCallEntry = prepare(db, 'SELECT entry_id FROM tool_calls WHERE session_id = ? AND acp_tool_call_id = ?')
   }
 
   list(sessionId: Id): TranscriptEntryDto[] {
@@ -63,23 +63,23 @@ export class SqliteTranscriptRepository implements TranscriptRepository {
   }
 
   appendMessage(sessionId: Id, role: MessageRole, blocks: ContentBlockDto[]): MessageEntryDto {
-    const id = this.db.transaction(() => this.createMessage(sessionId, role, blocks))()
+    const id = transaction(this.db, () => this.createMessage(sessionId, role, blocks))
     return this.requireMessage(id)
   }
 
   appendChunk(sessionId: Id, role: MessageRole, block: ContentBlockDto): ChunkResult {
-    return this.db.transaction((): ChunkResult => {
+    return transaction(this.db, (): ChunkResult => {
       const last = this.selectLast.get(sessionId)
       if (last?.kind === 'message' && last.role === role) {
         this.extendMessage(last.id, block)
         return { entry: this.requireMessage(last.id), created: false }
       }
       return { entry: this.requireMessage(this.createMessage(sessionId, role, [block])), created: true }
-    })()
+    })
   }
 
   upsertToolCall(sessionId: Id, input: ToolCallUpsert): UpsertResult {
-    return this.db.transaction((): UpsertResult => {
+    return transaction(this.db, (): UpsertResult => {
       const existing = this.selectToolCallEntry.get(sessionId, input.toolCallId)
       if (existing) {
         this.toolCalls.update(existing.entry_id, input)
@@ -88,7 +88,7 @@ export class SqliteTranscriptRepository implements TranscriptRepository {
       const entryId = this.entries.allocate(sessionId, 'tool_call')
       this.toolCalls.insert(entryId, sessionId, input)
       return { entry: this.requireToolCall(entryId), created: true }
-    })()
+    })
   }
 
   findToolCall(sessionId: Id, toolCallId: string): ToolCallEntryDto | null {
