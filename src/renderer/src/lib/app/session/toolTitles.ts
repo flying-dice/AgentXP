@@ -8,6 +8,7 @@
  * plain title: callers keep what the agent said.
  */
 import type { ToolKind } from '@shared/models'
+import { browserNow } from './browserSteps'
 
 export interface ToolTitleInput {
   /** The title the agent gave the tool call. */
@@ -116,3 +117,9 @@ export function plainToolTitle(name: string): string | null {
 
 /** The title to show for a tool: the plain one, else what the agent said. */
 export const toolTitleOr = (name: string): string => plainToolTitle(name) ?? name
+
+/**
+ * The title of a step that is running, for the status text and the chat row: the present-tense sentence of a Browser step
+ * ("Typing 'Standup'"), else the plain title, else null. A tool id such as `agent7.browser_type` is never the answer (UX-170).
+ */
+export const liveToolTitle = (name: string, rawInput: string | null = null): string | null => browserNow(name, rawInput) ?? plainToolTitle(name)

@@ -45,7 +45,7 @@ The page area shows the web page of the active tab. A new tab shows **Type an ad
 
 ### The Status Bar
 
-The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can read the page, and the zoom of the page. The part **Agent:** says **can read this page**, **asks first**, **cannot read pages**, or **reading** while the assistant reads the page. After the assistant read the page it says **The agent read this page**. Point to it to read where to change it. The button **Ask about this page** in the toolbar, at the right of the address, opens the chat pane with the question **What does this page say?** ready in the message box. You can change the question before you send it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can read the page, and the zoom of the page. The part **Agent:** says **can read this page**, **asks first**, **cannot read pages**, or **reading** while the assistant reads the page. After the assistant read the page it says **The agent read this page**. Point to it to read where to change it. The button **Ask about this page** in the toolbar, at the right of the address, opens the chat pane with the whole text that will be sent in the message box: one line that names the page and its address, and the question **What does this page say?** The box grows so that you see all of it. You can change the text before you send it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
@@ -68,10 +68,10 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | New tab | Opens a blank tab. The tooltip says **New tab**. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
 | Agent bar | Shows "Agent is using this page" with what the agent does, until the answer of the chat is done (at the latest 20 seconds after the last step). When the agent finished reading the page, it says "The agent read this page." and goes after 5 seconds, unless the agent goes on. After you take over, it says that you have control. It only shows the state: **Resume** is on the top bar. | `browser-agent-bar` |
-| Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'", "Waiting for the page to change"), or that you have control. Point to it to see what the agent waits for. | `browser-agent-bar-text` |
-| Take over | Pauses the agent on this page so that you can use it. Its tooltip says **You are in control. All tools ask first until you resume.** It stays at the right of the bar and then reads **Taken over**. Every tool asks before it is used again. | `browser-agent-takeover` |
+| Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'", "Waiting for the page to change"), or that you have control. The sentence wraps to a second line, so it is never cut. Point to it to see what the agent waits for. | `browser-agent-bar-text` |
+| Take over | Pauses the agent on this page so that you can use it. Its tooltip says **Stop the agent and use the page yourself. Every tool asks first until you resume.** It stays at the right of the bar and then reads **Taken over**. Every tool asks before it is used again. | `browser-agent-takeover` |
 | Agent status | Says whether the assistant can read the page: can read this page, asks first, cannot read pages, reading, or that the agent read this page. | `browser-assistant-status` |
-| Ask about this page | A button in the toolbar, at the right of the address. It opens the chat pane with the question "What does this page say?" ready. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
+| Ask about this page | A button in the toolbar, at the right of the address. It opens the chat pane with the whole text, the page and the question "What does this page say?", ready in the box. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
 | Error page | Shows when a page could not be opened. | `browser-error-page` |
 | Error title | "This page can't be displayed". | `browser-error-title` |

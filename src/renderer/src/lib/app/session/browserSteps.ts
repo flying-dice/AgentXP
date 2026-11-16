@@ -49,6 +49,63 @@ export function resultTarget(result: string | null | undefined, verbs: string): 
   return target && target !== 'an item on the page' ? target : null
 }
 
+/** The box a person typed into, in words: "'search messages'" gives "the search messages box"; "a text box" stays. */
+export function boxOf(target: string): string {
+  const name = /^'(.*)'$/.exec(target)?.[1]
+  if (name === undefined) return target
+  return /\b(box|field)$/i.test(name) ? `the ${name}` : `the ${name} box`
+}
+
+/**
+ * What a Browser step that is still running is doing, in the present tense ("Typing 'Standup'", "Reading the page"), for the status
+ * text and the chat row. Null for a tool that is not a Browser tool. The element of a click is only known once the call ends.
+ */
+export function browserNow(name: string, rawInput: string | null): string | null {
+  const tool = browserToolName(name)
+  if (!tool) return null
+  const input = parse(rawInput)
+  switch (tool) {
+    case 'browser_navigate': {
+      const url = str(input.url)
+      return url ? `Opening ${pageOf(url)}` : 'Opening a web page'
+    }
+    case 'browser_read':
+      return 'Reading the page'
+    case 'browser_find': {
+      const text = str(input.text) ?? str(input.name)
+      return text ? `Looking for '${shorten(text)}' on the page` : 'Looking at the page'
+    }
+    case 'browser_screenshot':
+      return 'Looking at the page'
+    case 'browser_click':
+      return 'Clicking on the page'
+    case 'browser_type': {
+      const text = str(input.text)
+      return text ? `Typing '${shorten(text)}'` : 'Typing on the page'
+    }
+    case 'browser_press': {
+      const key = str(input.key) ?? str(input.keys)
+      return key ? `Pressing ${key}` : 'Pressing a key on the page'
+    }
+    case 'browser_scroll':
+      return 'Scrolling the page'
+    case 'browser_wait':
+      return 'Waiting for the page to change'
+    case 'browser_select':
+      return 'Choosing an item on the page'
+    case 'browser_tabs':
+      return 'Working with the tabs of the browser'
+    case 'browser_back':
+      return 'Going back one page'
+    case 'browser_forward':
+      return 'Going forward one page'
+    case 'browser_reload':
+      return 'Reloading the page'
+    default:
+      return 'Using the browser'
+  }
+}
+
 /** One step of the Browser in the past tense ("Read the page"), or null for a tool that is not a Browser tool. `result` is the text the tool gave back; it names the target of a click or of typing. */
 export function browserStep(name: string, rawInput: string | null, result: string | null = null): string | null {
   const tool = browserToolName(name)
@@ -73,10 +130,12 @@ export function browserStep(name: string, rawInput: string | null, result: strin
     }
     case 'browser_type': {
       const target = resultTarget(result, 'Typed into')
-      return target ? `Typed in ${target}` : 'Typed on the page'
+      const text = str(input.text)
+      const typed = text ? `Typed '${shorten(text)}'` : 'Typed'
+      return target ? `${typed} in ${boxOf(target)}` : `${typed} on the page`
     }
     case 'browser_press': {
-      const key = str(input.key)
+      const key = str(input.key) ?? str(input.keys)
       return key ? `Pressed ${key}` : 'Pressed a key on the page'
     }
     case 'browser_scroll':

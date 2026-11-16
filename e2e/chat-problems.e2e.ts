@@ -99,6 +99,9 @@ describe('chat: the agent program is stopped from Task Manager', () => {
     const viewer = ctx.desktop.window('event-viewer')
     await see.visible(viewer)
     await see.attribute(viewer.getByTestId('event-viewer-show-all'), 'aria-checked', 'false')
+    // UX-171: the first view is never empty while the log is not; the hidden events are one link away.
+    await see.eventually(async () => expect(await viewer.getByTestId('event-viewer-row').count()).toBeGreaterThan(0))
+    if (await viewer.getByTestId('event-viewer-show-hidden').count()) await see.text(viewer.getByTestId('event-viewer-show-hidden'), 'Show all')
     await viewer.getByTestId('event-viewer-show-all').click()
     await see.attribute(viewer.getByTestId('event-viewer-show-all'), 'aria-checked', 'true')
     await ctx.desktop.closeWindow('event-viewer')

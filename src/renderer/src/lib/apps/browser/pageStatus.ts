@@ -90,6 +90,9 @@ export function stepZoom(zoom: number, direction: -1 | 0 | 1): number {
 
 export const zoomText = (zoom: number): string => `${Math.round(zoom * 100)}%`
 
+/** The tooltip of the Take over button: what one click does, in plain words. */
+export const TAKE_OVER_BUTTON_TIP = 'Stop the agent and use the page yourself. Every tool asks first until you resume.'
+
 /** How long "The agent read this page." stays in the yellow bar after the read is done (UX-128). */
 export const READ_DONE_MS = 5000
 

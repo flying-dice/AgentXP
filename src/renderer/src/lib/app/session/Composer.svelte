@@ -81,10 +81,24 @@
       if (request.text !== undefined) draft = request.text
       void tick().then(() => {
         input?.focus()
-        if (request.text !== undefined) input?.setSelectionRange(draft.length, draft.length)
+        if (request.text !== undefined) {
+          input?.setSelectionRange(draft.length, draft.length)
+          showWholeDraft()
+        }
         onprefilled?.(request.id)
       })
     })
+  })
+
+  /** A text put in the box by the app ("Ask about this page") is shown whole, not scrolled to its last line (UX-172); an empty box goes back to its size. */
+  function showWholeDraft(): void {
+    if (!(input instanceof HTMLTextAreaElement)) return
+    input.style.height = 'auto'
+    input.style.height = `${Math.min(input.scrollHeight + 2, 180)}px`
+    input.scrollTop = 0
+  }
+  $effect(() => {
+    if (draft === '' && input instanceof HTMLTextAreaElement) input.style.height = ''
   })
 
   const canSend = $derived(!running && (draft.trim() !== '' || attached.length > 0))

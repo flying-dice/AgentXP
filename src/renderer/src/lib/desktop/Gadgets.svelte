@@ -8,6 +8,9 @@
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
   import { feedText, type FeedItem } from './activity'
+  import { lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
+  import type { ProtocolEventDto } from '@shared/desktop'
+  import type { Agent7Api } from '@shared/ipc'
 
   interface Props {
     chatTitle: string | null
@@ -21,12 +24,32 @@
     now?: Date
     /** Opens the Event Viewer: the link under the Activity list, a double-click on the gadget and its right-click menu. */
     onopeneventviewer?: () => void
+    /** Where the last warning or error comes from (UX-171); without it the gadget shows the tool calls only. */
+    api?: Pick<Agent7Api, 'events' | 'on'>
+    desktopId?: number
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, api, desktopId }: Props = $props()
 
   const menu = new ContextMenu()
   const menuItems = () => [{ id: 'gadget-activity-menu-event-viewer', testid: 'gadget-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
+
+  // The newest warning or error, so "Drive E: was removed" shows here and not only in the Event Viewer.
+  let events = $state.raw<ProtocolEventDto[]>([])
+  const problem = $derived(lastProblem(events))
+  $effect(() => {
+    if (!api || !desktopId) return
+    let live = true
+    void api.events.query({ desktopId, limit: 200 }).then((list) => live && (events = list)).catch(() => {})
+    const stop = api.on('events.appended', (added) => {
+      const mine = added.filter((e) => e.desktopId === desktopId)
+      if (mine.length) events = [...events, ...mine].slice(-200)
+    })
+    return () => {
+      live = false
+      stop()
+    }
+  })
 
   let tick = $state(new Date())
   $effect(() => {
@@ -70,10 +93,11 @@
     <div class="activity" role="group" aria-label="Activity" data-testid="gadget-activity" title={onopeneventviewer ? 'Double-click to open the Event Viewer.' : undefined} ondblclick={() => onopeneventviewer?.()} oncontextmenu={(e) => onopeneventviewer && menu.show(e, menuItems())}>
     <ul class="feed">
       {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>{/if}
+      {#if problem}<li class="problem" data-testid="gadget-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
       {#each feed as item (item.key)}
         <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
       {:else}
-        <li class="muted">Nothing has happened yet.</li>
+        {#if !problem}<li class="muted">Nothing has happened yet.</li>{/if}
       {/each}
     </ul>
     {#if onopeneventviewer}<button type="button" class="open-events" data-testid="gadget-activity-open-event-viewer" onclick={() => onopeneventviewer?.()}>Event Viewer</button>{/if}
@@ -129,6 +153,9 @@
     align-items: flex-start;
     gap: 6px;
     line-height: 1.25;
+  }
+  .feed li.problem {
+    font-weight: 700;
   }
   .feed li.control {
     font-weight: 700;

@@ -1,6 +1,7 @@
 /** Pure summaries of what the agent is doing, from the chats of a desktop. */
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
+import { liveToolTitle } from '../app/session/toolTitles'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
@@ -39,7 +40,7 @@ export function workingText(chats: readonly ChatActivityInput[], waiting?: numbe
   for (const chat of [...busy].reverse()) {
     const calls = Object.values(chat.toolCalls)
     for (let i = calls.length - 1; i >= 0; i--) {
-      if (RUNNING.includes(calls[i].status)) return calls[i].title
+      if (RUNNING.includes(calls[i].status)) return liveToolTitle(calls[i].title, calls[i].rawInput) ?? calls[i].title
     }
   }
   const first = busy[busy.length - 1]

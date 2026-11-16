@@ -30,7 +30,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
-  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, isNotable, logTree, nodeScope, summaryOf } from './eventModel'
+  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, EMPTY_TEXT, eventView, filterEvents, findNext, formatDateTime, generalLines, isNotable, logTree, nodeScope, showAllText, summaryOf } from './eventModel'
 
   let { window: win, host }: AppProps<'event-viewer'> = $props()
 
@@ -54,9 +54,12 @@
 
   const desktopId = $derived(host.state.desktopId)
   const scope = $derived(nodeScope(node))
-  const visible = $derived(filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level, text, quiet: !showAll }))
-  /** Events the default list leaves out; the count says so and Show all brings them back. */
-  const hidden = $derived(showAll || level !== 'all' ? 0 : filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level, text }).length - visible.length)
+  const view = $derived(eventView(events, { source: scope.source, sessionId: scope.sessionId, level, text }, showAll))
+  const visible = $derived(view.shown)
+  /** Events the default list leaves out; the link says so and Show all brings them back. */
+  const hidden = $derived(view.hidden)
+  /** Everything the chosen log or chat holds, whatever the level and text: the number of "Show all (27)". */
+  const inScope = $derived(filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level: 'all', text: '' }).length)
   const current = $derived(events.find((e) => String(e.id) === selected[0]) ?? null)
   const chatTitle = (id: number | null): string | undefined => sessions.find((s) => s.id === id)?.title
   const nodes = $derived<TreeNodeData[]>(logTree(sessions))
@@ -264,13 +267,15 @@
                 <div class="center">
                   <div class="heading">
                     <strong>{scope.sessionId !== null ? (chatTitle(scope.sessionId) ?? scope.title) : scope.title}</strong>
-                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}{hidden > 0 ? `, ${hidden} more with Show all` : ''}</span>
+                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}{view.latest ? `, the newest ${visible.length}, no warnings or errors` : ''}</span>
+                    {#if hidden > 0}<button type="button" class="link" data-testid="event-viewer-show-hidden" onclick={() => (showAll = true)}>{hidden} more: Show all</button>{/if}
                     <span class="spring"></span>
                     <CheckBox testid="event-viewer-show-all" bind:checked={showAll}>Show all</CheckBox>
                     <CheckBox testid="event-viewer-autoscroll" bind:checked={autoscroll}>Autoscroll</CheckBox>
                   </div>
                   <div class="grid" bind:this={gridEl}>
-                    <ListView testid="event-viewer-list" {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? 'No events.'} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} />
+                    <ListView testid="event-viewer-list" {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? (inScope > 0 ? EMPTY_TEXT : 'No events.')} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} />
+                    {#if rows.length === 0 && !error && inScope > 0}<button type="button" class="link empty-link" data-testid="event-viewer-empty-show-all" onclick={() => ((level = 'all'), (text = ''), (showAll = true))}>{showAllText(inScope)}</button>{/if}
                   </div>
                 </div>
               {/snippet}
@@ -291,7 +296,7 @@
                             </dl>
                           </div>
                         {:else}
-                          <CodeViewer code={current.payload} language="json" label="Event payload" toolbar wordWrap={false} />
+                          <CodeViewer code={current.payload} language="json" label="Event payload" toolbar wordWrap={true} />
                         {/if}
                       {/snippet}
                     </TabControl>
@@ -395,6 +400,19 @@
   }
   .count {
     color: var(--w7-text-muted);
+  }
+  .link {
+    border: 0;
+    padding: 0;
+    background: none;
+    font: inherit;
+    color: var(--w7-link, #0066cc);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .empty-link {
+    align-self: flex-start;
+    margin: 4px 8px;
   }
   .spring {
     flex: 1;
