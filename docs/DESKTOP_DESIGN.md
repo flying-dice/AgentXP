@@ -35,7 +35,15 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Terminal | `terminal` | no | ACP `terminal/*`; MCP `terminal_run`, `terminal_read` | cwd, running command, last 20 lines |
 | Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_back` | url, page title, loading |
 | Control Centre | `control-centre` | yes | none (system UI) | open page |
-| Agent Manager | `agent-manager` | yes | none | none |
+| Task Manager | `agent-manager` | yes | none | none |
+| Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
+| WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
+| Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
+| Event Viewer | `event-viewer` | yes | MCP `events_query` (chat, source, level, text; at most 200 compact lines) | chat filter, level filter, selected event |
+| Snipping Tool | `snipping-tool` | yes | MCP `screen_capture` (whole desktop or one window) | last snip id |
+| Recycle Bin | `recycle-bin` | yes | MCP `recycle_list`, `recycle_restore` | selected item |
+
+Default policy: Ask for `wordpad` and `recycle` (and `fs.write`, `terminal` as before), Allow for the rest.
 
 Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, `desktop_focus_app`, and the A2UI tools `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws inside the calling chat).
 
@@ -113,10 +121,10 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 - **Control Centre** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
 - **Agent Manager** - running agent processes, chats per process, status, context use, **End process**.
 
-## 8. Data model additions (migration 002)
+## 8. Data model additions (migrations 002 and 003)
 
 ```sql
-CREATE TABLE app_kinds (kind TEXT PRIMARY KEY);   -- seeded: chat, explorer, notepad, code, terminal, browser, control-centre, agent-manager
+CREATE TABLE app_kinds (kind TEXT PRIMARY KEY);   -- seeded (002): chat, explorer, notepad, code, terminal, browser, control-centre, agent-manager; (003): paint, wordpad, sticky-notes, event-viewer, snipping-tool, recycle-bin
 CREATE TABLE desktops (
   id INTEGER PRIMARY KEY,
   folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
@@ -147,6 +155,32 @@ CREATE TABLE tool_group_policies (
 ```
 
 Focus and transient view state (scroll, selection, caret) are kept in memory only, not persisted. Existing sessions get a desktop per folder in the migration.
+
+Migration 003 (text columns only, no blobs):
+
+```sql
+CREATE TABLE sticky_notes (
+  id INTEGER PRIMARY KEY,
+  desktop_id INTEGER NOT NULL REFERENCES desktops(id) ON DELETE CASCADE,
+  text TEXT NOT NULL DEFAULT '',
+  color TEXT NOT NULL DEFAULT 'yellow' CHECK (color IN ('yellow','blue','green','pink','purple','white')),
+  x INTEGER NOT NULL, y INTEGER NOT NULL, width INTEGER NOT NULL CHECK (width > 0), height INTEGER NOT NULL CHECK (height > 0),
+  plan_session_id INTEGER REFERENCES sessions(id) ON DELETE SET NULL,   -- the note mirrors that chat's tasks
+  author TEXT NOT NULL CHECK (author IN ('user','agent')),
+  created_at TEXT NOT NULL
+);
+CREATE TABLE recycled_changes (
+  id INTEGER PRIMARY KEY,
+  desktop_id INTEGER NOT NULL REFERENCES desktops(id) ON DELETE CASCADE,
+  session_id INTEGER REFERENCES sessions(id) ON DELETE SET NULL,
+  path TEXT NOT NULL,
+  reverted_text TEXT,   -- the agent's version the revert threw away; NULL = the agent had deleted the file
+  restored_text TEXT,   -- what the revert wrote back; NULL = the revert deleted an added file
+  reverted_at TEXT NOT NULL
+);
+```
+
+The Event Viewer's events are not persisted: an in-memory ring buffer of 5,000 events per desktop.
 
 ## 9. Build order
 

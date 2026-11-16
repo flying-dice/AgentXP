@@ -9,7 +9,24 @@ import type { ToolContext, ToolResult } from './types'
 
 const app = z.enum(AGENT_OPENABLE_APPS)
 const windowId = z.number().int().optional().describe('Window id from desktop_state; default: the focused window of this app')
+const windowIdParam = z.number().int().optional().describe('Window id from desktop_state; default: the focused window of this app (else the front-most)')
 const path = (what: string) => z.string().min(1).describe(`${what}, relative to the workspace folder (W:)`)
+
+const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
+
+const PAINT_OP = z.object({
+  type: z.enum(['line', 'rect', 'ellipse', 'path', 'fill', 'text', 'clear']),
+  points: z.array(z.object({ x: z.number(), y: z.number() })).min(1).max(5000).optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  w: z.number().optional(),
+  h: z.number().optional(),
+  color: z.string().optional().describe('CSS colour, default black'),
+  fill: z.union([z.boolean(), z.string()]).optional().describe('rect, ellipse: a fill colour, or true to fill with `color`'),
+  width: z.number().min(1).max(200).optional().describe('Stroke width, default 2'),
+  text: z.string().optional(),
+  font: z.string().optional()
+})
 
 export interface ToolDefinition {
   group: ToolGroup
@@ -26,10 +43,10 @@ export const TOOL_DEFS = {
   desktop_open_app: {
     group: 'shell',
     description:
-      'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*).',
+      'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*, Agent Paint: paint_*, WordPad: wordpad_*, Sticky Notes: notes_*, Event Viewer: events_query, Snipping Tool: screen_capture, Recycle Bin: recycle_*).',
     input: z.object({
       app,
-      path: z.string().optional().describe('explorer, notepad, code: workspace-relative path to show'),
+      path: z.string().optional().describe('explorer, notepad, code, wordpad, paint: workspace-relative path to show'),
       url: z.string().optional().describe('browser: address to load')
     })
   },
@@ -125,6 +142,91 @@ export const TOOL_DEFS = {
     group: 'browser',
     description: 'Go back one page in the Browser window.',
     input: z.object({ window: windowId })
+  },
+  paint_draw: {
+    group: 'paint',
+    description:
+      'Draw on the Agent Paint canvas (origin top-left, pixels). Ops run in order: line (points: 2+), rect and ellipse (x, y, w, h; optional fill colour), path (points: polyline), fill (flood fill at x, y), text (x, y, text, font such as "20px sans-serif"), clear (whole canvas, colour = background).',
+    input: z.object({
+      ops: z.array(PAINT_OP).min(1).max(500),
+      windowId: windowIdParam
+    })
+  },
+  paint_read: {
+    group: 'paint',
+    description: 'Read the Agent Paint canvas as a PNG image.',
+    input: z.object({ windowId: windowIdParam })
+  },
+  paint_clear: {
+    group: 'paint',
+    description: 'Clear the Agent Paint canvas to white (or to `color`).',
+    input: z.object({ color: z.string().optional(), windowId: windowIdParam })
+  },
+  paint_resize: {
+    group: 'paint',
+    description: 'Resize the Agent Paint canvas (the picture is kept at the top-left).',
+    input: z.object({ width: z.number().int().min(1).max(4096), height: z.number().int().min(1).max(4096), windowId: windowIdParam })
+  },
+  wordpad_open: {
+    group: 'wordpad',
+    description: 'Show a markdown file in a WordPad window (opens one when needed).',
+    input: z.object({ path: path('File'), windowId: windowIdParam })
+  },
+  wordpad_read: {
+    group: 'wordpad',
+    description: 'Read the markdown the WordPad window shows right now, including edits the user has not saved.',
+    input: z.object({ windowId: windowIdParam })
+  },
+  wordpad_write: {
+    group: 'wordpad',
+    description: 'Write a markdown file and show it in WordPad. The write is recorded as one of your file changes (Changes list).',
+    input: z.object({ path: path('File'), markdown: z.string(), windowId: windowIdParam })
+  },
+  notes_list: {
+    group: 'notes',
+    description: 'List the sticky notes of this desktop.',
+    input: z.object({})
+  },
+  notes_add: {
+    group: 'notes',
+    description: 'Put a sticky note on the desktop. With `plan: true` the note mirrors this chat\'s plan (task list) live; its text is generated.',
+    input: z.object({ text: z.string().default(''), color: STICKY_COLOR.optional(), plan: z.boolean().optional() })
+  },
+  notes_update: {
+    group: 'notes',
+    description: 'Change the text or colour of a sticky note.',
+    input: z.object({ id: z.number().int(), text: z.string().optional(), color: STICKY_COLOR.optional() })
+  },
+  notes_remove: {
+    group: 'notes',
+    description: 'Remove a sticky note.',
+    input: z.object({ id: z.number().int() })
+  },
+  events_query: {
+    group: 'events',
+    description: 'Search the protocol events of this desktop (ACP, AG-UI, MCP), newest last. Returns one compact line per event.',
+    input: z.object({
+      sessionId: z.number().int().optional().describe('Only events of this chat'),
+      source: z.enum(['acp', 'ag-ui', 'mcp']).optional(),
+      level: z.enum(['info', 'warning', 'error']).optional(),
+      text: z.string().optional().describe('Case-insensitive text in the event name or payload'),
+      limit: z.number().int().min(1).max(200).optional().describe('Default 50')
+    })
+  },
+  screen_capture: {
+    group: 'snip',
+    description: 'Take a PNG screenshot of the whole desktop, or of one window\'s area.',
+    input: z.object({ windowId: z.number().int().optional().describe('Window id from desktop_state; default: the whole desktop') })
+  },
+  recycle_list: {
+    group: 'recycle',
+    description: 'List the reverted changes in the Recycle Bin.',
+    input: z.object({})
+  },
+  recycle_restore: {
+    group: 'recycle',
+    description: 'Restore a reverted change: its file content is written back and recorded as a new change.',
+    input: z.object({ id: z.number().int() })
   }
 } as const satisfies Record<string, ToolDefinition>
 

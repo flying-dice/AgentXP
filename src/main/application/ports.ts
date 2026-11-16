@@ -1,4 +1,5 @@
 import type { A2uiSurfaceDto } from '@shared/a2ui'
+import type { Bounds } from '@shared/desktop'
 import type {
   AgentDto,
   ContentBlockDto,
@@ -85,6 +86,20 @@ export interface TerminalActivity {
   exitStatus: { exitCode: number | null; signal: string | null } | null
 }
 
+/** Sees every JSON-RPC message of one ACP connection. `in`: agent to Agent7, `out`: Agent7 to the agent. */
+export type ProtocolTap = (direction: 'in' | 'out', message: unknown) => void
+
+/** Captures what the desktop window shows. */
+export interface ScreenCapturer {
+  /** PNG data URL of the desktop window, or of `region` (CSS px of the window). Rejects when the window is not open. */
+  capture(desktopId: Id, region?: Bounds): Promise<string>
+}
+
+/** Writes text files into a registered folder (sandboxed to it). */
+export interface FolderWriter {
+  writeText(root: string, relativePath: string, text: string): Promise<void>
+}
+
 /** Everything an agent connection needs from the harness, already bound to one session row. */
 export interface ConnectionHandlers {
   sink: AgentSessionEventSink
@@ -92,6 +107,8 @@ export interface ConnectionHandlers {
   files: FileAccessProvider
   /** Gates the client-side fs and terminal requests of this session. */
   gate: ToolGate
+  /** Observes the raw protocol traffic of this session (the Event Viewer). */
+  tap?: ProtocolTap
   onTerminalActivity(activity: TerminalActivity): void
 }
 

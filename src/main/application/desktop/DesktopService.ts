@@ -21,6 +21,7 @@ import type { AgentRepository } from '../../domain/repositories/agent-repository
 import type { AppWindowRecord, AppWindowRepository } from '../../domain/repositories/app-window-repository'
 import type { DesktopRecord, DesktopRepository } from '../../domain/repositories/desktop-repository'
 import type { FolderRepository } from '../../domain/repositories/folder-repository'
+import type { StickyNoteRepository } from '../../domain/repositories/sticky-note-repository'
 import type { SessionRepository } from '../../domain/repositories/session-repository'
 import type { ToolPolicyRepository } from '../../domain/repositories/tool-policy-repository'
 import { AppError, required } from '../errors'
@@ -41,6 +42,7 @@ export interface DesktopServiceDeps {
   folders: FolderRepository
   agents: AgentRepository
   sessions: SessionRepository
+  notes: StickyNoteRepository
   chats: ChatLifecycle
   /** The native folder picker (adds the folder to the registry). */
   pickFolder(): Promise<FolderDto | null>
@@ -145,7 +147,8 @@ export class DesktopService implements DesktopStates {
       windows,
       tools: enabledToolGroups(windows.map((w) => w.app)),
       paused: desktop.paused,
-      userInControl: desktop.userInControl
+      userInControl: desktop.userInControl,
+      notes: this.deps.notes.list(desktopId)
     }
   }
 
@@ -373,6 +376,11 @@ export class DesktopService implements DesktopStates {
       default:
         return
     }
+  }
+
+  /** Recomputes the state and publishes it when it changed (for changes that live outside this service, e.g. notes). */
+  refresh(desktopId: Id): void {
+    if (this.deps.desktops.get(desktopId)) this.emit(desktopId)
   }
 
   /** Publishes `desktop.changed` unless the state is what was published last. */

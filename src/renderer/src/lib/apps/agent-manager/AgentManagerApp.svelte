@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import type { AgentProcessDto } from '@shared/desktop'
-  import type { AgentDto, SessionDto } from '@shared/models'
+  import type { AgentDto, SessionDto, TerminalDto } from '@shared/models'
   import type { AppProps } from '../types'
   import Button from '../../kit/atoms/Button.svelte'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
@@ -14,7 +14,7 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { chatRows, contextState, formatTokens, processRows } from './processRows'
+  import { chatRows, contextState, formatTokens, processRows, terminalRows } from './processRows'
 
   let { host }: AppProps<'agent-manager'> = $props()
 
@@ -24,14 +24,16 @@
   let processes = $state.raw<AgentProcessDto[]>([])
   let sessions = $state.raw<SessionDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
-  let tab = $state('processes')
+  let terminals = $state.raw<TerminalDto[]>([])
+  let tab = $state('chats')
   let current = $state<CellRef>({ row: 0, col: 0 })
   let selectedChat = $state<string[]>([])
   let error = $state<string | null>(null)
 
   const tabs: TabDef[] = [
-    { id: 'processes', title: 'Processes' },
     { id: 'chats', title: 'Chats' },
+    { id: 'processes', title: 'Processes' },
+    { id: 'terminals', title: 'Terminals' },
     { id: 'performance', title: 'Performance' }
   ]
 
@@ -41,6 +43,7 @@
       processes = p
       sessions = s
       agents = a
+      terminals = (await Promise.all(s.map((x) => host.api.sessions.terminals(x.id).catch(() => [] as TerminalDto[])))).flat()
       error = null
     } catch (e) {
       error = e instanceof Error ? e.message : String(e)
@@ -65,18 +68,39 @@
   const chatColumns: ListColumn[] = [
     { key: 'title', header: 'Chat', width: 210 },
     { key: 'agent', header: 'Agent', width: 110 },
-    { key: 'status', header: 'Status', width: 130 },
+    { key: 'status', header: 'Status', width: 110 },
+    { key: 'tokens', header: 'Tokens', width: 110, align: 'right' },
     { key: 'context', header: 'Context', align: 'right' }
   ]
+  const terminalColumns: ListColumn[] = [
+    { key: 'chat', header: 'Chat', width: 150 },
+    { key: 'command', header: 'Command', width: 210 },
+    { key: 'status', header: 'Status', width: 90 },
+    { key: 'cwd', header: 'Working folder' }
+  ]
+  const termRows = $derived<ListRow[]>(terminalRows(terminals, sessions).map((t) => ({ ...t, icon: 'terminal' as const })))
   const chats = $derived(chatRows(sessions, agents))
   const chatListRows = $derived<ListRow[]>(chats.map((c) => ({ ...c, icon: 'session' as const })))
+
+  const selectedChatRow = $derived(chats.find((c) => c.id === selectedChat[0]) ?? null)
+
+  async function endTask(): Promise<void> {
+    const chat = selectedChatRow
+    if (!chat) return
+    try {
+      await host.api.sessions.cancel(Number(chat.id))
+    } catch (e) {
+      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'Agent7 Task Manager', buttons: 'OK', icon: 'error' })
+    }
+    await refresh()
+  }
 
   async function endProcess(): Promise<void> {
     const proc = selectedProcess
     if (!proc) return
     const answer = await showMessageBox({
       text: `Do you want to end ${proc.agent}?\n\nIts ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will close and any work in progress is lost.`,
-      caption: 'Agent Manager',
+      caption: 'Agent7 Task Manager',
       buttons: 'YesNo',
       icon: 'warning'
     })
@@ -84,7 +108,7 @@
     try {
       await host.api.processes.end(proc.agentId, proc.desktopId)
     } catch (e) {
-      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'Agent Manager', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'Agent7 Task Manager', buttons: 'OK', icon: 'error' })
     }
     await refresh()
   }
@@ -96,7 +120,7 @@
 
 <div class="am">
   <div class="tabs">
-    <TabControl {tabs} bind:selected={tab} aria-label="Agent Manager">
+    <TabControl {tabs} bind:selected={tab} aria-label="Agent7 Task Manager">
       {#snippet panel(t)}
         <div class="page">
           {#if t.id === 'processes'}
@@ -110,6 +134,13 @@
           {:else if t.id === 'chats'}
             <div class="grid">
               <ListView columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" emptyText="There are no chats on this desktop yet." />
+            </div>
+            <div class="buttons">
+              <Button disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
+            </div>
+          {:else if t.id === 'terminals'}
+            <div class="grid">
+              <ListView columns={terminalColumns} rows={termRows} aria-label="Terminals" emptyText="No chat has opened a terminal yet." />
             </div>
           {:else}
             <div class="perf w7-scroll" aria-label="Context use per chat">
@@ -135,6 +166,7 @@
     <StatusStripLabel text={error ?? `Refreshes every ${REFRESH_MS / 1000} s`} spring />
     <StatusStripLabel text="Processes: {processes.length}" borders={['left']} width={100} />
     <StatusStripLabel text="Chats: {sessions.length}" borders={['left']} width={90} />
+    <StatusStripLabel text="Terminals: {terminals.length}" borders={['left']} width={100} />
     <StatusStripLabel text="Context: {totalContext}%" borders={['left']} width={100} />
   </StatusStrip>
 </div>

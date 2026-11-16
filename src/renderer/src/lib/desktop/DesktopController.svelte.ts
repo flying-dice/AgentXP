@@ -23,6 +23,13 @@ import { nextFocus, raise } from './windowOrder'
 export const VIEW_DEBOUNCE_MS = 300
 const GLOW_MS = 1800
 
+/** A screen region the Snipping Tool is asking the user to pick; the overlay resolves it. */
+export interface SnipOverlayState {
+  mode: 'rect' | 'window'
+  /** A rectangle in desktop page coordinates, or null when cancelled. */
+  resolve: (region: Bounds | null) => void
+}
+
 export interface ShellMessage {
   id: number
   text: string
@@ -37,7 +44,8 @@ const emptyState = (): DesktopState => ({
   windows: [],
   tools: ['shell'],
   paused: false,
-  userInControl: false
+  userInControl: false,
+  notes: []
 })
 
 /**
@@ -67,6 +75,10 @@ export class DesktopController implements DesktopHost {
   gadgetsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
   selectedIcon = $state<string | null>(null)
+  /** Set while the Snipping Tool waits for the user to pick a region (dims the desktop). */
+  snipOverlay = $state.raw<SnipOverlayState | null>(null)
+  /** Items in the Recycle Bin (the desktop icon shows full or empty). */
+  recycleCount = $state(0)
 
   get state(): DesktopState {
     return this.current ?? emptyState()
@@ -138,12 +150,14 @@ export class DesktopController implements DesktopHost {
       this.api.on('desktop.changed', (s) => this.apply(s)),
       this.sessions.start(this.api, (id) => this.inbox.unregister(id)),
       this.api.on('session.changed', () => this.syncStores()),
-      this.api.on('status.message', ({ text }) => this.pushMessage(text))
+      this.api.on('status.message', ({ text }) => this.pushMessage(text)),
+      this.api.on('recycle.changed', () => void this.refreshRecycle())
     ]
     const [state] = await Promise.all([this.api.desktop.current(), this.sessions.load().catch(() => {})])
     if (state) this.apply(state)
     this.loaded = true
     this.syncStores()
+    void this.refreshRecycle()
   }
 
   dispose(): void {
@@ -151,9 +165,34 @@ export class DesktopController implements DesktopHost {
     this.offs = []
     this.started = false
     this.views.dispose()
+    this.snipOverlay?.resolve(null)
     this.glowTimers.forEach(clearTimeout)
     this.glowTimers.clear()
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
+  }
+
+  /** Counts the items in the Recycle Bin. */
+  async refreshRecycle(): Promise<void> {
+    if (!this.state.desktopId) return
+    try {
+      this.recycleCount = (await this.api.recycle.list(this.state.desktopId)).length
+    } catch {
+      this.recycleCount = 0
+    }
+  }
+
+  /** Asks the user to pick a region on the dimmed desktop. Resolves null when cancelled (Esc). */
+  pickSnipRegion(mode: SnipOverlayState['mode']): Promise<Bounds | null> {
+    this.snipOverlay?.resolve(null)
+    return new Promise((resolve) => {
+      this.snipOverlay = {
+        mode,
+        resolve: (region) => {
+          this.snipOverlay = null
+          resolve(region)
+        }
+      }
+    })
   }
 
   /** Re-reads the desktop (after `desktop.create` on first run). */

@@ -53,7 +53,13 @@ const GROUP_ACTION: Record<Exclude<ToolGroup, 'shell'>, string> = {
   terminal: 'Running commands',
   browser: 'Using the browser',
   notepad: 'Using Notepad',
-  code: 'Using Code'
+  code: 'Using Code',
+  paint: 'Drawing in Agent Paint',
+  wordpad: 'Writing in WordPad',
+  notes: 'Using Sticky Notes',
+  events: 'Reading the Event Viewer',
+  snip: 'Capturing the screen',
+  recycle: 'Restoring from the Recycle Bin'
 }
 
 export const approvalGroup = (kind: ToolKind | null): Exclude<ToolGroup, 'shell'> | null => (kind ? (KIND_GROUP[kind] ?? null) : null)

@@ -25,6 +25,16 @@ describe('ElectronEventPublisher', () => {
     expect(sent).toEqual(['w1:session.changed', 'w1:session.changed', 'w2:session.changed'])
   })
 
+  it('routes app requests, notes, recycle and protocol events to the owning desktop window', () => {
+    sent.length = 0
+    publisher.publish('desktop.appRequest', { requestId: 'r', desktopId: 2, windowId: 5, method: 'read', params: null })
+    publisher.publish('notes.changed', { desktopId: 1, notes: [] })
+    publisher.publish('recycle.changed', { desktopId: 2 })
+    publisher.publish('events.appended', [{ desktopId: 1 }] as never)
+    publisher.publish('notes.changed', { desktopId: 9, notes: [] }) // closed desktop: nobody
+    expect(sent).toEqual(['w2:desktop.appRequest', 'w1:notes.changed', 'w2:recycle.changed', 'w1:events.appended'])
+  })
+
   it('broadcasts folders and status, and keeps internal events in main', () => {
     sent.length = 0
     publisher.publish('status.message', { text: 'hi' })

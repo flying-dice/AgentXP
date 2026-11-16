@@ -1,5 +1,9 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
-import type { FilePicker } from '../application/ports'
+import type { FilePicker, ScreenCapturer } from '../application/ports'
+import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
+import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
+import type { RecycleService } from '../application/RecycleService'
+import type { StickyNoteService } from '../application/desktop/StickyNoteService'
 import type { DesktopService } from '../application/desktop/DesktopService'
 import type { ProcessService } from '../application/ProcessService'
 import type { A2uiService } from '../application/A2uiService'
@@ -25,6 +29,11 @@ export interface ApiServices {
   desktops: DesktopService
   processes: ProcessService
   files: FilePicker
+  appRequests: AppRequestBroker
+  notes: StickyNoteService
+  eventLog: ProtocolEventLog
+  recycle: RecycleService
+  screen: ScreenCapturer
   appVersion: string
 }
 
@@ -48,7 +57,8 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: async (id) => s.folders.remove(id),
       readDir: (folderId, relativePath) => s.folders.readDir(folderId, relativePath),
       readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath),
-      gitBranch: (folderId) => s.folders.gitBranch(folderId)
+      gitBranch: (folderId) => s.folders.gitBranch(folderId),
+      writeFile: (folderId, relativePath, text) => s.folders.writeFile(folderId, relativePath, text)
     },
     desktop: {
       list: async () => s.desktops.list(),
@@ -68,8 +78,26 @@ export function createApi(s: ApiServices): InvokeApi {
       newChat: (desktopId, agentId) => s.desktops.newChat(desktopId, agentId),
       policy: async () => s.desktops.policy(),
       setPolicy: async (policy) => s.desktops.setPolicy(policy),
-      attachBrowser: perWindow('desktop.attachBrowser')
+      attachBrowser: perWindow('desktop.attachBrowser'),
+      respondAppRequest: async (response) => s.appRequests.respond(response)
     },
+    notes: {
+      list: async (desktopId) => s.notes.list(desktopId),
+      add: async (desktopId, text, color) => s.notes.add(desktopId, text, color),
+      update: async (id, patch) => s.notes.update(id, patch),
+      remove: async (id) => s.notes.remove(id)
+    },
+    events: {
+      query: async (query) => s.eventLog.query(query),
+      clear: async (desktopId) => s.eventLog.clear(desktopId)
+    },
+    recycle: {
+      list: async (desktopId) => s.recycle.list(desktopId),
+      restore: (id) => s.recycle.restore(id),
+      remove: async (id) => s.recycle.remove(id),
+      empty: async (desktopId) => s.recycle.empty(desktopId)
+    },
+    snip: { capture: (desktopId, region) => s.screen.capture(desktopId, region) },
     processes: { list: async () => s.processes.list(), end: (agentId, desktopId) => s.processes.end(agentId, desktopId) },
     app: {
       version: async () => s.appVersion

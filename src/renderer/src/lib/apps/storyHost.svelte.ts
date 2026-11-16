@@ -7,18 +7,21 @@ import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { AppKind, AppView, AppWindowState, DesktopState, OpenWindowInput } from '@shared/desktop'
 import type { AguiSessionState } from '@shared/agui-state'
-import { createFakeApi, fakeAgui } from '../app/fakeApi'
+import { createFakeApi, fakeAgui, type FakeApi } from '../app/fakeApi'
 import { createFakeDesktop } from '../app/fakeDesktop'
 import type { DesktopHost } from './types'
 
 export class StoryHost implements DesktopHost {
   readonly api: Agent7Api
+  /** The fake backend (for stories that push events). */
+  readonly fake: FakeApi
   private current = $state.raw<DesktopState>(null as unknown as DesktopState)
   /** Every `updateView` the apps made, newest last (for stories that show the traffic). */
   reports = $state.raw<AppView[]>([])
 
   constructor(options: { empty?: boolean; state?: () => AguiSessionState } = {}) {
     const base = createFakeApi({ empty: options.empty })
+    this.fake = base
     const desktop = createFakeDesktop({ onChange: (state) => void (this.current = state) })
     this.current = desktop.state()
     this.api = { ...base, desktop, ...(options.state ? { agui: fakeAgui(options.state) } : {}) }

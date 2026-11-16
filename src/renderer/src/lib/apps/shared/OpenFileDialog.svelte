@@ -8,7 +8,7 @@
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
-  import { parentOf, toWindowsPath, typeName } from '../paths'
+  import { extensionOf, parentOf, toWindowsPath, typeName } from '../paths'
 
   interface Props {
     api: Agent7Api
@@ -16,11 +16,13 @@
     /** Directory shown first (workspace-relative). */
     startPath?: string
     title?: string
+    /** Only files with these extensions (lower case, no dot) are listed; folders always are. */
+    extensions?: string[]
     onopen: (path: string) => void
     onclose: () => void
   }
 
-  let { api, folderId, startPath = '', title = 'Open', onopen, onclose }: Props = $props()
+  let { api, folderId, startPath = '', title = 'Open', extensions, onopen, onclose }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let dir = $state(startPath)
@@ -34,7 +36,7 @@
     error = null
     selected = []
     api.folders.readDir(folderId, target).then(
-      (list) => !stale && (entries = list),
+      (list) => !stale && (entries = extensions ? list.filter((e) => e.isDirectory || extensions.includes(extensionOf(e.path))) : list),
       (e: unknown) => {
         if (stale) return
         entries = []

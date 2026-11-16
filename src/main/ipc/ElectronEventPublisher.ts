@@ -17,6 +17,14 @@ function desktopOf<K extends AppEventName>(event: K, payload: AppEvents[K]): Id 
       return (payload as AppEvents['desktop.changed']).desktopId
     case 'session.changed':
       return (payload as AppEvents['session.changed']).desktopId ?? null
+    case 'desktop.appRequest':
+      return (payload as AppEvents['desktop.appRequest']).desktopId
+    case 'notes.changed':
+      return (payload as AppEvents['notes.changed']).desktopId
+    case 'recycle.changed':
+      return (payload as AppEvents['recycle.changed']).desktopId
+    case 'events.appended':
+      return (payload as AppEvents['events.appended'])[0]?.desktopId ?? null
     default:
       return null
   }

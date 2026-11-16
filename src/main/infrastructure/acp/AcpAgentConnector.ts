@@ -10,6 +10,7 @@ import type {
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import { AcpAgentConnection } from './AcpAgentConnection'
 import { AgentProcess, type AgentProcessExit } from './AgentProcess'
+import { tapStream } from './tapStream'
 import { TerminalManager } from './TerminalManager'
 
 const describeExit = (exit: AgentProcessExit, stderr: string[]): string => {
@@ -71,7 +72,7 @@ export class AcpAgentConnector implements AgentConnector {
     const proc = new AgentProcess({ command: agent.command, args: agent.args, env: agent.env, cwd })
     const terminals = new TerminalManager((change) => handlers.onTerminalActivity(change))
     const connection = new AcpAgentConnection({
-      stream: proc.stream,
+      stream: handlers.tap ? tapStream(proc.stream, handlers.tap) : proc.stream,
       sink: handlers.sink,
       permissions: handlers.permissions,
       files: handlers.files,

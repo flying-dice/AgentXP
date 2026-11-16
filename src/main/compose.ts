@@ -1,6 +1,10 @@
 import type { Database } from './infrastructure/db/sql'
 import { A2uiService } from './application/A2uiService'
 import { AguiRunCoordinator } from './application/agui/AguiRunCoordinator'
+import { AppRequestBroker } from './application/desktop/AppRequestBroker'
+import { StickyNoteService } from './application/desktop/StickyNoteService'
+import { ProtocolEventLog } from './application/events/ProtocolEventLog'
+import { RecycleService } from './application/RecycleService'
 import { DesktopService } from './application/desktop/DesktopService'
 import { noWindowHost, type DesktopWindowHost } from './application/desktop/ports'
 import { ToolGateway } from './application/desktop/ToolGateway'
@@ -19,11 +23,18 @@ import type {
   EventPublisher,
   FilePicker,
   FolderPicker,
+  ScreenCapturer,
   PathOpener,
   TextFileSaver
 } from './application/ports'
 import { ProcessService } from './application/ProcessService'
 import { createBrowserTools } from './application/tools/browserTools'
+import { createEventsTools } from './application/tools/eventsTools'
+import { createNotesTools } from './application/tools/notesTools'
+import { createPaintTools } from './application/tools/paintTools'
+import { createRecycleTools } from './application/tools/recycleTools'
+import { createSnipTools } from './application/tools/snipTools'
+import { createWordpadTools } from './application/tools/wordpadTools'
 import { createCodeTools } from './application/tools/codeTools'
 import { DesktopToolService } from './application/tools/DesktopToolService'
 import { createFsTools } from './application/tools/fsTools'
@@ -53,6 +64,8 @@ import { SqliteFileChangeRepository } from './infrastructure/db/sqlite-file-chan
 import { SqliteFolderRepository } from './infrastructure/db/sqlite-folder-repository'
 import { SqlitePermissionRepository } from './infrastructure/db/sqlite-permission-repository'
 import { SqliteSessionRepository } from './infrastructure/db/sqlite-session-repository'
+import { SqliteRecycledChangeRepository } from './infrastructure/db/sqlite-recycled-change-repository'
+import { SqliteStickyNoteRepository } from './infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository'
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
@@ -79,6 +92,8 @@ export interface ComposeOptions {
   windows?: DesktopWindowHost
   /** Runs `terminal_run`; defaults to the platform shell. */
   commandRunner?: CommandRunner
+  /** Captures the desktop window for `snip.capture` / `screen_capture`; defaults to refusing (tests). */
+  screen?: ScreenCapturer
 }
 
 export interface AppServices {
@@ -93,6 +108,8 @@ export interface AppServices {
   a2ui: A2uiService
   /** Desktops, their windows and the tools that follow the apps. */
   desktops: DesktopService
+  /** Protocol events of every desktop (Event Viewer); the AG-UI IPC transport feeds it. */
+  eventLog: ProtocolEventLog
   /** The Browser app's pages; main attaches each `<webview>` here (`desktop.attachBrowser`). */
   browsers: ElectronBrowserDriver
   /** Starts the A2UI bridge and cleans up state left by a previous run. */
@@ -118,11 +135,14 @@ export function composeApp(options: ComposeOptions): AppServices {
     surfaces: new SqliteA2uiSurfaceRepository(db),
     desktops: new SqliteDesktopRepository(db),
     windows: new SqliteAppWindowRepository(db),
-    toolPolicies: new SqliteToolPolicyRepository(db)
+    toolPolicies: new SqliteToolPolicyRepository(db),
+    notes: new SqliteStickyNoteRepository(db),
+    recycled: new SqliteRecycledChangeRepository(db)
   }
   const fileSystem = new NodeWorkspaceFileSystem()
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
+  const workspaceFiles = new WorkspaceFiles(fileSystem, changeRecorder)
   const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster)
   const pool = new AgentConnectionPool()
   const eventBus = new SessionEventBus()
@@ -156,11 +176,16 @@ export function composeApp(options: ComposeOptions): AppServices {
     folders: repos.folders,
     events: eventBus,
     broker,
-    workspaceFiles: new WorkspaceFiles(fileSystem, changeRecorder),
+    workspaceFiles,
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
     a2uiMcpConfig,
-    toolGate: (sessionId) => gateway.forSession(sessionId)
+    toolGate: (sessionId) => gateway.forSession(sessionId),
+    protocolTap: (sessionId) => eventLog.acpTap(sessionId)
+  })
+  const eventLog = new ProtocolEventLog({
+    desktopOfSession: (sessionId) => repos.sessions.get(sessionId)?.desktopId ?? null,
+    events: publisher
   })
   const sessions = new SessionService({
     sessions: repos.sessions,
@@ -175,7 +200,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     events: publisher,
     desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
   })
-  const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher)
+  const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const desktops = new DesktopService({
     desktops: repos.desktops,
     windows: repos.windows,
@@ -183,6 +208,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     folders: repos.folders,
     agents: repos.agents,
     sessions: repos.sessions,
+    notes: repos.notes,
     chats: sessions,
     pickFolder: () => folderService.pick(),
     host: options.windows ?? noWindowHost,
@@ -193,6 +219,12 @@ export function composeApp(options: ComposeOptions): AppServices {
   const a2uiSink = new CompositeA2uiSink(a2ui)
   const folderBrowser = new NodeFolderBrowser()
   const browsers = new ElectronBrowserDriver()
+  const appRequests = new AppRequestBroker(publisher)
+  const notes = new StickyNoteService({ notes: repos.notes, events: publisher, desktops })
+  const screen: ScreenCapturer = options.screen ?? {
+    capture: () => Promise.reject(new Error('Screen capture is not available here.'))
+  }
+  const recycle = new RecycleService(repos.recycled, repos.desktops, repos.folders, repos.sessions, fileSystem, changeRecorder, publisher)
   const desktopTools = new DesktopToolService({
     states: desktops,
     gate: gateway,
@@ -202,7 +234,22 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createNotepadTools({ desktops, browser: folderBrowser }),
       ...createCodeTools({ desktops, changes: repos.changes }),
       ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner() }),
-      ...createBrowserTools({ desktops, driver: browsers })
+      ...createBrowserTools({ desktops, driver: browsers }),
+      ...createPaintTools({ desktops, requests: appRequests }),
+      ...createWordpadTools({
+        desktops,
+        browser: folderBrowser,
+        requests: appRequests,
+        files: { write: (sessionId, root, path, text) => workspaceFiles.forSession(sessionId, root).forSession('').writeTextFile(path, text) }
+      }),
+      ...createNotesTools({ notes }),
+      ...createEventsTools({ log: eventLog }),
+      ...createSnipTools({ desktops, screen }),
+      ...createRecycleTools({ recycle })
+    },
+    log: {
+      called: (context, tool, args) => eventLog.recordToolCall(context, tool, args),
+      finished: (context, tool, result, refused) => eventLog.recordToolResult(context, tool, result, refused)
     }
   })
   a2uiBridge = new A2uiBridgeServer(a2uiSink, undefined, undefined, desktopTools)
@@ -224,13 +271,18 @@ export function composeApp(options: ComposeOptions): AppServices {
     sessions,
     queries,
     broker,
-    reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder),
+    reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder, repos.recycled, repos.desktops, publisher),
     exporter: new TranscriptExporter(repos.sessions, repos.transcripts, options.saver),
     a2ui,
     desktops,
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
+    appRequests,
+    notes,
+    eventLog,
+    recycle,
+    screen,
     appVersion: options.appVersion ?? '0.0.0'
   })
 
@@ -250,6 +302,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     broker,
     a2ui,
     desktops,
+    eventLog,
     browsers,
     start: async () => {
       sessions.recoverAfterRestart()
@@ -257,6 +310,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     },
     shutdown: async () => {
       agui.dispose()
+      appRequests.dispose()
+      eventLog.dispose()
       await pool.disposeAll()
       await bridge.stop()
     }

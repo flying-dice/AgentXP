@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { ToolListChangedNotificationSchema } from '@modelcontextprotocol/sdk/types.js'
-import type { ToolGroup } from '@shared/desktop'
+import { AGENT_OPENABLE_APPS, type ToolGroup } from '@shared/desktop'
 import { DesktopToolService } from '../../application/tools/DesktopToolService'
 import type { DesktopToolHost, ToolContext, ToolResult } from '../../application/tools/types'
 import { A2uiBridgeServer, defaultSocketPath } from './bridge-server'
@@ -66,7 +66,27 @@ describe('agent7 MCP server <-> bridge: desktop tools', () => {
     expect(await names(client)).toContain('terminal_run')
     expect(await names(client)).not.toContain('browser_navigate')
     const open = (await client.listTools()).tools.find((t) => t.name === 'desktop_open_app')!
-    expect(open.inputSchema).toMatchObject({ type: 'object', properties: { app: { enum: ['explorer', 'notepad', 'code', 'terminal', 'browser'] } }, required: ['app'] })
+    expect(open.inputSchema).toMatchObject({ type: 'object', properties: { app: { enum: [...AGENT_OPENABLE_APPS] } }, required: ['app'] })
+  })
+
+  it('lists the tools of the new app groups only while those apps are open', async () => {
+    await connect('3')
+    const base = await names(client)
+    for (const tool of ['paint_draw', 'wordpad_read', 'notes_add', 'events_query', 'screen_capture', 'recycle_restore']) expect(base).not.toContain(tool)
+    host.groups = ['shell', 'paint', 'wordpad', 'notes', 'events', 'snip', 'recycle']
+    const open = await names(client)
+    for (const tool of ['paint_draw', 'paint_read', 'paint_clear', 'paint_resize', 'wordpad_open', 'wordpad_read', 'wordpad_write', 'notes_list', 'notes_add', 'notes_update', 'notes_remove', 'events_query', 'screen_capture', 'recycle_list', 'recycle_restore']) {
+      expect(open).toContain(tool)
+    }
+    host.groups = ['shell', 'notes']
+    const some = await names(client)
+    expect(some).toContain('notes_add')
+    expect(some).not.toContain('paint_draw')
+    const draw = (await client.listTools()).tools
+    host.groups = ['shell', 'paint']
+    const schema = (await client.listTools()).tools.find((t) => t.name === 'paint_draw')!.inputSchema
+    expect(schema).toMatchObject({ type: 'object', required: ['ops'] })
+    expect(draw.length).toBeGreaterThan(0)
   })
 
   it('sends notifications/tools/list_changed when the bridge publishes new groups for its desktop', async () => {

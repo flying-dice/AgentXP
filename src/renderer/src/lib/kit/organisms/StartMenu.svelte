@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from '../atoms/Icon.svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { filterStartItems, type StartItem } from './StartMenu'
+  import { filterStartItems, type StartGroup, type StartItem } from './StartMenu'
 
   interface Props {
     /** Left column: apps. */
@@ -10,6 +10,8 @@
     recent?: StartItem[]
     /** Right column: places and system. */
     places: StartItem[]
+    /** Folders under the programs (Accessories, System Tools); items run through `onrun`. */
+    groups?: StartGroup[]
     /** Caption of the power button, e.g. "Pause agent" or "Resume agent". */
     powerLabel?: string
     query?: string
@@ -22,12 +24,14 @@
     ignore?: HTMLElement | null
   }
 
-  let { programs, recent = [], places, powerLabel = 'Pause agent', query = $bindable(''), onrun, onrecent, onplace, onpower, onclose, ignore = null }: Props = $props()
+  let { programs, groups = [], recent = [], places, powerLabel = 'Pause agent', query = $bindable(''), onrun, onrecent, onplace, onpower, onclose, ignore = null }: Props = $props()
 
   const shownPrograms = $derived(filterStartItems(programs, query))
   const shownRecent = $derived(filterStartItems(recent, query))
   const searching = $derived(query.trim().length > 0)
-  const empty = $derived(searching && shownPrograms.length + shownRecent.length === 0)
+  let openGroups = $state<Record<string, boolean>>({})
+  const shownGroups = $derived(groups.map((g) => ({ ...g, items: filterStartItems(g.items, query) })).filter((g) => !searching || g.items.length > 0))
+  const empty = $derived(searching && shownPrograms.length + shownRecent.length + shownGroups.length === 0)
 
   let search: HTMLInputElement | undefined = $state()
   $effect(() => search?.focus())
@@ -37,9 +41,9 @@
       event.stopPropagation()
       onclose?.()
     } else if (event.key === 'Enter' && searching) {
-      const first = shownPrograms[0] ?? shownRecent[0]
+      const first = shownPrograms[0] ?? shownGroups[0]?.items[0] ?? shownRecent[0]
       if (!first) return
-      if (shownPrograms[0]) onrun?.(first.id)
+      if (shownPrograms[0] || shownGroups[0]?.items[0]) onrun?.(first.id)
       else onrecent?.(first.id)
     }
   }
@@ -62,6 +66,29 @@
         </li>
       {/each}
     </ul>
+    {#if shownGroups.length > 0}
+      <ul class="groups">
+        {#each shownGroups as group (group.id)}
+          {@const open = searching || openGroups[group.id]}
+          <li>
+            <button type="button" role="menuitem" class="entry small" aria-expanded={open} onclick={() => (openGroups[group.id] = !open)}>
+              <Icon name="folder" size={16} /><span class="title">{group.title}</span><span class="caret" class:open aria-hidden="true">▸</span>
+            </button>
+            {#if open}
+              <ul class="sub">
+                {#each group.items as item (item.id)}
+                  <li>
+                    <button type="button" role="menuitem" class="entry small" onclick={() => onrun?.(item.id)}>
+                      {#if item.icon}<Icon name={item.icon} size={16} />{/if}<span class="title">{item.title}</span>
+                    </button>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
     {#if shownRecent.length > 0}
       <div class="heading">Recent chats</div>
       <ul class="recent">
@@ -191,6 +218,26 @@
     border-top: 1px solid #d5dfe5;
     color: #3d5d8a;
     font-size: 11px;
+  }
+  .groups {
+    flex: none;
+    margin-top: 4px;
+    border-top: 1px solid #d5dfe5;
+    padding-top: 4px;
+    max-height: 190px;
+    overflow: auto;
+  }
+  .sub {
+    padding-left: 18px;
+  }
+  .caret {
+    margin-left: auto;
+    color: #6b7a90;
+    font-size: 10px;
+    transition: transform 0.1s;
+  }
+  .caret.open {
+    transform: rotate(90deg);
   }
   .recent {
     flex: 1;

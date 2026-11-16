@@ -1,6 +1,7 @@
 /** An in-memory `Agent7Api` for Storybook: the "Fix login redirect bug" session of the design. */
 import { EventType, type BaseEvent, type RunAgentInput } from '@ag-ui/core'
 import { createFakeDesktop } from './fakeDesktop'
+import { createFakeExtras } from './fakeExtras'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
@@ -11,6 +12,33 @@ export const sampleAgents: AgentDto[] = [
   { id: 1, name: 'Claude Code', command: 'npx', args: ['-y', '@zed-industries/claude-code-acp'], env: {}, isDefault: true },
   { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false }
 ]
+
+export const sampleMarkdown = `# claude-code-win
+
+A Windows-friendly build of the **login service**. It keeps the \`?next=\` parameter when it redirects.
+
+## Getting started
+
+1. Install the dependencies with \`npm install\`
+2. Run the tests with \`npm test\`
+3. Start the dev server
+
+## Notes
+
+- Redirects only go to paths on the same site
+- Sessions expire after _30 minutes_
+
+\`\`\`ts
+export function parseRedirect(url: string): string {
+  const next = new URL(url).searchParams.get('next')
+  return next && next.startsWith('/') ? next : '/'
+}
+\`\`\`
+
+## License
+
+MIT
+`
 
 export const sampleFolders: FolderDto[] = [
   { id: 1, name: 'claude-code-win', path: 'C:\\Users\\jonathan\\source\\claude-code-win', lastOpenedAt: null },
@@ -106,15 +134,18 @@ export function fakeAgui(stateOf: () => AguiSessionState = sampleState): Agent7A
 }
 
 /** Builds the fake backend; `agents` starts with the sample agents, `folders` and `sessions` can start empty. */
-export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
+export type FakeApi = Agent7Api & { pushEvent: ReturnType<typeof createFakeExtras>['pushEvent'] }
+
+export function createFakeApi(options: { empty?: boolean } = {}): FakeApi {
   let agents = [...sampleAgents]
   let folders = options.empty ? [] : [...sampleFolders]
   let sessions = options.empty ? [] : [...sampleSessions]
   const listeners: { [K in keyof Agent7Events]?: ((payload: Agent7Events[K]) => void)[] } = {}
   const emit = <K extends keyof Agent7Events>(event: K, payload: Agent7Events[K]): void => (listeners[event] ?? []).forEach((l) => l(payload))
   let nextId = 100
+  const extras = createFakeExtras(emit as unknown as Parameters<typeof createFakeExtras>[0])
 
-  return {
+  const api: Agent7Api = {
     agents: {
       list: async () => agents,
       create: async (input) => {
@@ -144,8 +175,9 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       },
       remove: async (id) => void (folders = folders.filter((f) => f.id !== id)),
       readDir: async (_id, path) => tree[path] ?? [],
-      readFile: async (_id, path) => (path.endsWith('.md') ? '# claude-code-win\n\nSample project.\n' : sampleNew),
-      gitBranch: async () => 'main'
+      readFile: async (_id, path) => (path.endsWith('.md') ? sampleMarkdown : sampleNew),
+      gitBranch: async () => 'main',
+      writeFile: async () => {}
     },
     sessions: {
       list: async () => sessions,
@@ -178,6 +210,10 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
     },
     desktop: createFakeDesktop({ windows: options.empty ? [] : ['chat'], onChange: (state) => emit('desktop.changed', state) }),
+    notes: extras.notes,
+    events: extras.events,
+    recycle: extras.recycle,
+    snip: extras.snip,
     processes: {
       list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
       end: async () => {}
@@ -200,4 +236,5 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       return () => void list.splice(list.indexOf(listener as (payload: never) => void), 1)
     }
   }
+  return Object.assign(api, { pushEvent: extras.pushEvent })
 }

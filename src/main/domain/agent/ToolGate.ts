@@ -1,5 +1,8 @@
 import type { ToolGroup } from '@shared/desktop'
 
+/** JSON-RPC server-error code for a request the desktop refuses (closed app, policy, pause). */
+export const TOOL_REFUSED_CODE = -32010
+
 export type GatedToolGroup = Exclude<ToolGroup, 'shell'>
 
 export interface ToolGateRequest {

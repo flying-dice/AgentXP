@@ -1,7 +1,7 @@
 /** Pure row builders of the Agent Manager. */
 import type { AgentProcessDto } from '@shared/desktop'
-import type { AgentDto, SessionDto } from '@shared/models'
-import { contextPercent, statusLabel } from '../../app/sessionStatus'
+import type { AgentDto, SessionDto, TerminalDto } from '@shared/models'
+import { contextPercent, isBusy, statusLabel } from '../../app/sessionStatus'
 
 export type ProcessRow = {
   id: string
@@ -31,7 +31,10 @@ export interface ChatRow {
   agent: string
   status: string
   context: string
+  /** `12.3k / 200k` tokens of context. */
+  tokens: string
   percent: number
+  busy: boolean
 }
 
 export function chatRows(sessions: readonly SessionDto[], agents: readonly AgentDto[]): ChatRow[] {
@@ -43,7 +46,9 @@ export function chatRows(sessions: readonly SessionDto[], agents: readonly Agent
       agent: agents.find((a) => a.id === s.agentId)?.name ?? `Agent ${s.agentId}`,
       status: statusLabel(s.status),
       context: s.contextSize > 0 ? `${percent}%` : '-',
-      percent
+      tokens: s.contextSize > 0 ? `${formatTokens(s.contextUsed)} / ${formatTokens(s.contextSize)}` : '-',
+      percent,
+      busy: isBusy(s.status)
     }
   })
 }
@@ -52,3 +57,25 @@ export function chatRows(sessions: readonly SessionDto[], agents: readonly Agent
 export const contextState = (percent: number): 'normal' | 'paused' | 'error' => (percent >= 90 ? 'error' : percent >= 70 ? 'paused' : 'normal')
 
 export const formatTokens = (n: number): string => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n))
+
+export interface TerminalRow {
+  id: string
+  chat: string
+  command: string
+  cwd: string
+  status: string
+}
+
+/** ACP terminals of the chats, running ones first. */
+export function terminalRows(terminals: readonly TerminalDto[], sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): TerminalRow[] {
+  const status = (t: TerminalDto): string => (t.signal ? `Killed (${t.signal})` : t.exitCode === null ? 'Running' : t.exitCode === 0 ? 'Exited' : `Exited (${t.exitCode})`)
+  return terminals
+    .map((t) => ({
+      id: `${t.sessionId}:${t.terminalId}`,
+      chat: sessions.find((s) => s.id === t.sessionId)?.title || `Chat ${t.sessionId}`,
+      command: [t.command, ...t.args].join(' '),
+      cwd: t.cwd ?? '',
+      status: status(t)
+    }))
+    .sort((a, b) => Number(b.status === 'Running') - Number(a.status === 'Running'))
+}

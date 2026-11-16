@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, closedAppMessage, type ToolGroup } from '@shared/desktop'
+import type { Bounds } from '@shared/desktop'
 import type { FileChangeDto, FileNodeDto } from '@shared/models'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
+import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteDesktopRepository } from '../../infrastructure/db/sqlite-desktop-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
 import { DesktopService } from '../desktop/DesktopService'
@@ -15,6 +17,14 @@ import { DesktopToolService } from './DesktopToolService'
 import { createFsTools, nameMatcher } from './fsTools'
 import { createNotepadTools } from './notepadTools'
 import type { BrowserDriver, CommandRunner, PageInfo, PageSnapshot } from './ports'
+import { createEventsTools } from './eventsTools'
+import { createNotesTools } from './notesTools'
+import { createPaintTools } from './paintTools'
+import { createRecycleTools } from './recycleTools'
+import { createSnipTools } from './snipTools'
+import { createWordpadTools } from './wordpadTools'
+import { ProtocolEventLog } from '../events/ProtocolEventLog'
+import { StickyNoteService } from '../desktop/StickyNoteService'
 import { createShellTools } from './shellTools'
 import { createTerminalTools } from './terminalTools'
 import { toWorkspacePath } from './paths'
@@ -74,6 +84,13 @@ let allowAsk: boolean
 let ran: { command: string; cwd: string }[]
 let tools: DesktopToolService
 let changes: FileChangeDto[]
+let appCalls: { windowId: number; method: string; params: unknown }[]
+let appAnswers: Record<string, unknown>
+let written: { sessionId: number; path: string; text: string }[]
+let captures: (Bounds | undefined)[]
+let restored: number[]
+let eventLog: ProtocolEventLog
+let noteService: StickyNoteService
 
 const run = (tool: string, args: unknown = {}): Promise<ToolResult> => tools.call({ sessionId, desktopId }, tool, args)
 
@@ -86,6 +103,7 @@ beforeEach(async () => {
     folders: f.repos.folders,
     agents: f.repos.agents,
     sessions: f.repos.sessions,
+    notes: new SqliteStickyNoteRepository(f.db),
     chats: {
       create: async (folderId, agentId, desktop) => f.repos.sessions.create({ folderId, agentId: agentId ?? f.agentId, desktopId: desktop, title: 'chat' }),
       cancel: async () => {},
@@ -129,8 +147,30 @@ beforeEach(async () => {
     broker: { prompt: async () => ({ outcome: 'selected', optionId: 'allow' }), observe: () => () => {} },
     events: { publish: () => {} }
   })
+  appCalls = []
+  appAnswers = {}
+  written = []
+  captures = []
+  restored = []
+  eventLog = new ProtocolEventLog({ desktopOfSession: () => desktopId, events: { publish: () => {} } })
+  noteService = new StickyNoteService({ notes: new SqliteStickyNoteRepository(f.db), events: f.publisher, desktops })
+  const requests = {
+    request: async (_desktop: number, windowId: number, method: string, params: unknown) => {
+      appCalls.push({ windowId, method, params })
+      if (appAnswers['fail']) throw new Error(String(appAnswers['fail']))
+      return appAnswers[method]
+    }
+  }
+  const recycle = {
+    list: () => [{ id: 4, desktopId, sessionId, path: 'a.txt', revertedText: 'x', restoredText: null, revertedAt: '2026-01-01T00:00:00.000Z' }],
+    restore: async (id: number) => void restored.push(id)
+  }
   tools = new DesktopToolService({
     states: desktops,
+    log: {
+      called: (c, t, a) => eventLog.recordToolCall(c, t, a),
+      finished: (c, t, r, refused) => eventLog.recordToolResult(c, t, r, refused)
+    },
     gate: gateway,
     handlers: {
       ...createShellTools({ desktops, ask }),
@@ -138,7 +178,26 @@ beforeEach(async () => {
       ...createNotepadTools({ desktops, browser }),
       ...createCodeTools({ desktops, changes: { list: () => changes } }),
       ...createTerminalTools({ desktops, runner }),
-      ...createBrowserTools({ desktops, driver })
+      ...createBrowserTools({ desktops, driver }),
+      ...createPaintTools({ desktops, requests }),
+      ...createWordpadTools({
+        desktops,
+        browser,
+        requests,
+        files: { write: async (sessionId, _root, path, text) => void written.push({ sessionId, path, text }) }
+      }),
+      ...createNotesTools({ notes: noteService }),
+      ...createEventsTools({ log: eventLog }),
+      ...createSnipTools({
+        desktops,
+        screen: {
+          capture: async (_id, region) => {
+            captures.push(region)
+            return 'data:image/png;base64,UE5H'
+          }
+        }
+      }),
+      ...createRecycleTools({ recycle: recycle as never })
     }
   })
 })
@@ -153,7 +212,13 @@ describe('tool catalog', () => {
     expect(byGroup('terminal')).toEqual(['terminal_run', 'terminal_read'])
     expect(byGroup('browser')).toEqual(['browser_navigate', 'browser_read', 'browser_screenshot', 'browser_click', 'browser_type', 'browser_back'])
     expect(byGroup('fs.write')).toEqual([])
-    expect(TOOL_SPECS).toHaveLength(19)
+    expect(byGroup('paint')).toEqual(['paint_draw', 'paint_read', 'paint_clear', 'paint_resize'])
+    expect(byGroup('wordpad')).toEqual(['wordpad_open', 'wordpad_read', 'wordpad_write'])
+    expect(byGroup('notes')).toEqual(['notes_list', 'notes_add', 'notes_update', 'notes_remove'])
+    expect(byGroup('events')).toEqual(['events_query'])
+    expect(byGroup('snip')).toEqual(['screen_capture'])
+    expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
+    expect(TOOL_SPECS).toHaveLength(34)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -369,5 +434,211 @@ describe('browser tools', () => {
 
   it('formats a page snapshot', () => {
     expect(formatSnapshot({ title: 'T', url: 'u', text: 'body', elements: [] })).toContain('No interactive elements.')
+  })
+})
+
+const PNG = 'data:image/png;base64,UE5H'
+
+describe('new app groups: gating and listing', () => {
+  it('lists the tools of a group only while its app is open', () => {
+    const listed = (): string[] => specsForGroups(tools.enabledGroups(desktopId)).map((s) => s.name)
+    expect(listed()).not.toContain('paint_draw')
+    desktops.openWindow({ desktopId, app: 'paint' })
+    desktops.openWindow({ desktopId, app: 'sticky-notes' })
+    expect(listed()).toEqual(expect.arrayContaining(['paint_draw', 'paint_read', 'notes_add']))
+    expect(listed()).not.toContain('wordpad_read')
+    expect(listed()).not.toContain('recycle_list')
+    const paint = desktops.state(desktopId).windows.find((w) => w.app === 'paint')!
+    desktops.closeWindow(paint.id)
+    expect(listed()).not.toContain('paint_draw')
+  })
+
+  it('answers with the open-the-app hint while an app is closed', async () => {
+    for (const [tool, group] of [
+      ['paint_read', 'paint'],
+      ['wordpad_read', 'wordpad'],
+      ['notes_list', 'notes'],
+      ['events_query', 'events'],
+      ['screen_capture', 'snip'],
+      ['recycle_list', 'recycle']
+    ] as const) {
+      expect(textOf(await run(tool))).toBe(closedAppMessage(group))
+    }
+  })
+
+  it('asks for WordPad and Recycle Bin by default (policy), allows the rest', async () => {
+    desktops.openWindow({ desktopId, app: 'wordpad' })
+    desktops.openWindow({ desktopId, app: 'recycle-bin' })
+    desktops.openWindow({ desktopId, app: 'sticky-notes' })
+    const approvals: string[] = []
+    const asking = new ToolGateway({
+      desktops,
+      broker: {
+        prompt: async () => {
+          approvals.push('asked')
+          return { outcome: 'selected', optionId: 'reject' }
+        },
+        observe: () => () => {}
+      },
+      events: { publish: () => {} }
+    })
+    await expect(asking.authorize(sessionId, { group: 'wordpad', title: 'x' })).rejects.toThrow(/declined/)
+    await expect(asking.authorize(sessionId, { group: 'recycle', title: 'x' })).rejects.toThrow(/declined/)
+    await expect(asking.authorize(sessionId, { group: 'notes', title: 'x' })).resolves.toBeUndefined()
+    expect(approvals).toHaveLength(2)
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, notes: 'deny' } })
+    expect(textOf(await run('notes_list'))).toMatch(/blocked/)
+  })
+
+  it('logs MCP tool calls as events, with refusals as warnings and failures as errors', async () => {
+    desktops.openWindow({ desktopId, app: 'sticky-notes' })
+    await run('notes_list')
+    await run('notes_update', { id: 99, text: 'x' }) // error result
+    await run('paint_read') // app closed: refused
+    const events = eventLog.query({ desktopId, source: 'mcp' })
+    expect(events.map((e) => `${e.direction}:${e.name}:${e.level}`)).toEqual([
+      'in:notes_list:info',
+      'out:notes_list:info',
+      'in:notes_update:info',
+      'out:notes_update:error',
+      'in:paint_read:info',
+      'out:paint_read:warning'
+    ])
+  })
+})
+
+describe('paint tools', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'paint' }))
+  const paintId = (): number => desktops.state(desktopId).windows.find((w) => w.app === 'paint')!.id
+
+  it('forwards draw, clear and resize to the paint window as app requests', async () => {
+    const ops = [{ type: 'rect', x: 1, y: 2, w: 3, h: 4, fill: '#f00' }, { type: 'line', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }] }]
+    expect(textOf(await run('paint_draw', { ops }))).toMatch(/Drew 2 operations/)
+    await run('paint_clear', { color: '#fff' })
+    await run('paint_resize', { width: 320, height: 200 })
+    expect(appCalls).toEqual([
+      { windowId: paintId(), method: 'draw', params: { ops } },
+      { windowId: paintId(), method: 'draw', params: { ops: [{ type: 'clear', color: '#fff' }] } },
+      { windowId: paintId(), method: 'resize', params: { width: 320, height: 200 } }
+    ])
+  })
+
+  it('returns the canvas as image content and rejects a non-image answer', async () => {
+    appAnswers['read'] = PNG
+    const res = await run('paint_read')
+    expect(res.content[1]).toEqual({ type: 'image', data: 'UE5H', mimeType: 'image/png' })
+    appAnswers['read'] = 'nope'
+    expect((await run('paint_read')).isError).toBe(true)
+  })
+
+  it('targets the window given, else the topmost, and reports unknown windows and app errors', async () => {
+    const second = desktops.openWindow({ desktopId, app: 'paint' })
+    await run('paint_clear')
+    expect(appCalls.at(-1)?.windowId).toBe(second.id)
+    await run('paint_clear', { windowId: paintId() })
+    expect(appCalls.at(-1)?.windowId).toBe(paintId())
+    expect(textOf(await run('paint_clear', { windowId: 9999 }))).toMatch(/not an open Agent Paint window/)
+    appAnswers['fail'] = 'did not answer'
+    expect(textOf(await run('paint_clear'))).toBe('did not answer')
+    expect((await run('paint_draw', { ops: [] })).isError).toBe(true) // schema: at least one op
+  })
+})
+
+describe('wordpad tools', () => {
+  it('opens a file in a new or the existing window and updates its view', async () => {
+    desktops.openWindow({ desktopId, app: 'wordpad' })
+    expect(textOf(await run('wordpad_open', { path: 'docs/a.md' }))).toBe('WordPad shows docs/a.md.')
+    const view = desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view
+    expect(view).toMatchObject({ app: 'wordpad', path: 'docs/a.md', dirty: false })
+    expect(desktops.state(desktopId).windows.filter((w) => w.app === 'wordpad')).toHaveLength(1)
+    expect(appCalls).toEqual([{ windowId: expect.any(Number), method: 'open', params: { path: 'docs/a.md' } }])
+    expect((await run('wordpad_open', { path: 'missing.txt' })).isError).toBe(true)
+    expect((await run('wordpad_open', { path: '../x.md' })).isError).toBe(true)
+  })
+
+  it('reads the text the window shows, unsaved edits included', async () => {
+    desktops.openWindow({ desktopId, app: 'wordpad' })
+    appAnswers['read'] = '# Draft\n\nunsaved'
+    expect(textOf(await run('wordpad_read'))).toBe('# Draft\n\nunsaved')
+    appAnswers['read'] = 42
+    expect((await run('wordpad_read')).isError).toBe(true)
+  })
+
+  it('writes through the recorded write path and shows the file', async () => {
+    desktops.openWindow({ desktopId, app: 'wordpad' })
+    expect(textOf(await run('wordpad_write', { path: 'notes.md', markdown: '# Hi' }))).toMatch(/Wrote notes.md/)
+    expect(written).toEqual([{ sessionId, path: 'notes.md', text: '# Hi' }])
+    expect(desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view).toMatchObject({ path: 'notes.md' })
+    expect((await run('wordpad_write', { path: '../../etc/x', markdown: '' })).isError).toBe(true)
+    expect(written).toHaveLength(1)
+  })
+})
+
+describe('notes tools and desktop state', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'sticky-notes' }))
+
+  it('adds, lists, updates and removes notes as the agent; notes appear in the desktop state', async () => {
+    expect(textOf(await run('notes_list'))).toBe('No sticky notes.')
+    expect(textOf(await run('notes_add', { text: 'buy milk', color: 'pink' }))).toMatch(/#\d+ \[pink\] \(agent\) buy milk/)
+    const [note] = desktops.state(desktopId).notes
+    expect(note).toMatchObject({ text: 'buy milk', color: 'pink', author: 'agent', planSessionId: null })
+    await run('notes_update', { id: note!.id, text: 'buy oat milk', color: 'green' })
+    expect(textOf(await run('notes_list'))).toBe(`#${note!.id} [green] (agent) buy oat milk`)
+    await run('notes_remove', { id: note!.id })
+    expect(desktops.state(desktopId).notes).toEqual([])
+    expect(textOf(await run('notes_remove', { id: note!.id }))).toMatch(/does not exist/)
+    expect(f.publisher.payloads('notes.changed').length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('creates one plan note for the calling chat', async () => {
+    await run('notes_add', { text: 'ignored', plan: true })
+    await run('notes_add', { plan: true })
+    const notes = desktops.state(desktopId).notes
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatchObject({ planSessionId: sessionId, text: '', author: 'agent' })
+    expect(textOf(await run('notes_list'))).toContain(`plan of chat ${sessionId}`)
+  })
+
+  it('rejects unknown colours', async () => {
+    expect((await run('notes_add', { text: 'x', color: 'teal' })).isError).toBe(true)
+  })
+})
+
+describe('events_query', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'event-viewer' }))
+
+  it('returns compact filtered lines, newest last', async () => {
+    eventLog.record({ sessionId, source: 'acp', direction: 'out', name: 'session/prompt', payload: { a: 1 } })
+    eventLog.record({ sessionId, source: 'acp', direction: 'in', name: 'session/prompt (response)', level: 'error', payload: { error: { message: 'boom' } } })
+    expect(textOf(await run('events_query', { level: 'error' }))).toMatch(/^#\d+ \d\d:\d\d:\d\d error acp in session\/prompt \(response\) chat \d+ \{ "error"/)
+    const all = textOf(await run('events_query', { source: 'acp', limit: 1 }))
+    expect(all.split('\n')).toHaveLength(1)
+    expect(textOf(await run('events_query', { source: 'acp', text: 'zzz' }))).toBe('No matching events.')
+    expect((await run('events_query', { limit: 500 })).isError).toBe(true)
+  })
+})
+
+describe('screen_capture', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'snipping-tool' }))
+
+  it('captures the desktop or one window area as image content', async () => {
+    const whole = await run('screen_capture')
+    expect(whole.content[1]).toEqual({ type: 'image', data: 'UE5H', mimeType: 'image/png' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    await run('screen_capture', { windowId: chat.id })
+    expect(captures).toEqual([undefined, chat.bounds])
+    expect(textOf(await run('screen_capture', { windowId: 9999 }))).toMatch(/does not exist/)
+  })
+})
+
+describe('recycle tools', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'recycle-bin' }))
+
+  it('lists and restores the bin items of this desktop', async () => {
+    expect(textOf(await run('recycle_list'))).toMatch(/^#4 a.txt \(your version reverted/)
+    expect(textOf(await run('recycle_restore', { id: 4 }))).toBe('Restored a.txt.')
+    expect(restored).toEqual([4])
+    expect(textOf(await run('recycle_restore', { id: 5 }))).toMatch(/does not exist/)
+    expect(restored).toEqual([4])
   })
 })

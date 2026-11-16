@@ -3,6 +3,7 @@ import { DEFAULT_TOOL_POLICY, type DesktopState } from '@shared/desktop'
 import type { SessionDto } from '@shared/models'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
 import { SqliteDesktopRepository } from '../../infrastructure/db/sqlite-desktop-repository'
+import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
 import { createAppFixture } from '../test-helpers'
 import { DesktopService, type ChatLifecycle } from './DesktopService'
@@ -46,6 +47,7 @@ beforeEach(() => {
     folders: f.repos.folders,
     agents: f.repos.agents,
     sessions: f.repos.sessions,
+    notes: new SqliteStickyNoteRepository(f.db),
     chats,
     pickFolder: async () => picked,
     host,

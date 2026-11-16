@@ -14,3 +14,11 @@ export function filterStartItems<T extends { title: string; description?: string
     return words.every((w) => hay.includes(w))
   })
 }
+
+/** A folder in the left column ("Accessories"): collapsed by default, expands in place. */
+export interface StartGroup {
+  id: string
+  title: string
+  icon?: import('../atoms/icons').IconName
+  items: StartItem[]
+}

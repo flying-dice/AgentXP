@@ -54,7 +54,13 @@ const CHIP_LABELS: Record<Exclude<ToolGroup, 'shell'>, string> = {
   notepad: 'Notepad',
   code: 'Code',
   terminal: 'Terminal',
-  browser: 'Browser'
+  browser: 'Browser',
+  paint: 'Paint',
+  wordpad: 'WordPad',
+  notes: 'Notes',
+  events: 'Events',
+  snip: 'Screen capture',
+  recycle: 'Recycle Bin'
 }
 
 /** Chips for the top bar: the tool groups the agent can use right now (the always-on shell group is left out). */

@@ -45,6 +45,26 @@ describe('streamAguiRun', () => {
     expect(await stream(runnerOf([invalid]), false)).toHaveLength(1)
   })
 
+  it('shows every sent event, RUN_ERROR included, to the observer and survives one that throws', async () => {
+    const seen: string[] = []
+    const sent: AguiEventMessage[] = []
+    await streamAguiRun(runnerOf([started], new Error('boom')), input, (m) => sent.push(m), {
+      validate: false,
+      isClosed: () => false,
+      onEvent: (e) => void seen.push(String(e.type))
+    })
+    expect(seen).toEqual([EventType.RUN_STARTED, EventType.RUN_ERROR])
+    const none: AguiEventMessage[] = []
+    await streamAguiRun(runnerOf([started]), input, (m) => none.push(m), {
+      validate: false,
+      isClosed: () => false,
+      onEvent: () => {
+        throw new Error('observer broke')
+      }
+    })
+    expect(none).toHaveLength(1)
+  })
+
   it('reports a failing runner as RUN_ERROR', async () => {
     const sent = await stream(runnerOf([started], new Error('boom')), false)
     expect(sent.at(-1)?.event).toMatchObject({ type: EventType.RUN_ERROR, message: 'boom' })

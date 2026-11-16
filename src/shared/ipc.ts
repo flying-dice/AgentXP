@@ -17,7 +17,7 @@ import type {
   TranscriptEntryDto
 } from './models'
 import type { A2uiClientEvent, A2uiSurfaceDto } from './a2ui'
-import type { AgentProcessDto, DesktopApi, DesktopEvents } from './desktop'
+import type { AgentProcessDto, DesktopApi, DesktopEvents, DesktopExtrasApi } from './desktop'
 
 export interface PromptInput {
   sessionId: Id
@@ -86,6 +86,8 @@ export interface Agent7Api {
     readFile(folderId: Id, relativePath: string): Promise<string>
     /** Current git branch (or short commit when detached) read from `.git/HEAD`; null when the folder is not a repository. */
     gitBranch(folderId: Id): Promise<string | null>
+    /** Writes a text file the user saved (Notepad, WordPad). Recorded as a user edit, not an agent change. */
+    writeFile(folderId: Id, relativePath: string, text: string): Promise<void>
   }
   sessions: {
     list(folderId?: Id): Promise<SessionDto[]>
@@ -119,6 +121,10 @@ export interface Agent7Api {
     pickFiles(): Promise<string[]>
   }
   desktop: DesktopApi
+  notes: DesktopExtrasApi['notes']
+  events: DesktopExtrasApi['events']
+  recycle: DesktopExtrasApi['recycle']
+  snip: DesktopExtrasApi['snip']
   processes: {
     /** Running agent processes across all desktops (Agent Manager). */
     list(): Promise<AgentProcessDto[]>

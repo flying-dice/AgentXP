@@ -15,16 +15,42 @@ export const APP_KINDS = [
   'terminal',
   'browser',
   'control-centre',
-  'agent-manager'
+  'agent-manager',
+  'paint',
+  'wordpad',
+  'sticky-notes',
+  'event-viewer',
+  'snipping-tool',
+  'recycle-bin'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
 /** Apps the agent may open or close with desktop_open_app / desktop_close_app. */
-export const AGENT_OPENABLE_APPS = ['explorer', 'notepad', 'code', 'terminal', 'browser'] as const satisfies readonly AppKind[]
+export const AGENT_OPENABLE_APPS = [
+  'explorer',
+  'notepad',
+  'code',
+  'terminal',
+  'browser',
+  'paint',
+  'wordpad',
+  'sticky-notes',
+  'event-viewer',
+  'snipping-tool',
+  'recycle-bin'
+] as const satisfies readonly AppKind[]
 export type AgentOpenableApp = (typeof AGENT_OPENABLE_APPS)[number]
 
 /** Apps that can have at most one window per desktop. */
-export const SINGLETON_APPS: readonly AppKind[] = ['code', 'control-centre', 'agent-manager']
+export const SINGLETON_APPS: readonly AppKind[] = [
+  'code',
+  'control-centre',
+  'agent-manager',
+  'sticky-notes',
+  'event-viewer',
+  'snipping-tool',
+  'recycle-bin'
+]
 
 export type WindowState = 'normal' | 'minimized' | 'maximized'
 export type OpenedBy = 'user' | 'agent'
@@ -53,6 +79,15 @@ export type AppView =
   | { app: 'browser'; url: string; title: string; loading: boolean }
   | { app: 'control-centre'; page: ControlCentrePage }
   | { app: 'agent-manager' }
+  | { app: 'paint'; path: string | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
+  | { app: 'wordpad'; path: string | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
+  | { app: 'sticky-notes' }
+  | { app: 'event-viewer'; sessionId: Id | null; level: EventLevel | 'all'; selectedEventId: number | null }
+  | { app: 'snipping-tool'; lastSnipId: string | null }
+  | { app: 'recycle-bin'; selectedId: Id | null }
+
+export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
+export type EventLevel = 'info' | 'warning' | 'error'
 
 export type ControlCentrePage = 'agents' | 'permissions' | 'appearance' | 'about'
 
@@ -89,6 +124,8 @@ export interface DesktopState {
   tools: ToolGroup[]
   paused: boolean
   userInControl: boolean
+  /** The desktop's sticky notes (the agent sees them in `desktop_state`). */
+  notes: StickyNoteDto[]
 }
 
 // ---------------------------------------------------------------- tools
@@ -100,7 +137,13 @@ export const TOOL_GROUPS = [
   'notepad', // notepad_open, notepad_read
   'code', // code_open, code_reveal, code_show_diff
   'terminal', // ACP terminal/*, terminal_run, terminal_read
-  'browser' // browser_*
+  'browser', // browser_*
+  'paint', // paint_draw, paint_read, paint_clear, paint_resize
+  'wordpad', // wordpad_open, wordpad_read, wordpad_write
+  'notes', // notes_list, notes_add, notes_update, notes_remove
+  'events', // events_query
+  'snip', // screen_capture
+  'recycle' // recycle_list, recycle_restore
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
 
@@ -112,7 +155,13 @@ export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   notepad: ['notepad'],
   code: ['code'],
   terminal: ['terminal'],
-  browser: ['browser']
+  browser: ['browser'],
+  paint: ['paint'],
+  wordpad: ['wordpad'],
+  notes: ['sticky-notes'],
+  events: ['event-viewer'],
+  snip: ['snipping-tool'],
+  recycle: ['recycle-bin']
 }
 
 /** The app suggested to the agent when a group is missing. */
@@ -122,7 +171,13 @@ export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AgentOpenableAp
   notepad: 'notepad',
   code: 'code',
   terminal: 'terminal',
-  browser: 'browser'
+  browser: 'browser',
+  paint: 'paint',
+  wordpad: 'wordpad',
+  notes: 'sticky-notes',
+  events: 'event-viewer',
+  snip: 'snipping-tool',
+  recycle: 'recycle-bin'
 }
 
 export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
@@ -133,7 +188,13 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   terminal: 'Terminal',
   browser: 'Browser',
   'control-centre': 'Control Centre',
-  'agent-manager': 'Agent Manager'
+  'agent-manager': 'Task Manager',
+  paint: 'Agent Paint',
+  wordpad: 'WordPad',
+  'sticky-notes': 'Sticky Notes',
+  'event-viewer': 'Event Viewer',
+  'snipping-tool': 'Snipping Tool',
+  'recycle-bin': 'Recycle Bin'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -159,7 +220,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask' },
   openApps: 'allow'
 }
 
@@ -209,6 +270,8 @@ export interface DesktopApi {
    * `windowId`, so `browser_*` tools can drive it. Call again after every re-attach.
    */
   attachBrowser(windowId: Id, webContentsId: number): Promise<void>
+  /** Answers a `desktop.appRequest` push. */
+  respondAppRequest(response: AppResponse): Promise<void>
 }
 
 export interface AgentProcessDto {
@@ -219,7 +282,107 @@ export interface AgentProcessDto {
   sessionIds: Id[]
 }
 
-export interface DesktopEvents {
+export interface DesktopEvents extends DesktopExtrasEvents {
   /** Full state of this OS window's desktop after any change. */
   'desktop.changed': DesktopState
+}
+
+// ---------------------------------------------------------------- app requests (main -> renderer app -> main)
+
+/**
+ * Some tools need the renderer: paint_read renders the canvas, wordpad_read
+ * reads unsaved text. Main pushes `desktop.appRequest` to the owning window,
+ * the app answers with `desktop.respondAppRequest`. Timeout 10 s in main.
+ */
+export interface AppRequest {
+  requestId: string
+  /** The desktop (OS window) the request is pushed to. */
+  desktopId: Id
+  windowId: Id
+  method: string
+  params: unknown
+}
+export type AppResponse = { requestId: string; ok: true; result: unknown } | { requestId: string; ok: false; error: string }
+
+// ---------------------------------------------------------------- sticky notes, events, recycle bin
+
+export type StickyColor = 'yellow' | 'blue' | 'green' | 'pink' | 'purple' | 'white'
+
+export interface StickyNoteDto {
+  id: Id
+  desktopId: Id
+  text: string
+  color: StickyColor
+  bounds: Bounds
+  /** When set, the note mirrors that chat's plan (tasks) live and its text is generated. */
+  planSessionId: Id | null
+  author: OpenedBy
+}
+
+/** One raw protocol event (ACP JSON-RPC message or AG-UI event), kept in memory per desktop. */
+export interface ProtocolEventDto {
+  id: number
+  at: IsoDate
+  desktopId: Id
+  sessionId: Id | null
+  source: 'acp' | 'ag-ui' | 'mcp'
+  direction: 'in' | 'out'
+  level: EventLevel
+  /** JSON-RPC method or AG-UI event type. */
+  name: string
+  /** Pretty JSON, truncated to 64 KB. */
+  payload: string
+}
+
+export interface ProtocolEventQuery {
+  desktopId: Id
+  sessionId?: Id | null
+  source?: ProtocolEventDto['source']
+  level?: EventLevel
+  text?: string
+  afterId?: number
+  limit?: number
+}
+
+/** A change the user reverted; can be restored (re-applies `revertedText`). */
+export interface RecycledChangeDto {
+  id: Id
+  desktopId: Id
+  sessionId: Id | null
+  path: string
+  /** The agent's version that the revert threw away (null when the agent deleted the file). */
+  revertedText: string | null
+  /** What revert wrote back (null when revert deleted an added file). */
+  restoredText: string | null
+  revertedAt: IsoDate
+}
+
+export interface DesktopExtrasApi {
+  notes: {
+    list(desktopId: Id): Promise<StickyNoteDto[]>
+    add(desktopId: Id, text: string, color?: StickyColor): Promise<StickyNoteDto>
+    update(id: Id, patch: Partial<Pick<StickyNoteDto, 'text' | 'color' | 'bounds' | 'planSessionId'>>): Promise<StickyNoteDto>
+    remove(id: Id): Promise<void>
+  }
+  events: {
+    query(query: ProtocolEventQuery): Promise<ProtocolEventDto[]>
+    clear(desktopId: Id): Promise<void>
+  }
+  recycle: {
+    list(desktopId: Id): Promise<RecycledChangeDto[]>
+    restore(id: Id): Promise<void>
+    remove(id: Id): Promise<void>
+    empty(desktopId: Id): Promise<void>
+  }
+  snip: {
+    /** Captures the desktop window (or a region of it, in CSS px) as a PNG data URL. */
+    capture(desktopId: Id, region?: Bounds): Promise<string>
+  }
+}
+
+export interface DesktopExtrasEvents {
+  'desktop.appRequest': AppRequest
+  'notes.changed': { desktopId: Id; notes: StickyNoteDto[] }
+  'events.appended': ProtocolEventDto[]
+  'recycle.changed': { desktopId: Id }
 }

@@ -15,7 +15,13 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   notepad: 'Notepad tools',
   code: 'Code tools',
   terminal: 'Running commands',
-  browser: 'Browser tools'
+  browser: 'Browser tools',
+  paint: 'Agent Paint tools',
+  wordpad: 'WordPad tools',
+  notes: 'Sticky Notes tools',
+  events: 'Event Viewer tools',
+  snip: 'Screen capture',
+  recycle: 'Recycle Bin tools'
 }
 
 export const groupLabel = (group: GatedToolGroup): string => GROUP_LABELS[group]

@@ -13,6 +13,14 @@ export interface DesktopToolServiceDeps {
   /** The policy gate (closed app, deny, pause, ask). */
   gate: { authorize(sessionId: Id, request: ToolGateRequest): Promise<void> }
   handlers: AllHandlers
+  /** Sees every tool call and its outcome (the Event Viewer). */
+  log?: ToolCallLog
+}
+
+/** What the Event Viewer needs to know about MCP tool calls. */
+export interface ToolCallLog {
+  called(context: ToolContext, tool: string, args: unknown): void
+  finished(context: ToolContext, tool: string, result: ToolResult, refused: boolean): void
 }
 
 const SUMMARY_LENGTH = 80
@@ -37,6 +45,14 @@ export class DesktopToolService implements DesktopToolHost {
   }
 
   async call(context: ToolContext, tool: string, args: unknown): Promise<ToolResult> {
+    this.deps.log?.called(context, tool, args)
+    let refused = false
+    const result = await this.run(context, tool, args, () => (refused = true))
+    this.deps.log?.finished(context, tool, result, refused)
+    return result
+  }
+
+  private async run(context: ToolContext, tool: string, args: unknown, onRefused: () => void): Promise<ToolResult> {
     if (!isToolName(tool)) return errorResult(`Unknown tool "${tool}".`)
     const parsed = TOOL_DEFS[tool].input.safeParse(args ?? {})
     if (!parsed.success) return errorResult(`Invalid arguments for ${tool}: ${parsed.error.message}`)
@@ -45,6 +61,7 @@ export class DesktopToolService implements DesktopToolHost {
       const handler = this.deps.handlers[tool] as (args: unknown, context: ToolContext) => Promise<ToolResult>
       return await handler(parsed.data, context)
     } catch (error) {
+      if (error instanceof ToolRefusedError) onRefused()
       return errorResult(error instanceof Error ? error.message : String(error))
     }
   }

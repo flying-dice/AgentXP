@@ -6,7 +6,9 @@
   import type { Snippet } from 'svelte'
   import type { AppKind, AppView } from '@shared/desktop'
   import type { AguiSessionState } from '@shared/agui-state'
+  import { onMount } from 'svelte'
   import Button from '../kit/atoms/Button.svelte'
+  import { handleAppRequest } from './appRequests'
   import Form from '../kit/organisms/Form.svelte'
   import MessageBoxHost from '../kit/organisms/MessageBoxHost.svelte'
   import { appRegistry } from './registry'
@@ -24,10 +26,14 @@
     setup?: (host: StoryHost) => void
     /** Shared AG-UI state of every chat (default: the sample session). */
     aguiState?: () => AguiSessionState
-    extra?: Snippet
+    /** Buttons that send an app request to the window (what the agent's tools do). */
+    requests?: { label: string; method: string; params?: unknown }[]
+    /** App requests sent once after the window mounted (a ready-made picture, for screenshots). */
+    run?: { method: string; params?: unknown }[]
+    extra?: Snippet<[StoryHost]>
   }
 
-  let { app, view, width = 760, height = 500, active = true, agent = [], setup, aguiState, extra }: Props = $props()
+  let { app, view, width = 760, height = 500, active = true, agent = [], requests = [], run = [], setup, aguiState, extra }: Props = $props()
 
   // One host per mount: the props are deliberately read once.
   // svelte-ignore state_referenced_locally
@@ -39,6 +45,13 @@
   const windowState = $derived(host.byId(opened.id))
   const definition = $derived(appRegistry[app])
   const Component = $derived(definition.component)
+  const send = (r: { method: string; params?: unknown }): Promise<unknown> => handleAppRequest({ requestId: `story-${r.method}`, desktopId: host.state.desktopId, windowId: opened.id, method: r.method, params: r.params })
+  onMount(() => {
+    const timer = setTimeout(async () => {
+      for (const r of run) await send(r)
+    }, 60)
+    return () => clearTimeout(timer)
+  })
 </script>
 
 <div class="stage">
@@ -47,13 +60,16 @@
       <Component window={windowState} {host} focused={active} />
     </div>
   </Form>
-  {#if agent.length > 0 || extra}
+  {#if agent.length > 0 || requests.length > 0 || extra}
     <div class="agent">
       <b>Agent:</b>
       {#each agent as a (a.label)}
         <Button onclick={() => host.agentSetsView(opened.id, a.view)}>{a.label}</Button>
       {/each}
-      {@render extra?.()}
+      {#each requests as r (r.label)}
+        <Button onclick={() => void send(r)}>{r.label}</Button>
+      {/each}
+      {@render extra?.(host)}
     </div>
   {/if}
   <MessageBoxHost />

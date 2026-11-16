@@ -5,7 +5,8 @@
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
-  import type { StartItem } from '../kit/organisms/StartMenu'
+  import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
+  import { startAppRequests } from '../apps/appRequests'
   import Desktop from '../kit/templates/Desktop.svelte'
   import { appRegistry } from '../desktop/apps'
   import { approvalReason } from '../desktop/approval'
@@ -13,6 +14,8 @@
   import { DesktopController } from '../desktop/DesktopController.svelte'
   import DesktopSurface, { type DesktopIconDef } from '../desktop/DesktopSurface.svelte'
   import Gadgets from '../desktop/Gadgets.svelte'
+  import SnipOverlay from '../desktop/SnipOverlay.svelte'
+  import StickyNotesLayer from '../desktop/StickyNotesLayer.svelte'
   import TopBar from '../desktop/TopBar.svelte'
   import TrayFlag from '../desktop/TrayFlag.svelte'
   import UacDialog from '../desktop/UacDialog.svelte'
@@ -42,8 +45,12 @@
 
   onMount(() => {
     void desktop.start()
+    const stopRequests = startAppRequests(desktop.api)
     orb = root?.querySelector<HTMLElement>('.w7-taskbar .orb') ?? null
-    return () => desktop.dispose()
+    return () => {
+      stopRequests()
+      desktop.dispose()
+    }
   })
 
   const icons = $derived(
@@ -51,17 +58,26 @@
   )
   const items = $derived(taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons))
 
-  const desktopIcons: DesktopIconDef[] = [
+  const desktopIcons = $derived<DesktopIconDef[]>([
     { id: 'workspace', label: 'Workspace (W:)', icon: 'folder-open' },
     { id: 'chats', label: 'Chats', icon: 'session' },
     { id: 'code', label: 'Code', icon: 'file-code' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal' },
     { id: 'browser', label: 'Browser', icon: 'globe' },
     { id: 'control-centre', label: 'Control Centre', icon: 'options' },
-    { id: 'recycle', label: 'Recycle Bin', icon: 'delete' }
-  ]
+    { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle' }
+  ])
 
-  const START_APPS: AppKind[] = ['chat', 'explorer', 'notepad', 'code', 'terminal', 'browser']
+  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'terminal', 'browser']
+  const groupOf = (id: string, title: string, kinds: AppKind[]): StartGroup => ({
+    id,
+    title,
+    items: kinds.map((k) => ({ id: k, title: appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
+  })
+  const groups: StartGroup[] = [
+    groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes']),
+    groupOf('system-tools', 'System Tools', ['event-viewer', 'agent-manager', 'control-centre'])
+  ]
   const programs = $derived<StartItem[]>(
     START_APPS.map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
   )
@@ -69,7 +85,8 @@
   const places: StartItem[] = [
     { id: 'workspace', title: 'Workspace' },
     { id: 'control-centre', title: 'Control Centre' },
-    { id: 'agent-manager', title: 'Agent Manager' },
+    { id: 'agent-manager', title: 'Task Manager' },
+    { id: 'recycle-bin', title: 'Recycle Bin' },
     { id: 'new-desktop', title: 'New desktop…' }
   ]
 
@@ -87,7 +104,7 @@
         return void (latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat())
       }
       case 'recycle':
-        return void desktop.openApp({ app: 'code' })
+        return void desktop.openApp({ app: 'recycle-bin' })
       default:
         return void desktop.openApp({ app: id as AppKind })
     }
@@ -141,6 +158,7 @@
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
       <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} {since} />
     {/if}
+    <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
     {#if !desktop.needsDesktop}
       <TopBar
@@ -154,10 +172,20 @@
       />
     {/if}
 
+    {#if desktop.snipOverlay}
+      <SnipOverlay
+        mode={desktop.snipOverlay.mode}
+        windows={desktop.state.windows.filter((w) => w.windowState !== 'minimized').map((w) => ({ id: w.id, bounds: desktop.boundsOf(w) }))}
+        onpick={(region) => desktop.snipOverlay?.resolve(region)}
+        oncancel={() => desktop.snipOverlay?.resolve(null)}
+      />
+    {/if}
+
     {#if desktop.startOpen}
       <div class="start">
         <StartMenu
           {programs}
+          {groups}
           {recent}
           {places}
           bind:query

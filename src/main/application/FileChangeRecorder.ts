@@ -10,7 +10,7 @@ export class FileChangeRecorder {
     private readonly events: EventPublisher
   ) {}
 
-  recordWrite(sessionId: Id, root: string, absolutePath: string, before: string | null, after: string): void {
+  recordWrite(sessionId: Id, root: string, absolutePath: string, before: string | null, after: string | null): void {
     this.changes.record({ sessionId, path: relative(root, absolutePath), previousText: before, newText: after })
     this.publish(sessionId)
   }

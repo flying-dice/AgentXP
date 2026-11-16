@@ -1,4 +1,5 @@
 import type { Id } from '@shared/models'
+import type { Bounds } from '@shared/desktop'
 import type { DesktopService } from '../desktop/DesktopService'
 
 export interface PageElement {
@@ -49,3 +50,15 @@ export type DesktopOps = Pick<
   DesktopService,
   'state' | 'openWindow' | 'closeWindow' | 'focusWindow' | 'updateView' | 'policy'
 >
+
+/** Asks an app window in the renderer (see `AppRequestBroker`). Rejects with a readable message on timeout. */
+export interface AppRequests {
+  request(desktopId: Id, windowId: Id, method: string, params: unknown, timeoutMs?: number): Promise<unknown>
+}
+
+/** Writes a file on behalf of the agent of a chat; the write is recorded as one of the chat's file changes. */
+export interface AgentFileWriter {
+  write(sessionId: Id, root: string, relativePath: string, text: string): Promise<void>
+}
+
+export type { Bounds }

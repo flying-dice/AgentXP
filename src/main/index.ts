@@ -10,6 +10,7 @@ import { desktopSenderHandlers } from './ipc/registerDesktopHandlers'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { registerWindowHandlers } from './ipc/registerWindowHandlers'
 import { ElectronFilePicker, ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from './ipc/ElectronDialogs'
+import { ElectronScreenCapturer } from './ipc/ElectronScreenCapturer'
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
@@ -39,6 +40,7 @@ async function bootstrap(): Promise<Running> {
       all: () => BrowserWindow.getAllWindows().map((w) => w.webContents)
     }),
     windows,
+    screen: new ElectronScreenCapturer(windows),
     picker: new ElectronFolderPicker(),
     filePicker: new ElectronFilePicker(),
     saver: new ElectronTextFileSaver(),
@@ -52,7 +54,13 @@ async function bootstrap(): Promise<Running> {
     running.api,
     desktopSenderHandlers({ windows, desktops: running.desktops, browsers: running.browsers })
   )
-  const unregisterAgui = registerAguiHandlers(running.agui, { validate: is.dev })
+  const unregisterAgui = registerAguiHandlers(running.agui, {
+    validate: is.dev,
+    onEvent: (input, event) => {
+      const sessionId = Number(input.threadId)
+      if (Number.isSafeInteger(sessionId)) running.eventLog.recordAgui(sessionId, event)
+    }
+  })
   const unregisterWindow = registerWindowHandlers()
   return {
     windows,

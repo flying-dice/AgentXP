@@ -36,7 +36,8 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
     windows: [],
     tools: enabledToolGroups([]),
     paused: false,
-    userInControl: false
+    userInControl: false,
+    notes: []
   }
   const changed = (): void => {
     state.tools = enabledToolGroups(state.windows.map((w) => w.app))
@@ -123,7 +124,8 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
     newChat: async () => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
-    attachBrowser: async () => {}
+    attachBrowser: async () => {},
+    respondAppRequest: async () => {}
   }
   for (const app of options.windows ?? []) void api.openWindow({ desktopId: desktop.id, app })
   return api

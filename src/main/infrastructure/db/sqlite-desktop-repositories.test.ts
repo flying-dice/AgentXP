@@ -125,7 +125,7 @@ describe('migration 002 on an existing database', () => {
       { title: 'a2', desktop_id: 1 },
       { title: 'b1', desktop_id: 2 }
     ])
-    expect(db.prepare('SELECT kind FROM app_kinds ORDER BY kind').all()).toHaveLength(8)
+    expect(db.prepare('SELECT kind FROM app_kinds ORDER BY kind').all()).toHaveLength(14)
     expect(db.prepare('PRAGMA foreign_key_check').all()).toEqual([])
   })
 

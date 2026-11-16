@@ -17,6 +17,18 @@
   {/await}
 </Story>
 
+<Story name="PaintNotesAndEvents" asChild>
+  {#await prepareDesktop({ windows: false, apps: ['event-viewer', 'paint', 'sticky-notes'], draw: true }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /></div>
+  {/await}
+</Story>
+
+<Story name="SnipOverlay" asChild>
+  {#await prepareDesktop({ apps: ['snipping-tool'], snip: 'rect' }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /></div>
+  {/await}
+</Story>
+
 <Story name="StartMenuOpen" asChild>
   {#await prepareDesktop({ startOpen: true }) then { api, controller }}
     <div class="stage"><DesktopPage {api} {controller} /></div>

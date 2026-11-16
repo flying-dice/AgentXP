@@ -6,7 +6,13 @@ import ChatApp from './chat/ChatApp.svelte'
 import CodeApp from './code/CodeApp.svelte'
 import ControlCentreApp from './control-centre/ControlCentreApp.svelte'
 import ExplorerApp from './explorer/ExplorerApp.svelte'
+import EventViewerApp from './event-viewer/EventViewerApp.svelte'
 import NotepadApp from './notepad/NotepadApp.svelte'
+import PaintApp from './paint/PaintApp.svelte'
+import RecycleBinApp from './recycle-bin/RecycleBinApp.svelte'
+import SnippingToolApp from './snipping-tool/SnippingToolApp.svelte'
+import StickyNotesApp from './sticky-notes/StickyNotesApp.svelte'
+import WordPadApp from './wordpad/WordPadApp.svelte'
 import TerminalApp from './terminal/TerminalApp.svelte'
 import type { AppDefinition } from './types'
 
@@ -18,5 +24,11 @@ export const appRegistry: Record<AppKind, AppDefinition> = {
   terminal: { kind: 'terminal', title: 'Terminal', icon: 'terminal', description: 'Watch the commands the agent runs', component: TerminalApp },
   browser: { kind: 'browser', title: 'Browser', icon: 'globe', description: 'Browse the web together with the agent', component: BrowserApp },
   'control-centre': { kind: 'control-centre', title: 'Control Centre', icon: 'options', description: 'Agents, permissions and appearance', component: ControlCentreApp },
-  'agent-manager': { kind: 'agent-manager', title: 'Agent Manager', icon: 'agent', description: 'Agent processes, chats and context use', component: AgentManagerApp }
+  'agent-manager': { kind: 'agent-manager', title: 'Task Manager', icon: 'taskmgr', description: 'Chats, agent processes, terminals and context use', component: AgentManagerApp },
+  paint: { kind: 'paint', title: 'Agent Paint', icon: 'paint', description: 'Draw, and watch the agent draw', component: PaintApp },
+  wordpad: { kind: 'wordpad', title: 'WordPad', icon: 'wordpad', description: 'Read and write markdown documents', component: WordPadApp },
+  'sticky-notes': { kind: 'sticky-notes', title: 'Sticky Notes', icon: 'sticky', description: 'Notes on the desktop, shared with the agent', component: StickyNotesApp },
+  'event-viewer': { kind: 'event-viewer', title: 'Event Viewer', icon: 'eventlog', description: 'ACP, AG-UI and MCP messages as they happen', component: EventViewerApp },
+  'snipping-tool': { kind: 'snipping-tool', title: 'Snipping Tool', icon: 'scissors', description: 'Capture part of the screen', component: SnippingToolApp },
+  'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp }
 }

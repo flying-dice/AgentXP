@@ -143,7 +143,8 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   (`agent7`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
   every `tools/list`, forwards other calls to the app and sends `notifications/tools/list_changed` when the bridge pushes
   `toolsChanged` (the child holds a subscription socket per desktop). Handlers are one module per group
-  (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`); `DesktopToolService` validates the
+  (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`, `paintTools`, `wordpadTools`,
+  `notesTools`, `eventsTools`, `snipTools`, `recycleTools`); `DesktopToolService` validates the
   arguments, applies the gate and runs them. Tools that change what a window shows go through `DesktopService.updateView`.
 - **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, app closed, policy deny, then ask (policy ask or
   "take control"). `ToolGateway` applies it to both channels: MCP tools (closed app = MCP error result with
@@ -156,6 +157,28 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
 - **Browser.** The Browser app renders a `<webview partition="persist:agent7-browser">` and reports its
   `getWebContentsId()` with `desktop.attachBrowser(windowId, id)`; main checks the guest belongs to the caller and hands it to
   `ElectronBrowserDriver` (navigate, read with numbered refs, screenshot, click, type, back).
+- **App requests.** Some tools need what only the renderer has (the Paint canvas, WordPad's unsaved text). `AppRequestBroker`
+  (application/desktop) pushes `desktop.appRequest` `{ requestId, desktopId, windowId, method, params }` to the owning window and
+  resolves when the app answers with `desktop.respondAppRequest`; it rejects after 10 s with a readable message. Methods:
+  Paint `draw` / `read` (PNG data URL) / `resize`, WordPad `read` (markdown) / `open` (best effort).
+- **Sticky Notes.** `sticky_notes` rows (migration 003) behind `StickyNoteService`: CRUD, `notes.changed` to the owning window,
+  and the notes are part of `DesktopState.notes` so the agent sees them in `desktop_state`. A note with `planSessionId` mirrors
+  that chat's tasks (the renderer renders them); `notes_add` with `plan: true` makes one for the calling chat (at most one per chat).
+- **Recycle Bin.** `ChangeReverter` records a `recycled_changes` row (path, the text the revert threw away, the text it wrote back)
+  for the desktop of the chat, then removes the change. `RecycleService.restore` writes `revertedText` back (or deletes the file
+  when the agent had deleted it), records that as a new file change of the chat when the chat still exists, and removes the row.
+  `recycle.changed` goes to the owning window.
+- **Event Viewer.** `ProtocolEventLog` (application/events) keeps a ring buffer of 5,000 events per desktop in memory (payload =
+  pretty JSON cut at 64 KB) and pushes `events.appended` in 250 ms batches. Three taps feed it: (a) ACP JSON-RPC in both
+  directions, `infrastructure/acp/tapStream` wraps the SDK stream and calls the `ProtocolTap` port that `SessionRuntime` binds
+  per chat (`ConnectionHandlers.tap`); responses are named after their request, (b) AG-UI events, `streamAguiRun` reports each
+  sent event through `onEvent`, (c) MCP tool calls, `DesktopToolService` reports the call and its result (`ToolCallLog`). Level:
+  `error` for JSON-RPC errors, `RUN_ERROR` and failed tool calls; `warning` for refusals (error code -32010, refused tools),
+  `stopReason` refusal / cancelled and `session/cancel`; else `info`.
+- **Screen capture.** `snip.capture` / `screen_capture` use the `ScreenCapturer` port; `ElectronScreenCapturer` calls
+  `webContents.capturePage(rect)` on the desktop's window and returns a PNG data URL.
+- **Saving by the user.** `folders.writeFile` (Notepad, WordPad saves) writes inside the folder through the same sandbox as
+  `readFile` and is not recorded as an agent change; the agent's `wordpad_write` goes through `WorkspaceFiles` and is.
 
 ## Window
 

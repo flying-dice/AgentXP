@@ -6,7 +6,7 @@ import type { FolderRepository } from '../domain/repositories/folder-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
 import type { AgentConnectionPool, LiveSession } from './AgentConnectionPool'
 import { required } from './errors'
-import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection } from './ports'
+import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection, ProtocolTap } from './ports'
 import type { ToolGate } from '../domain/agent/ToolGate'
 import type { PermissionBroker } from './PermissionBroker'
 import type { SessionBroadcaster } from './SessionBroadcaster'
@@ -37,6 +37,8 @@ export interface RuntimeDeps {
   a2uiMcpConfig: A2uiMcpConfigFactory
   /** Gate for the client-side fs and terminal requests of a session. */
   toolGate(sessionId: Id): ToolGate
+  /** Taps the protocol traffic of a session's agent connection (Event Viewer). */
+  protocolTap?(sessionId: Id): ProtocolTap
 }
 
 /** Brings a session's agent online (also after an app restart) and keeps the session row in sync. */
@@ -85,6 +87,7 @@ export class SessionRuntime {
         sink,
         permissions: broker.forSession(sessionId),
         gate: this.deps.toolGate(sessionId),
+        tap: this.deps.protocolTap?.(sessionId),
         files: workspaceFiles.forSession(sessionId, folder.path),
         onTerminalActivity: (activity) => terminals.record(sessionId, activity)
       }

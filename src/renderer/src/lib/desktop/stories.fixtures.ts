@@ -4,6 +4,8 @@ import type { Agent7Api } from '@shared/ipc'
 import { createFakeApi } from '../app/fakeApi'
 import { FakeSessionStore } from '../app/session/FakeSessionStore.svelte'
 import { permissionTurn, runningTurn } from '../app/session/session.fixtures'
+import { handleAppRequest } from '../apps/appRequests'
+import { houseScene } from '../apps/paint/paintDemo'
 import { DesktopController } from './DesktopController.svelte'
 
 const markAgentOpened = (state: DesktopState): DesktopState => ({ ...state, windows: state.windows.map((w) => (w.app === 'browser' ? { ...w, openedBy: 'agent' as const } : w)) })
@@ -27,6 +29,12 @@ export interface PrepareOptions {
   paused?: boolean
   agentOpened?: boolean
   gadgets?: boolean
+  /** Extra apps to open (in a cascade) after the usual ones. */
+  /** Show the snipping overlay. */
+  snip?: 'rect' | 'window'
+  /** The agent draws a scene in Agent Paint once the desktop is up. */
+  draw?: boolean
+  apps?: ('paint' | 'sticky-notes' | 'event-viewer' | 'wordpad' | 'recycle-bin' | 'snipping-tool')[]
 }
 
 export async function prepareDesktop(options: PrepareOptions = {}): Promise<PreparedDesktop> {
@@ -58,6 +66,14 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
         await d.setBounds(browser.id, { x: 150, y: 140, width: 520, height: 300 })
       }
     }
+    let at = 0
+    for (const app of options.apps ?? []) {
+      const w = await d.openWindow({ desktopId, app })
+      if (app === 'paint') await d.setBounds(w.id, { x: 30, y: 40, width: 640, height: 420 })
+      else if (app === 'event-viewer') await d.setBounds(w.id, { x: 110, y: 430, width: 820, height: 290 })
+      else if (app === 'sticky-notes') await d.setBounds(w.id, { x: 880, y: 440, width: 340, height: 270 })
+      at++
+    }
     if (options.paused) await d.setPaused(desktopId, true)
   }
   const controller = new DesktopController(api)
@@ -75,6 +91,11 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   ] : []
   await controller.start()
   if (options.agentOpened && controller.current) controller.current = markAgentOpened(controller.current)
+  if (options.snip) void controller.pickSnipRegion(options.snip)
+  if (options.draw) {
+    const paint = controller.state.windows.find((w) => w.app === 'paint')
+    if (paint) setTimeout(() => void handleAppRequest({ requestId: 'story-draw', desktopId: 1, windowId: paint.id, method: 'draw', params: { ops: houseScene } }), 500)
+  }
   if (options.review) {
     const first = controller.inbox.pending[0]
     if (first) await controller.review(first)

@@ -16,7 +16,7 @@ import type { AgentSessionEventSink } from '../../domain/agent/AgentSessionEvent
 import type { FileAccessProvider } from '../../domain/agent/FileAccess'
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import type { PermissionDecision, PermissionPrompter } from '../../domain/agent/PermissionPrompter'
-import { ToolRefusedError, allowAllTools, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
+import { TOOL_REFUSED_CODE, ToolRefusedError, allowAllTools, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
 import { toAcpContentBlock } from './contentMapping'
 import { mapSessionUpdate, toToolCallPatch } from './mapSessionUpdate'
 import { extractSessionState, type SessionState } from './sessionState'
@@ -72,8 +72,6 @@ export class AgentAuthRequiredError extends Error {
 }
 
 const AUTH_REQUIRED_CODE = -32000
-/** JSON-RPC server-error code for a request the desktop refuses (closed app, policy, pause). */
-const TOOL_REFUSED_CODE = -32010
 
 const toMcpServer = (config: McpServerConfig): McpServer =>
   config.kind === 'stdio'

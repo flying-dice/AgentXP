@@ -51,7 +51,8 @@ const baseState = (apps: Parameters<typeof enabledToolGroups>[0]): DesktopState 
   windows: [],
   tools: enabledToolGroups(apps),
   paused: false,
-  userInControl: false
+  userInControl: false,
+  notes: []
 })
 
 beforeEach(() => {
