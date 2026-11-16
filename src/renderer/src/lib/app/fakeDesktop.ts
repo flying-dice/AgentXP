@@ -73,6 +73,7 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     openWindow: async (input) => {
       const existing = SINGLETON_APPS.includes(input.app) ? state.windows.find((w) => w.app === input.app) : undefined
       if (existing) {
+        if (existing.view.app === 'help' && input.topic !== undefined) existing.view = { app: 'help', topic: input.topic }
         raise(existing)
         changed()
         return existing

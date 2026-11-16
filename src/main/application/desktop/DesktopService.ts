@@ -145,6 +145,7 @@ export class DesktopService implements DesktopStates {
     if (existing) {
       this.focusWindow(existing.id, openedBy)
       if (input.path !== undefined && existing.app === 'code') this.showInCode(existing, input.path)
+      if (input.topic !== undefined && existing.app === 'help') this.updateView(existing.id, { app: 'help', topic: input.topic })
       return this.windowState(existing.id)
     }
     const avoid = focused?.app === 'chat' && focused.windowState === 'normal' ? focused.bounds : null
@@ -156,6 +157,7 @@ export class DesktopService implements DesktopStates {
       openedBy,
       ...this.subtypeOf(input)
     })
+    if (input.app === 'help' && input.topic !== undefined) this.views.set(record.id, { app: 'help', topic: input.topic })
     if (typingChat) {
       this.deps.windows.raise(typingChat.id) // the new window goes behind the chat
       this.flag(desktopId, record.id)

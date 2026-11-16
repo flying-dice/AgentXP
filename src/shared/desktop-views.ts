@@ -23,7 +23,8 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'event-viewer': { x: 130, y: 90, width: 860, height: 520 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
   'recycle-bin': { x: 240, y: 120, width: 600, height: 400 },
-  surface: { x: 260, y: 100, width: 480, height: 360 }
+  surface: { x: 260, y: 100, width: 480, height: 360 },
+  help: { x: 150, y: 70, width: 760, height: 540 }
 }
 
 /** Default bounds of a new window, cascaded by the number of windows already open. */
@@ -91,7 +92,7 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -131,6 +132,8 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'recycle-bin', selectedId: null }
     case 'surface':
       return { app: 'surface', surfaceId: input.surfaceId ?? '', sessionId: input.sessionId ?? 0, title: SURFACE_FALLBACK_TITLE }
+    case 'help':
+      return { app: 'help', topic: input.topic ?? 'index' }
   }
 }
 

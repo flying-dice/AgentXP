@@ -24,7 +24,8 @@ export const APP_KINDS = [
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
-  'surface'
+  'surface',
+  'help'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
@@ -52,7 +53,8 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'sticky-notes',
   'event-viewer',
   'snipping-tool',
-  'recycle-bin'
+  'recycle-bin',
+  'help'
 ]
 
 export type WindowState = 'normal' | 'minimized' | 'maximized'
@@ -91,6 +93,8 @@ export type AppView =
   | { app: 'recycle-bin'; selectedId: Id | null }
   /** An A2UI surface the agent drew with `a2ui_render` (target `window`), one window per surface. */
   | { app: 'surface'; surfaceId: string; sessionId: Id; title: string }
+  /** Help and Support: `topic` is the file name of a manual in `docs/help` without `.md` (`index` is the home page). */
+  | { app: 'help'; topic: string }
 
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
@@ -218,7 +222,8 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   'event-viewer': 'Event Viewer',
   'snipping-tool': 'Snipping Tool',
   'recycle-bin': 'Recycle Bin',
-  surface: 'Agent window'
+  surface: 'Agent window',
+  help: 'Help and Support'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -266,6 +271,8 @@ export interface OpenWindowInput {
   sessionId?: Id
   /** The A2UI surface of a `surface` window (with `sessionId`: the chat that owns it). */
   surfaceId?: string
+  /** The topic of a `help` window (a file name in `docs/help` without `.md`). */
+  topic?: string
 }
 
 /** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */

@@ -1,0 +1,98 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "keyboard",
+  "description": "Greets and asks to write NOTE.md (Allow/Deny).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Hello! I would like to save a note for you.\n"
+        },
+        {
+          "type": "toolCall",
+          "id": "note-1",
+          "title": "Write NOTE.md",
+          "kind": "edit",
+          "status": "pending",
+          "rawInput": {
+            "path": "NOTE.md"
+          },
+          "locations": [
+            {
+              "path": "{{cwd}}/NOTE.md"
+            }
+          ],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/NOTE.md",
+                "newText": "Hello from the assistant.\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "note-1",
+          "title": "Write NOTE.md",
+          "options": [
+            {
+              "optionId": "allow",
+              "name": "Allow",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "deny",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ],
+          "branches": {
+            "allow": [
+              {
+                "type": "writeFile",
+                "path": "{{cwd}}/NOTE.md",
+                "content": "Hello from the assistant.\n"
+              },
+              {
+                "type": "toolCallUpdate",
+                "id": "note-1",
+                "status": "completed"
+              },
+              {
+                "type": "message",
+                "text": "Saved NOTE.md."
+              }
+            ],
+            "deny": [
+              {
+                "type": "toolCallUpdate",
+                "id": "note-1",
+                "status": "failed"
+              },
+              {
+                "type": "message",
+                "text": "Okay, nothing saved."
+              }
+            ],
+            "cancelled": [
+              {
+                "type": "end",
+                "stopReason": "cancelled"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

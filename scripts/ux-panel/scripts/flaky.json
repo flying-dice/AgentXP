@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "flaky",
+  "description": "The first prompt fails with an error; later prompts are answered.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "first-fails",
+      "once": true,
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "error",
+          "message": "The connection to the assistant dropped. Could not send.",
+          "code": -32603
+        }
+      ]
+    },
+    {
+      "id": "ok",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Got your message: {{prompt}}"
+        }
+      ]
+    }
+  ]
+}
