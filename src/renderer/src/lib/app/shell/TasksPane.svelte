@@ -17,7 +17,7 @@
   <div class="caption">Plan for this request</div>
   <div class="list w7-scroll" role="list" aria-label="Tasks">
     {#each ordered as task (task.id)}
-      <div class="item" role="listitem" class:done={task.status === 'completed'} class:active={task.status === 'in_progress'}>
+      <div class="item" role="listitem" data-testid="tasks-item" data-status={task.status} class:done={task.status === 'completed'} class:active={task.status === 'in_progress'}>
         <CheckBox checked={task.status === 'completed'} readonly>
           <span class="text">{task.content}</span>
         </CheckBox>

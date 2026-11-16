@@ -9,6 +9,7 @@
 
 <div class="check">
   <CheckBox
+    testid="a2ui-checkbox"
     label={asString(view.text)}
     disabled={!asBoolean(view.enabled, true)}
     bind:checked={

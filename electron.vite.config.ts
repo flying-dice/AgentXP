@@ -1,3 +1,4 @@
+import { cpSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
@@ -6,7 +7,16 @@ const shared = { '@shared': resolve('src/shared') }
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [
+      externalizeDepsPlugin(),
+      {
+        // The scripted agent finds its sample scripts in `scripts/` next to its entry file.
+        name: 'copy-scripted-agent-scripts',
+        writeBundle() {
+          cpSync(resolve('agents/scripted-agent/scripts'), resolve('out/main/scripts'), { recursive: true })
+        }
+      }
+    ],
     resolve: { alias: shared },
     build: {
       rollupOptions: {

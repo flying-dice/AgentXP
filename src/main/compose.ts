@@ -1,3 +1,4 @@
+import { ensureBuiltinAgents, type BuiltinAgent } from './application/BuiltinAgents'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -97,6 +98,8 @@ export interface ComposeOptions {
   appVersion?: string
   /** How the A2UI MCP server is launched by agents. */
   a2uiMcp: { electronPath: string; scriptPath: string }
+  /** Agents seeded on start (idempotent), e.g. the bundled Scripted Agent. Defaults to none (tests). */
+  builtinAgents?: readonly BuiltinAgent[]
   /** Defaults to spawning real ACP agent processes. */
   connector?: AgentConnector
   /** The OS windows of desktops and the launcher; defaults to an in-memory host (tests). */
@@ -378,6 +381,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     eventLog,
     browsers,
     start: async () => {
+      ensureBuiltinAgents(repos.agents, options.builtinAgents ?? [])
       sessions.recoverAfterRestart()
       launcher.resetConnections()
       await bridge.start()

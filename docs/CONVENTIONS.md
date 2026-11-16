@@ -87,7 +87,7 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
 - New UI gets test ids as part of the change, with the same naming; do not rename existing ones lightly (specs
   depend on them).
 
-**Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `error`
+**Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry
 `data-window-state` and `data-focused`.
 
@@ -108,3 +108,30 @@ Layout: `e2e/fixtures/launch.ts` (`launchAgent7({ userData? })`: private user-da
 (registering the fake agent, adding a temp workspace, plugging it in as a USB drive, setting the terminal
 policy, reading a desktop id); everything a test asserts or clicks goes through the UI. Specs never sleep:
 they wait on test ids and states.
+
+### Scripted agent specs
+
+`e2e/scripted-*.e2e.ts` drive the built app with the scripted ACP agent (`agents/scripted-agent/`, README there): a JSON
+script decides what the "model" says and does, so a spec can assert the exact ACP and AG-UI traffic and the UI at
+each step. Fixtures in `e2e/fixtures/scripted.ts`:
+
+- `startScriptedDesktop({ script, stepMode?, title? })`: app + desktop + the BUILT agent (`out/main/scripted-agent.js`
+  on Electron's node mode) as the default agent. `script` is a name from `agents/scripted-agent/scripts/` or a path;
+  `stepMode: 'manual'` overrides `defaults.stepMode` in a temp copy, so the first turn already pauses (no race).
+  `ctx.scripted.control()` returns a connected `ControlClient` (`next`, `status`, `setMode`, `waitForPause`, `events`).
+  `ctx.close()` stops everything. `useScriptedAgent(page, opts)` is the lower-level piece (the `agent` option of
+  `startConnectedDesktop`); each registration gets its own control socket in a temp dir.
+- `protocolEvents(page, { source: 'acp' | 'ag-ui' | 'mcp', sessionId })` reads the app's event log (the Event Viewer's
+  data). It lives in `setup.ts` (`readProtocolEvents`) as read-only test instrumentation, the only way to assert the
+  order of protocol messages. Helpers: `aguiRuns` (split at RUN_STARTED; run 0 is the connect/attach run),
+  `messageShape` (names without `STATE_*`, repeated streaming events collapsed), `deltaPaths`, `outcomeOf`,
+  `containsInOrder`, `collapseRuns`, `payloadOf`. ACP names are the JSON-RPC method, responses `<method> (response)`.
+- `ChatWindow`: `sessionId()`, `stop`, `errors`, `surfaces`, `reasoning`, `tasks`, `showTasks()`; A2UI controls are
+  `a2ui-surface`, `a2ui-button`, `a2ui-textbox`, `a2ui-checkbox`.
+
+Pattern: start the desktop, open a chat (`desktop.openApp('chat')`, or plug a project in and start from AutoPlay when the
+script touches files; open Code for file reads/writes and Terminal for `terminal/*`, tools follow apps), `chat.send(...)`,
+wait on test ids (`chat-transcript` has `data-running`), then compare `messageShape(...)` of a run with the expected list.
+Do not assert counts of streamed chunks or STATE_DELTA events. A permission request ends the run with an `interrupt`;
+answering starts a second run. Every `next()` should be followed by `control.waitForPause()` and a UI assertion.
+Run with `npm run test:e2e -- e2e/scripted-demo.e2e.ts` (add `A7_E2E_SKIP_BUILD=1` to reuse `out/`).

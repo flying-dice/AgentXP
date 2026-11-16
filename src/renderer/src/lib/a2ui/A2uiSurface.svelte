@@ -28,7 +28,7 @@
   const root = useSignal(() => controller.root)
 </script>
 
-<div class="a2ui-surface {className}" data-a2ui-surface>
+<div class="a2ui-surface {className}" data-a2ui-surface data-testid="a2ui-surface">
   {#if root.current}
     {#key root.current.id}
       <NodeView node={root.current} />

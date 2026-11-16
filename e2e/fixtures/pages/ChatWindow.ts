@@ -8,6 +8,24 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-composer-input')
   }
 
+  /** The chat's session id (`data-session-id` of the chat app root), to scope protocol event queries. */
+  async sessionId(): Promise<number> {
+    return Number(await this.frame.getByTestId('chat-app').getAttribute('data-session-id'))
+  }
+
+  get stop(): Locator {
+    return this.frame.getByTestId('chat-stop')
+  }
+
+  get errors(): Locator {
+    return this.frame.getByTestId('chat-error')
+  }
+
+  /** A2UI surfaces drawn into the transcript. */
+  get surfaces(): Locator {
+    return this.frame.getByTestId('a2ui-surface')
+  }
+
   get transcript(): Locator {
     return this.frame.getByTestId('chat-transcript')
   }
@@ -48,6 +66,21 @@ export class ChatWindow {
   async showChanges(): Promise<void> {
     if (!(await this.frame.getByTestId('chat-side-panel').isVisible())) await this.frame.getByTestId('chat-panel-toggle').click()
     await this.frame.getByTestId('chat-tab-changes').click()
+  }
+
+  /** Reasoning ("Thinking...") blocks of the transcript. */
+  get reasoning(): Locator {
+    return this.frame.getByTestId('chat-reasoning')
+  }
+
+  /** Opens the Tasks and changes pane and its Tasks tab. */
+  async showTasks(): Promise<void> {
+    if (!(await this.frame.getByTestId('chat-side-panel').isVisible())) await this.frame.getByTestId('chat-panel-toggle').click()
+    await this.frame.getByTestId('chat-tab-tasks').click()
+  }
+
+  get tasks(): Locator {
+    return this.frame.getByTestId('tasks-item')
   }
 
   get changes(): Locator {

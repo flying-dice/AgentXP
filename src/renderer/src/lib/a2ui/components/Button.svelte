@@ -12,7 +12,7 @@
 </script>
 
 <div class="button">
-  <KitButton isDefault={asBoolean(view.isDefault)} icon={toIcon(view.icon)} disabled={!asBoolean(view.enabled, true) || !valid} onclick={() => action?.()}>
+  <KitButton data-testid="a2ui-button" isDefault={asBoolean(view.isDefault)} icon={toIcon(view.icon)} disabled={!asBoolean(view.enabled, true) || !valid} onclick={() => action?.()}>
     {asString(view.text)}
   </KitButton>
 </div>

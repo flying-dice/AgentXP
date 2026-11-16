@@ -84,6 +84,11 @@ export class DesktopPage {
     await this.window(app, index).getByTestId('window-close').click()
   }
 
+  /** Brings a window to the front (click on its title bar); new windows open over the others. */
+  async focusWindow(app: AppId, index = 0): Promise<void> {
+    await this.window(app, index).getByTestId('window-title').click()
+  }
+
   async minimizeWindow(app: AppId, index = 0): Promise<void> {
     await this.window(app, index).getByTestId('window-minimize').click()
   }

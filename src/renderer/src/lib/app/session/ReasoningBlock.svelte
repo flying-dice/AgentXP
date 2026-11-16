@@ -7,7 +7,7 @@
   let { text, open = $bindable(false) }: Props = $props()
 </script>
 
-<div class="reasoning">
+<div class="reasoning" data-testid="chat-reasoning">
   <button class="toggle" type="button" aria-expanded={open} onclick={() => (open = !open)}>
     <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
       {#if open}

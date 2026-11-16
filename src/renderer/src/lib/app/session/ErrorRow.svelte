@@ -4,7 +4,7 @@
   let { message }: { message: string } = $props()
 </script>
 
-<div class="error-row" role="alert">
+<div class="error-row" role="alert" data-testid="chat-error">
   <MessageIcon kind="error" size={20} />
   <span class="text">{message}</span>
 </div>

@@ -96,6 +96,8 @@ export class AcpAgentConnection {
   private init: AgentInitInfo | null = null
   private readonly modelConfigIds = new Map<string, string>()
   private readonly permissionAborts = new Map<string, Set<AbortController>>()
+  /** Tool calls of each session that have not reached a final status (to mark them cancelled when the turn is cancelled). */
+  private readonly openToolCalls = new Map<string, Set<string>>()
 
   constructor(private readonly deps: AcpAgentConnectionDeps) {
     this.connection = this.buildApp().connect(deps.stream)
@@ -150,7 +152,26 @@ export class AcpAgentConnection {
       sessionId: acpSessionId,
       prompt: blocks.map(toAcpContentBlock)
     })
+    // ACP: a cancelled turn leaves tool calls the agent never finished; the client shows them as cancelled.
+    if (response.stopReason === 'cancelled') this.cancelOpenToolCalls(acpSessionId)
     return response.stopReason
+  }
+
+  private cancelOpenToolCalls(acpSessionId: string): void {
+    const open = this.openToolCalls.get(acpSessionId)
+    if (!open) return
+    for (const toolCallId of open) this.deps.sink.emit(acpSessionId, { type: 'tool_call_updated', toolCallId, patch: { status: 'cancelled' } })
+    open.clear()
+  }
+
+  private trackToolCall(acpSessionId: string, event: { type: string; toolCallId?: string; status?: string; patch?: { status?: string } }): void {
+    if (event.type !== 'tool_call_created' && event.type !== 'tool_call_updated') return
+    const status = event.status ?? event.patch?.status
+    if (status === undefined) return
+    const open = this.openToolCalls.get(acpSessionId) ?? new Set<string>()
+    if (status === 'completed' || status === 'failed' || status === 'cancelled') open.delete(event.toolCallId!)
+    else open.add(event.toolCallId!)
+    this.openToolCalls.set(acpSessionId, open)
   }
 
   /** Cancels the running turn and dismisses pending permission prompts. */
@@ -265,7 +286,9 @@ export class AcpAgentConnection {
 
   private handleUpdate(notification: SessionNotification): void {
     const event = mapSessionUpdate(notification.update)
-    if (event) this.deps.sink.emit(notification.sessionId, event)
+    if (!event) return
+    this.trackToolCall(notification.sessionId, event)
+    this.deps.sink.emit(notification.sessionId, event)
   }
 
   private async handlePermission(params: RequestPermissionRequest): Promise<RequestPermissionResponse> {

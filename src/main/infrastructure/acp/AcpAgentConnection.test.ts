@@ -108,6 +108,8 @@ describe('AcpAgentConnection with a fake agent', () => {
     const { acpSessionId } = await connection!.newSession(workspace)
     expect(await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).toBe('cancelled')
     expect(h.writes).toEqual([])
+    // The agent already failed the edit itself; nothing is left open to cancel.
+    expect(h.events.at(-1)).toMatchObject({ type: 'tool_call_updated', toolCallId: 'tc-1', patch: { status: 'failed' } })
     await expect(readFile(join(workspace, 'fake-agent-output.txt'))).rejects.toThrow()
   })
 

@@ -7,6 +7,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { Page } from 'playwright'
+import type { ProtocolEventDto } from '../../src/shared/desktop'
 import { projectRoot } from './launch'
 
 export const fakeAgentScript = join(projectRoot, 'src/main/infrastructure/acp/__fixtures__/fake-agent.ts')
@@ -81,4 +82,50 @@ export async function desktopIdByTitle(launcherPage: Page, title: string): Promi
     if (!found) throw new Error(`no desktop titled ${title}`)
     return found.id
   }, title)
+}
+
+/** Registers any ACP agent (name, command, args, env) and optionally makes it the default. Returns its id. */
+export async function registerAgent(
+  page: Page,
+  agent: { name: string; command: string; args: string[]; env: Record<string, string> },
+  options: { makeDefault?: boolean } = {}
+): Promise<number> {
+  return page.evaluate(
+    async ({ agent, makeDefault }) => {
+      const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+      const created = await api.agents.create(agent)
+      if (makeDefault !== false) await api.agents.setDefault(created.id)
+      return created.id
+    },
+    { agent, makeDefault: options.makeDefault }
+  )
+}
+
+/** The registered agents as `{ name, command, args, env }` (read only; shows the built-in "Scripted Agent"). */
+export async function listAgents(page: Page): Promise<{ name: string; command: string; args: string[]; env: Record<string, string>; isDefault: boolean }[]> {
+  return page.evaluate(async () => (await (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7.agents.list()))
+}
+
+/**
+ * TEST INSTRUMENTATION (read only). The raw protocol traffic the app records in its in-memory event log (the data
+ * behind the Event Viewer): `source` 'acp' | 'ag-ui' | 'mcp', `name` = JSON-RPC method or AG-UI event type, oldest
+ * first. Behaviour is asserted through the UI; this reader only lets a spec assert the ORDER of protocol messages,
+ * which no screen shows completely. It never writes.
+ */
+export async function readProtocolEvents(page: Page, query: { source?: ProtocolEventDto['source']; sessionId?: number | null }): Promise<ProtocolEventDto[]> {
+  const desktopId = desktopIdOf(page)
+  return page.evaluate(
+    async ({ desktopId, query }) => (await (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7.events.query({ desktopId, ...query, limit: 5000 })),
+    { desktopId, query }
+  )
+}
+
+/** Makes the registered agent with this name the default (used for the built-in "Scripted Agent"). */
+export async function setDefaultAgentByName(page: Page, name: string): Promise<void> {
+  await page.evaluate(async (name) => {
+    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const found = (await api.agents.list()).find((a) => a.name === name)
+    if (!found) throw new Error(`no agent named ${name}`)
+    await api.agents.setDefault(found.id)
+  }, name)
 }

@@ -58,7 +58,17 @@ async function bootstrap(): Promise<Running> {
     saver: new ElectronTextFileSaver(),
     opener: new ElectronPathOpener(),
     appVersion: app.getVersion(),
-    a2uiMcp: { electronPath: process.execPath, scriptPath: join(__dirname, 'a2ui-mcp.js') }
+    a2uiMcp: { electronPath: process.execPath, scriptPath: join(__dirname, 'a2ui-mcp.js') },
+    // The scripted ACP agent (agents/scripted-agent) runs on the app's own Electron in node mode; its sample scripts are
+    // copied next to it (out/main/scripts), so `--script demo` resolves in dev, built and packaged runs alike.
+    builtinAgents: [
+      {
+        name: 'Scripted Agent',
+        command: process.execPath,
+        args: [join(__dirname, 'scripted-agent.js'), '--script', 'demo'],
+        env: { ELECTRON_RUN_AS_NODE: '1' }
+      }
+    ]
   })
   const running = services
   await running.start()

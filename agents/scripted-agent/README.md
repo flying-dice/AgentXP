@@ -29,6 +29,16 @@ Add it in Agent7: Control Centre, Agents, Add:
 The `--experimental-strip-types` flag needs Node 22.6 or newer. The source uses plain TypeScript only
 (type-only imports, no enums, no parameter properties) so that it runs unbundled.
 
+## Built into Agent7
+
+Agent7 seeds an agent named **Scripted Agent** at every start (idempotent, `ensureBuiltinAgents` in
+`src/main/application/BuiltinAgents.ts`): command = the app's own Electron binary, env `ELECTRON_RUN_AS_NODE=1`,
+args `<out/main>/scripted-agent.js --script demo`. An existing row keeps your edits (other args and env, default flag);
+only the command, the entry-file path (it moves with the install) and the env defaults are refreshed. The build copies
+`scripts/` to `out/main/scripts/`, so `--script <name>` works in dev (`electron-vite dev`), built and packaged runs.
+Edit the agent in the Control Centre to pick another script (`--script stepping`) or add `AGENT7_SCRIPT_CONTROL`.
+The agent7 MCP child (`mcpCall`) gets `ELECTRON_RUN_AS_NODE` from the harness's `session/new` config.
+
 ## Script reference
 
 Add `"$schema": "./script.schema.json"` (or `../script.schema.json` inside `scripts/`) for editor
@@ -139,6 +149,31 @@ Pushed to every connected client: `{"event":"paused", ...status}`, `resumed`, `t
 
 `session/cancel` aborts the running turn (sleeping, paused, waiting on a terminal or MCP call) and the
 prompt answers `stopReason: "cancelled"`. A pending permission request is answered by the client.
+
+## Writing a scripted e2e test
+
+The e2e suite has fixtures for this (`e2e/fixtures/scripted.ts`; conventions in `docs/CONVENTIONS.md`, "Scripted agent specs"):
+
+```ts
+const ctx = await startScriptedDesktop({ script: 'stepping', stepMode: 'manual' })   // built agent + control socket
+await ctx.desktop.openApp('chat')
+const chat = ctx.desktop.chat()
+await chat.send('go')
+const control = await ctx.scripted.control()
+expect((await control.waitForPause()).label).toBe('first message')   // nothing visible yet
+await control.next()                                                // exactly one UI change per next()
+await control.waitForPause()
+await see.count(chat.agentMessages, 1)
+const sessionId = await chat.sessionId()
+const agui = aguiRuns(await protocolEvents(ctx.desktopPage, { source: 'ag-ui', sessionId }))
+expect(messageShape(agui[1])).toEqual(['RUN_STARTED', 'TEXT_MESSAGE_START', /* ... */ 'RUN_FINISHED'])
+await ctx.close()
+```
+
+Write a new script in `scripts/` (or pass a path) for a new scenario; give steps a `label` so `status()` names them.
+Scripts call the real agent7 MCP tools (`desktop_open_app`, `terminal_run`, `a2ui_render`, ... see
+`src/main/application/tools/catalog.ts`); a `contains`/`regex` rule on the prompt picks the scenario. A2UI actions come
+back as a hidden prompt ("The user triggered the action ...") that a rule can match.
 
 ## E2E example
 

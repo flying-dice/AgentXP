@@ -1,5 +1,5 @@
 export { launchAgent7, WAIT_MS, type Agent7Instance } from './launch'
-export { addProject, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, plugWorkspaceIn, registerFakeAgent, type Workspace } from './setup'
+export { addProject, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, type Workspace } from './setup'
 export { ChatWindow } from './pages/ChatWindow'
 export { CodeWindow } from './pages/CodeWindow'
 export { DesktopPage, type AppId } from './pages/DesktopPage'
@@ -8,3 +8,18 @@ export { LauncherPage } from './pages/LauncherPage'
 export { TerminalWindow } from './pages/TerminalWindow'
 export { see } from './expect'
 export { startConnectedDesktop, type ConnectedDesktop } from './session'
+export {
+  aguiRuns,
+  collapseRuns,
+  containsInOrder,
+  deltaPaths,
+  messageShape,
+  outcomeOf,
+  payloadOf,
+  protocolEvents,
+  protocolNames,
+  startScriptedDesktop,
+  useScriptedAgent,
+  type ScriptedAgent,
+  type ScriptedDesktop
+} from './scripted'
