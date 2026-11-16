@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
 import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
-import { noToolsOpen, recentToolCalls, toolChips, workingText, type ChatActivityInput } from './activity'
+import { feedText, noToolsOpen, recentToolCalls, toolChips, workingText, type ChatActivityInput } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -29,6 +29,12 @@ describe('recentToolCalls', () => {
       3
     )
     expect(feed.map((f) => f.title)).toEqual(['new2', 'new1', 'old2'])
+  })
+  it('shows equal calls in a row as one line with a count', () => {
+    const feed = recentToolCalls([chat(1, { toolCalls: { a: call('Read the page'), b: call('Read the page'), c: call('Read the page'), d: call('Clicked'), e: call('Read the page') } })])
+    expect(feed.map((f) => [f.title, f.count])).toEqual([['Read the page', 1], ['Clicked', 1], ['Read the page', 3]])
+    expect(feedText('Read the page', 24)).toBe('Read the page (24 times)')
+    expect(feedText('Clicked', 1)).toBe('Clicked')
   })
 })
 

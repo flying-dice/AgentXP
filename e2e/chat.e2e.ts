@@ -89,4 +89,17 @@ describe('chat turn with the fake agent', () => {
     await see.visible(viewer.getByTestId('event-viewer-row'))
     await see.visible(viewer.getByTestId('event-viewer-count'))
   })
+
+  it('typing in the Terminal says it is read-only and what to do instead', async () => {
+    await ctx.desktop.closeWindow('chat') // it is tiled over part of the other windows
+    await ctx.desktop.closeWindow('event-viewer')
+    await ctx.desktop.taskbarItem('terminal').click()
+    const terminal = ctx.desktop.terminal()
+    await terminal.output.click()
+    await ctx.desktopPage.keyboard.type('dir')
+    await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
+    await see.text(terminal.readOnlyNotice, 'Ask the agent in Chat to run a command.')
+    await see.visible(terminal.frame.getByTestId('console-cursor-locked'))
+    await see.gone(terminal.readOnlyNotice) // it goes after a few seconds
+  })
 })

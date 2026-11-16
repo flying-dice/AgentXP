@@ -3,6 +3,7 @@
   import type { AppProps } from '../types'
   import A2uiSurface from '../../a2ui/A2uiSurface.svelte'
   import { useSessionStores } from '../sessionStores.svelte'
+  import { lastReply } from './lastReply'
 
   let { window: win, host }: AppProps<'surface'> = $props()
 
@@ -21,7 +22,7 @@
 
 <div class="surface-app w7-scroll" data-testid="surface-app" data-surface-id={surfaceId}>
   {#if surface}
-    <A2uiSurface messages={surface.messages} {sessionId} busy={store?.running} onaction={(event) => void store?.sendA2uiAction(event)} />
+    <A2uiSurface messages={surface.messages} {sessionId} busy={store?.running} reply={lastReply(store?.messages ?? [])} onaction={(event) => void store?.sendA2uiAction(event)} />
   {:else}
     <div class="blank">{store ? 'This surface was deleted.' : 'Opening the surface...'}</div>
   {/if}

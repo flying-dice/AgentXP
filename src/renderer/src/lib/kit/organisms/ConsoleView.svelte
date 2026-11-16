@@ -10,11 +10,13 @@
     /** Follow new output unless the user scrolled up. */
     autoScroll?: boolean
     maxHeight?: string
+    /** A hollow block cursor that is always there: the console cannot be typed into (it blinks while `running`). */
+    lockedCursor?: boolean
     label?: string
     class?: string
   }
 
-  let { text, running = false, autoScroll = true, maxHeight, label = 'Console output', class: className = '' }: Props = $props()
+  let { text, running = false, autoScroll = true, maxHeight, lockedCursor = false, label = 'Console output', class: className = '' }: Props = $props()
 
   let scroller: HTMLDivElement | undefined = $state()
   let pinned = true
@@ -52,7 +54,7 @@
           style:font-weight={s.bold ? 'bold' : undefined}
           style:opacity={s.dim ? 0.6 : undefined}
           style:text-decoration={s.underline ? 'underline' : undefined}>{s.text}</span
-        >{/each}{#if running}<span class="cursor" aria-hidden="true"></span>{/if}</pre>
+        >{/each}{#if lockedCursor}<span class="cursor locked" class:blink={running} aria-hidden="true" data-testid="console-cursor-locked"></span>{:else if running}<span class="cursor blink" aria-hidden="true"></span>{/if}</pre>
   </div>
 </div>
 
@@ -96,7 +98,15 @@
     margin-left: 1px;
     vertical-align: text-bottom;
     background: var(--w7-console-fg);
+  }
+  .cursor.blink {
     animation: blink 1s steps(1) infinite;
+  }
+  /* Hollow block: the lock-style outline that says "look, do not type". */
+  .cursor.locked {
+    box-sizing: border-box;
+    background: transparent;
+    border: 1px solid var(--w7-console-fg);
   }
   @keyframes blink {
     50% {

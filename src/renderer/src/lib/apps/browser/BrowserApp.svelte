@@ -18,7 +18,7 @@
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
-  import { pageStatus, zoomText } from './pageStatus'
+  import { ASSISTANT_TOOLTIP, assistantStatus, pageStatus, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -39,8 +39,11 @@
   const waiters = new Map<number, (() => void)[]>()
   /** The tab main drives right now. */
   let attachedTo = 0
-  /** The bar stays this long after the agent's last action, so it does not flicker between steps of one turn. */
-  const ACTIVITY_MS = 8000
+  /**
+   * The bar stays this long after the agent's last announcement. Main announces every browser tool, reads included, and
+   * repeats the announcement while one runs, so the bar stays up for the whole job and goes 20 seconds after the last step.
+   */
+  const ACTIVITY_MS = 20000
 
   type BrowserTabPageApi = { navigate(url: string): void; step(delta: -1 | 1): void; reload(): void; stop(): void; zoomBy(direction: -1 | 0 | 1): void }
 
@@ -49,6 +52,10 @@
 
   // The agent working on the page: the bar and the ring around its target.
   let activity = $state<string | null>(null)
+  /** The agent is reading the page right now (the status bar says "Assistant: reading"). */
+  let reading = $state(false)
+  /** The user took control while the agent worked: the bar stays, with Give control back, until the user gives it back. */
+  let engaged = $state(false)
   let ring = $state<{ x: number; y: number; width: number; height: number } | null>(null)
   let activityTimer: ReturnType<typeof setTimeout> | undefined
   let ringTimer: ReturnType<typeof setTimeout> | undefined
@@ -132,6 +139,16 @@
 
   const go = (): void => navigate(normalizeAddress(address))
 
+  /** Left and Right move between the tabs (the tab list keeps one tab stop, on the active tab). */
+  function tabKey(event: KeyboardEvent): void {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+    if (step === 0) return
+    event.preventDefault()
+    const at = tabs.findIndex((t) => t.id === activeId)
+    const next = tabs[(at + step + tabs.length) % tabs.length]
+    void select(next.id).then(() => document.querySelector<HTMLElement>(`[data-testid="browser-tab-${next.id}"]`)?.focus())
+  }
+
   // The agent navigates (browser_navigate) or the shell restores the window.
   $effect(() => {
     const incoming = win.view.url
@@ -150,12 +167,14 @@
 
   async function handle(method: string, params: unknown): Promise<unknown> {
     if (method === 'activity') {
-      const p = (params ?? {}) as { label?: string; box?: { x: number; y: number; width: number; height: number } }
+      const p = (params ?? {}) as { label?: string; reading?: boolean; box?: { x: number; y: number; width: number; height: number } }
       // The first action of a turn brings the window to the front: the user sees what the agent does without hunting for it.
       if (activity === null) void host.focusWindow(win.id)
       activity = p.label || 'working'
+      reading = p.reading === true
+      engaged = true
       clearTimeout(activityTimer)
-      activityTimer = setTimeout(() => (activity = null), ACTIVITY_MS)
+      activityTimer = setTimeout(() => ((activity = null), (reading = false)), ACTIVITY_MS)
       if (p.box) {
         ring = p.box
         clearTimeout(ringTimer)
@@ -191,6 +210,10 @@
   }
 
   $effect(() => registerAppRequestHandler(win.id, handle))
+  // The bar after the agent's last step only stays for a user who has taken control.
+  $effect(() => {
+    if (!userInControl && activity === null) engaged = false
+  })
   $effect(() => () => {
     clearTimeout(activityTimer)
     clearTimeout(ringTimer)
@@ -253,6 +276,8 @@
   const zone = $derived(active.url.startsWith('file:') || active.url === BLANK ? 'Computer' : 'Internet')
   const status = $derived(pageStatus({ url: active.url, loading: active.loading, failed: active.failed }))
   const userInControl = $derived(host.state.userInControl)
+  const setControl = (on: boolean): void => void host.api.desktop.setUserInControl(host.state.desktopId, on)
+  const assistant = $derived(assistantStatus(host.state.policy?.groups.browser ?? 'allow', reading))
 
   /** Ctrl+Plus, Ctrl+Minus and Ctrl+0 zoom the page (the guest page keeps its own keys when it has focus). */
   function zoomKey(event: KeyboardEvent): void {
@@ -289,16 +314,35 @@
       {/if}
     </form>
   </div>
-  <div class="tabrow" data-testid="browser-tabs" role="tablist" aria-label="Tabs">
-    {#each tabs as tab (tab.id)}
-      <div class="tab" class:active={tab.id === activeId} data-testid="browser-tab-{tab.id}" data-active={tab.id === activeId} role="presentation">
-        <button class="tabtitle" role="tab" aria-selected={tab.id === activeId} title={tab.url} onclick={() => void select(tab.id)}>
-          <Icon name="globe" />
-          <span class="label">{tabLabel(tab)}</span>
-        </button>
-        <button class="tabclose" data-testid="browser-tab-close-{tab.id}" aria-label="Close tab" title="Close tab" onclick={() => closeAt(tab.id)}><Icon name="close" size={10} /></button>
+  <div class="tabrow">
+    <div class="tabs">
+      <div class="tablist" data-testid="browser-tabs" role="tablist" aria-label="Tabs" tabindex="-1" onkeydown={tabKey}>
+        {#each tabs as tab (tab.id)}
+          <button
+            class="tab"
+            class:active={tab.id === activeId}
+            data-testid="browser-tab-{tab.id}"
+            data-active={tab.id === activeId}
+            role="tab"
+            aria-selected={tab.id === activeId}
+            tabindex={tab.id === activeId ? 0 : -1}
+            title={tab.url}
+            onclick={() => void select(tab.id)}
+          >
+            <Icon name="globe" />
+            <span class="label">{tabLabel(tab)}</span>
+          </button>
+        {/each}
       </div>
-    {/each}
+      <!-- The close buttons are not inside the tab list (a tab holds no buttons); each sits over the right end of its tab. -->
+      <div class="closes">
+        {#each tabs as tab (tab.id)}
+          <div class="slot">
+            <button class="tabclose" data-testid="browser-tab-close-{tab.id}" aria-label="Close tab: {tabLabel(tab)}" title="Close tab" onclick={() => closeAt(tab.id)}><span class="x"><Icon name="close" size={10} /></span></button>
+          </div>
+        {/each}
+      </div>
+    </div>
     <button class="newtab" data-testid="browser-tab-new" aria-label="New tab" title="New tab" onclick={() => openTab()}><Icon name="plus" size={12} /></button>
   </div>
   <div class="page">
@@ -315,16 +359,21 @@
         oncontext={(info) => ((pageSelection = info.selectionText), ctx.showAt(info.x, info.y, contextItems(info)))}
       />
     {/each}
-    {#if activity}
-      <div class="agentbar" data-testid="browser-agent-bar" role="status">
+    {#if activity !== null || engaged}
+      <div class="agentbar" data-testid="browser-agent-bar" data-taken-over={userInControl} role="status">
         <Icon name="shield" size={12} />
-        <span>Agent is using this page: {activity}</span>
+        <span data-testid="browser-agent-bar-text"
+          >{userInControl ? 'You have control of this page. The agent stops and asks before it uses the page again.' : `Agent is using this page: ${activity ?? 'working'}`}</span
+        >
+        {#if userInControl}
+          <button class="bar-button" data-testid="browser-agent-giveback" title="Let the agent use this page again. It will ask before it does." onclick={() => setControl(false)}>Give control back</button>
+        {/if}
         <button
-          class="takeover"
+          class="bar-button takeover"
           data-testid="browser-agent-takeover"
           disabled={userInControl}
           title="Pause the agent on this page so that you can use it. The agent must ask before it uses the page again."
-          onclick={() => void host.api.desktop.setUserInControl(host.state.desktopId, true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
+          onclick={() => setControl(true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
       </div>
     {/if}
     {#if ring}
@@ -337,6 +386,9 @@
     <StatusStripLabel text={status} spring />
     <StatusStripLabel borders={['left']} width={130}>
       <Icon name={zone === 'Internet' ? 'globe' : 'shield'} /> <span>{zone}</span>
+    </StatusStripLabel>
+    <StatusStripLabel testid="browser-assistant-status" borders={['left']} width={190}>
+      <span class="t" title={ASSISTANT_TOOLTIP}>{assistant}</span>
     </StatusStripLabel>
     <StatusStripLabel text={zoomText(active.zoom)} borders={['left']} width={56} textAlign="right" />
   </StatusStrip>
@@ -425,23 +477,51 @@
     flex: none;
     display: flex;
     align-items: flex-end;
-    gap: 2px;
     height: 26px;
     padding: 0 8px;
     background: linear-gradient(#dfe8f5, #cddbee);
   }
+  .tabs {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-width: 0;
+    height: 100%;
+  }
+  .tablist,
+  .closes {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    min-width: 0;
+  }
+  /* The close buttons lie over the tabs: both rows give every item the same width, so each button meets its tab. */
+  .closes {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .tab,
+  .slot {
+    flex: 0 1 170px;
+    min-width: 60px;
+    box-sizing: border-box;
+  }
   .tab {
     display: flex;
     align-items: center;
-    min-width: 60px;
-    max-width: 200px;
+    gap: 5px;
     height: 23px;
+    padding: 0 28px 0 8px;
     overflow: hidden;
     background: linear-gradient(#eef3fb, #d3dff0);
     border: 1px solid #8ea4c4;
     border-bottom: 0;
     border-radius: 3px 3px 0 0;
     color: #243a5c;
+    font: inherit;
+    text-align: left;
   }
   .tab:hover {
     background: linear-gradient(#f7faff, #dde8f7);
@@ -454,19 +534,12 @@
     z-index: 1;
     margin-bottom: -1px;
   }
-  .tabtitle {
-    flex: 1;
-    min-width: 0;
+  .slot {
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    gap: 5px;
-    height: 100%;
-    padding: 0 4px 0 8px;
-    border: 0;
-    background: transparent;
-    font: inherit;
-    color: inherit;
-    text-align: left;
+    height: 24px;
+    padding-right: 1px;
   }
   .label {
     overflow: hidden;
@@ -478,24 +551,34 @@
     display: grid;
     place-items: center;
     flex: none;
-    width: 16px;
-    height: 16px;
     padding: 0;
-    margin-right: 3px;
-    border: 1px solid transparent;
-    border-radius: 2px;
+    border: 0;
     background: transparent;
   }
-  .tabclose:hover,
-  .newtab:hover {
+  /* A 24 x 24 px target around a 16 x 16 px look. */
+  .tabclose {
+    width: 24px;
+    height: 24px;
+    pointer-events: auto;
+  }
+  .x {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+  }
+  .tabclose:hover .x {
     border-color: #a14444;
     background: linear-gradient(#f9d3d0, #e48a84);
   }
   .newtab {
-    width: 22px;
-    height: 19px;
+    width: 24px;
+    height: 22px;
     margin: 0 0 2px 2px;
-    border-color: #8ea4c4;
+    border: 1px solid #8ea4c4;
+    border-radius: 2px;
     background: linear-gradient(#eef3fb, #d3dff0);
   }
   .newtab:hover {
@@ -519,7 +602,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    height: 22px;
+    height: 28px;
     padding: 0 8px;
     background: linear-gradient(#fff6c7, #ffe58a);
     border-bottom: 1px solid #c9a227;
@@ -532,14 +615,23 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .takeover {
+  .bar-button {
+    flex: none;
     pointer-events: auto;
-    height: 17px;
+    height: 22px;
     padding: 0 8px;
     border: 1px solid #a98a1b;
     border-radius: 2px;
     background: linear-gradient(#fffdf0, #f6df8a);
     font: inherit;
+  }
+  /* Take over stays at the right end with one width, whatever its label says. */
+  .takeover {
+    width: 86px;
+    padding: 0;
+  }
+  .bar-button:disabled {
+    opacity: 0.7;
   }
   .ring {
     position: absolute;

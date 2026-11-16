@@ -162,8 +162,9 @@ export function helpWindowTitle(topic: string): string {
 export function windowTitle(view: AppView): string {
   switch (view.app) {
     case 'chat':
-    case 'surface':
       return view.title
+    case 'surface':
+      return `${view.title} - from the assistant`
     case 'explorer':
       return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'
     case 'notepad':

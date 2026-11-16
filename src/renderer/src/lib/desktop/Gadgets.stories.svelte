@@ -15,9 +15,9 @@
       since: new Date(2026, 10, 16, 3, 14),
       now,
       feed: [
-        { key: '1', chatTitle: 'Fix login redirect bug', title: 'Read src/auth/redirect.ts', status: 'completed' },
-        { key: '2', chatTitle: 'Fix login redirect bug', title: 'Edit src/auth/redirect.ts', status: 'in_progress' },
-        { key: '3', chatTitle: 'Add parser unit tests', title: 'npm test -- auth', status: 'failed' }
+        { key: '1', chatTitle: 'Fix login redirect bug', title: 'Read the page', status: 'completed', count: 24 },
+        { key: '2', chatTitle: 'Fix login redirect bug', title: 'Edit src/auth/redirect.ts', status: 'in_progress', count: 1 },
+        { key: '3', chatTitle: 'Add parser unit tests', title: 'npm test -- auth', status: 'failed', count: 1 }
       ]
     },
     argTypes: { chatTitle: { control: 'text' }, contextUsed: { control: 'number' }, contextSize: { control: 'number' } }

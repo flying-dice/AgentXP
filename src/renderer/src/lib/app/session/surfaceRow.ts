@@ -1,6 +1,6 @@
 import type { A2uiServerMessage, A2uiSurfaceTarget } from '@shared/a2ui'
 import { surfaceTitle } from '@shared/a2ui/messages'
-import { SURFACE_FALLBACK_TITLE } from '@shared/desktop-views'
+import { SURFACE_FALLBACK_TITLE, windowTitle } from '@shared/desktop-views'
 import type { SurfaceActivity } from '../../agui/activities'
 import type { IconName } from '../../kit/atoms/icons'
 
@@ -13,6 +13,12 @@ export interface SurfaceRowModel {
   stateLabel: 'Open' | 'Closed'
   /** "Board: Open": the title and the state in one reading, so the state is never next to a button of the same word. */
   stateText: string
+  /** What the surface is for, in a word: a form (it has fields to fill in) or a panel (it only shows things). */
+  purpose: 'form' | 'panel'
+  /** "The assistant opened a form: Your name." */
+  intro: string
+  /** Where it is, said plainly: "It is in the window 'Your name - from the assistant'." Empty for an inline surface (it is in the chat). */
+  where: string
   /** The caption of the button that shows the surface: "Open" for a closed one, "Show" for one that is already open. */
   openLabel: 'Open' | 'Show'
   icon: IconName
@@ -38,11 +44,24 @@ export function surfaceCaption(messages: readonly A2uiServerMessage[]): string |
 /** The title of a surface in rows and tabs: its caption, else a generic name. */
 export const surfaceDisplayTitle = (messages: readonly A2uiServerMessage[]): string => surfaceCaption(messages) ?? SURFACE_FALLBACK_TITLE
 
+/** Components that take what the person types or chooses; a surface with one is a form. */
+const INPUT_COMPONENTS = new Set(['TextBox', 'ComboBox', 'CheckBox', 'CheckedListBox', 'RadioButtonGroup', 'NumericUpDown', 'DateTimePicker', 'TrackBar', 'ListBox', 'MonthCalendar'])
+
+/** A form when any of its components takes input, else a panel. */
+export function surfacePurpose(messages: readonly A2uiServerMessage[]): 'form' | 'panel' {
+  for (const m of messages) {
+    if ('updateComponents' in m && m.updateComponents.components.some((c) => INPUT_COMPONENTS.has(c.component))) return 'form'
+  }
+  return 'panel'
+}
+
 /** The model of a surface's chat row. `windowOpen` says whether the surface's window exists right now. */
 export function surfaceRowModel(surface: Pick<SurfaceActivity, 'surfaceId' | 'target' | 'hidden' | 'messages'>, windowOpen: boolean): SurfaceRowModel {
   const { target } = surface
   const open = target === 'inline' || (target === 'sidebar' ? !surface.hidden : windowOpen)
   const title = surfaceDisplayTitle(surface.messages)
+  const purpose = surfacePurpose(surface.messages)
+  const place = target === 'window' ? `window '${windowTitle({ app: 'surface', surfaceId: surface.surfaceId, sessionId: 0, title })}'` : `sidebar '${title}'`
   return {
     surfaceId: surface.surfaceId,
     title,
@@ -50,6 +69,9 @@ export function surfaceRowModel(surface: Pick<SurfaceActivity, 'surfaceId' | 'ta
     state: open ? 'open' : 'closed',
     stateLabel: open ? 'Open' : 'Closed',
     stateText: `${title}: ${open ? 'Open' : 'Closed'}`,
+    purpose,
+    intro: `The assistant opened a ${purpose}: ${title}.`,
+    where: target === 'inline' ? '' : open ? `It is in the ${place}.` : `It is closed. It was in the ${place}.`,
     openLabel: open ? 'Show' : 'Open',
     icon: ICONS[target],
     hasOpenClose: target !== 'inline',

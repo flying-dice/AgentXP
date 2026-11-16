@@ -1,15 +1,19 @@
 <script lang="ts">
   /** The page of a load that failed, in the style of Internet Explorer 8: what happened, why, and what to try. */
   import Button from '../../kit/atoms/Button.svelte'
-  import { FAILURE_HINTS, shortAddress, type LoadFailure } from './pageStatus'
+  import { failureHint, shortAddress, type LoadFailure } from './pageStatus'
 
   interface Props {
     failure: LoadFailure
     onrefresh: () => void
     onhelp?: () => void
+    /** Go to another address (the "Try another address:" box). */
+    onnavigate?: (address: string) => void
   }
 
-  let { failure, onrefresh, onhelp }: Props = $props()
+  let { failure, onrefresh, onhelp, onnavigate }: Props = $props()
+  // svelte-ignore state_referenced_locally
+  let another = $state(failure.url)
 </script>
 
 <div class="error" data-testid="browser-error-page" role="alert">
@@ -17,10 +21,19 @@
   <p data-testid="browser-error-cause">The address '{shortAddress(failure.url)}' could not be reached. {failure.cause}</p>
   <p class="try">Try this:</p>
   <ul>
-    {#each FAILURE_HINTS as hint (hint)}
-      <li>{hint}</li>
-    {/each}
+    <li data-testid="browser-error-hint">{failureHint(failure)}</li>
   </ul>
+  <form
+    class="another"
+    onsubmit={(event) => {
+      event.preventDefault()
+      onnavigate?.(another)
+    }}
+  >
+    <label for="browser-error-address">Try another address:</label>
+    <input id="browser-error-address" class="box" data-testid="browser-error-address" bind:value={another} spellcheck="false" />
+    <Button data-testid="browser-error-go" type="submit">Go</Button>
+  </form>
   <div class="row">
     <Button data-testid="browser-error-refresh" onclick={onrefresh}>Refresh</Button>
     <button class="link" data-testid="browser-error-help" type="button" onclick={() => onhelp?.()}>Help</button>
@@ -57,6 +70,20 @@
   ul {
     margin: 0 0 18px;
     padding-left: 22px;
+  }
+  .another {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+  }
+  .box {
+    flex: 1;
+    max-width: 360px;
+    height: 24px;
+    padding: 0 4px;
+    border: 1px solid #7c93b4;
+    font: inherit;
   }
   .row {
     display: flex;

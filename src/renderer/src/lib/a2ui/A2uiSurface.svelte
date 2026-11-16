@@ -14,10 +14,12 @@
     sessionId?: number
     /** True while the agent works on a turn: the form says "Sending..." until the reply is in, then "Sent." Omit it when unknown. */
     busy?: boolean
+    /** The assistant's latest reply as plain text; the form quotes it under the button: "Sent. The assistant answered: ...". */
+    reply?: string
     class?: string
   }
 
-  let { messages, onaction, sessionId, busy, class: className = '' }: Props = $props()
+  let { messages, onaction, sessionId, busy, reply, class: className = '' }: Props = $props()
 
   const controller = new SurfaceController()
   const submit = new SurfaceSubmit()
@@ -28,6 +30,9 @@
     onaction?.(event)
   }
 
+  $effect(() => {
+    submit.reply = reply ?? ''
+  })
   $effect(() => submit.follow(busy))
   // A reply that never ends the turn (or a surface without a store) must not leave the button disabled for good.
   $effect(() => {

@@ -62,7 +62,7 @@
       host={desktop}
       {sessionId}
       role="aside"
-      title="Chat pane"
+      title={w.view.app === 'browser' ? 'Chat about this page' : 'Chat pane'}
       collapsible
       resizable
       compact

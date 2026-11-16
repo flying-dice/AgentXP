@@ -248,6 +248,11 @@ export class ElectronBrowserDriver implements BrowserDriver {
     return { ...info(contents), box, note: `selected "${value.label}"` }
   }
 
+  async elementOf(windowId: Id, ref: number): Promise<{ role: string; name: string } | undefined> {
+    const target = this.session(await this.guest(windowId)).refs.get(ref)
+    return target ? { role: target.role, name: target.name } : undefined
+  }
+
   async back(windowId: Id): Promise<PageInfo> {
     const contents = await this.guest(windowId)
     if (!contents.navigationHistory.canGoBack()) throw new Error('There is no earlier page to go back to.')
