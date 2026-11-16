@@ -392,7 +392,7 @@ describe('fs tools', () => {
     f.drives.eject(desktopId, 'E')
     const refused = await run('fs_list')
     expect(refused.isError).toBe(true)
-    expect(textOf(refused)).toBe('Drive E: is not plugged in on this desktop. Ask the user to plug the project in, or work on C:.')
+    expect(textOf(refused)).toBe('Drive E: is not plugged in on this desktop. project was removed. Ask the user to open Computer and choose Plug in again.')
     expect(textOf(await run('fs_find', { pattern: 'a', path: 'E:\\src' }))).toMatch(/not plugged in/)
     expect(textOf(await run('fs_list', { path: 'C:\\Users' }))).toBe('C:\\Users\\Agent\\')
     f.drives.plugInFolder(desktopId, f.folder.id)

@@ -35,6 +35,19 @@ export interface DriveDto {
   pluggedAt: IsoDate | null
 }
 
+/** How many removed projects a desktop remembers (Computer shows the newest three). */
+export const REMOVED_PROJECTS_KEPT = 5
+
+/** A project that was removed from a desktop and can be plugged in again (Computer's "Recently removed"). */
+export interface RemovedProjectDto {
+  folderId: Id
+  /** The project's name (`login-app`). */
+  label: string
+  /** The letter it had (`E`). */
+  letter: DriveLetter
+  removedAt: IsoDate
+}
+
 export const SYSTEM_SEED_DIRS: readonly VPath[] = [
   'C:\\Users\\Agent\\Desktop',
   'C:\\Users\\Agent\\Documents',
@@ -116,7 +129,8 @@ export function nextDriveLetter(used: Iterable<DriveLetter>): DriveLetter | null
 }
 
 /** The message an agent gets when it touches an ejected or unknown drive. */
-export function noDriveMessage(letter: DriveLetter): string {
+export function noDriveMessage(letter: DriveLetter, removedProject?: string): string {
+  if (removedProject) return `Drive ${letter}: is not plugged in on this desktop. ${removedProject} was removed. Ask the user to open Computer and choose Plug in again.`
   return `Drive ${letter}: is not plugged in on this desktop. Ask the user to plug the project in, or work on C:.`
 }
 
@@ -151,6 +165,8 @@ export interface DesktopSummaryDto {
   runState: DesktopRunState
   /** Why the desktop's agent could not start (run state `error`), else null. */
   lastError?: string | null
+  /** The default agent's command was not found (checked when the launcher opens): the row shows the error. Else null. */
+  agentProblem?: string | null
   pendingApprovals: number
   chatCount: number
   drives: DriveDto[]
@@ -179,6 +195,8 @@ export interface LauncherApi {
   remove(id: Id): Promise<void>
   /** Shows the launcher window (from a desktop's Start menu). */
   show(): Promise<void>
+  /** Looks for the default agent program of every desktop (nothing is started) and updates the rows' `agentProblem`. */
+  checkAgents(): Promise<void>
 }
 
 export interface LauncherEvents {

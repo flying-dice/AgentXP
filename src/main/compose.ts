@@ -41,6 +41,7 @@ import type {
   AgentConnector,
   EventPublisher,
   DirectoryBrowser,
+  ProgramFinder,
   FilePicker,
   FolderPicker,
   ScreenCapturer,
@@ -93,6 +94,7 @@ import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-re
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
 import { FileThumbnailStore } from './infrastructure/fs/FileThumbnailStore'
 import { NodeDirectoryBrowser } from './infrastructure/fs/NodeDirectoryBrowser'
+import { PathProgramFinder } from './infrastructure/fs/PathProgramFinder'
 import { NodeFolderBrowser } from './infrastructure/fs/NodeFolderBrowser'
 import { NodeHostFiles } from './infrastructure/fs/NodeHostFiles'
 import { NodeWorkspaceFileSystem } from './infrastructure/fs/NodeWorkspaceFileSystem'
@@ -106,6 +108,8 @@ export interface ComposeOptions {
   picker: FolderPicker
   /** Lists folders for the in-app Browse For Folder dialog; defaults to the real disk. */
   directories?: DirectoryBrowser
+  /** Looks agent commands up for the launcher's start-error check; defaults to the PATH of this process. */
+  programs?: ProgramFinder
   /** `AGENT7_NATIVE_PICKER=1`: the renderer asks the native dialog instead of the in-app one. */
   nativePicker?: boolean
   saver: TextFileSaver
@@ -295,6 +299,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     desktops: repos.desktops,
     sessions: repos.sessions,
     agents: repos.agents,
+    programs: options.programs ?? new PathProgramFinder(),
     drives,
     vfs,
     desktopService: desktops,
@@ -398,7 +403,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage()),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
-    directories: options.directories ?? new NodeDirectoryBrowser(),
+    directories: options.directories ?? new NodeDirectoryBrowser({ recent: () => folderService.list().map((f) => f.path) }),
     nativePicker: options.nativePicker ?? false,
     appRequests,
     notes,

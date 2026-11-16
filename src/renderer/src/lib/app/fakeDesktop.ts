@@ -149,7 +149,14 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},
-    respondAppRequest: async () => {}
+    respondAppRequest: async () => {},
+    raiseWindow: async (id) => {
+      const w = find(id)
+      if (w.windowState === 'minimized') w.windowState = 'normal'
+      raise(w)
+      changed()
+    },
+    userActive: async () => {}
   }
   for (const app of options.windows ?? []) void api.openWindow({ desktopId: desktop.id, app })
   return api

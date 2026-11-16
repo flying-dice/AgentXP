@@ -28,6 +28,11 @@ export function helpMenu({ app, name, onhelp, onabout }: HelpMenuOptions): MenuD
   }
 }
 
+/** `File > New chat  Ctrl+N`: starts a chat on the default drive of the desktop (Code, Explorer and Chat have it). */
+export function newChatItem(app: string, onnewchat: () => void): MenuItemDef {
+  return { id: `${app}-new-chat`, testid: `${app}-menu-new-chat`, label: '&New chat', icon: 'session', shortcut: 'Ctrl+N', action: onnewchat }
+}
+
 /** The end of a File menu: a separator and `Close` (Alt+F4 closes the window); an editor says `E&xit` instead. */
 export function closeItems(app: string, onclose: () => void, label = '&Close'): MenuItemDef[] {
   return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label, shortcut: 'Alt+F4', action: onclose }]

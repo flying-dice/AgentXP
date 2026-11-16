@@ -86,6 +86,7 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Chat window | The root of the window. | `chat-app` |
 | File menu | Opens the File menu. | `menubar-file` |
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
+| New chat (menu) | File menu: starts another chat on the default drive. Ctrl+N. | `chat-menu-new-chat` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |

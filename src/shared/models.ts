@@ -233,4 +233,8 @@ export interface BrowseListingDto {
   path: string
   entries: BrowseEntryDto[]
   places: BrowsePlaceDto[]
+  /** Folders used before that still exist, newest first (only when `path` is ''). */
+  recent?: BrowsePlaceDto[]
+  /** Folders a bare name (no separator) matched, best match first. One entry means the name is resolved. */
+  matches?: BrowsePlaceDto[]
 }

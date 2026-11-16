@@ -7,7 +7,8 @@ import type { PermissionRequestDto } from '@shared/models'
 import type { DesktopService } from '../desktop/DesktopService'
 import type { DesktopWindowHost } from '../desktop/ports'
 import { AppError, required } from '../errors'
-import type { EventPublisher } from '../ports'
+import { startFailure } from '../agentProblems'
+import type { EventPublisher, ProgramFinder } from '../ports'
 import type { DriveService } from '../vfs/DriveService'
 import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import { deriveRunState } from './summary'
@@ -20,7 +21,9 @@ export interface ApprovalNotifier {
 export interface LauncherDeps {
   desktops: DesktopRepository
   sessions: SessionRepository
-  agents: Pick<AgentRepository, 'getDefault'>
+  agents: Pick<AgentRepository, 'get' | 'getDefault'>
+  /** Looks the agent's command up without starting it. */
+  programs: ProgramFinder
   drives: Pick<DriveService, 'list' | 'plugInFolder'>
   vfs: Pick<VirtualFileSystem, 'seedSystemDisk' | 'deleteDesktopFolder'>
   desktopService: Pick<DesktopService, 'rename' | 'forget'>
@@ -48,6 +51,8 @@ export class LauncherService {
   private lastPublished = ''
   /** The last failure to start an agent, per desktop; cleared by the next start that works. */
   private readonly startFailures = new Map<Id, string>()
+  /** Desktops whose default agent program was not found, with the message; refreshed by `checkAgents`. */
+  private readonly agentProblems = new Map<Id, string>()
 
   constructor(private readonly deps: LauncherDeps) {}
 
@@ -91,6 +96,26 @@ export class LauncherService {
     if (this.startFailures.delete(id)) this.publishChanged()
   }
 
+  /**
+   * Looks for the default agent program of each desktop (a `which` check: no process starts) and stores the problem on the
+   * row. The launcher calls this when it opens and every 30 seconds while it is open.
+   */
+  async checkAgents(): Promise<void> {
+    const found = new Map<string, boolean>()
+    const next = new Map<Id, string>()
+    for (const desktop of this.deps.desktops.list()) {
+      const agent = (desktop.agentId === null ? null : this.deps.agents.get(desktop.agentId)) ?? this.deps.agents.getDefault()
+      if (!agent) continue
+      if (!found.has(agent.command)) found.set(agent.command, await this.deps.programs.exists(agent.command))
+      if (!found.get(agent.command)) next.set(desktop.id, startFailure(new Error('ENOENT'), agent).message)
+    }
+    const same = next.size === this.agentProblems.size && [...next].every(([id, text]) => this.agentProblems.get(id) === text)
+    if (same) return
+    this.agentProblems.clear()
+    for (const [id, text] of next) this.agentProblems.set(id, text)
+    this.publishChanged()
+  }
+
   /** Opens (or focuses) the desktop's OS window. */
   connect(id: Id): void {
     this.record(id)
@@ -124,6 +149,7 @@ export class LauncherService {
     for (const session of this.deps.sessions.listByDesktop(id)) await this.deps.chats.remove(session.id)
     this.deps.desktopService.forget(id)
     this.startFailures.delete(id)
+    this.agentProblems.delete(id)
     this.deps.clearLog(id)
     this.deps.desktops.remove(id) // drives, windows, notes and recycled changes cascade; the real folders are untouched
     await this.deps.vfs.deleteDesktopFolder(id) // C: and the thumbnail
@@ -173,8 +199,9 @@ export class LauncherService {
       id: d.id,
       title: d.title,
       connected,
-      runState: deriveRunState(sessions.map((s) => s.status), pendingApprovals, this.startFailures.has(d.id)),
-      lastError: this.startFailures.get(d.id) ?? null,
+      runState: deriveRunState(sessions.map((s) => s.status), pendingApprovals, this.startFailures.has(d.id) || this.agentProblems.has(d.id)),
+      lastError: this.startFailures.get(d.id) ?? this.agentProblems.get(d.id) ?? null,
+      agentProblem: this.agentProblems.get(d.id) ?? null,
       pendingApprovals,
       chatCount: sessions.filter((s) => s.role === 'chat').length,
       drives: this.deps.drives.list(d.id),

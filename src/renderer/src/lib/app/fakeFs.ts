@@ -33,8 +33,14 @@ export function createFakeFs(): Agent7Api['fs'] {
             { name: 'Home', path: HOME },
             { name: 'Documents', path: `${HOME}\\Documents` },
             { name: 'Desktop', path: `${HOME}\\Desktop` }
-          ]
+          ],
+          recent: [{ name: 'login-app', path: `${HOME}\\source\\login-app` }]
         }
+      }
+      if (!/[\\/:]/.test(path)) {
+        const found = Object.keys(tree).filter((k) => k.split('\\').pop()?.toLowerCase() === path.toLowerCase())
+        if (found.length === 0) throw new Error(`No folder called '${path}' was found in your recent folders, Documents, Desktop or Home. Type the full path, for example C:\\Users\\you\\${path}, or choose a folder in the list.`)
+        return { path: found.length === 1 ? found[0] : '', entries: [], places: [], matches: found.map((p) => ({ name: path, path: p })) }
       }
       const key = path.length > 3 ? path.replace(/\\+$/, '') : path
       const children = tree[key]

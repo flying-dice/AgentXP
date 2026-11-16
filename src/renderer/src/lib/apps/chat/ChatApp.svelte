@@ -19,7 +19,7 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
-  import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
+  import { closeItems, editItems, menuBar, newChatItem } from '../../kit/molecules/standardMenu'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
@@ -271,6 +271,8 @@
       {
         label: '&File',
         items: [
+          newChatItem('chat', () => void host.startDefaultChat()),
+          { separator: true },
           { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
           ...closeItems('chat', () => void host.closeWindow(win.id))
         ]

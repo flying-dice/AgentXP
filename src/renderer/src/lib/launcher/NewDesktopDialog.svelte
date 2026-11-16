@@ -37,6 +37,8 @@
 
   const all = $derived([...folders, ...shown.filter((f) => !folders.some((x) => x.id === f.id))])
   const error = $derived(validateDesktopName(name, existingNames))
+  /** The first project folder the user chose (the name suggestion uses it). */
+  const firstProject = $derived(all.find((f) => f.id === checked[0])?.name)
   const items = $derived(all.map((f) => ({ value: f.id, label: `${f.name}   ${f.path}`, testid: 'new-desktop-project' })))
 
   async function browse(): Promise<void> {
@@ -56,7 +58,7 @@
 <Dialog testid="new-desktop-dialog" title="New desktop" iconName="computer" width="460px" contained onclose={oncancel}>
   <div class="form">
     <div class="field">
-      <DesktopNameField bind:value={name} label="Desktop name:" {existingNames} idPrefix="new-desktop" />
+      <DesktopNameField bind:value={name} label="Desktop name:" {existingNames} idPrefix="new-desktop" project={firstProject} />
     </div>
     <div class="field">
       <Label text="Project folders the agent can use (they appear as drives):" />

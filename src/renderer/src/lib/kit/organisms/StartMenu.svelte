@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import Icon from '../atoms/Icon.svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { filterStartItems, type StartGroup, type StartItem } from './StartMenu'
+  import { filterStartItems, moveHighlight, START_MENU_HINT, startNavItems, type StartGroup, type StartItem } from './StartMenu'
 
   interface Props {
     /** Left column: apps. */
@@ -50,16 +51,34 @@
   let search: HTMLInputElement | undefined = $state()
   $effect(() => search?.focus())
 
+  // The first entry is highlighted when the menu opens and after every change of the search text; Up and Down move it
+  // and Enter starts it.
+  const nav = $derived(startNavItems({ programs: shownPrograms, groups: shownGroups, recent: shownRecent, openGroups, searching }))
+  let hot = $state(0)
+  const hotKey = $derived(nav[Math.min(hot, nav.length - 1)]?.key ?? null)
+  $effect(() => {
+    query
+    untrack(() => (hot = 0))
+  })
+  $effect(() => {
+    if (hotKey) document.getElementById(`sm-${hotKey}`)?.scrollIntoView?.({ block: 'nearest' })
+  })
+
   function onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.stopPropagation()
       if (shutdownOpen) shutdownOpen = false
       else onclose?.()
-    } else if (event.key === 'Enter' && searching) {
-      const first = shownPrograms[0] ?? shownGroups[0]?.items[0] ?? shownRecent[0]
-      if (!first) return
-      if (shownPrograms[0] || shownGroups[0]?.items[0]) onrun?.(first.id)
-      else onrecent?.(first.id)
+    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && event.target === search) {
+      event.preventDefault()
+      hot = moveHighlight(Math.min(hot, Math.max(nav.length - 1, 0)), nav.length, event.key === 'ArrowDown' ? 1 : -1)
+    } else if (event.key === 'Enter' && event.target === search) {
+      // A button that has the focus handles its own Enter; the search box starts the highlighted entry.
+      const entry = nav.find((n) => n.key === hotKey)
+      if (!entry) return
+      event.preventDefault()
+      if (entry.kind === 'run') onrun?.(entry.id)
+      else onrecent?.(entry.id)
     }
   }
 </script>
@@ -71,7 +90,7 @@
     <ul class="programs" role="menu" aria-label="Programs">
       {#each shownPrograms as item (item.id)}
         <li role="none">
-          <button type="button" role="menuitem" class="entry" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
+          <button type="button" role="menuitem" class="entry" class:hot={hotKey === `p:${item.id}`} data-hot={hotKey === `p:${item.id}`} id="sm-p:{item.id}" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
             {#if item.icon}<Icon name={item.icon} size={32} />{/if}
             <span class="text"><span class="title">{item.title}</span></span>
           </button>
@@ -79,9 +98,13 @@
       {/each}
     </ul>
     {#if groups.length > 0 && !searching}
-      <button type="button" role="menuitem" class="entry all" data-testid="start-menu-all" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
-        <span class="tri" class:open={allOpen} aria-hidden="true"></span><span class="title">All Programs</span>
-      </button>
+      <ul role="menu" aria-label="All programs">
+        <li role="none">
+          <button type="button" role="menuitem" class="entry all" data-testid="start-menu-all" aria-haspopup="menu" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
+            <span class="tri" class:open={allOpen} aria-hidden="true"></span><span class="title">All Programs</span>
+          </button>
+        </li>
+      </ul>
     {/if}
     {#if shownGroups.length > 0 && (allOpen || searching)}
       <ul class="groups" role="menu" aria-label="Program folders">
@@ -95,7 +118,7 @@
               <ul class="sub" role="menu" aria-label={group.title}>
                 {#each group.items as item (item.id)}
                   <li role="none">
-                    <button type="button" role="menuitem" class="entry small" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
+                    <button type="button" role="menuitem" class="entry small" class:hot={hotKey === `g:${group.id}:${item.id}`} data-hot={hotKey === `g:${group.id}:${item.id}`} id="sm-g:{group.id}:{item.id}" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
                       {#if item.icon}<Icon name={item.icon} size={16} />{/if}<span class="title">{item.title}</span>
                     </button>
                   </li>
@@ -111,7 +134,7 @@
       <ul class="recent" role="menu" aria-label="Recent chats">
         {#each shownRecent as item (item.id)}
           <li role="none">
-            <button type="button" role="menuitem" class="entry small" data-testid="start-menu-recent" data-session-id={item.id} onclick={() => onrecent?.(item.id)}>
+            <button type="button" role="menuitem" class="entry small" class:hot={hotKey === `r:${item.id}`} data-hot={hotKey === `r:${item.id}`} id="sm-r:{item.id}" data-testid="start-menu-recent" data-session-id={item.id} onclick={() => onrecent?.(item.id)}>
               <Icon name="session" size={16} /><span class="title">{item.title}</span>
             </button>
           </li>
@@ -120,9 +143,10 @@
     {/if}
     {#if empty}<div class="none">No items match your search.</div>{/if}
     <div class="search">
-      <input data-testid="start-menu-search" bind:this={search} bind:value={query} type="search" placeholder="Search programs and chats" aria-label="Search programs and chats" />
+      <input data-testid="start-menu-search" bind:this={search} bind:value={query} type="search" placeholder="Search programs and chats" aria-label="Search programs and chats" aria-activedescendant={hotKey ? `sm-${hotKey}` : undefined} />
       <Icon name="search" size={14} />
     </div>
+    <p class="hint" data-testid="start-menu-hint">{START_MENU_HINT}</p>
   </div>
   <div class="right">
     <ul role="menu" aria-label="Places">
@@ -237,11 +261,17 @@
     padding: 3px 6px;
   }
   .entry:hover,
+  .entry.hot,
   .entry:focus-visible {
     outline: none;
     border-color: #b8d6fb;
     background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(214, 232, 252, 0.9));
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  }
+  /* The keyboard focus ring: 2 px dotted, dark on the white column and white on the glass (3:1 or better on both). */
+  .entry:focus-visible {
+    outline: 2px dotted #000;
+    outline-offset: -3px;
   }
   .all {
     margin-top: 4px;
@@ -306,6 +336,12 @@
     padding: 10px 8px;
     color: var(--w7-text-muted);
   }
+  .hint {
+    margin: 6px 2px 0;
+    color: #3a4656;
+    font-size: 12px;
+    line-height: 1.3;
+  }
   .search {
     margin-top: auto;
     position: relative;
@@ -358,9 +394,14 @@
   .right li + li {
     margin-top: 1px;
   }
+  .place:focus-visible,
+  .power-btn:focus-visible,
+  .shutdown-menu button:focus-visible {
+    outline: 2px dotted #fff;
+    outline-offset: -3px;
+  }
   .place:hover,
   .place:focus-visible {
-    outline: none;
     border-color: rgba(255, 255, 255, 0.55);
     background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);

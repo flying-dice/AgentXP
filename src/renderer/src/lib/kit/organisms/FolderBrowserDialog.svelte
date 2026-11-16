@@ -15,7 +15,15 @@
   import {
     cleanTypedPath,
     COMPUTER_ID,
+    emptyFolderNode,
     entryNode,
+    groupChildId,
+    isBareName,
+    MATCHES_ID,
+    matchesGroup,
+    NAME_LOOKUP_DELAY_MS,
+    RECENT_ID,
+    withMatches,
     FOLDER_BROWSER_INSTRUCTIONS,
     NEW_FOLDER_NAME,
     rootNodes,
@@ -61,10 +69,57 @@
 
   onMount(() => {
     void track(source.browse('')).then(
-      (listing) => (nodes = rootNodes(listing, paths)),
+      (listing) => {
+        nodes = rootNodes(listing, paths)
+        // The tree opens its seeded nodes only at mount; this one arrives later, so open it here.
+        if (nodes.some((n) => n.id === RECENT_ID)) expanded = new Set([...expanded, RECENT_ID])
+        else openStartFolder(listing.places.map((p) => p.path))
+      },
       (error: unknown) => (problem = message(error))
     )
   })
+
+  /** With no recent projects the tree opens at Documents, or Home when there is no Documents folder. */
+  function openStartFolder(placePaths: string[]): void {
+    const start = placePaths.find((p) => /[\\/]Documents$/.test(p)) ?? placePaths[0]
+    const id = start === undefined ? undefined : nodes.find((n) => paths.get(n.id) === start)?.id
+    if (id) expanded = new Set([...expanded, id])
+  }
+
+  // A name typed instead of a path is looked up 400 ms after the last key.
+  $effect(() => {
+    const typed = text
+    if (!isBareName(typed)) return
+    const timer = setTimeout(() => void lookUp(typed, false), NAME_LOOKUP_DELAY_MS)
+    return () => clearTimeout(timer)
+  })
+
+  /** Finds the folder of a typed name; resolves the full path when exactly one folder has that name. */
+  async function lookUp(name: string, accept: boolean): Promise<void> {
+    problem = ''
+    try {
+      const listing = await track(source.browse(name))
+      if (text !== name) return
+      const found = listing.matches ?? []
+      if (found.length > 1) {
+        nodes = withMatches(nodes, matchesGroup(found, paths))
+        expanded = new Set([...expanded, MATCHES_ID])
+        problem = `More than one folder is called '${name}'. Select one in the list.`
+        return
+      }
+      const only = found[0]
+      if (!only) return
+      if (accept) return onresult?.(only.path)
+      const known = nodes.find((n) => n.id === RECENT_ID)?.children?.some((c) => paths.get(c.id) === only.path)
+      if (!known) nodes = withMatches(nodes, matchesGroup(found, paths))
+      else nodes = withMatches(nodes, null)
+      expanded = new Set([...expanded, known ? RECENT_ID : MATCHES_ID])
+      selected = groupChildId(known ? RECENT_ID : MATCHES_ID, only.path)
+      path = only.path
+    } catch (error) {
+      if (text === name) problem = message(error)
+    }
+  }
 
   const message = (error: unknown): string => (error instanceof Error ? error.message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') : String(error))
 
@@ -73,7 +128,8 @@
     problem = ''
     try {
       const listing = await track(source.browse(at))
-      return listing.entries.map((e) => entryNode(node.id, e, paths))
+      const kids = listing.entries.map((e) => entryNode(node.id, e, paths))
+      return kids.length > 0 ? kids : [emptyFolderNode(node.id)]
     } catch (error) {
       problem = message(error)
       return []
@@ -105,6 +161,7 @@
   async function result(r: DialogResult): Promise<void> {
     if (r !== 'ok') return onresult?.(null)
     if (!canOk) return
+    if (isBareName(text)) return lookUp(text, true)
     try {
       const listing = await track(source.browse(text))
       onresult?.(listing.path)

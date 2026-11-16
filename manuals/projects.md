@@ -24,7 +24,7 @@ To plug in a project, follow the steps below:
 
 1. Open **Explorer**, and then click **Plug in a project...** in the toolbar. The **Browse For Folder** dialog box appears.
 2. Select the folder of the project.
-3. Click **OK**. The project appears as a drive in the **Computer** window.
+3. Click **OK**. The project appears as a drive in the **Computer** window, and a balloon says that it is ready to use.
 
 You can also click **Plug in a project...** in the **File** menu of **Code**, or right-click an empty place in the project tree of Code.
 
@@ -36,7 +36,9 @@ To remove a project from the desktop, follow the steps below:
 2. Click **Eject**. A box tells that the folder stays on your disk.
 3. Click **Yes**.
 
-Agent7 closes the windows that show files of the project. The chats of the project stay in the list, but their agents cannot read the files until you plug in the project again.
+Agent7 closes the windows that show files of the project. The chats of the project stay in the list, but their agents cannot read the files until you plug in the project again. The agent is told which project was removed and that you can plug it in again.
+
+To plug a removed project in again, open **Computer**, select it under **Recently removed**, and click **Plug in again**. You can also click the **Safely Remove Hardware** icon in the notification area and click **Plug in ... again**. Agent7 keeps the last five.
 
 ## 4 - Troubleshooting
 
