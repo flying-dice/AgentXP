@@ -172,6 +172,16 @@
     })
   })
 
+  /** The bar goes. At the end of a turn (`all` false) a finished read keeps its message until its own timer ends it. */
+  function stopActivity(all: boolean): void {
+    if (!all && readDone) return
+    clearTimeout(activityTimer)
+    activity = null
+    reading = false
+    activityDetail = null
+    readDone = false
+  }
+
   async function handle(method: string, params: unknown): Promise<unknown> {
     if (method === 'activity') {
       const p = (params ?? {}) as { label?: string; detail?: string; reading?: boolean; read?: boolean; box?: { x: number; y: number; width: number; height: number } }
@@ -185,7 +195,7 @@
       readDone = p.read === true
       engaged = true
       clearTimeout(activityTimer)
-      activityTimer = setTimeout(() => ((activity = null), (reading = false), (activityDetail = null), (readDone = false)), readDone ? READ_DONE_MS : ACTIVITY_MS)
+      activityTimer = setTimeout(() => stopActivity(true), readDone ? READ_DONE_MS : ACTIVITY_MS)
       if (p.box) {
         ring = p.box
         clearTimeout(ringTimer)
@@ -221,6 +231,14 @@
   }
 
   $effect(() => registerAppRequestHandler(win.id, handle))
+  // The turn ended: the yellow bar goes at once (the timer is only the fallback). "The agent read this page." keeps its few seconds (UX-156).
+  let wasBusy = false
+  $effect(() => {
+    const busy = host.agentBusy
+    const ended = wasBusy && !busy
+    wasBusy = busy
+    if (ended) untrack(() => stopActivity(false))
+  })
   // The bar after the agent's last step only stays for a user who has taken control.
   $effect(() => {
     if (!userInControl && activity === null) engaged = false

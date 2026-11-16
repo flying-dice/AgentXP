@@ -25,6 +25,15 @@ describe('browserStep', () => {
     expect(browserStep('browser_press', '{"key":"Enter"}')).toBe('Pressed Enter')
     expect(browserStep('fs.read_text_file', '{}')).toBeNull()
   })
+  it('names the target of a click or of typing from the tool result (UX-157)', () => {
+    expect(browserStep('browser_click', '{"ref":12}', "Clicked the button 'Send' [12]. Now at http://x/ (\"X\").")).toBe("Clicked the button 'Send'")
+    expect(browserStep('browser_click', '{"ref":12}', "Double-clicked the link 'More' [12]. Now at http://x/ (\"X\").")).toBe("Clicked the link 'More'")
+    expect(browserStep('browser_type', '{"ref":7,"text":"secret"}', "Typed into 'Message #general' [7]. Now at http://x/ (\"X\").")).toBe("Typed in 'Message #general'")
+    // no name, an old result or a failed call: the general words
+    expect(browserStep('browser_click', '{"ref":12}', 'Clicked an item on the page [12]. Now at x.')).toBe('Clicked on the page')
+    expect(browserStep('browser_click', '{"ref":12}', 'Clicked [12]. Now at x.')).toBe('Clicked on the page')
+    expect(browserStep('browser_type', '{"ref":7}', null)).toBe('Typed on the page')
+  })
 })
 
 describe('coalesceSteps', () => {

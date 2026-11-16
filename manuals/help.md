@@ -25,7 +25,7 @@ Use Help and Support to learn an app. Each app has a manual. A manual lists ever
 
 ## 2 - Open It
 
-- Press F1. Help opens on the manual of the window that has focus, at its section **Common Tasks**, which answers "how do I...". The section heading is near the top of the window, and the Table of Contents at the top of the manual lists the sections of that chapter only. If no window has focus, it opens **[Keyboard](keyboard.md)**. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
+- Press F1. Help opens on the manual of the window that has focus, at the top of the manual, so the title is the first line. The Help window always opens whole on the desktop, also on a small screen. Opening Help closes the welcome balloon. If no window has focus, it opens **[Keyboard](keyboard.md)**. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
 - Click **Start -> Help and Support**.
 - Click the **Help** menu of an app that has a menu, for example Notepad, Chat, Code, WordPad, or Agent Paint.
 
@@ -104,7 +104,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 | Name | What it does | data-testid |
 |---|---|---|
-| F1 | Opens the manual of the focused window at its Common Tasks section. | none |
+| F1 | Opens the manual of the focused window, at its top. | none |
 
 ## 5 - Common Tasks
 

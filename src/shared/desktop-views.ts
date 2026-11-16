@@ -16,7 +16,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   terminal: { x: 160, y: 300, width: 640, height: 300 },
   browser: { x: 100, y: 50, width: 860, height: 600 },
   'control-centre': { x: 180, y: 90, width: 760, height: 540 },
-  'agent-manager': { x: 220, y: 110, width: 640, height: 440 },
+  'agent-manager': { x: 220, y: 110, width: 820, height: 440 },
   paint: { x: 140, y: 70, width: 860, height: 640 },
   wordpad: { x: 170, y: 80, width: 700, height: 520 },
   'sticky-notes': { x: 600, y: 60, width: 360, height: 420 },

@@ -84,7 +84,7 @@
 
   const desktopIcons = $derived<DesktopIconDef[]>([
     { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the project folders (plugged in)' },
-    { id: 'chats', label: 'Chats', icon: 'session', title: 'Chats: talk to the agent' },
+    { id: 'chats', label: 'Chats', icon: 'session', title: 'Chats: see your chats and open one' },
     { id: 'code', label: 'Code', icon: 'file-code', title: 'Code: read the files of a project' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
     { id: 'browser', label: 'Browser', icon: 'globe', title: 'Browser: browse the web together with the agent' },
@@ -134,8 +134,8 @@
         case 'computer':
           return desktop.openApp({ app: 'explorer', path: '' })
         case 'chats': {
-          const latest = desktop.chats[0]
-          return latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChatFlow()
+          // With chats, the Chats icon shows the list of them (Task Manager), also when chat windows are open (UX-146).
+          return desktop.chats.length > 0 ? desktop.openApp({ app: 'agent-manager' }) : desktop.newChatFlow()
         }
         case 'recycle':
           return desktop.openApp({ app: 'recycle-bin' })
@@ -156,6 +156,11 @@
     else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
   }
+
+  const balloonAction = $derived.by(() => {
+    const action = desktop.balloon?.action
+    return action ? { label: action.label, onclick: () => { action.run(); desktop.dismissBalloon() } } : undefined
+  })
 
   const approvals = $derived(desktop.inbox.pending)
   const reviewing = $derived(desktop.reviewing && approvals.some((a) => a.key === desktop.reviewing?.key) ? desktop.reviewing : null)
@@ -366,7 +371,7 @@
     {/if}
     {#if desktop.balloon}
       <div class="balloon">
-        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} onclose={() => desktop.dismissBalloon()} />
+        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} action={balloonAction} onclose={() => desktop.dismissBalloon()} />
       </div>
     {/if}
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />

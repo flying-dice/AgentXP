@@ -2,17 +2,18 @@
   import ReasonNote from '../../kit/atoms/ReasonNote.svelte'
   import { firstReason, reasonFor } from '../../kit/atoms/reason'
   /** Control Center > Agents: the agents tab of the old Options dialog as a page. */
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   import type { AgentInput } from '@shared/ipc'
   import type { AgentDto } from '@shared/models'
   import AgentEditDialog from '../../app/options/AgentEditDialog.svelte'
-  import { describeAgent, formFromAgent } from '../../app/options/agentForm'
+  import { formFromAgent } from '../../app/options/agentForm'
   import Button from '../../kit/atoms/Button.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { AgentsStore } from '../../stores/AgentsStore.svelte'
   import type { DesktopHost } from '../types'
+  import { aboutOf, agentToSelect, commandOf } from './agentRows'
 
   interface Props {
     host: DesktopHost
@@ -26,14 +27,14 @@
   let editing = $state<{ agent: AgentDto | null } | null>(null)
 
   const columns: ListColumn[] = [
-    { key: 'name', header: 'Name', width: 120 },
-    { key: 'about', header: 'About', width: 220 },
+    { key: 'name', header: 'Name', width: 170 },
+    { key: 'about', header: 'About', width: 200 },
     { key: 'command', header: 'Command' },
     { key: 'mode', header: 'Start mode', width: 120 },
     { key: 'isDefault', header: 'Default', width: 56 }
   ]
   const rows = $derived<ListRow[]>(
-    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: describeAgent(a), command: [a.command, ...a.args].join(' '), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
+    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: aboutOf(a), command: commandOf(a), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
   )
   const selectedAgent = $derived(agents.items.find((a) => String(a.id) === selected[0]) ?? null)
 
@@ -45,7 +46,18 @@
     }
   }
 
-  onMount(() => void guard(() => agents.load()))
+  /** Opened from a chat whose agent failed ("Open Agents"): that agent is selected and scrolled into view (UX-149). */
+  async function selectBroken(): Promise<void> {
+    if (selected.length > 0) return
+    const sessions = await host.api.sessions.list(host.state.desktopId).catch(() => [])
+    const id = agentToSelect(sessions, agents.items)
+    if (id === null || selected.length > 0) return
+    selected = [String(id)]
+    await tick()
+    document.querySelector('[data-testid="agents-row"][aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
+  }
+
+  onMount(() => void guard(() => agents.load()).then(selectBroken))
 
   async function submit(input: AgentInput, makeDefault: boolean): Promise<void> {
     const target = editing?.agent

@@ -92,7 +92,8 @@ describe('launcherModel', () => {
   })
 
   it('tells deleted desktops keep the projects on disk', () => {
-    expect(DELETE_WARNING).toContain('removed from this desktop; the folders and files stay on your disk')
+    expect(DELETE_WARNING).toContain('Your project folders stay where they are')
+    expect(DELETE_WARNING).not.toContain('C:')
     expect(DELETE_WARNING).not.toContain('ejected')
   })
 

@@ -6,7 +6,7 @@ import { paginate } from './paging'
 import type { ActionResult, AppRequests, BrowserDriver, BrowserGuard, DesktopOps, PageBox, PageInfo, PageContent } from './ports'
 import { attempt, imageResult, textResult, type ToolContext, type ToolResult } from './types'
 import { pickWindow } from './windows'
-import { clickLabel, findLabel, READ_LABEL, SCREENSHOT_LABEL, selectLabel, tabsLabel, typeLabel, WAIT_LABEL, waitDetail, type ElementName } from './browserLabels'
+import { clickLabel, clickTarget, findLabel, READ_LABEL, SCREENSHOT_LABEL, selectLabel, tabsLabel, typeLabel, typeTarget, WAIT_LABEL, waitDetail, type ElementName } from './browserLabels'
 
 type FindArgs = { text?: string; role?: string; name?: string; limit?: number; window?: number }
 
@@ -135,18 +135,19 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
     <A extends { window?: number; ref?: number }>(
       label: (args: A, element: ElementName | undefined) => string,
       run: (id: Id, args: A, guard: BrowserGuard) => Promise<ActionResult>,
-      done: (result: ActionResult, args: A) => string
+      done: (result: ActionResult, args: A, element: ElementName | undefined) => string
     ) =>
     (args: A, { desktopId }: ToolContext) =>
       attempt(async () => {
         const id = windowId(desktopId, args.window)
         const guard = guardFor(desktopId)
         guard()
-        const words = label(args, await elementOf(id, args.ref))
+        const element = await elementOf(id, args.ref)
+        const words = label(args, element)
         const result = await whileAnnounced(desktopId, id, words, () => run(id, args, guard))
         showPage(desktopId, id, result, false)
         announce(desktopId, id, words, result.box)
-        return textResult(done(result, args))
+        return textResult(done(result, args, element))
       })
 
   const where = (r: PageInfo): string => `Now at ${r.url} ("${r.title}").`
@@ -204,13 +205,13 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
     browser_click: act(
       ({ double }, element) => clickLabel(element, double),
       (id, { ref, button, double }, guard) => driver.click(id, ref, { button: button ?? 'left', double: double ?? false }, guard),
-      (r, { ref, double }) => say(r, `${double ? 'Double-clicked' : 'Clicked'} [${ref}].`)
+      (r, { ref, double }, element) => say(r, `${double ? 'Double-clicked' : 'Clicked'} ${clickTarget(element)} [${ref}].`)
     ),
 
     browser_type: act(
       (_args, element) => typeLabel(element),
       (id, { ref, text, submit }, guard) => driver.type(id, ref, text, submit ?? false, guard),
-      (r, { ref, submit }) => say(r, `Typed into ${ref === undefined ? 'the focused element' : `[${ref}]`}${submit ? ' and pressed Enter' : ''}.`)
+      (r, { ref, submit }, element) => say(r, `Typed into ${ref === undefined ? 'the focused element' : `${typeTarget(element) ? `${typeTarget(element)} ` : ''}[${ref}]`}${submit ? ' and pressed Enter' : ''}.`)
     ),
 
     browser_press: act(

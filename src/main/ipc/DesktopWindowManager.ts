@@ -21,6 +21,9 @@ export interface WindowCallbacks {
 /** How long closing a desktop window waits for its thumbnail. */
 const THUMBNAIL_WAIT_MS = 1500
 
+/** How long a minimize may take before the desktop window is raised over the launcher instead. */
+const LAUNCHER_MINIMIZE_WAIT_MS = 400
+
 /**
  * The OS windows: one per connected desktop plus the launcher. Closing a desktop window only disconnects it
  * (the services keep its agents running). Knows which window shows which desktop so events and calls reach the right one.
@@ -64,9 +67,19 @@ export class DesktopWindowManager implements DesktopWindowHost {
     this.factory.loadLauncher(window)
   }
 
-  /** The launcher steps back once a desktop is open, so the desktop is the window in front. */
+  /**
+   * The launcher steps back once a desktop is open, so the desktop is the window in front (UX-119, UX-147). A system that
+   * does not minimize it (no window manager) gets the desktop window raised over it instead.
+   */
   minimizeLauncher(): void {
-    if (this.launcher && !this.launcher.isDestroyed()) this.launcher.minimize()
+    const launcher = this.launcher
+    if (!launcher || launcher.isDestroyed()) return
+    launcher.minimize()
+    setTimeout(() => {
+      if (launcher.isDestroyed() || launcher.isMinimized()) return
+      const newest = [...this.windows.values()].filter((w) => !w.isDestroyed()).at(-1)
+      if (newest) this.reveal(newest)
+    }, LAUNCHER_MINIMIZE_WAIT_MS)
   }
 
   hasWindows(): boolean {
