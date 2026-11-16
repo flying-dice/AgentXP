@@ -15,6 +15,7 @@
   import StopNotice from './StopNotice.svelte'
   import ReasoningBlock from './ReasoningBlock.svelte'
   import ToolCallItem from './ToolCallItem.svelte'
+  import VirtualList from '../../kit/organisms/VirtualList.svelte'
   import UserMessage from './UserMessage.svelte'
   import ActivityGroup from './ActivityGroup.svelte'
   import { transcriptDetail } from './transcriptDetail.svelte'
@@ -121,9 +122,14 @@
   /** Content grew while the user had scrolled up: the pill above the message box offers the way to the end. */
   let unseen = $state(false)
 
+  let lastTop = 0
   const onScroll = (): void => {
     if (!scroller) return
-    pinned = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24
+    // Content that grew under a position we set ourselves is not the user leaving the end: only scrolling up unpins.
+    const up = scroller.scrollTop < lastTop - 1
+    lastTop = scroller.scrollTop
+    if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24) pinned = true
+    else if (up) pinned = false
     if (pinned) unseen = false
   }
 
@@ -176,7 +182,11 @@
   })
 
   /** An inline form that appears is scrolled fully into view, also for a user who had scrolled up. */
-  function reveal(node: HTMLElement): void {
+  // Once per form: a row that scrolls out of the window and back is mounted again and must not pull the view to it.
+  const revealed = new Set<string>()
+  function reveal(node: HTMLElement, id: string): void {
+    if (revealed.has(id)) return
+    revealed.add(id)
     void Promise.resolve().then(() => {
       node.scrollIntoView({ block: 'nearest' })
       unseen = false
@@ -212,38 +222,50 @@
         ondelete={() => surfaceControls.remove(surface)}
         onmove={(target) => surfaceControls.move(surface, target)}
       />
-      {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} reply={latestReply} /></div>{/if}
+      {#if surface.target === 'inline'}<div use:reveal={row.surfaceId}><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} reply={latestReply} /></div>{/if}
     {/if}
   {/if}
 {/snippet}
 
 <div class="wrap">
-<div class="transcript w7-scroll" data-testid="chat-transcript" data-running={running} bind:this={scroller} onscroll={onScroll} role="log" aria-label="Conversation" aria-live="polite">
-  <div class="rows">
-    {#each items as item (item.kind === 'row' ? item.row.id : item.id)}
-      {#if item.kind === 'activity'}
-        <div class="row">
-          <ActivityGroup
-            summary={summaryOf(item.id, item.rows)}
-            detail={detailOf(item.id, item.rows)}
-            live={running && item.id === lastId}
-            bind:open={() => isOpen(item.id, item.rows), (value) => (overrides[item.id] = value)}
-          >
-            {#each item.rows as row (row.id)}
-              {@render rowView(row)}
-            {/each}
-          </ActivityGroup>
-        </div>
-      {:else}
-        <div class="row">
-          {@render rowView(item.row)}
-        </div>
-      {/if}
+<VirtualList
+  class="transcript w7-scroll"
+  data-testid="chat-transcript"
+  data-running={running}
+  bind:scroller
+  onscroll={onScroll}
+  role="log"
+  aria-label="Conversation"
+  aria-live="polite"
+  {items}
+  itemKey={(item) => (item.kind === 'row' ? item.row.id : item.id)}
+>
+  {#snippet row(item)}
+    {#if item.kind === 'activity'}
+      <div class="row">
+        <ActivityGroup
+          summary={summaryOf(item.id, item.rows)}
+          detail={detailOf(item.id, item.rows)}
+          live={running && item.id === lastId}
+          bind:open={() => isOpen(item.id, item.rows), (value) => (overrides[item.id] = value)}
+        >
+          {#each item.rows as r (r.id)}
+            {@render rowView(r)}
+          {/each}
+        </ActivityGroup>
+      </div>
     {:else}
       <div class="row">
-        <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
+        {@render rowView(item.row)}
       </div>
-    {/each}
+    {/if}
+  {/snippet}
+  {#snippet empty()}
+    <div class="row">
+      <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
+    </div>
+  {/snippet}
+  {#snippet tail()}
     {#if stopped && !running && !problem}
       <div class="row"><StopNotice reason="cancelled" /></div>
     {/if}
@@ -266,8 +288,8 @@
         <ProgressBar style="Marquee" width={160} label="{agentName} is working" />
       </div>
     {/if}
-  </div>
-</div>
+  {/snippet}
+</VirtualList>
   {#if unseen}
     <button type="button" class="more" data-testid="chat-new-messages" onclick={toEnd}>Newer messages below. Click to see them.</button>
   {/if}
@@ -304,19 +326,13 @@
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
   }
-  .transcript {
+  .wrap :global(.transcript) {
     flex: 1;
     min-height: 0;
     background: var(--w7-window);
     border: 1px solid var(--w7-panel-border);
     user-select: text;
     cursor: text;
-  }
-  .rows {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
   }
   .row {
     padding: 7px 10px 8px;

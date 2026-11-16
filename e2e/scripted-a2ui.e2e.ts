@@ -160,7 +160,8 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await ctx.desktopPage.getByTestId('chat-surface-move-inline').click()
       await see.count(chat().sidebarTabs, 1)
       await see.attribute(chat().surfaceRows.last(), 'data-target', 'inline')
-      await see.count(chat().transcript.getByTestId('a2ui-surface'), 2)
+      // The transcript is windowed: the first form, far above, is not in the DOM; the one that just moved in is.
+      await see.visible(chat().transcript.getByTestId('a2ui-surface').last())
 
       await chat().surfaceRows.last().getByTestId('chat-surface-move').click()
       await ctx.desktopPage.getByTestId('chat-surface-move-window').click()
