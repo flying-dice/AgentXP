@@ -19,7 +19,7 @@
   interface Props {
     window: AppWindowState
     desktop: DesktopController
-    /** Width of the window's client area (the pane never takes more than 60 % of it, nor so much that the app has under 420 px). */
+    /** Width of the window's client area (the pane never takes more than 60 % of it, nor so much that the app has under 380 px). */
     available: number
   }
 

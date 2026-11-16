@@ -96,9 +96,10 @@ describe('paneMaxWidth (UX-198)', () => {
   it('is 60 percent of a wide window', () => {
     expect(paneMaxWidth(2000)).toBe(1200)
   })
-  it('leaves the app 420 px in a mid-size window', () => {
-    expect(paneMaxWidth(900)).toBe(480)
-    expect(paneMaxWidth(760)).toBe(340)
+  it('leaves the app 380 px in a mid-size window, and an 800 px window its 420 px pane (UX-126)', () => {
+    expect(paneMaxWidth(900)).toBe(520)
+    expect(paneMaxWidth(800)).toBe(420)
+    expect(paneMaxWidth(760)).toBe(380)
   })
   it('never goes under the narrowest pane', () => {
     expect(paneMaxWidth(500)).toBe(PANE_MIN_WIDTH)
