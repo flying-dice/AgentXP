@@ -8,7 +8,7 @@
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
-  import { REVERTED_LABEL, changeKindLabel, changesSummary, linesLabel, splitChangePath } from '../changes/changeFormat'
+  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, linesLabel, splitChangePath, splitFileName } from '../changes/changeFormat'
 
   interface Props {
     changes: FileChangeDto[]
@@ -23,22 +23,22 @@
 
   let { changes, selectedId = $bindable(null), onrevert, onopeneditor, onopenrecyclebin }: Props = $props()
 
-  // Wide by default: the file column takes what the others leave, the others are wide enough for their words.
+  // The file column takes what the others leave and shrinks first, so the counts column is always on screen (UX-79).
   const columns: ListColumn[] = [
     { key: 'file', header: 'File' },
-    { key: 'kind', header: 'Change', width: 120 },
-    { key: 'lines', header: '+ added / - removed', width: 132, align: 'right' }
+    { key: 'kind', header: 'Change', width: 84 },
+    { key: 'lines', header: 'Lines', width: 84, align: 'right' }
   ]
 
-  /** Reverted changes stay in the list, grey, so nobody wonders where the file went. */
+  /** Reverted changes stay in the list, grey, so nobody wonders where the file went. A change that vanishes from the list was reverted, here or anywhere else (UX-79). */
   let reverted = $state.raw<FileChangeDto[]>([])
-  let pending = $state.raw<FileChangeDto[]>([])
+  let known: FileChangeDto[] = []
 
   $effect(() => {
-    const gone = pending.filter((p) => !changes.some((c) => c.id === p.id))
-    if (gone.length === 0) return
-    pending = pending.filter((p) => !gone.includes(p))
-    reverted = [...reverted, ...gone]
+    const now = changes
+    const gone = known.filter((k) => !now.some((c) => c.id === k.id) && !reverted.some((r) => r.id === k.id))
+    known = now
+    if (gone.length > 0) reverted = [...reverted, ...gone]
   })
 
   const rows = $derived<ListRow[]>([
@@ -58,7 +58,7 @@
       testid: 'changes-reverted',
       icon: 'file-code' as const,
       file: c.path,
-      kind: REVERTED_LABEL,
+      kind: REVERTED_KIND,
       lines: -1,
       label: '',
       reverted: true
@@ -67,15 +67,7 @@
   const selected = $derived(changes.find((c) => c.id === selectedId) ?? null)
 
   async function revert(): Promise<void> {
-    const change = selected
-    if (!change) return
-    pending = [...pending, change]
-    try {
-      await onrevert?.(change)
-    } finally {
-      // Declined or failed: the change is still there, so it is not "reverted".
-      pending = pending.filter((p) => p.id !== change.id || !changes.some((c) => c.id === change.id))
-    }
+    if (selected) await onrevert?.(selected)
   }
 </script>
 
@@ -94,8 +86,10 @@
       {#snippet cell(row, col)}
         {#if col.key === 'file'}
           {@const parts = splitChangePath(String(row.file))}
-          <span class="file" class:reverted={row.reverted} title={String(row.file)} data-testid="changes-file">
-            <b class="name">{parts.name}</b>{#if parts.dir}<span class="dir">{parts.dir}</span>{/if}
+          {@const name = splitFileName(parts.name)}
+          <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : String(row.file)} data-testid="changes-file">
+            <b class="name"><span class="stem" style:max-width="calc(100% - {name.ext.length}ch)">{name.stem}</span><span class="ext">{name.ext}</span></b>
+            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text">{REVERTED_LABEL}</span>{:else if parts.dir}<span class="dir">{parts.dir}</span>{/if}
           </span>
         {:else if col.key === 'kind'}
           <span class="t" class:reverted={row.reverted}>{row.kind}</span>
@@ -108,7 +102,7 @@
   {#if reverted.length > 0 && onopenrecyclebin}
     <div class="note" data-testid="changes-reverted-note">
       {REVERTED_LABEL}.
-      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open the Recycle Bin</button>
+      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open Recycle Bin</button>
     </div>
   {/if}
   <div class="diff" data-testid="changes-diff">
@@ -161,10 +155,23 @@
     overflow: hidden;
     white-space: nowrap;
   }
+  /* The folder shrinks first; then the stem of the name is cut, never the extension. */
   .name {
-    flex: none;
+    flex: 0 1 auto;
+    display: block;
+    min-width: 40px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .stem {
+    display: inline-block;
+    vertical-align: bottom;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .dir {
+    flex: 0 100 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--w7-text-muted);
@@ -179,6 +186,7 @@
     color: var(--w7-text-muted);
   }
   .link {
+    min-height: 24px;
     padding: 0;
     border: 0;
     background: transparent;

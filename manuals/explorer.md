@@ -41,7 +41,7 @@ The row at the top has **Back**, **Up**, the address bar, and **Refresh**. The a
 
 ### The Command Bar
 
-The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
+The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. Press F1 for more. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
 
 ### The Navigation Pane
 

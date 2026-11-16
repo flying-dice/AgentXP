@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { baseLabel, chatLabel, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
+import { SEVERITY_HELP, addCommentTitle, baseLabel, filesStatusLabel, verdictLine, chatLabel, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -140,5 +140,29 @@ describe('opening file, change position and totals (UX-41, UX-42)', () => {
     expect(chatLabel({ id: 4, title: 'Fix the login...' })).toBe('Fix the login...')
     expect(chatLabel({ id: 4, title: 'New session' })).toBe('Chat 4')
     expect(chatLabel({ id: 5, title: '' })).toBe('Chat 5')
+  })
+})
+
+describe('numbers in digits (UX-77)', () => {
+  it('writes the verdict line with digits and names the blockers', () => {
+    const c = (severity: 'blocker' | 'minor', parentId: number | null = null) => ({ parentId, severity })
+    expect(verdictLine('request_changes', [c('blocker'), c('minor'), c('minor', 1)])).toBe('Changes requested. 2 comments, 1 is a blocker.')
+    expect(verdictLine('request_changes', [c('blocker'), c('blocker')])).toBe('Changes requested. 2 comments, 2 are blockers.')
+    expect(verdictLine('comment', [c('minor')])).toBe('Commented. 1 comment.')
+    expect(verdictLine('approve', [])).toBe('Approved.')
+  })
+  it('says how many files changed and how many are shown', () => {
+    expect(filesStatusLabel(2, 1)).toBe('2 files changed, 1 shown')
+    expect(filesStatusLabel(2, 0)).toBe('2 files changed')
+    expect(filesStatusLabel(1, 1)).toBe('1 file changed, 1 shown')
+    expect(filesStatusLabel(0, 0)).toBe('0 files changed')
+  })
+})
+
+describe('adding a comment (UX-76)', () => {
+  it('explains the default severity and the "+" of the gutter', () => {
+    expect(SEVERITY_HELP).toContain('Minor is the usual choice')
+    expect(addCommentTitle(2)).toBe('Add a comment on line 2')
+    expect(addCommentTitle(undefined)).toContain('no line')
   })
 })

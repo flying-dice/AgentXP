@@ -27,6 +27,7 @@ When you revert a change of the agent, Agent7 does not lose the text. It puts th
 
 - Double-click **Recycle Bin** on the desktop. The icon looks full when it holds items.
 - Click **Start -> Recycle Bin**.
+- Click **Open Recycle Bin** under the list of changes in **[Chat](chat.md)** or **[Code](code.md)**, after you reverted a change.
 
 ## 3 - The Window
 

@@ -25,7 +25,7 @@ Use Help and Support to learn an app. Each app has a manual. A manual lists ever
 
 ## 2 - Open It
 
-- Press F1. Help opens on the topic of the window that has focus. If no window has focus, it opens **[The Desktop](desktop.md)**.
+- Press F1. Help opens on the topic of the window that has focus. If no window has focus, it opens **[Keyboard](keyboard.md)**. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
 - Click **Start -> Help and Support**.
 - Click the **Help** menu of an app that has a menu, for example Notepad, Chat, Code, WordPad, or Agent Paint.
 
@@ -37,11 +37,11 @@ The toolbar is at the top. It has **Back**, **Forward**, **Home**, and the **Sea
 
 ### The Topic List
 
-The list is at the left. It shows each topic. When you type in **Search Help**, the title changes to **Search results** and the list keeps only the topics that contain all your words.
+The list is at the left. It shows each topic. When you type in **Search Help**, the title changes to **Search results** and the list keeps only the topics that contain all your words. The topic of the window you came from is first. Each result shows the section and a line of text. Click a result, or select it and press Enter, to scroll to that section. The matched line is highlighted for 2 seconds.
 
 ### The Article
 
-The article is at the right. A link to another manual opens that manual in the same window. Other links show their address as text.
+The article is at the right. A link to another manual opens that manual in the same window. A link to a section opens the manual at that section. Page Down and Page Up scroll the article, also while the search box has the focus. Esc clears the search; when the search is empty, Esc closes the window. Other links show their address as text.
 
 ### The Status Bar
 

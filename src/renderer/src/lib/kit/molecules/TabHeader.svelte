@@ -45,7 +45,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    height: 22px;
+    height: 24px;
     margin: 1px -1px 0 0;
     padding: 0 12px;
     border: 1px solid var(--w7-panel-border);
@@ -61,7 +61,7 @@
     border-color: #7eb4ea;
   }
   .tab.selected {
-    height: 25px;
+    height: 27px;
     margin-top: -2px;
     margin-bottom: -1px;
     border-top: 2px solid var(--w7-tab-accent);

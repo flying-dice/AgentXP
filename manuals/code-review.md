@@ -40,7 +40,7 @@ Each of these first opens the **Code Review** box. It asks what to review:
 2. In **Compare against**, choose what to compare with: **Uncommitted changes (HEAD)**, the last commit, or type a branch, tag or commit.
 3. Click **Review**.
 
-The window opens without starting anything. The reviewer only works when you click **Ask the reviewer**, and it can read your files but never change them.
+The window opens without starting anything. The reviewer only works when you click **Start a new review**, and it can read your files but never change them.
 
 ## 3 - The Window
 
@@ -62,13 +62,13 @@ The outline lists each changed file with its status, the number of added and rem
 
 ### The Expanded View
 
-The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. Click a line number to write a comment on that line. Comments of the reviewer and your answers appear under the line.
+The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. To write a comment on a line, point to the line and click the blue **+** at its left, or click the line number, or double-click the line, or right-click the line and choose **Add comment on this line**. Ctrl+Alt+M does the same for the selected line. Comments of the reviewer and your answers appear under the line.
 
 Press F7 to go to the next change. Press Shift+F7 to go to the previous change. At the last change of a file, F7 goes on to the next file. The **Side by side** button shows the old and new text in two columns.
 
 ### The Comments Pane
 
-The **Comments** button shows or hides a list of all comments on the right. Each row names the file and line. Use **Open only** to hide resolved and sent comments. Click **Send all open comments** to pass them to a chat.
+The **Comments** button shows or hides a list of all comments on the right. Each row names the file and line. Use **Open only** to hide resolved and sent comments. Click **Send comments to chat** to pass them to a chat. The same button is in the toolbar, next to **Comments**.
 
 ### The Review Chat
 
@@ -76,7 +76,7 @@ The right edge of the window holds the chat with the reviewer. You can ask a que
 
 ### The Status Bar
 
-The status bar shows the folder, the number of files, the number of open comments, and what the reviewer does.
+The status bar shows the folder, how many files changed (for example "2 files changed, 1 shown"), the number of open comments, and what the reviewer does. Every number in the window is written in digits.
 
 ## 4 - Controls Reference
 
@@ -89,7 +89,7 @@ The status bar shows the folder, the number of files, the number of open comment
 | Cancel | Closes the box without a review. | `new-review-cancel` |
 | Show thinking and tool details (menu) | Opens every Thinking line of the Reviewer pane. The same setting as in Chat. | `review-menu-details` |
 | Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
-| Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
+| Send comments to chat... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |
 | Close (menu) | Closes the window and ends the review. Alt+F4. | `code-review-menu-close` |
 | Outline (menu) | Shows the list of files. | `review-menu-outline` |
@@ -125,11 +125,14 @@ The status bar shows the folder, the number of files, the number of open comment
 | Margin bar | The bar at the left edge. Click it to jump to a place. | `review-margin` |
 | Margin block | One red or yellow block. The attribute `data-kind` tells which. | `review-margin-block` |
 | Line | One line of the file. | `review-row` |
+| Add comment (+) | The blue **+** that shows when you point to a line. It starts a comment on that line. The tooltip says which line. | `review-gutter-plus` |
+| Add comment on this line (right-click) | Starts a comment on the line you right-clicked. Ctrl+Alt+M does the same for the selected line. | `review-ctx-add-comment` |
 | Line number | Starts a comment on the line. The unified view has one column: the new line number, or the old one on a removed line. | `review-gutter-add` |
 | Lost comments | Lists comments whose line is not in the file any more. | `review-orphans` |
 | New comment | The form to write a comment. | `review-compose` |
 | Comment text | The input for the comment. | `review-compose-input` |
-| Severity (new) | Selects blocker, major, minor, or nit. | `review-compose-severity` |
+| Severity (new) | Selects Blocker, Major, Minor, or Nit. Minor is selected at first. | `review-compose-severity` |
+| Severity help | Says what the selected severity is for: Minor is the usual choice for a suggestion. | `review-compose-severity-help` |
 | Comment (button) | Saves the comment. | `review-compose-submit` |
 | Cancel (comment) | Closes the form. | `review-compose-cancel` |
 | Thread | One comment with its answers. The attributes `data-state` and `data-severity` give its state. | `review-thread` |
@@ -147,27 +150,29 @@ The status bar shows the folder, the number of files, the number of open comment
 | Open only | Hides resolved and sent comments. | `review-filter-open` |
 | Comment row | One comment of the list. Click it to go to its line. | `review-comment-row` |
 | No comments | Shows when the list is empty. | `review-comments-empty` |
-| Send all open comments | Opens the **Send to chat** dialog box. | `review-send-all` |
+| Send comments to chat | Opens the **Send to chat** dialog box. | `review-send-all` |
+| Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. | `review-send-comments` |
+| Verdict text | The verdict and the numbers of comments and blockers, for example "Changes requested. 2 comments, 1 is a blocker." | `review-verdict-line` |
 | Send to chat dialog | Asks which chat gets the comments. | `review-send-dialog` |
 | Chat (option) | An existing chat. The attribute `data-session-id` gives it. | `review-send-chat` |
 | New chat (option) | Starts a new chat. | `review-send-new-chat` |
 | Send | Sends the comments. | `review-send-confirm` |
 | Cancel (send) | Closes the dialog box. | `review-send-cancel` |
 | Status: folder | The folder of the review. | `review-status-root` |
-| Status: files | The number of changed files. | `review-status-files` |
+| Status: files | How many files changed, and how many are shown. | `review-status-files` |
 | Status: comments | The number of open comments. | `review-status-comments` |
 | Status: reviewer | What the reviewer does. | `review-status-agent` |
 | All changes | Shows every changed file on one page. | `review-all` |
 | All changes: file | A file in the one-page view. | `review-all-file` |
 | All changes: file heading | The name of a file in the one-page view. | `review-all-head` |
-| Ask the reviewer | Asks the reviewer for a review of the changes. Nothing starts until you click it. | `review-ask-agent` |
+| Start a new review | Asks the reviewer for a review of the changes. Nothing starts until you click it. | `review-ask-agent` |
 | Comments banner | Says how many comments are open. | `review-banner-comments` |
 | Compared with | Says what the changes are compared with. | `review-base-hint` |
 | Diff columns | The old and new text side by side. | `review-columns` |
 | Comment sent | Marks a comment that was sent. | `review-comment-sent` |
 | Comments list | The comments of the review. | `review-comments-wrap` |
 | View: all changes | Shows every changed file on one page. | `review-menu-all` |
-| Review: ask the reviewer | Asks the reviewer for a review. | `review-menu-ask-agent` |
+| Review: start a new review (menu) | Asks the reviewer for a review. | `review-menu-ask-agent` |
 | Next file | Goes to the next changed file. | `review-next-file` |
 | Reviewer | The area of the reviewer. | `review-reviewer-wrap` |
 | Status: change | Which change you are on, such as Change 3 of 7. | `review-status-change` |
@@ -185,14 +190,14 @@ To review the changes of a project, follow the steps below:
 
 To comment on a line yourself, follow the steps below:
 
-1. Click the line number in the expanded view. A form appears.
-2. Type your comment and select a severity.
+1. Point to the line in the expanded view and click the blue **+**. A form appears.
+2. Type your comment. Under **Severity**, keep Minor for a suggestion. Choose Blocker only when the change must not be accepted as it is.
 3. Click **Comment**.
 
 To send the comments to a chat that fixes the code, follow the steps below:
 
-1. Click **Comments**. The pane opens.
-2. Click **Send all open comments**. The **Send to chat** dialog box appears.
+1. Click **Send comments to chat** in the toolbar. The **Send to chat** dialog box appears.
+2. Check the number of comments that the dialog box names.
 3. Select a chat, or select **New chat**.
 4. Click **Send**. The chat gets the comments. The comments change to **sent**.
 

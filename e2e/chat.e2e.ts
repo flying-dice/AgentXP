@@ -112,9 +112,25 @@ describe('chat turn with the fake agent', () => {
     await see.visible(viewer.getByTestId('event-viewer-count'))
   })
 
+  it('a revert shows "Reverted" in the chat and in Code, and the change stays out of the list of changes (UX-79)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.showChanges()
+    await chat.changes.first().click()
+    await chat.frame.getByTestId('changes-revert').click()
+    await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
+    await see.visible(chat.frame.getByTestId('changes-reverted'))
+    await see.text(chat.frame.getByTestId('changes-reverted-text'), 'Reverted. Restore from the Recycle Bin')
+    await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
+    // The Code window shows the same list: its own Changes pane updates without any action there.
+    const code = ctx.desktop.code()
+    await code.showChanges()
+    await see.visible(code.frame.getByTestId('changes-reverted'))
+  })
+
   it('typing in the Terminal says it is read-only and what to do instead', async () => {
     await ctx.desktop.closeWindow('chat') // it is tiled over part of the other windows
     await ctx.desktop.closeWindow('event-viewer')
+    await ctx.desktop.closeWindow('code')
     await ctx.desktop.taskbarItem('terminal').click()
     const terminal = ctx.desktop.terminal()
     await terminal.output.click()

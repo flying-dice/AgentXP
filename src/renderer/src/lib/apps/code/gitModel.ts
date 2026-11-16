@@ -75,12 +75,28 @@ export const GIT_STATE_WORD: Record<GitFileState, string> = {
 /** "Git (3)": the tab of the Git list. */
 export const gitTabTitle = (count: number): string => (count > 0 ? `Git (${count})` : 'Git')
 
-/** The tooltip of the Git tab: "3 files changed since the last commit". */
+/** The tooltip of the Git tab: "Git: 3 files with changes that are not saved in version control" (UX-78). */
 export const gitTabTooltip = (count: number): string =>
-  count === 0 ? 'No file changed since the last commit' : `${count} ${count === 1 ? 'file' : 'files'} changed since the last commit`
+  count === 0
+    ? 'Git: no file has changes that are not saved in version control'
+    : `Git: ${count} ${count === 1 ? 'file' : 'files'} with changes that are not saved in version control`
 
-/** What the Git list says for a folder that git does not track, and what to do. */
-export const NOT_A_GIT_REPOSITORY = "Not a Git repository. This folder is not tracked, so there are no change marks. Run 'git init' to start tracking."
+/** What the Git list says for a folder that git does not track, and what to do (UX-82). */
+export const NOT_A_GIT_REPOSITORY =
+  'This folder is not tracked with Git, so there are no change marks. Git is a way to keep the history of a project. You can turn it on here; this adds a hidden folder named .git and does not change your files.'
+
+/** The question before Git is turned on (UX-82). */
+export const TURN_ON_GIT_TEXT = `Turn on Git for this project?\n\nThis adds a hidden folder named .git. Your files do not change. You can delete the .git folder later to turn Git off.`
+
+/** The "+ lines / - lines" cell of a Git row; empty when the counts are not known (yet). */
+export const gitLinesLabel = (counts: { additions: number; deletions: number } | undefined): string => (counts ? `+${counts.additions} / -${counts.deletions}` : '')
+
+/** The line counts per path (below `root`, with `/`) of a review change list, to look rows up by `relativeToRoot`. */
+export const countsByPath = (changes: readonly { path: string; additions: number; deletions: number }[]): Map<string, { additions: number; deletions: number }> =>
+  new Map(changes.map((c) => [c.path, { additions: c.additions, deletions: c.deletions }]))
+
+/** What a double click or Enter on a Git row opens: the path of that very row (never the first row); null when the row is gone. */
+export const rowReviewPath = (rows: readonly { id: string }[], rowId: string): string | null => rows.find((r) => r.id === rowId)?.id ?? null
 
 /** `src/auth/redirect.ts` for the file `E:\src\auth\redirect.ts` of the root `E:\`; null when the file is not below the root. */
 export function relativeToRoot(root: VPath, path: VPath): string | null {

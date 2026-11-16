@@ -163,6 +163,9 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Diff | Shows the diff of the selected file. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the selected file in Code. | `changes-open-editor` |
+| Reverted row | A change that was reverted stays in the list, in grey, with the words "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
+| Reverted text | The words on a reverted row. | `changes-reverted-text` |
+| Open Recycle Bin | The link under the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
 | Task | One task of the plan. | `tasks-item` |
 | Sidebar | The pane for drawn forms. | `chat-sidebar` |
 | Sidebar tab | One drawn form. | `chat-sidebar-tab` |
@@ -222,10 +225,14 @@ To stop the agent, click **Stop**.
 
 To undo a change of the agent, follow the steps below:
 
-1. Click **Tasks and changes**. The pane opens on the **Changes** tab.
+1. Click **Changes**. In a chat window, click **Tasks and changes** first. The pane opens on the **Changes** tab.
 2. Select the file.
 3. Click **Revert**. A question appears.
-4. Click **Yes**. The file goes back to its old text. The change goes to the **[Recycle Bin](recycle-bin.md)**.
+4. Click **Yes**. The file goes back to its old text. The row says "Reverted. Restore from the Recycle Bin".
+
+To get a reverted change back, click **Open Recycle Bin** under the list, or open the **[Recycle Bin](recycle-bin.md)**, select the item, and click **Restore this item**.
+
+The list of changes updates at once when a change is reverted, also when it is reverted somewhere else. Each row shows the full file name, with the lines added and removed (for example "+4 / -1") at the right.
 
 To change the model, select another entry in **Model**.
 

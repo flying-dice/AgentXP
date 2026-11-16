@@ -32,6 +32,7 @@
   import type { SurfaceActivity } from '../../agui/activities'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import SurfaceSidebar from './SurfaceSidebar.svelte'
+  import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
 
   let { window: win, host, focused }: AppProps<'chat'> = $props()
 
@@ -49,6 +50,9 @@
   let selectedChangeId = $state<number | null>(null)
 
   const info = $derived(store?.state.session)
+
+  // A revert from anywhere (another window, the agent) updates the Changes list at once (UX-79).
+  $effect(() => refreshOnRevert(host.api, host.state.desktopId, () => (store ? [store] : [])))
 
   // The chats of this desktop: chats with the same title get " (2)", " (3)" in the title bar and on the taskbar.
   let chatList = $state.raw<SessionDto[]>([])

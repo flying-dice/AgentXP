@@ -69,7 +69,7 @@
   .mi {
     display: flex;
     align-items: center;
-    height: 23px;
+    height: 24px;
     padding: 0 0 0 0;
     border: 1px solid transparent;
     border-radius: 2px;
