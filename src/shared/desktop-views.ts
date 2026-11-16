@@ -181,6 +181,29 @@ export function placeNewWindow(
   return overlaps(base, titleStrip) ? placeWindow(app, openCount, p, area, size, minY) : base
 }
 
+/** Smallest share of a Browser that a chat opened from it may cover (UX-120): none beyond a sliver. */
+export const BROWSER_OVERLAP_LIMIT = 0.1
+
+/**
+ * A chat started from a Browser task opens beside the Browser, in the half of the work area the Browser does not use,
+ * so the user can watch the page while the agent works (UX-120). The Browser keeps its side and is narrowed to its own
+ * half when it is wider than that. `browser` is null when it already leaves enough room (it stays as it is).
+ */
+export function placeChatBesideBrowser(
+  browser: Bounds,
+  area: { width: number; height: number } = DESKTOP_AREA,
+  minY: number = WINDOW_MIN_Y
+): { chat: Bounds; browser: Bounds | null } {
+  const half = Math.floor((area.width - PLACEMENT_GAP) / 2)
+  const browserOnLeft = browser.x + browser.width / 2 <= area.width / 2
+  const chatX = browserOnLeft ? area.width - half : 0
+  const chat: Bounds = { x: chatX, y: Math.max(browser.y, minY), width: half, height: Math.min(DEFAULT_BOUNDS.chat.height, Math.max(1, area.height - Math.max(browser.y, minY))) }
+  const covered = Math.max(0, Math.min(browser.x + browser.width, chat.x + chat.width) - Math.max(browser.x, chat.x)) / browser.width
+  if (covered <= BROWSER_OVERLAP_LIMIT) return { chat, browser: null }
+  const narrowed: Bounds = browserOnLeft ? { ...browser, x: 0, width: half } : { ...browser, x: area.width - half, width: half }
+  return { chat, browser: narrowed }
+}
+
 export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
@@ -241,8 +264,8 @@ export function helpWindowTitle(topic: string): string {
 /** "Review - review-notes": the Code Review window is named after the project, like the chats of that project. */
 export const reviewWindowTitle = (projectName: string): string => `Review - ${projectName}`
 
-/** The title of the window of an agent's form: "<title> - from the agent". */
-export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
+/** The title of the window of an agent's form: the same name as its chat row (UX-135). */
+export const surfaceWindowTitle = (title: string): string => title
 
 /**
  * The title of a window. `projectName` is the name of the project a Code Review window shows (the label of its drive,

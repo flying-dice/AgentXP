@@ -126,7 +126,7 @@ export function projectSuggestion(name: string, project: string | undefined, exi
 
 /** The warning shown before a desktop is deleted. */
 export const DELETE_WARNING =
-  'Deleting this desktop removes its private C: drive (files made on this desktop), chats, notes and logs. Project folders (plugged in) are removed from this desktop; the folders and files stay on your disk.'
+  'Deleting this desktop removes your files (C:), chats, notes and logs. Projects are removed from this desktop; the folders and files stay on your disk.'
 
 export type LauncherCommand = 'new' | 'connect' | 'rename' | 'delete'
 
@@ -145,6 +145,9 @@ export function accessKeyCommand(key: string): LauncherCommand | null {
       return null
   }
 }
+
+/** Tooltip of the Connect button: what it does and its key. */
+export const connectTip = (connected: boolean): string => (connected ? 'Bring the desktop to the front (Alt+C)' : 'Open the selected desktop (Alt+C)')
 
 /** Caption of the Connect button: a connected desktop is brought forward, not opened again. */
 export const connectLabel = (connected: boolean): string => (connected ? 'Show desktop' : '&Connect')

@@ -26,7 +26,7 @@ A desktop is a long-lived virtual computer for one or more projects. Desktop Con
 
 Closing a desktop window only disconnects it. Its agents keep running.
 
-**Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own private C: drive (files made on this desktop), its own chats, and the project folders that you plug in as drives.
+**Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own place for your files (C:), its own chats, and the projects that you plug in as drives.
 
 ## 2 - Open It
 
@@ -39,7 +39,7 @@ The window opens when you start Agent7. To open it again from a desktop, click *
 The list is in the middle of the window. Each row shows a picture of the desktop, its name, its state, its drives, and when you used it last.
 
 - **Name** – The name of the desktop. The word **Connected** appears next to the name while a window shows the desktop.
-- **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has an amber error icon and bold text, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. Agent7 looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
+- **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has a red error icon, red bold text, and a light red row, so that it differs from the amber row of a desktop that needs your approval, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. Agent7 looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
 
 When the window opens, the desktop that needs your approval is already selected. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
 
@@ -53,7 +53,7 @@ The buttons are at the bottom of the window. **Show Options** is at the left. **
 
 When you click **Create** in the New desktop dialog box, the new desktop opens at once and stays selected in the list. If it does not open, the row says **Ready. Click Connect to open it.** and **Connect** is the default button.
 
-When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
+When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. The Desktop Connection window steps back (it is minimized), so the desktop is not hidden. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
 
 Press F1 to read this manual.
 
@@ -62,7 +62,7 @@ Press F1 to read this manual.
 The dialog box has a name box, a list of projects, and an agent list.
 
 - **Desktop name** – The name of the new desktop. The line under the box says: Agent7 opens the new desktop when you click Create. The name must have 1 to 60 characters and must be new. Agent7 checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. The place for the message and the links is always reserved, so the buttons do not move when the message appears. **Create** stays dimmed until the name is good.
-- **Project folders the agent can use (they appear as drives)** – A list of folders. Select the projects that the desktop gets.
+- **Projects the agent can use (each project appears as a drive)** – A list of projects. Select the projects that the desktop gets. A long folder path is cut in the middle; point at it to read all of it.
 - **Browse...** – Opens the **Browse For Folder** dialog box and adds the folder that you select to the list.
 - **Agent** – The agent that the chats of the desktop start. The default agent is selected first.
 
@@ -94,7 +94,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | What you can do | Says what to do first. Shows below the empty message. | `launcher-empty-help` |
 | Show Options, Hide Options | Shows or hides the details pane. | `launcher-options` |
 | Disconnect | Closes the window of the selected desktop. | `launcher-disconnect` |
-| New... | Opens the New desktop dialog box. | `launcher-new` |
+| New... | Opens the New desktop dialog box. Point to it to see the key, Alt+N. | `launcher-new` |
 | Rename... | Opens the Rename desktop dialog box. | `launcher-rename` |
 | Delete... | Deletes the selected desktop after you answer a question. | `launcher-delete` |
 | Connect | Opens the selected desktop. | `launcher-connect` |
@@ -160,7 +160,7 @@ To rename a desktop, follow the steps below:
 To delete a desktop, follow the steps below:
 
 1. Select the desktop and click **Delete...**. A question appears.
-2. Read the warning. Agent7 removes the private C: drive (files made on this desktop), the chats, the notes, and the logs of the desktop. Project folders (plugged in) are removed from this desktop. The folders and files stay on your disk.
+2. Read the warning. Agent7 removes your files (C:), the chats, the notes, and the logs of the desktop. Projects are removed from this desktop. The folders and files stay on your disk.
 3. Click **Yes**.
 
 ## 6 - Troubleshooting

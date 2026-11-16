@@ -27,7 +27,7 @@ A form has three places: in the transcript of the chat, in the sidebar of the ch
 
 ## 3 - The Window
 
-The window has a title bar with the title of the form and the words **from the agent**, for example **Board - from the agent**. The client area shows the form. The form has no controls of its own. The agent decides what it shows, for example buttons, text boxes, and check boxes.
+The window has a title bar with the title of the form, for example **Board**. The chat row of the form uses the same name. The client area shows the form. The form has no controls of its own. The agent decides what it shows, for example buttons, text boxes, and check boxes.
 
 In a text box, a grey line in italics that starts with **Example:** is a hint. It is not text that you typed. Click the box and type your own text.
 
@@ -44,7 +44,7 @@ If you delete the form, the window says that the surface was deleted.
 | Button | A button that the agent drew. After you click it, it reads **Sending...** until the agent answers. | `a2ui-button` |
 | Sent | A short note that the agent got your answer: **Sent.** and what it answered. It goes after 3 seconds. | `a2ui-sent` |
 | Text box | A text box that the agent drew. A hint such as **Example: Ann** is grey and in italics. | `a2ui-textbox` |
-| Form row: where | In the chat, the line of a form row that says where the form is, for example **It is in the window 'Board - from the agent'.** An inline form has no line. | `chat-surface-where` |
+| Form row: where | In the chat, the line of a form row that says where the form is, for example **It is in the window 'Board'.** An inline form has no line. | `chat-surface-where` |
 | Option | An option that the agent drew. | `a2ui-checkbox` |
 
 ### Keys

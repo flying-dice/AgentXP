@@ -37,6 +37,14 @@ describe('Browser agent: a local chat web app', () => {
     await web?.close()
   })
 
+  it('a chat started from the Browser opens beside it, not over it', async () => {
+    const browser = await ctx.desktop.window('browser').boundingBox()
+    const chat = await ctx.desktop.window('chat').boundingBox()
+    expect(browser && chat).toBeTruthy()
+    const shared = Math.max(0, Math.min(browser!.x + browser!.width, chat!.x + chat!.width) - Math.max(browser!.x, chat!.x))
+    expect(shared / browser!.width).toBeLessThanOrEqual(0.1)
+  })
+
   it('reads the tree, switches channel, loads older messages, sends from the contenteditable composer and uses the iframe and shadow DOM', async () => {
     const chat = ctx.desktop.chat()
     const browser = ctx.desktop.window('browser')
@@ -54,25 +62,28 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The bar stays after the last step (and no element number shows in it); the status bar says that the agent read the page.
+    // The bar stays 20 seconds after a step that is not a read (a finished read says "The agent read this page." for 5 seconds: unit-tested).
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-    await see.text(browser.getByTestId('browser-assistant-status'), 'The agent read this page')
-
-    // "Ask about this page" opens the chat pane with the question ready and does not send it.
-    const aside = ctx.desktop.aside('browser')
-    await browser.getByTestId('browser-ask-page').click()
-    await see.eventually(async () => expect(await aside.composer.inputValue()).toContain('What does this page say?'))
-    await see.count(aside.userMessages, 0)
 
     // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
     await browser.getByTestId('browser-agent-takeover').click()
     await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
-    await browser.getByTestId('browser-agent-giveback').click()
+    // Give control back is one button, on the top bar; the page bar only shows the state.
+    await see.count(browser.getByTestId('browser-agent-giveback'), 0)
+    await ctx.desktopPage.getByTestId('topbar-give-back').click()
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'false')
-    await see.text(browser.getByTestId('browser-agent-takeover'), 'Take over')
+
+    await see.text(browser.getByTestId('browser-assistant-status'), 'The agent read this page')
+
+    // "Ask about this page" is a button in the toolbar with its whole label; it opens the chat pane with the question ready and does not send it.
+    await see.text(browser.getByTestId('browser-ask-page'), 'Ask about this page')
+    const aside = ctx.desktop.aside('browser')
+    await browser.getByTestId('browser-ask-page').click()
+    await see.eventually(async () => expect(await aside.composer.inputValue()).toContain('What does this page say?'))
+    await see.count(aside.userMessages, 0)
 
     // The page the agent drove is the page of the window.
     await see.eventually(async () => expect(await browser.getByTestId('browser-address').inputValue()).toContain(web.origin))

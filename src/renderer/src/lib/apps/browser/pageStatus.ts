@@ -89,3 +89,13 @@ export function stepZoom(zoom: number, direction: -1 | 0 | 1): number {
 }
 
 export const zoomText = (zoom: number): string => `${Math.round(zoom * 100)}%`
+
+/** How long "The agent read this page." stays in the yellow bar after the read is done (UX-128). */
+export const READ_DONE_MS = 5000
+
+/** What the yellow bar over the page says: that the user has control, that the agent finished reading, or what the agent does now. */
+export function agentBarText({ userInControl, readDone, activity }: { userInControl: boolean; readDone: boolean; activity: string | null }): string {
+  if (userInControl) return 'You have control of this page. The agent stops and asks before it uses the page again. Click Give control back at the top to let it go on.'
+  if (readDone) return 'The agent read this page.'
+  return `Agent is using this page: ${activity ?? 'working'}`
+}

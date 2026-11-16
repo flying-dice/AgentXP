@@ -22,7 +22,7 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { chatRows, contextState, formatTokens, processRows, terminalRows } from './processRows'
+  import { chatRows, contextState, formatTokens, initialTab, processRows, terminalRows } from './processRows'
 
   let { window: win, host }: AppProps<'agent-manager'> = $props()
 
@@ -34,6 +34,8 @@
   let agents = $state.raw<AgentDto[]>([])
   let terminals = $state.raw<TerminalDto[]>([])
   let tab = $state('chats')
+  /** The first refresh picks the tab once (UX-130); a tab the user chose first is kept. */
+  let tabChosen = false
   let current = $state<CellRef>({ row: 0, col: 0 })
   let selectedChat = $state<string[]>([])
   let error = $state<string | null>(null)
@@ -50,6 +52,10 @@
       const [p, s, a] = await Promise.all([host.api.processes.list(), host.api.sessions.list(host.state.desktopId), host.api.agents.list()])
       processes = p
       sessions = s
+      if (!tabChosen) {
+        tabChosen = true
+        tab = initialTab(s)
+      }
       agents = a
       terminals = (await Promise.all(s.map((x) => host.api.sessions.terminals(x.id).catch(() => [] as TerminalDto[])))).flat()
       error = null

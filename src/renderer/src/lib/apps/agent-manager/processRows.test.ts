@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { SessionDto } from '@shared/models'
 import { sampleAgents, sampleSessions } from '../../app/fakeApi'
 import type { TerminalDto } from '@shared/models'
-import { chatRows, chatStatusText, formatMemory, contextState, formatTokens, processRows, terminalRows } from './processRows'
+import { chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, terminalRows } from './processRows'
 
 describe('processRows', () => {
   it('describes processes', () => {
@@ -40,5 +40,15 @@ describe('processRows', () => {
     expect([null, 500_000, 250 * 1024 * 1024, 2 * 1024 ** 3].map(formatMemory)).toEqual(['-', '0.5 MB', '250 MB', '2.0 GB'])
     expect(chatStatusText('idle')).toBe('Idle (the agent program is still running)')
     expect(chatStatusText('working')).toBe('Working')
+  })
+})
+
+describe('initialTab (UX-130)', () => {
+  it('opens on Processes for a chat with a problem, an error or a running turn, else on Chats', () => {
+    expect(initialTab([{ status: 'idle' }])).toBe('chats')
+    expect(initialTab([])).toBe('chats')
+    expect(initialTab([{ status: 'idle' }, { status: 'working' }])).toBe('processes')
+    expect(initialTab([{ status: 'error' }])).toBe('processes')
+    expect(initialTab([{ status: 'idle', problem: { message: 'x' } as never }])).toBe('processes')
   })
 })

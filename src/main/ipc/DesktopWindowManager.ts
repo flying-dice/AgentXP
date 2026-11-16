@@ -64,6 +64,11 @@ export class DesktopWindowManager implements DesktopWindowHost {
     this.factory.loadLauncher(window)
   }
 
+  /** The launcher steps back once a desktop is open, so the desktop is the window in front. */
+  minimizeLauncher(): void {
+    if (this.launcher && !this.launcher.isDestroyed()) this.launcher.minimize()
+  }
+
   hasWindows(): boolean {
     return this.connectedIds().length > 0 || (this.launcher !== null && !this.launcher.isDestroyed())
   }

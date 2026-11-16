@@ -21,7 +21,7 @@
   import LauncherHelpDialog from '../launcher/LauncherHelpDialog.svelte'
   import NewDesktopDialog from '../launcher/NewDesktopDialog.svelte'
   import RenameDesktopDialog from '../launcher/RenameDesktopDialog.svelte'
-  import { accessKeyCommand, AGENT_CHECK_MS, connectLabel, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
+  import { accessKeyCommand, AGENT_CHECK_MS, connectLabel, connectTip, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -289,10 +289,10 @@
           <span class="arrow" aria-hidden="true">{options ? '▴' : '▾'}</span> {options ? 'Hide Options' : 'Show Options'}
         </Button>
         <span class="spring"></span>
-        <Button data-testid="launcher-new" aria-keyshortcuts="Alt+N" onclick={COMMANDS.new}>{@render access('&New...')}</Button>
-        <Button data-testid="launcher-rename" aria-keyshortcuts="Alt+R" disabled={!current} onclick={() => COMMANDS.rename()}>{@render access('&Rename...')}</Button>
-        <Button data-testid="launcher-delete" aria-keyshortcuts="Alt+D" disabled={!current} onclick={COMMANDS.delete}>{@render access('&Delete...')}</Button>
-        <Button data-testid="launcher-connect" aria-keyshortcuts="Alt+C" isDefault disabled={!current} onclick={COMMANDS.connect}>{@render access(connectLabel(current?.connected ?? false))}</Button>
+        <Button data-testid="launcher-new" title="Create a new desktop (Alt+N)" aria-keyshortcuts="Alt+N" onclick={COMMANDS.new}>{@render access('&New...')}</Button>
+        <Button data-testid="launcher-rename" title="Rename the selected desktop (Alt+R)" aria-keyshortcuts="Alt+R" disabled={!current} onclick={() => COMMANDS.rename()}>{@render access('&Rename...')}</Button>
+        <Button data-testid="launcher-delete" title="Delete the selected desktop (Alt+D)" aria-keyshortcuts="Alt+D" disabled={!current} onclick={COMMANDS.delete}>{@render access('&Delete...')}</Button>
+        <Button data-testid="launcher-connect" title={connectTip(current?.connected ?? false)} aria-keyshortcuts="Alt+C" isDefault disabled={!current} onclick={COMMANDS.connect}>{@render access(connectLabel(current?.connected ?? false))}</Button>
       </footer>
     </div>
     {#if helpOpen}

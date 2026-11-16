@@ -17,7 +17,7 @@ export interface SurfaceRowModel {
   purpose: 'form' | 'panel'
   /** "The agent opened a form: Your name." */
   intro: string
-  /** Where it is, said plainly: "It is in the window 'Your name - from the agent'." Empty for an inline surface (it is in the chat). */
+  /** Where it is, said plainly: "It is in the window 'Your name'." Empty for an inline surface (it is in the chat). */
   where: string
   /** The caption of the button that shows the surface: "Open" for a closed one, "Show" for one that is already open. */
   openLabel: 'Open' | 'Show'
@@ -53,6 +53,18 @@ export function surfacePurpose(messages: readonly A2uiServerMessage[]): 'form' |
     if ('updateComponents' in m && m.updateComponents.components.some((c) => INPUT_COMPONENTS.has(c.component))) return 'form'
   }
   return 'panel'
+}
+
+/** What a sidebar tab says: a form is called "Form" ("Form 2" for the next one), a panel keeps its title; the tooltip has the full title (UX-135). */
+export function surfaceTabLabels(surfaces: readonly Pick<SurfaceActivity, 'surfaceId' | 'messages'>[]): Map<string, { label: string; tooltip: string }> {
+  const forms = surfaces.filter((s) => surfacePurpose(s.messages) === 'form')
+  return new Map(
+    surfaces.map((s) => {
+      const title = surfaceDisplayTitle(s.messages)
+      const at = forms.findIndex((f) => f.surfaceId === s.surfaceId)
+      return [s.surfaceId, { label: at < 0 ? title : forms.length > 1 ? `Form ${at + 1}` : 'Form', tooltip: title }]
+    })
+  )
 }
 
 /** The model of a surface's chat row. `windowOpen` says whether the surface's window exists right now. */

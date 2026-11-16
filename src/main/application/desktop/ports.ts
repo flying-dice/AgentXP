@@ -11,17 +11,21 @@ export interface DesktopWindowHost {
   connectedIds(): Id[]
   /** Shows (or creates) the launcher window. */
   showLauncher(): void
+  /** Minimizes the launcher window (a desktop was opened from it); no-op when it is not open. */
+  minimizeLauncher(): void
 }
 
 /** A host with no windows (tests); `open` / `close` keep a set so `connectedIds` reads back. */
-export function createMemoryWindowHost(): DesktopWindowHost & { launcherShown: number } {
+export function createMemoryWindowHost(): DesktopWindowHost & { launcherShown: number; launcherMinimized: number } {
   const open = new Set<Id>()
   const host = {
     launcherShown: 0,
+    launcherMinimized: 0,
     open: (id: Id) => void open.add(id),
     close: (id: Id) => void open.delete(id),
     connectedIds: () => [...open],
-    showLauncher: () => void host.launcherShown++
+    showLauncher: () => void host.launcherShown++,
+    minimizeLauncher: () => void host.launcherMinimized++
   }
   return host
 }

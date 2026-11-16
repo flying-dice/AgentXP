@@ -74,6 +74,10 @@
     background: #fff4d6;
     border-color: #f0d9a0;
   }
+  .row.failed {
+    background: #fde8e8;
+    border-color: #e8b4b4;
+  }
   .row.selected {
     border-color: var(--w7-select-border);
     background: var(--w7-select-face);
@@ -142,13 +146,14 @@
     background: radial-gradient(circle at 35% 30%, #ffe08a, #e89a0c);
   }
   .error .dot {
-    background: radial-gradient(circle at 35% 30%, #ffe08a, #e89a0c);
+    background: radial-gradient(circle at 35% 30%, #ff9c9c, #c01c1c);
   }
   .approval {
     color: #8a5200;
   }
+  /* An agent problem is red, a request for approval is amber: the two rows differ in colour and in the icon (UX-136). */
   .error {
-    color: #8a5200;
+    color: #a31515;
   }
   .strong {
     font-weight: 700;

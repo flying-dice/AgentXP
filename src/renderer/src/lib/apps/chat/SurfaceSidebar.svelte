@@ -3,7 +3,7 @@
   import A2uiSurface from '../../a2ui/A2uiSurface.svelte'
   import type { SurfaceActivity } from '../../agui/activities'
   import Icon from '../../kit/atoms/Icon.svelte'
-  import { surfaceDisplayTitle } from '../../app/session/surfaceRow'
+  import { surfaceDisplayTitle, surfaceTabLabels } from '../../app/session/surfaceRow'
 
   interface Props {
     /** The sidebar surfaces whose tab is open, in transcript order. */
@@ -23,6 +23,7 @@
 
   let { surfaces, sessionId, selected, width = $bindable(300), onselect, onclose, onaction, running, reply }: Props = $props()
 
+  const tabLabels = $derived(surfaceTabLabels(surfaces))
   const current = $derived(surfaces.find((s) => s.surfaceId === selected) ?? surfaces[0])
 
   function startResize(event: PointerEvent): void {
@@ -54,7 +55,7 @@
       {#each surfaces as s (s.surfaceId)}
         {@const active = s.surfaceId === current.surfaceId}
         <div class="tab" class:active data-testid="chat-sidebar-tab" data-surface-id={s.surfaceId} data-selected={active}>
-          <button type="button" role="tab" aria-selected={active} class="label" onclick={() => onselect?.(s.surfaceId)}>{surfaceDisplayTitle(s.messages)}</button>
+          <button type="button" role="tab" aria-selected={active} class="label" title={tabLabels.get(s.surfaceId)?.tooltip} onclick={() => onselect?.(s.surfaceId)}>{tabLabels.get(s.surfaceId)?.label}</button>
           <button type="button" class="x" data-testid="chat-sidebar-tab-close" aria-label="Close {surfaceDisplayTitle(s.messages)}" onclick={() => onclose?.(s)}>
             <Icon name="close" />
           </button>

@@ -45,7 +45,7 @@ The page area shows the web page of the active tab. A new tab shows **Type an ad
 
 ### The Status Bar
 
-The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can read the page, and the zoom of the page. The part **Agent:** says **can read this page**, **asks first**, **cannot read pages**, or **reading** while the assistant reads the page. After the assistant read the page it says **The agent read this page**. Point to it to read where to change it. Next to it, click **Ask about this page** to open the chat pane with the question **What does this page say?** ready in the message box. You can change the question before you send it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can read the page, and the zoom of the page. The part **Agent:** says **can read this page**, **asks first**, **cannot read pages**, or **reading** while the assistant reads the page. After the assistant read the page it says **The agent read this page**. Point to it to read where to change it. The button **Ask about this page** in the toolbar, at the right of the address, opens the chat pane with the question **What does this page say?** ready in the message box. You can change the question before you send it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
@@ -63,16 +63,15 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Refresh | Loads the page again. It shows when no page loads. | `browser-refresh` |
 | Stop | Stops loading. It shows while a page loads. | `browser-stop` |
 | Tab strip | Holds the tabs. | `browser-tabs` |
-| Tab | One open page. The number is the tab number. | `browser-tab-*` |
+| Tab | One open page. The number is the tab number. A long title is cut at the end; point to the title in the tab to read all of it. | `browser-tab-*` |
 | Close tab | Closes that tab. It sits at the right end of the tab. | `browser-tab-close-*` |
-| New tab | Opens a blank tab. | `browser-tab-new` |
+| New tab | Opens a blank tab. The tooltip says **New tab**. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
-| Agent bar | Shows "Agent is using this page" with what the agent does, for the whole job and 20 seconds after the last step. After you take over, it says that you have control. | `browser-agent-bar` |
+| Agent bar | Shows "Agent is using this page" with what the agent does, for the whole job and 20 seconds after the last step. When the agent finished reading the page, it says "The agent read this page." and goes after 5 seconds, unless the agent goes on. After you take over, it says that you have control. It only shows the state: **Give control back** is on the top bar. | `browser-agent-bar` |
 | Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'", "Waiting for the page to change"), or that you have control. Point to it to see what the agent waits for. | `browser-agent-bar-text` |
 | Take over | Pauses the agent on this page so that you can use it. It stays at the right of the bar and then reads **Taken over**. The agent must ask before it uses the page again. | `browser-agent-takeover` |
-| Give control back | Shows after you took over. The agent may use the page again, and it asks first. | `browser-agent-giveback` |
 | Agent status | Says whether the assistant can read the page: can read this page, asks first, cannot read pages, reading, or that the agent read this page. | `browser-assistant-status` |
-| Ask about this page | Opens the chat pane with the question "What does this page say?" ready. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
+| Ask about this page | A button in the toolbar, at the right of the address. It opens the chat pane with the question "What does this page say?" ready. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
 | Error page | Shows when a page could not be opened. | `browser-error-page` |
 | Error title | "This page can't be displayed". | `browser-error-title` |
@@ -142,7 +141,7 @@ The agent can use a web app such as a team chat, mail, or documents. Follow the 
 2. Sign in yourself. Agent7 keeps you signed in. The agent never types a password.
 3. Ask the agent to read or send messages.
 
-While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. The bar stays while the agent works, also when it only reads. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says that you have control, and the agent stops and asks before it uses the page again. Click **Give control back** to let the agent go on. You can also click **Pause all agents** on the top bar.
+While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". When the agent finished reading, the bar says "The agent read this page." and goes after 5 seconds. An orange frame shows the item the agent used. The bar stays while the agent works, also when it only reads. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says that you have control, and the agent stops and asks before it uses the page again. Click **Give control back** on the top bar to let the agent go on. You can also click **Pause all agents** on the top bar.
 
 The chip **Browser** on the top bar and the part **Agent:** in the status bar of Browser show that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one. To change what the agent may do, open **Control Center**, click **Permissions**, and set **Browser**.
 

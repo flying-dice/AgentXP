@@ -179,6 +179,15 @@ describe('DesktopService: window placement and focus', () => {
     expect(terminal.bounds.x + terminal.bounds.width).toBeLessThanOrEqual(1280)
   })
 
+  it('a chat started from the Browser opens in the half the Browser does not use (UX-120)', async () => {
+    const browser = service.openWindow({ desktopId, app: 'browser' })
+    const chat = await openChat()
+    const narrowed = service.state(desktopId).windows.find((w) => w.id === browser.id)!
+    const shared = Math.max(0, Math.min(narrowed.bounds.x + narrowed.bounds.width, chat.bounds.x + chat.bounds.width) - Math.max(narrowed.bounds.x, chat.bounds.x))
+    expect(shared / narrowed.bounds.width).toBeLessThanOrEqual(0.1)
+    expect(chat.bounds.x + chat.bounds.width).toBeLessThanOrEqual(1280)
+  })
+
   it('follows a chat that was moved', async () => {
     const chat = await openChat()
     service.setBounds(chat.id, { x: 600, y: 100, width: 640, height: 520 })
