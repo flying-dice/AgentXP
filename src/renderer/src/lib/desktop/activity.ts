@@ -93,12 +93,12 @@ export interface ToolChip {
   state: ChipState
   /** No app that provides the tool is open, so the agent cannot use it yet (never true for Deny: it reads Deny). */
   closed: boolean
-  /** The tooltip: "Open Control Center.", then the setting and why the chip is as it is. */
+  /** The tooltip: "Open Control Center to change this.", then the setting and why the chip is as it is. */
   tooltip: string
 }
 
 /** The first words of every chip tooltip; a chip is a button that opens Control Center at Permissions (UX-142). */
-export const OPEN_CONTROL_CENTRE = 'Open Control Center.'
+export const OPEN_CONTROL_CENTRE = 'Open Control Center to change this.'
 
 /** The name a screen reader reads for a chip: "Run commands: Ask. Open Control Center to change." */
 export const chipAriaLabel = (chip: Pick<ToolChip, 'label'>): string => `${chip.label}. Open Control Center to change.`

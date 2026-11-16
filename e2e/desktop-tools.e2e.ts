@@ -21,9 +21,18 @@ describe('desktop: tools follow apps', () => {
   })
 
   it('every chip is a button that says it opens Control Center, then the setting and why the agent cannot use it yet (UX-142)', async () => {
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
-    await see.attribute(ctx.desktop.toolChip('browser'), 'title', 'Open Control Center. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
+    await see.attribute(ctx.desktop.toolChip('browser'), 'title', 'Open Control Center to change this. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
     await see.attribute(ctx.desktop.toolChip('terminal'), 'aria-label', 'Run commands: Ask (no Terminal open). Open Control Center to change.')
+  })
+
+  it('a chip opens Control Center at Permissions with the row of its tool selected, and only a chip without an app has a dashed border (UX-159)', async () => {
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'data-closed', 'true')
+    await ctx.desktop.toolChip('terminal').click()
+    await see.visible(ctx.desktop.window('control-centre'))
+    const row = ctx.desktop.window('control-centre').getByTestId('permissions-row').filter({ hasText: 'Run commands' })
+    await see.attribute(row, 'data-selected', 'true')
+    await ctx.desktop.closeWindow('control-centre')
   })
 
   it('opening Terminal from Start adds its window and taskbar button and turns its chip on', async () => {
@@ -32,7 +41,7 @@ describe('desktop: tools follow apps', () => {
     await see.visible(ctx.desktop.taskbarItem('terminal'))
     await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'asks')
     await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask')
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center. Run commands is set to Ask.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Open Control Center to change this. Run commands is set to Ask.')
     await see.gone(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
 

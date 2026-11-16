@@ -162,11 +162,11 @@ describe('toolChips', () => {
   })
   it('keeps the setting word while no app that gives the tool is open, and the tooltip names the setting and the reason', () => {
     const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({ terminal: 'ask' }))
-    expect(read.tooltip).toBe('Open Control Center. Read files is set to Allow.')
+    expect(read.tooltip).toBe('Open Control Center to change this. Read files is set to Allow.')
     expect(run).toMatchObject({ label: 'Run commands: Ask (no Terminal open)', word: 'Ask', closed: true, state: 'off' })
-    expect(run.tooltip).toBe('Open Control Center. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
-    expect(browser.tooltip).toBe('Open Control Center. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
-    expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
+    expect(run.tooltip).toBe('Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
+    expect(browser.tooltip).toBe('Open Control Center to change this. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
+    expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center to change this. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
   })
   it('never reads Off, and never says Off against an Ask or Deny setting', () => {
     for (const askFirst of [false, true]) for (const setting of ['allow', 'ask', 'deny'] as const) {

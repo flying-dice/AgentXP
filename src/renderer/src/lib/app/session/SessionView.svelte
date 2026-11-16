@@ -253,6 +253,7 @@
     {starting}
     {askFirst}
     {onaskfirst}
+    retry={!!store.failedSend?.unanswered}
     running={store.running}
     {modes}
     {modeId}

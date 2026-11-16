@@ -281,7 +281,7 @@
   {/snippet}
   {#snippet empty()}
     <div class="row">
-      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />{/if}
+      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on? To undo a change, open Changes and click Revert." />{/if}
     </div>
   {/snippet}
   {#snippet tail()}

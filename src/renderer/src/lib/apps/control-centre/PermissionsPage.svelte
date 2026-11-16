@@ -23,9 +23,20 @@
 
   interface Props {
     host: DesktopHost
+    /** The row a top bar chip asked for ("terminal"): highlighted and scrolled into view. */
+    selectedRow?: string | null
   }
 
-  let { host }: Props = $props()
+  let { host, selectedRow = null }: Props = $props()
+
+  /** Scrolls the requested row into view once the rows exist. */
+  function reveal(node: HTMLElement, selected: boolean): { update: (selected: boolean) => void } {
+    const go = (on: boolean): void => {
+      if (on) node.scrollIntoView?.({ block: 'nearest' })
+    }
+    go(selected)
+    return { update: go }
+  }
 
   let saved = $state.raw<ToolPolicyDto | null>(null)
   let draft = $state.raw<ToolPolicyDto | null>(null)
@@ -95,7 +106,7 @@
   {#each groups as group (group.id)}
     <div class="group" role="row" data-testid="permissions-group" data-group={group.id}><span role="columnheader">{group.title}</span></div>
     {#each group.rows as row (row.key)}
-      <div class="row" role="row" data-testid="permissions-row" data-key={row.key}>
+      <div class="row" class:selected={row.key === selectedRow} use:reveal={row.key === selectedRow} role="row" data-testid="permissions-row" data-key={row.key} data-selected={row.key === selectedRow}>
         <span class="name" role="cell" title={row.tooltip}>{row.label}</span>
         <span class="setting" role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
         <span class="mode" role="cell" data-testid="permissions-mode">{decisionNote(row.decision)}.</span>
@@ -177,6 +188,11 @@
     padding-top: 3px;
     padding-bottom: 4px;
     border-bottom: 1px solid #f0f0f0;
+  }
+  .row.selected {
+    background: var(--w7-select-face, #c4e5f6);
+    outline: 1px solid var(--w7-hot-border, #3399ff);
+    outline-offset: -1px;
   }
   .name {
     grid-area: name;

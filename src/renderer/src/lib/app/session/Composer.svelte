@@ -39,6 +39,8 @@
     /** The desktop's "Ask before every action" state; the Mode menu has an entry for it when `onaskfirst` is given. */
     askFirst?: boolean
     onaskfirst?: (on: boolean) => void
+    /** The last message did not go through and its text is in the box: the box says "Press Send to try again." until a send works. */
+    retry?: boolean
   }
 
   let {
@@ -56,7 +58,8 @@
     dense = false,
     starting = false,
     askFirst = false,
-    onaskfirst
+    onaskfirst,
+    retry = false
   }: Props = $props()
 
   let draft = $state('')
@@ -161,6 +164,9 @@
   {#if starting}
     <div class="starting" role="status" data-testid="chat-starting">Starting the agent... Your message will be sent when the agent is ready.</div>
   {/if}
+  {#if retry && draft.trim() !== ''}
+    <div class="retry" role="status" data-testid="chat-retry-hint">Press Send to try again.</div>
+  {/if}
   {#if attached.length > 0}
     <div class="chips" aria-label="Attachments">
       {#each attached as path (path)}
@@ -197,6 +203,10 @@
   }
   .hint {
     color: #444;
+  }
+  .retry {
+    margin-bottom: 4px;
+    color: #7a0000;
   }
   .chips {
     display: flex;

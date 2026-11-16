@@ -44,6 +44,10 @@ describe('chat: the agent program ends while a request runs', () => {
     await endAgentProgram()
     await see.text(chat.frame.getByTestId('chat-error-text'), 'It stopped again')
     await see.text(chat.frame.getByTestId('chat-error-new-chat'), 'your text is kept in the box')
+    // UX-160: Restart is the highlighted button; Event Viewer is a link in the sentence after the buttons.
+    expect(await chat.frame.getByTestId('chat-error-restart').getAttribute('class')).toContain('def')
+    expect(await chat.frame.getByTestId('chat-error-event-viewer').getAttribute('class')).not.toContain('w7-btn')
+    expect(await chat.frame.getByTestId('chat-error-text').innerText()).not.toContain('Show in Event Viewer')
     await chat.frame.getByTestId('chat-error-restart').click()
     await see.text(chat.frame.getByTestId('chat-restarted-note'), 'Agent7 restarted. Your last request was not sent again:')
     await see.text(chat.frame.getByTestId('chat-restarted-text'), 'step through')

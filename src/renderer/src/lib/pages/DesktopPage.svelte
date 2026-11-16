@@ -270,7 +270,7 @@
         {policy}
         onpause={() => void desktop.togglePaused()}
         ontakecontrol={() => void desktop.toggleUserInControl()}
-        onopenpermissions={() => void desktop.openControlCentre('permissions')}
+        onopenpermissions={(row) => void desktop.openControlCentre('permissions', row)}
         {maximized}
         onminimize={() => void desktop.api.window.minimize()}
         onmaximize={() => void desktop.api.window.toggleMaximize()}
