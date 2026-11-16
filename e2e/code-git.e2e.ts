@@ -160,6 +160,24 @@ describe('Code app git awareness', () => {
     await pane.hide.click()
   })
 
+  it('a click or a drag in the line number column selects lines, and the status bar says what to do when nothing is selected (UX-186)', async () => {
+    const code = ctx.desktop.code()
+    await code.openFile('notes.txt')
+    const numbers = code.frame.getByTestId('code-line-number')
+    await see.visible(numbers.nth(1))
+    // Nothing is selected: the status bar says so and the button is grey.
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(false))
+    await see.text(code.frame.getByTestId('code-status-select-hint'), 'Select some lines first')
+    // A click on a number selects that line.
+    await numbers.nth(0).click()
+    await see.text(code.frame.getByTestId('code-status-selected'), 'Selected 1-1')
+    // A drag over the numbers of lines 1 and 2 selects both.
+    await numbers.nth(0).dragTo(numbers.nth(1))
+    await see.text(code.frame.getByTestId('code-status-selected'), 'Selected 1-2')
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(true))
+    await see.gone(code.frame.getByTestId('code-status-select-hint'))
+  })
+
   it('the Git list shows the lines of each file and double-click opens the file that was clicked (UX-78)', async () => {
     const code = ctx.desktop.code()
     await code.frame.getByTestId('code-logs-tab-git').click()
@@ -204,12 +222,16 @@ describe('Code app git awareness', () => {
     await ctx.desktop.closeWindow('code-review')
   })
 
-  it('the Changes tab never says "No pending changes" beside a Git list: it names the Git count and links to Git (UX-152)', async () => {
+  it('the Changes tab never says the chat changed nothing beside a Git list: it says what the chat did and names the Git count with a link (UX-152, UX-187)', async () => {
     const code = ctx.desktop.code()
     await code.showChanges()
-    await see.text(code.frame.getByTestId('changes-git-note'), 'The agent changed nothing in this chat. Git shows 2 changed files.')
+    await see.text(code.frame.getByTestId('changes-git-note'), 'Git shows 2 changed files from before.')
     await see.count(code.frame.getByTestId('changes-item'), 0)
-    expect(await code.frame.getByTestId('changes-list').innerText()).not.toContain('No pending changes')
+    const listText = await code.frame.getByTestId('changes-list').innerText()
+    expect(listText).toContain('This chat did not change any file.')
+    expect(listText).not.toContain('No pending changes')
+    // Nothing to revert yet, said under the buttons (UX-187).
+    await see.text(code.frame.getByTestId('changes-reason'), 'Nothing to revert yet.')
     await code.frame.getByTestId('changes-open-git').click()
     await see.visible(code.frame.getByTestId('code-git-pane'))
   })

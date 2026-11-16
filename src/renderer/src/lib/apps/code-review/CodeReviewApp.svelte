@@ -139,7 +139,7 @@
   const shownFields = $derived(
     fitStatusFields(
       [
-        { key: 'files', text: filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0) },
+        { key: 'files', text: filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0, file ? file.path : undefined) },
         { key: 'comments', text: commentsStatus },
         ...(mode === 'expanded' && positionLabel ? [{ key: 'change', text: positionLabel }] : []),
         { key: 'agent', text: connectionLabel(status) }
@@ -552,18 +552,17 @@
 
   {#if review.summary}
     <div class="banner {review.summary.verdict}" data-testid="review-verdict" data-verdict={review.summary.verdict} role="status">
-      <b data-testid="review-verdict-line">{verdictLine(review.summary.verdict, review.comments)}</b>
-      {#if review.summary.body}<span class="body" title={review.summary.body}>{review.summary.body}</span>{:else}<span class="body"></span>{/if}
-      {@render commentsLink()}
+      <!-- One sentence, full width, with the link at its end. The reviewer's own summary is the tooltip: it repeats the counts (UX-191). -->
+      <span class="sentence" title={review.summary.body || undefined}><b data-testid="review-verdict-line">{verdictLine(review.summary.verdict, review.comments)}</b> {@render commentsLink()}</span>
     </div>
   {:else}
     <div class="banner pending" data-testid="review-banner" data-state={reviewing ? 'reviewing' : 'waiting'} role="status">
-      <span class="body">
+      <span class="sentence">
         {reviewing
           ? 'The agent is reading the changes. It cannot change files.'
           : 'Nobody has reviewed these changes yet. Click a line number to comment yourself, or click "Start a new review...".'}
+        {@render commentsLink()}
       </span>
-      {@render commentsLink()}
     </div>
   {/if}
 
@@ -653,7 +652,7 @@
 
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="review-status-root" text="{root} against {baseLabel(baseRef)}" spring />
-    {#if shownFields.some((f) => f.key === 'files')}<StatusStripLabel testid="review-status-files" class="keep" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />{/if}
+    {#if shownFields.some((f) => f.key === 'files')}<StatusStripLabel testid="review-status-files" class="keep" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0, file ? file.path : undefined)} borders={['left']} />{/if}
     {#if shownFields.some((f) => f.key === 'change')}
       <StatusStripLabel testid="review-status-change" class="keep" text={positionLabel} borders={['left']} />
     {/if}
@@ -710,8 +709,6 @@
     white-space: nowrap;
   }
   .link {
-    flex: none;
-    margin-left: auto;
     padding: 0;
     border: 0;
     background: transparent;
@@ -750,8 +747,7 @@
   }
   .banner {
     flex: none;
-    display: flex;
-    gap: 8px;
+    display: block;
     padding: 4px 10px;
     border-bottom: 1px solid var(--w7-panel-border);
     background: #eef2f8;
@@ -772,9 +768,8 @@
   .review :global(.sl.keep) {
     flex: none;
   }
-  .banner .body {
-    flex: 1;
-    min-width: 0;
+  /* The sentence runs the full width of the banner and wraps there; the link sits at its end. */
+  .banner .sentence {
     overflow-wrap: anywhere;
   }
   .row {
