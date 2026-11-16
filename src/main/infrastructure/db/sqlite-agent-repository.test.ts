@@ -16,7 +16,8 @@ describe('SqliteAgentRepository', () => {
       command: 'npx',
       args: ['-y', '@zed-industries/claude-code-acp'],
       env: {},
-      isDefault: true
+      isDefault: true,
+      defaultModeId: null
     })
     expect(repo.list()).toHaveLength(1)
   })
@@ -68,5 +69,12 @@ describe('SqliteAgentRepository', () => {
   it('refuses to delete an agent that sessions reference', () => {
     const f = createFixture()
     expect(() => new SqliteAgentRepository(f.db).remove(f.agentId)).toThrow(/FOREIGN KEY/)
+  })
+
+  it('stores, changes and clears the default session mode', () => {
+    const created = repo.create({ name: 'A', command: 'a', args: [], env: {}, defaultModeId: 'acceptEdits' })
+    expect(repo.get(created.id)?.defaultModeId).toBe('acceptEdits')
+    expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {}, defaultModeId: 'plan' })?.defaultModeId).toBe('plan')
+    expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {} })?.defaultModeId).toBeNull()
   })
 })

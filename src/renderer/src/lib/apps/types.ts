@@ -16,6 +16,10 @@ export interface DesktopHost {
   readonly state: DesktopState
   readonly api: Agent7Api
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
+  /** The root to review or work on for a path: its plugged-in project drive, else the first project drive, else home. */
+  projectRootOf(path?: string | null): VPath
+  /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */
+  chooseReview(path?: string | null): void
   closeWindow(windowId: Id): Promise<void>
   focusWindow(windowId: Id): Promise<void>
   /** Debounced (300 ms) per window; the latest view wins. */

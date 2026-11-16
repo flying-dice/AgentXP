@@ -5,7 +5,7 @@ import type { AgentRepository } from '../domain/repositories/agent-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
 import type { AgentConnectionPool, LiveSession } from './AgentConnectionPool'
 import { AppError, required } from './errors'
-import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection, ProtocolTap } from './ports'
+import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection, OpenedAcpSession, ProtocolTap } from './ports'
 import type { ToolGate } from '../domain/agent/ToolGate'
 import type { PermissionBroker } from './PermissionBroker'
 import type { SessionBroadcaster } from './SessionBroadcaster'
@@ -68,7 +68,7 @@ export class SessionRuntime {
       // The agent's cwd is the real folder behind the chat's working directory; an ejected drive refuses here.
       const cwd = await this.deps.vfs.realPath(this.desktopOf(session), session.cwd)
       const connection = await this.openConnection(agent, cwd, sessionId, sink)
-      const live = await this.openSession(connection, session, cwd, sink)
+      const live = await this.openSession(connection, session, cwd, sink, agent.defaultModeId)
       pool.add(sessionId, live)
       broadcaster.setStatus(sessionId, 'idle')
       void connection.closed.then(() => this.onClosed(sessionId, connection))
@@ -100,7 +100,8 @@ export class SessionRuntime {
     connection: LiveAgentConnection,
     session: SessionDto,
     cwd: string,
-    sink: MutableSink
+    sink: MutableSink,
+    defaultModeId: string | null
   ): Promise<LiveSession> {
     const mcpServers = [this.deps.a2uiMcpConfig(session.id)]
     try {
@@ -113,11 +114,25 @@ export class SessionRuntime {
       }
       const opened = await connection.newSession(cwd, mcpServers)
       this.deps.sessions.setAcpSessionId(session.id, opened.acpSessionId)
-      this.storeState(session.id, opened)
+      this.storeState(session.id, await this.applyDefaultMode(connection, opened, defaultModeId))
       return { connection, acpSessionId: opened.acpSessionId }
     } catch (error) {
       await connection.dispose()
       throw error
+    }
+  }
+
+  /**
+   * A fresh session starts in the agent's default mode (Control Centre > Agents) when the agent offers it. A mode the
+   * agent does not know, or one that fails to apply, leaves the session in the mode the agent chose.
+   */
+  private async applyDefaultMode(connection: LiveAgentConnection, opened: OpenedAcpSession, modeId: string | null): Promise<OpenedAcpSession> {
+    if (!modeId || modeId === opened.currentModeId || !opened.modes.some((m) => m.id === modeId)) return opened
+    try {
+      await connection.setMode(opened.acpSessionId, modeId)
+      return { ...opened, currentModeId: modeId }
+    } catch {
+      return opened
     }
   }
 

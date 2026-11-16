@@ -130,7 +130,10 @@ export class FakeLiveConnection implements LiveAgentConnection {
     this.mcpServers = mcpServers
     return {
       acpSessionId: this.nextAcpId,
-      modes: [{ id: 'default', name: 'Default', description: null }],
+      modes: [
+        { id: 'default', name: 'Default', description: null },
+        { id: 'acceptEdits', name: 'Accept Edits', description: null }
+      ],
       models: [],
       currentModeId: 'default',
       currentModelId: null

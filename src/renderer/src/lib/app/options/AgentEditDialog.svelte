@@ -4,8 +4,9 @@
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import LabeledField from '../../kit/molecules/LabeledField.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
-  import { emptyAgentForm, inputFromForm, validateAgentForm, type AgentFormValues } from './agentForm'
+  import { COMMON_MODES, emptyAgentForm, inputFromForm, validateAgentForm, type AgentFormValues } from './agentForm'
 
   interface Props {
     title?: string
@@ -46,6 +47,9 @@
     </LabeledField>
     <LabeledField label="Environment:" for="agent-env" labelWidth={90}>
       <TextBox id="agent-env" multiline rows={3} bind:value={form.env} placeholder="KEY=VALUE, one per line" />
+    </LabeledField>
+    <LabeledField label="Start mode:" for="agent-mode" labelWidth={90}>
+      <ComboBox testid="agent-mode" items={COMMON_MODES} dropDownStyle="DropDown" bind:value={form.defaultModeId} aria-label="Start mode of new chats" />
     </LabeledField>
     <div class="problem" role="alert">{touched && problem ? problem : ''}</div>
   </div>

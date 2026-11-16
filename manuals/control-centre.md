@@ -47,7 +47,17 @@ The page lists the agents. The columns are **Name**, **Command**, and **Default*
 - **Remove** – Removes the selected agent after a question.
 - **Set as Default** – Makes the selected agent the default.
 
-The agent dialog box has the boxes **Name**, **Command**, **Arguments** (one per line), and **Environment** (KEY=VALUE, one per line).
+The agent dialog box has the boxes **Name**, **Command**, **Arguments** (one per line), and **Environment** (KEY=VALUE, one per line), and **Start mode**.
+
+**Start mode** is the mode that every new chat of the agent starts in. This is how you reduce the permission prompts. Choose **Agent default** to keep the mode that the agent chooses itself. For Claude Code the modes are:
+
+- **Default** – Asks before risky actions.
+- **Accept Edits** – Does not ask before file edits.
+- **Plan** – Plans only and runs no tools.
+- **Don't Ask** – Does not ask. It refuses what is not pre-approved.
+- **Bypass Permissions** – Does not ask at all.
+
+Other agents can have other modes. You can type the id of a mode in the box. If the agent does not offer the mode, the chat starts in the mode of the agent. The setting does not change chats that already exist. In a chat you can still change the mode at any time.
 
 ### The Permissions Page
 

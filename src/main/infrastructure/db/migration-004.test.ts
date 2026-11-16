@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS } from './migrations'
 import { openRaw } from './sql'
-import { SqliteAgentRepository } from './sqlite-agent-repository'
 
 function legacyDatabase() {
   const db = openRaw(':memory:')
   db.exec('PRAGMA foreign_keys = ON')
   migrate(db, MIGRATIONS.slice(0, 3))
-  const agentId = new SqliteAgentRepository(db).getDefault()!.id
+  const agentId = (db.prepare('SELECT id FROM agents WHERE is_default = 1').get() as { id: number }).id
   db.exec(`
     INSERT INTO folders (path, name) VALUES ('/work/a', 'a'), ('/work/b', 'b');
     INSERT INTO desktops (folder_id, agent_id, title, is_open, created_at) VALUES

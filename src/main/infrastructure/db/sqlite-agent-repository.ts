@@ -7,6 +7,7 @@ interface AgentRow {
   name: string
   command: string
   is_default: number
+  default_mode_id: string | null
 }
 
 export class SqliteAgentRepository implements AgentRepository {
@@ -15,8 +16,8 @@ export class SqliteAgentRepository implements AgentRepository {
   private readonly selectDefault: Statement<[], AgentRow>
   private readonly selectArgs: Statement<[Id], { value: string }>
   private readonly selectEnv: Statement<[Id], { key: string; value: string }>
-  private readonly insertAgent: Statement<[string, string]>
-  private readonly updateAgent: Statement<[string, string, Id]>
+  private readonly insertAgent: Statement<[string, string, string | null]>
+  private readonly updateAgent: Statement<[string, string, string | null, Id]>
   private readonly insertArg: Statement<[Id, number, string]>
   private readonly insertEnv: Statement<[Id, string, string]>
   private readonly deleteArgs: Statement<[Id]>
@@ -26,14 +27,14 @@ export class SqliteAgentRepository implements AgentRepository {
   private readonly markDefault: Statement<[Id]>
 
   constructor(private readonly db: Database) {
-    const cols = 'id, name, command, is_default'
+    const cols = 'id, name, command, is_default, default_mode_id'
     this.selectAll = prepare(db, `SELECT ${cols} FROM agents ORDER BY id`)
     this.selectById = prepare(db, `SELECT ${cols} FROM agents WHERE id = ?`)
     this.selectDefault = prepare(db, `SELECT ${cols} FROM agents WHERE is_default = 1`)
     this.selectArgs = prepare(db, 'SELECT value FROM agent_args WHERE agent_id = ? ORDER BY position')
     this.selectEnv = prepare(db, 'SELECT key, value FROM agent_env WHERE agent_id = ? ORDER BY key')
-    this.insertAgent = prepare(db, 'INSERT INTO agents (name, command) VALUES (?, ?)')
-    this.updateAgent = prepare(db, 'UPDATE agents SET name = ?, command = ? WHERE id = ?')
+    this.insertAgent = prepare(db, 'INSERT INTO agents (name, command, default_mode_id) VALUES (?, ?, ?)')
+    this.updateAgent = prepare(db, 'UPDATE agents SET name = ?, command = ?, default_mode_id = ? WHERE id = ?')
     this.insertArg = prepare(db, 'INSERT INTO agent_args (agent_id, position, value) VALUES (?, ?, ?)')
     this.insertEnv = prepare(db, 'INSERT INTO agent_env (agent_id, key, value) VALUES (?, ?, ?)')
     this.deleteArgs = prepare(db, 'DELETE FROM agent_args WHERE agent_id = ?')
@@ -59,7 +60,7 @@ export class SqliteAgentRepository implements AgentRepository {
 
   create(input: NewAgent): AgentDto {
     const id = transaction(this.db, () => {
-      const newId = Number(this.insertAgent.run(input.name, input.command).lastInsertRowid)
+      const newId = Number(this.insertAgent.run(input.name, input.command, input.defaultModeId ?? null).lastInsertRowid)
       this.writeChildren(newId, input)
       return newId
     })
@@ -68,7 +69,7 @@ export class SqliteAgentRepository implements AgentRepository {
 
   update(id: Id, input: NewAgent): AgentDto | null {
     transaction(this.db, () => {
-      if (this.updateAgent.run(input.name, input.command, id).changes === 0) return
+      if (this.updateAgent.run(input.name, input.command, input.defaultModeId ?? null, id).changes === 0) return
       this.deleteArgs.run(id)
       this.deleteEnv.run(id)
       this.writeChildren(id, input)
@@ -107,7 +108,8 @@ export class SqliteAgentRepository implements AgentRepository {
       command: row.command,
       args: this.selectArgs.all(row.id).map((a) => a.value),
       env: Object.fromEntries(this.selectEnv.all(row.id).map((e) => [e.key, e.value])),
-      isDefault: row.is_default === 1
+      isDefault: row.is_default === 1,
+      defaultModeId: row.default_mode_id
     }
   }
 }

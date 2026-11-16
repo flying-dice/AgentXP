@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS } from './migrations'
 import { openRaw } from './sql'
-import { SqliteAgentRepository } from './sqlite-agent-repository'
 
 function seeded(upTo: number) {
   const db = openRaw(':memory:')
   db.exec('PRAGMA foreign_keys = ON')
   migrate(db, MIGRATIONS.slice(0, upTo))
-  const agentId = new SqliteAgentRepository(db).getDefault()!.id
+  const agentId = (db.prepare('SELECT id FROM agents WHERE is_default = 1').get() as { id: number }).id
   db.exec(`INSERT INTO desktops (title, is_open, created_at) VALUES ('D', 0, '2026-01-01T00:00:00.000Z')`)
   db.exec(`INSERT INTO sessions (agent_id, desktop_id, title, role) VALUES (${agentId}, 1, 'pane', 'aside')`)
   db.exec(`INSERT INTO app_windows (desktop_id, kind, x, y, width, height, window_state, z_order, opened_by) VALUES (1, 'notepad', 0, 0, 300, 200, 'normal', 1, 'user')`)
@@ -41,5 +40,15 @@ describe('migration 008 (aside windows)', () => {
     db.exec(`INSERT INTO app_windows (desktop_id, kind, x, y, width, height, window_state, z_order, opened_by) VALUES (1, 'terminal', 0, 0, 300, 200, 'normal', 2, 'user')`)
     db.exec('INSERT INTO aside_windows (window_id, session_id) VALUES (1, 1)')
     expect(() => db.exec('INSERT INTO aside_windows (window_id, session_id) VALUES (2, 1)')).toThrow(/UNIQUE/)
+  })
+})
+
+describe('migration 009 (agent default mode)', () => {
+  it('adds a nullable default_mode_id that keeps existing agents on the agent default', () => {
+    const db = seeded(8)
+    const before = db.prepare('SELECT id FROM agents').all()
+    expect(migrate(db)).toBe(MIGRATIONS.length)
+    expect(MIGRATIONS[8]).toMatchObject({ version: 9, name: 'agent_default_mode' })
+    expect(db.prepare('SELECT id, default_mode_id FROM agents').all()).toEqual(before.map((a) => ({ ...(a as object), default_mode_id: null })))
   })
 })

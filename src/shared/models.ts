@@ -16,6 +16,8 @@ export interface AgentDto {
   args: string[]
   env: Record<string, string>
   isDefault: boolean
+  /** The ACP session mode id new sessions start in (Default, Accept Edits, ...); null keeps the agent's own choice. */
+  defaultModeId: string | null
 }
 
 export interface FolderDto {

@@ -86,6 +86,8 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Chat window | The root of the window. | `chat-app` |
 | File menu | Opens the File menu. | `menubar-file` |
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
+| Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
+| Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
 | Close | Closes the window. | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
