@@ -187,7 +187,7 @@ describe('placeNewWindow (UX-88)', () => {
 
   it('Help opens on the side with more free width and does not cover the window that asked for it', () => {
     const left = { app: 'notepad' as const, bounds: { x: 20, y: 100, width: 420, height: 380 } }
-    const right = { app: 'notepad' as const, bounds: { x: 700, y: 100, width: 420, height: 380 } }
+    const right = { app: 'notepad' as const, bounds: { x: 760, y: 100, width: 420, height: 380 } }
     const a = placeNewWindow('help', 1, left)
     expect(overlap(a, left.bounds)).toBe(false)
     expect(a.x).toBeGreaterThanOrEqual(left.bounds.x + left.bounds.width)
@@ -195,6 +195,14 @@ describe('placeNewWindow (UX-88)', () => {
     expect(overlap(c, right.bounds)).toBe(false)
     expect(c.x + c.width).toBeLessThanOrEqual(right.bounds.x)
     expect(inside(a) && inside(c)).toBe(true)
+  })
+
+  it('never squeezes Control Center below 640 px or Event Viewer below 720 px beside the chat (UX-115, UX-121)', () => {
+    const chat = { x: 20, y: 80, width: 680, height: 560 }
+    for (const [app, min] of [['control-centre', 640], ['event-viewer', 720]] as const) {
+      expect(placeWindow(app, 1, chat).width).toBeGreaterThanOrEqual(min)
+      expect(placeNewWindow(app, 1, { app: 'chat', bounds: chat }).width).toBeGreaterThanOrEqual(min)
+    }
   })
 
   it('Help falls back to the cascade when neither side has room, still below the parent title bar', () => {

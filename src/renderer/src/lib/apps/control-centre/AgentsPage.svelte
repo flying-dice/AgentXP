@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ReasonNote from '../../kit/atoms/ReasonNote.svelte'
+  import { firstReason, reasonFor } from '../../kit/atoms/reason'
   /** Control Center > Agents: the agents tab of the old Options dialog as a page. */
   import { onMount } from 'svelte'
   import type { AgentInput } from '@shared/ipc'
@@ -61,6 +63,10 @@
     const answer = await showMessageBox({ text: `Remove the agent "${agent.name}"?`, caption: 'Control Center', buttons: 'YesNo', icon: 'warning' })
     if (answer === 'yes') await guard(() => agents.remove(agent.id))
   }
+
+  /** Why Edit and Remove are off, and why Set as Default is (one note under the buttons). */
+  const noAgent = $derived(selectedAgent ? null : 'Select an agent first')
+  const defaultReason = $derived(firstReason([!selectedAgent && 'Select an agent first', selectedAgent?.isDefault && 'This is already the default']))
 </script>
 
 <p class="lead">Agents are the programs behind your chats. New desktops use the default agent. A chat uses the agent of the desktop it is on.</p>
@@ -79,9 +85,10 @@
   </div>
   <div class="side">
     <Button data-testid="agents-add" onclick={() => (editing = { agent: null })}>Add...</Button>
-    <Button data-testid="agents-edit" disabled={!selectedAgent} onclick={() => selectedAgent && (editing = { agent: selectedAgent })}>Edit...</Button>
-    <Button data-testid="agents-remove" disabled={!selectedAgent} onclick={remove}>Remove</Button>
-    <Button data-testid="agents-set-default" disabled={!selectedAgent || selectedAgent.isDefault} onclick={() => selectedAgent && guard(() => agents.setDefault(selectedAgent.id))}>Set as Default</Button>
+    <Button data-testid="agents-edit" {...reasonFor(noAgent)} onclick={() => selectedAgent && (editing = { agent: selectedAgent })}>Edit...</Button>
+    <Button data-testid="agents-remove" {...reasonFor(noAgent)} onclick={remove}>Remove</Button>
+    <Button data-testid="agents-set-default" {...reasonFor(defaultReason)} onclick={() => selectedAgent && guard(() => agents.setDefault(selectedAgent.id))}>Set as Default</Button>
+    <ReasonNote testid="agents-reason" reason={defaultReason} />
   </div>
 </div>
 
@@ -118,8 +125,14 @@
   }
   .side {
     flex: none;
+    width: 160px;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 6px;
+  }
+  .side :global(.w7-reason) {
+    white-space: normal;
+    min-height: 2.6em;
   }
 </style>

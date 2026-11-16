@@ -26,14 +26,23 @@ export interface EventFilter {
   sessionId: number | null
   level: EventLevel | 'all'
   text: string
+  /**
+   * Hides the protocol traffic (level Information) while `level` is All levels, so the warning is not lost among 28 other events.
+   * An explicit level always wins: asking for Information shows it. Default false (everything).
+   */
+  quiet?: boolean
 }
 
 export const noFilter = (): EventFilter => ({ source: null, sessionId: null, level: 'all', text: '' })
+
+/** True for the events the viewer shows by default: warnings and errors. */
+export const isNotable = (e: Pick<ProtocolEventDto, 'level'>): boolean => e.level !== 'info'
 
 export function matchesFilter(e: ProtocolEventDto, f: EventFilter): boolean {
   if (f.source && e.source !== f.source) return false
   if (f.sessionId !== null && e.sessionId !== f.sessionId) return false
   if (f.level !== 'all' && e.level !== f.level) return false
+  if (f.quiet && f.level === 'all' && !isNotable(e)) return false
   const text = f.text.trim().toLowerCase()
   return !text || `${e.name} ${e.source} ${e.payload}`.toLowerCase().includes(text)
 }

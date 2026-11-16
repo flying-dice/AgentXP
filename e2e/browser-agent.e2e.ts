@@ -127,7 +127,13 @@ describe('Browser agent: a local chat web app', () => {
     await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")
     await see.text(browser.getByTestId('browser-error-cause'), "The address '127.0.0.1:9' could not be reached.")
     // Port 9 is one the Browser blocks: the hint says so and does not blame the network.
-    await see.text(browser.getByTestId('browser-error-hint'), 'port that the Browser blocks')
+    await see.text(browser.getByTestId('browser-error-cause'), 'port that the Browser blocks (the number after the colon)')
+    await see.text(browser.getByTestId('browser-error-hint'), '(here :9)')
+    // The technical name of the error is opt-in.
+    await see.gone(browser.getByTestId('browser-error-technical'))
+    await browser.getByTestId('browser-error-details').click()
+    await see.text(browser.getByTestId('browser-error-technical'), 'ERR_UNSAFE_PORT')
+    await browser.getByTestId('browser-error-details').click()
     await see.visible(browser.getByTestId('browser-error-help'))
     await browser.getByTestId('browser-error-refresh').click()
     await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")

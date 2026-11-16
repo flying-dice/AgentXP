@@ -69,6 +69,8 @@
     store?: SessionAgentStore | null
     /** The session row, once loaded. */
     session?: SessionDto | null
+    /** The chat's agent, bound back to the host (the chat window names it in its status line). */
+    agent?: AgentDto | null
     /**
      * Without a session (`sessionId` 0) the panel shows a composer; the first message calls this to create the session
      * (resolves with its id) and is sent to it. Without `onstart` the panel just says there is no session yet.
@@ -103,6 +105,7 @@
     pickFiles,
     store = $bindable(null),
     session = $bindable(null),
+    agent: boundAgent = $bindable(null),
     onstart,
     onnew,
     suggestions = [],
@@ -124,6 +127,9 @@
   let loadError = $state<string | null>(null)
   // Derived, so a chat that moved to another agent ("Try again with <agent>") shows the new one.
   const agent = $derived(agents.find((a) => a.id === session?.agentId) ?? null)
+  $effect(() => {
+    boundAgent = agent
+  })
   /** The desktop's default agent when it is not this chat's agent: the Try again button of a failed start names it. */
   const newDefaultAgent = $derived.by(() => {
     const standard = agents.find((a) => a.isDefault)
@@ -457,6 +463,8 @@
     margin-top: 4px;
   }
   .chip {
+    min-height: 24px;
+    min-width: 24px;
     padding: 1px 8px;
     border: 1px solid #9aa9bf;
     border-radius: 9px;

@@ -26,9 +26,11 @@
     pickFiles?: () => Promise<string[]>
     /**
      * Fills the box (and focuses it) when `id` is one the box has not applied yet; without `text` it only focuses.
+     * With `clearIf` it instead empties the box when it still holds exactly that text (a recovery button sent the message again;
+     * what the user typed after the failure stays) and does not move the focus.
      * The host (the chat pane: "Ask the agent about this...", Ctrl+Shift+C) is told through `onprefilled`, so a remount does not apply it twice.
      */
-    prefill?: { id: number; text?: string } | null
+    prefill?: { id: number; text?: string; clearIf?: string } | null
     onprefilled?: (id: number) => void
     /** A short box for short exchanges (the chat pane of an app window). */
     dense?: boolean
@@ -68,6 +70,14 @@
     if (!request || request.id === appliedPrefill) return
     appliedPrefill = request.id
     untrack(() => {
+      if (request.clearIf !== undefined) {
+        if (draft === request.clearIf) {
+          draft = ''
+          attached = []
+        }
+        onprefilled?.(request.id)
+        return
+      }
       if (request.text !== undefined) draft = request.text
       void tick().then(() => {
         input?.focus()

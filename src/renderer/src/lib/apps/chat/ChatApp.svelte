@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte'
-  import type { FolderDto, SessionDto } from '@shared/models'
+  import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import type { AppProps } from '../types'
   import { cwdLabel } from '../explorer/explorerModel'
   import { chatTitleLabels } from '../../app/chatTitles'
@@ -43,12 +43,14 @@
   // are loaded by the embedded chat panel and bound back here.
   let store = $state.raw<SessionAgentStore | null>(null)
   let session = $state.raw<SessionDto | null>(null)
+  /** The chat's agent, bound back from the embedded chat (its name starts the failure line: "My assistant could not start: ..."). */
+  let agent = $state.raw<AgentDto | null>(null)
   /** The chat's working directory shown like the old folder (name and path). */
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   /** Where the chat works, as a person says it ("login-app (E:)"); the full path is the tooltip. */
   const where = $derived(session ? folderLabel(session.cwd, host.state.drives) : '')
   /** What went wrong, in plain words with the next step; the status bar shows this and never the raw error. */
-  const problemLine = $derived(describeProblem({ error: store?.error ?? null, problem: session?.problem, failed: store?.failedSend ?? null })?.status ?? null)
+  const problemLine = $derived(describeProblem({ error: store?.error ?? null, problem: session?.problem, failed: store?.failedSend ?? null, agentName: agent?.name })?.status ?? null)
   let panelOpen = $state(false)
   let panelTab = $state('changes')
   let selectedChangeId = $state<number | null>(null)
@@ -274,7 +276,9 @@
         label: '&Tools',
         items: [
           { id: 'chat-review', testid: 'chat-menu-review', label: '&Review changes', icon: 'changes', action: reviewChanges },
-          { id: 'chat-code', testid: 'chat-menu-code', label: 'Open in &Code', action: () => void host.openApp({ app: 'code', path: host.projectRootOf(session?.cwd) }) }
+          { id: 'chat-code', testid: 'chat-menu-code', label: 'Open in &Code', action: () => void host.openApp({ app: 'code', path: host.projectRootOf(session?.cwd) }) },
+          { separator: true },
+          { id: 'chat-events', testid: 'chat-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog', action: () => void host.openEventViewer({ sessionId: sessionId > 0 ? sessionId : null }) }
         ]
       },
       { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
@@ -322,7 +326,7 @@
           <button type="button" class="dismiss" data-testid="chat-reopened-dismiss" aria-label="Dismiss" title="Dismiss" onclick={() => (reopened = null)}>x</button>
         </div>
       {/if}
-      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} prefill={{ id: focusSeq }} contained bind:store bind:session />
+      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} prefill={{ id: focusSeq }} contained bind:store bind:session bind:agent />
     </div>
     <SurfaceSidebar
       surfaces={sidebarSurfaces}

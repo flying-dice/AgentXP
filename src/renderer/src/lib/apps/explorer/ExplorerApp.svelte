@@ -25,6 +25,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { errorText } from '../shared/listing'
+  import { firstReason } from '../../kit/atoms/reason'
   import { NOTHING_REMOVED_TIP } from '../../desktop/projectDrives'
   import { opensInNotepad, typeName } from '../paths'
   import { useAppContext } from '../shared/appContext.svelte'
@@ -263,6 +264,12 @@
 
   /** A recently removed project the user selected in Computer (the toolbar's Plug in again acts on it). */
   let removedSelected = $state<Id | null>(null)
+  /** Why Open and Eject are off (tooltip, description and one line next to the buttons). */
+  const openReason = $derived(selectedDrive ? null : 'Select a drive first')
+  const ejectReason = $derived(firstReason([!selectedDrive && 'Select a project drive first', selectedDrive && selectedDrive.kind !== 'removable' && 'Only a project drive can be ejected']))
+  const commandsNote = $derived(ejectReason)
+  /** The reason as the accessible description of a button that is off (spread: the kit button forwards it). */
+  const described = (reason: string | null): Record<string, string | undefined> => ({ 'aria-description': reason ?? undefined })
 
   /** Computer with the project's drive selected, after it was plugged in (or found plugged in already). */
   function showDrive(drive: DriveDto | null): void {
@@ -436,12 +443,13 @@
       <ToolTip text={host.recentlyRemoved.length === 0 ? NOTHING_REMOVED_TIP : 'Plug the selected removed project in again, without choosing its folder.'}>
         <ToolStripButton data-testid="explorer-plug-in-again" icon="usb" text="Plug in again" disabled={removedSelected === null} onclick={() => void plugInAgain()} />
       </ToolTip>
-      <ToolTip text="Open the selected drive.">
-        <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
+      <ToolTip text={openReason ?? 'Open the selected drive.'}>
+        <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} {...described(openReason)} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
       </ToolTip>
-      <ToolTip text="Remove the selected project from this desktop. The folder stays on your disk.">
-        <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject (remove from this desktop)" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
+      <ToolTip text={ejectReason ?? 'Remove the selected project from this desktop. The folder stays on your disk.'}>
+        <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject (remove from this desktop)" disabled={selectedDrive?.kind !== 'removable'} {...described(ejectReason)} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
       </ToolTip>
+      <span class="reason" data-testid="explorer-commands-reason" role="status">{commandsNote ?? ''}</span>
     </div>
   {/if}
   <div class="split">
@@ -520,5 +528,11 @@
   }
   :global(.w7-tree.folders) {
     height: 100%;
+  }
+  .reason {
+    align-self: center;
+    margin-left: 8px;
+    color: var(--w7-text-muted);
+    white-space: nowrap;
   }
 </style>

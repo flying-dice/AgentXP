@@ -49,6 +49,29 @@ describe('control center', () => {
     await see.attribute(ctx.desktop.toolChip('fs.read'), 'data-state', 'off')
   })
 
+  it('OK stays on the same pixel when the first change is made, and a row name stays on one line (UX-115)', async () => {
+    const ok = page('permissions-ok')
+    const before = await ok.boundingBox()
+    await pick('permissions-setting-fs-read', 'allow')
+    await see.attribute(page('permissions-status'), 'data-kind', 'pending')
+    expect(await ok.boundingBox()).toEqual(before)
+    const row = page('permissions-row').filter({ has: page('permissions-setting-terminal') })
+    const box = await row.boundingBox()
+    // Name, setting, what it covers and the mode line: no row grows by a wrapped name.
+    expect(box!.height).toBeLessThan(90)
+    await page('permissions-cancel').click()
+    await see.visible(page('permissions-callout'))
+  })
+
+  it('a button that is off says why in its tooltip (UX-127)', async () => {
+    await centre.getByTestId('control-centre-page-agents').click()
+    await see.attribute(page('agents-edit'), 'title', 'Select an agent first')
+    await page('agents-row').filter({ hasText: 'Yes' }).first().click()
+    await see.attribute(page('agents-set-default'), 'title', 'This is already the default')
+    await see.text(page('agents-reason'), 'This is already the default')
+    await centre.getByTestId('control-centre-page-permissions').click()
+  })
+
   it('one row can be changed and saved with OK, and the line goes away by itself', async () => {
     await pick('permissions-setting-fs-read', 'allow')
     await see.attribute(page('permissions-status'), 'data-kind', 'pending')

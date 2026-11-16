@@ -80,6 +80,8 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Error hint | The next step for this error. | `browser-error-hint` |
 | Error address | The address to try instead. | `browser-error-address` |
 | Error go | Opens the address in the error address box. | `browser-error-go` |
+| Error details | Shows or hides the technical name of the error. It is hidden at first. | `browser-error-details` |
+| Error technical name | The technical name of the error, after you click Details. | `browser-error-technical` |
 | Error help | Opens this manual at the section Troubleshooting. | `browser-error-help` |
 | Highlight ring | An orange frame around the item the agent used. | `browser-agent-ring` |
 

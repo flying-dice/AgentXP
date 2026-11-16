@@ -115,8 +115,8 @@ export type ToolKind =
   | 'switch_mode'
   | 'other'
 
-/** Why the current text of a file could not be read for a change request (`unreadable`: it is not a file, or reading failed). */
-export type ReadErrorKind = 'unreadable'
+/** Why the current text of a file could not be read for a change request (`in_use`: another program holds it; `unreadable`: it is not a file, or reading failed). */
+export type ReadErrorKind = 'unreadable' | 'in_use'
 
 export type ToolCallContentDto =
   | { kind: 'content'; block: ContentBlockDto }

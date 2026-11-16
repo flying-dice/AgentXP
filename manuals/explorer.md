@@ -82,6 +82,7 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Plug in again | Plugs the selected recently removed project in again. | `explorer-plug-in-again` |
 | Open | Opens the selected drive. | `explorer-open` |
 | Eject (remove from this desktop) | Removes the selected project from this desktop. The folder and its files stay where they are. | `explorer-eject` |
+| Reason note | Says why Open or Eject is off, for example **Select a drive first**. | `explorer-commands-reason` |
 | Navigation pane | The tree at the left. | `explorer-nav` |
 | Favorites | The group of favorite folders. | `explorer-tree-favorites` |
 | Favorite | One favorite folder. | `explorer-tree-favorite` |

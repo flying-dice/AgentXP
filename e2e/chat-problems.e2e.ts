@@ -14,8 +14,7 @@ describe('chat: the agent cannot start', () => {
     })
     await ctx.desktop.openApp('chat')
     const chat = ctx.desktop.chat()
-    await see.text(chat.errors, "The program 'not-a-real-command' was not found.")
-    await see.text(chat.errors, 'The agent could not start.')
+    await see.text(chat.errors, "Broken agent could not start: the program 'not-a-real-command' was not found.")
     expect(await chat.errors.innerText()).not.toMatch(/ACP|ENOENT|JSON/)
     await see.count(ctx.desktopPage.getByTestId('message-box'), 0)
     await see.text(chat.frame.getByTestId('chat-error-restart'), 'Try again')
@@ -88,6 +87,24 @@ describe('chat: the agent program is stopped from Task Manager', () => {
     await see.gone(chat.errors)
     await see.text(chat.frame.getByTestId('chat-restart-status'), 'The agent is running again.')
     await see.text(chat.frame.getByTestId('chat-status'), 'Connected')
+  })
+
+  it('Event Viewer opens from the Tools menu of the chat and from the Activity list, and starts on warnings and errors (UX-121)', async () => {
+    await ctx.desktop.closeWindow('agent-manager') // it covers the Activity list
+    const chat = ctx.desktop.chat()
+    await chat.frame.getByTestId('menubar-tools').click()
+    await ctx.desktopPage.getByTestId('chat-menu-event-viewer').click()
+    const viewer = ctx.desktop.window('event-viewer')
+    await see.visible(viewer)
+    await see.attribute(viewer.getByTestId('event-viewer-show-all'), 'aria-checked', 'false')
+    await viewer.getByTestId('event-viewer-show-all').click()
+    await see.attribute(viewer.getByTestId('event-viewer-show-all'), 'aria-checked', 'true')
+    await ctx.desktop.closeWindow('event-viewer')
+    await ctx.desktopPage.getByTestId('gadget-activity-open-event-viewer').click()
+    await see.visible(ctx.desktop.window('event-viewer'))
+    await ctx.desktop.closeWindow('event-viewer')
+    await ctx.desktopPage.getByTestId('gadget-activity').dblclick()
+    await see.visible(ctx.desktop.window('event-viewer'))
   })
 
   it('the mode list ends with "Ask before every action", which is the same switch as the top bar', async () => {
