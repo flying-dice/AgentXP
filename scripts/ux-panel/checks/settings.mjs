@@ -59,10 +59,16 @@ export const checks = {
   },
 
   async 'T22.2'(ctx, { answer }) {
+    // H-96: the scenario does not name a Help window and the answer is on the Changes pane's own screen, so a correct answer without a
+    // Help window passes (the T22.1 rule, H-24). A Help window with the wrong topic still fails.
     const help = await helpInfo(ctx)
-    if (!help) return fail('no Help window is open (neither "Help and Support" nor "Chat Help"; no window with app help)')
+    const answerWords = { keywords: [['revert', 'undo'], ['changes', 'recycle']], expect: 'the answer lists the steps correctly (Tasks and changes > Changes > select > Revert; Recycle Bin to restore)' }
+    if (!help) {
+      if (!answer) return manual('no Help window is open and no answer was given; the answer must name the Changes pane (Revert) or the Recycle Bin')
+      return withAnswer(pass('no Help window; the answer decides'), answer, answerWords)
+    }
     const ok = ['recycle-bin', 'chat'].includes(help.topic) || /recycle bin|changes/i.test(help.text)
-    return withAnswer(all([[ok, `the topic about the Changes pane or Recycle Bin is open (topic ${help.topic ?? '?'})`]]), answer, { keywords: [['revert', 'undo'], ['changes', 'recycle']], expect: 'the answer lists the steps correctly (Tasks and changes > Changes > select > Revert; Recycle Bin to restore)' })
+    return withAnswer(all([[ok, `the topic about the Changes pane or Recycle Bin is open (topic ${help.topic ?? '?'})`]]), answer, answerWords)
   }
 }
 

@@ -14,8 +14,7 @@ export const RECORD_TEMPLATE = `# <task> <title> - <level>
 - Help used (F1, Help topics): ...
 - Steps (the numbered step list of the final report): ...
 - Frustrations / what they would change: ...
-- Evidence: <session folder copy>/shots/NNN.png, log.jsonl
-- Researcher notes (answer checks, MANUAL decisions): ...`
+- Evidence: docs/ux/panel/<round>/<task>-<level>-session/shots/NNN.png, log.jsonl (the repository path of the session copy; name the shots you quote)`
 
 /**
  * `taskInfo` is the entry of the task in docs/ux/tasks.md, `panelist` the text of PANELIST.md (LEVEL is replaced here).
@@ -61,10 +60,10 @@ export function buildBrief({ task, level, taskInfo, panelist, round = 'r1', out,
     '',
     '## 4. Record',
     '',
-    `Write \`${record}\` with this template, copying your final report into it (the numbered step list; Errors, Help and Frustrations from your report; SEQ line exactly as in your report). The Result line copies the first lines that \`check\` printed. Leave "Researcher notes" as "(none yet)".`,
+    `Write \`${record}\` with this template, copying your final report into it (the numbered step list; Errors, Help and Frustrations from your report; SEQ line exactly as in your report). The Result line copies the first lines that \`check\` printed. The Evidence line is the repository path shown in the template, not the temporary folder.`,
     '',
     '```',
-    RECORD_TEMPLATE.replace('<task>', task).replace('<title>', taskInfo?.title ?? '<title>').replace('<level>', level),
+    RECORD_TEMPLATE.replaceAll('<round>', round).replaceAll('<task>', task).replace('<title>', taskInfo?.title ?? '<title>').replaceAll('<level>', level),
     '```',
     '',
     '## 5. Stop',

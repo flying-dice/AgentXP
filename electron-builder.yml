@@ -8,6 +8,9 @@ files:
   - '!docs/*'
   - '!.storybook/*'
   - '!{electron.vite.config.ts,tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
+extraResources:
+  - from: resources/build-info.json
+    to: build-info.json
 asarUnpack:
   - resources/**
 win:

@@ -167,7 +167,8 @@ export function summaryOf(payload: string): string {
 function firstString(value: unknown, depth: number): string | null {
   if (typeof value === 'string') return value.length > 3 ? value.slice(0, 200) : null
   if (depth > 5 || value === null || typeof value !== 'object') return null
-  for (const v of Object.values(value)) {
+  for (const [key, v] of Object.entries(value)) {
+    if (key === 'type' || key === 'mimeType') continue
     const found = firstString(v, depth + 1)
     if (found) return found
   }
@@ -188,14 +189,36 @@ export function findNext(events: readonly ProtocolEventDto[], text: string, from
 
 export interface ProblemLine {
   level: Exclude<EventLevel, 'info'>
-  /** One plain line: the message the event carries, else its name. */
+  /** One plain sentence, never a protocol word. */
   text: string
 }
 
-/** The newest warning or error of the log, for the Activity gadget; null when there is none. `events` is oldest first. */
+const PROTOCOL_WORD = /RUN_ERROR|RUN_FINISHED|JSON-?RPC|\bACP\b|AG-UI|\bMCP\b|session\/|\(response\)|\bInternal error\b|\bnpx\b/i
+const DRIVE_GONE = /Drive ([A-Z]):\s+(?:is not plugged in|was removed)/
+const CONNECTION = /closed before|connection|disconnect|econnreset|epipe|socket/i
+
+/** A plain sentence for one warning or error: what it says when that is readable, else one sentence per kind of event (UX-188). */
+export function problemSentence(e: ProtocolEventDto): string {
+  const message = summaryOf(e.payload).replace(/\s+/g, ' ').trim()
+  const drive = DRIVE_GONE.exec(message) ?? DRIVE_GONE.exec(e.payload)
+  if (drive) return `Drive ${drive[1]}: was removed`
+  if (CONNECTION.test(message)) return 'The connection dropped'
+  if (e.name === 'RUN_ERROR') return 'The agent stopped unexpectedly'
+  if (message && !PROTOCOL_WORD.test(message) && message.length <= 160) return message
+  if (e.level === 'warning') return e.name === 'session/cancel' || /cancel/i.test(e.payload) ? 'The agent was stopped' : 'The agent was not allowed to do that'
+  if (e.source === 'mcp') return 'A tool of the desktop could not finish'
+  return e.source === 'ag-ui' ? 'The agent stopped unexpectedly' : 'The agent reported a problem'
+}
+
+/** A chat that finished a turn after event `e` has recovered from it (a later RUN_FINISHED of the same chat). */
+const recovered = (events: readonly ProtocolEventDto[], e: ProtocolEventDto): boolean =>
+  e.sessionId !== null && events.some((o) => o.id > e.id && o.sessionId === e.sessionId && o.name === 'RUN_FINISHED' && o.level === 'info')
+
+/**
+ * The newest warning or error of the log that is still current, for the Activity gadget; null when there is none.
+ * A problem of a chat is dropped once the same chat has a later successful turn. `events` is oldest first.
+ */
 export function lastProblem(events: readonly ProtocolEventDto[]): ProblemLine | null {
-  const e = events.findLast(isNotable)
-  if (!e) return null
-  const text = summaryOf(e.payload).replace(/\s+/g, ' ').trim() || e.name
-  return { level: e.level as ProblemLine['level'], text }
+  const e = events.findLast((o) => isNotable(o) && !recovered(events, o))
+  return e ? { level: e.level as ProblemLine['level'], text: problemSentence(e) } : null
 }

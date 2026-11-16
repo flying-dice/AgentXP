@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { normalizeKey, parseArgs, parseCommand } from './lib/args.mjs'
-import { countSteps, createLog, readLog, summarize } from './lib/log.mjs'
+import { countSteps, createLog, readLog, stepsToPassFromLog, summarize } from './lib/log.mjs'
+import { windowKind, windowLine } from './lib/windows.mjs'
 import { buildBrief, RECORD_TEMPLATE } from './lib/brief.mjs'
 import { scrollReport, scrollWarning } from './lib/args.mjs'
 import { answerOrderNotes } from './checks/chat.mjs'
@@ -11,7 +12,7 @@ import { canonicalTaskId, contextConflicts, contextProblem, parsePrevious, withS
 import { effectiveSteps, recordAnswerProblem, stepsToPassOf, answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq, answerTooShort, seqProblem, startDecision, syncSeq } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
 import { barChipConflicts, countsThreeAndThree } from './checks/chat.mjs'
-import { gateProblem, readBuild, withBuildLine } from './lib/build.mjs'
+import { commitProblem, gateProblem, readBuild, siblingCommits, withBuildLine } from './lib/build.mjs'
 import { T162_NO, T162_WHY } from './checks/settings.mjs'
 import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, saysCouldNotTell, userText } from './checks/util.mjs'
 import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
@@ -229,6 +230,12 @@ describe('H-07 T22.x accept the Help window under either title', () => {
     expect((await run('T22.2', ok, 'open Changes, select, Revert; the recycle bin restores')).status).toBe('PASS')
     expect((await run('T22.2', fakeCtx({ desktop: { windows: [win('help', { topic: 'chat' })] } }))).status).toBe('MANUAL')
     expect((await run('T22.2', fakeCtx({ desktop: { windows: [win('help', { topic: 'paint' })] } }))).status).toBe('FAIL')
+  })
+  it('H-96: T22.2 accepts a correct answer without a Help window, and still fails a wrong one', async () => {
+    const none = fakeCtx({ desktop: { windows: [] } })
+    expect((await run('T22.2', none, 'Open Changes, select the change and click Revert; the Recycle Bin can restore it')).status).toBe('PASS')
+    expect((await run('T22.2', none, 'I do not know')).status).toBe('FAIL')
+    expect((await run('T22.2', none)).status).toBe('MANUAL')
   })
   it('fails without a help window', async () => {
     // H-24: without a Help window the tooltip answer decides; no answer at all needs the researcher
@@ -550,7 +557,7 @@ describe('H-27 H-31 H-38 H-40 scripts', () => {
   it('browser-agent has a read rule and a fallback', () => {
     const agent = json('scripts/browser-agent.json')
     expect(agent.rules.find((r) => r.id === 'read-page').steps.some((x) => x.tool === 'browser_read')).toBe(true)
-    expect(JSON.stringify(agent.fallback)).toContain('I can read the page that is open in the Browser.')
+    expect(JSON.stringify(agent.fallback)).toContain('Okay.')
   })
 })
 
@@ -614,6 +621,15 @@ describe('H-49 T19.1 asks the assistant, H-50 T02.2 asks for the reason', () => 
     expect(new RegExp(rule.match.regex, 'i').test('What does it say?')).toBe(true)
     expect(new RegExp(rule.match.regex, 'i').test('Please read this')).toBe(true)
   })
+  it('H-98: the read rule does not match a follow-up about the work, and T28.1 puts the request on its own line', () => {
+    const rule = JSON.parse(source('scripts/browser-agent.json')).rules.find((r) => r.id === 'read-page')
+    const re = new RegExp(rule.match.regex, 'i')
+    expect(re.test('How could I tell that you were using the page?')).toBe(false)
+    expect(re.test('Then tell me what you did in the browser.')).toBe(false)
+    const t = loadTasks()['T28.1']
+    expect(t.scenario).toContain('tell the facilitator')
+    expect(t.scenario.split('\n\n')).toContain('Use the chat app at http://127.0.0.1:4174/')
+  })
   it('T02.2 tries the same name and needs the reason', async () => {
     const t = loadTasks()['T02.2']
     expect(t.scenario).toContain('Try to give it the same name. If the program will not allow that, say why')
@@ -648,7 +664,7 @@ describe('H-51 T14.1 start state waits for the agent problem', () => {
 describe('H-52 a hover waits for the tooltip', () => {
   it('move waits longer than the 500 ms tooltip delay', () => {
     const src = source('server.mjs')
-    expect(src).toContain('HOVER_WAIT_MS = 800')
+    expect(src).toContain('HOVER_WAIT_MS = 1200')
     expect(src).toContain("cmd === 'move' ? HOVER_WAIT_MS : 150")
   })
   it('PANELIST.md says to look again after a hover', () => {
@@ -1366,6 +1382,31 @@ describe('H-94 build id', () => {
     expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'x' } }).packaged).toBe(true)
     expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: join(root, 'missing.exe'), UX_BUILD_COMMIT: 'x' } }).packaged).toBe(false)
   })
+  it('H-100: the commit comes from build-info.json beside the packaged executable, before the environment', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ux-h100-'))
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+    mkdirSync(join(root, 'app', 'resources'), { recursive: true })
+    const exe = join(root, 'app', 'Agent7.exe')
+    writeFileSync(exe, '')
+    expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'envcommit00' } }).commit).toBe('envcommit00')
+    writeFileSync(join(root, 'app', 'resources', 'build-info.json'), JSON.stringify({ commit: '840aaf8687aa', version: '1.2.3' }))
+    expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'envcommit00' } }).commit).toBe('840aaf8687aa')
+  })
+  it('H-100: a round with two commit ids is refused unless confirmed', () => {
+    expect(commitProblem(['840aaf8687aa', '840aaf8687bb', null])).toBe(null) // the same first ten characters
+    expect(commitProblem(['840aaf8687', '840aaf8687', 'f29521dd34'])).toContain('840aaf8687, f29521dd34')
+    expect(commitProblem(['840aaf8687', 'f29521dd34'], { confirmed: true })).toBe(null)
+    expect(commitProblem([])).toBe(null)
+  })
+  it('H-100: siblingCommits reads the other session folders of the round', () => {
+    const round = mkdtempSync(join(tmpdir(), 'ux-h100r-'))
+    for (const [name, commit] of [['T01.1-novice', 'aaaaaaaaaa'], ['T02.1-novice', 'bbbbbbbbbb'], ['T03.1-novice', 'cccccccccc']]) {
+      mkdirSync(join(round, name))
+      writeFileSync(join(round, name, name === 'T03.1-novice' ? 'check.json' : 'session.json'), JSON.stringify({ build: { commit } }))
+    }
+    expect(siblingCommits(join(round, 'T02.1-novice')).sort()).toEqual(['aaaaaaaaaa', 'cccccccccc'])
+    expect(siblingCommits(join(round, 'missing', 'x'))).toEqual([])
+  })
   it('a round without packaged: true does not count for the gate', () => {
     expect(gateProblem([{ build: { packaged: true } }, { build: { packaged: true } }])).toBe(null)
     expect(gateProblem([{ build: { packaged: true } }, { build: { packaged: false } }, {}])).toContain('2 of 3')
@@ -1387,5 +1428,39 @@ describe('H-95 T23.2 documents the flaky script', () => {
     expect(md).toContain('first send after each Reconnect fails again')
     const script = JSON.parse(source('scripts/flaky.json'))
     expect(script.rules[0]).toMatchObject({ id: 'first-fails', once: true })
+  })
+})
+
+describe('H-101 to H-105 round 7 harness', () => {
+  it('H-101: stepsToPassFromLog counts the actions up to the first line where the check held', () => {
+    const log = [{ cmd: 'shot' }, { cmd: 'click' }, { cmd: 'click', ok: false }, { cmd: 'type', checkHeld: true }, { cmd: 'click' }]
+    expect(stepsToPassFromLog(log)).toBe(2)
+    expect(stepsToPassFromLog([{ cmd: 'click' }, { cmd: 'click' }])).toBe(null)
+    expect(stepsToPassFromLog([])).toBe(null)
+  })
+  it('H-101: the server replays the check for T01.1 and T02.1 and check.json uses the log', () => {
+    expect(source('server.mjs')).toContain('REPLAY_TASKS.includes(state.task)')
+    expect(source('session.mjs')).toContain('stepsToPassFromLog(entries)')
+  })
+  it('H-102: a shot says which window it shows, and a click waits for a new window', () => {
+    expect(windowKind('file:///x/index.html?launcher=1')).toBe('launcher')
+    expect(windowKind('file:///x/index.html?desktop=3')).toBe('desktop')
+    expect(windowKind('about:blank')).toBe('window')
+    expect(windowLine('x?desktop=3', 'Fix login redirect')).toBe('Window shown: desktop "Fix login redirect"')
+    expect(source('server.mjs')).toContain('NEW_WINDOW_WAIT_MS = 1500')
+    expect(source('server.mjs')).toContain('windowLine(page.url(), entry.window)')
+  })
+  it('H-105: the template has no empty Researcher notes line and the Evidence line is a repository path', () => {
+    expect(RECORD_TEMPLATE).not.toContain('Researcher notes')
+    expect(RECORD_TEMPLATE).toContain('- Evidence: docs/ux/panel/<round>/<task>-<level>-session/shots/NNN.png')
+    const brief = buildBrief({ task: 'T01.1', level: 'novice', taskInfo: { title: 'Find the start' }, panelist: 'LEVEL', round: 'r8' })
+    expect(brief).toContain('- Evidence: docs/ux/panel/r8/T01.1-novice-session/shots/NNN.png')
+    expect(brief).not.toContain('Researcher notes')
+    expect(source('PANELIST.md')).toContain('Open every screenshot that a command lists')
+  })
+  it('H-104 and H-97: /tmp paths are test paths in the briefing; bad-default-agent adds a working helper agent', () => {
+    expect(source('PANELIST.md')).toContain('start with `/tmp` are test paths')
+    expect(source('presets/desktops.mjs')).toContain("name: 'Helper assistant'")
+    expect(source('presets/desktops.mjs')).toContain('makeDefault: false')
   })
 })

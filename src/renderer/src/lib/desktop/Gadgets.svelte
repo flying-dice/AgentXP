@@ -157,6 +157,10 @@
   .feed li.problem {
     font-weight: 700;
   }
+  .feed li.problem .t {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
   .feed li.control {
     font-weight: 700;
   }

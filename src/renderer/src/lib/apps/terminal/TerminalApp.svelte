@@ -50,14 +50,19 @@
   const text = $derived(current ? fullText.slice(Math.min(cleared[current.key] ?? 0, fullText.length)) : fullText)
   let screen = $state<HTMLElement | null>(null)
 
-  /** The read-only notice at the bottom of the screen: shown by a key press, gone after a few seconds. */
-  let notice = $state(false)
+  /**
+   * The read-only notice at the bottom of the screen. It shows when the window opens and stays until the first click in the text
+   * area (UX-190); after that a click or a key press shows it for a few seconds.
+   */
+  let notice = $state(true)
   let noticeTimer: ReturnType<typeof setTimeout> | undefined
-  function typed(event: KeyboardEvent): void {
-    if (!isTypingKey(event)) return
+  function showNotice(): void {
     notice = true
     clearTimeout(noticeTimer)
     noticeTimer = setTimeout(() => (notice = false), NOTICE_MS)
+  }
+  function typed(event: KeyboardEvent): void {
+    if (isTypingKey(event)) showNotice()
   }
   $effect(() => () => clearTimeout(noticeTimer))
 
@@ -165,7 +170,7 @@
     {/if}
   </div>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onkeydown={typed}>
+  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onkeydown={typed} onpointerdown={showNotice}>
     <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" lockedCursor />
     {#if notice}
       <div class="notice" data-testid="terminal-readonly-notice" role="status">{READ_ONLY_NOTICE}</div>

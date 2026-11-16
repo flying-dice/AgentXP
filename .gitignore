@@ -9,3 +9,4 @@ storybook-static
 *.tsbuildinfo
 .scratch/
 .claude/worktrees/
+resources/build-info.json

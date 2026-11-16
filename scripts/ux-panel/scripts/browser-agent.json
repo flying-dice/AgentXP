@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "browser-agent",
-  "description": "Uses a local chat web app through the browser_* tools: tree, find, click, scroll, type into a contenteditable, press Enter, iframe, shadow DOM, tabs. The prompt carries the address (\"... chat app at <url>\"). Any prompt about reading, summarising or looking at the open page makes it call browser_read and report (H-40); other prompts get a plain sentence.",
+  "description": "Uses a local chat web app through the browser_* tools: tree, find, click, scroll, type into a contenteditable, press Enter, iframe, shadow DOM, tabs. The prompt carries the address (\"... chat app at <url>\"). Any prompt about reading, summarising or looking at the open page makes it call browser_read and report (H-40); any other text gets the neutral reply Okay. (H-98).",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -807,7 +807,7 @@
     {
       "id": "read-page",
       "match": {
-        "regex": "summar|read|look|see|say|says|what|page|browser|tell me"
+        "regex": "summar|\\bread\\b|\\blooks?\\b|\\bsee\\b|\\bsays?\\b|what does|what is on"
       },
       "steps": [
         {
@@ -840,7 +840,7 @@
   "fallback": [
     {
       "type": "message",
-      "text": "I can read the page that is open in the Browser."
+      "text": "Okay."
     }
   ]
 }

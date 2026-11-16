@@ -21,7 +21,7 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 | `windows` / `switch <n>` | list the program windows, look at another one |
 | `shot` | take a screenshot (also prints the words that are on screen) |
 | `click <x> <y>` (`--double`, `--right`) | click at a pixel position of the screenshot |
-| `move <x> <y>` | hover (tooltips; the screenshot is taken after a short wait, so a tooltip is in it. If you expect one and do not see it, look again with `shot`) |
+| `move <x> <y>` | hover. A tooltip needs a moment: the screenshot is taken 1.2 seconds after the move. If you expect a tooltip and do not see it, wait with `wait 1000` and look again with `shot` |
 | `drag <x1> <y1> <x2> <y2>` | drag with the mouse |
 | `scroll <x> <y> <dy>` | scroll with the mouse wheel at that position. `dy` is in pixels, positive = down: **100 is one wheel notch, 200 to 300 moves about a page**. A `dy` under 20 barely moves anything (the output warns). The output says how far the content moved |
 | `type "<text>"` | type text where the keyboard focus is |
@@ -29,9 +29,13 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 | `wait <ms>` | wait up to 10000 ms |
 | `find "<text>"` | where does this text appear on the screen? (like asking a screen reader) |
 
-Every action prints the path of a new screenshot and "Step N", the number of actions you have done so far (a scroll is one step like a click; you do not need to count yourself). **One step = one action + look at its screenshot.** Screenshots are
+**Open every screenshot that a command lists (with your Read tool) before you act again or describe the screen**; the output text alone is not what a person sees. Every action prints the path of a new screenshot and "Step N", the number of actions you have done so far (a scroll is one step like a click; you do not need to count yourself). **One step = one action + look at its screenshot.** Screenshots are
 1280x800 pixels; coordinates are pixels in the screenshot. A new window can open (the output says so); use `windows` and
 `switch` to look at it. Press **F1** if you want help from the program itself, like a person would.
+
+The output under each screenshot says which window it shows ("Window shown: desktop ..."). After a click that opens a window, that
+window is the one you see. Folder paths that start with `/tmp` are test paths of this study (the program runs in a sandbox): they
+are not wording of the program, so do not report them as a problem.
 
 ## What you must not do
 

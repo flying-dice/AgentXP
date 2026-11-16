@@ -27,7 +27,7 @@ Use Event Viewer to see what an agent sent and received. Read it to find out why
 
 ## 2 - Open It
 
-Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event. The Activity list on the desktop also shows the last warning or error, for example **Warning: Drive E: was removed**, above the steps of the agent.
+Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event. The Activity list on the desktop also shows the last warning or error, as one plain sentence, for example **Warning: Drive E: was removed** or **Error: The agent stopped unexpectedly**, above the steps of the agent. The line goes away when the same chat finishes a later turn.
 
 ## 3 - The Window
 
@@ -71,7 +71,7 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 | Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
 | More: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
 | Show all (n) | A link in an empty list. It clears the filter and shows every event. | `event-viewer-empty-show-all` |
-| Last problem | The last warning or error in the Activity list on the desktop. | `gadget-activity-problem` |
+| Last problem | The last warning or error in the Activity list on the desktop, in plain words. It goes away when the same chat finishes a later turn. | `gadget-activity-problem` |
 | Events | The list of events. | `event-viewer-list` |
 | Event | One row of the list. | `event-viewer-row` |
 | Details | The pane of the selected event. | `event-viewer-detail` |
