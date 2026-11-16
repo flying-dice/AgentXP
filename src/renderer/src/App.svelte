@@ -1,7 +1,7 @@
 <script lang="ts">
   import MessageBoxHost from './lib/kit/organisms/MessageBoxHost.svelte'
-  import MainWindow from './lib/pages/MainWindow.svelte'
+  import DesktopPage from './lib/pages/DesktopPage.svelte'
 </script>
 
-<MainWindow />
+<DesktopPage />
 <MessageBoxHost />

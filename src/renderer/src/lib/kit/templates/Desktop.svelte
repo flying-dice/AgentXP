@@ -6,6 +6,7 @@
     taskbarItems?: TaskbarItem[]
     clock?: Date
     showTaskbar?: boolean
+    startOpen?: boolean
     onstart?: () => void
     onitemclick?: (item: TaskbarItem) => void
     /** Windows: position them absolutely inside this area. */
@@ -14,13 +15,13 @@
     class?: string
   }
 
-  let { taskbarItems = [], clock, showTaskbar = true, onstart, onitemclick, children, tray, class: className = '' }: Props = $props()
+  let { taskbarItems = [], clock, showTaskbar = true, startOpen = false, onstart, onitemclick, children, tray, class: className = '' }: Props = $props()
 </script>
 
 <div class="w7-desktop {className}">
   <div class="area">{@render children?.()}</div>
   {#if showTaskbar}
-    <Taskbar items={taskbarItems} {clock} {tray} {onstart} {onitemclick} />
+    <Taskbar items={taskbarItems} {clock} {tray} {startOpen} {onstart} {onitemclick} />
   {/if}
 </div>
 
