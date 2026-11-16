@@ -324,7 +324,7 @@
       style="width:170px"
     />
     <span class="spring"></span>
-    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={panelOpen} checkOnClick data-testid="chat-panel-toggle" />
+    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={panelOpen} checkOnClick title="Changes the agent made: review, revert" data-testid="chat-panel-toggle" />
   </div>
   <div class="row">
     <div class="main">

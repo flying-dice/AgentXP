@@ -25,6 +25,8 @@ type ResumeResponses = Parameters<typeof buildResumeArray>[1]
 
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error))
 
+const sameFiles = (a: readonly string[], b: readonly string[]): boolean => a.length === b.length && a.every((p, i) => p === b[i])
+
 function userContent(text: string, attachments: string[]): string | ContentPart[] {
   if (attachments.length === 0) return text
   const files: ContentPart[] = attachments.map((path) => ({
@@ -147,9 +149,21 @@ export class SessionAgentStore {
    */
   async send(text: string, attachments: string[] = []): Promise<boolean> {
     if (this.running || this.interrupts.length > 0) return false
+    const previous = this.failedSend
     this.failedSend = null
     this.stoppedByUser = false
     this.lastDecision = null
+    // The same text again after a failure ("Press Send to try again", also after Reconnect): the failed copy is taken back first,
+    // so the message is in the transcript once (UX-162).
+    if (previous?.unanswered && previous.text === text && sameFiles(previous.attachments, attachments)) {
+      try {
+        await this.withdraw(previous)
+      } catch (error) {
+        this.failedSend = previous
+        this.error = messageOf(error)
+        return false
+      }
+    }
     const message: UserMessage = { id: randomUUID(), role: 'user', content: userContent(text, attachments) }
     this.agent.addMessage(message)
     this.messages = [...this.agent.messages]
@@ -202,7 +216,10 @@ export class SessionAgentStore {
   private async withdraw(failed: FailedSend): Promise<void> {
     if (!failed.unanswered) return
     await this.sessionsApi().retry(this.sessionId)
-    this.agent.setMessages(this.agent.messages.filter((m) => m.id !== failed.messageId))
+    // A Reconnect loads the transcript again, so the copy may carry another id: the unanswered last message with the same text goes too.
+    const content = JSON.stringify(userContent(failed.text, failed.attachments))
+    const last = this.agent.messages.at(-1)
+    this.agent.setMessages(this.agent.messages.filter((m) => m.id !== failed.messageId && !(m === last && m.role === 'user' && JSON.stringify(m.content) === content)))
     this.messages = [...this.agent.messages]
   }
 

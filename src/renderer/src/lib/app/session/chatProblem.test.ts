@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeProblem, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
+import { defaultActionId, describeProblem, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
 
 const stopped = { kind: 'agent-stopped', message: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed' } as const
 const notFound = { kind: 'start-failed', message: "The agent could not start. The program 'not-a-real-command' was not found.", detail: 'spawn not-a-real-command ENOENT' } as const
@@ -13,7 +13,7 @@ describe('describeProblem', () => {
     const result = describeProblem({ error: 'ACP connection closed', problem: stopped, failed: { unanswered: true } })!
     expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.')
     expect(result.text).not.toMatch(/ACP/)
-    expect(result.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Show in Event Viewer'])
+    expect(result.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Event Viewer'])
     expect(result.detail).toBe('ACP connection closed')
   })
 
@@ -36,8 +36,8 @@ describe('describeProblem', () => {
   it('a second failure in a row adds the cause and swaps Restart and send again for Start a new chat', () => {
     const again = { ...stopped, failures: 2, cause: 'The agent program closed the connection.' }
     const result = describeProblem({ error: null, problem: again, failed: { unanswered: true } })!
-    expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.\nIt stopped again: the agent program closed the connection. Show in Event Viewer shows the details.')
-    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat (your text is kept in the box)', 'Details...', 'Show in Event Viewer'])
+    expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.\nIt stopped again: the agent program closed the connection.')
+    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat (your text is kept in the box)', 'Details...', 'Event Viewer'])
     expect(describeProblem({ error: null, problem: again, failed: null })!.actions.map((a) => a.label)).toContain('Start a new chat')
     const first = describeProblem({ error: null, problem: { ...again, failures: 1 }, failed: { unanswered: true } })!
     expect(first.text).not.toMatch(/stopped again/)
@@ -46,7 +46,7 @@ describe('describeProblem', () => {
 
   it('a second start failure names the plain cause and offers a new chat', () => {
     const result = describeProblem({ error: null, problem: { ...notFound, failures: 2, cause: "The program 'x' was not found." }, failed: null })!
-    expect(result.text).toContain("It stopped again: the program 'x' was not found. Show in Event Viewer")
+    expect(result.text).toContain("It stopped again: the program 'x' was not found.")
     expect(result.actions.map((a) => a.id)).toEqual(['restart', 'open-agents', 'choose-agent', 'new-chat', 'event-viewer', 'details'])
   })
 
@@ -115,7 +115,7 @@ describe('plainError', () => {
 describe('a first crash (failures 1, as main records one crash)', () => {
   it('offers Restart and send again and does not say it stopped again', () => {
     const shown = describeProblem({ error: 'ACP connection closed', problem: { ...stopped, failures: 1 }, failed: { unanswered: true } })!
-    expect(shown.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Show in Event Viewer'])
+    expect(shown.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Event Viewer'])
     expect(shown.text).not.toMatch(/stopped again/)
   })
 })
@@ -142,5 +142,21 @@ describe('problemDetails and logLines', () => {
   it('formats the newest events, oldest first', () => {
     const events = ['a', 'b', 'c'].map((name, i) => ({ at: `2026-11-16T10:42:0${i}.000Z`, source: 'acp' as const, name, level: i === 2 ? ('error' as const) : ('info' as const) }))
     expect(logLines(events, 2)).toEqual(['10:42:01 ACP b', '10:42:02 ACP c (error)'])
+  })
+})
+
+describe('defaultActionId (UX-160)', () => {
+  const id = (input: Parameters<typeof describeProblem>[0]): string | null => defaultActionId(describeProblem(input)!.actions)
+
+  it('is the recovery that works, never Details or Event Viewer', () => {
+    expect(id({ error: null, problem: stopped, failed: null })).toBe('restart')
+    expect(id({ error: null, problem: stopped, failed: { unanswered: true } })).toBe('restart-send')
+    expect(id({ error: null, problem: { ...stopped, failures: 2 }, failed: { unanswered: true } })).toBe('restart')
+    expect(id({ error: null, problem: { ...stopped, kind: 'agent-ended', failures: 2 }, failed: null })).toBe('restart')
+    expect(id({ error: 'Request timed out', problem: null, failed: { unanswered: true } })).toBe('send-again')
+  })
+  it('is none when there is nothing to retry', () => {
+    expect(id({ error: 'Rate limit', problem: null, failed: null })).toBeNull()
+    expect(defaultActionId([{ id: 'details', label: 'Details...' }])).toBeNull()
   })
 })

@@ -88,7 +88,8 @@ export type AppView =
     }
   | { app: 'terminal'; terminalId: string | null; cwd: VPath; runningCommand: string | null; lastLines: string[] }
   | { app: 'browser'; url: string; title: string; loading: boolean }
-  | { app: 'control-centre'; page: ControlCentrePage }
+  /** `row`: the Permissions row to select (a tool group id such as `terminal`), set by a top bar chip. */
+  | { app: 'control-centre'; page: ControlCentrePage; row?: string }
   | { app: 'agent-manager' }
   | { app: 'paint'; path: VPath | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
   | { app: 'wordpad'; path: VPath | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }

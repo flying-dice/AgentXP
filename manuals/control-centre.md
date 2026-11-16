@@ -123,7 +123,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Permission table | The permissions in two blocks. | `permissions-table` |
 | Permissions note | The box above the list that says what each row covers, including Code and Notepad. | `permissions-callout` |
 | Permission block | The heading of a block. | `permissions-group` |
-| Permission row | One permission. | `permissions-row` |
+| Permission row | One permission. The row that a top bar chip asked for is highlighted. | `permissions-row` |
 | What it covers | The second line of a row. It tells what the permission covers. | `permissions-covers` |
 | What the setting does | The third line of a row. **Allow** runs without asking, **Ask** asks you each time, **Deny** never runs. | `permissions-mode` |
 | Permission list | Sets Allow, Ask, or Deny for one row. The name ends with the row, for example `fs-read`. | `permissions-setting-*` |

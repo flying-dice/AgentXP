@@ -538,9 +538,9 @@ export class DesktopController implements DesktopHost {
   // ---- agent controls ---------------------------------------------------------------------------
 
   /** Opens Control Center (one window per desktop) at a page, e.g. the top bar chips open Permissions. */
-  async openControlCentre(page: ControlCentrePage): Promise<void> {
+  async openControlCentre(page: ControlCentrePage, row?: string): Promise<void> {
     const window = await this.openApp({ app: 'control-centre' })
-    await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
+    await this.api.desktop.updateView(window.id, { app: 'control-centre', page, ...(row ? { row } : {}) })
   }
 
   /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event: the flag menu and "Show in Event Viewer". */

@@ -143,7 +143,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
-| Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask**. Its tooltip is **Open Control Center.** A click opens Control Center at Permissions. | `topbar-tool-chip-*` |
+| Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask**. Its tooltip starts with **Open Control Center to change this.** A chip for an app that is not open has a dashed border. A click opens Control Center at Permissions with the row of that tool selected. | `topbar-tool-chip-*` |
 | Nothing yet | Shows that no app and no chat is open, or that only chats are. | `topbar-tool-chips-none` |
 | Waiting link | The status while requests wait. It names the chat, for example "Fix login redirect is waiting: run a command (1 of 2 waiting)". Click it to go to the chat with the oldest request. | `topbar-waiting-link` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
@@ -224,6 +224,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Details | Shows the change to the file or the command. | `uac-detail` |
 | Details: file | Shows the full path of the file. | `uac-detail-path` |
 | Details: size | Tells how many lines are added and removed. | `uac-detail-summary` |
+| Change preview | The lines that change, at least 8 rows. | `uac-detail-view` |
 | Show all lines | Shows every line of a long change. | `uac-detail-more` |
 | Allow | Allows the action. | `uac-allow` |
 | Other answer | Gives another answer that the agent offers, for example Deny. The focus starts on the first refusal. | `uac-option-*` |

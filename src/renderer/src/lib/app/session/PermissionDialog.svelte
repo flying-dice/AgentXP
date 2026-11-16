@@ -25,6 +25,8 @@
   let { agentName, title, options, toolCall, onanswer, queueText = null }: Props = $props()
 
   let remember = $state(false)
+  /** "Show the whole change": the box may take most of the window (UX-158). */
+  let expanded = $state(false)
 
   const diff = $derived(toolCall?.contents.find((c) => c.kind === 'diff'))
   const question = $derived(approvalTitle({ title, toolKind: toolCall?.kind ?? null, path: (diff?.kind === 'diff' ? diff.path : toolCall?.locations[0]?.path) ?? null }, agentName))
@@ -64,15 +66,15 @@
 
 <svelte:window onkeydown={onkeydown} onkeyup={alt.keyup} onblur={alt.reset} />
 
-<!-- Part of the chat layout, above the message box: it scrolls inside its own height and never covers the transcript. Allow and Deny stay in view. -->
-<section class="permission" bind:this={box} use:focusDeny role="alertdialog" aria-label={question} data-testid="permission-dialog">
+<!-- Part of the chat layout, above the message box: it takes what the preview needs up to 55% of the window (the transcript shrinks first) and does not scroll itself; only the preview scrolls. Allow and Deny stay in view. -->
+<section class="permission" class:expanded bind:this={box} use:focusDeny role="alertdialog" aria-label={question} data-testid="permission-dialog">
   <div class="scroll">
     <div class="body">
       <MessageIcon kind="shield" size={32} />
       <div class="main">
         {#if queueText}<div class="queue" data-testid="permission-queue">{queueText}</div>{/if}
         <div class="question" data-testid="permission-question">{question}</div>
-        <ApprovalDetail {toolCall} testid="permission" />
+        <ApprovalDetail {toolCall} testid="permission" bind:expanded />
       </div>
     </div>
   </div>
@@ -111,19 +113,27 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    /* A part of the chat's height: the request scrolls inside, the two answers stay in the window. */
-    max-height: 40%;
+    /* A part of the chat's height: the preview scrolls alone, the two answers stay in the window. */
+    max-height: 62%;
     margin-top: 4px;
     border: 1px solid #1c3a64;
     background: var(--w7-window);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   }
+  .permission.expanded {
+    max-height: 90%;
+  }
+  /* No scroll bar of its own: the preview inside is the only scroll area. */
   .scroll {
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   .body {
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     gap: 10px;
     padding: 8px 10px 4px;
@@ -131,6 +141,9 @@
   .main {
     flex: 1;
     min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   .queue {
     margin-bottom: 2px;
@@ -138,8 +151,8 @@
     font-size: 12px;
   }
   .question {
-    font-size: 15px;
-    line-height: 1.25;
+    font-size: 14px;
+    line-height: 1.2;
     color: #003399;
     overflow-wrap: anywhere;
   }
