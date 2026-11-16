@@ -6,7 +6,7 @@
 import type { Message } from '@ag-ui/core'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
-import type { AppKind, AskChatRequest, AppView, AppWindowState, DesktopState, OpenWindowInput } from '@shared/desktop'
+import type { AppKind, AskChatRequest, AppView, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab } from '@shared/desktop'
 import type { AguiSessionState } from '@shared/agui-state'
 import { createFakeApi, fakeAgui, type FakeApi } from '../app/fakeApi'
 import { createFakeDesktop } from '../app/fakeDesktop'
@@ -63,6 +63,11 @@ export class StoryHost implements DesktopHost {
     const window = await this.openApp({ app: 'event-viewer' })
     this.updateView(window.id, { app: 'event-viewer', sessionId: scope.sessionId ?? null, level: 'all', selectedEventId: scope.selectedEventId ?? null })
   }
+  openTaskManager = async (tab: TaskManagerTab = 'chats', chatId?: Id): Promise<void> => {
+    const window = await this.openApp({ app: 'agent-manager' })
+    this.updateView(window.id, { app: 'agent-manager', tab, ...(chatId === undefined ? {} : { chatId }) })
+  }
+  chatProgress = (): string | null => null
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
 

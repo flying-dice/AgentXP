@@ -54,8 +54,8 @@ describe('topicForApp and topicOfHref', () => {
     expect(topicForApp('notepad')).toBe('notepad')
     expect(topicForApp('code-review')).toBe('code-review')
     expect(splitTopic(topicForApp('notepad'))).toEqual({ topic: 'notepad', section: '' })
-    expect(topicForApp(null)).toBe('keyboard')
-    expect(topicForApp(undefined)).toBe('keyboard')
+    expect(topicForApp(null)).toBe('desktop')
+    expect(topicForApp(undefined)).toBe('desktop')
   })
   it('accepts links to other manuals only', () => {
     expect(topicOfHref('notepad.md')).toBe('notepad')

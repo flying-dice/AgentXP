@@ -110,6 +110,7 @@ describe('chat: the agent program is stopped from Task Manager', () => {
   })
 
   it('the mode list ends with "Ask before every action", which is the same switch as the top bar', async () => {
+    await ctx.desktop.closeWindow('event-viewer') // the previous test leaves it open over the composer
     const chat = ctx.desktop.chat()
     await chat.frame.getByTestId('chat-mode').click()
     await see.visible(ctx.desktopPage.getByTestId('chat-mode-ask-first'))

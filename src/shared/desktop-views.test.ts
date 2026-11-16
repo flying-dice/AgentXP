@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { clearIconColumn, ICON_COLUMN_WIDTH, asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -252,5 +252,20 @@ describe('placeChatBesideBrowser (UX-120)', () => {
     const right = placeChatBesideBrowser({ x: 700, y: 80, width: 560, height: 400 })
     expect(right.chat.x).toBe(0)
     expect(overlap(right.chat, { x: 700, y: 80, width: 560, height: 400 })).toBe(false)
+  })
+})
+
+describe('the icon column (UX-166)', () => {
+  it('moves a window that starts over the icons to the right of them', () => {
+    expect(clearIconColumn({ x: 40, y: 40, width: 680, height: 560 }, area)).toEqual({ x: ICON_COLUMN_WIDTH, y: 40, width: 680, height: 560 })
+    expect(clearIconColumn({ x: 300, y: 40, width: 400, height: 300 }, area).x).toBe(300)
+  })
+  it('keeps the size and stays inside a narrow work area', () => {
+    expect(clearIconColumn({ x: 0, y: 0, width: 600, height: 300 }, { width: 600, height: 600 }).x).toBe(0)
+  })
+  it('no new window starts over the icons', () => {
+    for (const app of ['chat', 'code', 'notepad', 'terminal', 'explorer', 'browser', 'help'] as const) {
+      for (let n = 0; n < 6; n++) expect(placeNewWindow(app, n, null).x).toBeGreaterThanOrEqual(ICON_COLUMN_WIDTH)
+    }
   })
 })

@@ -2,7 +2,7 @@ import type { Agent7Api } from '@shared/ipc'
 import type { FolderDto, Id, SessionDto } from '@shared/models'
 import {
   DESKTOP_CONTEXT_DESCRIPTION,
-  supportsAside,
+  windowHasAside,
   type AppView,
   type AppWindowState,
   type AskChatRequest,
@@ -10,6 +10,7 @@ import {
   type ControlCentrePage,
   type DesktopState,
   type OpenWindowInput,
+  type TaskManagerTab,
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
@@ -19,6 +20,7 @@ import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
+import { runningToolTitle } from '../apps/agent-manager/processRows'
 import { closeChatBalloon, isTurnRunning } from './closeChat'
 import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, pluggedBalloonText, projectQuoted, removeProjectText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
@@ -32,9 +34,9 @@ import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { fitInsideWorkArea, type BarRect } from './geometry'
+import { helpBounds, type BarRect } from './geometry'
 import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
-import { ICON_HINT, takeIconHint } from './shellHints'
+import { ICON_HINT, PROJECT_HINT, takeIconHint, takeProjectHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
 
@@ -375,7 +377,7 @@ export class DesktopController implements DesktopHost {
     const opened = await this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
     if (input.app === 'help') {
       this.dismissBalloon() // the welcome balloon would cover the Help window's footer (UX-148)
-      return this.fitToWorkArea(opened)
+      return this.placeHelp(opened)
     }
     return opened
   }
@@ -383,12 +385,11 @@ export class DesktopController implements DesktopHost {
   /** The size of the area windows live in (the window layer sets it); null until the layer is shown. */
   workArea: (() => { width: number; height: number }) | null = null
 
-  /** Main places windows for a default desktop size; a window that sticks out of the real one is pulled in and sent back to main. */
-  private async fitToWorkArea(win: AppWindowState): Promise<AppWindowState> {
+  /** The Help window opens centred at 760 x 520 (or the work area minus 40 px), so it is whole on any desktop size (UX-165). */
+  private async placeHelp(win: AppWindowState): Promise<AppWindowState> {
     const area = this.workArea?.()
     if (!area || area.width <= 0 || area.height <= 0) return win
-    const bounds = fitInsideWorkArea(win.bounds, area, this.barRect?.height ?? 0)
-    if (bounds.x === win.bounds.x && bounds.y === win.bounds.y && bounds.width === win.bounds.width && bounds.height === win.bounds.height) return win
+    const bounds = helpBounds(area, this.barRect?.height ?? 0)
     this.patch(win.id, { bounds })
     await this.api.desktop.setBounds(win.id, bounds)
     return { ...win, bounds }
@@ -408,10 +409,11 @@ export class DesktopController implements DesktopHost {
     this.views.cancel(windowId)
     // A chat that closes while its turn runs: the agent goes on, and the user is told where to find it (UX-136).
     const view = this.current?.windows.find((w) => w.id === windowId)?.view
-    const notice = closeChatBalloon(view, view?.app === 'chat' ? this.sessions.byId(view.sessionId)?.status : undefined)
+    const closing = view?.app === 'chat' ? this.sessions.byId(view.sessionId) : undefined
+    const notice = closeChatBalloon(view, closing?.status, closing?.title)
     if (notice) {
       const { action, ...text } = notice
-      this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openApp({ app: 'agent-manager' }) } })
+      this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openTaskManager('chats', closing?.id) } })
     }
     if (this.current) {
       const windows = this.current.windows.filter((w) => w.id !== windowId)
@@ -543,6 +545,18 @@ export class DesktopController implements DesktopHost {
     await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
   }
 
+  /** Opens Task Manager on one tab (the Chats icon, the toast of a closed chat, "Open Task Manager" in a chat notice); `chatId` selects that chat's row. */
+  async openTaskManager(tab: TaskManagerTab = 'chats', chatId?: Id): Promise<void> {
+    const window = await this.openApp({ app: 'agent-manager' })
+    await this.api.desktop.updateView(window.id, { app: 'agent-manager', tab, ...(chatId === undefined ? {} : { chatId }) })
+  }
+
+  /** What a working chat is doing right now: the title of its running tool, else null (Task Manager shows it beside the status). */
+  chatProgress(sessionId: Id): string | null {
+    const input = this.activityInputs.find((c) => c.sessionId === sessionId)
+    return input ? runningToolTitle(input.toolCalls) : null
+  }
+
   /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event: the flag menu and "Show in Event Viewer". */
   async openEventViewer(scope: { sessionId?: Id | null; selectedEventId?: number | null } = {}): Promise<void> {
     const window = await this.openApp({ app: 'event-viewer' })
@@ -643,7 +657,7 @@ export class DesktopController implements DesktopHost {
    */
   async askChat(request: AskChatRequest): Promise<void> {
     const window = this.state.windows.find((w) => w.id === request.windowId)
-    if (!window || !supportsAside(window.app) || request.kind === 'window') return this.askChatWindow(request)
+    if (!window || !windowHasAside(window) || request.kind === 'window') return this.askChatWindow(request)
     this.setChatPane(window.id, true)
     if (request.kind === 'ask') {
       this.prefillPane(window.id, askChatDraft(request))
@@ -663,7 +677,7 @@ export class DesktopController implements DesktopHost {
   async sendFileToChat(windowId: Id, filePath: string, text: string): Promise<void> {
     const window = this.state.windows.find((w) => w.id === windowId)
     let sessionId: Id
-    if (window && supportsAside(window.app)) {
+    if (window && windowHasAside(window)) {
       this.setChatPane(window.id, true)
       sessionId = await this.openAside(window.id)
     } else {
@@ -758,7 +772,7 @@ export class DesktopController implements DesktopHost {
   /** Shows or hides a window's chat pane; showing it focuses its composer. Windows without a pane ignore it. */
   setChatPane(windowId: Id, open: boolean): void {
     const window = this.state.windows.find((w) => w.id === windowId)
-    if (!window || !supportsAside(window.app)) return
+    if (!window || !windowHasAside(window)) return
     this.patchPane(windowId, { collapsed: !open })
     if (open) this.focusPane(windowId)
   }
@@ -980,6 +994,14 @@ export class DesktopController implements DesktopHost {
   showIconHint(storage: Pick<Storage, 'getItem' | 'setItem'> | null = localStore()): void {
     if (this.needsDesktop || !takeIconHint(storage)) return
     this.showBalloon({ ...ICON_HINT, icon: 'info' })
+  }
+
+  /** The first-run balloon of a desktop without a project: names Computer and has a button that opens it. True when it was shown. */
+  showProjectHint(storage: Pick<Storage, 'getItem' | 'setItem'> | null = localStore()): boolean {
+    if (this.needsDesktop || this.state.drives.some((d) => d.kind === 'removable') || !takeProjectHint(storage, this.state.desktopId)) return false
+    const { action, ...text } = PROJECT_HINT
+    this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openApp({ app: 'explorer', path: '' }) } })
+    return true
   }
 
   /** Alt+Tab (`1`) and Alt+Shift+Tab (`-1`): switch to the next or previous window in recent order. */

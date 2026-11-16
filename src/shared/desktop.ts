@@ -62,6 +62,9 @@ export const SINGLETON_APPS: readonly AppKind[] = [
 export const ASIDE_EXCLUDED_APPS: readonly AppKind[] = ['chat', 'code-review', 'surface']
 export const supportsAside = (app: AppKind): boolean => !ASIDE_EXCLUDED_APPS.includes(app)
 
+/** Does this window offer the chat pane now? Task Manager has none on its Chats tab: that list is where a chat is opened (UX-163). */
+export const windowHasAside = (w: { app: AppKind; view: AppView }): boolean => supportsAside(w.app) && !(w.view.app === 'agent-manager' && w.view.tab === 'chats')
+
 export type WindowState = 'normal' | 'minimized' | 'maximized'
 export type OpenedBy = 'user' | 'agent'
 
@@ -89,7 +92,7 @@ export type AppView =
   | { app: 'terminal'; terminalId: string | null; cwd: VPath; runningCommand: string | null; lastLines: string[] }
   | { app: 'browser'; url: string; title: string; loading: boolean }
   | { app: 'control-centre'; page: ControlCentrePage }
-  | { app: 'agent-manager' }
+  | { app: 'agent-manager'; tab?: TaskManagerTab; /** The chat whose row is selected on the Chats tab (set when another window opens Task Manager for it). */ chatId?: Id }
   | { app: 'paint'; path: VPath | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
   | { app: 'wordpad'; path: VPath | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
   | { app: 'sticky-notes' }
@@ -109,6 +112,8 @@ export type AppView =
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
 
+/** The tabs of Task Manager. */
+export type TaskManagerTab = 'chats' | 'processes' | 'terminals' | 'performance'
 export type ControlCentrePage = 'agents' | 'permissions' | 'appearance' | 'about'
 
 export type ViewOf<K extends AppKind> = Extract<AppView, { app: K }>

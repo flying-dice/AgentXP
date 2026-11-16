@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { SessionDto } from '@shared/models'
 import { sampleAgents, sampleSessions } from '../../app/fakeApi'
 import type { TerminalDto } from '@shared/models'
-import { chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, terminalRows } from './processRows'
+import { chatRows, chatStatusText, initialTab, formatMemory, contextState, formatTokens, processRows, runningToolTitle, terminalRows, withProgress } from './processRows'
 
 describe('processRows', () => {
   it('describes processes', () => {
@@ -50,5 +50,18 @@ describe('initialTab (UX-130)', () => {
     expect(initialTab([{ status: 'idle' }, { status: 'working' }])).toBe('processes')
     expect(initialTab([{ status: 'error' }])).toBe('processes')
     expect(initialTab([{ status: 'idle', problem: { message: 'x' } as never }])).toBe('processes')
+  })
+})
+
+describe('progress of a working chat (UX-163)', () => {
+  it('shows the running tool beside the status of a busy chat only', () => {
+    const busy: SessionDto = { ...sampleSessions[0], status: 'working' }
+    expect(chatRows([busy], sampleAgents, () => 'Step 12 of 30')[0].status).toBe('Working: Step 12 of 30')
+    expect(chatRows([{ ...busy, status: 'idle' }], sampleAgents, () => 'Step 12 of 30')[0].status).not.toContain('Step 12')
+    expect(withProgress('Working', null)).toBe('Working')
+  })
+  it('takes the last running tool call', () => {
+    expect(runningToolTitle({ a: { status: 'completed', title: 'Read a' }, b: { status: 'in_progress', title: 'Step 12 of 30' } })).toBe('Step 12 of 30')
+    expect(runningToolTitle({ a: { status: 'completed', title: 'Read a' } })).toBeNull()
   })
 })

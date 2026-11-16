@@ -53,7 +53,7 @@ The buttons are at the bottom of the window. **Show Options** is at the left. **
 
 When you click **Create** in the New desktop dialog box, the new desktop opens at once and stays selected in the list. If it does not open, the row says **Ready. Click Connect to open it.** and **Connect** is the default button.
 
-When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. The Desktop Connection window steps back (it is minimized), so the desktop is not hidden. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
+When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. The Desktop Connection window steps back (it is minimized), so the desktop is not hidden. This is the same after **Create**, **Connect**, and **Show desktop**. A new desktop without a project shows a balloon that says how to plug in a project. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
 
 Press F1 to read this manual.
 
@@ -101,6 +101,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | New desktop | The New desktop dialog box. | `new-desktop-dialog` |
 | Desktop name (new) | Names the new desktop. | `new-desktop-name` |
 | Opens note | Says that Agent7 opens the new desktop when you click Create. | `new-desktop-opens-note` |
+| Projects note | Says that you can add projects later. | `new-desktop-projects-note` |
 | Name error | Shows why the name is not valid, with an error icon. | `new-desktop-error` |
 | Use a free name | Fills in the suggested name (New desktop dialog box). | `new-desktop-use-suggestion` |
 | Use name with project | Fills in the name followed by the first chosen project folder. Appears when the name is taken. | `new-desktop-use-project-suggestion` |

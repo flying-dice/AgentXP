@@ -347,6 +347,30 @@ describe('DesktopController projects and shell feedback', () => {
     expect(controller.balloon).toBeNull()
   })
 
+  it('opens Task Manager on the Chats tab with the chat selected (UX-163)', async () => {
+    const { api, controller } = await started()
+    const spy = vi.spyOn(api.desktop, 'updateView')
+    await controller.openTaskManager('chats', 7)
+    const win = controller.state.windows.find((w) => w.app === 'agent-manager')!
+    expect(spy).toHaveBeenCalledWith(win.id, { app: 'agent-manager', tab: 'chats', chatId: 7 })
+    await controller.openTaskManager('processes')
+    expect(spy).toHaveBeenLastCalledWith(win.id, { app: 'agent-manager', tab: 'processes' })
+    expect(controller.state.windows.filter((w) => w.app === 'agent-manager')).toHaveLength(1)
+  })
+
+  it('shows the project balloon once on a desktop without a project (UX-164)', async () => {
+    const { controller } = await started()
+    const data = new Map<string, string>()
+    const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) }
+    if (controller.state.drives.some((d) => d.kind === 'removable')) return
+    expect(controller.showProjectHint(storage)).toBe(true)
+    expect(controller.balloon?.text).toContain('open Computer')
+    expect(controller.balloon?.action?.label).toBe('Open Computer')
+    controller.dismissBalloon()
+    expect(controller.showProjectHint(storage)).toBe(false)
+    expect(controller.balloon).toBeNull()
+  })
+
   it('Alt+Tab cycles through the windows', async () => {
     const { controller } = await started()
     const a = await controller.openApp({ app: 'notepad' })

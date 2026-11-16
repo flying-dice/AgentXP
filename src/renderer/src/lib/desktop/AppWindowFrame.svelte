@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { supportsAside, type AppWindowState, type Bounds } from '@shared/desktop'
+  import { windowHasAside, type AppWindowState, type Bounds } from '@shared/desktop'
   import type { AppDefinition } from '../apps/types'
   import Icon from '../kit/atoms/Icon.svelte'
   import Form from '../kit/organisms/Form.svelte'
@@ -30,7 +30,7 @@
   const bounds = $derived(desktop.boundsOf(w))
   const glowing = $derived(desktop.glowing.has(w.id))
   const App = $derived(definition?.component)
-  const hasPane = $derived(supportsAside(w.app))
+  const hasPane = $derived(windowHasAside(w))
   let hostedWidth = $state(0)
 
   /** Ctrl+Shift+C anywhere inside the window: show or hide its chat pane (the shortcut of View > Chat pane). */

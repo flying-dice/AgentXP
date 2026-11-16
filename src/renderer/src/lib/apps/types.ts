@@ -7,7 +7,7 @@ import type { Component } from 'svelte'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { DriveDto, DriveLetter, VPath } from '@shared/vfs'
-import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, ViewOf } from '@shared/desktop'
+import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
 import type { RemovedProject } from '../desktop/projectDrives'
 
@@ -19,6 +19,10 @@ export interface DesktopHost {
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
   /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event ("Show in Event Viewer"). */
   openEventViewer(scope?: { sessionId?: Id | null; selectedEventId?: number | null }): Promise<void>
+  /** Opens Task Manager on a tab (default Chats); `chatId` selects that chat's row. */
+  openTaskManager(tab?: TaskManagerTab, chatId?: Id): Promise<void>
+  /** What a working chat is doing now (the title of its running tool), or null. */
+  chatProgress(sessionId: Id): string | null
   /** The root to review or work on for a path: its plugged-in project drive, else the first project drive, else home. */
   projectRootOf(path?: string | null): VPath
   /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */
