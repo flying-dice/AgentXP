@@ -1,6 +1,7 @@
 /** Pure helpers of the Terminal app: ACP terminals of the desktop's chats and their cmd.exe rendering. */
 import type { AguiTerminalState } from '@shared/agui-state'
 import type { Id } from '@shared/models'
+import { AGENT_HOME, type VPath } from '@shared/vfs'
 
 export interface TerminalEntry {
   /** Unique on the desktop: `<sessionId>:<terminalId>`. */
@@ -47,12 +48,14 @@ export function lastLines(output: string, count = 20): string[] {
   return lines.slice(-count)
 }
 
-export const PROMPT = 'W:\\>'
+/** The cmd.exe prompt of a working directory: `E:\\src>`. */
+export const promptFor = (cwd: VPath): string => `${cwd}>`
 
-export const BANNER = 'Agent7 shell  (sandboxed: C:\\ is private, W:\\ is your repo)'
+export const BANNER = 'Agent7 shell  (C:\\ is private to this desktop; projects are USB drives)'
 
 /** The console text of one terminal: banner, prompt with the command, its output and the exit status. */
-export function renderTerminal(entry: TerminalEntry | null): string {
+export function renderTerminal(entry: TerminalEntry | null, cwd: VPath = AGENT_HOME): string {
+  const PROMPT = promptFor(cwd)
   if (!entry) return `${BANNER}\n\n${PROMPT}`
   const out = entry.output.replace(/\n+$/, '')
   const lines = [BANNER, '', `${PROMPT}${entry.command}`]

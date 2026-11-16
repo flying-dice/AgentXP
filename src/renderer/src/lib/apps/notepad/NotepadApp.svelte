@@ -7,16 +7,12 @@
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
-  import { baseName, parentOf } from '../paths'
+  import { joinVPath, vpathName, vpathParent } from '@shared/vfs'
+  import { errorText } from '../shared/listing'
   import { ViewSync } from '../viewSync'
   import { caretPosition, offsetOfLine } from './caret'
 
   let { window: win, host, focused }: AppProps<'notepad'> = $props()
-
-  type Writer = (folderId: number, path: string, text: string) => Promise<void>
-  /** The API has no write method yet; when the backend adds `folders.writeFile`, Save lights up. */
-  // svelte-ignore state_referenced_locally
-  const writeFile = (host.api.folders as unknown as { writeFile?: Writer }).writeFile?.bind(host.api.folders)
 
   let path = $state<string | null>(null)
   let text = $state('')
@@ -46,11 +42,11 @@
       message = ''
     } else {
       try {
-        text = original = await host.api.folders.readFile(host.state.folder.id, target)
+        text = original = await host.api.vfs.readFile(host.state.desktopId, target)
         message = ''
       } catch (error) {
         text = original = ''
-        message = error instanceof Error ? error.message : String(error)
+        message = errorText(error)
       }
     }
     await tick()
@@ -94,7 +90,7 @@
   async function confirmDiscard(): Promise<boolean> {
     if (!dirty) return true
     const answer = await showMessageBox({
-      text: `The text in ${path ? baseName(path) : 'Untitled'} has changed.\n\nDo you want to discard the changes?`,
+      text: `The text in ${path ? vpathName(path) : 'Untitled'} has changed.\n\nDo you want to discard the changes?`,
       caption: 'Notepad',
       buttons: 'YesNo',
       icon: 'warning'
@@ -111,14 +107,14 @@
   }
 
   async function save(): Promise<void> {
-    if (!writeFile || path === null) return
+    if (path === null) return
     try {
-      await writeFile(host.state.folder.id, path, text)
+      await host.api.vfs.writeFile(host.state.desktopId, path, text)
       original = text
-      message = `Saved ${baseName(path)}`
+      message = `Saved ${vpathName(path)}`
       report()
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Notepad', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: errorText(error), caption: 'Notepad', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -139,9 +135,9 @@
         { id: 'open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void openFile() },
         {
           id: 'save',
-          label: writeFile ? '&Save' : '&Save (not supported yet)',
+          label: '&Save',
           shortcut: 'Ctrl+S',
-          disabled: !writeFile || path === null || !dirty,
+          disabled: path === null || !dirty,
           action: () => void save()
         },
         { separator: true },
@@ -195,8 +191,8 @@
   {#if picking}
     <OpenFileDialog
       api={host.api}
-      folderId={host.state.folder.id}
-      startPath={path ? parentOf(path) : ''}
+      desktopId={host.state.desktopId}
+      startPath={path ? (vpathParent(path) ?? '') : (joinVPath(host.state.home, 'Documents') ?? '')}
       onopen={(p) => {
         picking = false
         void load(p)

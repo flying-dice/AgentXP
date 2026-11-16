@@ -29,15 +29,16 @@ describe('terminalModel', () => {
 
   it('renders a finished command with a fresh prompt', () => {
     const text = renderTerminal(collectTerminals(sources)[0])
-    expect(text).toContain('W:\\>npm test\nok')
-    expect(text.endsWith('W:\\>')).toBe(true)
+    expect(text).toContain('C:\\Users\\Agent>npm test\nok')
+    expect(text.endsWith('C:\\Users\\Agent>')).toBe(true)
+    expect(renderTerminal(collectTerminals(sources)[0], 'E:\\src').endsWith('E:\\src>')).toBe(true)
   })
 
   it('renders a running command without a prompt and flags failures', () => {
     expect(renderTerminal(collectTerminals(sources)[1]).endsWith('...\n\n')).toBe(true)
     const failed = renderTerminal({ ...collectTerminals(sources)[0], exitCode: 2 })
     expect(failed).toContain('(exit code 2)')
-    expect(renderTerminal(null)).toContain('W:\\>')
+    expect(renderTerminal(null)).toContain('C:\\Users\\Agent>')
   })
 
   it('labels entries', () => {

@@ -31,7 +31,7 @@
 
   async function refresh(): Promise<void> {
     try {
-      const [list, sess] = await Promise.all([host.api.recycle.list(desktopId), host.api.sessions.list(host.state.folder.id)])
+      const [list, sess] = await Promise.all([host.api.recycle.list(desktopId), host.api.sessions.list(host.state.desktopId)])
       items = list
       sessions = sess
       error = null

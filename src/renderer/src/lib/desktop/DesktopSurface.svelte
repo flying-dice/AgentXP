@@ -17,14 +17,14 @@
     onselect?: (id: string | null) => void
     onopen?: (id: string) => void
     onnewchat?: () => void
-    onopenworkspace?: () => void
+    onopencomputer?: () => void
     ontogglegadgets?: () => void
     oncontrolcentre?: () => void
     /** Any press on the bare desktop (closes popups). */
     onbackground?: () => void
   }
 
-  let { icons, selected, gadgets, onselect, onopen, onnewchat, onopenworkspace, ontogglegadgets, oncontrolcentre, onbackground }: Props = $props()
+  let { icons, selected, gadgets, onselect, onopen, onnewchat, onopencomputer, ontogglegadgets, oncontrolcentre, onbackground }: Props = $props()
 
   let root: HTMLDivElement | undefined = $state()
   let menuOpen = $state(false)
@@ -33,7 +33,7 @@
 
   const menu = $derived<MenuItemDef[]>([
     { label: 'New &chat', icon: 'session', action: () => onnewchat?.() },
-    { label: 'Open &Workspace', icon: 'folder-open', action: () => onopenworkspace?.() },
+    { label: 'Open &Computer', icon: 'computer', action: () => onopencomputer?.() },
     { separator: true },
     { label: '&Gadgets', checked: gadgets, action: () => ontogglegadgets?.() },
     { label: 'Control &Centre', icon: 'options', action: () => oncontrolcentre?.() }

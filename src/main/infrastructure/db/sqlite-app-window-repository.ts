@@ -21,7 +21,7 @@ interface WindowRow {
 
 const SELECT = `
 SELECT w.id, w.desktop_id, w.kind, w.x, w.y, w.width, w.height, w.window_state, w.z_order, w.opened_by,
-       c.session_id AS session_id, p.relative_path AS path, b.url AS url
+       c.session_id AS session_id, p.path AS path, b.url AS url
 FROM app_windows w
 LEFT JOIN chat_windows c ON c.window_id = w.id
 LEFT JOIN path_windows p ON p.window_id = w.id
@@ -68,7 +68,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
     this.insertChat = prepare(db, 'INSERT INTO chat_windows (window_id, session_id) VALUES (?, ?)')
     this.upsertPath = prepare(
       db,
-      'INSERT INTO path_windows (window_id, relative_path) VALUES (?, ?) ON CONFLICT (window_id) DO UPDATE SET relative_path = excluded.relative_path'
+      'INSERT INTO path_windows (window_id, path) VALUES (?, ?) ON CONFLICT (window_id) DO UPDATE SET path = excluded.path'
     )
     this.upsertUrl = prepare(
       db,

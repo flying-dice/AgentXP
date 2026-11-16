@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createFakeApi } from '../app/fakeApi'
+import { messageBoxes } from '../kit/organisms/messageBox'
 import { DesktopController, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
 
 async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
@@ -89,5 +90,62 @@ describe('DesktopController', () => {
     expect(again.id).toBe(chat.id)
     expect(controller.state.focusedWindowId).toBe(chat.id)
     expect(controller.state.windows.filter((w) => w.view.app === 'chat' && w.view.sessionId === 2)).toHaveLength(1)
+  })
+
+  describe('drives', () => {
+    it('opens AutoPlay for a newly plugged-in drive, not for the first state', async () => {
+      const { api, controller } = await started()
+      expect(controller.autoPlay).toBeNull()
+      await api.drives.plugIn(1, 2)
+      expect(controller.state.drives.map((d) => d.letter)).toEqual(['C', 'E', 'F'])
+      expect(controller.autoPlay?.label).toBe('dotfiles')
+      await controller.autoPlayChoose('open')
+      expect(controller.autoPlay).toBeNull()
+      const explorer = controller.state.windows.find((w) => w.view.app === 'explorer')
+      expect(explorer?.view).toMatchObject({ path: 'F:\\' })
+    })
+
+    it('Take no action just closes AutoPlay', async () => {
+      const { api, controller } = await started()
+      await api.drives.plugIn(1, 2)
+      const before = controller.state.windows.length
+      await controller.autoPlayChoose('none')
+      expect(controller.autoPlay).toBeNull()
+      expect(controller.state.windows).toHaveLength(before)
+    })
+
+    it('warns before ejecting a drive that chats work on, and keeps it when the answer is No', async () => {
+      const { controller } = await started()
+      const pending = controller.ejectDrive('E')
+      await vi.waitFor(() => expect(controller.chatsOnDrive('E').length).toBeGreaterThan(0))
+      let queued: { id: number; options: { caption?: string } }[] = []
+      messageBoxes.queue.subscribe((q) => (queued = q))()
+      expect(queued[0].options.caption).toBe('Safely Remove Hardware')
+      messageBoxes.settle(queued[0].id, 'no')
+      await pending
+      expect(controller.state.drives.some((d) => d.letter === 'E')).toBe(true)
+      expect(controller.balloon).toBeNull()
+    })
+
+    it('ejects after Yes and shows the Safe To Remove balloon', async () => {
+      const { controller } = await started()
+      const pending = controller.ejectDrive('E')
+      let queued: { id: number }[] = []
+      messageBoxes.queue.subscribe((q) => (queued = q))()
+      messageBoxes.settle(queued[0].id, 'yes')
+      await pending
+      expect(controller.state.drives.map((d) => d.letter)).toEqual(['C'])
+      expect(controller.balloon?.title).toBe('Safe To Remove Hardware')
+      expect(controller.balloon?.text).toContain("'claude-code-win (E:)'")
+      controller.dismissBalloon()
+      expect(controller.balloon).toBeNull()
+    })
+
+    it('never ejects the system disk', async () => {
+      const { api, controller } = await started()
+      const spy = vi.spyOn(api.drives, 'eject')
+      await controller.ejectDrive('C')
+      expect(spy).not.toHaveBeenCalled()
+    })
   })
 })

@@ -31,8 +31,8 @@ export const sampleEvents: ProtocolEventDto[] = [
 ]
 
 export const sampleRecycled: RecycledChangeDto[] = [
-  { id: 1, desktopId: 1, sessionId: 1, path: 'src/auth/redirect.ts', revertedText: "export function parseRedirect(url: string): string {\n  const next = new URL(url).searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/'\n}\n", restoredText: "export function parseRedirect(url: string): string {\n  return new URL(url).searchParams.get('next') ?? '/'\n}\n", revertedAt: at(20) },
-  { id: 2, desktopId: 1, sessionId: 1, path: 'src/auth/session.test.ts', revertedText: "import { describe, it, expect } from 'vitest'\n\ndescribe('session', () => {\n  it('expires', () => expect(true).toBe(true))\n})\n", restoredText: null, revertedAt: at(55) }
+  { id: 1, desktopId: 1, sessionId: 1, path: 'E:\\src\\auth\\redirect.ts', revertedText: "export function parseRedirect(url: string): string {\n  const next = new URL(url).searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/'\n}\n", restoredText: "export function parseRedirect(url: string): string {\n  return new URL(url).searchParams.get('next') ?? '/'\n}\n", revertedAt: at(20) },
+  { id: 2, desktopId: 1, sessionId: 1, path: 'E:\\tests\\session.test.ts', revertedText: "import { describe, it, expect } from 'vitest'\n\ndescribe('session', () => {\n  it('expires', () => expect(true).toBe(true))\n})\n", restoredText: null, revertedAt: at(55) }
 ]
 
 /** A little picture of a desktop, standing in for a captured PNG. */

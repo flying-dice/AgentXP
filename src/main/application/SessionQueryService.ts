@@ -22,8 +22,8 @@ export class SessionQueryService {
     private readonly desktops?: Pick<DesktopStates, 'stateOfSession'>
   ) {}
 
-  list(folderId?: Id): SessionDto[] {
-    return this.sessions.list(folderId)
+  list(desktopId?: Id): SessionDto[] {
+    return this.sessions.list(desktopId)
   }
 
   get(id: Id): SessionDto {

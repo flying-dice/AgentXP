@@ -1,15 +1,16 @@
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, closedAppMessage, type ToolGroup } from '@shared/desktop'
 import type { Bounds } from '@shared/desktop'
-import type { FileChangeDto, FileNodeDto } from '@shared/models'
+import type { FileChangeDto } from '@shared/models'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
 import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
-import { SqliteDesktopRepository } from '../../infrastructure/db/sqlite-desktop-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
 import { DesktopService } from '../desktop/DesktopService'
 import { PAUSED_MESSAGE } from '../desktop/AppToolPolicy'
 import { ToolGateway } from '../desktop/ToolGateway'
-import { createAppFixture } from '../test-helpers'
+import { createVfsFixture } from '../test-helpers'
 import { TOOL_SPECS, specsForGroups } from './catalog'
 import { createBrowserTools, formatSnapshot, normalizeUrl } from './browserTools'
 import { createCodeTools } from './codeTools'
@@ -27,21 +28,10 @@ import { ProtocolEventLog } from '../events/ProtocolEventLog'
 import { StickyNoteService } from '../desktop/StickyNoteService'
 import { createShellTools } from './shellTools'
 import { createTerminalTools } from './terminalTools'
-import { toWorkspacePath } from './paths'
+import { ToolPaths } from './ToolPaths'
 import type { ToolResult } from './types'
 
 const textOf = (r: ToolResult): string => r.content.map((c) => (c.type === 'text' ? c.text : `<${c.type}>`)).join('\n')
-
-const TREE: Record<string, FileNodeDto[]> = {
-  '': [
-    { name: 'src', path: 'src', isDirectory: true },
-    { name: 'README.md', path: 'README.md', isDirectory: false }
-  ],
-  src: [
-    { name: 'app.ts', path: 'src/app.ts', isDirectory: false },
-    { name: 'app.test.ts', path: 'src/app.test.ts', isDirectory: false }
-  ]
-}
 
 class FakeDriver implements BrowserDriver {
   calls: string[] = []
@@ -74,7 +64,8 @@ class FakeDriver implements BrowserDriver {
   }
 }
 
-let f: ReturnType<typeof createAppFixture>
+let f: Awaited<ReturnType<typeof createVfsFixture>>
+let paths: ToolPaths
 let desktops: DesktopService
 let desktopId: number
 let sessionId: number
@@ -95,26 +86,37 @@ let noteService: StickyNoteService
 const run = (tool: string, args: unknown = {}): Promise<ToolResult> => tools.call({ sessionId, desktopId }, tool, args)
 
 beforeEach(async () => {
-  f = createAppFixture()
+  f = await createVfsFixture()
+  // The project (E:) holds a small tree; node_modules and .git are there but hidden from the agent's listings.
+  for (const dir of ['src', 'docs', 'node_modules/dep', '.git']) await mkdir(join(f.projectDir, dir), { recursive: true })
+  const files: Record<string, string> = {
+    'README.md': 'text of README.md',
+    'notes.md': 'text of notes.md',
+    'other.txt': 'text of other.txt',
+    'src/app.ts': 'x',
+    'src/app.test.ts': 'x',
+    'docs/a.md': '# a',
+    'node_modules/dep/index.js': 'x'
+  }
+  for (const [name, text] of Object.entries(files)) await writeFile(join(f.projectDir, name), text)
   desktops = new DesktopService({
-    desktops: new SqliteDesktopRepository(f.db),
+    desktops: f.repos.desktops,
     windows: new SqliteAppWindowRepository(f.db),
     policies: new SqliteToolPolicyRepository(f.db),
-    folders: f.repos.folders,
     agents: f.repos.agents,
     sessions: f.repos.sessions,
     notes: new SqliteStickyNoteRepository(f.db),
     chats: {
-      create: async (folderId, agentId, desktop) => f.repos.sessions.create({ folderId, agentId: agentId ?? f.agentId, desktopId: desktop, title: 'chat' }),
+      create: async (desktop, agentId, cwd) => f.repos.sessions.create({ agentId: agentId ?? f.agentId, desktopId: desktop, cwd, title: 'chat' }),
       cancel: async () => {},
       remove: async () => {}
     },
-    pickFolder: async () => null,
-    host: { open: () => {}, close: () => {} },
+    drives: f.drives,
     events: f.publisher
   })
-  desktopId = desktops.desktopForFolder(f.folderId).id
-  const chat = await desktops.newChat(desktopId)
+  desktopId = f.desktop.id
+  paths = new ToolPaths(f.vfs, f.repos.sessions)
+  const chat = await desktops.newChat(desktopId, undefined, 'E:\\')
   sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
   driver = new FakeDriver()
   asked = []
@@ -125,17 +127,6 @@ beforeEach(async () => {
     run: async (command, options) => {
       ran.push({ command, cwd: options.cwd })
       return { exitCode: command === 'fail' ? 2 : 0, timedOut: false, output: 'line1\nline2\n' }
-    }
-  }
-  const browser = {
-    list: async (_root: string, rel: string) => {
-      const entries = TREE[rel]
-      if (!entries) throw new Error(`no such folder ${rel}`)
-      return entries
-    },
-    readText: async (_root: string, rel: string) => {
-      if (rel === 'missing.txt') throw new Error('ENOENT')
-      return `text of ${rel}`
     }
   }
   const ask = async (_id: number, title: string): Promise<boolean> => {
@@ -173,18 +164,19 @@ beforeEach(async () => {
     },
     gate: gateway,
     handlers: {
-      ...createShellTools({ desktops, ask }),
-      ...createFsTools({ desktops, browser }),
-      ...createNotepadTools({ desktops, browser }),
-      ...createCodeTools({ desktops, changes: { list: () => changes } }),
-      ...createTerminalTools({ desktops, runner }),
+      ...createShellTools({ desktops, paths, ask }),
+      ...createFsTools({ vfs: f.vfs, paths }),
+      ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
+      ...createCodeTools({ desktops, changes: { list: () => changes }, paths }),
+      ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths }),
       ...createBrowserTools({ desktops, driver }),
       ...createPaintTools({ desktops, requests }),
       ...createWordpadTools({
         desktops,
-        browser,
+        vfs: f.vfs,
+        paths,
         requests,
-        files: { write: async (sessionId, _root, path, text) => void written.push({ sessionId, path, text }) }
+        files: { write: async (sessionId, path, text) => void written.push({ sessionId, path, text }) }
       }),
       ...createNotesTools({ notes: noteService }),
       ...createEventsTools({ log: eventLog }),
@@ -205,7 +197,7 @@ beforeEach(async () => {
 describe('tool catalog', () => {
   it('groups the tools as documented', () => {
     const byGroup = (g: ToolGroup): string[] => specsForGroups([g]).map((s) => s.name)
-    expect(byGroup('shell')).toEqual(['desktop_state', 'desktop_open_app', 'desktop_close_app', 'desktop_focus_app'])
+    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'desktop_close_app', 'desktop_focus_app'])
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
     expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
@@ -218,7 +210,7 @@ describe('tool catalog', () => {
     expect(byGroup('events')).toEqual(['events_query'])
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
-    expect(TOOL_SPECS).toHaveLength(34)
+    expect(TOOL_SPECS).toHaveLength(35)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -280,6 +272,23 @@ describe('shell tools', () => {
     expect(asked).toEqual(['Open the Browser app', 'Open the Browser app'])
   })
 
+  it('lists the drives (always on) and shows them in desktop_state', async () => {
+    expect(textOf(await run('drives_list'))).toBe(
+      'C:\\  Local Disk: your private system disk (home: C:\\Users\\Agent)\nE:\\  project: USB drive, a project the user plugged in (can be ejected at any time)'
+    )
+    expect(JSON.parse(textOf(await run('desktop_state'))).drives.map((d: { letter: string }) => d.letter)).toEqual(['C', 'E'])
+    f.drives.eject(desktopId, 'E')
+    expect(textOf(await run('drives_list'))).toBe('C:\\  Local Disk: your private system disk (home: C:\\Users\\Agent)')
+  })
+
+  it('opens an app at a path relative to the working directory or a full virtual path', async () => {
+    await run('desktop_open_app', { app: 'explorer', path: 'src' })
+    expect(desktops.windowsOf(desktopId, 'explorer')[0]?.view).toMatchObject({ path: 'E:\\src' })
+    await run('desktop_open_app', { app: 'notepad', path: 'C:\\Users\\Agent\\Documents\\n.txt' })
+    expect(desktops.windowsOf(desktopId, 'notepad')[0]?.view).toMatchObject({ path: 'C:\\Users\\Agent\\Documents\\n.txt' })
+    expect(textOf(await run('desktop_open_app', { app: 'explorer', path: 'G:\\' }))).toMatch(/Drive G: is not plugged in/)
+  })
+
   it('does not let the agent close the user\'s own windows', async () => {
     const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
     expect(textOf(await run('desktop_close_app', { window: chat.id }))).toMatch(/belongs to the user/)
@@ -296,18 +305,34 @@ describe('shell tools', () => {
 describe('fs tools', () => {
   beforeEach(() => void desktops.openWindow({ desktopId, app: 'explorer' }))
 
-  it('lists a directory and finds files by name or glob', async () => {
-    expect(textOf(await run('fs_list'))).toBe('src/\nREADME.md')
-    expect(textOf(await run('fs_list', { path: 'src' }))).toBe('src/app.ts\nsrc/app.test.ts')
-    expect(textOf(await run('fs_find', { pattern: '*.test.ts' }))).toBe('src/app.test.ts')
-    expect(textOf(await run('fs_find', { pattern: 'readme' }))).toBe('README.md')
-    expect(textOf(await run('fs_find', { pattern: 'nothing' }))).toBe('No matches.')
-    expect(textOf(await run('fs_find', { pattern: 'app', limit: 1 }))).toBe('src/app.ts')
+  it('lists a directory (default: the chat\'s working directory) and finds files by name or glob; VPaths come back', async () => {
+    expect(textOf(await run('fs_list'))).toBe('E:\\docs\\\nE:\\src\\\nE:\\notes.md\nE:\\other.txt\nE:\\README.md') // .git and node_modules hidden
+    expect(textOf(await run('fs_list', { path: 'src' }))).toBe('E:\\src\\app.test.ts\nE:\\src\\app.ts')
+    expect(textOf(await run('fs_list', { path: 'E:\\src' }))).toBe('E:\\src\\app.test.ts\nE:\\src\\app.ts')
+    expect(textOf(await run('fs_list', { path: join(f.projectDir, 'src') }))).toBe('E:\\src\\app.test.ts\nE:\\src\\app.ts') // real paths inside a drive work too
+    expect(textOf(await run('fs_find', { pattern: '*.test.ts' }))).toBe('E:\\src\\app.test.ts')
+    expect(textOf(await run('fs_find', { pattern: 'readme' }))).toBe('E:\\README.md')
+    expect(textOf(await run('fs_find', { pattern: 'dep' }))).toBe('No matches.') // node_modules is not searched
+    expect(textOf(await run('fs_find', { pattern: 'app', limit: 1 }))).toBe('E:\\src\\app.test.ts')
   })
 
-  it('refuses paths outside the workspace and reports missing folders', async () => {
+  it('lists C: (seeded) and refuses paths outside the drives and missing folders', async () => {
+    expect(textOf(await run('fs_list', { path: 'C:\\Users\\Agent' }))).toBe('C:\\Users\\Agent\\Desktop\\\nC:\\Users\\Agent\\Documents\\\nC:\\Users\\Agent\\Downloads\\')
     expect((await run('fs_list', { path: '../etc' })).isError).toBe(true)
-    expect(textOf(await run('fs_list', { path: 'nope' }))).toMatch(/no such folder/)
+    expect(textOf(await run('fs_list', { path: '/etc' }))).toMatch(/Not a valid path/)
+    expect(textOf(await run('fs_list', { path: 'nope' }))).toMatch(/ENOENT|no such/i)
+  })
+
+  it('refuses a drive that was ejected, at the very next call, and works again after plugging it in', async () => {
+    expect((await run('fs_list')).isError).toBeUndefined()
+    f.drives.eject(desktopId, 'E')
+    const refused = await run('fs_list')
+    expect(refused.isError).toBe(true)
+    expect(textOf(refused)).toBe('Drive E: is not plugged in on this desktop. Ask the user to plug the project in, or work on C:.')
+    expect(textOf(await run('fs_find', { pattern: 'a', path: 'E:\\src' }))).toMatch(/not plugged in/)
+    expect(textOf(await run('fs_list', { path: 'C:\\Users' }))).toBe('C:\\Users\\Agent\\')
+    f.drives.plugInFolder(desktopId, f.folder.id)
+    expect((await run('fs_list')).isError).toBeUndefined()
   })
 
   it('matches names', () => {
@@ -317,11 +342,17 @@ describe('fs tools', () => {
     expect(nameMatcher('a.b*')('axb')).toBe(false)
   })
 
-  it('normalises workspace paths', () => {
-    expect(toWorkspacePath('/w', undefined)).toBe('')
-    expect(toWorkspacePath('/w', '/w/src/a.ts')).toBe('src/a.ts')
-    expect(toWorkspacePath('/w', 'src/../b.ts')).toBe('b.ts')
-    expect(() => toWorkspacePath('/w', '/etc/passwd')).toThrow(/outside/)
+  it('resolves tool paths: relative to the cwd, full VPaths, real paths inside a drive', () => {
+    const context = { sessionId, desktopId }
+    expect(paths.cwd(context)).toBe('E:\\')
+    expect(paths.resolve(context)).toBe('E:\\')
+    expect(paths.resolve(context, 'src/a.ts')).toBe('E:\\src\\a.ts')
+    expect(paths.resolve(context, 'src\\..\\b.ts')).toBe('E:\\b.ts')
+    expect(paths.resolve(context, 'c:/Users/Agent')).toBe('C:\\Users\\Agent')
+    expect(paths.resolve(context, join(f.projectDir, 'x.ts'))).toBe('E:\\x.ts')
+    expect(() => paths.resolve(context, '../x')).toThrow(/Not a valid path/)
+    expect(() => paths.resolve(context, '/etc/passwd')).toThrow(/Not a valid path/)
+    expect(() => paths.resolve(context, 'Q:\\x')).toThrow(/Drive Q: is not plugged in/)
   })
 })
 
@@ -329,11 +360,11 @@ describe('notepad and code tools', () => {
   it('notepad_open shows the file (one window per file) and notepad_read reads it', async () => {
     desktops.openWindow({ desktopId, app: 'notepad' })
     await run('notepad_open', { path: 'notes.md' })
-    await run('notepad_open', { path: 'notes.md' })
+    await run('notepad_open', { path: 'E:\\notes.md' })
     const pads = desktops.windowsOf(desktopId, 'notepad')
-    expect(pads.map((w) => w.view)).toMatchObject([{ path: null }, { path: 'notes.md' }])
+    expect(pads.map((w) => w.view)).toMatchObject([{ path: null }, { path: 'E:\\notes.md' }])
     expect(textOf(await run('notepad_read'))).toBe('text of notes.md')
-    desktops.updateView(pads[1]!.id, { app: 'notepad', path: 'notes.md', dirty: true, caretLine: 1 })
+    desktops.updateView(pads[1]!.id, { app: 'notepad', path: 'E:\\notes.md', dirty: true, caretLine: 1 })
     expect(textOf(await run('notepad_read'))).toMatch(/unsaved edits/)
     expect(textOf(await run('notepad_read', { path: 'other.txt' }))).toBe('text of other.txt')
     expect((await run('notepad_open', { path: 'missing.txt' })).isError).toBe(true)
@@ -343,18 +374,20 @@ describe('notepad and code tools', () => {
     desktops.openWindow({ desktopId, app: 'code' })
     await run('code_open', { path: 'src/app.ts', line: 40 })
     let view = desktops.windowsOf(desktopId, 'code')[0]!.view
-    expect(view).toMatchObject({ app: 'code', tabs: ['src/app.ts'], activePath: 'src/app.ts', selection: { startLine: 40, endLine: 40 }, visibleLines: [35, 65] })
+    expect(view).toMatchObject({ app: 'code', tabs: ['E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', selection: { startLine: 40, endLine: 40 }, visibleLines: [35, 65] })
     await run('code_reveal', { path: 'README.md', startLine: 3, endLine: 9 })
     view = desktops.windowsOf(desktopId, 'code')[0]!.view
-    expect(view).toMatchObject({ tabs: ['src/app.ts', 'README.md'], activePath: 'README.md', selection: { startLine: 3, endLine: 9 } })
+    expect(view).toMatchObject({ tabs: ['E:\\src\\app.ts', 'E:\\README.md'], activePath: 'E:\\README.md', selection: { startLine: 3, endLine: 9 } })
     expect(desktops.windowsOf(desktopId, 'code')).toHaveLength(1)
+    expect(textOf(await run('code_open', { path: 'G:\\x.ts' }))).toMatch(/Drive G: is not plugged in/)
   })
 
   it('code_show_diff selects the recorded change', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
     expect((await run('code_show_diff', { path: 'src/app.ts' })).isError).toBe(true)
-    changes = [{ id: 11, sessionId, path: '/work/project/src/app.ts', kind: 'modified', additions: 3, deletions: 1, originalText: '', currentText: '' } as FileChangeDto]
+    changes = [{ id: 11, sessionId, path: 'E:\\src\\app.ts', kind: 'modified', additions: 3, deletions: 1, originalText: '', currentText: '' } as FileChangeDto]
     expect(textOf(await run('code_show_diff', { path: 'src/app.ts' }))).toMatch(/\+3 -1/)
+    expect(textOf(await run('code_show_diff', { path: 'e:\\SRC\\app.ts' }))).toMatch(/\+3 -1/)
     expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
   })
 })
@@ -362,18 +395,28 @@ describe('notepad and code tools', () => {
 describe('terminal tools', () => {
   beforeEach(() => void desktops.openWindow({ desktopId, app: 'terminal' }))
 
-  it('runs a command in the workspace, shows it in the Terminal window and keeps the output for terminal_read', async () => {
+  it('runs a command in a real folder behind the drive, shows it in the Terminal window and keeps the output for terminal_read', async () => {
     const res = await run('terminal_run', { command: 'echo hi', cwd: 'src' })
     expect(textOf(res)).toBe('line1\nline2\n[exit code 0]')
-    expect(ran).toEqual([{ command: 'echo hi', cwd: '/work/project/src' }])
+    expect(ran).toEqual([{ command: 'echo hi', cwd: join(f.projectDir, 'src') }])
     expect(desktops.windowsOf(desktopId, 'terminal')[0]?.view).toEqual({
       app: 'terminal',
       terminalId: 'agent',
-      cwd: 'src',
+      cwd: 'E:\\src',
       runningCommand: null,
       lastLines: ['> echo hi', 'line1', 'line2']
     })
     expect(textOf(await run('terminal_read', { lines: 2 }))).toBe('line1\nline2')
+  })
+
+  it('runs on C: and refuses an ejected drive without running anything', async () => {
+    await run('terminal_run', { command: 'ls', cwd: 'C:\\Temp' })
+    expect(ran).toEqual([{ command: 'ls', cwd: join(f.desktopsDir, String(desktopId), 'C', 'Temp') }])
+    f.drives.eject(desktopId, 'E')
+    const res = await run('terminal_run', { command: 'ls' })
+    expect(res.isError).toBe(true)
+    expect(textOf(res)).toMatch(/Drive E: is not plugged in/)
+    expect(ran).toHaveLength(1)
   })
 
   it('reports a failing command as an error result', async () => {
@@ -547,11 +590,11 @@ describe('paint tools', () => {
 describe('wordpad tools', () => {
   it('opens a file in a new or the existing window and updates its view', async () => {
     desktops.openWindow({ desktopId, app: 'wordpad' })
-    expect(textOf(await run('wordpad_open', { path: 'docs/a.md' }))).toBe('WordPad shows docs/a.md.')
+    expect(textOf(await run('wordpad_open', { path: 'docs/a.md' }))).toBe('WordPad shows E:\\docs\\a.md.')
     const view = desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view
-    expect(view).toMatchObject({ app: 'wordpad', path: 'docs/a.md', dirty: false })
+    expect(view).toMatchObject({ app: 'wordpad', path: 'E:\\docs\\a.md', dirty: false })
     expect(desktops.state(desktopId).windows.filter((w) => w.app === 'wordpad')).toHaveLength(1)
-    expect(appCalls).toEqual([{ windowId: expect.any(Number), method: 'open', params: { path: 'docs/a.md' } }])
+    expect(appCalls).toEqual([{ windowId: expect.any(Number), method: 'open', params: { path: 'E:\\docs\\a.md' } }])
     expect((await run('wordpad_open', { path: 'missing.txt' })).isError).toBe(true)
     expect((await run('wordpad_open', { path: '../x.md' })).isError).toBe(true)
   })
@@ -566,9 +609,9 @@ describe('wordpad tools', () => {
 
   it('writes through the recorded write path and shows the file', async () => {
     desktops.openWindow({ desktopId, app: 'wordpad' })
-    expect(textOf(await run('wordpad_write', { path: 'notes.md', markdown: '# Hi' }))).toMatch(/Wrote notes.md/)
-    expect(written).toEqual([{ sessionId, path: 'notes.md', text: '# Hi' }])
-    expect(desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view).toMatchObject({ path: 'notes.md' })
+    expect(textOf(await run('wordpad_write', { path: 'notes.md', markdown: '# Hi' }))).toMatch(/Wrote E:\\notes.md/)
+    expect(written).toEqual([{ sessionId, path: 'E:\\notes.md', text: '# Hi' }])
+    expect(desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view).toMatchObject({ path: 'E:\\notes.md' })
     expect((await run('wordpad_write', { path: '../../etc/x', markdown: '' })).isError).toBe(true)
     expect(written).toHaveLength(1)
   })

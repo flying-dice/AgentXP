@@ -7,7 +7,6 @@ import {
   type AppView,
   type AppWindowState,
   type Bounds,
-  type DesktopDto,
   type DesktopState,
   type OpenWindowInput,
   type OpenedBy,
@@ -16,21 +15,21 @@ import {
   type WindowState
 } from '@shared/desktop'
 import { cascadedBounds, initialView, windowTitle } from '@shared/desktop-views'
-import type { FolderDto, Id, SessionDto } from '@shared/models'
+import type { Id, SessionDto } from '@shared/models'
+import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
 import type { AppWindowRecord, AppWindowRepository } from '../../domain/repositories/app-window-repository'
 import type { DesktopRecord, DesktopRepository } from '../../domain/repositories/desktop-repository'
-import type { FolderRepository } from '../../domain/repositories/folder-repository'
 import type { StickyNoteRepository } from '../../domain/repositories/sticky-note-repository'
 import type { SessionRepository } from '../../domain/repositories/session-repository'
 import type { ToolPolicyRepository } from '../../domain/repositories/tool-policy-repository'
 import { AppError, required } from '../errors'
 import type { EventPublisher } from '../ports'
-import type { DesktopStates, DesktopWindowHost } from './ports'
+import type { DesktopStates } from './ports'
 
 /** What `DesktopService` needs from the chat lifecycle (satisfied by `SessionService`). */
 export interface ChatLifecycle {
-  create(folderId: Id, agentId: Id | undefined, desktopId: Id): Promise<SessionDto>
+  create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined): Promise<SessionDto>
   cancel(sessionId: Id): Promise<void>
   remove(sessionId: Id): Promise<void>
 }
@@ -39,21 +38,17 @@ export interface DesktopServiceDeps {
   desktops: DesktopRepository
   windows: AppWindowRepository
   policies: ToolPolicyRepository
-  folders: FolderRepository
   agents: AgentRepository
   sessions: SessionRepository
   notes: StickyNoteRepository
   chats: ChatLifecycle
-  /** The native folder picker (adds the folder to the registry). */
-  pickFolder(): Promise<FolderDto | null>
-  host: DesktopWindowHost
+  /** The drives of a desktop (C: and the plugged-in projects). */
+  drives: { list(desktopId: Id): DriveDto[] }
   events: EventPublisher
 }
 
 const BUSY_STATUSES: SessionDto['status'][] = ['working', 'awaiting_permission']
 const PATH_APPS: readonly AppKind[] = ['explorer', 'notepad', 'code']
-
-const toDto = ({ paused: _paused, userInControl: _control, ...dto }: DesktopRecord): DesktopDto => dto
 
 /**
  * The source of truth for desktops. Window rows are persisted; focus and the transient view
@@ -69,50 +64,7 @@ export class DesktopService implements DesktopStates {
   constructor(private readonly deps: DesktopServiceDeps) {}
 
   // ---- desktops ----------------------------------------------------------------------------------
-
-  list(): DesktopDto[] {
-    return this.deps.desktops.list().map(toDto)
-  }
-
-  listOpen(): DesktopDto[] {
-    return this.deps.desktops.listOpen().map(toDto)
-  }
-
-  /** Picks a folder (unless `folderId` is given), creates a desktop on it and opens its OS window. */
-  async create(folderId?: Id): Promise<DesktopDto | null> {
-    const folder = folderId === undefined ? await this.deps.pickFolder() : required(this.deps.folders.get(folderId), 'Folder')
-    if (!folder) return null
-    const record = this.deps.desktops.create({
-      folderId: folder.id,
-      agentId: this.deps.agents.getDefault()?.id ?? null,
-      title: folder.name,
-      isOpen: true
-    })
-    this.deps.folders.touch(folder.id)
-    this.deps.host.open(record.id)
-    return toDto(record)
-  }
-
-  /** The first desktop of the folder, created closed when there is none (for chats made without a desktop). */
-  desktopForFolder(folderId: Id): DesktopDto {
-    const existing = this.deps.desktops.findByFolder(folderId)
-    if (existing) return toDto(existing)
-    const folder = required(this.deps.folders.get(folderId), 'Folder')
-    return toDto(
-      this.deps.desktops.create({ folderId, agentId: this.deps.agents.getDefault()?.id ?? null, title: folder.name, isOpen: false })
-    )
-  }
-
-  open(id: Id): void {
-    this.record(id)
-    this.deps.desktops.setOpen(id, true)
-    this.deps.host.open(id)
-  }
-
-  /** The OS window of the desktop was closed by the user. */
-  windowClosed(id: Id): void {
-    if (this.deps.desktops.get(id)) this.deps.desktops.setOpen(id, false)
-  }
+  // Creating, connecting and deleting desktops is the launcher's job (`LauncherService`).
 
   rename(id: Id, title: string): void {
     const trimmed = title.trim()
@@ -122,12 +74,9 @@ export class DesktopService implements DesktopStates {
     this.emit(id)
   }
 
-  async remove(id: Id): Promise<void> {
-    this.record(id)
-    this.deps.host.close(id)
-    for (const session of this.deps.sessions.listByDesktop(id)) await this.deps.chats.remove(session.id)
+  /** The desktop is going away (its rows are deleted by the caller): drop what lives only in memory. */
+  forget(id: Id): void {
     for (const window of this.deps.windows.list(id)) this.views.delete(window.id)
-    this.deps.desktops.remove(id)
     this.focus.delete(id)
     this.lastPublished.delete(id)
   }
@@ -136,13 +85,13 @@ export class DesktopService implements DesktopStates {
 
   state(desktopId: Id): DesktopState {
     const desktop = this.record(desktopId)
-    const folder = required(this.deps.folders.get(desktop.folderId), 'Folder')
     const records = this.deps.windows.list(desktopId)
     const windows = records.map((r) => this.toWindowState(r))
     return {
       desktopId,
       title: desktop.title,
-      folder: { id: folder.id, path: folder.path, name: folder.name },
+      drives: this.deps.drives.list(desktopId),
+      home: AGENT_HOME,
       focusedWindowId: this.focusedId(desktopId, windows),
       windows,
       tools: enabledToolGroups(windows.map((w) => w.app)),
@@ -249,9 +198,9 @@ export class DesktopService implements DesktopStates {
 
   // ---- chats -------------------------------------------------------------------------------------
 
-  async newChat(desktopId: Id, agentId?: Id): Promise<AppWindowState> {
+  async newChat(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<AppWindowState> {
     const desktop = this.record(desktopId)
-    const session = await this.deps.chats.create(desktop.folderId, agentId ?? desktop.agentId ?? undefined, desktopId)
+    const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, cwd)
     return this.openWindow({ desktopId, app: 'chat', sessionId: session.id })
   }
 
@@ -366,7 +315,7 @@ export class DesktopService implements DesktopStates {
     const { windows } = this.deps
     switch (view.app) {
       case 'explorer':
-        return windows.setPath(record.id, view.path || null)
+        return windows.setPath(record.id, view.path || null) // '' (Computer) has no row
       case 'notepad':
         return windows.setPath(record.id, view.path)
       case 'code':

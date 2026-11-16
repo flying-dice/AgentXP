@@ -2,7 +2,7 @@
 import type { RecycledChangeDto } from '@shared/desktop'
 import type { SessionDto } from '@shared/models'
 import type { ListRow } from '../../kit/organisms/ListView'
-import { baseName, parentOf, toWindowsPath } from '../paths'
+import { vpathName, vpathParent } from '@shared/vfs'
 import { formatDateTime } from '../shared/dates'
 
 export function recycleRows(items: readonly RecycledChangeDto[], sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): ListRow[] {
@@ -11,8 +11,8 @@ export function recycleRows(items: readonly RecycledChangeDto[], sessions: reado
     .map((r): ListRow => ({
       id: String(r.id),
       icon: r.revertedText === null ? 'delete' : 'file-text',
-      name: baseName(r.path),
-      location: toWindowsPath(parentOf(r.path)),
+      name: vpathName(r.path),
+      location: vpathParent(r.path) ?? r.path,
       when: formatDateTime(r.revertedAt),
       chat: sessions.find((s) => s.id === r.sessionId)?.title ?? (r.sessionId === null ? '' : `Chat ${r.sessionId}`)
     }))

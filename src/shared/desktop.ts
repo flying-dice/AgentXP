@@ -6,6 +6,7 @@
  * Pure types, constants and pure functions only.
  */
 import type { Id, IsoDate } from './models'
+import type { DriveDto, VPath } from './vfs'
 
 export const APP_KINDS = [
   'chat',
@@ -65,22 +66,23 @@ export interface Bounds {
 /** Per-app view state: what the window currently shows. Sent to the agent. */
 export type AppView =
   | { app: 'chat'; sessionId: Id; title: string }
-  | { app: 'explorer'; path: string; selected: string[] }
-  | { app: 'notepad'; path: string | null; dirty: boolean; caretLine: number }
+  /** `path` is a VPath; '' means "Computer" (the drives root, the initial view of a new Explorer). */
+  | { app: 'explorer'; path: VPath | ''; selected: VPath[] }
+  | { app: 'notepad'; path: VPath | null; dirty: boolean; caretLine: number }
   | {
       app: 'code'
-      tabs: string[]
-      activePath: string | null
+      tabs: VPath[]
+      activePath: VPath | null
       visibleLines: [number, number] | null
       selection: { startLine: number; endLine: number } | null
       selectedChangeId: Id | null
     }
-  | { app: 'terminal'; terminalId: string | null; cwd: string; runningCommand: string | null; lastLines: string[] }
+  | { app: 'terminal'; terminalId: string | null; cwd: VPath; runningCommand: string | null; lastLines: string[] }
   | { app: 'browser'; url: string; title: string; loading: boolean }
   | { app: 'control-centre'; page: ControlCentrePage }
   | { app: 'agent-manager' }
-  | { app: 'paint'; path: string | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
-  | { app: 'wordpad'; path: string | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
+  | { app: 'paint'; path: VPath | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
+  | { app: 'wordpad'; path: VPath | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
   | { app: 'sticky-notes' }
   | { app: 'event-viewer'; sessionId: Id | null; level: EventLevel | 'all'; selectedEventId: number | null }
   | { app: 'snipping-tool'; lastSnipId: string | null }
@@ -103,11 +105,12 @@ export interface AppWindowState {
   view: AppView
 }
 
+/** A desktop row. Desktops are long-lived projects; they are no longer tied to one folder (see `DriveDto`). */
 export interface DesktopDto {
   id: Id
-  folderId: Id
   agentId: Id | null
   title: string
+  /** True while an OS window shows the desktop ("connected"). */
   isOpen: boolean
   createdAt: IsoDate
 }
@@ -116,7 +119,10 @@ export interface DesktopDto {
 export interface DesktopState {
   desktopId: Id
   title: string
-  folder: { id: Id; path: string; name: string }
+  /** The drives of the desktop: C: first, then the plugged-in USB drives (projects). */
+  drives: DriveDto[]
+  /** The agent's home directory (`AGENT_HOME`, on C:). */
+  home: VPath
   focusedWindowId: Id | null
   /** Back to front. */
   windows: AppWindowState[]
@@ -236,22 +242,17 @@ export const DESKTOP_RESOURCE_URI = 'agent7://desktop/state'
 export interface OpenWindowInput {
   desktopId: Id
   app: AppKind
-  /** Initial view hints: a path for explorer/notepad/code, a url for browser, a session for chat. */
-  path?: string
+  /** Initial view hints: a VPath for explorer/notepad/code/wordpad/paint, a url for browser, a session for chat. */
+  path?: VPath
   url?: string
   sessionId?: Id
 }
 
+/** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */
 export interface DesktopApi {
-  list(): Promise<DesktopDto[]>
-  /** The desktop shown by this OS window (from the `?desktop=` query), or null on first launch. */
+  /** The desktop shown by this OS window (from the `?desktop=` query); null in the launcher window. */
   current(): Promise<DesktopState | null>
-  /** Shows the folder picker, creates a desktop and opens it in a new OS window. */
-  create(folderId?: Id): Promise<DesktopDto | null>
-  /** Opens an existing desktop in its OS window (focuses it when already open). */
-  open(id: Id): Promise<void>
   rename(id: Id, title: string): Promise<void>
-  remove(id: Id): Promise<void>
   openWindow(input: OpenWindowInput): Promise<AppWindowState>
   closeWindow(windowId: Id): Promise<void>
   focusWindow(windowId: Id): Promise<void>
@@ -261,8 +262,8 @@ export interface DesktopApi {
   updateView(windowId: Id, view: AppView): Promise<void>
   setPaused(desktopId: Id, paused: boolean): Promise<void>
   setUserInControl(desktopId: Id, on: boolean): Promise<void>
-  /** Starts a chat (ACP session) on the desktop and opens its Chat window. */
-  newChat(desktopId: Id, agentId?: Id): Promise<AppWindowState>
+  /** Starts a chat (ACP session) on the desktop and opens its Chat window. `cwd` (a VPath on a plugged-in drive or C:) defaults to `AGENT_HOME`. */
+  newChat(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<AppWindowState>
   policy(): Promise<ToolPolicyDto>
   setPolicy(policy: ToolPolicyDto): Promise<void>
   /**
@@ -349,7 +350,8 @@ export interface RecycledChangeDto {
   id: Id
   desktopId: Id
   sessionId: Id | null
-  path: string
+  /** Where the file is (or was) on the desktop; `?:\...` when its drive has been ejected. */
+  path: VPath
   /** The agent's version that the revert threw away (null when the agent deleted the file). */
   revertedText: string | null
   /** What revert wrote back (null when revert deleted an added file). */

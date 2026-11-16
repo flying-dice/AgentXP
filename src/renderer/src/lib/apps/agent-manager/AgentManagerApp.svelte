@@ -39,7 +39,7 @@
 
   async function refresh(): Promise<void> {
     try {
-      const [p, s, a] = await Promise.all([host.api.processes.list(), host.api.sessions.list(host.state.folder.id), host.api.agents.list()])
+      const [p, s, a] = await Promise.all([host.api.processes.list(), host.api.sessions.list(host.state.desktopId), host.api.agents.list()])
       processes = p
       sessions = s
       agents = a

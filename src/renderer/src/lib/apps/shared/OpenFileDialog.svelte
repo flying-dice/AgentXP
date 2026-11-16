@@ -1,20 +1,23 @@
 <script lang="ts">
-  /** A simple "Open" dialog over the workspace folder (folders.readDir), shown inside the app window. */
+  /** A simple "Open" dialog over the desktop's drives (vfs.readDir), shown inside the app window. */
   import type { Agent7Api } from '@shared/ipc'
-  import type { FileNodeDto, Id } from '@shared/models'
+  import type { Id } from '@shared/models'
+  import type { VfsEntryDto, VPath } from '@shared/vfs'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
   import Dialog from '../../kit/organisms/Dialog.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
-  import { extensionOf, parentOf, toWindowsPath, typeName } from '../paths'
+  import { upPath } from '../explorer/explorerModel'
+  import { extensionOf, typeName } from '../paths'
+  import { errorText, listLocation } from './listing'
 
   interface Props {
     api: Agent7Api
-    folderId: Id
-    /** Directory shown first (workspace-relative). */
-    startPath?: string
+    desktopId: Id
+    /** Directory shown first ('' is Computer, the list of drives). */
+    startPath?: VPath | ''
     title?: string
     /** Only files with these extensions (lower case, no dot) are listed; folders always are. */
     extensions?: string[]
@@ -22,11 +25,11 @@
     onclose: () => void
   }
 
-  let { api, folderId, startPath = '', title = 'Open', extensions, onopen, onclose }: Props = $props()
+  let { api, desktopId, startPath = '', title = 'Open', extensions, onopen, onclose }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let dir = $state(startPath)
-  let entries = $state.raw<FileNodeDto[]>([])
+  let entries = $state.raw<VfsEntryDto[]>([])
   let selected = $state<string[]>([])
   let error = $state<string | null>(null)
 
@@ -35,12 +38,12 @@
     let stale = false
     error = null
     selected = []
-    api.folders.readDir(folderId, target).then(
-      (list) => !stale && (entries = extensions ? list.filter((e) => e.isDirectory || extensions.includes(extensionOf(e.path))) : list),
+    listLocation(api, desktopId, target).then(
+      (list) => !stale && (entries = extensions ? list.filter((e) => e.kind === 'directory' || extensions.includes(extensionOf(e.path))) : list),
       (e: unknown) => {
         if (stale) return
         entries = []
-        error = e instanceof Error ? e.message : String(e)
+        error = errorText(e)
       }
     )
     return () => {
@@ -53,20 +56,20 @@
     { key: 'type', header: 'Type' }
   ]
   const rows = $derived<ListRow[]>(
-    entries.map((e) => ({ id: e.path, icon: e.isDirectory ? 'folder' : 'file-text', name: e.name, type: typeName(e.path, e.isDirectory) }))
+    entries.map((e) => ({ id: e.path, icon: e.kind === 'directory' ? 'folder' : 'file-text', name: e.name, type: dir === '' ? 'Drive' : typeName(e.path, e.kind === 'directory') }))
   )
   const picked = $derived(entries.find((e) => e.path === selected[0]) ?? null)
 
   function activate(row: ListRow): void {
     const entry = entries.find((e) => e.path === row.id)
     if (!entry) return
-    if (entry.isDirectory) dir = entry.path
+    if (entry.kind === 'directory') dir = entry.path
     else onopen(entry.path)
   }
 
   function result(r: DialogResult): void {
     if (r === 'ok' && picked) {
-      if (picked.isDirectory) dir = picked.path
+      if (picked.kind === 'directory') dir = picked.path
       else onopen(picked.path)
     } else if (r === 'cancel') onclose()
   }
@@ -75,8 +78,8 @@
 <Dialog {title} iconName="open-folder" width="420px" contained {onclose}>
   <div class="open">
     <div class="where">
-      <ToolStripButton icon="chevron-up" title="Up one level" aria-label="Up" disabled={dir === ''} onclick={() => (dir = parentOf(dir))} />
-      <span class="path">Look in: {toWindowsPath(dir)}</span>
+      <ToolStripButton icon="chevron-up" title="Up one level" aria-label="Up" disabled={dir === ''} onclick={() => (dir = upPath(dir))} />
+      <span class="path">Look in: {dir === '' ? 'Computer' : dir}</span>
     </div>
     <div class="list">
       <ListView {columns} {rows} bind:selected aria-label="Files" emptyText={error ?? 'This folder is empty.'} onactivate={activate} />

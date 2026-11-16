@@ -61,7 +61,7 @@ describe('agent7 MCP server <-> bridge: desktop tools', () => {
     await connect('3')
     expect(client.getServerCapabilities()?.tools?.listChanged).toBe(true)
     expect(client.getServerVersion()?.name).toBe('agent7')
-    expect(await names(client)).toEqual(['a2ui_catalog', 'a2ui_render', 'a2ui_delete_surface', 'desktop_state', 'desktop_open_app', 'desktop_close_app', 'desktop_focus_app'])
+    expect(await names(client)).toEqual(['a2ui_catalog', 'a2ui_render', 'a2ui_delete_surface', 'desktop_state', 'drives_list', 'desktop_open_app', 'desktop_close_app', 'desktop_focus_app'])
     host.groups = ['shell', 'terminal']
     expect(await names(client)).toContain('terminal_run')
     expect(await names(client)).not.toContain('browser_navigate')

@@ -2,6 +2,7 @@
  * Pure helpers shared by main (`DesktopService`) and the renderer's fake desktop:
  * default window bounds, the initial view of a new window and window titles.
  */
+import { AGENT_HOME, vpathName } from './vfs'
 import { APP_DISPLAY_NAMES, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
 
 export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
@@ -33,6 +34,7 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
     case 'explorer':
+      // '' is "Computer" (the drives root).
       return { app: 'explorer', path: input.path ?? '', selected: [] }
     case 'notepad':
       return { app: 'notepad', path: input.path ?? null, dirty: false, caretLine: 1 }
@@ -46,7 +48,7 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
         selectedChangeId: null
       }
     case 'terminal':
-      return { app: 'terminal', terminalId: null, cwd: '', runningCommand: null, lastLines: [] }
+      return { app: 'terminal', terminalId: null, cwd: AGENT_HOME, runningCommand: null, lastLines: [] }
     case 'browser':
       return { app: 'browser', url: input.url ?? 'about:blank', title: '', loading: false }
     case 'control-centre':
@@ -73,17 +75,17 @@ export function windowTitle(view: AppView): string {
     case 'chat':
       return view.title
     case 'explorer':
-      return view.path ? `W:\\${view.path.replaceAll('/', '\\')}` : 'Workspace (W:)'
+      return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'
     case 'notepad':
-      return `${view.path?.split('/').pop() ?? 'Untitled'} - Notepad`
+      return `${view.path ? vpathName(view.path) : 'Untitled'} - Notepad`
     case 'code':
-      return view.activePath ? `${view.activePath.split('/').pop()} - Code` : 'Code'
+      return view.activePath ? `${vpathName(view.activePath)} - Code` : 'Code'
     case 'browser':
       return view.title ? `${view.title} - Browser` : 'Browser'
     case 'paint':
-      return `${view.path?.split('/').pop() ?? 'Untitled'} - Agent Paint`
+      return `${view.path ? vpathName(view.path) : 'Untitled'} - Agent Paint`
     case 'wordpad':
-      return `${view.path?.split('/').pop() ?? 'Document'} - WordPad`
+      return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
     default:
       return APP_DISPLAY_NAMES[view.app]
   }

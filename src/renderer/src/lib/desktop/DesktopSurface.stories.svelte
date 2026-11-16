@@ -4,7 +4,7 @@
   import DesktopSurface from './DesktopSurface.svelte'
 
   const icons = [
-    { id: 'workspace', label: 'Workspace (W:)', icon: 'folder-open' },
+    { id: 'computer', label: 'Computer', icon: 'computer' },
     { id: 'chats', label: 'Chats', icon: 'session' },
     { id: 'code', label: 'Code', icon: 'file-code' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal' },
@@ -17,7 +17,7 @@
     title: 'Desktop/DesktopSurface',
     component: DesktopSurface,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
-    args: { icons: [...icons], selected: null, gadgets: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopenworkspace: fn(), ontogglegadgets: fn(), oncontrolcentre: fn(), onbackground: fn() },
+    args: { icons: [...icons], selected: null, gadgets: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopencomputer: fn(), ontogglegadgets: fn(), oncontrolcentre: fn(), onbackground: fn() },
     argTypes: { selected: { control: 'text' }, gadgets: { control: 'boolean' } }
   })
 </script>

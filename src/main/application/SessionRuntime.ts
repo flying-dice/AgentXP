@@ -1,18 +1,18 @@
-import type { AgentDto, FolderDto, Id, SessionDto } from '@shared/models'
+import type { AgentDto, Id, SessionDto } from '@shared/models'
 import type { AgentSessionEvent } from '../domain/agent/AgentSessionEvent'
 import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSink'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
-import type { FolderRepository } from '../domain/repositories/folder-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
 import type { AgentConnectionPool, LiveSession } from './AgentConnectionPool'
-import { required } from './errors'
+import { AppError, required } from './errors'
 import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection, ProtocolTap } from './ports'
 import type { ToolGate } from '../domain/agent/ToolGate'
 import type { PermissionBroker } from './PermissionBroker'
 import type { SessionBroadcaster } from './SessionBroadcaster'
 import type { SessionEventBus } from './SessionEventBus'
 import type { TerminalRecorder } from './TerminalRecorder'
-import type { WorkspaceFiles } from './WorkspaceFiles'
+import type { SessionFiles } from './SessionFiles'
+import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
 
 /** Drops events while closed: `session/load` replays history we already persisted. */
 class MutableSink implements AgentSessionEventSink {
@@ -28,10 +28,10 @@ export interface RuntimeDeps {
   pool: AgentConnectionPool
   sessions: SessionRepository
   agents: AgentRepository
-  folders: FolderRepository
+  vfs: Pick<VirtualFileSystem, 'realPath'>
   events: SessionEventBus
   broker: PermissionBroker
-  workspaceFiles: WorkspaceFiles
+  files: SessionFiles
   terminals: TerminalRecorder
   broadcaster: SessionBroadcaster
   a2uiMcpConfig: A2uiMcpConfigFactory
@@ -62,12 +62,13 @@ export class SessionRuntime {
     const { sessions, broadcaster, pool } = this.deps
     const session = required(sessions.get(sessionId), 'Session')
     const agent = required(this.deps.agents.get(session.agentId), 'Agent')
-    const folder = required(this.deps.folders.get(session.folderId), 'Folder')
     broadcaster.setStatus(sessionId, 'connecting')
     const sink = new MutableSink(this.deps.events.forSession(sessionId))
     try {
-      const connection = await this.openConnection(agent, folder, sessionId, sink)
-      const live = await this.openSession(connection, session, folder.path, sink)
+      // The agent's cwd is the real folder behind the chat's working directory; an ejected drive refuses here.
+      const cwd = await this.deps.vfs.realPath(this.desktopOf(session), session.cwd)
+      const connection = await this.openConnection(agent, cwd, sessionId, sink)
+      const live = await this.openSession(connection, session, cwd, sink)
       pool.add(sessionId, live)
       broadcaster.setStatus(sessionId, 'idle')
       void connection.closed.then(() => this.onClosed(sessionId, connection))
@@ -78,17 +79,17 @@ export class SessionRuntime {
     }
   }
 
-  private openConnection(agent: AgentDto, folder: FolderDto, sessionId: Id, sink: AgentSessionEventSink): Promise<LiveAgentConnection> {
-    const { broker, workspaceFiles, terminals } = this.deps
+  private openConnection(agent: AgentDto, cwd: string, sessionId: Id, sink: AgentSessionEventSink): Promise<LiveAgentConnection> {
+    const { broker, files, terminals } = this.deps
     return this.deps.connector.open({
       agent,
-      cwd: folder.path,
+      cwd,
       handlers: {
         sink,
         permissions: broker.forSession(sessionId),
         gate: this.deps.toolGate(sessionId),
         tap: this.deps.protocolTap?.(sessionId),
-        files: workspaceFiles.forSession(sessionId, folder.path),
+        files: files.forSession(sessionId),
         onTerminalActivity: (activity) => terminals.record(sessionId, activity)
       }
     })
@@ -118,6 +119,11 @@ export class SessionRuntime {
       await connection.dispose()
       throw error
     }
+  }
+
+  private desktopOf(session: SessionDto): Id {
+    if (session.desktopId === null || session.desktopId === undefined) throw new AppError('This chat is not on a desktop.')
+    return session.desktopId
   }
 
   private storeState(sessionId: Id, state: AcpSessionState): void {

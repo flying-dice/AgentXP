@@ -59,6 +59,30 @@
   {/await}
 </Story>
 
+<Story name="UsbTrayMenuOpen" asChild>
+  {#await prepareDesktop({ usbMenu: true }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /></div>
+  {/await}
+</Story>
+
+<Story name="SafeToRemoveBalloon" asChild>
+  {#await prepareDesktop({ balloon: true }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /></div>
+  {/await}
+</Story>
+
+<Story name="AutoPlayAfterPlugIn" asChild>
+  {#await prepareDesktop({ autoPlay: true }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /></div>
+  {/await}
+</Story>
+
+<Story name="EjectWarning" asChild>
+  {#await prepareDesktop({ eject: true }) then { api, controller }}
+    <div class="stage"><DesktopPage {api} {controller} /><MessageBoxHost contained /></div>
+  {/await}
+</Story>
+
 <Story name="FirstRunWelcome" asChild>
   {#await prepareDesktop({ firstRun: true }) then { api, controller }}
     <div class="stage"><DesktopPage {api} {controller} /></div>

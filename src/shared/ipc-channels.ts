@@ -36,7 +36,8 @@ const RENDERER_EVENTS = {
   'desktop.appRequest': true,
   'notes.changed': true,
   'events.appended': true,
-  'recycle.changed': true
+  'recycle.changed': true,
+  'launcher.changed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -66,12 +67,8 @@ const INVOKE_METHODS = {
     exportTranscript: true
   },
   desktop: {
-    list: true,
     current: true,
-    create: true,
-    open: true,
     rename: true,
-    remove: true,
     openWindow: true,
     closeWindow: true,
     focusWindow: true,
@@ -86,6 +83,9 @@ const INVOKE_METHODS = {
     attachBrowser: true,
     respondAppRequest: true
   },
+  vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
+  drives: { list: true, plugIn: true, eject: true },
+  launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },
   notes: { list: true, add: true, update: true, remove: true },
   events: { query: true, clear: true },
   recycle: { list: true, restore: true, remove: true, empty: true },

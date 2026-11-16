@@ -12,15 +12,22 @@
   import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { relativeToFolder } from '../explorer/agentStatus'
-  import { baseName, normalizePath } from '../paths'
+  import { normaliseVPath, vpathName } from '@shared/vfs'
+  import { driveRoot, driveTitle, sortDrives } from '../explorer/explorerModel'
+  import { errorText } from '../shared/listing'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
   import { closeTab, openTab, reconcileTabs, sameRange, scrollTopForLine, visibleRange } from './codeModel'
 
   let { window: win, host }: AppProps<'code'> = $props()
 
-  const folder = $derived(host.state.folder)
+  const desktopId = $derived(host.state.desktopId)
+  /** The tree shows every plugged-in project; with none, the agent's home. */
+  const roots = $derived.by(() => {
+    const usb = sortDrives(host.state.drives).filter((d) => d.kind === 'removable')
+    return usb.length > 0 ? usb.map((d) => ({ path: driveRoot(d.letter), name: driveTitle(d) })) : [{ path: host.state.home, name: vpathName(host.state.home) }]
+  })
+  const rootsKey = $derived(roots.map((r) => r.path).join('|'))
 
   let tabs = $state<string[]>([])
   let active = $state<string | null>(null)
@@ -48,7 +55,7 @@
   const desktop = useDesktopStores(host)
   const stores = $derived(desktop.list)
   const changes = $derived<FileChangeDto[]>(stores.flatMap((s) => s.state.changes))
-  const changedPaths = $derived(changes.map((c) => c.path))
+  const changedPaths = $derived(changes.map((c) => normaliseVPath(c.path) ?? c.path))
   const editing = $derived(
     active !== null &&
       stores.some((s) =>
@@ -56,21 +63,21 @@
           (c) =>
             c.kind === 'edit' &&
             (c.status === 'in_progress' || c.status === 'pending') &&
-            c.locations.some((l) => relativeToFolder(folder.path, l.path) === active)
+            c.locations.some((l) => normaliseVPath(l.path) === active)
         )
       )
   )
   /** Changes to the active file, so the text is re-read when an edit lands. */
   const activeChangeKey = $derived(
-    JSON.stringify(changes.filter((c) => c.path === active).map((c) => [c.id, c.additions, c.deletions, c.kind]))
+    JSON.stringify(changes.filter((c) => normaliseVPath(c.path) === active).map((c) => [c.id, c.additions, c.deletions, c.kind]))
   )
 
   async function loadFile(path: string): Promise<void> {
     try {
-      const text = await host.api.folders.readFile(folder.id, path)
+      const text = await host.api.vfs.readFile(desktopId, path)
       files = { ...files, [path]: { text, error: null } }
     } catch (error) {
-      files = { ...files, [path]: { text: null, error: error instanceof Error ? error.message : String(error) } }
+      files = { ...files, [path]: { text: null, error: errorText(error) } }
     }
   }
 
@@ -122,7 +129,7 @@
     const view = win.view
     if (!sync.isExternal({ tabs: view.tabs, activePath: view.activePath, visibleLines: view.visibleLines, selectedChangeId: view.selectedChangeId })) return
     untrack(() => {
-      const next = reconcileTabs(view.tabs.map(normalizePath), view.activePath ? normalizePath(view.activePath) : null)
+      const next = reconcileTabs(view.tabs.map((t) => normaliseVPath(t) ?? t), view.activePath ? (normaliseVPath(view.activePath) ?? view.activePath) : null)
       const changedFile = next.active !== active
       tabs = next.tabs
       active = next.active
@@ -241,15 +248,15 @@
     <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={showChanges} checkOnClick />
     <span class="spring"></span>
     {#if editing}
-      <span class="editing" role="status"><Icon name="edit" /> Agent is editing {active ? baseName(active) : ''}</span>
+      <span class="editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
     {/if}
   </div>
   <div class="work">
     <SplitContainer splitterDistance={190} panel1MinSize={120} panel2MinSize={260} fixedPanel="panel1">
       {#snippet panel1()}
         <div class="tree">
-          {#key folder.id}
-            <FileTree rootName={folder.name} readDir={(p) => host.api.folders.readDir(folder.id, p)} {changedPaths} onopen={show} />
+          {#key rootsKey}
+            <FileTree {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} onopen={show} />
           {/key}
         </div>
       {/snippet}
@@ -260,9 +267,9 @@
               {#each tabs as tab (tab)}
                 <div class="tab" class:on={tab === active} role="presentation">
                   <button class="name" role="tab" aria-selected={tab === active} title={tab} onclick={() => show(tab)}>
-                    <Icon name="file-code" />{baseName(tab)}{#if changedPaths.includes(tab)}<span class="mod" title="Changed by the agent">*</span>{/if}
+                    <Icon name="file-code" />{vpathName(tab)}{#if changedPaths.includes(tab)}<span class="mod" title="Changed by the agent">*</span>{/if}
                   </button>
-                  <button class="x" aria-label="Close {baseName(tab)}" onclick={() => close(tab)}>&times;</button>
+                  <button class="x" aria-label="Close {vpathName(tab)}" onclick={() => close(tab)}>&times;</button>
                 </div>
               {/each}
             </div>
@@ -302,7 +309,7 @@
     </SplitContainer>
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={active ? `W:\\${active.replaceAll('/', '\\')}` : 'Ready'} spring />
+    <StatusStripLabel text={active ?? 'Ready'} spring />
     {#if lineLabel}<StatusStripLabel text={lineLabel} borders={['left']} />{/if}
     {#if selection}<StatusStripLabel text="Selected {selection.startLine}-{selection.endLine}" borders={['left']} />{/if}
     <StatusStripLabel text={language} borders={['left']} width={90} />

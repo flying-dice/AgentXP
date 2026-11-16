@@ -10,7 +10,8 @@ export const iconNames = [
   'chevron-down', 'chevron-right', 'chevron-up', 'chevron-left', 'plus', 'minus', 'refresh',
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
   'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agent7',
-  'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr'
+  'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
+  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library'
 ] as const
 
 export type IconName = (typeof iconNames)[number]
@@ -314,6 +315,45 @@ const markup: Record<IconName, string> = {
       '<rect x="3" y="3.5" width="10" height="7" fill="url(#~m)" stroke="#2f3a2f" stroke-width=".6"/>' +
       '<path d="M3.5 9l2-2.5 1.8 1.5 2.2-3.5 1.5 2 1.5-1" fill="none" stroke="#5fe05f" stroke-width="1"/>' +
       '<path d="M5 14h6M8 12v2" stroke="#52667f" stroke-width="1.2"/>'
+  ),
+  computer: defs(
+    vg('m', '#eef3f9', '#bfd0e4') + vg('s', '#8fd0ff', '#2f86e0'),
+    '<rect x="1.5" y="2" width="13" height="9" rx="1" fill="url(#~m)" stroke="#52667f"/>' +
+      '<rect x="3" y="3.5" width="10" height="6" fill="url(#~s)" stroke="#27456b" stroke-width=".6"/>' +
+      '<path d="M3.5 4.5h4" stroke="#fff" opacity=".6"/>' +
+      '<path d="M5.5 14h5M8 11v3" stroke="#52667f" stroke-width="1.4"/>'
+  ),
+  drive: defs(
+    vg('d', '#f4f7fb', '#b9c5d4'),
+    '<rect x="1.5" y="5" width="13" height="7.5" rx="1.2" fill="url(#~d)" stroke="#5a6678"/>' +
+      '<path d="M2.2 6.3h11.6" stroke="#fff" opacity=".8"/>' +
+      '<rect x="3" y="9.4" width="6" height="1.5" fill="#8b97a8"/>' +
+      '<circle cx="12" cy="10.2" r=".9" fill="#48d048" stroke="#1f7a1f" stroke-width=".4"/>'
+  ),
+  usb: defs(
+    vg('s', '#f6f8fb', '#aab6c6') + vg('b', '#7cc3ff', '#2a6fc6', '#4a9be8'),
+    '<rect x="5.5" y="1" width="5" height="4.2" fill="url(#~s)" stroke="#5a6678"/>' +
+      '<rect x="6.6" y="2" width="1" height="1.3" fill="#333"/><rect x="8.5" y="2" width="1" height="1.3" fill="#333"/>' +
+      '<path d="M4.5 5.2h7l1 1.3v7a1.2 1.2 0 0 1-1.2 1.2H4.7a1.2 1.2 0 0 1-1.2-1.2v-7z" fill="url(#~b)" stroke="#1f4f8a" stroke-linejoin="round"/>' +
+      '<rect x="6" y="9" width="4" height="2.6" rx=".6" fill="#fff" opacity=".65"/>'
+  ),
+  'usb-safe': defs(
+    vg('s', '#ffffff', '#c5cfdc') + rg('g', '#7ff07f', '#1f9d1f'),
+    '<rect x="4.5" y="0.8" width="4.6" height="3.6" fill="url(#~s)" stroke="#2c3e5c" stroke-width=".8"/>' +
+      '<path d="M3.8 4.4h6.2l.9 1.2v7.600a1 1 0 0 1-1 1H3.900a1 1 0 0 1-1-1V5.600z" fill="url(#~s)" stroke="#2c3e5c" stroke-width=".8" stroke-linejoin="round"/>' +
+      '<rect x="5" y="8" width="3.600" height="2.200" rx=".5" fill="#6b86ad"/>' +
+      '<circle cx="11.600" cy="11.600" r="4" fill="url(#~g)" stroke="#fff" stroke-width=".9"/>' +
+      '<path d="M9.700 11.700l1.400 1.400 2.400-2.800" fill="none" stroke="#fff" stroke-width="1.500"/>'
+  ),
+  star: defs(
+    vg('y', '#fff3a6', '#f2b520'),
+    '<path d="M8 1.3l2 4.300 4.700.6-3.400 3.200.9 4.700L8 11.800l-4.200 2.300.9-4.700L1.300 6.200 6 5.600z" fill="url(#~y)" stroke="#a87a0c" stroke-linejoin="round"/>'
+  ),
+  library: defs(
+    vg('f', '#fde9a0', '#f0c04e') + docDefs,
+    '<rect x="2" y="2.500" width="3" height="11" fill="#7aa7de" stroke="#2f5f9f"/><rect x="5.500" y="1.500" width="3" height="12" fill="#a8cb7a" stroke="#4c7a2a"/>' +
+      '<path d="M9.200 3l3 -.8 2.300 10.800-3 .8z" fill="#f0c04e" stroke="#b8902c" stroke-linejoin="round"/>' +
+      '<path d="M1.500 13.500h13" stroke="#6b7886"/>'
   ),
   agent7: defs(
     vg('b', '#7cc3ff', '#3f9bf0', '#2f86e0') + vg('c', '#8fe9ff', '#3cc8ee', '#22b8e0') + vg('a', '#ffe08a', '#ffb84d', '#f6a93a'),

@@ -25,7 +25,7 @@ src/
       acp/         ACP client built on @agentclientprotocol/sdk: agent process, connection,
                    client-side handlers (fs, terminals, permissions), session update mapping.
       a2ui/        Stdio MCP server (@modelcontextprotocol/sdk) handed to agents + bridge into the app.
-      fs/          Workspace file system access, sandboxed to registered folders.
+      fs/          Host file access (`NodeHostFiles`), sandboxed per drive root; thumbnail store.
     ipc/           ipcMain handlers that adapt Agent7Api calls to application services, the AG-UI
                    stream transport (streamAguiRun), window caption handlers, Electron dialogs and
                    the event publisher that pushes the renderer-facing events to windows.
@@ -79,16 +79,16 @@ component properties and data models). Images from agents are stored as BLOB.
 
 ## Agent flow
 
-1. The user adds a folder (workspace) and creates a session in it.
+1. The user creates a desktop in the launcher, plugs a folder (project) in as a drive (E:) and starts a chat with a working directory (a VPath).
 2. `SessionService` spawns the configured agent command (default
    `npx -y @zed-industries/claude-code-acp`) via `AgentProcess`, initialises ACP,
-   and calls `session/new` with the folder as `cwd` and the A2UI MCP server in
+   and calls `session/new` with the real path of the chat's cwd and the A2UI MCP server in
    `mcpServers`.
 3. `session/update` notifications are mapped to domain events, projected into repository writes (transcript,
    tool calls, plan, modes, commands, usage) and translated into the AG-UI stream (see below).
 4. Client-side ACP requests (`fs/read_text_file`, `fs/write_text_file`,
    `terminal/*`, `session/request_permission`) are served by the harness,
-   sandboxed to the session folder. Writes are recorded as file changes for the
+   allowed inside C: and the plugged-in drives only. Writes are recorded as file changes for the
    Changes pane (with revert).
 5. The A2UI MCP tool lets the agent draw WinForms surfaces inline in the
    transcript; user actions on a surface are delivered back to the agent as a
@@ -135,9 +135,15 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   Three things listen: (a) `ElectronEventPublisher` sends it to the owning desktop's window only (chat events go the same way
   via `SessionDto.desktopId`), (b) `AguiRunCoordinator` turns it into STATE_DELTA on `/desktop` for the chats of that desktop
   (`buildSessionState` fills `desktop`), (c) the bridge pushes `toolsChanged` when `tools` changed.
-- **Windows.** One `BrowserWindow` per open desktop (`ipc/DesktopWindowManager`, URL `?desktop=<id>`, `webviewTag` on). The
+- **Virtual file system and launcher.** Desktops are long-lived virtual PCs (docs/DESKTOP_DESIGN.md, section 8b). `VirtualFileSystem`
+  and `DriveService` (application/vfs) map VPaths (`C:\...`, `E:\...`) to real paths through the desktop's live drives (C: is
+  `<userData>/desktops/<id>/C`; E: to Z: are plugged-in `folders`), `SessionFiles` gates the ACP file/terminal requests the same way,
+  and `HostFiles` (`NodeHostFiles`, sandbox guard, symlink-safe) is the only code that touches the disk. `LauncherService`
+  (application/launcher) lists/creates/connects/disconnects/renames/removes desktops; `ThumbnailService` keeps a PNG per desktop
+  (served as `agent7-thumb://`). Disconnecting only closes the OS window.
+- **Windows.** One `BrowserWindow` per connected desktop plus the launcher window (`?launcher=1`) (`ipc/DesktopWindowManager`, URL `?desktop=<id>`, `webviewTag` on). The
   manager is the `DesktopWindowHost` port: `open` focuses or creates a window, reusing the blank first-run window. Closing an
-  OS window sets `is_open = 0` (not when the app quits). `desktop.current` and `desktop.attachBrowser` need the calling window
+  OS window only disconnects (`is_open = 0`, not when the app quits); nothing running stops. `desktop.current` and `desktop.attachBrowser` need the calling window
   and are registered per sender (`ipc/registerDesktopHandlers`); every other call goes through `createApi`.
 - **Tools follow apps.** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
   (`agent7`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
@@ -177,8 +183,8 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   `stopReason` refusal / cancelled and `session/cancel`; else `info`.
 - **Screen capture.** `snip.capture` / `screen_capture` use the `ScreenCapturer` port; `ElectronScreenCapturer` calls
   `webContents.capturePage(rect)` on the desktop's window and returns a PNG data URL.
-- **Saving by the user.** `folders.writeFile` (Notepad, WordPad saves) writes inside the folder through the same sandbox as
-  `readFile` and is not recorded as an agent change; the agent's `wordpad_write` goes through `WorkspaceFiles` and is.
+- **Saving by the user.** `vfs.writeFile` (Notepad, WordPad saves) writes to a VPath through the same sandbox as
+  `vfs.readFile` and is not recorded as an agent change; the agent's `wordpad_write` goes through `SessionFiles` and is.
 
 ## Window
 

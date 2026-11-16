@@ -474,7 +474,8 @@ describe('AguiRunCoordinator: A2UI and abort', () => {
 const desktopState = (desktopId: number, tools: DesktopState['tools']): DesktopState => ({
   desktopId,
   title: 'project',
-  folder: { id: 1, path: '/work/project', name: 'project' },
+  drives: [{ letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }],
+  home: 'C:\\Users\\Agent',
   focusedWindowId: null,
   windows: [],
   tools,

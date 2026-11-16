@@ -10,7 +10,15 @@ import type { ToolContext, ToolResult } from './types'
 const app = z.enum(AGENT_OPENABLE_APPS)
 const windowId = z.number().int().optional().describe('Window id from desktop_state; default: the focused window of this app')
 const windowIdParam = z.number().int().optional().describe('Window id from desktop_state; default: the focused window of this app (else the front-most)')
-const path = (what: string) => z.string().min(1).describe(`${what}, relative to the workspace folder (W:)`)
+const path = (what: string) =>
+  z.string().min(1).describe(`${what}: a full virtual path such as E:\\src\\index.ts or C:\\Users\\Agent\\notes.md, or relative to your working directory`)
+
+/** Told to agents once, when the MCP server starts: how the file system looks. */
+export const DESKTOP_INSTRUCTIONS =
+  'You work on a virtual Windows desktop. All paths are virtual paths with a drive letter and backslashes: C:\\ is your private system disk ' +
+  '(your home is C:\\Users\\Agent) and projects are USB drives the user plugs in (E:\\, F:\\, ...). Call drives_list to see which drives exist. ' +
+  'A drive can be ejected at any time; then every path on it is refused until the user plugs the project in again. ' +
+  'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more.'
 
 const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
 
@@ -37,7 +45,12 @@ export interface ToolDefinition {
 export const TOOL_DEFS = {
   desktop_state: {
     group: 'shell',
-    description: 'The current desktop as JSON: open windows (with what each shows), focus, enabled tool groups, pause and control flags.',
+    description: 'The current desktop as JSON: drives, open windows (with what each shows), focus, enabled tool groups, pause and control flags.',
+    input: z.object({})
+  },
+  drives_list: {
+    group: 'shell',
+    description: 'List the drives of this desktop. C: is your private system disk; projects are USB drives the user plugs in (E:, F:, ...) and can eject at any time.',
     input: z.object({})
   },
   desktop_open_app: {
@@ -46,7 +59,7 @@ export const TOOL_DEFS = {
       'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*, Agent Paint: paint_*, WordPad: wordpad_*, Sticky Notes: notes_*, Event Viewer: events_query, Snipping Tool: screen_capture, Recycle Bin: recycle_*).',
     input: z.object({
       app,
-      path: z.string().optional().describe('explorer, notepad, code, wordpad, paint: workspace-relative path to show'),
+      path: z.string().optional().describe('explorer, notepad, code, wordpad, paint: virtual path to show (E:\\src, relative to your working directory, ...); an Explorer without a path shows Computer (the drives)'),
       url: z.string().optional().describe('browser: address to load')
     })
   },
@@ -62,15 +75,15 @@ export const TOOL_DEFS = {
   },
   fs_list: {
     group: 'fs.read',
-    description: 'List one directory of the workspace (folders first). Needs the Explorer or Code app.',
-    input: z.object({ path: z.string().optional().describe('Workspace-relative directory; default: the workspace root') })
+    description: 'List one directory (folders first; .git and node_modules are hidden). Needs the Explorer or Code app.',
+    input: z.object({ path: z.string().optional().describe('Directory as a virtual path or relative to your working directory; default: your working directory') })
   },
   fs_find: {
     group: 'fs.read',
-    description: 'Find files and folders by name below a directory. Case-insensitive; `*` matches any characters. Needs the Explorer or Code app.',
+    description: 'Find files and folders by name below a directory (.git and node_modules are skipped). Case-insensitive; `*` matches any characters. Needs the Explorer or Code app.',
     input: z.object({
       pattern: z.string().min(1).describe('Name or glob such as "*.test.ts" or "readme"'),
-      path: z.string().optional().describe('Workspace-relative directory to search; default: the root'),
+      path: z.string().optional().describe('Directory to search, as a virtual path or relative to your working directory; default: your working directory'),
       limit: z.number().int().min(1).max(500).optional().describe('Maximum results (default 100)')
     })
   },
@@ -82,7 +95,7 @@ export const TOOL_DEFS = {
   notepad_read: {
     group: 'notepad',
     description: 'Read the saved text of the file a Notepad window shows (or of `path`).',
-    input: z.object({ path: z.string().optional().describe('Workspace-relative file; default: the file of the focused Notepad') })
+    input: z.object({ path: z.string().optional().describe('File as a virtual path or relative to your working directory; default: the file of the focused Notepad') })
   },
   code_open: {
     group: 'code',
@@ -101,10 +114,10 @@ export const TOOL_DEFS = {
   },
   terminal_run: {
     group: 'terminal',
-    description: 'Run a shell command in the workspace and wait for it. Output appears in the Terminal app and is returned (last 20k characters).',
+    description: 'Run a shell command and wait for it (it runs in a real folder behind a drive; ejected drives are refused). Output appears in the Terminal app and is returned (last 20k characters).',
     input: z.object({
       command: z.string().min(1),
-      cwd: z.string().optional().describe('Workspace-relative working directory; default: the workspace root'),
+      cwd: z.string().optional().describe('Working directory as a virtual path or relative to your working directory; default: your working directory'),
       timeoutSeconds: z.number().int().min(1).max(600).optional().describe('Default 60')
     })
   },

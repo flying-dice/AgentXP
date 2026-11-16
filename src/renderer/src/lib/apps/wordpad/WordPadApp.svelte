@@ -15,7 +15,8 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { registerAppRequestHandler } from '../appRequests'
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
-  import { baseName, joinPath, normalizePath, parentOf } from '../paths'
+  import { joinVPath, normaliseVPath, vpathName, vpathParent } from '@shared/vfs'
+  import { errorText } from '../shared/listing'
   import { ViewSync } from '../viewSync'
   import { headingAtLine, insertLink, lineOf, toggleBullets, toggleCode, toggleHeading, toggleNumbers, wrapSelection, type Edit } from './markdownEdit'
 
@@ -58,11 +59,11 @@
       message = ''
     } else {
       try {
-        text = original = await host.api.folders.readFile(host.state.folder.id, target)
+        text = original = await host.api.vfs.readFile(host.state.desktopId, target)
         message = ''
       } catch (error) {
         text = original = ''
-        message = error instanceof Error ? error.message : String(error)
+        message = errorText(error)
       }
     }
     await tick()
@@ -96,7 +97,9 @@
       case 'open': {
         const target = (params as { path?: unknown } | null)?.path
         if (typeof target !== 'string') throw new Error('params.path must be a string')
-        await load(normalizePath(target))
+        const vpath = normaliseVPath(target)
+        if (!vpath) throw new Error('params.path must be an absolute path such as E:\\README.md')
+        await load(vpath)
         return { ok: true }
       }
       case 'write': {
@@ -157,7 +160,7 @@
 
   async function confirmDiscard(): Promise<boolean> {
     if (!dirty) return true
-    const answer = await showMessageBox({ text: `The text in ${path ? baseName(path) : 'the document'} has changed.\n\nDo you want to discard the changes?`, caption: 'WordPad', buttons: 'YesNo', icon: 'warning' })
+    const answer = await showMessageBox({ text: `The text in ${path ? vpathName(path) : 'the document'} has changed.\n\nDo you want to discard the changes?`, caption: 'WordPad', buttons: 'YesNo', icon: 'warning' })
     return answer === 'yes'
   }
 
@@ -167,11 +170,11 @@
       return
     }
     try {
-      await host.api.folders.writeFile(host.state.folder.id, path, text)
+      await host.api.vfs.writeFile(host.state.desktopId, path, text)
       original = text
-      message = `Saved ${baseName(path)}`
+      message = `Saved ${vpathName(path)}`
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'WordPad', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: errorText(error), caption: 'WordPad', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -186,14 +189,14 @@
       return
     }
     saveAs = null
-    path = joinPath('', name)
+    path = joinVPath(host.state.home, 'Documents', name)
     await save()
   }
 
   function followLink(href: string): void {
     if (/^[a-z]+:/i.test(href) || href.startsWith('#')) return
-    const target = normalizePath(`${parentOf(path ?? '')}/${href.split('#')[0]}`)
-    if (/\.(md|markdown|txt)$/i.test(target)) void confirmDiscard().then((ok) => (ok ? load(target) : undefined))
+    const target = joinVPath(vpathParent(path ?? '') ?? joinVPath(host.state.home, 'Documents') ?? host.state.home, href.split('#')[0])
+    if (target && /\.(md|markdown|txt)$/i.test(target)) void confirmDiscard().then((ok) => (ok ? load(target) : undefined))
   }
 
   const menu = $derived<MenuItemDef[]>([
@@ -272,13 +275,13 @@
         {#if text.trim() === ''}
           <p class="empty">{message || 'This document is empty. Choose Edit to start writing, or File > Open.'}</p>
         {:else}
-          <MarkdownView source={text} onlink={followLink} label={path ? baseName(path) : 'Document'} />
+          <MarkdownView source={text} onlink={followLink} label={path ? vpathName(path) : 'Document'} />
         {/if}
       </div>
     {/if}
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={message || (dirty ? 'Modified' : (path ? `W:\\${path.replaceAll('/', '\\')}` : 'New document'))} spring />
+    <StatusStripLabel text={message || (dirty ? 'Modified' : (path ?? 'New document'))} spring />
     <StatusStripLabel text="{words} word{words === 1 ? '' : 's'}" borders={['left']} width={90} />
     <StatusStripLabel text={heading ? `§ ${heading}` : ''} borders={['left']} width={170} />
   </StatusStrip>
@@ -286,8 +289,8 @@
   {#if picking}
     <OpenFileDialog
       api={host.api}
-      folderId={host.state.folder.id}
-      startPath={path ? parentOf(path) : ''}
+      desktopId={host.state.desktopId}
+      startPath={path ? (vpathParent(path) ?? '') : (joinVPath(host.state.home, 'Documents') ?? '')}
       extensions={['md', 'markdown', 'txt']}
       onopen={(p) => {
         picking = false

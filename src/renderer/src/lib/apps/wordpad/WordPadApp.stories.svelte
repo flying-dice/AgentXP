@@ -13,17 +13,17 @@
     app="wordpad"
     width={720}
     height={500}
-    view={{ app: 'wordpad', path: 'README.md', mode: 'read', dirty: false, visibleHeading: null }}
+    view={{ app: 'wordpad', path: 'E:\\README.md', mode: 'read', dirty: false, visibleHeading: null }}
     agent={[
-      { label: 'wordpad_open docs', view: { app: 'wordpad', path: 'docs/guide.md', mode: 'read', dirty: false, visibleHeading: null } },
-      { label: 'edit mode', view: { app: 'wordpad', path: 'README.md', mode: 'edit', dirty: false, visibleHeading: null } }
+      { label: 'wordpad_open docs', view: { app: 'wordpad', path: 'E:\\docs\\guide.md', mode: 'read', dirty: false, visibleHeading: null } },
+      { label: 'edit mode', view: { app: 'wordpad', path: 'E:\\README.md', mode: 'edit', dirty: false, visibleHeading: null } }
     ]}
     requests={[{ label: 'wordpad_read', method: 'read' }]}
   />
 </Story>
 
 <Story name="Edit" asChild>
-  <AppStory app="wordpad" width={720} height={500} view={{ app: 'wordpad', path: 'README.md', mode: 'edit', dirty: false, visibleHeading: null }} />
+  <AppStory app="wordpad" width={720} height={500} view={{ app: 'wordpad', path: 'E:\\README.md', mode: 'edit', dirty: false, visibleHeading: null }} />
 </Story>
 
 <Story name="Empty" asChild>

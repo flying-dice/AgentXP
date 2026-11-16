@@ -77,7 +77,7 @@
 
   async function refresh(): Promise<void> {
     try {
-      const [list2, sess] = await Promise.all([host.api.events.query({ desktopId, limit: 1000 }), host.api.sessions.list(host.state.folder.id)])
+      const [list2, sess] = await Promise.all([host.api.events.query({ desktopId, limit: 1000 }), host.api.sessions.list(host.state.desktopId)])
       events = list2
       sessions = sess
       error = null

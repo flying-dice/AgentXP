@@ -14,12 +14,12 @@
   <div class="body">
     <Icon name="agent7" size={48} />
     <div>
-      <h2>Open a folder to start a desktop</h2>
-      <p>A desktop is a small Windows 7 machine for one project. The folder you choose becomes drive W:, and your agent works through the apps you open on it.</p>
+      <h2>Open a desktop to get started</h2>
+      <p>A desktop is a small Windows 7 machine for one project. It has its own C: drive, and your projects plug in as USB drives that you can safely remove. Pick or create one in Agent7 Desktops.</p>
     </div>
   </div>
   {#snippet buttons()}
-    <div class="buttons"><Button isDefault data-autofocus onclick={() => onopen?.()}>Open folder…</Button></div>
+    <div class="buttons"><Button isDefault data-autofocus onclick={() => onopen?.()}>Agent7 Desktops…</Button></div>
   {/snippet}
 </Dialog>
 

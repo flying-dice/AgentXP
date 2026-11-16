@@ -1,10 +1,10 @@
 import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { PromptInput } from '@shared/ipc'
+import { AGENT_HOME, normaliseVPath, type VPath } from '@shared/vfs'
 import type { ContentBlockDto, Id, SessionDto } from '@shared/models'
 import type { A2uiSurfaceRepository } from '../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
-import type { FolderRepository } from '../domain/repositories/folder-repository'
 import type { PermissionRepository } from '../domain/repositories/permission-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
@@ -14,6 +14,7 @@ import { AppError, required } from './errors'
 import type { EventPublisher, StopReason } from './ports'
 import type { SessionBroadcaster } from './SessionBroadcaster'
 import type { SessionRuntime } from './SessionRuntime'
+import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
 
 export const DEFAULT_SESSION_TITLE = 'New session'
 const TITLE_MAX_LENGTH = 40
@@ -21,7 +22,8 @@ const TITLE_MAX_LENGTH = 40
 export interface SessionServiceDeps {
   sessions: SessionRepository
   agents: AgentRepository
-  folders: FolderRepository
+  /** Validates a chat's working directory (its drive is plugged in and the folder exists). */
+  vfs: Pick<VirtualFileSystem, 'stat'>
   transcripts: TranscriptRepository
   surfaces: A2uiSurfaceRepository
   permissions: PermissionRepository
@@ -58,12 +60,15 @@ const toBlocks = ({ text, attachments }: PromptInput): ContentBlockDto[] => [
 export class SessionService {
   constructor(private readonly deps: SessionServiceDeps) {}
 
-  async create(folderId: Id, agentId?: Id, desktopId?: Id): Promise<SessionDto> {
-    const { sessions, folders, runtime, events } = this.deps
-    const folder = required(folders.get(folderId), 'Folder')
+  /** Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. */
+  async create(desktopId: Id, agentId?: Id, cwd: VPath = AGENT_HOME): Promise<SessionDto> {
+    const { sessions, runtime, events } = this.deps
     const agent = required(agentId === undefined ? this.deps.agents.getDefault() : this.deps.agents.get(agentId), 'Agent')
-    const session = sessions.create({ folderId: folder.id, agentId: agent.id, desktopId, title: DEFAULT_SESSION_TITLE })
-    folders.touch(folder.id)
+    const workingDirectory = normaliseVPath(cwd)
+    if (!workingDirectory) throw new AppError(`Not a valid working directory: ${cwd}`)
+    const folder = await this.deps.vfs.stat(desktopId, workingDirectory)
+    if (folder?.kind !== 'directory') throw new AppError(`The working directory ${workingDirectory} does not exist.`)
+    const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title: DEFAULT_SESSION_TITLE })
     try {
       await runtime.ensureConnected(session.id)
     } catch (error) {

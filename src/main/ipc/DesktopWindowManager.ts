@@ -3,52 +3,72 @@ import type { Id } from '@shared/models'
 import type { DesktopWindowHost } from '../application/desktop/ports'
 
 export interface WindowFactory {
-  create(): BrowserWindow
-  load(window: BrowserWindow, desktopId: Id | null): void
+  /** A frameless desktop window (not shown until ready). */
+  createDesktop(): BrowserWindow
+  loadDesktop(window: BrowserWindow, desktopId: Id): void
+  /** The small fixed-size launcher window. */
+  createLauncher(): BrowserWindow
+  loadLauncher(window: BrowserWindow): void
 }
 
+export interface WindowCallbacks {
+  /** The user closed a desktop window (the desktop is now disconnected). Not called when the app quits or `close()` was used. */
+  onClosed(desktopId: Id): void
+  /** The user is closing a desktop window: take its thumbnail now. Closing waits for it (briefly). */
+  beforeClose(desktopId: Id): Promise<void>
+}
+
+/** How long closing a desktop window waits for its thumbnail. */
+const THUMBNAIL_WAIT_MS = 1500
+
 /**
- * One OS window per open desktop, plus at most one blank window (no desktop yet: first launch).
- * Knows which window shows which desktop so events and calls reach the right one.
+ * The OS windows: one per connected desktop plus the launcher. Closing a desktop window only disconnects it
+ * (the services keep its agents running). Knows which window shows which desktop so events and calls reach the right one.
  */
 export class DesktopWindowManager implements DesktopWindowHost {
   private readonly windows = new Map<Id, BrowserWindow>()
-  private blank: BrowserWindow | null = null
+  private launcher: BrowserWindow | null = null
   private quitting = false
 
   constructor(
     private readonly factory: WindowFactory,
-    /** An OS window of a desktop was closed by the user (not by quitting). */
-    private readonly onClosed: (desktopId: Id) => void
+    private readonly callbacks: WindowCallbacks
   ) {}
 
   open(desktopId: Id): void {
     const existing = this.windows.get(desktopId)
     if (existing && !existing.isDestroyed()) return this.reveal(existing)
-    // The first-run window becomes the desktop's window instead of staying blank next to it.
-    const window = this.blank && !this.blank.isDestroyed() ? this.blank : this.track(this.factory.create())
-    this.blank = null
+    const window = this.trackDesktop(desktopId, this.factory.createDesktop())
     this.windows.set(desktopId, window)
-    this.factory.load(window, desktopId)
+    this.factory.loadDesktop(window, desktopId)
   }
 
-  openBlank(): void {
-    if (this.blank && !this.blank.isDestroyed()) return this.reveal(this.blank)
-    this.blank = this.track(this.factory.create())
-    this.factory.load(this.blank, null)
-  }
-
+  /** Closes without the "closed by the user" callback (disconnect, delete). */
   close(desktopId: Id): void {
     const window = this.windows.get(desktopId)
-    this.windows.delete(desktopId) // not a "user closed it": the desktop is going away
+    this.windows.delete(desktopId)
     if (window && !window.isDestroyed()) window.destroy()
   }
 
-  hasWindows(): boolean {
-    return this.windows.size > 0 || this.blank !== null
+  connectedIds(): Id[] {
+    return [...this.windows].filter(([, w]) => !w.isDestroyed()).map(([id]) => id)
   }
 
-  /** The desktop shown by the window that owns `sender`; null in the blank window. */
+  showLauncher(): void {
+    if (this.launcher && !this.launcher.isDestroyed()) return this.reveal(this.launcher)
+    const window = this.factory.createLauncher()
+    this.launcher = window
+    window.once('closed', () => {
+      if (this.launcher === window) this.launcher = null
+    })
+    this.factory.loadLauncher(window)
+  }
+
+  hasWindows(): boolean {
+    return this.connectedIds().length > 0 || (this.launcher !== null && !this.launcher.isDestroyed())
+  }
+
+  /** The desktop shown by the window that owns `sender`; null in the launcher window. */
   desktopOf(sender: WebContents): Id | null {
     for (const [id, window] of this.windows) if (!window.isDestroyed() && window.webContents.id === sender.id) return id
     return null
@@ -60,7 +80,11 @@ export class DesktopWindowManager implements DesktopWindowHost {
     return window && !window.isDestroyed() ? window.webContents : null
   }
 
-  /** While the app quits, closing windows must not mark desktops closed (they reopen next launch). */
+  launcherContents(): WebContents | null {
+    return this.launcher && !this.launcher.isDestroyed() ? this.launcher.webContents : null
+  }
+
+  /** While the app quits, closing windows must not run the disconnect flow. */
   markQuitting(): void {
     this.quitting = true
   }
@@ -71,16 +95,22 @@ export class DesktopWindowManager implements DesktopWindowHost {
     window.focus()
   }
 
-  private track(window: BrowserWindow): BrowserWindow {
+  private trackDesktop(desktopId: Id, window: BrowserWindow): BrowserWindow {
+    let capturing = false
+    window.on('close', (event) => {
+      // First close request: delay it until the thumbnail is taken (the window is gone afterwards).
+      if (this.quitting || capturing || this.windows.get(desktopId) !== window) return
+      capturing = true
+      event.preventDefault()
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, THUMBNAIL_WAIT_MS))
+      void Promise.race([this.callbacks.beforeClose(desktopId).catch(() => {}), timeout]).then(() => {
+        if (!window.isDestroyed()) window.close()
+      })
+    })
     window.once('closed', () => {
-      if (this.blank === window) this.blank = null
-      // Closing the last window quits the app (except on macOS): that desktop stays open for the next launch.
-      const quitsApp = this.windows.size === 1 && process.platform !== 'darwin'
-      for (const [id, w] of this.windows) {
-        if (w !== window) continue
-        this.windows.delete(id)
-        if (!this.quitting && !quitsApp) this.onClosed(id)
-      }
+      if (this.windows.get(desktopId) !== window) return // closed through `close()`
+      this.windows.delete(desktopId)
+      if (!this.quitting) this.callbacks.onClosed(desktopId)
     })
     return window
   }

@@ -14,10 +14,23 @@ function assertOrdered(migrations: readonly Migration[]): void {
 }
 
 function apply(db: Database, migration: Migration): void {
-  transaction(db, () => {
-    db.exec(migration.sql)
-    db.exec(`PRAGMA user_version = ${Math.trunc(migration.version)}`)
-  })
+  // foreign_keys cannot be changed inside a transaction, and DROP TABLE would cascade with it on.
+  const restore = migration.rebuildsTables ? Number(readPragma(db, 'foreign_keys')) : null
+  if (restore !== null) db.exec('PRAGMA foreign_keys = OFF')
+  try {
+    transaction(db, () => {
+      db.exec(migration.sql)
+      if (restore !== null) assertNoForeignKeyViolations(db, migration)
+      db.exec(`PRAGMA user_version = ${Math.trunc(migration.version)}`)
+    })
+  } finally {
+    if (restore !== null) db.exec(`PRAGMA foreign_keys = ${restore === 1 ? 'ON' : 'OFF'}`)
+  }
+}
+
+function assertNoForeignKeyViolations(db: Database, migration: Migration): void {
+  const violations = db.prepare('PRAGMA foreign_key_check').all()
+  if (violations.length > 0) throw new Error(`Migration ${migration.version} (${migration.name}) left ${violations.length} foreign key violations`)
 }
 
 /** Applies pending migrations in order, each atomically. Returns the resulting schema version. */

@@ -8,13 +8,14 @@ import type {
   SessionStatus
 } from '@shared/models'
 import type { NewSession, SessionRepository } from '../../domain/repositories/session-repository'
+import { AGENT_HOME } from '@shared/vfs'
 import { NOW_SQL } from './sql'
 
 interface SessionRow {
   id: number
-  folder_id: number
   agent_id: number
   desktop_id: number | null
+  cwd: string
   acp_session_id: string | null
   title: string
   status: SessionStatus
@@ -33,16 +34,15 @@ interface ListRow {
 type ModeRow = { id: string } & ListRow
 type CommandRow = { name: string; description: string; hint: string | null }
 
-const COLUMNS = `id, folder_id, agent_id, desktop_id, acp_session_id, title, status, current_mode_id,
+const COLUMNS = `id, agent_id, desktop_id, cwd, acp_session_id, title, status, current_mode_id,
   current_model_id, context_used, context_size, created_at, updated_at`
 
 export class SqliteSessionRepository implements SessionRepository {
   private readonly selectAll: Statement<[], SessionRow>
-  private readonly selectByFolder: Statement<[Id], SessionRow>
   private readonly selectById: Statement<[Id], SessionRow>
   private readonly selectByDesktop: Statement<[Id], SessionRow>
   private readonly selectByAcp: Statement<[Id, string], SessionRow>
-  private readonly insertSession: Statement<[Id, Id, Id | null, string]>
+  private readonly insertSession: Statement<[Id, Id | null, string, string]>
   private readonly updateColumn: Record<
     'title' | 'status' | 'acp_session_id' | 'current_mode_id' | 'current_model_id',
     Statement<[string | null, Id]>
@@ -63,11 +63,10 @@ export class SqliteSessionRepository implements SessionRepository {
   constructor(private readonly db: Database) {
     const order = 'ORDER BY updated_at DESC, id DESC'
     this.selectAll = prepare(db, `SELECT ${COLUMNS} FROM sessions ${order}`)
-    this.selectByFolder = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE folder_id = ? ${order}`)
     this.selectById = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE id = ?`)
     this.selectByDesktop = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE desktop_id = ? ${order}`)
     this.selectByAcp = prepare(db, `SELECT ${COLUMNS} FROM sessions WHERE agent_id = ? AND acp_session_id = ?`)
-    this.insertSession = prepare(db, 'INSERT INTO sessions (folder_id, agent_id, desktop_id, title) VALUES (?, ?, ?, ?)')
+    this.insertSession = prepare(db, 'INSERT INTO sessions (agent_id, desktop_id, cwd, title) VALUES (?, ?, ?, ?)')
     const setter = (column: string): Statement<[string | null, Id]> =>
       prepare(db, `UPDATE sessions SET ${column} = ?, updated_at = ${NOW_SQL} WHERE id = ?`)
     this.updateColumn = {
@@ -105,8 +104,8 @@ export class SqliteSessionRepository implements SessionRepository {
     )
   }
 
-  list(folderId?: Id): SessionDto[] {
-    const rows = folderId === undefined ? this.selectAll.all() : this.selectByFolder.all(folderId)
+  list(desktopId?: Id): SessionDto[] {
+    const rows = desktopId === undefined ? this.selectAll.all() : this.selectByDesktop.all(desktopId)
     return rows.map((row) => this.toDto(row))
   }
 
@@ -125,7 +124,7 @@ export class SqliteSessionRepository implements SessionRepository {
   }
 
   create(input: NewSession): SessionDto {
-    const id = Number(this.insertSession.run(input.folderId, input.agentId, input.desktopId ?? null, input.title).lastInsertRowid)
+    const id = Number(this.insertSession.run(input.agentId, input.desktopId ?? null, input.cwd ?? AGENT_HOME, input.title).lastInsertRowid)
     const session = this.get(id)
     if (!session) throw new Error(`Session ${id} vanished after insert`)
     return session
@@ -192,9 +191,9 @@ export class SqliteSessionRepository implements SessionRepository {
   private toDto(row: SessionRow): SessionDto {
     return {
       id: row.id,
-      folderId: row.folder_id,
       agentId: row.agent_id,
       desktopId: row.desktop_id,
+      cwd: row.cwd,
       title: row.title,
       status: row.status,
       acpSessionId: row.acp_session_id,

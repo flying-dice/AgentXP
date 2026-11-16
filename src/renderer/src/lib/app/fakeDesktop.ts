@@ -9,29 +9,34 @@ import {
   enabledToolGroups,
   type AppWindowState,
   type DesktopApi,
-  type DesktopDto,
   type DesktopState,
   type OpenWindowInput,
   type ToolPolicyDto
 } from '@shared/desktop'
 import { cascadedBounds, initialView, windowTitle } from '@shared/desktop-views'
+import { AGENT_HOME, type DriveDto } from '@shared/vfs'
+import { systemDrive, usbDrive } from './fakeVfs'
 
 export { initialView, windowTitle }
 
 export interface FakeDesktopOptions {
-  folder?: DesktopState['folder']
+  /** The drives of the desktop (default: C: and the sample USB drive E:). */
+  drives?: DriveDto[]
   windows?: OpenWindowInput['app'][]
   onChange?: (state: DesktopState) => void
 }
 
-export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi & { state(): DesktopState } {
+export type FakeDesktopApi = DesktopApi & { state(): DesktopState; /** Plug in / eject: replaces the drives and pushes `desktop.changed`. */ setDrives(drives: DriveDto[]): void }
+
+export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktopApi {
   let nextId = 500
   let policy: ToolPolicyDto = structuredClone(DEFAULT_TOOL_POLICY)
-  const desktop: DesktopDto = { id: 1, folderId: 1, agentId: 1, title: 'claude-code-win', isOpen: true, createdAt: '2026-11-16T09:00:00Z' }
+  const desktop = { id: 1, title: 'claude-code-win' }
   const state: DesktopState = {
     desktopId: desktop.id,
     title: desktop.title,
-    folder: options.folder ?? { id: 1, name: 'claude-code-win', path: 'C:\\Users\\jonathan\\source\\claude-code-win' },
+    drives: options.drives ?? [systemDrive(), usbDrive('E', { id: 1, name: 'claude-code-win' })],
+    home: AGENT_HOME,
     focusedWindowId: null,
     windows: [],
     tools: enabledToolGroups([]),
@@ -53,17 +58,17 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
     state.focusedWindowId = w.id
   }
 
-  const api: DesktopApi & { state(): DesktopState } = {
+  const api: FakeDesktopApi = {
     state: () => structuredClone(state),
-    list: async () => [desktop],
+    setDrives: (drives) => {
+      state.drives = drives
+      changed()
+    },
     current: async () => structuredClone(state),
-    create: async () => desktop,
-    open: async () => {},
     rename: async (_id, title) => {
       state.title = title
       changed()
     },
-    remove: async () => {},
     openWindow: async (input) => {
       const existing = SINGLETON_APPS.includes(input.app) ? state.windows.find((w) => w.app === input.app) : undefined
       if (existing) {
@@ -121,7 +126,7 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
       state.userInControl = on
       changed()
     },
-    newChat: async () => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
+    newChat: async (_desktopId, _agentId, _cwd) => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},

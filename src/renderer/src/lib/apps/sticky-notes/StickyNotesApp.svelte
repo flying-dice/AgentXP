@@ -23,7 +23,7 @@
   $effect(() => followNotes(host.api, desktopId, (list) => (notes = list)))
   $effect(() => {
     let stale = false
-    host.api.sessions.list(host.state.folder.id).then((list) => !stale && (sessions = list), () => {})
+    host.api.sessions.list(host.state.desktopId).then((list) => !stale && (sessions = list), () => {})
     return () => {
       stale = true
     }

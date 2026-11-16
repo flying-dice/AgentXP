@@ -3,7 +3,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, typ
 import { z } from 'zod'
 import { A2UI_VERSION } from '@shared/a2ui/messages'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
-import { specsForGroups } from '../../application/tools/catalog'
+import { DESKTOP_INSTRUCTIONS, specsForGroups } from '../../application/tools/catalog'
 import type { BridgeClient } from './bridge-client'
 import { buildCatalogReply } from './mcp-instructions'
 import { MCP_SERVER_NAME } from './protocol'
@@ -49,7 +49,7 @@ const deleteArgs = z.object({ surfaceId: z.string().min(1) })
  * `toolsChanged` push becomes `notifications/tools/list_changed`.
  */
 export function createAgent7McpServer(client: BridgeClient, validator: A2uiMessageValidator = new A2uiMessageValidator()): Server {
-  const server = new Server({ name: MCP_SERVER_NAME, version: '0.2.0' }, { capabilities: { tools: { listChanged: true } } })
+  const server = new Server({ name: MCP_SERVER_NAME, version: '0.2.0' }, { capabilities: { tools: { listChanged: true } }, instructions: DESKTOP_INSTRUCTIONS })
 
   const rejected = (errors: string[]): CallToolResult => text(`Rejected. Fix and resend:\n${errors.join('\n')}`, true)
   /** Validates with web_core first so the agent gets errors without a round trip to the app. */

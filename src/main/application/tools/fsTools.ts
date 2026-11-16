@@ -1,9 +1,8 @@
-import type { Id } from '@shared/models'
+import type { VPath } from '@shared/vfs'
 import { AppError } from '../errors'
-import type { FolderBrowser } from '../ports'
+import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import type { ToolHandlers } from './catalog'
-import { toWorkspacePath } from './paths'
-import type { DesktopOps } from './ports'
+import type { ToolPaths } from './ToolPaths'
 import { attempt, textResult } from './types'
 
 const DEFAULT_FIND_LIMIT = 100
@@ -22,36 +21,35 @@ export function nameMatcher(pattern: string): (name: string) => boolean {
 }
 
 export interface FsToolsDeps {
-  desktops: Pick<DesktopOps, 'state'>
-  browser: Pick<FolderBrowser, 'list'>
+  vfs: Pick<VirtualFileSystem, 'readDir'>
+  paths: ToolPaths
 }
 
-/** fs_list, fs_find: read-only browsing of the desktop's workspace folder. */
-export function createFsTools({ desktops, browser }: FsToolsDeps): ToolHandlers<'fs_list' | 'fs_find'> {
-  const rootOf = (desktopId: Id): string => desktops.state(desktopId).folder.path
+const label = (path: VPath, directory: boolean): string => (directory && !path.endsWith('\\') ? `${path}\\` : path)
 
+/** fs_list, fs_find: read-only browsing of the drives (C: and the plugged-in projects). */
+export function createFsTools({ vfs, paths }: FsToolsDeps): ToolHandlers<'fs_list' | 'fs_find'> {
   return {
-    fs_list: ({ path }, { desktopId }) =>
+    fs_list: ({ path }, context) =>
       attempt(async () => {
-        const root = rootOf(desktopId)
-        const entries = await browser.list(root, toWorkspacePath(root, path))
+        const entries = await vfs.readDir(context.desktopId, paths.resolve(context, path), { hideIgnored: true })
         if (entries.length === 0) return textResult('(empty)')
-        return textResult(entries.map((e) => (e.isDirectory ? `${e.path}/` : e.path)).join('\n'))
+        return textResult(entries.map((e) => label(e.path, e.kind === 'directory')).join('\n'))
       }),
 
-    fs_find: ({ pattern, path, limit }, { desktopId }) =>
+    fs_find: ({ pattern, path, limit }, context) =>
       attempt(async () => {
-        const root = rootOf(desktopId)
         const matches = nameMatcher(pattern)
         const max = limit ?? DEFAULT_FIND_LIMIT
         const found: string[] = []
-        const queue = [toWorkspacePath(root, path)]
+        const queue: VPath[] = [paths.resolve(context, path)]
         let visited = 0
         while (queue.length > 0 && found.length < max) {
           if (++visited > MAX_VISITED_DIRECTORIES) throw new AppError('Too many folders to search; narrow the path.')
-          for (const entry of await browser.list(root, queue.shift()!)) {
-            if (matches(entry.name) && found.length < max) found.push(entry.isDirectory ? `${entry.path}/` : entry.path)
-            if (entry.isDirectory) queue.push(entry.path)
+          for (const entry of await vfs.readDir(context.desktopId, queue.shift()!, { hideIgnored: true })) {
+            const directory = entry.kind === 'directory'
+            if (matches(entry.name) && found.length < max) found.push(label(entry.path, directory))
+            if (directory) queue.push(entry.path)
           }
         }
         return textResult(found.length > 0 ? found.join('\n') : 'No matches.')

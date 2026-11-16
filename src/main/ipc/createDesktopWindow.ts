@@ -28,7 +28,7 @@ function secureWebviews(window: BrowserWindow): void {
   })
 }
 
-/** One frameless OS window; `loadDesktop` fills it. */
+/** One frameless desktop OS window; `loadDesktop` fills it. */
 export function createDesktopWindow(): BrowserWindow {
   const window = new BrowserWindow({
     width: 1280,
@@ -57,9 +57,39 @@ export function createDesktopWindow(): BrowserWindow {
   return window
 }
 
-/** Loads the renderer with `?desktop=<id>` (no query: the first-run page without a desktop). */
-export function loadDesktop(window: BrowserWindow, desktopId: Id | null): void {
-  const query: Record<string, string> = desktopId === null ? {} : { desktop: String(desktopId) }
+/** The launcher: small, fixed size, frameless (the renderer draws the caption). */
+export function createLauncherWindow(): BrowserWindow {
+  const window = new BrowserWindow({
+    width: 520,
+    height: 600,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: false,
+    title: 'Agent7',
+    frame: false,
+    backgroundColor: '#1e5aa8',
+    icon: join(__dirname, '../../resources/icon-256.png'),
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.mjs'),
+      sandbox: false
+    }
+  })
+  publishWindowState(window)
+  window.on('ready-to-show', () => window.show())
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  return window
+}
+
+/** Loads the renderer with `?desktop=<id>` (a desktop window) or `?launcher=1` (the launcher). */
+export const loadDesktop = (window: BrowserWindow, desktopId: Id): void => loadRenderer(window, { desktop: String(desktopId) })
+export const loadLauncher = (window: BrowserWindow): void => loadRenderer(window, { launcher: '1' })
+
+function loadRenderer(window: BrowserWindow, query: Record<string, string>): void {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     const url = new URL(process.env['ELECTRON_RENDERER_URL'])
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value)

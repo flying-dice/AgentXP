@@ -18,6 +18,7 @@ import type {
 } from './models'
 import type { A2uiClientEvent, A2uiSurfaceDto } from './a2ui'
 import type { AgentProcessDto, DesktopApi, DesktopEvents, DesktopExtrasApi } from './desktop'
+import type { DrivesApi, LauncherApi, LauncherEvents, VPath, VfsApi } from './vfs'
 
 export interface PromptInput {
   sessionId: Id
@@ -90,10 +91,11 @@ export interface Agent7Api {
     writeFile(folderId: Id, relativePath: string, text: string): Promise<void>
   }
   sessions: {
-    list(folderId?: Id): Promise<SessionDto[]>
+    /** Chats of one desktop, or of all. */
+    list(desktopId?: Id): Promise<SessionDto[]>
     get(id: Id): Promise<SessionDto>
-    /** Creates the row, spawns the agent and opens an ACP session. */
-    create(folderId: Id, agentId?: Id): Promise<SessionDto>
+    /** Creates the row, spawns the agent in `cwd` (a VPath, default `AGENT_HOME`) and opens an ACP session. */
+    create(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<SessionDto>
     rename(id: Id, title: string): Promise<void>
     remove(id: Id): Promise<void>
     transcript(id: Id): Promise<TranscriptEntryDto[]>
@@ -121,6 +123,9 @@ export interface Agent7Api {
     pickFiles(): Promise<string[]>
   }
   desktop: DesktopApi
+  vfs: VfsApi
+  drives: DrivesApi
+  launcher: LauncherApi
   notes: DesktopExtrasApi['notes']
   events: DesktopExtrasApi['events']
   recycle: DesktopExtrasApi['recycle']
@@ -145,7 +150,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents {
+export interface Agent7Events extends DesktopEvents, LauncherEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

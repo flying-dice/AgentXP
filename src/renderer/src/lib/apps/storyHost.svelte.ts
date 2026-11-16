@@ -22,7 +22,8 @@ export class StoryHost implements DesktopHost {
   constructor(options: { empty?: boolean; state?: () => AguiSessionState } = {}) {
     const base = createFakeApi({ empty: options.empty })
     this.fake = base
-    const desktop = createFakeDesktop({ onChange: (state) => void (this.current = state) })
+    const desktop = createFakeDesktop({ drives: base.driveList(), onChange: (state) => void (this.current = state) })
+    base.watchDrives((drives) => desktop.setDrives(drives))
     this.current = desktop.state()
     this.api = { ...base, desktop, ...(options.state ? { agui: fakeAgui(options.state) } : {}) }
   }
@@ -47,6 +48,8 @@ export class StoryHost implements DesktopHost {
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
 
+  ejectDrive = (letter: string): Promise<void> => this.api.drives.eject(this.current.desktopId, letter)
+
   updateView(windowId: Id, view: AppView): void {
     this.reports = [...this.reports.slice(-9), view]
     void this.api.desktop.updateView(windowId, view)
@@ -63,8 +66,8 @@ export const sampleChatView = (sessionId = 1, title = 'Fix login redirect bug'):
 /** Default views for stories, by app. */
 export const storyViews: { [K in AppKind]?: Extract<AppView, { app: K }> } = {
   chat: sampleChatView(),
-  explorer: { app: 'explorer', path: 'src/auth', selected: [] },
-  notepad: { app: 'notepad', path: 'README.md', dirty: false, caretLine: 1 },
-  code: { app: 'code', tabs: ['src/auth/redirect.ts', 'src/index.ts'], activePath: 'src/auth/redirect.ts', visibleLines: null, selection: null, selectedChangeId: null },
+  explorer: { app: 'explorer', path: 'E:\\src\\auth', selected: [] },
+  notepad: { app: 'notepad', path: 'E:\\README.md', dirty: false, caretLine: 1 },
+  code: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: null, selection: null, selectedChangeId: null },
   browser: { app: 'browser', url: 'https://example.com/', title: 'Example Domain', loading: false }
 }

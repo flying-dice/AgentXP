@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog } from 'electron'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { composeApp, type AppServices } from './compose'
 import { openDatabase } from './infrastructure/db/open-database'
-import { createDesktopWindow, loadDesktop } from './ipc/createDesktopWindow'
+import { createDesktopWindow, createLauncherWindow, loadDesktop, loadLauncher } from './ipc/createDesktopWindow'
 import { DesktopWindowManager } from './ipc/DesktopWindowManager'
 import { registerAguiHandlers } from './ipc/registerAguiHandlers'
 import { desktopSenderHandlers } from './ipc/registerDesktopHandlers'
@@ -12,17 +12,21 @@ import { registerWindowHandlers } from './ipc/registerWindowHandlers'
 import { ElectronFilePicker, ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from './ipc/ElectronDialogs'
 import { ElectronScreenCapturer } from './ipc/ElectronScreenCapturer'
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
+import { ElectronNotifier } from './ipc/ElectronNotifier'
+import { ElectronThumbnailCapturer, handleThumbnailScheme, registerThumbnailScheme } from './ipc/ElectronThumbnails'
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
 const userDataOverride = process.env['AGENT7_USER_DATA']
 if (userDataOverride) app.setPath('userData', userDataOverride)
 
+// Thumbnails reach the launcher renderer over a custom protocol (registered before `ready`).
+registerThumbnailScheme()
+
 const databasePath = (): string => process.env['AGENT7_DB_PATH'] ?? join(app.getPath('userData'), 'agent7.sqlite')
 
 interface Running {
   windows: DesktopWindowManager
-  /** Reopens the desktops that were open last time; without any, shows the first-run window. */
-  openInitialWindows(): void
+  services: AppServices
   shutdown(): Promise<void>
 }
 
@@ -30,8 +34,13 @@ interface Running {
 async function bootstrap(): Promise<Running> {
   const db = openDatabase(databasePath())
   let services: AppServices | null = null
-  const windows = new DesktopWindowManager({ create: createDesktopWindow, load: loadDesktop }, (desktopId) =>
-    services?.desktops.windowClosed(desktopId)
+  // Closing a desktop window only disconnects it: the services (agents, turns, permission requests) keep running.
+  const windows = new DesktopWindowManager(
+    { createDesktop: createDesktopWindow, loadDesktop, createLauncher: createLauncherWindow, loadLauncher },
+    {
+      onClosed: (desktopId) => services?.launcher.windowClosed(desktopId),
+      beforeClose: (desktopId) => services?.thumbnails.captureNow(desktopId) ?? Promise.resolve()
+    }
   )
   services = composeApp({
     db,
@@ -40,6 +49,9 @@ async function bootstrap(): Promise<Running> {
       all: () => BrowserWindow.getAllWindows().map((w) => w.webContents)
     }),
     windows,
+    desktopsDir: join(app.getPath('userData'), 'desktops'),
+    thumbnailCapturer: new ElectronThumbnailCapturer(windows),
+    notifier: new ElectronNotifier((desktopId) => services?.launcher.connect(desktopId)),
     screen: new ElectronScreenCapturer(windows),
     picker: new ElectronFolderPicker(),
     filePicker: new ElectronFilePicker(),
@@ -50,11 +62,12 @@ async function bootstrap(): Promise<Running> {
   })
   const running = services
   await running.start()
+  handleThumbnailScheme(running.thumbnailStore)
   const unregister = registerIpcHandlers(
     running.api,
     desktopSenderHandlers({ windows, desktops: running.desktops, browsers: running.browsers })
   )
-  const unregisterAgui = registerAguiHandlers(running.agui, {
+  const unregisterAguiHandlers = registerAguiHandlers(running.agui, {
     validate: is.dev,
     onEvent: (input, event) => {
       const sessionId = Number(input.threadId)
@@ -64,14 +77,10 @@ async function bootstrap(): Promise<Running> {
   const unregisterWindow = registerWindowHandlers()
   return {
     windows,
-    openInitialWindows: () => {
-      const open = running.desktops.listOpen()
-      if (open.length === 0) windows.openBlank()
-      for (const desktop of open) windows.open(desktop.id)
-    },
+    services: running,
     shutdown: async () => {
       unregister()
-      unregisterAgui()
+      unregisterAguiHandlers()
       unregisterWindow()
       await running.shutdown()
       db.close()
@@ -86,9 +95,10 @@ app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.flyingdice.agent7')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
   running = await bootstrap()
-  running.openInitialWindows()
+  // Starting Agent7 opens the launcher; desktops are connected from there.
+  running.windows.showLauncher()
   app.on('activate', () => {
-    if (running && !running.windows.hasWindows()) running.openInitialWindows()
+    if (running && !running.windows.hasWindows()) running.windows.showLauncher()
   })
 }).catch((error: unknown) => {
   dialog.showErrorBox('Agent7 could not start', error instanceof Error ? error.message : String(error))
@@ -103,6 +113,8 @@ app.on('before-quit', (event) => {
   void running.shutdown().finally(() => app.quit())
 })
 
+// Closing the launcher while desktops are connected keeps the app (and the agents) running; closing the last
+// window quits (agents stop). On macOS the app stays until Cmd+Q, and a click on the dock icon shows the launcher.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })

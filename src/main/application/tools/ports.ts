@@ -58,7 +58,7 @@ export interface AppRequests {
 
 /** Writes a file on behalf of the agent of a chat; the write is recorded as one of the chat's file changes. */
 export interface AgentFileWriter {
-  write(sessionId: Id, root: string, relativePath: string, text: string): Promise<void>
+  write(sessionId: Id, path: string, text: string): Promise<void>
 }
 
 export type { Bounds }

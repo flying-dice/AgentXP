@@ -14,7 +14,7 @@
     const state = sampleState()
     state.toolCalls = {
       ...state.toolCalls,
-      live: { title: 'Edit src/index.ts', kind: 'edit', status: 'in_progress', rawInput: null, locations: [{ path: 'src/index.ts', line: 1 }], contents: [] }
+      live: { title: 'Edit src/index.ts', kind: 'edit', status: 'in_progress', rawInput: null, locations: [{ path: 'E:\\src\\index.ts', line: 1 }], contents: [] }
     }
     return state
   }
@@ -27,9 +27,9 @@
     height={620}
     setup={(host) => host.open({ app: 'chat' }, sampleChatView())}
     agent={[
-      { label: 'code_open src/index.ts', view: { app: 'code', tabs: ['src/auth/redirect.ts', 'src/index.ts'], activePath: 'src/index.ts', visibleLines: null, selection: null, selectedChangeId: null } },
-      { label: 'code_reveal lines 14-20', view: { app: 'code', tabs: ['src/auth/redirect.ts', 'src/index.ts'], activePath: 'src/auth/redirect.ts', visibleLines: [14, 20], selection: null, selectedChangeId: null } },
-      { label: 'code_show_diff', view: { app: 'code', tabs: ['src/auth/redirect.ts'], activePath: 'src/auth/redirect.ts', visibleLines: null, selection: null, selectedChangeId: 1 } }
+      { label: 'code_open src/index.ts', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\index.ts', visibleLines: null, selection: null, selectedChangeId: null } },
+      { label: 'code_reveal lines 14-20', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: [14, 20], selection: null, selectedChangeId: null } },
+      { label: 'code_show_diff', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: null, selection: null, selectedChangeId: 1 } }
     ]}
   />
 </Story>
@@ -40,7 +40,7 @@
     width={940}
     height={620}
     aguiState={editingState}
-    view={{ app: 'code', tabs: ['src/index.ts', 'src/auth/redirect.ts'], activePath: 'src/index.ts', visibleLines: null, selection: null, selectedChangeId: 1 }}
+    view={{ app: 'code', tabs: ['E:\\src\\index.ts', 'E:\\src\\auth\\redirect.ts'], activePath: 'E:\\src\\index.ts', visibleLines: null, selection: null, selectedChangeId: 1 }}
     setup={(host) => host.open({ app: 'chat' }, sampleChatView())}
   />
 </Story>

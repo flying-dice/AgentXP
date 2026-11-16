@@ -1,3 +1,5 @@
+import type { VPath } from './vfs'
+
 /**
  * Data transfer objects shared by the main process and the renderer.
  * These are plain, serialisable shapes. The main process owns the truth
@@ -45,10 +47,11 @@ export interface AvailableCommandDto {
 
 export interface SessionDto {
   id: Id
-  folderId: Id
   agentId: Id
-  /** The desktop this chat lives on; null/absent for chats from before desktops. */
+  /** The desktop this chat lives on. */
   desktopId?: Id | null
+  /** The chat's working directory (the agent's `cwd`): a VPath on C: or a plugged-in drive. */
+  cwd: VPath
   title: string
   status: SessionStatus
   acpSessionId: string | null
@@ -161,7 +164,8 @@ export type FileChangeKind = 'added' | 'modified' | 'deleted'
 export interface FileChangeDto {
   id: Id
   sessionId: Id
-  path: string
+  /** Where the file is on the desktop; `?:\...` when its drive has been ejected. */
+  path: VPath
   kind: FileChangeKind
   additions: number
   deletions: number

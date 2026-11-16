@@ -12,7 +12,7 @@ export interface AppWindowRecord {
   openedBy: OpenedBy
   /** chat windows */
   sessionId: Id | null
-  /** explorer, notepad and code windows: folder-relative path */
+  /** explorer, notepad and code windows: VPath */
   path: string | null
   /** browser windows */
   url: string | null

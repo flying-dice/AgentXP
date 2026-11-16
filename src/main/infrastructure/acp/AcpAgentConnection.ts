@@ -236,7 +236,8 @@ export class AcpAgentConnection {
           terminalId: terminals.create(params.sessionId, {
             command: params.command,
             args: params.args,
-            cwd: params.cwd ?? undefined,
+            // The terminal starts inside a drive of the desktop (the chat's cwd by default), never anywhere else.
+            cwd: await files.forSession(params.sessionId).resolveCwd(params.cwd ?? undefined),
             env: Object.fromEntries((params.env ?? []).map((e) => [e.name, e.value])),
             outputByteLimit: params.outputByteLimit ?? undefined
           })

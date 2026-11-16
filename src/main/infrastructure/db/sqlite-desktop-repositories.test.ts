@@ -15,15 +15,15 @@ function setup() {
   const f = createFixture()
   const desktops = new SqliteDesktopRepository(f.db)
   const windows = new SqliteAppWindowRepository(f.db)
-  const desktop = desktops.create({ folderId: f.folderId, agentId: f.agentId, title: 'project', isOpen: true })
+  const desktop = desktops.create({ agentId: f.agentId, title: 'project', isOpen: true })
   return { ...f, desktops, windows, desktop, sessions: new SqliteSessionRepository(f.db) }
 }
 
 describe('SqliteDesktopRepository', () => {
   it('creates, lists, flags and removes desktops', () => {
-    const { desktops, desktop, folderId } = setup()
-    expect(desktop).toMatchObject({ folderId, title: 'project', isOpen: true, paused: false, userInControl: false })
-    expect(desktops.findByFolder(folderId)?.id).toBe(desktop.id)
+    const { desktops, desktop } = setup()
+    expect(desktop).toMatchObject({ title: 'project', isOpen: true, paused: false, userInControl: false })
+    expect(desktop.lastUsedAt).toMatch(/^\d{4}-\d\d-\d\dT/)
     expect(desktops.listOpen()).toHaveLength(1)
 
     desktops.setOpen(desktop.id, false)
@@ -38,8 +38,8 @@ describe('SqliteDesktopRepository', () => {
   })
 
   it('removes the chats of a deleted desktop (cascade)', () => {
-    const { db, desktops, desktop, sessions, folderId, agentId } = setup()
-    const session = sessions.create({ folderId, agentId, desktopId: desktop.id, title: 'chat' })
+    const { db, desktops, desktop, sessions, agentId } = setup()
+    const session = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })
     expect(sessions.get(session.id)?.desktopId).toBe(desktop.id)
     expect(sessions.listByDesktop(desktop.id).map((s) => s.id)).toEqual([session.id])
     desktops.remove(desktop.id)
@@ -50,15 +50,15 @@ describe('SqliteDesktopRepository', () => {
 
 describe('SqliteAppWindowRepository', () => {
   it('stores windows with their subtype columns, back to front', () => {
-    const { windows, desktop, sessions, folderId, agentId } = setup()
-    const session = sessions.create({ folderId, agentId, desktopId: desktop.id, title: 'chat' })
+    const { windows, desktop, sessions, agentId } = setup()
+    const session = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })
     const chat = windows.create({ desktopId: desktop.id, app: 'chat', bounds, windowState: 'normal', openedBy: 'user', sessionId: session.id })
-    const notepad = windows.create({ desktopId: desktop.id, app: 'notepad', bounds, windowState: 'normal', openedBy: 'agent', path: 'a.txt' })
+    const notepad = windows.create({ desktopId: desktop.id, app: 'notepad', bounds, windowState: 'normal', openedBy: 'agent', path: 'E:\\a.txt' })
     const browser = windows.create({ desktopId: desktop.id, app: 'browser', bounds, windowState: 'normal', openedBy: 'user', url: 'https://example.com/' })
 
     expect(windows.list(desktop.id).map((w) => w.id)).toEqual([chat.id, notepad.id, browser.id])
     expect(chat).toMatchObject({ sessionId: session.id, path: null, url: null, bounds })
-    expect(notepad).toMatchObject({ path: 'a.txt', openedBy: 'agent' })
+    expect(notepad).toMatchObject({ path: 'E:\\a.txt', openedBy: 'agent' })
     expect(browser.url).toBe('https://example.com/')
     expect(windows.findChatWindow(session.id)?.id).toBe(chat.id)
 
@@ -66,17 +66,17 @@ describe('SqliteAppWindowRepository', () => {
     expect(windows.list(desktop.id).at(-1)?.id).toBe(chat.id)
     windows.setBounds(notepad.id, { x: 5, y: 6, width: 400.4, height: 300 })
     windows.setWindowState(notepad.id, 'minimized')
-    windows.setPath(notepad.id, 'b.txt')
+    windows.setPath(notepad.id, 'E:\\b.txt')
     windows.setUrl(browser.id, 'https://example.org/')
-    expect(windows.get(notepad.id)).toMatchObject({ bounds: { x: 5, y: 6, width: 400, height: 300 }, windowState: 'minimized', path: 'b.txt' })
+    expect(windows.get(notepad.id)).toMatchObject({ bounds: { x: 5, y: 6, width: 400, height: 300 }, windowState: 'minimized', path: 'E:\\b.txt' })
     windows.setPath(notepad.id, null)
     expect(windows.get(notepad.id)?.path).toBeNull()
     expect(windows.get(browser.id)?.url).toBe('https://example.org/')
   })
 
   it('deletes the window row when its chat is deleted, and one window per chat', () => {
-    const { db, windows, desktop, sessions, folderId, agentId } = setup()
-    const session = sessions.create({ folderId, agentId, desktopId: desktop.id, title: 'chat' })
+    const { db, windows, desktop, sessions, agentId } = setup()
+    const session = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })
     windows.create({ desktopId: desktop.id, app: 'chat', bounds, windowState: 'normal', openedBy: 'user', sessionId: session.id })
     expect(() =>
       windows.create({ desktopId: desktop.id, app: 'chat', bounds, windowState: 'normal', openedBy: 'user', sessionId: session.id })
@@ -113,7 +113,7 @@ describe('migration 002 on an existing database', () => {
         (1, ${agentId}, 'a2', '2026-01-02T00:00:00.000Z'),
         (2, ${agentId}, 'b1', '2026-03-01T00:00:00.000Z');`)
 
-    migrate(db)
+    migrate(db, MIGRATIONS.slice(0, 3))
 
     const desktops = db.prepare('SELECT folder_id, agent_id, title, is_open FROM desktops ORDER BY folder_id').all()
     expect(desktops).toEqual([
@@ -133,7 +133,7 @@ describe('migration 002 on an existing database', () => {
     const db = openRaw(':memory:')
     migrate(db, [MIGRATIONS[0]!])
     db.exec("INSERT INTO folders (path, name) VALUES ('/a', 'a')")
-    migrate(db)
+    migrate(db, MIGRATIONS.slice(0, 3))
     expect(db.prepare('SELECT COUNT(*) AS n FROM desktops').get()).toEqual({ n: 0 })
   })
 })

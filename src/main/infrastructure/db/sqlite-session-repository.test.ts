@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SqliteFolderRepository } from './sqlite-folder-repository'
+import { SqliteDesktopRepository } from './sqlite-desktop-repository'
 import { SqliteSessionRepository } from './sqlite-session-repository'
 import { SqliteTranscriptRepository } from './sqlite-transcript-repository'
 import { SqliteTaskRepository } from './sqlite-task-repository'
@@ -10,7 +10,7 @@ describe('SqliteSessionRepository', () => {
     const f = createFixture()
     const s = new SqliteSessionRepository(f.db).get(f.sessionId)
     expect(s).toMatchObject({
-      folderId: f.folderId,
+      cwd: 'C:\\Users\\Agent',
       agentId: f.agentId,
       title: 'Session',
       status: 'idle',
@@ -85,20 +85,21 @@ describe('SqliteSessionRepository', () => {
     expect(s.commands).toEqual([])
   })
 
-  it('lists newest activity first and filters by folder', () => {
+  it('lists newest activity first and filters by desktop; the working directory defaults to the agent home', () => {
     const f = createFixture()
-    const folders = new SqliteFolderRepository(f.db)
-    const other = folders.add('/other', 'other')
+    const desktop = new SqliteDesktopRepository(f.db).create({ agentId: f.agentId, title: 'd', isOpen: false })
     const repo = new SqliteSessionRepository(f.db)
-    const s2 = repo.create({ folderId: other.id, agentId: f.agentId, title: 'two' })
+    const s2 = repo.create({ agentId: f.agentId, desktopId: desktop.id, cwd: 'E:\\src', title: 'two' })
     expect(repo.list().map((s) => s.id)).toEqual([s2.id, f.sessionId])
-    expect(repo.list(f.folderId).map((s) => s.id)).toEqual([f.sessionId])
+    expect(repo.list(desktop.id).map((s) => s.id)).toEqual([s2.id])
+    expect(repo.get(f.sessionId)?.cwd).toBe('C:\\Users\\Agent')
+    expect(s2.cwd).toBe('E:\\src')
   })
 
   it('enforces unique acp session id per agent', () => {
     const f = createFixture()
     const repo = new SqliteSessionRepository(f.db)
-    const s2 = repo.create({ folderId: f.folderId, agentId: f.agentId, title: 'two' })
+    const s2 = repo.create({ agentId: f.agentId, title: 'two' })
     repo.setAcpSessionId(f.sessionId, 'same')
     expect(() => repo.setAcpSessionId(s2.id, 'same')).toThrow(/UNIQUE/)
   })

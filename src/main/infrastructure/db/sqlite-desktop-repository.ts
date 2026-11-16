@@ -1,37 +1,38 @@
 import type { Id } from '@shared/models'
 import type { DesktopRecord, DesktopRepository, NewDesktop } from '../../domain/repositories/desktop-repository'
-import { prepare, type Database, type Statement } from './sql'
+import { NOW_SQL, prepare, type Database, type Statement } from './sql'
 
 interface DesktopRow {
   id: number
-  folder_id: number
   agent_id: number | null
   title: string
   is_open: number
   paused: number
   user_in_control: number
   created_at: string
+  last_used_at: string
 }
 
-const COLUMNS = 'id, folder_id, agent_id, title, is_open, paused, user_in_control, created_at'
+const COLUMNS = 'id, agent_id, title, is_open, paused, user_in_control, created_at, last_used_at'
 
 const toRecord = (row: DesktopRow): DesktopRecord => ({
   id: row.id,
-  folderId: row.folder_id,
   agentId: row.agent_id,
   title: row.title,
   isOpen: row.is_open === 1,
   paused: row.paused === 1,
   userInControl: row.user_in_control === 1,
-  createdAt: row.created_at
+  createdAt: row.created_at,
+  lastUsedAt: row.last_used_at
 })
 
 export class SqliteDesktopRepository implements DesktopRepository {
   private readonly selectAll: Statement<[], DesktopRow>
   private readonly selectOpen: Statement<[], DesktopRow>
   private readonly selectById: Statement<[Id], DesktopRow>
-  private readonly selectByFolder: Statement<[Id], DesktopRow>
-  private readonly insert: Statement<[Id, Id | null, string, number]>
+  private readonly insert: Statement<[Id | null, string, number]>
+  private readonly closeAll_: Statement<[]>
+  private readonly touch_: Statement<[Id]>
   private readonly updateTitle: Statement<[string, Id]>
   private readonly updateFlag: Record<'is_open' | 'paused' | 'user_in_control', Statement<[number, Id]>>
   private readonly remove_: Statement<[Id]>
@@ -40,8 +41,9 @@ export class SqliteDesktopRepository implements DesktopRepository {
     this.selectAll = prepare(db, `SELECT ${COLUMNS} FROM desktops ORDER BY id`)
     this.selectOpen = prepare(db, `SELECT ${COLUMNS} FROM desktops WHERE is_open = 1 ORDER BY id`)
     this.selectById = prepare(db, `SELECT ${COLUMNS} FROM desktops WHERE id = ?`)
-    this.selectByFolder = prepare(db, `SELECT ${COLUMNS} FROM desktops WHERE folder_id = ? ORDER BY id LIMIT 1`)
-    this.insert = prepare(db, 'INSERT INTO desktops (folder_id, agent_id, title, is_open) VALUES (?, ?, ?, ?)')
+    this.insert = prepare(db, 'INSERT INTO desktops (agent_id, title, is_open) VALUES (?, ?, ?)')
+    this.closeAll_ = prepare(db, 'UPDATE desktops SET is_open = 0 WHERE is_open = 1')
+    this.touch_ = prepare(db, `UPDATE desktops SET last_used_at = ${NOW_SQL} WHERE id = ?`)
     this.updateTitle = prepare(db, 'UPDATE desktops SET title = ? WHERE id = ?')
     const flag = (column: string): Statement<[number, Id]> => prepare(db, `UPDATE desktops SET ${column} = ? WHERE id = ?`)
     this.updateFlag = { is_open: flag('is_open'), paused: flag('paused'), user_in_control: flag('user_in_control') }
@@ -61,13 +63,8 @@ export class SqliteDesktopRepository implements DesktopRepository {
     return row ? toRecord(row) : null
   }
 
-  findByFolder(folderId: Id): DesktopRecord | null {
-    const row = this.selectByFolder.get(folderId)
-    return row ? toRecord(row) : null
-  }
-
   create(input: NewDesktop): DesktopRecord {
-    const id = Number(this.insert.run(input.folderId, input.agentId, input.title, input.isOpen ? 1 : 0).lastInsertRowid)
+    const id = Number(this.insert.run(input.agentId, input.title, input.isOpen ? 1 : 0).lastInsertRowid)
     const record = this.get(id)
     if (!record) throw new Error(`Desktop ${id} vanished after insert`)
     return record
@@ -79,6 +76,14 @@ export class SqliteDesktopRepository implements DesktopRepository {
 
   setOpen(id: Id, isOpen: boolean): void {
     this.updateFlag.is_open.run(isOpen ? 1 : 0, id)
+  }
+
+  closeAll(): void {
+    this.closeAll_.run()
+  }
+
+  touch(id: Id): void {
+    this.touch_.run(id)
   }
 
   setPaused(id: Id, paused: boolean): void {

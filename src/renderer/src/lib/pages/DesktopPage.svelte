@@ -6,10 +6,14 @@
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
+  import { joinVPath } from '@shared/vfs'
   import { startAppRequests } from '../apps/appRequests'
   import Desktop from '../kit/templates/Desktop.svelte'
   import { appRegistry } from '../desktop/apps'
   import { approvalReason } from '../desktop/approval'
+  import AutoPlayDialog from '../desktop/AutoPlayDialog.svelte'
+  import Balloon from '../desktop/Balloon.svelte'
+  import UsbTray from '../desktop/UsbTray.svelte'
   import { setDesktopContext } from '../desktop/context'
   import { DesktopController } from '../desktop/DesktopController.svelte'
   import DesktopSurface, { type DesktopIconDef } from '../desktop/DesktopSurface.svelte'
@@ -40,6 +44,7 @@
   let root: HTMLDivElement | undefined = $state()
   let orb: HTMLElement | null = $state(null)
   let flag: HTMLButtonElement | null = $state(null)
+  let usbIcon: HTMLButtonElement | null = $state(null)
   let query = $state('')
   const since = new Date()
 
@@ -59,7 +64,7 @@
   const items = $derived(taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons))
 
   const desktopIcons = $derived<DesktopIconDef[]>([
-    { id: 'workspace', label: 'Workspace (W:)', icon: 'folder-open' },
+    { id: 'computer', label: 'Computer', icon: 'computer' },
     { id: 'chats', label: 'Chats', icon: 'session' },
     { id: 'code', label: 'Code', icon: 'file-code' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal' },
@@ -83,11 +88,12 @@
   )
   const recent = $derived<StartItem[]>(desktop.chats.slice(0, 8).map((s) => ({ id: String(s.id), title: s.title || 'New chat' })))
   const places: StartItem[] = [
-    { id: 'workspace', title: 'Workspace' },
+    { id: 'computer', title: 'Computer' },
+    { id: 'documents', title: 'Documents' },
     { id: 'control-centre', title: 'Control Centre' },
     { id: 'agent-manager', title: 'Task Manager' },
     { id: 'recycle-bin', title: 'Recycle Bin' },
-    { id: 'new-desktop', title: 'New desktop…' }
+    { id: 'desktops', title: 'Agent7 Desktops…' }
   ]
 
   function runApp(id: string): void {
@@ -97,8 +103,8 @@
 
   function openIcon(id: string): void {
     switch (id) {
-      case 'workspace':
-        return void desktop.openApp({ app: 'explorer' })
+      case 'computer':
+        return void desktop.openApp({ app: 'explorer', path: '' })
       case 'chats': {
         const latest = desktop.chats[0]
         return void (latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat())
@@ -112,8 +118,9 @@
 
   function openPlace(id: string): void {
     desktop.startOpen = false
-    if (id === 'new-desktop') void desktop.createDesktop()
-    else if (id === 'workspace') void desktop.openApp({ app: 'explorer' })
+    if (id === 'desktops') void desktop.showLauncher()
+    else if (id === 'computer') void desktop.openApp({ app: 'explorer', path: '' })
+    else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
   }
 
@@ -150,7 +157,7 @@
       onselect={(id) => (desktop.selectedIcon = id)}
       onopen={openIcon}
       onnewchat={() => void desktop.newChat()}
-      onopenworkspace={() => void desktop.openApp({ app: 'explorer' })}
+      onopencomputer={() => void desktop.openApp({ app: 'explorer', path: '' })}
       ontogglegadgets={() => (desktop.gadgetsVisible = !desktop.gadgetsVisible)}
       oncontrolcentre={() => void desktop.openApp({ app: 'control-centre' })}
       onbackground={() => desktop.closePopups()}
@@ -162,7 +169,7 @@
     <WindowLayer {desktop} />
     {#if !desktop.needsDesktop}
       <TopBar
-        title={desktop.state.title || desktop.state.folder.name}
+        title={desktop.state.title}
         working={desktop.working}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
@@ -229,9 +236,18 @@
       />
     {/if}
     {#if desktop.needsDesktop}
-      <WelcomeDialog onopen={() => void desktop.createDesktop()} />
+      <WelcomeDialog onopen={() => void desktop.showLauncher()} />
+    {/if}
+    {#if desktop.autoPlay}
+      <AutoPlayDialog drive={desktop.autoPlay} onchoose={(c) => void desktop.autoPlayChoose(c)} />
+    {/if}
+    {#if desktop.balloon}
+      <div class="balloon">
+        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} onclose={() => desktop.dismissBalloon()} />
+      </div>
     {/if}
     {#snippet tray()}
+      <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} />
       <TrayFlag count={approvals.length} open={desktop.actionCenterOpen} bind:element={flag} onclick={() => desktop.toggleActionCenter()} />
     {/snippet}
   </Desktop>
@@ -249,6 +265,12 @@
     left: 0;
     bottom: 0;
     z-index: 100001;
+  }
+  .balloon {
+    position: absolute;
+    right: 72px;
+    bottom: 44px;
+    z-index: 100002;
   }
   .center {
     position: absolute;

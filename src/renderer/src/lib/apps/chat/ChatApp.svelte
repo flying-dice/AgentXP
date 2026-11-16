@@ -2,6 +2,7 @@
   import { untrack } from 'svelte'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import type { AppProps } from '../types'
+  import { cwdLabel } from '../explorer/explorerModel'
   import { connectionLabel, contextPercent } from '../../app/sessionStatus'
   import SessionView from '../../app/session/SessionView.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
@@ -28,7 +29,8 @@
   const store = $derived(sessionId > 0 ? (stores.peek(sessionId) ?? null) : null)
 
   let session = $state.raw<SessionDto | null>(null)
-  let folder = $state.raw<FolderDto | null>(null)
+  /** The chat's working directory shown like the old folder (name and path). */
+  const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   let agent = $state.raw<AgentDto | null>(null)
   let panelOpen = $state(false)
   let panelTab = $state('changes')
@@ -41,10 +43,9 @@
     let stale = false
     void (async () => {
       try {
-        const [s, folders, agents] = await Promise.all([host.api.sessions.get(id), host.api.folders.list(), host.api.agents.list()])
+        const [s, agents] = await Promise.all([host.api.sessions.get(id), host.api.agents.list()])
         if (stale) return
         session = s
-        folder = folders.find((f) => f.id === s.folderId) ?? null
         agent = agents.find((a) => a.id === s.agentId) ?? null
       } catch {
         if (!stale) session = null

@@ -154,6 +154,8 @@ CREATE TABLE tool_group_policies (
 );
 ```
 
+Migration 004 (section 8b) replaces `desktops.folder_id` with `desktop_drives` and `sessions.folder_id` with `sessions.cwd`; `path_windows` holds VPaths.
+
 Focus and transient view state (scroll, selection, caret) are kept in memory only, not persisted. Existing sessions get a desktop per folder in the migration.
 
 Migration 003 (text columns only, no blobs):
@@ -181,6 +183,61 @@ CREATE TABLE recycled_changes (
 ```
 
 The Event Viewer's events are not persisted: an in-memory ring buffer of 5,000 events per desktop.
+
+## 8b. Virtual file system and launcher (migration 004)
+
+A desktop is a long-lived virtual Windows 7 PC, not a view of one folder. Contract: `src/shared/vfs.ts`.
+
+**Paths.** The agent and the UI use *VPaths*: `C:\Users\Agent`, `E:\src\a.ts` (backslashes, upper-case drive letter, the drive
+root keeps its trailing `\`). `parseVPath` / `normaliseVPath` / `joinVPath` / `vpathParent` / `vpathName` are pure; relative paths
+and `..` above a drive root are invalid. The Explorer path `''` is "Computer" (the drive list).
+
+**Drives.**
+- `C:` is the desktop's own disk: a real directory `<userData>/desktops/<id>/C`, seeded with `Users\Agent\{Desktop,Documents,Downloads}` and `Temp`.
+  It is deleted with the desktop. The agent's home (`AGENT_HOME`) and the default chat cwd are on it.
+- `E:` to `Z:` are projects plugged in like USB sticks (`desktop_drives`, one `folders` row each). Plugging in picks the first free letter;
+  plugging the same project again returns its drive. Eject ("Safely Remove") deletes the row: the very next tool call on that drive fails with
+  `noDriveMessage` (`DriveUnavailableError`, a refusal, JSON-RPC -32010, a warning in the Event Viewer). `C:` cannot be ejected.
+
+**`VirtualFileSystem`** (application/vfs) turns a VPath into a real path through the *live* drive list of the desktop, so eject takes effect at once.
+Every read and write goes through the `HostFiles` port (`NodeHostFiles`), which confines each call to one root with the symlink-safe sandbox guard.
+`DriveService` lists, plugs in and ejects drives and notifies observers (the desktop pushes a new `DesktopState`).
+`SessionFiles` serves the ACP `fs/*` and `terminal/*` requests: a real absolute path is allowed iff it is inside `C:` or a plugged-in drive,
+otherwise a JSON-RPC error (`OutsideDrivesError`, or the drive-named message when the chat's own drive was ejected).
+MCP tools take and return VPaths (`ToolPaths.resolve` also accepts a real path inside a drive and paths relative to the chat's cwd); `drives_list`
+is part of the always-on shell group, and the server instructions explain drives.
+
+**Chats** have a `cwd` VPath (default `C:\Users\Agent`). The ACP `session/new` cwd is its real path.
+
+**Changes.** `file_changes` / `recycled_changes` store `(folder_id, path)`: `folder_id NULL` is `C:`, the path is relative to that root with `/`.
+The drive letter is looked up when a row is read, so a project plugged in again under another letter keeps its changes (while unplugged they show `?:\...`).
+
+**Launcher** ("Remote Desktop Connection"). A fixed 520x600 frameless window (`?launcher=1`) opens at app start. A desktop is *connected* while an OS window
+(`?desktop=<id>`) shows it; `desktops.is_open` means connected and is reset at start. Closing a desktop window (or `launcher.disconnect`) only disconnects:
+agents, turns and permission requests keep running in main. A pending approval on a disconnected desktop raises an OS notification
+"Agent7: <desktop> needs your approval" (click connects) and a `launcher.changed` push. `runState` = awaiting_approval > working > error > idle, derived from session
+statuses and the `PermissionBroker`. `launcher.remove` stops the agents, deletes the rows (cascade) and the desktop's app-data folder; plugged-in project folders are only ejected.
+
+**Thumbnails.** `capturePage` resized to 320 px wide, written to `<userData>/desktops/<id>/thumbnail.png` on disconnect and every 60 s while connected
+(`ThumbnailService`, `FileThumbnailStore`). The launcher loads `agent7-thumb://desktop/<id>.png?v=<mtime>`, served by a custom protocol handler;
+the renderer's CSP must allow `agent7-thumb:` in `img-src`.
+
+```sql
+CREATE TABLE desktop_drives (
+  desktop_id INTEGER NOT NULL REFERENCES desktops(id) ON DELETE CASCADE,
+  letter TEXT NOT NULL CHECK (letter GLOB '[E-Z]'),
+  folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+  plugged_at TEXT NOT NULL,
+  UNIQUE (desktop_id, letter), UNIQUE (desktop_id, folder_id)
+);
+-- desktops: folder_id dropped, last_used_at added; is_open = connected
+-- sessions: folder_id dropped, cwd TEXT NOT NULL DEFAULT 'C:\Users\Agent'
+-- file_changes / recycled_changes: folder_id (NULL = C:) + root-relative path; UNIQUE (session_id, COALESCE(folder_id,0), path)
+-- path_windows.relative_path -> path (a VPath)
+```
+
+Migration: every existing desktop's folder becomes its drive `E:`, existing chats get cwd `E:\`, change paths get the folder of their chat, window paths become
+`E:\...`. `desktops` and `sessions` are rebuilt, so the migration runs with foreign keys off (`Migration.rebuildsTables`) and `migrate` runs `PRAGMA foreign_key_check` before committing.
 
 ## 9. Build order
 

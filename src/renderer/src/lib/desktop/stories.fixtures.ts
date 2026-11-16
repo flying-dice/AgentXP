@@ -29,6 +29,14 @@ export interface PrepareOptions {
   paused?: boolean
   agentOpened?: boolean
   gadgets?: boolean
+  /** The Safely Remove menu of the USB tray icon is open. */
+  usbMenu?: boolean
+  /** The "Safe To Remove Hardware" balloon is showing (as after an eject). */
+  balloon?: boolean
+  /** The AutoPlay dialog for a just-plugged-in drive F: (dotfiles). */
+  autoPlay?: boolean
+  /** Starts Safely Remove on E:, whose chats are working: the warning box shows. */
+  eject?: boolean
   /** Extra apps to open (in a cascade) after the usual ones. */
   /** Show the snipping overlay. */
   snip?: 'rect' | 'window'
@@ -53,7 +61,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
     const initial = await d.current()
     for (const w of initial?.windows ?? []) await d.closeWindow(w.id)
     if (options.windows !== false) {
-      const explorer = await d.openWindow({ desktopId, app: 'explorer', path: 'src/auth' })
+      const explorer = await d.openWindow({ desktopId, app: 'explorer', path: 'E:\\src\\auth' })
       await d.setBounds(explorer.id, { x: 36, y: 56, width: 560, height: 330 })
       const terminal = await d.openWindow({ desktopId, app: 'terminal' })
       await d.setBounds(terminal.id, { x: 250, y: 300, width: 560, height: 270 })
@@ -87,11 +95,15 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   controller.gadgetsVisible = options.gadgets !== false
   controller.messages = options.actionCenter || options.review ? [
     { id: 1, text: 'Context is at 6%. The agent compacts automatically at 80%.', at: new Date() },
-    { id: 2, text: 'Opened C:\\Users\\jonathan\\source\\claude-code-win', at: new Date() }
+    { id: 2, text: 'Opened E:\\', at: new Date() }
   ] : []
   await controller.start()
   if (options.agentOpened && controller.current) controller.current = markAgentOpened(controller.current)
   if (options.snip) void controller.pickSnipRegion(options.snip)
+  if (options.usbMenu) controller.usbMenuOpen = true
+  if (options.balloon) controller.showBalloon({ title: 'Safe To Remove Hardware', text: "The 'dotfiles (F:)' device can now be safely removed from the computer.", icon: 'usb-safe' })
+  if (options.autoPlay) await api.drives.plugIn(1, 2)
+  if (options.eject) void controller.ejectDrive('E')
   if (options.draw) {
     const paint = controller.state.windows.find((w) => w.app === 'paint')
     if (paint) setTimeout(() => void handleAppRequest({ requestId: 'story-draw', desktopId: 1, windowId: paint.id, method: 'draw', params: { ops: houseScene } }), 500)

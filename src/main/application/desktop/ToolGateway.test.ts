@@ -46,7 +46,8 @@ let gateway: ToolGateway
 const baseState = (apps: Parameters<typeof enabledToolGroups>[0]): DesktopState => ({
   desktopId: 1,
   title: 't',
-  folder: { id: 1, path: '/w', name: 'w' },
+  drives: [{ letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }],
+  home: 'C:\\Users\\Agent',
   focusedWindowId: null,
   windows: [],
   tools: enabledToolGroups(apps),

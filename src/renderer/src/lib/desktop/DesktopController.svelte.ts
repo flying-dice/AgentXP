@@ -10,7 +10,10 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
+import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
+import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
+import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { isBusy } from '../app/sessionStatus'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
@@ -30,6 +33,15 @@ export interface SnipOverlayState {
   resolve: (region: Bounds | null) => void
 }
 
+/** The Win7 notification balloon over the tray ("Safe To Remove Hardware"). */
+export interface Balloon {
+  title: string
+  text: string
+  icon: 'usb-safe' | 'info'
+}
+
+export const BALLOON_MS = 9000
+
 export interface ShellMessage {
   id: number
   text: string
@@ -39,7 +51,8 @@ export interface ShellMessage {
 const emptyState = (): DesktopState => ({
   desktopId: 0,
   title: '',
-  folder: { id: 0, path: '', name: '' },
+  drives: [],
+  home: '',
   focusedWindowId: null,
   windows: [],
   tools: ['shell'],
@@ -79,6 +92,12 @@ export class DesktopController implements DesktopHost {
   snipOverlay = $state.raw<SnipOverlayState | null>(null)
   /** Items in the Recycle Bin (the desktop icon shows full or empty). */
   recycleCount = $state(0)
+  /** A USB drive that was just plugged in: the AutoPlay dialog shows it. */
+  autoPlay = $state.raw<DriveDto | null>(null)
+  /** The tray balloon, auto-hidden after `BALLOON_MS`. */
+  balloon = $state.raw<Balloon | null>(null)
+  /** The Safely Remove menu of the tray icon is open. */
+  usbMenuOpen = $state(false)
 
   get state(): DesktopState {
     return this.current ?? emptyState()
@@ -90,9 +109,9 @@ export class DesktopController implements DesktopHost {
     const id = this.state.focusedWindowId
     return this.state.windows.find((w) => w.id === id) ?? null
   }
-  /** Sessions of this desktop's folder, newest first. */
+  /** Chats of this desktop, newest first. */
   get chats(): SessionDto[] {
-    return this.sessions.items.filter((s) => s.folderId === this.state.folder.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    return this.sessions.items.filter((s) => s.desktopId === this.state.desktopId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }
   get activityInputs(): ChatActivityInput[] {
     return this.chats.flatMap((s): ChatActivityInput[] => {
@@ -126,6 +145,7 @@ export class DesktopController implements DesktopHost {
   private offs: (() => void)[] = []
   private messageId = 0
   private glowTimers = new Set<ReturnType<typeof setTimeout>>()
+  private balloonTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(api: Agent7Api, inbox?: PermissionInbox) {
     this.api = api
@@ -168,6 +188,7 @@ export class DesktopController implements DesktopHost {
     this.snipOverlay?.resolve(null)
     this.glowTimers.forEach(clearTimeout)
     this.glowTimers.clear()
+    if (this.balloonTimer) clearTimeout(this.balloonTimer)
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
   }
 
@@ -205,6 +226,9 @@ export class DesktopController implements DesktopHost {
     const known = new Set(this.current?.windows.map((w) => w.id))
     const fresh = this.current ? next.windows.filter((w) => !known.has(w.id) && w.openedBy === 'agent') : []
     if (fresh.length) this.glow(fresh.map((w) => w.id))
+    // A drive that was not there before has just been plugged in (not on the first state).
+    const plugged = this.current ? next.drives.find((d) => d.kind === 'removable' && !this.current?.drives.some((o) => o.letter === d.letter)) : undefined
+    if (plugged) this.autoPlay = plugged
     this.current = next
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
@@ -364,11 +388,69 @@ export class DesktopController implements DesktopHost {
     return this.api.desktop.newChat(this.state.desktopId)
   }
 
-  /** Shows the folder picker and creates a desktop (a new OS window in the real app). */
-  async createDesktop(): Promise<void> {
+  /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
+  async newChatIn(cwd: VPath): Promise<AppWindowState> {
     this.startOpen = false
-    const created = await this.api.desktop.create()
-    if (created && this.needsDesktop) await this.reload()
+    return this.api.desktop.newChat(this.state.desktopId, undefined, cwd)
+  }
+
+  /** Shows the launcher window (Start menu: Agent7 Desktops...). */
+  async showLauncher(): Promise<void> {
+    this.startOpen = false
+    await this.api.launcher.show()
+  }
+
+  // ---- drives -------------------------------------------------------------------------------------
+
+  /** Chats that still run and have their working directory on the drive. */
+  chatsOnDrive(letter: DriveLetter): SessionDto[] {
+    return this.chats.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
+  }
+
+  /** Safely Remove: warns when chats work on the drive, ejects it, then shows the balloon. */
+  async ejectDrive(letter: DriveLetter): Promise<void> {
+    const drive = this.state.drives.find((d) => d.letter === letter)
+    if (!drive || drive.kind === 'system') return
+    this.usbMenuOpen = false
+    this.startOpen = false
+    const title = driveTitle(drive)
+    const working = this.chatsOnDrive(letter)
+    if (working.length > 0) {
+      const names = working.map((s) => `"${s.title || 'New chat'}"`).slice(0, 3).join(', ')
+      const more = working.length > 3 ? ` and ${working.length - 3} more` : ''
+      const answer = await showMessageBox({
+        text: `${working.length === 1 ? 'A chat works' : `${working.length} chats work`} on '${title}': ${names}${more}.\n\nIf you remove it now, the agent loses access to its files at once and every file or terminal request on it is refused.\n\nDo you want to remove it anyway?`,
+        caption: 'Safely Remove Hardware',
+        buttons: 'YesNo',
+        icon: 'warning',
+        defaultButton: 1
+      })
+      if (answer !== 'yes') return
+    }
+    await this.api.drives.eject(this.state.desktopId, letter)
+    if (this.current) this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter) }
+    this.showBalloon({ title: 'Safe To Remove Hardware', text: `The '${title}' device can now be safely removed from the computer.`, icon: 'usb-safe' })
+  }
+
+  showBalloon(balloon: Balloon): void {
+    this.balloon = balloon
+    if (this.balloonTimer) clearTimeout(this.balloonTimer)
+    this.balloonTimer = setTimeout(() => (this.balloon = null), BALLOON_MS)
+  }
+
+  dismissBalloon(): void {
+    if (this.balloonTimer) clearTimeout(this.balloonTimer)
+    this.balloon = null
+  }
+
+  /** AutoPlay choices for the drive that was just plugged in. */
+  async autoPlayChoose(choice: 'open' | 'chat' | 'none'): Promise<void> {
+    const drive = this.autoPlay
+    this.autoPlay = null
+    if (!drive || choice === 'none') return
+    const root = driveRoot(drive.letter)
+    if (choice === 'open') await this.openApp({ app: 'explorer', path: root })
+    else await this.newChatIn(root)
   }
 
   // ---- shell ui ---------------------------------------------------------------------------------
@@ -386,6 +468,7 @@ export class DesktopController implements DesktopHost {
   closePopups(): void {
     this.startOpen = false
     this.actionCenterOpen = false
+    this.usbMenuOpen = false
   }
 
   /** Opens the UAC-style dialog for an approval (loads the policy for the reason line). */

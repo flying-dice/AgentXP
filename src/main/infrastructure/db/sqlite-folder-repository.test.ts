@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { openDatabase } from './open-database'
+import { SqliteDesktopRepository } from './sqlite-desktop-repository'
+import { SqliteDriveRepository } from './sqlite-drive-repository'
+import { SqliteFileChangeRepository } from './sqlite-file-change-repository'
 import { SqliteFolderRepository } from './sqlite-folder-repository'
 import { count, createFixture } from './test-helpers'
 
@@ -34,11 +37,16 @@ describe('SqliteFolderRepository', () => {
     expect(list[0].lastOpenedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
   })
 
-  it('removes folders and cascades to sessions', () => {
+  it('removes folders, unplugging them from desktops and dropping their recorded changes; chats survive', () => {
     const f = createFixture()
+    const desktop = new SqliteDesktopRepository(f.db).create({ agentId: f.agentId, title: 'd', isOpen: false })
+    new SqliteDriveRepository(f.db).add(desktop.id, 'E', f.folderId)
+    new SqliteFileChangeRepository(f.db).record({ sessionId: f.sessionId, folderId: f.folderId, path: 'a.ts', previousText: null, newText: 'x' })
     const repo = new SqliteFolderRepository(f.db)
     expect(repo.remove(f.folderId)).toBe(true)
     expect(repo.remove(f.folderId)).toBe(false)
-    expect(count(f.db, 'sessions')).toBe(0)
+    expect(count(f.db, 'desktop_drives')).toBe(0)
+    expect(count(f.db, 'file_changes')).toBe(0)
+    expect(count(f.db, 'sessions')).toBe(1)
   })
 })

@@ -30,7 +30,7 @@ describe('processRows', () => {
   })
 
   it('lists terminals, running first', () => {
-    const t = (terminalId: string, exitCode: number | null, signal: string | null = null): TerminalDto => ({ id: 1, sessionId: 1, terminalId, command: 'npm', args: ['test'], cwd: 'W:\\', output: '', exitCode, signal })
+    const t = (terminalId: string, exitCode: number | null, signal: string | null = null): TerminalDto => ({ id: 1, sessionId: 1, terminalId, command: 'npm', args: ['test'], cwd: 'E:\\', output: '', exitCode, signal })
     const rows = terminalRows([t('a', 0), t('b', null), t('c', 1), t('d', null, 'SIGTERM')], [{ id: 1, title: 'Fix bug' }])
     expect(rows.map((r) => r.status)).toEqual(['Running', 'Exited', 'Exited (1)', 'Killed (SIGTERM)'])
     expect(rows[0]).toMatchObject({ chat: 'Fix bug', command: 'npm test' })

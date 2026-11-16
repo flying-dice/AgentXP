@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { Database } from './infrastructure/db/sql'
 import { A2uiService } from './application/A2uiService'
 import { AguiRunCoordinator } from './application/agui/AguiRunCoordinator'
@@ -6,7 +9,13 @@ import { StickyNoteService } from './application/desktop/StickyNoteService'
 import { ProtocolEventLog } from './application/events/ProtocolEventLog'
 import { RecycleService } from './application/RecycleService'
 import { DesktopService } from './application/desktop/DesktopService'
-import { noWindowHost, type DesktopWindowHost } from './application/desktop/ports'
+import { createMemoryWindowHost, type DesktopWindowHost } from './application/desktop/ports'
+import { LauncherService, type ApprovalNotifier } from './application/launcher/LauncherService'
+import { ThumbnailService, type ThumbnailCapturer } from './application/launcher/ThumbnailService'
+import { SessionFiles } from './application/SessionFiles'
+import { ToolPaths } from './application/tools/ToolPaths'
+import { DriveService } from './application/vfs/DriveService'
+import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
 import { ToolGateway } from './application/desktop/ToolGateway'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
@@ -50,13 +59,13 @@ import { SessionService } from './application/SessionService'
 import { ShellService } from './application/ShellService'
 import { TerminalRecorder } from './application/TerminalRecorder'
 import { TranscriptExporter } from './application/TranscriptExporter'
-import { WorkspaceFiles } from './application/WorkspaceFiles'
 import { A2uiBridgeServer, buildA2uiMcpServerConfig } from './infrastructure/a2ui/bridge-server'
 import { AcpAgentConnector } from './infrastructure/acp/AcpAgentConnector'
 import { ElectronBrowserDriver } from './infrastructure/browser/ElectronBrowserDriver'
 import { ShellCommandRunner } from './infrastructure/process/ShellCommandRunner'
 import { SqliteAppWindowRepository } from './infrastructure/db/sqlite-app-window-repository'
 import { SqliteDesktopRepository } from './infrastructure/db/sqlite-desktop-repository'
+import { SqliteDriveRepository } from './infrastructure/db/sqlite-drive-repository'
 import { SqliteToolPolicyRepository } from './infrastructure/db/sqlite-tool-policy-repository'
 import { SqliteA2uiSurfaceRepository } from './infrastructure/db/sqlite-a2ui-surface-repository'
 import { SqliteAgentRepository } from './infrastructure/db/sqlite-agent-repository'
@@ -69,7 +78,9 @@ import { SqliteStickyNoteRepository } from './infrastructure/db/sqlite-sticky-no
 import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository'
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
+import { FileThumbnailStore } from './infrastructure/fs/FileThumbnailStore'
 import { NodeFolderBrowser } from './infrastructure/fs/NodeFolderBrowser'
+import { NodeHostFiles } from './infrastructure/fs/NodeHostFiles'
 import { NodeWorkspaceFileSystem } from './infrastructure/fs/NodeWorkspaceFileSystem'
 import { createApi } from './ipc/createApi'
 import type { InvokeApi } from '../shared/ipc-channels'
@@ -88,8 +99,14 @@ export interface ComposeOptions {
   a2uiMcp: { electronPath: string; scriptPath: string }
   /** Defaults to spawning real ACP agent processes. */
   connector?: AgentConnector
-  /** The OS windows of desktops; defaults to none (tests). */
+  /** The OS windows of desktops and the launcher; defaults to an in-memory host (tests). */
   windows?: DesktopWindowHost
+  /** `<userData>/desktops`: each desktop's C: disk and thumbnail live in `<desktopsDir>/<id>/`. Defaults to a fresh temp folder (tests). */
+  desktopsDir?: string
+  /** Takes the launcher thumbnails; defaults to none (tests). */
+  thumbnailCapturer?: ThumbnailCapturer
+  /** Tells the user a disconnected desktop needs approval; defaults to silence (tests). */
+  notifier?: ApprovalNotifier
   /** Runs `terminal_run`; defaults to the platform shell. */
   commandRunner?: CommandRunner
   /** Captures the desktop window for `snip.capture` / `screen_capture`; defaults to refusing (tests). */
@@ -108,6 +125,14 @@ export interface AppServices {
   a2ui: A2uiService
   /** Desktops, their windows and the tools that follow the apps. */
   desktops: DesktopService
+  /** The launcher: desktops as long-lived projects (connect, disconnect, create, delete). */
+  launcher: LauncherService
+  /** The drives (C: and USB projects) of every desktop and the virtual file system over them. */
+  drives: DriveService
+  vfs: VirtualFileSystem
+  /** Launcher thumbnails (a PNG per desktop in its app-data folder). */
+  thumbnails: ThumbnailService
+  thumbnailStore: FileThumbnailStore
   /** Protocol events of every desktop (Event Viewer); the AG-UI IPC transport feeds it. */
   eventLog: ProtocolEventLog
   /** The Browser app's pages; main attaches each `<webview>` here (`desktop.attachBrowser`). */
@@ -134,15 +159,21 @@ export function composeApp(options: ComposeOptions): AppServices {
     permissions: new SqlitePermissionRepository(db),
     surfaces: new SqliteA2uiSurfaceRepository(db),
     desktops: new SqliteDesktopRepository(db),
+    drives: new SqliteDriveRepository(db),
     windows: new SqliteAppWindowRepository(db),
     toolPolicies: new SqliteToolPolicyRepository(db),
     notes: new SqliteStickyNoteRepository(db),
     recycled: new SqliteRecycledChangeRepository(db)
   }
   const fileSystem = new NodeWorkspaceFileSystem()
+  const desktopsDir = options.desktopsDir ?? mkdtempSync(join(tmpdir(), 'agent7-desktops-'))
+  const hostFiles = new NodeHostFiles()
+  const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
+  const drives = new DriveService({ drives: repos.drives, folders: repos.folders, desktops: repos.desktops, pickFolder: () => folderService.pick() })
+  const vfs = new VirtualFileSystem({ host: hostFiles, folders: repos.folders, drives, desktopsDir })
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
-  const workspaceFiles = new WorkspaceFiles(fileSystem, changeRecorder)
+  const sessionFiles = new SessionFiles({ vfs, host: hostFiles, sessions: repos.sessions, recorder: changeRecorder })
   const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster)
   const pool = new AgentConnectionPool()
   const eventBus = new SessionEventBus()
@@ -173,10 +204,10 @@ export function composeApp(options: ComposeOptions): AppServices {
     pool,
     sessions: repos.sessions,
     agents: repos.agents,
-    folders: repos.folders,
+    vfs,
     events: eventBus,
     broker,
-    workspaceFiles,
+    files: sessionFiles,
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
     a2uiMcpConfig,
@@ -190,7 +221,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const sessions = new SessionService({
     sessions: repos.sessions,
     agents: repos.agents,
-    folders: repos.folders,
+    vfs,
     transcripts: repos.transcripts,
     surfaces: repos.surfaces,
     permissions: repos.permissions,
@@ -200,47 +231,76 @@ export function composeApp(options: ComposeOptions): AppServices {
     events: publisher,
     desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
   })
-  const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const desktops = new DesktopService({
     desktops: repos.desktops,
     windows: repos.windows,
     policies: repos.toolPolicies,
-    folders: repos.folders,
     agents: repos.agents,
     sessions: repos.sessions,
     notes: repos.notes,
     chats: sessions,
-    pickFolder: () => folderService.pick(),
-    host: options.windows ?? noWindowHost,
+    drives,
     events: publisher
+  })
+  const windowHost = options.windows ?? createMemoryWindowHost()
+  const thumbnailStore = new FileThumbnailStore(desktopsDir)
+  const thumbnails = new ThumbnailService({
+    store: thumbnailStore,
+    capturer: options.thumbnailCapturer ?? { capturePng: async () => null },
+    connected: () => windowHost.connectedIds(),
+    updated: () => launcher.publishChanged()
+  })
+  const launcher = new LauncherService({
+    desktops: repos.desktops,
+    sessions: repos.sessions,
+    agents: repos.agents,
+    drives,
+    vfs,
+    desktopService: desktops,
+    chats: sessions,
+    pendingApprovals: () => broker.pendingRequests(),
+    host: windowHost,
+    thumbnails,
+    notifier: options.notifier ?? { approvalNeeded: () => {} },
+    clearLog: (desktopId) => eventLog.clear(desktopId),
+    events: publisher
+  })
+  drives.observe((desktopId) => {
+    desktops.refresh(desktopId)
+    launcher.publishChanged()
+  })
+  broker.observe((change) => {
+    if (change.kind === 'requested') launcher.onApprovalRequested(change.request.sessionId)
+    else launcher.publishChanged()
   })
   const gateway = new ToolGateway({ desktops, broker, events: eventBus })
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
   const a2uiSink = new CompositeA2uiSink(a2ui)
-  const folderBrowser = new NodeFolderBrowser()
+  const toolPaths = new ToolPaths(vfs, repos.sessions)
   const browsers = new ElectronBrowserDriver()
   const appRequests = new AppRequestBroker(publisher)
   const notes = new StickyNoteService({ notes: repos.notes, events: publisher, desktops })
   const screen: ScreenCapturer = options.screen ?? {
     capture: () => Promise.reject(new Error('Screen capture is not available here.'))
   }
-  const recycle = new RecycleService(repos.recycled, repos.desktops, repos.folders, repos.sessions, fileSystem, changeRecorder, publisher)
+  const recycle = new RecycleService(repos.recycled, repos.sessions, vfs, hostFiles, changeRecorder, publisher)
   const desktopTools = new DesktopToolService({
     states: desktops,
     gate: gateway,
     handlers: {
-      ...createShellTools({ desktops, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
-      ...createFsTools({ desktops, browser: folderBrowser }),
-      ...createNotepadTools({ desktops, browser: folderBrowser }),
-      ...createCodeTools({ desktops, changes: repos.changes }),
-      ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner() }),
+      ...createShellTools({ desktops, paths: toolPaths, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
+      ...createFsTools({ vfs, paths: toolPaths }),
+      ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
+      ...createCodeTools({ desktops, changes: repos.changes, paths: toolPaths }),
+      ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths }),
       ...createBrowserTools({ desktops, driver: browsers }),
       ...createPaintTools({ desktops, requests: appRequests }),
       ...createWordpadTools({
         desktops,
-        browser: folderBrowser,
+        vfs,
+        paths: toolPaths,
         requests: appRequests,
-        files: { write: (sessionId, root, path, text) => workspaceFiles.forSession(sessionId, root).forSession('').writeTextFile(path, text) }
+        files: { write: (sessionId, path, text) => sessionFiles.writeVPath(sessionId, path, text) }
       }),
       ...createNotesTools({ notes }),
       ...createEventsTools({ log: eventLog }),
@@ -271,10 +331,13 @@ export function composeApp(options: ComposeOptions): AppServices {
     sessions,
     queries,
     broker,
-    reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder, repos.recycled, repos.desktops, publisher),
+    reverter: new ChangeReverter(repos.changes, repos.sessions, vfs, hostFiles, changeRecorder, repos.recycled, publisher),
     exporter: new TranscriptExporter(repos.sessions, repos.transcripts, options.saver),
     a2ui,
     desktops,
+    vfs,
+    drives,
+    launcher,
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
@@ -290,8 +353,13 @@ export function composeApp(options: ComposeOptions): AppServices {
   // Desktop changes: the MCP children refresh their tool lists; chat titles follow session renames.
   publisher.subscribe((message) => {
     if (message.name === 'desktop.changed') bridge.publishTools(message.payload.desktopId, message.payload.tools)
-    else if (message.name === 'session.changed') desktops.onSessionChanged(message.payload)
-    else if (message.name === 'session.removed') desktops.onSessionRemoved()
+    else if (message.name === 'session.changed') {
+      desktops.onSessionChanged(message.payload)
+      launcher.publishChanged()
+    } else if (message.name === 'session.removed') {
+      desktops.onSessionRemoved()
+      launcher.publishChanged()
+    }
   })
   return {
     api,
@@ -302,13 +370,21 @@ export function composeApp(options: ComposeOptions): AppServices {
     broker,
     a2ui,
     desktops,
+    launcher,
+    drives,
+    vfs,
+    thumbnails,
+    thumbnailStore,
     eventLog,
     browsers,
     start: async () => {
       sessions.recoverAfterRestart()
+      launcher.resetConnections()
       await bridge.start()
+      thumbnails.start()
     },
     shutdown: async () => {
+      thumbnails.stop()
       agui.dispose()
       appRequests.dispose()
       eventLog.dispose()

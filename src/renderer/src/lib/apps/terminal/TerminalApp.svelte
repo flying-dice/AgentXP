@@ -22,8 +22,20 @@
   /** Key of the shown terminal; null follows the newest one. */
   let chosen = $state<string | null>(null)
   const current = $derived(entries.find((e) => e.key === chosen) ?? entries.at(-1) ?? null)
-  const text = $derived(renderTerminal(current))
-  const cwd = 'W:\\'
+  /** The working directory of every chat (the terminal runs where its chat works). */
+  let cwds = $state.raw<Record<number, string>>({})
+  $effect(() => {
+    let stale = false
+    const load = (): void => void host.api.sessions.list(host.state.desktopId).then((list) => !stale && (cwds = Object.fromEntries(list.map((s) => [s.id, s.cwd]))), () => {})
+    load()
+    const off = host.api.on('session.changed', load)
+    return () => {
+      stale = true
+      off()
+    }
+  })
+  const cwd = $derived((current && cwds[current.sessionId]) || host.state.home)
+  const text = $derived(renderTerminal(current, cwd))
 
   const sync = new ViewSync<{ terminalId: string | null }>((v) => String(v.terminalId))
 
