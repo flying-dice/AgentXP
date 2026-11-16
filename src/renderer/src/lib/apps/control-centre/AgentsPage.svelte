@@ -13,7 +13,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { AgentsStore } from '../../stores/AgentsStore.svelte'
   import type { DesktopHost } from '../types'
-  import { aboutOf, agentToSelect, commandOf } from './agentRows'
+  import { MISSING_DEFAULT_QUESTION, aboutOf, agentToSelect, commandOf, probePrograms, type ProgramState } from './agentRows'
 
   interface Props {
     host: DesktopHost
@@ -25,6 +25,12 @@
   const agents = new AgentsStore(host.api.agents)
   let selected = $state<string[]>([])
   let editing = $state<{ agent: AgentDto | null } | null>(null)
+  /** Whether the program of each agent exists, looked up when the page opens and after a change (UX-197). */
+  let programs = $state.raw<ReadonlyMap<number, ProgramState>>(new Map())
+  const stateOf = (agent: AgentDto): ProgramState => programs.get(agent.id) ?? 'unknown'
+  async function probe(): Promise<void> {
+    programs = await probePrograms(agents.items, (command) => host.api.agents.check(command))
+  }
 
   const columns: ListColumn[] = [
     { key: 'name', header: 'Name', width: 170 },
@@ -34,7 +40,7 @@
     { key: 'isDefault', header: 'Default', width: 56 }
   ]
   const rows = $derived<ListRow[]>(
-    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: aboutOf(a), command: commandOf(a), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
+    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: aboutOf(a, stateOf(a)), command: commandOf(a), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
   )
   const selectedAgent = $derived(agents.items.find((a) => String(a.id) === selected[0]) ?? null)
 
@@ -57,7 +63,7 @@
     document.querySelector('[data-testid="agents-row"][aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
   }
 
-  onMount(() => void guard(() => agents.load()).then(selectBroken))
+  onMount(() => void guard(() => agents.load()).then(() => void probe()).then(selectBroken))
 
   async function submit(input: AgentInput, makeDefault: boolean): Promise<void> {
     const target = editing?.agent
@@ -67,6 +73,18 @@
       else selected = [String(id)]
       if (makeDefault && !target?.isDefault) await agents.setDefault(id)
     })
+    await probe()
+  }
+
+  /** Set as Default: an agent whose program was not found is made the default only after a question that defaults to No (UX-197). */
+  async function setDefault(): Promise<void> {
+    const agent = selectedAgent
+    if (!agent) return
+    if (stateOf(agent) === 'missing') {
+      const answer = await showMessageBox({ text: MISSING_DEFAULT_QUESTION, caption: 'Control Center', buttons: 'YesNo', icon: 'warning', defaultButton: 1 })
+      if (answer !== 'yes') return
+    }
+    await guard(() => agents.setDefault(agent.id))
   }
 
   async function remove(): Promise<void> {
@@ -99,7 +117,7 @@
     <Button data-testid="agents-add" onclick={() => (editing = { agent: null })}>Add...</Button>
     <Button data-testid="agents-edit" {...reasonFor(noAgent)} onclick={() => selectedAgent && (editing = { agent: selectedAgent })}>Edit...</Button>
     <Button data-testid="agents-remove" {...reasonFor(noAgent)} onclick={remove}>Remove</Button>
-    <Button data-testid="agents-set-default" {...reasonFor(defaultReason)} onclick={() => selectedAgent && guard(() => agents.setDefault(selectedAgent.id))}>Set as Default</Button>
+    <Button data-testid="agents-set-default" {...reasonFor(defaultReason)} onclick={() => void setDefault()}>Set as Default</Button>
     <ReasonNote testid="agents-reason" reason={defaultReason} />
   </div>
 </div>

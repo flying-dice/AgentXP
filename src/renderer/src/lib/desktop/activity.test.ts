@@ -63,22 +63,22 @@ describe('the waiting link and the take-over text', () => {
     expect(barStatus({ paused: false, userInControl: false, working: null, waiting: 1, waitingFor: 'Fix login is waiting: run a command' })).toEqual({ state: 'waiting', text: 'Fix login is waiting: run a command' })
   })
   it('one sentence says what taking control does, in the bar, the Activity tile and the Take over tooltip', () => {
-    expect(TAKE_OVER_TIP).toBe('You are in control. All tools ask first until you resume.')
-    expect(CONTROL_IDLE_NOTE).toBe(TAKE_OVER_TIP)
-    expect(CONTROL_NOTE).toBe('You are in control. The agent asks first.')
-    expect(NOT_SAVED_TEXT).toBe('This is not saved. To keep a tool on Ask, change it in Control Center.')
+    expect(TAKE_OVER_TIP).toBe('You are in control. All tools ask first until you click Resume.')
+    expect(CONTROL_IDLE_NOTE).toBe(`${TAKE_OVER_TIP} This is not saved.`)
+    expect(CONTROL_NOTE).toBe('You are in control. The agent asks first. This is not saved.')
+    expect(NOT_SAVED_TEXT).toBe('To keep a tool on Ask, change it in Control Center.')
   })
   it('a chip tells a screen reader that it opens Control Center', () => {
     expect(chipAriaLabel(toolChips(['shell', 'terminal'], null, false)[1])).toBe('Run commands: Allow. Open Control Center to change.')
-    expect(chipAriaLabel(toolChips(['shell', 'terminal'], null, true)[1])).toBe('Run commands: Ask (now). Asks you first. Open Control Center to change.')
+    expect(chipAriaLabel(toolChips(['shell', 'terminal'], null, true)[1])).toBe('Run commands: Ask first (now). Asks you first. Open Control Center to change.')
   })
   it('a chip that is Ask only because the box is ticked says (now) and names the saved setting (UX-173)', () => {
     const [read, run] = toolChips(['shell', 'fs.read', 'terminal'], policy({ terminal: 'allow' }), true)
-    expect(run).toMatchObject({ label: 'Run commands: Ask (now)', word: 'Ask' })
+    expect(run).toMatchObject({ label: 'Run commands: Ask first (now)', word: 'Ask' })
     expect(run.tooltip).toBe('Open Control Center to change this. Saved setting: Allow. You are in control, so the agent asks first.\nAsks you first.')
-    expect(read.label).toBe('Read files: Ask (now)')
+    expect(read.label).toBe('Read files: Ask first (now)')
     // A saved Ask is Ask, not "now"; a saved Deny stays Deny.
-    expect(toolChips(['shell', 'terminal'], policy({ terminal: 'ask' }), true)[1].label).toBe('Run commands: Ask')
+    expect(toolChips(['shell', 'terminal'], policy({ terminal: 'ask' }), true)[1].label).toBe('Run commands: Ask first')
     expect(toolChips(['shell', 'terminal'], policy({ terminal: 'deny' }), true)[1].label).toBe('Run commands: Deny')
   })
   it('a chip that reads Ask has the second tooltip line "Asks you first." (UX-178)', () => {
@@ -132,8 +132,8 @@ describe('barStatus', () => {
   })
   it('Paused wins over You are in control, which wins over Working; a notice never hides them', () => {
     const busy = { ...base, working: 'Read a.ts', notice: 'x' }
-    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. All tools ask first until you resume.' })
-    expect(barStatus({ ...busy, userInControl: true, closedApps: ['Terminal', 'Browser'] }).text).toBe('You are in control. All tools ask first until you resume. Terminal and Browser are not open.')
+    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. All tools ask first until you click Resume. This is not saved.' })
+    expect(barStatus({ ...busy, userInControl: true, closedApps: ['Terminal', 'Browser'] }).text).toBe('You are in control. All tools ask first until you click Resume. Terminal and Browser are not open. This is not saved.')
     expect(barStatus({ ...busy, userInControl: true, paused: true })).toEqual({ state: 'paused', text: 'Paused: no agent will act until you resume.' })
   })
 })
@@ -141,7 +141,7 @@ describe('barStatus', () => {
 describe('the agent line next to the chips', () => {
   it('counts a chat as something the agent can use', () => {
     expect(noToolsOpen(['shell'], 1)).toBe(false)
-    expect(toolsLine(['shell'], 0)).toBe('Agent can use nothing yet. Open an app to give it a tool.')
+    expect(toolsLine(['shell'], 0)).toBe('Open an app (Terminal, Browser, Code) to give the agent a tool.')
     expect(toolsLine(['shell'], 1)).toBe('The agent can use this chat.')
     expect(toolsLine(['shell', 'code'], 1)).toBeNull()
   })
@@ -168,19 +168,19 @@ describe('controlNote', () => {
 describe('toolChips', () => {
 
   it('always shows the three headline chips, in one pattern, and hides the shell group', () => {
-    expect(toolChips([]).map((c) => c.label)).toEqual(['Read files: Allow (no app is open)', 'Run commands: Allow (Terminal is closed)', 'Browser: Allow (Browser is closed)'])
+    expect(toolChips([]).map((c) => c.label)).toEqual(['Read files: Allow', 'Run commands: Allow', 'Browser: Allow'])
     expect(toolChips(['shell']).map((c) => c.group)).toEqual(['fs.read', 'terminal', 'browser'])
     expect(noToolsOpen(['shell'])).toBe(true)
     expect(noToolsOpen(['shell', 'code'])).toBe(false)
   })
   it('says the Control Center setting: Allow, Ask or Deny', () => {
     const chips = toolChips(['shell', 'fs.read', 'terminal', 'browser'], policy({ terminal: 'ask', browser: 'deny' }))
-    expect(chips.map((c) => [c.label, c.state])).toEqual([['Read files: Allow', 'on'], ['Run commands: Ask', 'asks'], ['Browser: Deny', 'off']])
+    expect(chips.map((c) => [c.label, c.state])).toEqual([['Read files: Allow', 'on'], ['Run commands: Ask first', 'asks'], ['Browser: Deny', 'off']])
   })
   it('keeps the setting word while no app that gives the tool is open, and the tooltip names the setting and the reason', () => {
     const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({ terminal: 'ask' }))
     expect(read.tooltip).toBe('Open Control Center to change this. Read files is set to Allow.')
-    expect(run).toMatchObject({ label: 'Run commands: Ask (Terminal is closed)', word: 'Ask', closed: true, state: 'off' })
+    expect(run).toMatchObject({ label: 'Run commands: Ask first', word: 'Ask', closed: true, state: 'off' })
     expect(run.tooltip).toBe('Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.\nAsks you first.')
     expect(browser.tooltip).toBe('Open Control Center to change this. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
     expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center to change this. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
@@ -193,10 +193,10 @@ describe('toolChips', () => {
   })
   it('names the closed apps for the take-over text, so the bar and the chips agree', () => {
     const chips = toolChips(['shell', 'fs.read'], policy({}), true)
-    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask (now)', 'Run commands: Ask (Terminal is closed)', 'Browser: Ask (now, Browser is closed)'])
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask first (now)', 'Run commands: Ask first', 'Browser: Ask first (now)'])
     expect(closedAppNames(chips)).toEqual(['Terminal', 'Browser'])
-    expect(controlText(closedAppNames(chips))).toBe('You are in control. All tools ask first until you resume. Terminal and Browser are not open.')
-    expect(controlText(['Terminal'])).toBe('You are in control. All tools ask first until you resume. Terminal is not open.')
+    expect(controlText(closedAppNames(chips))).toBe('You are in control. All tools ask first until you click Resume. Terminal and Browser are not open. This is not saved.')
+    expect(controlText(['Terminal'])).toBe('You are in control. All tools ask first until you click Resume. Terminal is not open. This is not saved.')
     expect(closedAppNames(toolChips([], policy({ terminal: 'deny' })))).toEqual(['Browser'])
   })
   it('a Deny setting reads Deny even when its app is closed', () => {
@@ -207,10 +207,10 @@ describe('toolChips', () => {
   })
   it('adds the other open apps after the headline chips', () => {
     const chips = toolChips(['shell', 'fs.read', 'fs.write', 'code', 'notepad'], policy({}))
-    expect(chips.map((c) => c.label)).toEqual(['Read files: Allow', 'Run commands: Ask (Terminal is closed)', 'Browser: Allow (Browser is closed)', 'Write files: Ask', 'Code: Allow', 'Notepad: Allow'])
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Allow', 'Run commands: Ask first', 'Browser: Allow', 'Write files: Ask first', 'Code: Allow', 'Notepad: Allow'])
   })
   it('reads Ask on everything that is on while Ask before every action is on', () => {
     const chips = toolChips(['fs.read', 'code'], policy({}), true)
-    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask (now)', 'Run commands: Ask (Terminal is closed)', 'Browser: Ask (now, Browser is closed)', 'Code: Ask (now)'])
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask first (now)', 'Run commands: Ask first', 'Browser: Ask first (now)', 'Code: Ask first (now)'])
   })
 })

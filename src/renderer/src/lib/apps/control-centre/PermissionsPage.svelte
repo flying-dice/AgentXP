@@ -7,12 +7,13 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import type { DesktopHost } from '../types'
   import {
-    ASK_HELP,
     DECISION_ITEMS,
     SAVED_MS,
     decisionNote,
     SAVED_TEXT,
+    helpFor,
     isDecision,
+    isNarrowPage,
     permissionGroups,
     policiesEqual,
     settingTestid,
@@ -39,6 +40,11 @@
     go(selected)
     return { update: go }
   }
+
+  /** The width of the page: in a narrow one (the chat pane is open) the help is short, with a "More" link (UX-198). */
+  let pageWidth = $state(0)
+  let helpOpen = $state(false)
+  const help = $derived(helpFor(isNarrowPage(pageWidth), helpOpen))
 
   let saved = $state.raw<ToolPolicyDto | null>(null)
   let draft = $state.raw<ToolPolicyDto | null>(null)
@@ -95,7 +101,11 @@
   }
 </script>
 
-<p class="callout" role="note" data-testid="permissions-callout">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. {ASK_HELP} These settings are always kept. The box 'Ask before every action' in the top bar is different: it works only until you untick it and it is not saved.</p>
+<div class="page-body" bind:clientWidth={pageWidth} data-testid="permissions-page" data-narrow={isNarrowPage(pageWidth)}>
+<p class="callout" role="note" data-testid="permissions-callout">{help.text}
+  {#if help.collapsed}<button type="button" class="more" data-testid="permissions-help-more" aria-expanded="false" onclick={() => (helpOpen = true)}>More</button>
+  {:else if isNarrowPage(pageWidth)}<button type="button" class="more" data-testid="permissions-help-less" aria-expanded="true" onclick={() => (helpOpen = false)}>Less</button>{/if}
+</p>
 <div class="all" role="group" aria-label="Set all permissions">
   <span class="all-label">Set every permission to:</span>
   <ComboBox testid="permissions-set-all-value" aria-label="Set every permission to" items={DECISION_ITEMS} bind:value={allValue} style="width:80px" />
@@ -128,8 +138,32 @@
   <Button data-testid="permissions-cancel" disabled={!dirty} onclick={() => (draft = saved)}>Cancel</Button>
   <Button data-testid="permissions-apply" disabled={!dirty || busy} onclick={() => void apply()}>Apply</Button>
 </div>
+</div>
 
 <style>
+  /* The whole page in one column: the help, the "Set every permission" row and the table take the page width; the page scrolls when the window is short. */
+  .page-body {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .more {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--w7-link);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .more:focus-visible {
+    outline: var(--w7-focus-outline);
+  }
+  .all {
+    flex-wrap: wrap;
+  }
   /* The sentence about Code and Notepad sits above the list in a callout, so it is read before the first row. */
   .callout {
     flex: none;

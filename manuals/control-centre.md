@@ -40,7 +40,7 @@ The list is at the left under the title **Control Center Home**. It has **Agents
 
 ### The Agents Page
 
-The page lists the agents. The columns are **Name**, **About** (one plain sentence, for example that the Scripted Agent is a practice agent that gives fixed sample answers and does not use an AI model), **Command**, and **Default**. For an agent that you added, **About** shows the command. The name comes first and a long command is cut short; point at a row to see its full command. When you open the page with **Open Agents** from a chat whose agent did not start, that agent is already selected and in view. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
+The page lists the agents. The columns are **Name**, **About** (one plain sentence, for example that the Scripted Agent is a practice agent that gives fixed sample answers and does not use an AI model), **Command**, and **Default**. For an agent that you added, **About** shows the command. When the page opens, it looks for the program of each agent. For an agent whose program is missing, **About** says **Not installed** (an agent that Agent7 knows) or **Not found** (an agent that you added). The default agent shows the same words. **Set as Default** on such a row asks **This program was not found. Make it the default anyway?** The answer **No** is the default. The name comes first and a long command is cut short; point at a row to see its full command. When you open the page with **Open Agents** from a chat whose agent did not start, that agent is already selected and in view. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
 
 - **Add...** – Opens the **Add Agent** dialog box.
 - **Edit...** – Opens the **Edit Agent** dialog box for the selected agent.
@@ -77,7 +77,7 @@ Each row has two lines. The first line shows the name and the setting. The secon
 
 Each row is separate. **Write files** covers changing files in any app. **Code** and **Notepad** cover only what their rows list. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
 
-The top bar shows chips with the same names, for example **Run commands: Ask**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, the same word as the row. When no app that gives the agent this tool is open, the chip adds that, for example **Run commands: Ask (Terminal is closed)**, and looks paler. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason. Click a chip to open this page.
+The top bar shows chips with the same names, for example **Run commands: Ask first**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, the same setting as the row. When no app that gives the agent this tool is open, the chip has a dashed border. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason, for example **The agent cannot use it yet because no Terminal is open.** Click a chip to open this page.
 
 - **Allow** – The agent acts without a question.
 - **Ask** – A request appears in the Action Center.
@@ -121,7 +121,10 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Agent environment | KEY=VALUE per line. | `agents-dialog-env` |
 | Make default | Makes the agent the default for new desktops and chats. | `agents-dialog-default` |
 | Permission table | The permissions in two blocks. | `permissions-table` |
-| Permissions note | The box above the list that says what each row covers, including Code and Notepad. | `permissions-callout` |
+| Permissions page | The whole page: help, **Set every permission to**, the list and the buttons. The attribute `data-narrow` is true when the page is narrower than 520 px. The page scrolls when the window is short. | `permissions-page` |
+| Permissions note | The box above the list that says what each row covers, including Code and Notepad, and what the top bar box **Ask before every action (this session only)** does. In a page narrower than 520 px it shows two sentences. | `permissions-callout` |
+| More | Shows the whole note in a narrow page. | `permissions-help-more` |
+| Less | Shortens the note again. | `permissions-help-less` |
 | Permission block | The heading of a block. | `permissions-group` |
 | Permission row | One permission. The row that a top bar chip asked for is highlighted. | `permissions-row` |
 | What it covers | The second line of a row. It tells what the permission covers. | `permissions-covers` |

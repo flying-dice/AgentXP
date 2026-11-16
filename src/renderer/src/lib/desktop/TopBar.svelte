@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from '../kit/atoms/Button.svelte'
+  import { tooltip } from '../kit/actions/tooltip'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
   import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
   import { NOT_SAVED_NOTE, PAUSE_TIP, RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, TAKE_CONTROL_LABEL, barStatus, chipAriaLabel, closedAppNames, toolChips, toolsLine } from './activity'
@@ -66,20 +67,20 @@
     {#if agentProblem}<span class="problem" data-testid="topbar-agent-problem" title="Open the Control Center, then Agents, to change the command of the agent.">{agentProblem}</span>{/if}
   </ConnectionBar>
   <div class="body">
-    <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use" title="The agent can use only what is open here. Closing an app takes its tool away.">
-      <span class="lead">Agent can use</span>
+    <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use">
+      <span class="lead" use:tooltip={'The agent can use only what is open here. Closing an app takes its tool away.'}>Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)} onfocus={(e) => (focusTip = e.currentTarget.matches(':focus-visible') ? chip.tooltip : null)} onblur={() => (focusTip = null)}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" use:tooltip={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)} onfocus={(e) => (focusTip = e.currentTarget.matches(':focus-visible') ? chip.tooltip : null)} onblur={() => (focusTip = null)}>{chip.label}</button>
       {/each}
       {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
     <span class="pause-slot">
       <Button
         data-testid="topbar-pause"
-        title={paused ? 'Let every agent act again. A step that Pause stopped is asked to continue where it stopped.' : `${PAUSE_TIP}. Each one stops now and does nothing until you click Resume agents and continue. Chats and files stay as they are.`}
+        title={paused ? 'Let every agent act again. A step that Pause stopped is asked to continue where it stopped.' : `${PAUSE_TIP}. Each agent stops now and does nothing until you click Resume agents and continue. Chats and files stay as they are.`}
         onclick={() => onpause?.()}>{paused ? RESUME_BUTTON : 'Pause all agents'}</Button>
     </span>
-    <span class="ask-slot" data-testid="topbar-ask-slot" title="You decide on every action. The agent asks first, even for reading. This lasts until you untick the box. It is not saved.">
+    <span class="ask-slot" data-testid="topbar-ask-slot" title="You decide on every action. The agent asks first, even for reading. This lasts until you clear the box or click Resume, and it is not saved.">
       <CheckBox testid="topbar-take-control" label={TAKE_CONTROL_LABEL} checked={userInControl} onchange={() => ontakecontrol?.()} />
     </span>
   </div>

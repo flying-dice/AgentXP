@@ -20,12 +20,20 @@ export interface SessionStoreLike {
   readonly lastDecision?: { allowed: boolean; text: string } | null
   /** The user stopped the last reply. */
   readonly stoppedByUser: boolean
+  /** The user started a new chat with the failed text: this chat says "Continued in a new chat" (optional for fakes). */
+  readonly continued?: boolean
+  /** The failed request that a Reconnect did not send again, or null (optional for fakes). */
+  readonly notResent?: string | null
+  /** Ids of messages of a cut-off turn that were sent again, and of the repeats (optional for fakes). */
+  readonly stoppedIds?: ReadonlySet<string>
+  readonly resentIds?: ReadonlySet<string>
   /** Resolves true when the turn went through. */
   send(text: string, attachments?: string[]): Promise<boolean>
   resend(options?: { restart?: boolean }): Promise<boolean>
   /** "Edit": takes the failed message back and returns it (null when it cannot be taken back). */
   takeBack(): Promise<FailedSend | null>
-  reconnect(): Promise<void>
+  reconnect(options?: { announce?: boolean }): Promise<void>
+  markContinued?(): void
   resolveInterrupt(optionId: string | null, interruptId?: string): Promise<void>
   sendA2uiAction(event: A2uiClientEvent): Promise<void>
   cancel(): Promise<void>

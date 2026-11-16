@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "chat-failures",
+  "description": "A step that times out inside the agent's own work (UX-195): the first prompt about a page answers with a message and then fails; later prompts are answered.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "step-timeout",
+      "once": true,
+      "match": { "contains": "page" },
+      "steps": [
+        { "type": "message", "text": "Looking at the page.\n" },
+        { "type": "error", "message": "Timed out after 5183 ms waiting for \"Standup notes\"", "code": -32603 }
+      ]
+    },
+    {
+      "id": "ok",
+      "match": { "any": true },
+      "steps": [{ "type": "message", "text": "Finished: {{prompt}}" }]
+    }
+  ]
+}

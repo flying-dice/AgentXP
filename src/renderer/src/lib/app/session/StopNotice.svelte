@@ -1,30 +1,18 @@
 <script lang="ts">
-  import { stopNoticeText } from '@shared/agui-state'
-  import LinkLabel from '../../kit/atoms/LinkLabel.svelte'
   import MessageIcon from '../../kit/molecules/MessageIcon.svelte'
-  import { getDesktopContext } from '../../desktop/context'
+  import { stopNoticeLines } from './stopNotice'
 
-  /** `reason` is the ACP stop reason (`refusal`, `max_tokens`, `max_turn_requests`...). */
-  let { reason }: { reason: string } = $props()
+  /** `reason` is the ACP stop reason (`refusal`, `max_tokens`, `max_turn_requests`...); `cancelled` is the user's own Stop. */
+  let { reason, programRunning = true }: { reason: string; programRunning?: boolean } = $props()
 
-  /** The desktop, when the notice is on one (a story has none and shows no link). */
-  const desktop = (() => {
-    try {
-      return getDesktopContext().desktop
-    } catch {
-      return null
-    }
-  })()
+  const lines = $derived(stopNoticeLines(reason, programRunning))
 </script>
 
 <div class="stop-notice" role="status" data-testid="chat-stop-notice" data-reason={reason}>
-  <MessageIcon kind="warning" size={20} />
+  <MessageIcon kind={reason === 'cancelled' ? 'information' : 'warning'} size={20} />
   <span class="text">
-    {stopNoticeText(reason)}
-    {#if reason === 'cancelled'}
-      <span data-testid="chat-stop-notice-program">To end the agent program, use Task Manager, Processes.</span>
-      {#if desktop}<LinkLabel data-testid="chat-stop-notice-taskmgr" text="Open Task Manager" onclick={() => void desktop.openTaskManager('processes')} />{/if}
-    {/if}
+    <span data-testid="chat-stop-notice-text">{lines[0]}</span>
+    {#if lines[1]}<span class="second" data-testid="chat-stop-notice-program">{lines[1]}</span>{/if}
   </span>
 </div>
 
@@ -38,10 +26,17 @@
     background: #fffbe6;
     color: #4a3b00;
   }
+  .stop-notice[data-reason='cancelled'] {
+    border-color: #b9c7da;
+    background: #f4f7fb;
+    color: #1d3a63;
+  }
   .text {
     padding-top: 2px;
-    white-space: pre-wrap;
     overflow-wrap: anywhere;
     user-select: text;
+  }
+  .second {
+    display: block;
   }
 </style>

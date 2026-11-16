@@ -5,7 +5,8 @@
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
   import type { ChatSuggestion } from './chatPaneText'
-  import { describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
+  import { describeProblem, sendStateOf, ENDED_SEND_OFF, type ProblemActionId, type SendState } from './chatProblem'
+  import { settleStaleSteps } from './staleSteps'
   import PermissionDialog from './PermissionDialog.svelte'
   import { PAUSED_NOTE, STOPPED_BY_PAUSE_NOTE } from './resumeNote'
   import { permissionMetadata } from './permissionOptions'
@@ -102,10 +103,17 @@
 
   // ---- what went wrong: the error row, the state of the failed message -------------------------------------
   const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent, agentName: agent?.name }))
+  /** The user ended the agent program: the box is not refilled and Send is off until the agent runs again (UX-201). */
+  const ended = $derived(session.problem?.kind === 'agent-ended')
   const sendStates = $derived.by((): ReadonlyMap<string, SendState> => {
     const failed = store.failedSend
-    return failed ? new Map([[failed.messageId, sendStateOf(failed.messageId, failed, !!session.problem)]]) : new Map()
+    const marks = { stoppedIds: store.stoppedIds, resentIds: store.resentIds }
+    const ids = new Set([...(failed ? [failed.messageId] : []), ...(marks.stoppedIds ?? []), ...(marks.resentIds ?? [])])
+    // After the user's own end the cut-off message says Stopped, not "Not sent": the program was ended, the message did not fail.
+    return new Map([...ids].map((id) => [id, ended && id === failed?.messageId ? 'stopped' : sendStateOf(id, failed, !!(session.problem || store.error), marks)]))
   })
+  /** A step still "Running" while no turn runs belongs to a cut-off turn; it shows as Cancelled. */
+  const settledState = $derived(settleStaleSteps(store.state, store.running, !!request))
 
   /** "Details...": opens the technical text under the buttons, or closes it. */
   let detailsText = $state<string | null>(null)
@@ -135,13 +143,18 @@
     if (restartTimer) clearTimeout(restartTimer)
     restart = 'working'
     const kept = store.failedSend
-    await store.reconnect()
+    // After the user's own end of the program nothing is resent, and nothing is said about a request (UX-201).
+    const userEnded = session.problem?.kind === 'agent-ended'
+    await store.reconnect({ announce: !userEnded })
     const up = !session.problem && !store.error
     restart = up ? 'done' : null
     if (up) restartTimer = setTimeout(() => (restart = null), RESTART_DONE_MS)
-    if (up && then) await then()
+    if (up && then) {
+      resentNote = true
+      await then()
+    }
     // A request that stays unsent is said so in the chat, with a button that sends it again (nothing is sent by itself).
-    else if (up && kept) restartedRequest = kept.text
+    else if (up && kept && !userEnded) restartedRequest = kept.text
   }
 
   function onproblem(id: ProblemActionId): void {
@@ -167,9 +180,14 @@
   /** After "Restart" with a request that was not sent again: the text the line in the chat quotes (null: no line). */
   let restartedRequest = $state<string | null>(null)
   /** The line goes away with the next send, the next problem, or when there is no failed request left to send. */
-  const restartedShown = $derived(store.failedSend ? restartedRequest : null)
+  const restartedShown = $derived(store.failedSend && !ended ? (restartedRequest ?? store.notResent ?? null) : null)
   $effect(() => {
     if (store.running || problem) untrack(() => (restartedRequest = null))
+  })
+  /** "Your request was sent again." after "Restart and send again": the line stays until the next message (UX-201). */
+  let resentNote = $state(false)
+  $effect(() => {
+    if (problem) untrack(() => (resentNote = false))
   })
   function resendRestarted(): void {
     restartedRequest = null
@@ -180,16 +198,34 @@
    * "Start a new chat": the text of the failed message goes to the message box of the new chat, so that Enter sends it there (UX-175),
    * and this chat's box is emptied when it still holds that text. This chat keeps its error and says "Continued in a new chat".
    */
-  let continued = $state(false)
-  $effect(() => {
-    if (store.running) untrack(() => (continued = false))
-  })
+  const continued = $derived(!!store.continued)
   function startNewChat(): void {
     const text = store.failedSend?.text
     if (text !== undefined) edit = { id: --editSeq, clearIf: text }
-    continued = true
+    store.markContinued?.()
     onnewchat?.(text)
   }
+
+  /**
+   * The message box gets its draft back only when the message was never answered. A message the agent had started on stays in the
+   * chat (marked Stopped), and after the user's own end of the program the box stays empty (UX-201).
+   */
+  async function sendMessage(text: string, files: string[]): Promise<boolean> {
+    resentNote = false
+    const sent = await store.send(text, files)
+    if (sent) return true
+    const failed = store.failedSend
+    if (!failed) return false
+    return !(failed.unanswered && session.problem?.kind !== 'agent-ended')
+  }
+  // The end can be reported after the send returned: the draft that came back is taken out of the box again.
+  $effect(() => {
+    if (!ended) return
+    untrack(() => {
+      const text = store.failedSend?.text
+      if (text !== undefined) edit = { id: --editSeq, clearIf: text }
+    })
+  })
 
   /** "Edit" on a message that was not sent: the text goes back into the message box. */
   /** What the message box is told to do: hold a text again ("Edit"), or empty itself of a message that went out again. */
@@ -207,13 +243,13 @@
   {#if !compact && !request}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
   <Transcript
     messages={store.messages}
-    agentState={store.state}
+    agentState={settledState}
     activities={store.activities}
     sessionId={session.id}
     {agentName}
     folderName={folder?.name ?? ''}
     running={store.running}
-    {problem}
+    problem={continued ? null : problem}
     {onproblem}
     problemDetails={detailsText}
     {restart}
@@ -240,7 +276,10 @@
     <div class="decision" role="status" data-testid="chat-permission-result" data-allowed={store.lastDecision.allowed}>{store.lastDecision.text}</div>
   {/if}
   {#if continued}
-    <div class="decision" role="status" data-testid="chat-continued-note">Continued in a new chat.</div>
+    <div class="continued" role="status" data-testid="chat-continued-note">Continued in a new chat.</div>
+  {/if}
+  {#if resentNote && !problem && !continued}
+    <div class="decision" role="status" data-testid="chat-resent-note">Your request was sent again.</div>
   {/if}
   {#if paused}
     <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>
@@ -265,12 +304,13 @@
     {starting}
     {askFirst}
     {onaskfirst}
-    retry={!!store.failedSend?.unanswered}
+    retry={!!store.failedSend?.unanswered && !ended}
+    blocked={ended ? ENDED_SEND_OFF : null}
     running={store.running}
     {modes}
     {modeId}
     {openFilePath}
-    onsend={(text, files) => store.send(text, files)}
+    onsend={sendMessage}
     oncancel={() => void store.cancel()}
     onmode={(id) => void setMode(session.id, id)}
     {pickFiles}
@@ -303,6 +343,14 @@
     border: 1px solid #b9c7da;
     background: #f4f7fb;
     color: #1d3a63;
+  }
+  .continued {
+    flex: none;
+    margin-top: 4px;
+    padding: 3px 8px;
+    border: 1px solid #c5ccd6;
+    background: #f1f3f6;
+    color: #555;
   }
   .paused {
     flex: none;

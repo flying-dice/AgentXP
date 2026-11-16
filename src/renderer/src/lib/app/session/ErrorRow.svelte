@@ -10,9 +10,11 @@
     onaction?: (id: ProblemActionId) => void
     /** The technical text behind "Details...", shown inline under the buttons while it is open (null: closed). */
     details?: string | null
+    /** Something the user asked for (they ended the agent program): a grey notice with an information icon, not a red error (UX-201). */
+    notice?: boolean
   }
 
-  let { message, actions = [], onaction, details = null }: Props = $props()
+  let { message, actions = [], onaction, details = null, notice = false }: Props = $props()
 
   /** The buttons; Event Viewer is a link in the sentence after them. */
   const buttons = $derived(actions.filter((a) => a.id !== 'event-viewer'))
@@ -21,8 +23,8 @@
   const primary = $derived(defaultActionId(actions))
 </script>
 
-<div class="error-row" role="alert" data-testid="chat-error">
-  <MessageIcon kind="error" size={20} />
+<div class="error-row" class:notice role={notice ? 'status' : 'alert'} data-testid="chat-error" data-notice={notice}>
+  <MessageIcon kind={notice ? 'information' : 'error'} size={20} />
   <div class="main">
     <span class="text" data-testid="chat-error-text">{message}</span>
     {#if buttons.length > 0}
@@ -48,6 +50,11 @@
     border: 1px solid #d9a5a1;
     background: #fff0ef;
     color: #7a0000;
+  }
+  .error-row.notice {
+    border-color: #b9c7da;
+    background: #f4f7fb;
+    color: #1d3a63;
   }
   .main {
     min-width: 0;

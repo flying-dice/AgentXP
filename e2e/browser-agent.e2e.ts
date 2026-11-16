@@ -82,7 +82,7 @@ describe('Browser agent: a local chat web app', () => {
     await see.visible(browser.getByTestId('browser-agent-giveback'))
     await see.count(browser.getByTestId('browser-agent-takeover'), 0)
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
-    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume.')
+    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you click Resume.')
     await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
     // Give back in the bar and Resume on the top bar are the same action.
     await browser.getByTestId('browser-agent-giveback').click()

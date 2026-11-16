@@ -12,6 +12,11 @@ import type { Id } from '@shared/models'
 export const PANE_DEFAULT_WIDTH = 420
 export const PANE_MIN_WIDTH = 260
 export const PANE_MAX_WIDTH = 720
+/** The app keeps at least this much width when the pane opens (UX-198: a page squeezed beside the pane is unreadable). */
+export const APP_MIN_WIDTH = 420
+
+/** The widest the pane can be in a window whose client area is `available` wide: 60 % of it, and never so wide that the app has under 420 px. */
+export const paneMaxWidth = (available: number): number => Math.max(PANE_MIN_WIDTH, Math.min(Math.floor(available * 0.6), available - APP_MIN_WIDTH))
 
 /** What the shell remembers of a window's chat pane. A new window starts collapsed. */
 export interface PaneState {
