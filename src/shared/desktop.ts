@@ -94,7 +94,7 @@ export type AppView =
   | { app: 'recycle-bin'; selectedId: Id | null }
   /** An A2UI surface the agent drew with `a2ui_render` (target `window`), one window per surface. */
   | { app: 'surface'; surfaceId: string; sessionId: Id; title: string }
-  /** Help and Support: `topic` is the file name of a manual in `docs/help` without `.md` (`index` is the home page). */
+  /** Help and Support: `topic` is the file name of a manual in `manuals` without `.md` (`index` is the home page). */
   | { app: 'help'; topic: string }
   /**
    * Code Review: the working tree at `root` against `baseRef`, with the comments of its review session (`sessionId`,
@@ -283,7 +283,7 @@ export interface OpenWindowInput {
   sessionId?: Id
   /** The A2UI surface of a `surface` window (with `sessionId`: the chat that owns it). */
   surfaceId?: string
-  /** The topic of a `help` window (a file name in `docs/help` without `.md`). */
+  /** The topic of a `help` window (a file name in `manuals` without `.md`). */
   topic?: string
   /** The base ref of a `code-review` window (default `HEAD`). */
   baseRef?: string

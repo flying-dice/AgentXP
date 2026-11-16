@@ -1,9 +1,9 @@
-// Fails when a static data-testid of the renderer UI is not written in any docs/help/*.md file.
+// Fails when a static data-testid of the renderer UI is not written in any manuals/*.md file.
 //
 // Collects the ids of src/renderer/src/lib/{apps,desktop,launcher,pages}/**/*.svelte (not stories):
 //   data-testid="x"   testid="x"   rowTestid="x"   testid: 'x'   data-testid={cond ? 'a' : `b-${n}`}
 // A template id keeps its static prefix and ends with `*`: `chat-message-{id}` becomes `chat-message-*`.
-// An id counts as documented when it appears as a whole word in a docs/help/*.md file
+// An id counts as documented when it appears as a whole word in a manuals/*.md file
 // (letters, digits, `-` and `*`, so `explorer-item` does not match inside `explorer-item-count`).
 //
 // Run: node scripts/check-help-coverage.mjs   (npm run help:coverage)
@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SOURCE_DIRS = ['apps', 'desktop', 'launcher', 'pages'].map((d) => join(root, 'src/renderer/src/lib', d))
-const HELP_DIR = join(root, 'docs/help')
+const HELP_DIR = join(root, 'manuals')
 
 /** Files that are not product UI. */
 const IGNORED_FILES = [
@@ -133,7 +133,7 @@ function main() {
   const documented = documentedIds()
   const missing = [...found].filter(([id]) => !ignored.has(id) && !documented.has(id)).sort(([a], [b]) => a.localeCompare(b))
   if (missing.length > 0) {
-    console.error(`help:coverage: ${missing.length} data-testid value(s) are not in any docs/help/*.md file:\n`)
+    console.error(`help:coverage: ${missing.length} data-testid value(s) are not in any manuals/*.md file:\n`)
     for (const [id, file] of missing) console.error(`  ${id}   (${file})`)
     console.error('\nDocument each id in the Controls reference table of the manual of its app (see docs/CONVENTIONS.md).')
     process.exit(1)

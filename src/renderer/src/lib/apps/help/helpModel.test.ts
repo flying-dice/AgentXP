@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { back, forward, parseTopics, plainText, searchTopics, startHistory, titleOf, topicForApp, topicOfHref, visit } from './helpModel'
 
 const files = {
-  '/docs/help/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
-  '/docs/help/notepad.md': '# Using Notepad\n\nSave a text file with Ctrl+S.',
-  '/docs/help/index.md': '# Agent7 Help and Support\n\nPress F1.',
-  '/docs/help/desktop.md': '# Using the Desktop\n\nThe taskbar.',
-  '/docs/help/zzz.md': 'No heading here'
+  '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
+  '/manuals/notepad.md': '# Using Notepad\n\nSave a text file with Ctrl+S.',
+  '/manuals/index.md': '# Agent7 Help and Support\n\nPress F1.',
+  '/manuals/desktop.md': '# Using the Desktop\n\nThe taskbar.',
+  '/manuals/zzz.md': 'No heading here'
 }
 
 describe('parseTopics', () => {

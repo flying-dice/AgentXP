@@ -162,13 +162,13 @@ Evidence: `performance.now()` marks or Playwright traces with the measured value
 
 ### D11 - Documentation (manual completeness, accuracy, findability)
 
-Question: does every app have a Microsoft-style manual in `docs/help/<app>.md`, and can the user find the right topic from the app, offline?
+Question: does every app have a Microsoft-style manual in `manuals/<app>.md`, and can the user find the right topic from the app, offline?
 
 | Score | Anchor |
 |---|---|
 | 4 | The app has no manual, or a stub. Many controls are undocumented, or the text describes a different UI. F1 does nothing. |
 | 7 | A manual exists and covers the main tasks and most controls. A few controls are missing or out of date. F1 opens help, but not always the topic of the focused app. |
-| 10 | All of: (a) `docs/help/<app>.md` exists for every app on the journey and follows `docs/DOCUMENTATION_STYLE.md` (shape, SimpleEnglish, procedures, definition lists, screenshots); (b) every interactive control of the app, meaning every `data-testid` inside the app root, appears in the manual with its place and its purpose (the coverage script reports zero missing and zero stale ids); (c) each button, menu item, input and pane is described where the user would look for it (a parts list per window, one procedure per task); (d) screenshots match the built app; (e) the in-app Help and Support app renders the manual offline, F1 opens the topic for the focused app (and for the focused dialog if it has one), and Start has a Help and Support entry; (f) the manual's procedures were followed word for word by a fresh reviewer and worked; (g) a user panelist who used only the manual completed the task (see `process.md`). |
+| 10 | All of: (a) `manuals/<app>.md` exists for every app on the journey and follows `docs/DOCUMENTATION_STYLE.md` (shape, SimpleEnglish, procedures, definition lists, screenshots); (b) every interactive control of the app, meaning every `data-testid` inside the app root, appears in the manual with its place and its purpose (the coverage script reports zero missing and zero stale ids); (c) each button, menu item, input and pane is described where the user would look for it (a parts list per window, one procedure per task); (d) screenshots match the built app; (e) the in-app Help and Support app renders the manual offline, F1 opens the topic for the focused app (and for the focused dialog if it has one), and Start has a Help and Support entry; (f) the manual's procedures were followed word for word by a fresh reviewer and worked; (g) a user panelist who used only the manual completed the task (see `process.md`). |
 
 Evidence: the coverage script output, the procedure run log, the F1 check for each app, the screenshots diff, the panel session where help was used.
 

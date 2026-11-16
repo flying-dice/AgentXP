@@ -6,7 +6,7 @@ Planned features are included where they change a journey: A2UI surface targets 
 
 ## How to read a journey
 
-Each journey also has panel tasks in `tasks.md` (T-numbers) and a manual topic in `docs/help/<app>.md` for each app it touches; docs are part of the evidence (D11). Each journey has: id, personas, trigger, goal, preconditions, happy path (table: screen, user action, system response, what the user must notice), decision points, failure and edge branches, success measure, and existing e2e coverage.
+Each journey also has panel tasks in `tasks.md` (T-numbers) and a manual topic in `manuals/<app>.md` for each app it touches; docs are part of the evidence (D11). Each journey has: id, personas, trigger, goal, preconditions, happy path (table: screen, user action, system response, what the user must notice), decision points, failure and edge branches, success measure, and existing e2e coverage.
 
 "Must notice" is the observable signal the user needs to continue without help. If a step has no such signal, that is a finding.
 
@@ -65,7 +65,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - High DPI, small screen (below 600 px height): the fixed 520x600 window must fit and scroll.
 - **Success measure.** 90% of P4 reviewers click **New...** within 10 seconds with no help. The empty state has no jargon.
 - **E2E coverage.** `launcher.e2e.ts` ("opens the launcher first, with no desktops yet"). Missing: empty-state text quality, screenshots, small screen.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T01.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T01.1 in `tasks.md`.
 
 ## J02 - Create a desktop
 
@@ -93,7 +93,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Very long names: truncate with tooltip.
 - **Success measure.** Task time under 45 seconds for P4. Zero errors with unclear cause.
 - **E2E coverage.** `launcher.e2e.ts` ("creates a desktop through the New dialog", "creates a desktop with a project plugged in as a USB drive"). Missing: duplicate name, empty name, cancel, keyboard-only.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T02.1, T02.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T02.1, T02.2 in `tasks.md`.
 
 ## J03 - Plug in a project
 
@@ -120,7 +120,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - AutoPlay closed with Esc: treated as Take no action.
 - **Success measure.** P4 plugs in a folder and starts a chat on it with no help, first try.
 - **E2E coverage.** `explorer-usb.e2e.ts` ("plugging a project into the running desktop shows AutoPlay and the new drive"), `chat.e2e.ts` ("plugs the project in and starts a chat on it from AutoPlay"). Missing: duplicate, no free letter, cancel.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T03.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T03.1 in `tasks.md`.
 
 ## J04 - Start a chat
 
@@ -145,7 +145,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Many chats: Recent chats list length, search box.
 - **Success measure.** Chat window ready within 5 seconds (warm) and the user can name the folder the chat works in.
 - **E2E coverage.** `desktop-shell.e2e.ts` (chat on a drive, on C:, from Explorer), `chat.e2e.ts`, `scripted-builtin.e2e.ts`. Missing: agent not installed, auth failure, recent chats.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T04.1, T04.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T04.1, T04.2 in `tasks.md`.
 
 ## J05 - Send a prompt and follow progress
 
@@ -175,7 +175,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Attachment too large or unreadable.
 - **Success measure.** A P4 reviewer can say in one sentence what the agent did after the turn, from the screen alone.
 - **E2E coverage.** `chat.e2e.ts`, `scripted-stepping.e2e.ts`, `scripted-errors.e2e.ts`, `scripted-paths.e2e.ts`. Missing: send while working, long transcript, context warning, attachments.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T05.1, T05.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T05.1, T05.2 in `tasks.md`.
 
 ## J06 - Approve or deny a request (chat and UAC dialog)
 
@@ -206,7 +206,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Desktop disconnected while waiting: see J13.
 - **Success measure.** P2 can state the file, the change and the reason from the dialog alone. No accidental Allow in the usability test (default button risk).
 - **E2E coverage.** `chat.e2e.ts` (permission request in chat and Action Center, allow completes), `scripted-demo.e2e.ts` (allow path and deny path). Missing: Not now, Esc, two requests, Stop while waiting, option label variants.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T06.1, T06.2, T06.3 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T06.1, T06.2, T06.3 in `tasks.md`.
 
 ## J07 - Approve from the Action Center
 
@@ -232,7 +232,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Flag is tiny: target size and contrast of the red count.
 - **Success measure.** Time from "count appears" to "answered" under 5 seconds with the mouse and under 8 with the keyboard.
 - **E2E coverage.** `chat.e2e.ts` ("a second request can be approved from the Action Center through the UAC dialog"). Missing: messages list, empty state, many requests, keyboard.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T07.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T07.1 in `tasks.md`.
 
 ## J08 - Review and revert changes (Chat, Code)
 
@@ -262,7 +262,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Agent Code tools "Agent is editing" marker while the user reviews.
 - **Success measure.** P1 reverts the right file on the first try. P2 can review every changed file in one pass (keyboard reachable, next/previous change).
 - **E2E coverage.** `chat.e2e.ts` ("lists the edited file under Changes in the chat and in Code"), `scripted-demo.e2e.ts` ("Changes list shows the file the agent wrote"). Missing: revert itself, revert-all, conflict, deleted/created cases, git status [planned].
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T08.1, T08.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T08.1, T08.2 in `tasks.md`.
 
 ## J09 - Restore from the Recycle Bin
 
@@ -287,7 +287,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Large number of items.
 - **Success measure.** Restore on the first try for P1 and P2. No silent overwrite.
 - **E2E coverage.** None.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T09.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T09.1 in `tasks.md`.
 
 ## J10 - Tools follow apps (what can the agent touch?)
 
@@ -314,7 +314,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Chip colors only distinguish by color.
 - **Success measure.** P2 correctly predicts the agent's available tools in a quiz after 2 minutes. The honest limit is found without the README.
 - **E2E coverage.** `desktop-tools.e2e.ts`, `scripted-desktop-tools.e2e.ts`, `chat.e2e.ts` (first test). Missing: two windows of one app, minimized, honest-limit text.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T10.1, T10.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T10.1, T10.2 in `tasks.md`.
 
 ## J11 - Pause and take control
 
@@ -342,7 +342,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Pause blocks the user's own app use? It must not.
 - **Success measure.** P2 pauses within 2 seconds of deciding to. Nobody mistakes Resume for "continue the turn".
 - **E2E coverage.** `desktop-tools.e2e.ts` ("Pause toggles the top bar between Idle and Paused"). Missing: pause while working, take control, pause with pending request, persistence.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T11.1, T11.2, T11.3 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T11.1, T11.2, T11.3 in `tasks.md`.
 
 ## J12 - Eject a drive
 
@@ -369,7 +369,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Only C: remains: tray icon disappears; focus must not be lost.
 - **Success measure.** After eject, 100% of reviewers can say what the agent can still reach. No data loss in the unsaved-text case.
 - **E2E coverage.** `explorer-usb.e2e.ts` ("Safely Remove from the tray ejects E: and its tile disappears"). Missing: eject mid-turn, stranded chat, open windows, re-plug, keyboard.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T12.1, T12.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T12.1, T12.2 in `tasks.md`.
 
 ## J13 - Disconnect and reconnect while the agent runs
 
@@ -398,7 +398,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Multiple notifications from one desktop: collapse.
 - **Success measure.** No lost or duplicated messages after reconnect. P3 returns to the right desktop from the notification in one click.
 - **E2E coverage.** `launcher.e2e.ts` (disconnect, reconnect), `desktop-shell.e2e.ts` (close button disconnects, tooltip). Missing: reconnect mid-turn, notification, quit warning, Needs your approval row state.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T13.1, T13.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T13.1, T13.2 in `tasks.md`.
 
 ## J14 - Manage several desktops
 
@@ -425,7 +425,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Settings scope: are permissions global or per desktop? The UI must say which (see J16).
 - **Success measure.** P3 identifies the desktop that needs him in under 3 seconds with 4 desktops.
 - **E2E coverage.** `desktop-shell.e2e.ts` ("Switch desktop shows the launcher and keeps this desktop open"), `launcher.e2e.ts`. Missing: rename, details, several desktops, launch with many open.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T14.1, T14.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T14.1, T14.2 in `tasks.md`.
 
 ## J15 - Delete a desktop
 
@@ -448,7 +448,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Deleting the last desktop: back to the empty launcher state (J01).
 - **Success measure.** Zero unintended deletions in testing. P4 can say what is lost after reading the box.
 - **E2E coverage.** `launcher.e2e.ts` ("deletes a desktop after confirming"), `desktop-shell.e2e.ts` ("Delete desktop asks first"). Missing: running agent, default button, failure.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T15.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T15.1 in `tasks.md`.
 
 ## J16 - Choose permissions (Control Centre)
 
@@ -476,7 +476,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Copy: "may" and "Centre" spelling conflicts with the style guide and with "Action Center". Check.
 - **Success measure.** P2 sets Terminal to Deny and confirms the effect in a test turn in under 2 minutes. No ambiguity on scope.
 - **E2E coverage.** `chat.e2e.ts` sets the terminal policy through the API in setup only. Missing: any UI test of the Permissions page.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T16.1, T16.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T16.1, T16.2 in `tasks.md`.
 
 ## J17 - Add and choose agents
 
@@ -504,7 +504,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Claude Code sign-in missing.
 - **Success measure.** P3 adds an agent and gets a first reply in under 2 minutes. A broken command yields a message with the cause.
 - **E2E coverage.** `scripted-builtin.e2e.ts` (built-in registered). Missing: Add dialog, set default, bad command.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T17.1, T17.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T17.1, T17.2 in `tasks.md`.
 
 ## J18 - A2UI surfaces: inline, sidebar, window
 
@@ -533,7 +533,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Agent crash with a surface open: show disabled state.
 - **Success measure.** A P4 user completes a three-field form and sees the agent's reply with no help. Surface actions are never lost or doubled.
 - **E2E coverage.** `scripted-a2ui.e2e.ts` (inline, sidebar, window, move to, delete). Missing: invalid component, stale surface, keyboard, spoofing review.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T18.1, T18.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T18.1, T18.2 in `tasks.md`.
 
 ## J19 - Browse with the Browser
 
@@ -560,7 +560,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Page content may carry prompt injection: the agent reads untrusted text. Note the risk; show the URL in every request.
 - **Success measure.** P1 loads a page in 2 steps. P2 can tell when the agent is reading or clicking.
 - **E2E coverage.** `apps.e2e.ts` opens each app from Start (includes Browser if listed; check). None for navigation or errors.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T19.1, T19.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T19.1, T19.2 in `tasks.md`.
 
 ## J20 - Investigate a problem (Event Viewer, Task Manager)
 
@@ -587,7 +587,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Event Viewer empty: empty state.
 - **Success measure.** P2 finds the reason for a given refusal in under 1 minute. P3 ends a stuck agent and continues in under 1 minute.
 - **E2E coverage.** `chat.e2e.ts` ("the Event Viewer logged the traffic of the turn"). Missing: filters, details, Task Manager, End process.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T20.1, T20.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T20.1, T20.2 in `tasks.md`.
 
 ## J21 - Keyboard-only operation
 
@@ -617,13 +617,13 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - README says Alt shows access keys: verify underlines.
 - **Success measure.** All of J01 to J16 are completable by keyboard. Zero focus traps. Visible focus on every stop.
 - **E2E coverage.** `apps.e2e.ts` (menu shortcuts inside windows only). Missing: all other keyboard flows.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T21.1 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T21.1 in `tasks.md`.
 
 ## J22 - First-time help and discoverability
 
 - **Personas.** P4.
 - **Trigger.** The user does not know what to do next, or what a thing means.
-- **Goal.** Find an answer in under 10 seconds without leaving Agent7. **[planned]** Agent7 gets a Help and Support app that renders the per-app manuals in `docs/help/<app>.md`. F1 is context-sensitive: it opens the topic of the focused app or dialog. Start has a **Help and Support** entry with search. The manuals cover every control (coverage script).
+- **Goal.** Find an answer in under 10 seconds without leaving Agent7. **[planned]** Agent7 gets a Help and Support app that renders the per-app manuals in `manuals/<app>.md`. F1 is context-sensitive: it opens the topic of the focused app or dialog. Start has a **Help and Support** entry with search. The manuals cover every control (coverage script).
 - **Preconditions.** Any screen.
 
 | # | Screen | User action | System response | The user must notice |
@@ -646,7 +646,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Language: US English only; confirm.
 - **Success measure.** P4 finds the answer to three set questions ("how do I undo a change", "what can the agent do now", "how do I stop it") in under 30 seconds each.
 - **E2E coverage.** None.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T22.1, T22.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T22.1, T22.2 in `tasks.md`.
 
 ## J23 - Recover from errors
 
@@ -676,7 +676,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - Error text copyable for issue reports; link to GitHub issues exists in README only.
 - **Success measure.** For each injected failure, a P4 reviewer names the cause and the next step from the screen alone. No data loss.
 - **E2E coverage.** `scripted-errors.e2e.ts` (error row, refusal, max tokens, cancelled, expect failure, Stop). Missing: agent crash, no network, restart, retry.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T23.1, T23.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T23.1, T23.2 in `tasks.md`.
 
 ## J24 - Read code, git status and the gutter [planned]
 
@@ -705,4 +705,4 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - The agent has no `code_*` tools if Code is closed (J10).
 - **Success measure.** P2 reviews all changes of a turn in Code in one pass. P1 finds the changed line from the gutter at once.
 - **E2E coverage.** `chat.e2e.ts` (Code lists the edited file), `apps.e2e.ts` (opens Code). The new layout, git status and gutter have none yet.
-- **Docs and panel.** Manual topics for each app used (`docs/help/<app>.md`) must name every control of this journey. Panel tasks: T24.1, T24.2 in `tasks.md`.
+- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T24.1, T24.2 in `tasks.md`.

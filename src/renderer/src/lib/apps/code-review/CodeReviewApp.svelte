@@ -3,7 +3,7 @@
    * Code Review: a WinDiff-style diff of a working tree against a base ref (outline of the changed files, expanded
    * view with the coloured margin bar, side by side), with a dedicated ACP session beside it (the embedded chat
    * panel in role `review`) whose agent leaves inline comments like a merge request gets them. The comments can be
-   * passed to a chat to fix. See docs/help/code-review.md.
+   * passed to a chat to fix. See manuals/code-review.md.
    */
   import { onMount, tick, untrack } from 'svelte'
   import type { Agent7Events } from '@shared/ipc'

@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** Help and Support: the manuals of docs/help, a topic list, an article, Back, Forward, Home and a search box. */
+  /** Help and Support: the manuals of manuals, a topic list, an article, Back, Forward, Home and a search box. */
   import { tick, untrack } from 'svelte'
   import type { AppProps } from '../types'
   import Icon from '../../kit/atoms/Icon.svelte'

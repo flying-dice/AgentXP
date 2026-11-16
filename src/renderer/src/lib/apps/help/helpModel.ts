@@ -1,5 +1,5 @@
 /**
- * Help and Support: the topics (one per file of `docs/help`), the topic of an app, the topic search and the
+ * Help and Support: the topics (one per file of `manuals`), the topic of an app, the topic search and the
  * link rules. Pure functions: `helpTopics.ts` loads the files, `HelpApp.svelte` shows them.
  */
 import { APP_KINDS, type AppKind } from '@shared/desktop'

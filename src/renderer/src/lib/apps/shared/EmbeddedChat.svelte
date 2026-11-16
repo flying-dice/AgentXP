@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * The embedded chat panel: THE consistent right-hand aside every app can host (docs/help/embedded-chat.md).
+   * The embedded chat panel: THE consistent right-hand aside every app can host (manuals/embedded-chat.md).
    *
    * It wraps `SessionView` (transcript, composer, permission dialog) and owns what a host would otherwise repeat:
    * loading the session row and its agent, following `session.changed`, and the shared `SessionAgentStore` of the

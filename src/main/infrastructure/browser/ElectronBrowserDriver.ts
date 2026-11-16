@@ -92,7 +92,13 @@ export class ElectronBrowserDriver implements BrowserDriver {
 
   async navigate(windowId: Id, url: string): Promise<PageInfo> {
     const contents = await this.guest(windowId)
+    const dbg = (m: string): void => void require('node:fs').appendFileSync('/tmp/claude-0/drv.log', `${Date.now()} ${m}\n`)
+    dbg(`navigate ${url} from ${contents.getURL()} id=${contents.id}`)
+    contents.on('did-start-navigation', (_e: unknown, u: string) => dbg(`start-nav ${u}`))
+    contents.on('did-fail-load', (_e: unknown, c: number, d: string, u: string) => dbg(`fail ${c} ${d} ${u}`))
+    contents.on('did-stop-loading', () => dbg(`stop ${contents.getURL()}`))
     await this.untilLoaded(contents, () => void contents.loadURL(url).catch(() => {}))
+    dbg(`navigated ${contents.getURL()}`)
     return info(contents)
   }
 
