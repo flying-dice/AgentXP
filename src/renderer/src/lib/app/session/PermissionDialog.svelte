@@ -3,16 +3,15 @@
   import type { PermissionOptionDto } from '@shared/models'
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
   import MessageIcon from '../../kit/molecules/MessageIcon.svelte'
-  import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
   import Dialog from '../../kit/organisms/Dialog.svelte'
-  import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
+  import ApprovalDetail from './ApprovalDetail.svelte'
   import CommandLink from './CommandLink.svelte'
-  import { asPredicate, canRemember, captionFor, optionFor, type PermissionDecision } from './permissionOptions'
-  import { toolArgument } from './toolSummary'
+  import { canRemember, captionFor, optionFor, type PermissionDecision } from './permissionOptions'
+  import { approvalTitle } from './toolTitles'
 
   interface Props {
     agentName: string
-    /** The request's title, e.g. "Edit src/auth/redirect.ts" or "Run npm test". */
+    /** The agent's own title for the request, e.g. "Edit src/auth/redirect.ts" or "Run npm test". The dialog words it plainly. */
     title: string
     options: readonly PermissionOptionDto[]
     /** The tool call asking for permission, for its diff or command. */
@@ -28,11 +27,8 @@
   let remember = $state(false)
 
   const diff = $derived(toolCall?.contents.find((c) => c.kind === 'diff'))
-  const argument = $derived(
-    toolCall ? toolArgument(toolCall.kind, toolCall.rawInput, toolCall.locations, toolCall.title) : ''
-  )
+  const question = $derived(approvalTitle({ title, toolKind: toolCall?.kind ?? null, path: (diff?.kind === 'diff' ? diff.path : toolCall?.locations[0]?.path) ?? null }, agentName))
   const rememberable = $derived(canRemember(options))
-  const language = $derived(toolCall?.kind === 'execute' ? 'bash' : 'text')
 
   function decide(decision: PermissionDecision): void {
     onanswer?.(optionFor(options, decision, remember && rememberable)?.optionId ?? null)
@@ -43,16 +39,8 @@
   <div class="body">
     <MessageIcon kind="shield" size={40} />
     <div class="main">
-      <div class="question">Allow {agentName} to {asPredicate(title)}?</div>
-      {#if diff?.kind === 'diff'}
-        <div class="detail">
-          <DiffViewer oldText={diff.oldText ?? ''} newText={diff.newText} fileName={diff.path} toolbar={false} maxHeight="220px" />
-        </div>
-      {:else if argument}
-        <div class="detail">
-          <CodeViewer code={argument} {language} wordWrap maxHeight="140px" label="Arguments" />
-        </div>
-      {/if}
+      <div class="question" data-testid="permission-question">{question}</div>
+      <ApprovalDetail {toolCall} testid="permission" />
     </div>
   </div>
   <div class="links">
@@ -65,6 +53,7 @@
     />
     <CommandLink
       kind="deny"
+      autofocus
       testid="permission-option-{optionFor(options, 'deny', remember && rememberable)?.optionId ?? 'deny'}"
       title={captionFor(options, 'deny', remember && rememberable)}
       description="Nothing changes. You can tell {agentName} what to do instead."
@@ -94,11 +83,6 @@
     line-height: 1.25;
     color: #003399;
     overflow-wrap: anywhere;
-  }
-  .detail {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
   }
   .links {
     padding: 8px 10px 6px;

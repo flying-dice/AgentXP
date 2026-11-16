@@ -1,4 +1,5 @@
 import type { Id, PermissionRequestDto } from '@shared/models'
+import type { ToolCallDiffs } from './vfs/ToolCallDiffs'
 import type { PermissionDecision, PermissionPrompt, PermissionPrompter } from '../domain/agent/PermissionPrompter'
 import type { PermissionRepository } from '../domain/repositories/permission-repository'
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
@@ -30,7 +31,9 @@ export class PermissionBroker {
     private readonly events: EventPublisher,
     private readonly broadcaster: SessionBroadcaster,
     /** Rewrites the tool call of a prompt before it is stored (host paths to virtual paths). */
-    private readonly mapToolCall: (sessionId: Id, toolCall: PermissionPrompt['toolCall']) => PermissionPrompt['toolCall'] = (_id, toolCall) => toolCall
+    private readonly mapToolCall: (sessionId: Id, toolCall: PermissionPrompt['toolCall']) => PermissionPrompt['toolCall'] = (_id, toolCall) => toolCall,
+    /** Adds what a change replaces (the file's current text) when the agent left it out; null = nothing to add. */
+    private readonly diffs: Pick<ToolCallDiffs, 'needsText' | 'complete'> | null = null
   ) {}
 
   /** Observes requests as they open and close; returns an unsubscribe function. */
@@ -51,7 +54,15 @@ export class PermissionBroker {
 
   prompt(sessionId: Id, request: PermissionPrompt): Promise<PermissionDecision> {
     if (request.signal.aborted) return Promise.resolve({ outcome: 'cancelled' })
-    this.transcripts.upsertToolCall(sessionId, { toolCallId: request.toolCallId, ...this.mapToolCall(sessionId, request.toolCall) })
+    const toolCall = this.mapToolCall(sessionId, request.toolCall)
+    // Only a change without its old text waits for the file to be read; every other request opens at once.
+    const diffs = this.diffs
+    if (!diffs || !diffs.needsText(toolCall)) return this.open(sessionId, request, toolCall)
+    return diffs.complete(sessionId, toolCall).then((full) => (request.signal.aborted ? { outcome: 'cancelled' as const } : this.open(sessionId, request, full)))
+  }
+
+  private open(sessionId: Id, request: PermissionPrompt, toolCall: PermissionPrompt['toolCall']): Promise<PermissionDecision> {
+    this.transcripts.upsertToolCall(sessionId, { toolCallId: request.toolCallId, ...toolCall })
     const stored = this.permissions.create(sessionId, request.toolCallId, request.options)
     this.broadcaster.setStatus(sessionId, 'awaiting_permission')
     this.publishToolCall(sessionId, request.toolCallId)

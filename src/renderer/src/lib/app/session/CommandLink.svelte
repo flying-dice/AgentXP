@@ -5,12 +5,14 @@
     description: string
     onclick?: () => void
     testid?: string
+    /** The dialog puts the first focus here (`data-autofocus`). */
+    autofocus?: boolean
   }
 
-  let { kind, title, description, onclick, testid }: Props = $props()
+  let { kind, title, description, onclick, testid, autofocus = false }: Props = $props()
 </script>
 
-<button class="command-link" type="button" data-testid={testid} data-decision={kind} {onclick}>
+<button class="command-link" type="button" data-testid={testid} data-decision={kind} data-autofocus={autofocus ? '' : undefined} {onclick}>
   <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
     {#if kind === 'allow'}
       <circle cx="10" cy="10" r="9" fill="#3fae3f" stroke="#237a23" />
@@ -33,7 +35,7 @@
     gap: 8px;
     width: 100%;
     padding: 6px 8px;
-    border: 1px solid transparent;
+    border: 1px solid #dfe6ee;
     background: none;
     text-align: left;
     font: inherit;

@@ -47,7 +47,7 @@ export const isRendererEvent = (name: string): name is Agent7EventName => name i
 
 /** Every invoke method, as `true` flags. The type forces this list to match `Agent7Api` exactly. */
 const INVOKE_METHODS = {
-  agents: { list: true, create: true, update: true, remove: true, setDefault: true },
+  agents: { list: true, create: true, update: true, remove: true, setDefault: true, check: true },
   folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true, writeFile: true },
   sessions: {
     list: true,

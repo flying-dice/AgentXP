@@ -28,7 +28,7 @@
 <Story name="RunCommand" args={{ approval: run, reason: 'Running commands is set to Ask in Control Centre.' }}>
   {#snippet template(args)}<div class="stage"><UacDialog {...args} /></div>{/snippet}
 </Story>
-<Story name="UserInControl" args={{ reason: 'You are in control of this desktop, so every action needs your approval.' }}>
+<Story name="UserInControl" args={{ reason: 'Ask before every action is on, so every action needs your approval.' }}>
   {#snippet template(args)}<div class="stage"><UacDialog {...args} /></div>{/snippet}
 </Story>
 

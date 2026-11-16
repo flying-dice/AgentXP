@@ -210,7 +210,7 @@
             {@const w = widthOf(col)}
             <span class="cell" role="gridcell" style:width={w !== undefined ? `${w}px` : undefined} class:flex={w === undefined} style:justify-content={col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : undefined}>
               {#if i === 0 && row.icon}<Icon name={row.icon} />{/if}
-              <span class="t">{cellText(row, col.key)}</span>
+              <span class="t" title={cellText(row, col.key)}>{cellText(row, col.key)}</span>
             </span>
           {/each}
         </div>

@@ -69,7 +69,7 @@ describe('scripted agent: tools follow apps (desktop.json)', () => {
 
   it('desktop_open_app opens the window by itself, then terminal_run works (the fallback rule)', async () => {
     await ctx.desktop.closeWindow('terminal')
-    await see.gone(ctx.desktop.toolChip('terminal'))
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'off')
     const chat = ctx.desktop.chat()
     await chat.send('Open the terminal and run something')
     await see.visible(ctx.desktop.window('terminal'))

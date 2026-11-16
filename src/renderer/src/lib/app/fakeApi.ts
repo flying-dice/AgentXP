@@ -200,7 +200,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
         return agents.find((a) => a.id === id)!
       },
       remove: async (id) => void (agents = agents.filter((a) => a.id !== id)),
-      setDefault: async (id) => void (agents = agents.map((a) => ({ ...a, isDefault: a.id === id })))
+      setDefault: async (id) => void (agents = agents.map((a) => ({ ...a, isDefault: a.id === id }))),
+      check: async (command) => ['node', 'npx', 'python', 'claude'].includes(command.trim())
     },
     folders: {
       list: async () => folders,

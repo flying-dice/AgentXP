@@ -29,6 +29,12 @@ describe('z-order', () => {
 })
 
 describe('taskbar', () => {
+  it('puts "Waiting: " before the title of a chat that waits for an answer', () => {
+    const chat = (id: number, sessionId: number): AppWindowState => ({ ...win(id, 'chat'), view: { app: 'chat', sessionId, title: 'hello' } })
+    const items = taskbarItems([chat(1, 10), chat(2, 11), win(3)], 1, {}, new Set([11]))
+    expect(items.map((i) => i.title)).toEqual(['Window 1', 'Waiting: Window 2', 'Window 3'])
+  })
+
   it('flashes the button of a window that wants attention until it has focus', () => {
     const flagged = { ...win(2), attention: true }
     expect(taskbarItems([win(1), flagged], 1, {}).find((i) => i.id === '2')?.flashing).toBe(true)

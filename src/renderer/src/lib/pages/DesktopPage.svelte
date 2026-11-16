@@ -11,7 +11,7 @@
   import { startAppRequests } from '../apps/appRequests'
   import Desktop from '../kit/templates/Desktop.svelte'
   import { appRegistry } from '../desktop/apps'
-  import { approvalReason } from '../desktop/approval'
+  import { approvalLabel, approvalOrigin, approvalReason } from '../desktop/approval'
   import AutoPlayDialog from '../desktop/AutoPlayDialog.svelte'
   import Balloon from '../desktop/Balloon.svelte'
   import UsbTray from '../desktop/UsbTray.svelte'
@@ -70,7 +70,7 @@
   const icons = $derived(
     Object.fromEntries((Object.keys(appRegistry) as AppKind[]).map((k) => [k, appRegistry[k].icon])) as Record<AppKind, IconName>
   )
-  const items = $derived(taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons))
+  const items = $derived(taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons, new Set(desktop.inbox.pending.map((a) => a.sessionId))))
 
   const desktopIcons = $derived<DesktopIconDef[]>([
     { id: 'computer', label: 'Computer', icon: 'computer' },
@@ -140,8 +140,11 @@
 
   const approvals = $derived(desktop.inbox.pending)
   const reviewing = $derived(desktop.reviewing && approvals.some((a) => a.key === desktop.reviewing?.key) ? desktop.reviewing : null)
-  const centreApprovals = $derived(approvals.map((a) => ({ key: a.key, title: a.title, detail: a.chatTitle })))
-  const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text })))
+  const centreApprovals = $derived(
+    approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt) }))
+  )
+  const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text, continueId: m.continueChat })))
+  const policy = $derived(desktop.state.policy ?? desktop.policy)
 
   // The taskbar button menu: Restore, Minimize, Close window.
   const taskbarMenu = new ContextMenu()
@@ -202,8 +205,10 @@
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
         tools={desktop.state.tools}
+        {policy}
         onpause={() => void desktop.togglePaused()}
         ontakecontrol={() => void desktop.toggleUserInControl()}
+        onopenpermissions={() => void desktop.openControlCentre('permissions')}
         {maximized}
         onminimize={() => void desktop.api.window.minimize()}
         onmaximize={() => void desktop.api.window.toggleMaximize()}
@@ -254,6 +259,10 @@
             const a = approvals.find((x) => x.key === key)
             if (a) void desktop.review(a)
           }}
+          oncontinue={(id) => {
+            const chat = desktop.messages.find((m) => m.id === id)?.continueChat
+            if (chat !== undefined) void desktop.continueChat(chat)
+          }}
           onopencontrolcentre={() => {
             desktop.actionCenterOpen = false
             void desktop.openApp({ app: 'control-centre' })
@@ -265,7 +274,7 @@
     {#if reviewing}
       <UacDialog
         approval={reviewing}
-        reason={approvalReason(reviewing.toolKind, desktop.policy, desktop.state.userInControl)}
+        reason={approvalReason(reviewing.toolKind, policy, desktop.state.userInControl)}
         onanswer={(optionId) => void desktop.answerReview(optionId)}
         onclose={() => (desktop.reviewing = null)}
       />

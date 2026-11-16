@@ -1,7 +1,11 @@
-import { cpSync } from 'node:fs'
+import { cpSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+
+// The version users see comes from package.json at build time: `app.getVersion()` reports Electron's own version
+// when the app runs unpackaged from `out/`.
+const version = (JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as { version: string }).version
 
 const shared = { '@shared': resolve('src/shared') }
 
@@ -18,6 +22,7 @@ export default defineConfig({
       }
     ],
     resolve: { alias: shared },
+    define: { __APP_VERSION__: JSON.stringify(version) },
     build: {
       rollupOptions: {
         input: {

@@ -58,7 +58,8 @@ export function createApi(s: ApiServices): InvokeApi {
       create: async (input) => s.agents.create(input),
       update: async (id, input) => s.agents.update(id, input),
       remove: async (id) => s.agents.remove(id),
-      setDefault: async (id) => s.agents.setDefault(id)
+      setDefault: async (id) => s.agents.setDefault(id),
+      check: async (command) => s.agents.check(command)
     },
     folders: {
       list: async () => s.folders.list(),

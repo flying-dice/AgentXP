@@ -16,6 +16,8 @@
     /** Show the header with counts and the view toggle. */
     toolbar?: boolean
     maxHeight?: string
+    /** Wrap long lines instead of scrolling sideways (the approval dialogs). */
+    wrap?: boolean
     label?: string
     class?: string
   }
@@ -29,6 +31,7 @@
     context = 3,
     toolbar = true,
     maxHeight,
+    wrap = false,
     label = 'Changes',
     class: className = ''
   }: Props = $props()
@@ -45,7 +48,7 @@
   const title = (file: DiffFile): string => file.newPath ?? file.oldPath ?? ''
 </script>
 
-<div class="w7-diffviewer {className}" style:max-height={maxHeight}>
+<div class="w7-diffviewer {className}" class:wrap style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <span class="summary">
@@ -207,9 +210,14 @@
     padding: 0 0 0 6px;
     user-select: none;
   }
-  .split .tx {
+  .split .tx,
+  .wrap .tx {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+  .wrap .grid.unified {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    width: auto;
   }
   .split .no + .tx {
     border-right: 1px solid var(--w7-border-light);

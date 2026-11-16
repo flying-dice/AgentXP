@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createFakeApi } from '../app/fakeApi'
 import { messageBoxes } from '../kit/organisms/messageBox'
-import { DesktopController, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
+import { emptyAguiState } from '@shared/agui-state'
+import { CONTINUE_TEXT, DesktopController, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
 
 async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
   const api = createFakeApi()
@@ -103,6 +104,38 @@ describe('DesktopController', () => {
     await controller.toggleUserInControl()
     expect(controller.state.paused).toBe(true)
     expect(controller.state.userInControl).toBe(true)
+  })
+
+  it('Resume leaves a Continue message for each chat that Pause stopped, and Continue asks the agent to carry on', async () => {
+    const { controller } = await started()
+    controller.sessions.items = controller.sessions.items.map((s) => (s.id === 1 ? { ...s, status: 'working' as const } : s))
+    const send = vi.fn(async () => {})
+    controller.inbox.register(1, { state: emptyAguiState(), pendingInterrupt: null, running: false, resolveInterrupt: async () => {}, send })
+    await controller.togglePaused()
+    expect(controller.messages).toHaveLength(0)
+    await controller.togglePaused()
+    expect(controller.messages).toHaveLength(1)
+    expect(controller.messages[0]).toMatchObject({ continueChat: 1 })
+    expect(controller.messages[0].text).toContain('The step that was stopped stays stopped')
+    expect(controller.balloon?.title).toBe('Agents resumed')
+    await controller.continueChat(1)
+    expect(send).toHaveBeenCalledWith(CONTINUE_TEXT)
+    expect(controller.messages).toHaveLength(0)
+  })
+
+  it('Resume with nothing stopped adds no message', async () => {
+    const { controller } = await started()
+    await controller.togglePaused()
+    await controller.togglePaused()
+    expect(controller.messages).toHaveLength(0)
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('opens Control Centre at a page', async () => {
+    const { api, controller } = await started()
+    const spy = vi.spyOn(api.desktop, 'updateView')
+    await controller.openControlCentre('permissions')
+    expect(spy).toHaveBeenCalledWith(expect.any(Number), { app: 'control-centre', page: 'permissions' })
   })
 
   it('focuses an existing chat window instead of opening a second one', async () => {

@@ -1,12 +1,16 @@
 <script module lang="ts">
   export interface ActionCenterApproval {
     key: string
+    /** What the agent wants to do: "Change src/auth/redirect.ts". */
     title: string
+    /** Which chat asked: "In chat 'Fix the login...' (started 10:42)". */
     detail?: string
   }
   export interface ActionCenterMessage {
     id: number
     text: string
+    /** Shows a "Continue" button; `oncontinue` gets this id. */
+    continueId?: number
   }
 </script>
 
@@ -18,13 +22,15 @@
     approvals?: ActionCenterApproval[]
     messages?: ActionCenterMessage[]
     onreview?: (key: string) => void
+    /** The Continue button of a message (a chat whose step Pause stopped). */
+    oncontinue?: (id: number) => void
     onopencontrolcentre?: () => void
     onclose?: () => void
     /** Tray button element: presses on it are not "outside". */
     ignore?: HTMLElement | null
   }
 
-  let { approvals = [], messages = [], onreview, onopencontrolcentre, onclose, ignore = null }: Props = $props()
+  let { approvals = [], messages = [], onreview, oncontinue, onopencontrolcentre, onclose, ignore = null }: Props = $props()
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -52,8 +58,8 @@
           <path d="M10 5.5v5M10 12.5v1.6" stroke="#5a3d00" stroke-width="1.8" />
         </svg>
         <div class="what">
-          <div class="title">{a.title}</div>
-          {#if a.detail}<div class="detail">{a.detail}</div>{/if}
+          <div class="title" data-testid="action-center-approval-title" title={a.title}>{a.title}</div>
+          {#if a.detail}<div class="detail" data-testid="action-center-approval-chat" title={a.detail}>{a.detail}</div>{/if}
         </div>
         <Button data-testid="action-center-review" onclick={() => onreview?.(a.key)}>Review</Button>
       </div>
@@ -62,7 +68,10 @@
   <section>
     <h4>Messages</h4>
     {#each messages as m (m.id)}
-      <p data-testid="action-center-message">{m.text}</p>
+      <div class="message" data-testid="action-center-message">
+        <p>{m.text}</p>
+        {#if m.continueId !== undefined}<Button data-testid="action-center-continue" onclick={() => oncontinue?.(m.continueId!)}>Continue</Button>{/if}
+      </div>
     {:else}
       <p class="quiet">No new messages.</p>
     {/each}
@@ -111,8 +120,6 @@
     white-space: nowrap;
   }
   .detail {
-    font: var(--w7-font-mono);
-    font-size: 11px;
     color: #444;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -121,6 +128,16 @@
   p {
     margin: 0 0 8px;
     line-height: 1.35;
+  }
+  .message {
+    margin: 0 0 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .message p {
+    flex: 1;
+    margin: 0;
   }
   .quiet {
     color: var(--w7-text-muted);

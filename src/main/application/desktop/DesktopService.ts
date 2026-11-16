@@ -115,6 +115,7 @@ export class DesktopService implements DesktopStates {
       tools: enabledToolGroups(windows.map((w) => w.app)),
       paused: desktop.paused,
       userInControl: desktop.userInControl,
+      policy: this.policy(),
       notes: this.deps.notes.list(desktopId),
       surfaces: this.surfacesOf(desktopId, records)
     }
@@ -369,6 +370,8 @@ export class DesktopService implements DesktopStates {
   setPolicy(policy: ToolPolicyDto): void {
     const entries: [string, PolicyDecision][] = [...Object.entries(policy.groups), ['openApps', policy.openApps]]
     for (const [key, decision] of entries) this.deps.policies.set(key, decision)
+    // The permissions ride with the desktop state: every desktop that was shown tells its top bar.
+    for (const id of [...this.lastPublished.keys()]) this.emit(id)
   }
 
   // ---- internals ---------------------------------------------------------------------------------
