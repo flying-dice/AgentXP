@@ -91,6 +91,29 @@ const askPermission = (): Promise<unknown> =>
   broker.prompt(f.sessionId, { sessionKey: 'acp', toolCallId: 't1', toolCall: { title: 'Write file', toolKind: 'edit' }, options, signal: new AbortController().signal })
 
 describe('AguiRunCoordinator: prompt', () => {
+  it.each(['refusal', 'max_tokens'])('a turn that ends with stopReason %s adds a stop notice and the reason as RUN_FINISHED.result', async (reason) => {
+    script = async () => {
+      emit(chunk('Cut o'))
+      return reason
+    }
+    const events = await collect(coordinator.run(input({ messages: [user('go')] })))
+    await expectValidStream(events)
+    const notices = ofType(events, EventType.ACTIVITY_SNAPSHOT)
+    expect(notices).toHaveLength(1)
+    expect(notices[0]).toMatchObject({ activityType: 'stop-notice', content: { reason } })
+    const finished = ofType(events, EventType.RUN_FINISHED)[0]
+    expect(finished).toMatchObject({ outcome: { type: 'success' }, result: { stopReason: reason } })
+    expect(types(events).at(-2)).toBe(EventType.ACTIVITY_SNAPSHOT)
+  })
+
+  it('end_turn and cancelled add no stop notice', async () => {
+    for (const reason of ['end_turn', 'cancelled']) {
+      script = async () => reason
+      const events = await collect(coordinator.run(input({ messages: [user(`go ${reason}`)] })))
+      expect(ofType(events, EventType.ACTIVITY_SNAPSHOT)).toHaveLength(0)
+    }
+  })
+
   it('streams a turn: RUN_STARTED, state snapshot, messages, tool call, state deltas, RUN_FINISHED', async () => {
     let seenPrompt: PromptTurnInput | undefined
     script = async (prompt) => {

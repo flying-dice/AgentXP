@@ -123,11 +123,11 @@ export class ProtocolEventLog {
   }
 
   /** An MCP tool call of the agent (`in`) and its result (`out`); images are summarised, not stored. */
-  recordToolCall(context: { sessionId: Id; desktopId: Id }, tool: string, args: unknown): void {
+  recordToolCall(context: { sessionId: Id; desktopId?: Id }, tool: string, args: unknown): void {
     this.record({ sessionId: context.sessionId, desktopId: context.desktopId, source: 'mcp', direction: 'in', name: tool, payload: args ?? {} })
   }
 
-  recordToolResult(context: { sessionId: Id; desktopId: Id }, tool: string, result: { content: { type: string; text?: string; mimeType?: string; data?: string }[]; isError?: boolean }, refused: boolean): void {
+  recordToolResult(context: { sessionId: Id; desktopId?: Id }, tool: string, result: { content: { type: string; text?: string; mimeType?: string; data?: string }[]; isError?: boolean }, refused: boolean): void {
     const content = result.content.map((c) => (c.type === 'image' ? { type: 'image', mimeType: c.mimeType, bytes: c.data?.length ?? 0 } : c))
     const level: EventLevel = refused ? 'warning' : result.isError ? 'error' : 'info'
     this.record({ sessionId: context.sessionId, desktopId: context.desktopId, source: 'mcp', direction: 'out', name: tool, level, payload: { isError: result.isError ?? false, content } })

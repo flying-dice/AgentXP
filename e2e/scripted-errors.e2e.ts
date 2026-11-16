@@ -43,6 +43,16 @@ describe('scripted agent: failures and stop reasons (errors.json)', () => {
     await see.visible(chat.agentMessage("I can't help with that."))
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.eventually(async () => expect(await stopReason(1)).toBe('refusal'))
+    // The turn did not simply succeed: the transcript says so, after the refusal text.
+    await see.count(chat.stopNotices, 1)
+    await see.attribute(chat.stopNotices, 'data-reason', 'refusal')
+    await see.text(chat.stopNotices, 'The agent declined to continue.')
+    await see.eventually(async () => {
+      const finished = aguiRuns(await protocolEvents(ctx.desktopPage, { source: 'ag-ui', sessionId })).at(-1)!
+      expect(finished.at(-1)?.name).toBe('RUN_FINISHED')
+      expect(payloadOf<{ result?: { stopReason: string } }>(finished.at(-1)!).result).toEqual({ stopReason: 'refusal' })
+      expect(messageShape(finished).slice(-2)).toEqual(['ACTIVITY_SNAPSHOT', 'RUN_FINISHED'])
+    })
     const acp = await protocolEvents(ctx.desktopPage, { source: 'acp', sessionId })
     expect(acp.filter((e) => e.name === 'session/prompt (response)')[1].level).toBe('warning')
   })
@@ -53,6 +63,9 @@ describe('scripted agent: failures and stop reasons (errors.json)', () => {
     await see.visible(chat.agentMessage('This answer is cut o'))
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.eventually(async () => expect(await stopReason(2)).toBe('max_tokens'))
+    await see.count(chat.stopNotices, 2)
+    await see.attribute(chat.stopNotices.last(), 'data-reason', 'max_tokens')
+    await see.text(chat.stopNotices.last(), 'The agent stopped: it reached its output limit.')
   })
 
   it('a scripted cancelled stop reason finishes the run as cancelled', async () => {
@@ -60,6 +73,7 @@ describe('scripted agent: failures and stop reasons (errors.json)', () => {
     await chat.send('this ends cancelled')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.eventually(async () => expect(await stopReason(3)).toBe('cancelled'))
+    await see.count(chat.stopNotices, 2) // cancelling is the user's own doing: no notice
     const last = aguiRuns(await protocolEvents(ctx.desktopPage, { source: 'ag-ui', sessionId })).at(-1)!
     expect(outcomeOf(last.at(-1))).toBe('cancelled')
   })

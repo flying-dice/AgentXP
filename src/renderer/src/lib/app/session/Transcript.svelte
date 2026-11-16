@@ -7,6 +7,7 @@
   import A2uiActivity from './A2uiActivity.svelte'
   import AgentMessage from './AgentMessage.svelte'
   import ErrorRow from './ErrorRow.svelte'
+  import StopNotice from './StopNotice.svelte'
   import ReasoningBlock from './ReasoningBlock.svelte'
   import ToolCallItem from './ToolCallItem.svelte'
   import UserMessage from './UserMessage.svelte'
@@ -83,6 +84,8 @@
             terminals={agentState.terminals}
             waiting={waitingToolCallId === row.toolCallId}
           />
+        {:else if row.kind === 'stop'}
+          <StopNotice reason={row.reason} />
         {:else}
           {@const surface = activities.get(row.surfaceId)}
           {#if surface}<A2uiActivity messages={surface.messages} {sessionId} {onaction} />{/if}

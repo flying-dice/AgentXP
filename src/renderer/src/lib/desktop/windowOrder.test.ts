@@ -29,6 +29,13 @@ describe('z-order', () => {
 })
 
 describe('taskbar', () => {
+  it('flashes the button of a window that wants attention until it has focus', () => {
+    const flagged = { ...win(2), attention: true }
+    expect(taskbarItems([win(1), flagged], 1, {}).find((i) => i.id === '2')?.flashing).toBe(true)
+    expect(taskbarItems([win(1), flagged], 2, {}).find((i) => i.id === '2')?.flashing).toBe(false)
+    expect(taskbarItems([win(1), win(2)], 1, {}).every((i) => !i.flashing)).toBe(true)
+  })
+
   it('toggles on click', () => {
     expect(taskbarAction(win(1), 1)).toBe('minimize')
     expect(taskbarAction(win(1), 2)).toBe('focus')

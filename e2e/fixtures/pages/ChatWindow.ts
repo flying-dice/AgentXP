@@ -21,6 +21,11 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-error')
   }
 
+  /** Notices that a turn ended for another reason than end_turn (refusal, output limit...); `data-reason` is the ACP stop reason. */
+  get stopNotices(): Locator {
+    return this.frame.getByTestId('chat-stop-notice')
+  }
+
   /** A2UI surfaces drawn into the transcript. */
   get surfaces(): Locator {
     return this.frame.getByTestId('a2ui-surface')

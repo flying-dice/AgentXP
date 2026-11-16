@@ -8,6 +8,11 @@ export class TerminalWindow {
     return this.frame.getByTestId('terminal-output')
   }
 
+  /** The terminal chooser (shown when several terminals exist). */
+  get picker(): Locator {
+    return this.frame.getByTestId('terminal-picker')
+  }
+
   get status(): Locator {
     return this.frame.getByTestId('terminal-status')
   }

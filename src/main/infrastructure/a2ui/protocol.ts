@@ -12,6 +12,9 @@ export type BridgeRequest =
   | { type: 'tools'; id: string; desktopId: string }
   /** Run a desktop tool. */
   | { type: 'call'; id: string; sessionKey: string; desktopId: string; tool: string; args: unknown }
+  /** Record an A2UI tool call (`phase: 'called'`) or its outcome (`'finished'`) in the Event Viewer's log; no other effect. */
+  | { type: 'log'; id: string; sessionKey: string; tool: string; phase: 'called'; args: unknown }
+  | { type: 'log'; id: string; sessionKey: string; tool: string; phase: 'finished'; result: ToolResult }
   /** Keep this socket open; the app pushes `toolsChanged` when the groups of the desktop change. */
   | { type: 'subscribe'; id: string; desktopId: string }
 

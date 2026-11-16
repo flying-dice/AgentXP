@@ -2,6 +2,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf'
   import AgentMessage from './AgentMessage.svelte'
   import ErrorRow from './ErrorRow.svelte'
+  import StopNotice from './StopNotice.svelte'
   import ReasoningBlock from './ReasoningBlock.svelte'
   import UserMessage from './UserMessage.svelte'
 
@@ -24,6 +25,14 @@
 
 <Story name="ErrorRow">
   <div class="box"><ErrorRow message="The agent process exited unexpectedly (code 1)." /></div>
+</Story>
+
+<Story name="StopNotice">
+  <div class="box"><StopNotice reason="max_tokens" /></div>
+</Story>
+
+<Story name="StopNoticeRefusal">
+  <div class="box"><StopNotice reason="refusal" /></div>
 </Story>
 
 <style>

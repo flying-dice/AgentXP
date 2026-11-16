@@ -102,6 +102,18 @@ describe('AcpAgentConnection with a fake agent', () => {
     expect(h.terminalChanges.some((c) => c.output.includes('terminal-says-hi'))).toBe(true)
   })
 
+  it('gives a tool call id that the agent reuses in the next turn a new id (events and permission)', async () => {
+    const h = start(allow)
+    await connection!.initialize()
+    const { acpSessionId } = await connection!.newSession(workspace)
+    await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'one' }])
+    await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'two' }])
+    const created = h.events.filter((e) => e.type === 'tool_call_created').map((e) => (e.type === 'tool_call_created' ? e.toolCallId : ''))
+    expect(created).toEqual(['tc-1', 'tc-1@2'])
+    expect(h.events.filter((e) => e.type === 'tool_call_updated').map((e) => (e.type === 'tool_call_updated' ? e.toolCallId : ''))).toEqual(['tc-1', 'tc-1@2'])
+    expect(h.prompts.map((p) => p.toolCallId)).toEqual(['tc-1', 'tc-1@2'])
+  })
+
   it('ends the turn as cancelled and writes nothing when permission is rejected', async () => {
     const h = start(async () => ({ outcome: 'selected', optionId: 'reject' }))
     await connection!.initialize()

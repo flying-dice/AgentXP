@@ -69,7 +69,7 @@ export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): Tool
     desktop_focus_app: (args, { desktopId }) =>
       attempt(() => {
         const [window] = targets(desktopId, args).slice(-1)
-        desktops.focusWindow(window!.id)
+        desktops.focusWindow(window!.id, 'agent')
         return textResult(`Focused ${describe(window!)}.`)
       })
   }

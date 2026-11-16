@@ -43,6 +43,7 @@ export function taskbarItems(
       testid: `taskbar-item-${w.app}`,
       icon: icons[w.app],
       running: true,
-      active: w.id === focusedId && w.windowState !== 'minimized'
+      active: w.id === focusedId && w.windowState !== 'minimized',
+      flashing: w.attention === true && w.id !== focusedId
     }))
 }

@@ -156,6 +156,72 @@ describe('DesktopService: windows and state', () => {
   })
 })
 
+describe('DesktopService: window placement and focus', () => {
+  const overlaps = (a: { x: number; y: number; width: number; height: number }, b: typeof a): boolean =>
+    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+  const openChat = async () => service.newChat(desktopId)
+
+  it('tiles a new window beside the focused chat instead of over it', async () => {
+    const chat = await openChat()
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+    expect(overlaps(notepad.bounds, chat.bounds)).toBe(false)
+    expect(notepad.bounds.x).toBeGreaterThanOrEqual(chat.bounds.x + chat.bounds.width)
+    // The second window is only checked against the chat once the notepad took focus: it must not cover the notepad's chat either.
+    expect(terminal.bounds.x + terminal.bounds.width).toBeLessThanOrEqual(1280)
+  })
+
+  it('follows a chat that was moved', async () => {
+    const chat = await openChat()
+    service.setBounds(chat.id, { x: 600, y: 100, width: 640, height: 520 })
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    expect(overlaps(notepad.bounds, { x: 600, y: 100, width: 640, height: 520 })).toBe(false)
+  })
+
+  it('cascades as before when the focused window is not a chat', () => {
+    service.openWindow({ desktopId, app: 'terminal' })
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    expect(notepad.bounds).toEqual({ x: 224, y: 144, width: 520, height: 380 })
+  })
+
+  it('a window the agent opens goes behind the focused chat, keeps the chat focused and is flagged until focused', async () => {
+    const chat = await openChat()
+    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
+    let state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.map((w) => w.id)).toEqual([code.id, chat.id]) // back to front: chat on top
+    expect(state.windows.find((w) => w.id === code.id)?.attention).toBe(true)
+    expect(state.windows.find((w) => w.id === chat.id)?.attention).toBeUndefined()
+    service.focusWindow(code.id)
+    state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(code.id)
+    expect(state.windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
+  })
+
+  it('an agent that reopens or focuses an existing window does not steal focus either', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
+    const chat = await openChat()
+    expect(service.state(desktopId).focusedWindowId).toBe(chat.id)
+    service.openWindow({ desktopId, app: 'code', path: 'C:\\Users\\Agent\\a.ts' }, 'agent')
+    service.focusWindow(code.id, 'agent')
+    const state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.at(-1)?.id).toBe(chat.id)
+    expect(state.windows.find((w) => w.id === code.id)).toMatchObject({ attention: true, view: { activePath: 'C:\\Users\\Agent\\a.ts' } })
+  })
+
+  it('an agent window takes focus when no chat is focused, and the user always does', async () => {
+    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+    const browser = service.openWindow({ desktopId, app: 'browser' }, 'agent')
+    expect(service.state(desktopId).focusedWindowId).toBe(browser.id)
+    await openChat()
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    expect(service.state(desktopId).focusedWindowId).toBe(notepad.id)
+    expect(terminal.openedBy).toBe('user')
+  })
+})
+
 describe('DesktopService: control flags and policy', () => {
   it('pausing cancels the busy chats of that desktop only', async () => {
     const busy = await service.newChat(desktopId)

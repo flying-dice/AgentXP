@@ -89,7 +89,8 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
 
 **Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry
-`data-window-state` and `data-focused`.
+`data-window-state` and `data-focused`; `chat-stop-notice` carries `data-reason` (the ACP stop reason of a turn that did not end with
+`end_turn`/`cancelled`); taskbar buttons carry `data-flashing` (an agent-opened window behind the focused chat).
 
 ### Running e2e
 

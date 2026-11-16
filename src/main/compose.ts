@@ -202,6 +202,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     }
   }
 
+  const terminalRecorder = new TerminalRecorder(repos.terminals, publisher)
   const runtime = new SessionRuntime({
     connector: options.connector ?? new AcpAgentConnector(),
     pool,
@@ -211,7 +212,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     events: eventBus,
     broker,
     files: sessionFiles,
-    terminals: new TerminalRecorder(repos.terminals, publisher),
+    terminals: terminalRecorder,
     broadcaster,
     a2uiMcpConfig,
     toolGate: (sessionId) => gateway.forSession(sessionId),
@@ -295,7 +296,7 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createFsTools({ vfs, paths: toolPaths }),
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
       ...createCodeTools({ desktops, changes: repos.changes, paths: toolPaths }),
-      ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths }),
+      ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths, terminals: terminalRecorder }),
       ...createBrowserTools({ desktops, driver: browsers }),
       ...createPaintTools({ desktops, requests: appRequests }),
       ...createWordpadTools({
@@ -315,7 +316,10 @@ export function composeApp(options: ComposeOptions): AppServices {
       finished: (context, tool, result, refused) => eventLog.recordToolResult(context, tool, result, refused)
     }
   })
-  a2uiBridge = new A2uiBridgeServer(a2uiSink, undefined, undefined, desktopTools)
+  a2uiBridge = new A2uiBridgeServer(a2uiSink, undefined, undefined, desktopTools, {
+    called: (sessionId, tool, args) => eventLog.recordToolCall({ sessionId }, tool, args),
+    finished: (sessionId, tool, result) => eventLog.recordToolResult({ sessionId }, tool, result, false)
+  })
 
   const queries = new SessionQueryService(
     repos.sessions,

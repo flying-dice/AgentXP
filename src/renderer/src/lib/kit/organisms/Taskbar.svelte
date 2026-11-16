@@ -14,6 +14,8 @@
     running?: boolean
     /** This item's window has focus. */
     active?: boolean
+    /** The window wants attention (opened behind the window in use): the button flashes orange until it is focused. */
+    flashing?: boolean
     /** `data-testid` of the button. */
     testid?: string
   }
@@ -76,6 +78,8 @@
         class:pinned={item.pinned && !item.running}
         class:running={item.running}
         class:active={item.active}
+        class:flashing={item.flashing && !item.active}
+        data-flashing={item.flashing && !item.active ? 'true' : 'false'}
         aria-label={item.title}
         aria-pressed={item.running ? !!item.active : undefined}
         title={item.title}
@@ -178,6 +182,20 @@
   .task.running.active {
     border-color: rgba(255, 255, 255, 0.8);
     background: linear-gradient(rgba(255, 255, 255, 0.72), rgba(200, 228, 252, 0.45) 50%, rgba(160, 205, 245, 0.42));
+  }
+  .task.flashing {
+    animation: task-flash 1s steps(1, end) infinite;
+  }
+  @keyframes task-flash {
+    0%,
+    100% {
+      background: linear-gradient(rgba(255, 214, 120, 0.95), rgba(255, 170, 40, 0.8) 55%, rgba(240, 140, 20, 0.75));
+      border-color: #fff3c4;
+    }
+    50% {
+      background: var(--w7-taskbtn-face);
+      border-color: rgba(255, 255, 255, 0.65);
+    }
   }
   .task:hover {
     border-color: rgba(255, 255, 255, 0.85);

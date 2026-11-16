@@ -11,6 +11,9 @@ export interface BridgeClient {
   /** The tool groups enabled on this chat's desktop right now. */
   tools(): Promise<ToolGroup[]>
   call(tool: string, args: unknown): Promise<ToolResult>
+  /** Tells the app about an `a2ui_*` tool call and its result so the protocol event log shows it. Best effort. */
+  logCalled(tool: string, args: unknown): Promise<void>
+  logFinished(tool: string, result: ToolResult): Promise<void>
   /** Calls `listener` whenever the app says the tool list changed. Best effort: needs the app to be reachable. */
   onToolsChanged(listener: () => void): void
   close(): void
@@ -49,6 +52,14 @@ export class SocketBridgeClient implements BridgeClient {
     const res = await this.request({ type: 'call', id: randomUUID(), sessionKey: this.sessionKey, desktopId: this.desktopId, tool, args }, 0)
     if (res.ok && res.result) return res.result
     return { content: [{ type: 'text', text: res.errors?.join('\n') ?? 'unknown error' }], isError: true }
+  }
+
+  async logCalled(tool: string, args: unknown): Promise<void> {
+    await this.request({ type: 'log', id: randomUUID(), sessionKey: this.sessionKey, tool, phase: 'called', args }, this.timeoutMs)
+  }
+
+  async logFinished(tool: string, result: ToolResult): Promise<void> {
+    await this.request({ type: 'log', id: randomUUID(), sessionKey: this.sessionKey, tool, phase: 'finished', result }, this.timeoutMs)
   }
 
   onToolsChanged(listener: () => void): void {

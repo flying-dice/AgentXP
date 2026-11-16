@@ -88,6 +88,32 @@ export interface A2uiSurfaceActivity {
   deleted?: boolean
 }
 
+/** `ActivityMessage.activityType` of the notice that a turn ended for another reason than `end_turn`. */
+export const STOP_NOTICE_ACTIVITY_TYPE = 'stop-notice'
+
+/** `ActivityMessage.content` of a stop notice (`reason` is the ACP stop reason: `refusal`, `max_tokens`, ...). */
+export interface StopNoticeActivity {
+  reason: string
+}
+
+/** The notice text for an ACP stop reason (`cancelled` and `end_turn` need none). */
+export function stopNoticeText(reason: string): string {
+  switch (reason) {
+    case 'max_tokens':
+      return 'The agent stopped: it reached its output limit.'
+    case 'max_turn_requests':
+      return 'The agent stopped: it reached the limit of model requests for one turn.'
+    case 'refusal':
+      return 'The agent declined to continue.'
+    default:
+      return `The agent stopped (${reason}).`
+  }
+}
+
+/** True for stop reasons the user should be told about. */
+export const isNoticeableStopReason = (reason: string | void): reason is string =>
+  typeof reason === 'string' && reason !== 'end_turn' && reason !== 'cancelled'
+
 /** `Interrupt.reason` of a tool permission request. */
 export const PERMISSION_INTERRUPT_REASON = 'tool_permission'
 

@@ -25,7 +25,7 @@ export function createWordpadTools({ desktops, vfs, paths, requests, files }: Wo
     const state = desktops.state(desktopId)
     const existing = windowId === undefined && state.windows.every((w) => w.app !== 'wordpad') ? null : pickWindow(state, 'wordpad', windowId)
     const window = existing ?? desktops.openWindow({ desktopId, app: 'wordpad', path: file }, 'agent')
-    desktops.focusWindow(window.id)
+    desktops.focusWindow(window.id, 'agent')
     const view = pickWindow(desktops.state(desktopId), 'wordpad', window.id).view as WordpadView
     desktops.updateView(window.id, { ...view, path: file, dirty: false })
     // Best effort: an app that does not answer is not an error here (the view change already tells it).

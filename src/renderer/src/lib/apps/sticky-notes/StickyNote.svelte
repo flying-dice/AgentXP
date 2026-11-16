@@ -98,6 +98,7 @@
     menuOpen = true
   }}
 >
+  <!-- svelte-ignore a11y_no_static_element_interactions -- the title bar is a pointer-only drag handle; the note has its own keyboard-reachable buttons -->
   <header class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
     <button type="button" class="btn" data-testid="notes-sticky-add" title="New note" aria-label="New note" onpointerdown={(e) => e.stopPropagation()} onclick={onadd}>+</button>
     {#if note.author === 'agent'}<span class="by" title="Written by the agent">Agent7</span>{/if}

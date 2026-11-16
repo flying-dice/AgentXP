@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto'
 import type { Id } from '@shared/models'
 import type { ToolHandlers } from './catalog'
+import type { TerminalActivity } from '../ports'
 import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import type { CommandRunner, DesktopOps } from './ports'
 import type { ToolPaths } from './ToolPaths'
@@ -19,18 +21,25 @@ export interface TerminalToolsDeps {
   runner: CommandRunner
   vfs: Pick<VirtualFileSystem, 'realPath'>
   paths: ToolPaths
+  /** Records each run as a terminal of the chat (command, streamed output, exit code): the Terminal app lists it. */
+  terminals: { record(sessionId: Id, activity: TerminalActivity): void }
+  newTerminalId?: () => string
 }
 
-/** terminal_run, terminal_read. Output also goes to the Terminal window's view (cwd, running command, last lines). */
-export function createTerminalTools({ desktops, runner, vfs, paths }: TerminalToolsDeps): ToolHandlers<'terminal_run' | 'terminal_read'> {
+/**
+ * terminal_run, terminal_read. Every run is also recorded as a terminal of the calling chat (like an ACP
+ * terminal), so the Terminal app shows its command, streaming output and exit code in its own tab; the
+ * Terminal window's view (cwd, running command, last lines) follows it too.
+ */
+export function createTerminalTools({ desktops, runner, vfs, paths, terminals, newTerminalId = () => `run-${randomUUID()}` }: TerminalToolsDeps): ToolHandlers<'terminal_run' | 'terminal_read'> {
   /** What terminal_run printed on each desktop, newest last. */
   const buffers = new Map<Id, string[]>()
 
-  const showInTerminal = (desktopId: Id, cwd: string, runningCommand: string | null, lines: string[]): void => {
+  const showInTerminal = (desktopId: Id, terminalId: string, cwd: string, runningCommand: string | null, lines: string[]): void => {
     const window = pickWindow(desktops.state(desktopId), 'terminal')
     desktops.updateView(window.id, {
       app: 'terminal',
-      terminalId: 'agent',
+      terminalId,
       cwd,
       runningCommand,
       lastLines: lastLines(lines, VIEW_LINES)
@@ -46,15 +55,22 @@ export function createTerminalTools({ desktops, runner, vfs, paths }: TerminalTo
         const lines = buffers.get(desktopId) ?? []
         buffers.set(desktopId, lines)
         lines.push(`> ${command}`)
-        showInTerminal(desktopId, directory, command, lines)
+        const terminalId = newTerminalId()
+        const record = (delta: string, exitStatus: TerminalActivity['exitStatus'] = null): void =>
+          terminals.record(context.sessionId, { terminalId, command, args: [], cwd: real, delta, exitStatus })
+        record('')
+        showInTerminal(desktopId, terminalId, directory, command, lines)
         const result = await runner.run(command, {
           cwd: real,
-          timeoutMs: (timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * 1000
+          timeoutMs: (timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * 1000,
+          onOutput: (text) => record(text)
         })
+        // A timeout or a signal has no exit code; the terminal still has to end (exit code null means "running").
+        record(result.timedOut ? '\n[timed out]\n' : '', { exitCode: result.exitCode ?? (result.timedOut ? 124 : 1), signal: null })
         const printed = result.output.replace(/\r\n/g, '\n').replace(/\n$/, '')
         if (printed) lines.push(...printed.split('\n'))
         if (lines.length > KEPT_LINES) lines.splice(0, lines.length - KEPT_LINES)
-        showInTerminal(desktopId, directory, null, lines)
+        showInTerminal(desktopId, terminalId, directory, null, lines)
         const status = result.timedOut ? 'timed out' : `exit code ${result.exitCode ?? 'unknown'}`
         const text = `${tail(printed, MAX_OUTPUT_CHARS) || '(no output)'}\n[${status}]`
         return result.timedOut || result.exitCode !== 0 ? errorResult(text) : textResult(text)

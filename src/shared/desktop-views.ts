@@ -29,6 +29,63 @@ export function cascadedBounds(app: AppKind, openCount: number): Bounds {
   return { ...b, x: b.x + offset, y: b.y + offset }
 }
 
+/**
+ * The desktop area new windows are placed in. Main does not know the real viewport; this is the
+ * default Agent7 window (1280x800) minus the top bar and the taskbar.
+ */
+export const DESKTOP_AREA = { width: 1280, height: 730 } as const
+
+/** Gap kept between a new window and the window it avoids. */
+const PLACEMENT_GAP = 8
+/** Smallest size a new window is squeezed to when it is tiled into the space beside another window. */
+const MIN_TILE = { width: 360, height: 220 }
+
+const overlaps = (a: Bounds, b: Bounds): boolean =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v))
+
+/** Moves (and, when it is larger than the area, shrinks) `b` so it lies inside `area`. */
+function within(b: Bounds, area: { width: number; height: number }): Bounds {
+  const width = Math.min(b.width, area.width)
+  const height = Math.min(b.height, area.height)
+  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, 0, area.height - height), width, height }
+}
+
+/**
+ * Bounds of a new window. Without a window to avoid this is the cascade (`cascadedBounds`). With one
+ * (the focused chat: the user is typing in it) the window is tiled where it does not cover it, in this order:
+ * to the right, below, to the left, above at full size, then squeezed into the room to the right or below.
+ * When there is no room at all it falls back to the cascade (overlap cannot be avoided). Always inside `area`.
+ */
+export function placeWindow(
+  app: AppKind,
+  openCount: number,
+  avoid: Bounds | null,
+  area: { width: number; height: number } = DESKTOP_AREA
+): Bounds {
+  const base = within(cascadedBounds(app, openCount), area)
+  if (!avoid || !overlaps(base, avoid)) return base
+  const { width, height } = base
+  const top = clamp(avoid.y, 0, area.height - height)
+  const left = clamp(avoid.x, 0, area.width - width)
+  const rightX = avoid.x + avoid.width + PLACEMENT_GAP
+  const belowY = avoid.y + avoid.height + PLACEMENT_GAP
+  const exact: Bounds[] = [
+    { x: rightX, y: top, width, height },
+    { x: left, y: belowY, width, height },
+    { x: avoid.x - PLACEMENT_GAP - width, y: top, width, height },
+    { x: left, y: avoid.y - PLACEMENT_GAP - height, width, height }
+  ]
+  const fits = exact.find((b) => b.x >= 0 && b.y >= 0 && b.x + b.width <= area.width && b.y + b.height <= area.height)
+  if (fits) return fits
+  const roomRight = area.width - rightX
+  if (roomRight >= MIN_TILE.width) return { x: rightX, y: top, width: roomRight, height }
+  const roomBelow = area.height - belowY
+  if (roomBelow >= MIN_TILE.height) return { x: left, y: belowY, width, height: roomBelow }
+  return base
+}
+
 export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':

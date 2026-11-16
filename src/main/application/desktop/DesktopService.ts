@@ -14,7 +14,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { cascadedBounds, initialView, windowTitle } from '@shared/desktop-views'
+import { initialView, placeWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto } from '@shared/models'
 import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
@@ -60,6 +60,8 @@ export class DesktopService implements DesktopStates {
   private readonly views = new Map<Id, AppView>()
   private readonly focus = new Map<Id, Id>()
   private readonly lastPublished = new Map<Id, string>()
+  /** Windows the agent opened or touched behind the user's chat (taskbar flash), per desktop; cleared when focused. */
+  private readonly attention = new Map<Id, Set<Id>>()
 
   constructor(private readonly deps: DesktopServiceDeps) {}
 
@@ -78,6 +80,7 @@ export class DesktopService implements DesktopStates {
   forget(id: Id): void {
     for (const window of this.deps.windows.list(id)) this.views.delete(window.id)
     this.focus.delete(id)
+    this.attention.delete(id)
     this.lastPublished.delete(id)
   }
 
@@ -118,23 +121,36 @@ export class DesktopService implements DesktopStates {
 
   // ---- windows -----------------------------------------------------------------------------------
 
+  /**
+   * Opens a window (or brings the existing one of a singleton app / chat forward). A new window is tiled
+   * beside the focused chat instead of over it (`placeWindow`). A window the agent opens does not take
+   * focus from a chat the user is working in: it opens behind that chat and its taskbar button flashes.
+   */
   openWindow(input: OpenWindowInput, openedBy: OpenedBy = 'user'): AppWindowState {
     const desktopId = this.record(input.desktopId).id
+    const focused = this.focusedRecord(desktopId)
+    const typingChat = openedBy === 'agent' && focused?.app === 'chat' ? focused : null
     const existing = this.existingWindow(input)
     if (existing) {
-      this.focusWindow(existing.id)
+      this.focusWindow(existing.id, openedBy)
       if (input.path !== undefined && existing.app === 'code') this.showInCode(existing, input.path)
       return this.windowState(existing.id)
     }
+    const avoid = focused?.app === 'chat' && focused.windowState === 'normal' ? focused.bounds : null
     const record = this.deps.windows.create({
       desktopId,
       app: input.app,
-      bounds: cascadedBounds(input.app, this.deps.windows.list(desktopId).length),
+      bounds: placeWindow(input.app, this.deps.windows.list(desktopId).length, avoid),
       windowState: 'normal',
       openedBy,
       ...this.subtypeOf(input)
     })
-    this.focus.set(desktopId, record.id)
+    if (typingChat) {
+      this.deps.windows.raise(typingChat.id) // the new window goes behind the chat
+      this.flag(desktopId, record.id)
+    } else {
+      this.focus.set(desktopId, record.id)
+    }
     this.emit(desktopId)
     return this.windowState(record.id)
   }
@@ -143,16 +159,28 @@ export class DesktopService implements DesktopStates {
     const record = this.windowRecord(windowId)
     this.deps.windows.remove(windowId)
     this.views.delete(windowId)
+    this.attention.get(record.desktopId)?.delete(windowId)
     if (this.focus.get(record.desktopId) === windowId) this.focus.delete(record.desktopId)
     this.emit(record.desktopId)
   }
 
-  focusWindow(windowId: Id): void {
+  /**
+   * Brings a window to the front and focuses it. `by: 'agent'` never takes focus from a chat the user is
+   * working in: the window is only flagged (its taskbar button flashes until the user focuses it).
+   */
+  focusWindow(windowId: Id, by: OpenedBy = 'user'): void {
     const record = this.windowRecord(windowId)
+    const focused = this.focusedRecord(record.desktopId)
+    if (by === 'agent' && focused?.app === 'chat' && focused.id !== windowId) {
+      this.flag(record.desktopId, windowId)
+      this.emit(record.desktopId)
+      return
+    }
     if (record.windowState === 'minimized') this.deps.windows.setWindowState(windowId, 'normal')
     const top = this.deps.windows.list(record.desktopId).at(-1)
     if (top?.id !== windowId) this.deps.windows.raise(windowId)
     this.focus.set(record.desktopId, windowId)
+    this.attention.get(record.desktopId)?.delete(windowId)
     this.emit(record.desktopId)
   }
 
@@ -257,6 +285,7 @@ export class DesktopService implements DesktopStates {
       bounds: record.bounds,
       windowState: record.windowState,
       openedBy: record.openedBy,
+      ...(this.attention.get(record.desktopId)?.has(record.id) ? { attention: true } : {}),
       view
     }
   }
@@ -272,6 +301,20 @@ export class DesktopService implements DesktopStates {
     const view = initialView({ app: record.app, path: record.path || undefined, url: record.url ?? undefined, sessionId: record.sessionId ?? undefined })
     this.views.set(record.id, view)
     return view
+  }
+
+  private flag(desktopId: Id, windowId: Id): void {
+    const set = this.attention.get(desktopId) ?? new Set<Id>()
+    set.add(windowId)
+    this.attention.set(desktopId, set)
+  }
+
+  /** The window that has focus (same rule as `state().focusedWindowId`), as its row. */
+  private focusedRecord(desktopId: Id): AppWindowRecord | null {
+    const records = this.deps.windows.list(desktopId)
+    const stored = this.focus.get(desktopId)
+    const visible = (r: AppWindowRecord): boolean => r.windowState !== 'minimized'
+    return records.find((r) => r.id === stored && visible(r)) ?? records.findLast(visible) ?? null
   }
 
   private focusedId(desktopId: Id, windows: AppWindowState[]): Id | null {

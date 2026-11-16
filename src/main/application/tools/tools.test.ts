@@ -29,6 +29,7 @@ import { StickyNoteService } from '../desktop/StickyNoteService'
 import { createShellTools } from './shellTools'
 import { createTerminalTools } from './terminalTools'
 import { ToolPaths } from './ToolPaths'
+import type { TerminalActivity } from '../ports'
 import type { ToolResult } from './types'
 
 const textOf = (r: ToolResult): string => r.content.map((c) => (c.type === 'text' ? c.text : `<${c.type}>`)).join('\n')
@@ -73,6 +74,8 @@ let driver: FakeDriver
 let asked: string[]
 let allowAsk: boolean
 let ran: { command: string; cwd: string }[]
+let recorded: [number, TerminalActivity][]
+let runCounter: number
 let tools: DesktopToolService
 let changes: FileChangeDto[]
 let appCalls: { windowId: number; method: string; params: unknown }[]
@@ -122,10 +125,14 @@ beforeEach(async () => {
   asked = []
   allowAsk = true
   ran = []
+  recorded = []
+  runCounter = 0
   changes = []
   const runner: CommandRunner = {
     run: async (command, options) => {
       ran.push({ command, cwd: options.cwd })
+      options.onOutput?.('line1\n')
+      options.onOutput?.('line2\n')
       return { exitCode: command === 'fail' ? 2 : 0, timedOut: false, output: 'line1\nline2\n' }
     }
   }
@@ -168,7 +175,7 @@ beforeEach(async () => {
       ...createFsTools({ vfs: f.vfs, paths }),
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
       ...createCodeTools({ desktops, changes: { list: () => changes }, paths }),
-      ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths }),
+      ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths, terminals: { record: (id, a) => void recorded.push([id, a]) }, newTerminalId: () => `run-${++runCounter}` }),
       ...createBrowserTools({ desktops, driver }),
       ...createPaintTools({ desktops, requests }),
       ...createWordpadTools({
@@ -401,12 +408,29 @@ describe('terminal tools', () => {
     expect(ran).toEqual([{ command: 'echo hi', cwd: join(f.projectDir, 'src') }])
     expect(desktops.windowsOf(desktopId, 'terminal')[0]?.view).toEqual({
       app: 'terminal',
-      terminalId: 'agent',
+      terminalId: 'run-1',
       cwd: 'E:\\src',
       runningCommand: null,
       lastLines: ['> echo hi', 'line1', 'line2']
     })
     expect(textOf(await run('terminal_read', { lines: 2 }))).toBe('line1\nline2')
+  })
+
+  it('records each run as a terminal of the chat: start, streamed output, exit code', async () => {
+    await run('terminal_run', { command: 'echo hi', cwd: 'src' })
+    await run('terminal_run', { command: 'fail' })
+    const cwd = join(f.projectDir, 'src')
+    expect(recorded.map(([id, a]) => [id, a.terminalId, a.command, a.delta, a.exitStatus])).toEqual([
+      [sessionId, 'run-1', 'echo hi', '', null],
+      [sessionId, 'run-1', 'echo hi', 'line1\n', null],
+      [sessionId, 'run-1', 'echo hi', 'line2\n', null],
+      [sessionId, 'run-1', 'echo hi', '', { exitCode: 0, signal: null }],
+      [sessionId, 'run-2', 'fail', '', null],
+      [sessionId, 'run-2', 'fail', 'line1\n', null],
+      [sessionId, 'run-2', 'fail', 'line2\n', null],
+      [sessionId, 'run-2', 'fail', '', { exitCode: 2, signal: null }]
+    ])
+    expect(recorded[0]![1]).toMatchObject({ args: [], cwd })
   })
 
   it('runs on C: and refuses an ejected drive without running anything', async () => {

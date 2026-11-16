@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { A2UI_VERSION } from '@shared/a2ui/messages'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
 import { DESKTOP_INSTRUCTIONS, specsForGroups } from '../../application/tools/catalog'
+import type { ToolResult } from '../../application/tools/types'
 import type { BridgeClient } from './bridge-client'
 import { buildCatalogReply } from './mcp-instructions'
 import { MCP_SERVER_NAME } from './protocol'
@@ -65,18 +66,28 @@ export function createAgent7McpServer(client: BridgeClient, validator: A2uiMessa
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [...A2UI_TOOLS, ...(await desktopTools())] }))
 
+  /** Runs an A2UI tool and records the call and its result in the app's protocol event log (like the desktop tools). */
+  const logged = async (tool: string, args: unknown, run: () => Promise<CallToolResult>): Promise<CallToolResult> => {
+    await client.logCalled(tool, args ?? {}).catch(() => {})
+    const result = await run()
+    await client.logFinished(tool, { content: result.content as ToolResult['content'], ...(result.isError ? { isError: true } : {}) }).catch(() => {})
+    return result
+  }
+
   server.setRequestHandler(CallToolRequestSchema, async ({ params }): Promise<CallToolResult> => {
     switch (params.name) {
       case 'a2ui_catalog':
-        return text(buildCatalogReply())
-      case 'a2ui_render': {
-        const args = renderArgs.safeParse(params.arguments)
-        return args.success ? send(args.data.messages) : text(`Invalid arguments: ${args.error.message}`, true)
-      }
-      case 'a2ui_delete_surface': {
-        const args = deleteArgs.safeParse(params.arguments)
-        return args.success ? send([{ version: A2UI_VERSION, deleteSurface: { surfaceId: args.data.surfaceId } }]) : text(`Invalid arguments: ${args.error.message}`, true)
-      }
+        return logged(params.name, params.arguments, async () => text(buildCatalogReply()))
+      case 'a2ui_render':
+        return logged(params.name, params.arguments, async () => {
+          const args = renderArgs.safeParse(params.arguments)
+          return args.success ? send(args.data.messages) : text(`Invalid arguments: ${args.error.message}`, true)
+        })
+      case 'a2ui_delete_surface':
+        return logged(params.name, params.arguments, async () => {
+          const args = deleteArgs.safeParse(params.arguments)
+          return args.success ? send([{ version: A2UI_VERSION, deleteSurface: { surfaceId: args.data.surfaceId } }]) : text(`Invalid arguments: ${args.error.message}`, true)
+        })
       default:
 {
         const result = await client.call(params.name, params.arguments ?? {})

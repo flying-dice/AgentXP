@@ -125,3 +125,34 @@ describe('buildA2uiMcpServerConfig', () => {
     })
   })
 })
+
+describe('A2UI tool calls in the protocol log', () => {
+  it('records a2ui_* calls and their results through the bridge, also rejected ones', async () => {
+    const calls: string[] = []
+    const sink = new FakeSink()
+    const bridge = new A2uiBridgeServer(sink, defaultSocketPath(process.pid + Math.floor(Math.random() * 1e6)), undefined, undefined, {
+      called: (sessionId, tool, args) => calls.push(`in ${sessionId} ${tool} ${JSON.stringify(args)}`),
+      finished: (sessionId, tool, result) => calls.push(`out ${sessionId} ${tool} ${result.isError ? 'error' : 'ok'} ${textOf(result)}`)
+    })
+    await bridge.start()
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, '5'))
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: 't', version: '0' })
+    await Promise.all([server.connect(a), client.connect(b)])
+    try {
+      await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } }] } })
+      await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ nonsense: true }] } })
+      await client.callTool({ name: 'a2ui_delete_surface', arguments: { surfaceId: 's' } })
+    } finally {
+      await client.close()
+      await bridge.stop()
+    }
+    expect(calls).toHaveLength(6)
+    expect(calls[0]).toMatch(/^in 5 a2ui_render .*createSurface/)
+    expect(calls[1]).toBe('out 5 a2ui_render ok ok')
+    expect(calls[2]).toMatch(/^in 5 a2ui_render .*nonsense/)
+    expect(calls[3]).toMatch(/^out 5 a2ui_render error Rejected/)
+    expect(calls[4]).toBe('in 5 a2ui_delete_surface {"surfaceId":"s"}')
+    expect(calls[5]).toBe('out 5 a2ui_delete_surface ok ok')
+  })
+})

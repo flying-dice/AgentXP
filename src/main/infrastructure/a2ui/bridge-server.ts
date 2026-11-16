@@ -5,7 +5,7 @@ import { rmSync } from 'node:fs'
 import type { ToolGroup } from '@shared/desktop'
 import type { Id } from '@shared/models'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
-import type { DesktopToolHost } from '../../application/tools/types'
+import type { DesktopToolHost, ToolResult } from '../../application/tools/types'
 import type { A2uiMessageSink } from '../../domain/a2ui/ports'
 import { LineSplitter } from './ndjson'
 import { ENV_DESKTOP_ID, ENV_SESSION_KEY, ENV_SOCKET, MCP_SERVER_NAME, type BridgePush, type BridgeResponse } from './protocol'
@@ -28,6 +28,12 @@ const asId = (value: unknown): Id | null => {
   return Number.isSafeInteger(n) ? n : null
 }
 
+/** Sees the `a2ui_*` tool calls of the agents (the Event Viewer); the desktop tools are logged by `DesktopToolService`. */
+export interface A2uiToolLog {
+  called(sessionId: Id, tool: string, args: unknown): void
+  finished(sessionId: Id, tool: string, result: ToolResult): void
+}
+
 const message = (error: unknown): string => (error instanceof Error ? error.message : String(error))
 
 /**
@@ -44,7 +50,8 @@ export class A2uiBridgeServer {
     private readonly sink: A2uiMessageSink,
     readonly socketPath: string = defaultSocketPath(),
     private readonly validator: A2uiMessageValidator = new A2uiMessageValidator(),
-    private readonly tools?: DesktopToolHost
+    private readonly tools?: DesktopToolHost,
+    private readonly log?: A2uiToolLog
   ) {}
 
   start(): Promise<void> {
@@ -120,6 +127,8 @@ export class A2uiBridgeServer {
           return this.listTools(id, request)
         case 'call':
           return await this.callTool(id, request)
+        case 'log':
+          return this.logTool(id, request)
         case 'subscribe':
           return this.subscribe(id, request, socket)
         default:
@@ -153,6 +162,14 @@ export class A2uiBridgeServer {
       return { id, ok: false, errors: ['This chat is not on a desktop, so desktop tools are unavailable.'] }
     }
     return { id, ok: true, result: await this.tools.call({ sessionId: session, desktopId: desktop }, tool, args) }
+  }
+
+  private logTool(id: string, { sessionKey, tool, phase, args, result }: Record<string, unknown>): BridgeResponse {
+    const session = asId(sessionKey)
+    if (session === null || typeof tool !== 'string' || !tool.startsWith('a2ui_')) return { id, ok: false, errors: ['invalid log request'] }
+    if (phase === 'called') this.log?.called(session, tool, args)
+    else if (phase === 'finished' && typeof result === 'object' && result !== null) this.log?.finished(session, tool, result as ToolResult)
+    return { id, ok: true }
   }
 
   private subscribe(id: string, { desktopId }: Record<string, unknown>, socket: Socket): BridgeResponse {

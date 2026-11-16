@@ -22,7 +22,7 @@ export function createNotepadTools({ desktops, vfs, paths }: NotepadToolsDeps): 
         const file = paths.resolve(context, path)
         await vfs.readFile(desktopId, file) // fails with a readable error when the file is missing
         const open = desktops.state(desktopId).windows.find((w) => w.view.app === 'notepad' && w.view.path === file)
-        if (open) desktops.focusWindow(open.id)
+        if (open) desktops.focusWindow(open.id, 'agent')
         else desktops.openWindow({ desktopId, app: 'notepad', path: file }, 'agent')
         return textResult(`Notepad shows ${file}.`)
       }),

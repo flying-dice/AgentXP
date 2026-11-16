@@ -70,6 +70,10 @@ describe('scripted agent: manual stepping (stepping.json)', () => {
     await chat.send('run it all')
     await see.eventually(async () => expect(await chat.agentMessages.count()).toBe(4))
     await see.count(chat.reasoning, 2)
+    // The script reuses the tool call id `t1` in every turn: each turn gets its own card.
+    await see.count(chat.toolCalls, 2)
+    await see.attribute(chat.toolCalls.first(), 'data-status', 'done')
+    await see.attribute(chat.toolCalls.last(), 'data-status', 'done')
     expect((await control.status()).state).toBe('idle')
   })
 })

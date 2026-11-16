@@ -12,12 +12,14 @@ import {
   type Stream
 } from '@agentclientprotocol/sdk'
 import type { ContentBlockDto, PermissionOptionDto } from '@shared/models'
+import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { AgentSessionEventSink } from '../../domain/agent/AgentSessionEventSink'
 import type { FileAccessProvider } from '../../domain/agent/FileAccess'
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import type { PermissionDecision, PermissionPrompter } from '../../domain/agent/PermissionPrompter'
 import { TOOL_REFUSED_CODE, ToolRefusedError, allowAllTools, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
 import { toAcpContentBlock } from './contentMapping'
+import { ToolCallScope } from './ToolCallScope'
 import { mapSessionUpdate, toToolCallPatch } from './mapSessionUpdate'
 import { extractSessionState, type SessionState } from './sessionState'
 import type { TerminalManager } from './TerminalManager'
@@ -98,6 +100,8 @@ export class AcpAgentConnection {
   private readonly permissionAborts = new Map<string, Set<AbortController>>()
   /** Tool calls of each session that have not reached a final status (to mark them cancelled when the turn is cancelled). */
   private readonly openToolCalls = new Map<string, Set<string>>()
+  /** Makes tool call ids unique per turn (agents reuse `t1` in every prompt). */
+  private readonly toolCallScope = new ToolCallScope()
 
   constructor(private readonly deps: AcpAgentConnectionDeps) {
     this.connection = this.buildApp().connect(deps.stream)
@@ -148,6 +152,7 @@ export class AcpAgentConnection {
   }
 
   async prompt(acpSessionId: string, blocks: ContentBlockDto[]): Promise<StopReason> {
+    this.toolCallScope.beginTurn(acpSessionId)
     const response = await this.connection.agent.request(methods.agent.session.prompt, {
       sessionId: acpSessionId,
       prompt: blocks.map(toAcpContentBlock)
@@ -285,10 +290,17 @@ export class AcpAgentConnection {
   }
 
   private handleUpdate(notification: SessionNotification): void {
-    const event = mapSessionUpdate(notification.update)
-    if (!event) return
+    const mapped = mapSessionUpdate(notification.update)
+    if (!mapped) return
+    const event = this.scopeToolCall(notification.sessionId, mapped)
     this.trackToolCall(notification.sessionId, event)
     this.deps.sink.emit(notification.sessionId, event)
+  }
+
+  private scopeToolCall(sessionId: string, event: AgentSessionEvent): AgentSessionEvent {
+    if (event.type === 'tool_call_created') return { ...event, toolCallId: this.toolCallScope.forCreate(sessionId, event.toolCallId) }
+    if (event.type === 'tool_call_updated') return { ...event, toolCallId: this.toolCallScope.forUpdate(sessionId, event.toolCallId) }
+    return event
   }
 
   private async handlePermission(params: RequestPermissionRequest): Promise<RequestPermissionResponse> {
@@ -297,7 +309,7 @@ export class AcpAgentConnection {
       const decision = await Promise.race([
         this.deps.permissions.prompt({
           sessionKey: params.sessionId,
-          toolCallId: params.toolCall.toolCallId,
+          toolCallId: this.toolCallScope.forCreate(params.sessionId, params.toolCall.toolCallId),
           toolCall: toToolCallPatch(params.toolCall),
           options: params.options.map(toOptionDto),
           signal: abort.signal

@@ -102,6 +102,8 @@ export interface AppWindowState {
   bounds: Bounds
   windowState: WindowState
   openedBy: OpenedBy
+  /** The agent opened or touched this window behind the chat the user is working in: its taskbar button flashes until it is focused. Absent when false. */
+  attention?: boolean
   view: AppView
 }
 
