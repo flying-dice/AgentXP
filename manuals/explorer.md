@@ -41,7 +41,7 @@ The row at the top has **Back**, **Up**, the address bar, and **Refresh**. The a
 
 ### The Command Bar
 
-The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. Press F1 for more. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
+The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject (remove from this desktop)**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. Press F1 for more. The **Eject (remove from this desktop)** button says: Remove the selected project from this desktop. The folder stays on your disk.
 
 ### The Navigation Pane
 
@@ -53,7 +53,7 @@ The list shows the files of the folder. It has the columns **Name**, **Type**, a
 
 ### The Computer Window
 
-The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the private C: drive (files made on this desktop). The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
+The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the private C: drive (files made on this desktop). The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject (remove from this desktop)**, and **Properties**.
 
 The group **Recently removed** shows the last five projects that you ejected from this desktop. The newest one is selected when you open the group. If nothing was removed yet, the dimmed button says so in its tooltip. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
 
@@ -81,7 +81,7 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Plug in a project... | Opens the **Browse For Folder** dialog box and plugs the folder in as a drive. | `explorer-plug-in` |
 | Plug in again | Plugs the selected recently removed project in again. | `explorer-plug-in-again` |
 | Open | Opens the selected drive. | `explorer-open` |
-| Eject | Safely removes the selected USB drive. | `explorer-eject` |
+| Eject (remove from this desktop) | Removes the selected project from this desktop. The folder and its files stay where they are. | `explorer-eject` |
 | Navigation pane | The tree at the left. | `explorer-nav` |
 | Favorites | The group of favorite folders. | `explorer-tree-favorites` |
 | Favorite | One favorite folder. | `explorer-tree-favorite` |
@@ -164,13 +164,13 @@ To go to a path, follow the steps below:
 
 To start a chat in a folder, right-click the folder and click **Start a chat here**.
 
-To eject a project, select it in **Computer** and click **Eject**, or right-click it and click **Eject**. A balloon tells you that it can be removed and that its files on disk did not change.
+To remove a project from the desktop, select it in **Computer** and click **Eject (remove from this desktop)**, or right-click it and click the same entry. A balloon with the title **Project removed** says: 'login-app' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back. The folder is not deleted.
 
 ## 6 - Troubleshooting
 
 - **A message says that Windows cannot find the path.** Fix the spelling of the path. Make sure that the drive is plugged in.
 - **The window went back to Computer.** Someone ejected the drive that you looked at.
-- **Eject is dimmed.** Select a USB drive. The private C: drive cannot be ejected.
+- **Eject (remove from this desktop) is dimmed.** Select a project. The private C: drive cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
 
 ## 7 - Need Help?

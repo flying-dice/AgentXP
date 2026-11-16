@@ -33,8 +33,10 @@ You can also click **Plug in a project...** in the **File** menu of **Code**, or
 To remove a project from the desktop, follow the steps below:
 
 1. Right-click the drive of the project in **Explorer** or in the project tree of **Code**.
-2. Click **Eject**. A box tells that the folder stays on your disk.
-3. Click **Yes**.
+2. Click **Eject (remove from this desktop)**. If a chat still works on the project, a box asks: Remove 'login-app' from this desktop? The agent can no longer use it. The folder and its files stay where they are.
+3. If the box appears, click **Yes**.
+
+A balloon with the title **Project removed** tells you that the project is no longer on the desktop and that your files are still in the folder. The folder is not deleted.
 
 Agent7 closes the windows that show files of the project. The chats of the project stay in the list, but their agents cannot read the files until you plug in the project again. The agent is told which project was removed and that you can plug it in again.
 

@@ -87,7 +87,7 @@ describe('DesktopController', () => {
     const remove = vi.spyOn(api.launcher, 'remove')
     const ask = async (result: 'yes' | 'no'): Promise<boolean> => {
       const pending = controller.deleteDesktop()
-      let queued: { id: number; options: { caption?: string } }[] = []
+      let queued: { id: number; options: { caption?: string; text?: string } }[] = []
       await vi.waitFor(() => {
         messageBoxes.queue.subscribe((q) => (queued = q))()
         expect(queued.length).toBeGreaterThan(0)
@@ -191,16 +191,17 @@ describe('DesktopController', () => {
       const { controller } = await started()
       const pending = controller.ejectDrive('E')
       await vi.waitFor(() => expect(controller.chatsOnDrive('E').length).toBeGreaterThan(0))
-      let queued: { id: number; options: { caption?: string } }[] = []
+      let queued: { id: number; options: { caption?: string; text?: string } }[] = []
       messageBoxes.queue.subscribe((q) => (queued = q))()
-      expect(queued[0].options.caption).toBe('Safely Remove Hardware')
+      expect(queued[0].options.caption).toBe('Remove project')
+      expect(queued[0].options.text).toContain("Remove 'claude-code-win' from this desktop? The agent can no longer use it. The folder and its files stay where they are.")
       messageBoxes.settle(queued[0].id, 'no')
       await pending
       expect(controller.state.drives.some((d) => d.letter === 'E')).toBe(true)
       expect(controller.balloon).toBeNull()
     })
 
-    it('ejects after Yes and shows the Safe To Remove balloon', async () => {
+    it('ejects after Yes and shows the Project removed balloon', async () => {
       const { controller } = await started()
       const pending = controller.ejectDrive('E')
       let queued: { id: number }[] = []
@@ -208,9 +209,8 @@ describe('DesktopController', () => {
       messageBoxes.settle(queued[0].id, 'yes')
       await pending
       expect(controller.state.drives.map((d) => d.letter)).toEqual(['C'])
-      expect(controller.balloon?.title).toBe('Safe To Remove Hardware')
-      expect(controller.balloon?.text).toContain('claude-code-win (E:) can now be removed. Its files on disk were not changed.')
-      expect(controller.balloon?.text).toContain('Plug in a project...')
+      expect(controller.balloon?.title).toBe('Project removed')
+      expect(controller.balloon?.text).toBe("'claude-code-win' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.")
       expect(controller.recentlyRemoved.map((r) => r.label)).toEqual(['claude-code-win'])
       controller.dismissBalloon()
       expect(controller.balloon).toBeNull()
@@ -278,7 +278,7 @@ describe('DesktopController projects and shell feedback', () => {
     const plugged = controller.state.drives.find((d) => d.kind === 'removable')!
     const pending = controller.plugInAgain(plugged.folderId!)
     const text = await answerBox('ok')
-    expect(text).toBe(`${plugged.label} is already plugged in as drive ${plugged.letter}:.`)
+    expect(text).toBe(`The project '${plugged.label}' (${plugged.letter}:) is already plugged in.`)
     expect((await pending)?.letter).toBe(plugged.letter)
   })
 

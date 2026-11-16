@@ -29,6 +29,7 @@
   import NewReviewDialog from '../desktop/NewReviewDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
+  import { observeBar } from '../desktop/barHeight'
   import { desktopWindowTitle } from '../launcher/launcherModel'
   import { ctrlNStartsChat, isCtrlN } from '../desktop/shellKeys'
   import { cycleRegion, focusRegion, tabOutOfWindow } from '../desktop/shellRegions'
@@ -248,7 +249,7 @@
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
     {#if !desktop.needsDesktop}
-      <div class="region" data-region="bar">
+      <div class="region" data-region="bar" use:observeBar={(rect) => void desktop.setBarRect(rect)}>
       <TopBar
         title={desktop.state.title}
         working={desktop.working}

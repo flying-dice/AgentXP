@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeWindow, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeNewWindow, placeWindow, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -23,7 +23,7 @@ describe('placeWindow', () => {
 
   it('tiles to the right of the focused chat at full size when there is room', () => {
     const b = placeWindow('notepad', 1, chat)
-    expect(b).toEqual({ x: chat.x + chat.width + 8, y: chat.y, width: DEFAULT_BOUNDS.notepad.width, height: DEFAULT_BOUNDS.notepad.height })
+    expect(b).toEqual({ x: chat.x + chat.width + 8, y: Math.max(chat.y, WINDOW_MIN_Y), width: DEFAULT_BOUNDS.notepad.width, height: DEFAULT_BOUNDS.notepad.height })
     expect(overlap(b, chat)).toBe(false)
   })
 
@@ -148,5 +148,57 @@ describe('window sizes and placement below the top bar', () => {
   it('has minimum sizes: 480 x 320, Control Center 640 x 420', () => {
     expect(minWindowSize('notepad')).toEqual({ width: 480, height: 320 })
     expect(minWindowSize('control-centre')).toEqual({ width: 640, height: 420 })
+  })
+})
+
+describe('placeNewWindow (UX-88)', () => {
+  const titleStrip = (b: Bounds): Bounds => ({ x: b.x, y: b.y, width: b.width, height: 28 })
+  const notepadParent = { app: 'notepad' as const, bounds: { x: 300, y: 200, width: 520, height: 380 } }
+
+  for (const bar of [52, 68]) {
+    it(`starts below a top bar of ${bar} px`, () => {
+      const minY = windowMinY(bar)
+      for (const app of Object.keys(DEFAULT_BOUNDS) as (keyof typeof DEFAULT_BOUNDS)[]) {
+        for (let open = 0; open < 8; open++) {
+          expect(placeNewWindow(app, open, null, area, undefined, minY).y, `${app} ${open}`).toBeGreaterThanOrEqual(minY)
+          expect(placeNewWindow(app, open, notepadParent, area, undefined, minY).y, `${app} ${open} with parent`).toBeGreaterThanOrEqual(minY)
+        }
+      }
+    })
+  }
+
+  it('the default bar height is the larger one, so a first paint is safe', () => {
+    expect(WINDOW_MIN_Y).toBe(windowMinY(68))
+    expect(windowMinY(52)).toBe(56)
+  })
+
+  it('cascades from the focused window, 28 px right and down, and leaves its title bar visible', () => {
+    const b = placeNewWindow('terminal', 1, notepadParent)
+    expect(b.x).toBe(notepadParent.bounds.x + 28)
+    expect(b.y).toBe(notepadParent.bounds.y + 28)
+    expect(overlap(b, titleStrip(notepadParent.bounds))).toBe(false)
+  })
+
+  it('tiles beside a focused chat as before', () => {
+    const b = placeNewWindow('notepad', 1, { app: 'chat', bounds: chat })
+    expect(overlap(b, chat)).toBe(false)
+  })
+
+  it('Help opens on the side with more free width and does not cover the window that asked for it', () => {
+    const left = { app: 'notepad' as const, bounds: { x: 20, y: 100, width: 420, height: 380 } }
+    const right = { app: 'notepad' as const, bounds: { x: 700, y: 100, width: 420, height: 380 } }
+    const a = placeNewWindow('help', 1, left)
+    expect(overlap(a, left.bounds)).toBe(false)
+    expect(a.x).toBeGreaterThanOrEqual(left.bounds.x + left.bounds.width)
+    const c = placeNewWindow('event-viewer', 1, right)
+    expect(overlap(c, right.bounds)).toBe(false)
+    expect(c.x + c.width).toBeLessThanOrEqual(right.bounds.x)
+    expect(inside(a) && inside(c)).toBe(true)
+  })
+
+  it('Help falls back to the cascade when neither side has room, still below the parent title bar', () => {
+    const wide = { app: 'notepad' as const, bounds: { x: 100, y: 100, width: 1000, height: 500 } }
+    const b = placeNewWindow('help', 1, wide)
+    expect(overlap(b, titleStrip(wide.bounds))).toBe(false)
   })
 })

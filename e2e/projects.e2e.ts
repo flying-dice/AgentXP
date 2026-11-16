@@ -63,12 +63,12 @@ describe('plug in and eject a project', () => {
     await see.text(explorer.itemCount, '2 projects plugged in')
   })
 
-  it('Plug in a project that is plugged in already: a message names its drive, and the drive is selected', async () => {
+  it('Plug in a project that is plugged in already: a message names the project and its drive, and the drive is selected', async () => {
     const explorer = ctx.desktop.explorer()
     await explorer.plugIn.click()
     await browser.chooseByTyping(first.path)
     const box = ctx.desktopPage.getByTestId('message-box')
-    await see.text(box, `${first.name} is already plugged in as drive E:.`)
+    await see.text(box, `The project '${first.name}' (E:) is already plugged in.`)
     await box.getByTestId('dialog-button-ok').click()
     await see.attribute(explorer.drive('e'), 'aria-selected', 'true')
   })
@@ -84,14 +84,14 @@ describe('plug in and eject a project', () => {
     await page.keyboard.press('Escape')
   })
 
-  it('Eject: a balloon says that the files were not changed, and the project appears under Recently removed', async () => {
+  it('Eject: a balloon says that the project was removed and the files are still in the folder, and the project appears under Recently removed', async () => {
     const explorer = ctx.desktop.explorer()
     await explorer.drive('f').click()
     await explorer.eject.click()
     await see.gone(explorer.drive('f'))
-    await see.text(ctx.desktop.balloonTitle, 'Safe To Remove Hardware')
-    await see.text(ctx.desktop.balloonText, `${second.name} (F:) can now be removed. Its files on disk were not changed.`)
-    await see.text(ctx.desktop.balloonText, 'To use it again, open Computer and choose Plug in a project...')
+    await see.text(ctx.desktop.balloonTitle, 'Project removed')
+    await see.text(ctx.desktop.balloonText, `'${second.name}' (F:) was removed from this desktop. Your files are still in the folder.`)
+    await see.text(ctx.desktop.balloonText, 'Use Plug in again to add it back.')
     await see.visible(explorer.removedGroup)
     await see.text(explorer.removed, second.name)
     await see.text(explorer.itemCount, '1 project plugged in')

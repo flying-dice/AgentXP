@@ -34,7 +34,7 @@ Use the desktop to open apps, to switch between windows, to pause the agent, and
 
 ## 2 - Open It
 
-You open a desktop from the **[Desktop Connection](launcher.md)** window. Select a desktop and click **Connect**. A new window opens and shows the desktop.
+You open a desktop from the **[Desktop Connection](launcher.md)** window. A desktop that you just created opens at once. To open another one, select it and click **Connect**. A new window opens and shows the desktop.
 
 If you have no desktop yet, the **Welcome to Agent7** dialog box appears. Click **Agent7 Desktops...** to open the **Desktop Connection** window.
 
@@ -101,7 +101,7 @@ The notification area is at the right end of the taskbar. It has these parts:
 - **Safely Remove Hardware** – A USB icon. It appears while a project is plugged in. Point to it to read **Safely Remove Hardware: 1 project plugged in**. Click it to see **Eject** and the name of each project, for example **Eject login-app (E:)**. **Start -> Eject a project...** opens the same list.
 - **Action Center** – A flag. A number on the flag tells how many requests wait for your answer.
 - **Clock** – Shows the time and the date.
-- **Balloon** – A message above the tray, for example **Project plugged in** (**login-app (E:) is ready to use.**) or **Safe To Remove Hardware** (**login-app (E:) can now be removed. Its files on disk were not changed.**). It closes by itself after nine seconds.
+- **Balloon** – A message above the tray, for example **Project plugged in** (**login-app (E:) is ready to use.**) or **Project removed** (**'login-app' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.**). It closes by itself after nine seconds.
 
 ### The Action Center
 
@@ -296,7 +296,7 @@ To make the agent ask before every action, even reading, tick **Ask before every
 To eject a USB drive, follow the steps below:
 
 1. Click the **Safely Remove Hardware** icon in the notification area, or click **Start -> Eject a project...**.
-2. Click **Eject** and the name of the project. A balloon tells you that the project can be removed and that its files on disk did not change.
+2. Click **Eject** and the name of the project. A balloon tells you that the project was removed from this desktop and that your files are still in the folder.
 
 To open the manual of a window, select the window and press F1.
 

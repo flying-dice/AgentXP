@@ -6,7 +6,7 @@
   const { Story } = defineMeta({
     title: 'Desktop/Balloon',
     component: Balloon,
-    args: { title: 'Safe To Remove Hardware', text: "The 'claude-code-win (E:)' device can now be safely removed from the computer.", icon: 'usb-safe', onclose: fn() },
+    args: { title: 'Project removed', text: "'claude-code-win' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.", icon: 'usb-safe', onclose: fn() },
     argTypes: { icon: { control: 'select', options: ['usb-safe', 'info', 'warning'] }, onclose: { action: 'close' } }
   })
 </script>

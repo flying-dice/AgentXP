@@ -19,7 +19,7 @@ import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
-import { addRemoved, ejectBalloonText, pluggedBalloonText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
+import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, pluggedBalloonText, projectQuoted, removeProjectText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
@@ -31,7 +31,8 @@ import type { PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { cycleTarget, nextFocus, raise, taskbarAction } from './windowOrder'
+import type { BarRect } from './geometry'
+import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
 import { ICON_HINT, takeIconHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
@@ -46,7 +47,7 @@ export interface SnipOverlayState {
   resolve: (region: Bounds | null) => void
 }
 
-/** The Win7 notification balloon over the tray ("Safe To Remove Hardware"). */
+/** The Win7 notification balloon over the tray ("Project removed" after an eject). */
 export interface Balloon {
   title: string
   text: string
@@ -433,6 +434,23 @@ export class DesktopController implements DesktopHost {
     else await this.raiseWindow(windowId)
   }
 
+  // ---- top bar ----------------------------------------------------------------------------------
+
+  /** The size of the top bar as the page measured it (null until the first measurement). */
+  barRect = $state.raw<BarRect | null>(null)
+
+  /**
+   * The top bar was measured (first paint, or it grew with the chips row or the status line). Windows that now have their
+   * title bar under it move down (UX-88). Idempotent: a window that is clear of the bar stays where it is.
+   */
+  async setBarRect(rect: BarRect): Promise<void> {
+    this.barRect = rect
+    for (const move of windowsToMoveBelowBar(this.state.windows, rect)) {
+      this.patch(move.id, { bounds: move.bounds })
+      await this.api.desktop.setBounds(move.id, move.bounds)
+    }
+  }
+
   // ---- drag / resize ----------------------------------------------------------------------------
 
   boundsOf(w: AppWindowState): Bounds {
@@ -765,20 +783,19 @@ export class DesktopController implements DesktopHost {
     return this.allSessions.filter((s) => s.status !== 'closed' && parseVPath(s.cwd)?.drive === letter)
   }
 
-  /** Safely Remove: warns when chats work on the drive, ejects it, then shows the balloon. */
+  /** Eject (remove from this desktop): warns when chats work on the drive, ejects it, then shows the balloon. */
   async ejectDrive(letter: DriveLetter): Promise<void> {
     const drive = this.state.drives.find((d) => d.letter === letter)
     if (!drive || drive.kind === 'system') return
     this.usbMenuOpen = false
     this.startOpen = false
-    const title = driveTitle(drive)
     const working = this.chatsOnDrive(letter)
     if (working.length > 0) {
       const names = working.map((s) => `"${s.title || 'New chat'}"`).slice(0, 3).join(', ')
       const more = working.length > 3 ? ` and ${working.length - 3} more` : ''
       const answer = await showMessageBox({
-        text: `${working.length === 1 ? 'A chat works' : `${working.length} chats work`} on '${title}': ${names}${more}.\n\nIf you remove it now, the agent loses access to its files at once and every file or terminal request on it is refused.\n\nDo you want to remove it anyway?`,
-        caption: 'Safely Remove Hardware',
+        text: `${removeProjectText(drive.label)}\n\n${working.length === 1 ? 'A chat works' : `${working.length} chats work`} on it: ${names}${more}. Their file and terminal requests on it are refused until you plug it in again.`,
+        caption: 'Remove project',
         buttons: 'YesNo',
         icon: 'warning',
         defaultButton: 1
@@ -791,7 +808,7 @@ export class DesktopController implements DesktopHost {
       const removedProjects = gone.length > 0 ? addRemoved(this.current.removedProjects ?? [], gone[0], REMOVED_PROJECTS_KEPT) : this.current.removedProjects
       this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter), removedProjects }
     }
-    this.showBalloon({ title: 'Safe To Remove Hardware', text: ejectBalloonText(title), icon: 'usb-safe' })
+    this.showBalloon({ title: EJECT_BALLOON_TITLE, text: ejectBalloonText(drive.label, letter), icon: 'usb-safe' })
   }
 
   /** Plug in a project: the Browse For Folder dialog, then the drive. Resolves the drive (also when it was plugged in already), or null when cancelled or it failed. */
@@ -827,7 +844,7 @@ export class DesktopController implements DesktopHost {
   private async plugInFolder(folder: FolderDto, options: { explorer?: boolean; autoPlay?: boolean } = {}): Promise<DriveDto | null> {
     const already = this.state.drives.find((d) => d.kind === 'removable' && d.folderId === folder.id)
     if (already) {
-      await showMessageBox({ text: `${folder.name} is already plugged in as drive ${already.letter}:.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
+      await showMessageBox({ text: `The project ${projectQuoted(folder.name, already.letter)} is already plugged in.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
       return already
     }
     if (!options.autoPlay) this.chosenPlugIns++
@@ -855,7 +872,7 @@ export class DesktopController implements DesktopHost {
   openEjectList(): void {
     this.startOpen = false
     if (this.state.drives.some((d) => d.kind === 'removable')) this.usbMenuOpen = true
-    else this.showBalloon({ title: 'Safely Remove Hardware', text: 'No project is plugged in.', icon: 'info' })
+    else this.showBalloon({ title: 'Remove a project', text: 'No project is plugged in.', icon: 'info' })
   }
 
   showBalloon(balloon: Balloon): void {
