@@ -147,11 +147,11 @@ describe('chat turn with the fake agent', () => {
     await see.visible(chat.frame.getByTestId('changes-reverted'))
     // The row says one word, "Reverted"; the full words are in its tooltip and the note above the list (UX-167).
     await see.text(chat.frame.getByTestId('changes-reverted-text'), 'Reverted')
-    expect(await chat.frame.getByTestId('changes-reverted-text').getAttribute('title')).toBe('Reverted. Restore from the Recycle Bin')
+    expect(await chat.frame.getByTestId('changes-reverted-text').getAttribute('title')).toBe('Reverted. Select it and click Restore to put the file back.')
     await see.visible(chat.frame.getByTestId('changes-open-recycle-bin'))
     // A right-click on the reverted row offers the way back, and the Edit menu offers Undo revert (UX-169).
     await chat.frame.getByTestId('changes-reverted').click({ button: 'right' })
-    await see.text(ctx.desktopPage.getByTestId('changes-ctx-restore'), 'Restore from the Recycle Bin')
+    await see.text(ctx.desktopPage.getByTestId('changes-ctx-restore'), 'Show in the Recycle Bin')
     await ctx.desktopPage.keyboard.press('Escape')
     await chat.frame.getByTestId('menubar-edit').click()
     await see.visible(ctx.desktopPage.getByTestId('chat-menu-undo-revert'))

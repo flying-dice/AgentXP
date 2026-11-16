@@ -41,7 +41,7 @@ describe('changes list (UX-40)', () => {
 
   it('tells where a reverted file can be found', () => {
     expect(revertConfirmText('E:\\a.ts')).toContain('You can get it back from the Recycle Bin.')
-    expect(REVERTED_LABEL).toBe('Reverted. Restore from the Recycle Bin')
+    expect(REVERTED_LABEL).toBe('Reverted. Select it and click Restore to put the file back.')
     expect(REVERTED_KIND).toBe('Reverted')
   })
 })

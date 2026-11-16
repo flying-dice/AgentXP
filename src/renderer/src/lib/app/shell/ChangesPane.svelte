@@ -138,7 +138,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   const note = $derived(nothingChanged ? gitNote(gitCount, gitTracked) : null)
   const reason = $derived(revertReason ?? editorReason)
 
-  // The right-click menu of a row: Revert on a changed row, "Restore from the Recycle Bin" on a reverted one (UX-169).
+  // The right-click menu of a row: Revert on a changed row, "Show in the Recycle Bin" on a reverted one (UX-169).
   const menu = new ContextMenu()
   const rowItems = (id: string) =>
     changeRowItems({

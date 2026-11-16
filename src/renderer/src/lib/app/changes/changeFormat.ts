@@ -51,7 +51,7 @@ export const revertConfirmText = (path: string): string =>
   `Revert the changes to ${path}?\n\nThe file goes back to how it was before the agent edited it. You can get it back from the Recycle Bin.`
 
 /** What a reverted row says in place of its change kind (UX-79). */
-export const REVERTED_LABEL = 'Reverted. Restore from the Recycle Bin'
+export const REVERTED_LABEL = 'Reverted. Select it and click Restore to put the file back.'
 /** The one line above the list when a file was reverted; the link beside it opens the Recycle Bin (UX-151). */
 export const REVERTED_NOTE = 'Reverted files are in the Recycle Bin.'
 
