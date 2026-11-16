@@ -80,6 +80,13 @@ export const DESKTOP_AREA = { width: 1280, height: 730 } as const
 const PLACEMENT_GAP = 8
 /** Smallest size a new window is squeezed to when it is tiled into the space beside another window. */
 const MIN_TILE = { width: 360, height: 220 }
+/**
+ * Windows that are never squeezed narrower than this when tiled beside another window: Control Center keeps its list, header and
+ * buttons apart from 640 px (UX-115), Event Viewer its Level and Date and Time columns whole from 720 px (UX-121). Without that
+ * much room they take their default size and cascade over the other window instead.
+ */
+const TILE_MIN_WIDTH: Partial<Record<AppKind, number>> = { 'control-centre': 640, 'event-viewer': 720 }
+const tileMinWidth = (app: AppKind): number => TILE_MIN_WIDTH[app] ?? MIN_TILE.width
 
 const overlaps = (a: Bounds, b: Bounds): boolean =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -123,7 +130,7 @@ export function placeWindow(
   const fits = exact.find((b) => b.x >= 0 && b.y >= minY && b.x + b.width <= area.width && b.y + b.height <= area.height)
   if (fits) return fits
   const roomRight = area.width - rightX
-  if (roomRight >= MIN_TILE.width) return { x: rightX, y: top, width: roomRight, height }
+  if (roomRight >= tileMinWidth(app)) return { x: rightX, y: top, width: roomRight, height }
   const roomBelow = area.height - belowY
   if (roomBelow >= MIN_TILE.height) return { x: left, y: belowY, width, height: roomBelow }
   return base
@@ -166,7 +173,7 @@ export function placeNewWindow(
     const right = area.width - (p.x + p.width)
     const onRight = right >= left
     const room = (onRight ? right : left) - PLACEMENT_GAP
-    if (room >= MIN_TILE.width) {
+    if (room >= tileMinWidth(app)) {
       const width = Math.min(base.width, room)
       const x = onRight ? p.x + p.width + PLACEMENT_GAP : p.x - PLACEMENT_GAP - width
       return within({ ...base, x, y: Math.max(p.y, minY), width }, area, minY)

@@ -14,6 +14,8 @@
   let { failure, onrefresh, onhelp, onnavigate }: Props = $props()
   // svelte-ignore state_referenced_locally
   let another = $state(failure.url)
+  /** The technical name of the error (ERR_...) is opt-in: it shows only after "Details". */
+  let details = $state(false)
 </script>
 
 <div class="error" data-testid="browser-error-page" role="alert">
@@ -38,7 +40,8 @@
     <Button data-testid="browser-error-refresh" onclick={onrefresh}>Refresh</Button>
     <button class="link" data-testid="browser-error-help" type="button" onclick={() => onhelp?.()}>Help</button>
   </div>
-  <p class="technical" title="The technical name of the error">{failure.technical}</p>
+  <button class="link" data-testid="browser-error-details" type="button" aria-expanded={details} onclick={() => (details = !details)}>{details ? 'Hide details' : 'Details'}</button>
+  {#if details}<p class="technical" data-testid="browser-error-technical" title="The technical name of the error">{failure.technical}</p>{/if}
 </div>
 
 <style>

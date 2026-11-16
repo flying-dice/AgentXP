@@ -29,10 +29,12 @@ describe('pageStatus', () => {
 describe('failureHint', () => {
   const hint = (url: string, technical: string): string => failureHint(describeLoadFailure(url, technical))
   it('names the blocked port and does not blame the network', () => {
-    const text = hint('http://127.0.0.1:9/', 'ERR_UNSAFE_PORT')
-    expect(text).toContain('port that the Browser blocks')
+    const failure = describeLoadFailure('http://127.0.0.1:9/', 'ERR_UNSAFE_PORT')
+    expect(failure.cause).toBe('The address uses a port that the Browser blocks (the number after the colon).')
+    const text = failureHint(failure)
     expect(text).toContain('(here :9)')
     expect(text).not.toContain('online')
+    expect(`${failure.cause} ${text}`).not.toMatch(/ERR_|ENOENT/)
   })
   it('tells what to do for a refused connection, an unknown name and a missing network', () => {
     expect(hint('http://localhost:3000/', 'ERR_CONNECTION_REFUSED')).toContain('Nothing is listening at this address')

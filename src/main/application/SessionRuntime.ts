@@ -82,7 +82,8 @@ export class SessionRuntime {
         throw new AppError('The chat was removed.')
       }
       pool.add(sessionId, live)
-      this.deps.problems?.recovered(sessionId)
+      // A start that worked clears the problem, not the count of failures: only an answered turn does (see `SessionService.runTurn`).
+      this.deps.problems?.clear(sessionId)
       broadcaster.setStatus(sessionId, 'idle')
       void connection.closed.then(() => this.onClosed(sessionId, connection))
       return live

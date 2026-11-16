@@ -108,6 +108,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
+| Event Viewer (menu) | Opens Event Viewer on the events of this chat. | `chat-menu-event-viewer` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
 | Close | Closes the window. The agent keeps working. (Tooltip: "Close this window. The agent keeps working.") | `chat-menu-close` |

@@ -2,7 +2,7 @@
   import Button from '../kit/atoms/Button.svelte'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
   import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
-  import { RESUME_BUTTON, barStatus, toolChips, toolsLine } from './activity'
+  import { RESUME_BUTTON, barStatus, closedAppNames, toolChips, toolsLine } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
@@ -45,7 +45,7 @@
   const chips = $derived(toolChips(tools, policy, userInControl))
   const toolsNote = $derived(toolsLine(tools, chatsOpen))
   // One derivation for the text, the dot and `data-state`, so they cannot disagree.
-  const view = $derived(barStatus({ paused, userInControl, working, waiting, notice }))
+  const view = $derived(barStatus({ paused, userInControl, working, waiting, notice, closedApps: closedAppNames(chips) }))
   const status = $derived(view.text)
   const mode = $derived(view.state)
 </script>

@@ -80,6 +80,14 @@ describe('describeProblem', () => {
     expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'spawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
   })
 
+  it('names the agent in the start failure: "My assistant could not start: the program x was not found."', () => {
+    const result = describeProblem({ error: null, problem: notFound, failed: null, agentName: 'My assistant' })!
+    expect(result.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found.")
+    expect(result.status).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Click Try again, or open Agents to change the command.")
+    expect(describeProblem({ error: null, problem: notFound, failed: { unanswered: true }, agentName: 'My assistant' })!.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Your message was not sent.")
+    expect(`${result.text} ${result.status}`).not.toMatch(/ERR_|ENOENT/)
+  })
+
   it('a timeout is plain too, with Send again for a message nobody answered', () => {
     const result = describeProblem({ error: 'Request timed out after 60000ms', problem: null, failed: { unanswered: true } })!
     expect(result).toMatchObject({ text: 'The agent did not answer in time.', status: 'The agent did not answer in time. Click Send again to try again.' })

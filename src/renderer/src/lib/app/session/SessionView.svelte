@@ -99,7 +99,7 @@
   const starting = $derived(isStarting(effectiveStatus(info.status, session.status)))
 
   // ---- what went wrong: the error row, the state of the failed message -------------------------------------
-  const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent }))
+  const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent, agentName: agent?.name }))
   const sendStates = $derived.by((): ReadonlyMap<string, SendState> => {
     const failed = store.failedSend
     return failed ? new Map([[failed.messageId, sendStateOf(failed.messageId, failed, !!session.problem)]]) : new Map()
@@ -140,8 +140,8 @@
   }
 
   function onproblem(id: ProblemActionId): void {
-    if (id === 'send-again') void (session.problem ? restartThen(() => store.resend()) : store.resend())
-    else if (id === 'restart-send') void restartThen(() => store.resend())
+    if (id === 'send-again') void (session.problem ? restartThen(resendFailed) : resendFailed())
+    else if (id === 'restart-send') void restartThen(resendFailed)
     else if (id === 'restart') void restartThen(store.failedSend ? putBack : undefined)
     else if (id === 'details') void toggleDetails()
     else if (id === 'open-agents' || id === 'choose-agent') onopenagents?.()
@@ -149,11 +149,20 @@
     else onshowevents?.()
   }
 
+  /**
+   * "Send again" and "Restart and send again": the message goes out once more, so the draft that came back into the message box
+   * when it failed is emptied (a text typed after the failure stays).
+   */
+  async function resendFailed(): Promise<boolean> {
+    const text = store.failedSend?.text
+    if (text !== undefined) edit = { id: --editSeq, clearIf: text }
+    return store.resend()
+  }
+
   /** After "Restart": the message that was not answered goes back into the message box, and a line says to press Send. */
   let restartedNote = $state(false)
   async function putBack(): Promise<void> {
-    await editFailed()
-    restartedNote = !!edit
+    restartedNote = await editFailed()
   }
   // The line goes away with the next send or the next problem.
   $effect(() => {
@@ -161,11 +170,13 @@
   })
 
   /** "Edit" on a message that was not sent: the text goes back into the message box. */
-  let edit = $state<{ id: number; text: string } | null>(null)
+  /** What the message box is told to do: hold a text again ("Edit"), or empty itself of a message that went out again. */
+  let edit = $state<{ id: number; text?: string; clearIf?: string } | null>(null)
   let editSeq = 0
-  async function editFailed(): Promise<void> {
+  async function editFailed(): Promise<boolean> {
     const failed = await store.takeBack()
     if (failed) edit = { id: --editSeq, text: failed.text }
+    return !!failed
   }
 </script>
 
@@ -249,6 +260,8 @@
     margin-top: 4px;
   }
   .chip {
+    min-height: 24px;
+    min-width: 24px;
     padding: 1px 8px;
     border: 1px solid #9aa9bf;
     border-radius: 9px;

@@ -77,7 +77,7 @@ Each row has two lines. The first line shows the name and the setting. The secon
 
 Each row is separate. **Write files** covers changing files in any app. **Code** and **Notepad** cover only what their rows list. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
 
-The top bar shows chips with the same names, for example **Run commands: Ask**. Each chip reads *Name*: *Allow*, *Ask*, *Deny*, or *Off*. **Off** means that no app which gives the agent this tool is open. For example, **Run commands: Off** means that Terminal is not open. The setting of the row stays the same. Click a chip to open this page.
+The top bar shows chips with the same names, for example **Run commands: Ask**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, the same word as the row. When no app that gives the agent this tool is open, the chip adds that, for example **Run commands: Ask (no Terminal open)**, and looks paler. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason. Click a chip to open this page.
 
 - **Allow** – The agent acts without a question.
 - **Ask** – A request appears in the Action Center.
@@ -111,6 +111,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Edit... | Changes the selected agent. | `agents-edit` |
 | Remove | Removes the selected agent. | `agents-remove` |
 | Set as Default | Makes the agent the default. | `agents-set-default` |
+| Agents reason note | Says why Edit, Remove, or Set as Default is off, for example **This is already the default**. | `agents-reason` |
 | Agent dialog box | Adds or changes an agent. | `agents-dialog` |
 | Agent name | The optional name. | `agents-dialog-name` |
 | Agent command | The program to run. | `agents-dialog-command` |
@@ -120,6 +121,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Agent environment | KEY=VALUE per line. | `agents-dialog-env` |
 | Make default | Makes the agent the default for new desktops and chats. | `agents-dialog-default` |
 | Permission table | The permissions in two blocks. | `permissions-table` |
+| Permissions note | The box above the list that says what each row covers, including Code and Notepad. | `permissions-callout` |
 | Permission block | The heading of a block. | `permissions-group` |
 | Permission row | One permission. | `permissions-row` |
 | What it covers | The second line of a row. It tells what the permission covers. | `permissions-covers` |

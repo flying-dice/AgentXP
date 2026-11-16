@@ -33,7 +33,7 @@ export class PermissionBroker {
     /** Rewrites the tool call of a prompt before it is stored (host paths to virtual paths). */
     private readonly mapToolCall: (sessionId: Id, toolCall: PermissionPrompt['toolCall']) => PermissionPrompt['toolCall'] = (_id, toolCall) => toolCall,
     /** Adds what a change replaces (the file's current text) when the agent left it out; null = nothing to add. */
-    private readonly diffs: Pick<ToolCallDiffs, 'needsText' | 'complete'> | null = null
+    private readonly diffs: Pick<ToolCallDiffs, 'needsText' | 'complete' | 'withStoredChange'> | null = null
   ) {}
 
   /** Observes requests as they open and close; returns an unsubscribe function. */
@@ -54,10 +54,13 @@ export class PermissionBroker {
 
   prompt(sessionId: Id, request: PermissionPrompt): Promise<PermissionDecision> {
     if (request.signal.aborted) return Promise.resolve({ outcome: 'cancelled' })
-    const toolCall = this.mapToolCall(sessionId, request.toolCall)
-    // Only a change without its old text waits for the file to be read; every other request opens at once.
+    const mapped = this.mapToolCall(sessionId, request.toolCall)
     const diffs = this.diffs
-    if (!diffs || !diffs.needsText(toolCall)) return this.open(sessionId, request, toolCall)
+    if (!diffs) return this.open(sessionId, request, mapped)
+    // The change may be in the request or only in the earlier update of the same call; either way it is completed.
+    const toolCall = diffs.withStoredChange(mapped, this.transcripts.findToolCall(sessionId, request.toolCallId))
+    // Only a change without its old text waits for the file to be read; every other request opens at once.
+    if (!diffs.needsText(toolCall)) return this.open(sessionId, request, toolCall)
     return diffs.complete(sessionId, toolCall).then((full) => (request.signal.aborted ? { outcome: 'cancelled' as const } : this.open(sessionId, request, full)))
   }
 

@@ -1,8 +1,12 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { PermissionPrompt } from '../domain/agent/PermissionPrompter'
 import { PermissionBroker } from './PermissionBroker'
 import { SessionBroadcaster } from './SessionBroadcaster'
-import { createAppFixture } from './test-helpers'
+import { createAppFixture, createVfsFixture } from './test-helpers'
+import { ToolCallDiffs } from './vfs/ToolCallDiffs'
+import { changeCounts } from '@shared/lineCounts'
 
 let f: ReturnType<typeof createAppFixture>
 let broker: PermissionBroker
@@ -89,6 +93,7 @@ describe('PermissionBroker', () => {
       (_id, toolCall) => toolCall,
       {
         needsText: () => true,
+        withStoredChange: (patch) => patch,
         complete: async (_id, patch) => ({ ...patch, contents: [{ kind: 'diff', path: 'E:\\a.ts', oldText: 'old\n', newText: 'new\n' }] })
       }
     )
@@ -97,6 +102,98 @@ describe('PermissionBroker', () => {
     const entry = f.publisher.payloads('transcript.upserted').at(-1)?.entry
     expect(entry).toMatchObject({ kind: 'tool_call', contents: [{ kind: 'diff', oldText: 'old\n' }] })
     withDiffs.respond(pendingRequestId(), 'allow')
+    await decision
+  })
+})
+
+describe('PermissionBroker with the real diff reader (UX-114)', () => {
+  const OLD = 'a\nb\nc\nd\ne\n'
+  const NEW = 'a\nX\nY\nZ\ne\n'
+  let v: Awaited<ReturnType<typeof createVfsFixture>>
+  let real: PermissionBroker
+
+  beforeEach(async () => {
+    v = await createVfsFixture()
+    real = new PermissionBroker(
+      v.repos.permissions,
+      v.repos.transcripts,
+      v.publisher,
+      new SessionBroadcaster(v.repos.sessions, v.publisher),
+      (_id, toolCall) => toolCall,
+      new ToolCallDiffs(v.vfs, () => v.desktop.id)
+    )
+  })
+
+  const diffOf = () => {
+    const entry = v.publisher.payloads('transcript.upserted').at(-1)?.entry
+    const content = entry && entry.kind === 'tool_call' ? entry.contents.find((c) => c.kind === 'diff') : undefined
+    if (!content || content.kind !== 'diff') throw new Error('no diff stored')
+    return content
+  }
+  const ask = (toolCall: PermissionPrompt['toolCall']) => real.forSession(v.sessionId).prompt({ ...request(), toolCall })
+  const answer = async (decision: Promise<unknown>) => {
+    real.respond(v.repos.permissions.listPending(v.sessionId)[0]!.id, 'allow')
+    await decision
+  }
+
+  it('completes a diff that is inside the request', async () => {
+    writeFileSync(join(v.projectDir, 'redirect.ts'), OLD)
+    const decision = ask({ title: 'Edit', toolKind: 'edit', contents: [{ kind: 'diff', path: 'E:\\redirect.ts', oldText: null, newText: NEW }] })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(diffOf()).toMatchObject({ oldText: OLD })
+    expect(changeCounts(diffOf().oldText, diffOf().newText)).toMatchObject({ additions: 3, deletions: 3 })
+    await answer(decision)
+  })
+
+  it('completes a diff that only the earlier update of the same call carries', async () => {
+    writeFileSync(join(v.projectDir, 'redirect.ts'), OLD)
+    v.repos.transcripts.upsertToolCall(v.sessionId, { toolCallId: 'tc-1', title: 'Edit', toolKind: 'edit', contents: [{ kind: 'diff', path: 'E:\\redirect.ts', oldText: null, newText: NEW }] })
+    const decision = ask({ title: 'Edit redirect.ts' })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(diffOf()).toMatchObject({ path: 'E:\\redirect.ts', oldText: OLD, newText: NEW })
+    expect(diffOf().oldTextError).toBeUndefined()
+    await answer(decision)
+  })
+
+  it('shows a file that does not exist yet as new', async () => {
+    v.repos.transcripts.upsertToolCall(v.sessionId, { toolCallId: 'tc-1', contents: [{ kind: 'diff', path: 'E:\\created.ts', oldText: null, newText: NEW }] })
+    const decision = ask({ title: 'Create created.ts' })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(diffOf()).toMatchObject({ oldText: '' })
+    await answer(decision)
+  })
+
+  it('keeps null and says the file cannot be read when the path is a folder, and saves the reason', async () => {
+    mkdirSync(join(v.projectDir, 'dir'))
+    v.repos.transcripts.upsertToolCall(v.sessionId, { toolCallId: 'tc-1', contents: [{ kind: 'diff', path: 'E:\\dir', oldText: null, newText: NEW }] })
+    const decision = ask({ title: 'Edit dir' })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(diffOf()).toMatchObject({ oldText: null, oldTextError: 'unreadable' })
+    expect(v.repos.transcripts.findToolCall(v.sessionId, 'tc-1')?.contents[0]).toMatchObject({ oldTextError: 'unreadable' })
+    await answer(decision)
+  })
+
+  it('names a file another program holds as in use', async () => {
+    const locked = new PermissionBroker(
+      v.repos.permissions,
+      v.repos.transcripts,
+      v.publisher,
+      new SessionBroadcaster(v.repos.sessions, v.publisher),
+      (_id, toolCall) => toolCall,
+      new ToolCallDiffs(
+        {
+          stat: async () => ({ kind: 'file' }) as never,
+          readFile: async () => {
+            throw Object.assign(new Error('busy'), { code: 'EBUSY' })
+          }
+        },
+        () => v.desktop.id
+      )
+    )
+    const decision = locked.forSession(v.sessionId).prompt({ ...request(), toolCall: { title: 'Edit', contents: [{ kind: 'diff', path: 'E:\\x.ts', oldText: null, newText: NEW }] } })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(diffOf()).toMatchObject({ oldText: null, oldTextError: 'in_use' })
+    locked.respond(v.repos.permissions.listPending(v.sessionId)[0]!.id, 'allow')
     await decision
   })
 })

@@ -4,6 +4,8 @@
   import type { AgentDto, SessionDto, TerminalDto } from '@shared/models'
   import type { AppProps } from '../types'
   import Button from '../../kit/atoms/Button.svelte'
+  import ReasonNote from '../../kit/atoms/ReasonNote.svelte'
+  import { firstReason, reasonFor } from '../../kit/atoms/reason'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
   import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
@@ -92,6 +94,8 @@
   const chatListRows = $derived<ListRow[]>(chats.map((c) => ({ ...c, icon: 'session' as const })))
 
   const selectedChatRow = $derived(chats.find((c) => c.id === selectedChat[0]) ?? null)
+  /** Why End Task is off: nothing is selected, or the selected chat is not working. */
+  const endTaskReason = $derived(firstReason([!selectedChatRow && 'Select a chat first', selectedChatRow && !selectedChatRow.busy && 'This chat is not working']))
 
   async function endTask(): Promise<void> {
     const chat = selectedChatRow
@@ -207,14 +211,16 @@
               {#if procRows.length === 0}<div class="empty">No agent is running. Start a chat to launch one.</div>{/if}
             </div>
             <div class="buttons">
-              <Button data-testid="agent-manager-end-process" title="End this agent's process" disabled={!selectedProcess} onclick={endProcess}>End process</Button>
+              <Button data-testid="agent-manager-end-process" {...reasonFor(selectedProcess ? null : 'Select a program first', "End this agent's process")} onclick={endProcess}>End process</Button>
+              <ReasonNote testid="agent-manager-reason" reason={selectedProcess ? null : 'Select a program first'} />
             </div>
           {:else if t.id === 'chats'}
             <div class="grid">
               <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
             <div class="buttons">
-              <Button data-testid="agent-manager-end-task" title="Stop the step that this chat is working on" disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
+              <Button data-testid="agent-manager-end-task" {...reasonFor(endTaskReason, 'Stop the step that this chat is working on')} onclick={endTask}>End Task</Button>
+              <ReasonNote testid="agent-manager-reason" reason={endTaskReason} />
             </div>
           {:else if t.id === 'terminals'}
             <div class="grid">
@@ -300,7 +306,14 @@
   .buttons {
     flex: none;
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: 10px;
+  }
+  .buttons :global(.w7-reason) {
+    flex: 1;
+    min-width: 0;
+    order: -1;
   }
   .perf {
     flex: 1;

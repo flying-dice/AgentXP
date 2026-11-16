@@ -11,18 +11,18 @@ describe('desktop: tools follow apps', () => {
     await ctx?.app.close()
   })
 
-  it('starts with no app windows, the three headline chips off and the "open an app" hint in the top bar', async () => {
+  it('starts with no app windows, the three headline chips closed and the "open an app" hint in the top bar', async () => {
     await see.visible(ctx.desktop.topBar)
     await see.visible(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
-    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Off')
-    await see.text(ctx.desktop.toolChip('fs.read'), 'Read files: Off')
-    await see.text(ctx.desktop.toolChip('browser'), 'Browser: Off')
+    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (no Terminal open)')
+    await see.text(ctx.desktop.toolChip('fs.read'), 'Read files: Allow (no app open)')
+    await see.text(ctx.desktop.toolChip('browser'), 'Browser: Allow (no Browser open)')
     await see.count(ctx.desktop.windows('terminal'), 0)
   })
 
-  it('every chip has a tooltip: what Off means and what the setting is', async () => {
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Run commands is Off because no Terminal is open. The setting is Ask. Click to change it.')
-    await see.attribute(ctx.desktop.toolChip('browser'), 'title', 'Browser is Off because no Browser is open. The setting is Allow. Click to change it.')
+  it('every chip has a tooltip: the setting and why the agent cannot use it yet', async () => {
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Run commands is set to Ask. The agent cannot use it yet because no Terminal is open. Click to change it in Control Center.')
+    await see.attribute(ctx.desktop.toolChip('browser'), 'title', 'Browser is set to Allow. The agent cannot use it yet because no Browser is open. Click to change it in Control Center.')
   })
 
   it('opening Terminal from Start adds its window and taskbar button and turns its chip on', async () => {
@@ -31,7 +31,7 @@ describe('desktop: tools follow apps', () => {
     await see.visible(ctx.desktop.taskbarItem('terminal'))
     await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'asks')
     await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask')
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Run commands: Ask. Click to change this in Control Center.')
+    await see.attribute(ctx.desktop.toolChip('terminal'), 'title', 'Run commands is set to Ask. Click to change it in Control Center.')
     await see.gone(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
 
@@ -56,7 +56,7 @@ describe('desktop: tools follow apps', () => {
     await ctx.desktop.closeWindow('code')
     await ctx.desktop.closeWindow('terminal')
     await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'off')
-    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Off')
+    await see.text(ctx.desktop.toolChip('terminal'), 'Run commands: Ask (no Terminal open)')
     await see.gone(ctx.desktop.toolChip('code'))
     await see.visible(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
@@ -84,7 +84,7 @@ describe('desktop: tools follow apps', () => {
     await see.gone(ctx.desktopPage.getByTestId('topbar-give-back'))
     await ctx.desktop.openApp('terminal')
     await box.click()
-    await see.text(ctx.desktop.status, 'You are in control. Browser and all other tools are set to Ask until you resume.')
+    await see.text(ctx.desktop.status, 'You are in control. Tools that need an app ask first. Browser is not open.')
     await see.attribute(ctx.desktop.topBar, 'data-state', 'control')
     await see.visible(ctx.desktopPage.getByTestId('topbar-give-back'))
     await see.text(ctx.desktopPage.getByTestId('gadget-activity-control'), 'You are in control. The agent waits until you resume.')

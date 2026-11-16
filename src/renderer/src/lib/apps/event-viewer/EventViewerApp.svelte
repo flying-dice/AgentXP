@@ -30,7 +30,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
-  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, logTree, nodeScope, summaryOf } from './eventModel'
+  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, isNotable, logTree, nodeScope, summaryOf } from './eventModel'
 
   let { window: win, host }: AppProps<'event-viewer'> = $props()
 
@@ -41,6 +41,8 @@
   // svelte-ignore state_referenced_locally
   let level = $state<EventLevel | 'all'>(win.view.level)
   let text = $state('')
+  /** "Show all": the protocol events too. Off, the list shows warnings and errors only (UX-121). */
+  let showAll = $state(false)
   // svelte-ignore state_referenced_locally
   let selected = $state<string[]>(win.view.selectedEventId !== null ? [String(win.view.selectedEventId)] : [])
   let autoscroll = $state(true)
@@ -52,7 +54,9 @@
 
   const desktopId = $derived(host.state.desktopId)
   const scope = $derived(nodeScope(node))
-  const visible = $derived(filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level, text }))
+  const visible = $derived(filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level, text, quiet: !showAll }))
+  /** Events the default list leaves out; the count says so and Show all brings them back. */
+  const hidden = $derived(showAll || level !== 'all' ? 0 : filterEvents(events, { source: scope.source, sessionId: scope.sessionId, level, text }).length - visible.length)
   const current = $derived(events.find((e) => String(e.id) === selected[0]) ?? null)
   const chatTitle = (id: number | null): string | undefined => sessions.find((s) => s.id === id)?.title
   const nodes = $derived<TreeNodeData[]>(logTree(sessions))
@@ -91,8 +95,15 @@
       if (id === null || String(id) === selected[0]) return
       selected = [String(id)]
       autoscroll = false
+      revealSelected()
     })
   })
+
+  /** A named event that the default list would hide (a step of the chat, an information event) turns Show all on, so the link never lands on nothing. */
+  function revealSelected(): void {
+    const event = events.find((e) => String(e.id) === selected[0])
+    if (event && !isNotable(event) && level === 'all') showAll = true
+  }
 
   async function refresh(): Promise<void> {
     try {
@@ -100,6 +111,7 @@
       events = list2
       sessions = sess
       error = null
+      revealSelected()
     } catch (e) {
       error = e instanceof Error ? e.message : String(e)
     }
@@ -151,8 +163,8 @@
   }
 
   const columns: ListColumn[] = [
-    { key: 'level', header: 'Level', width: 100 },
-    { key: 'when', header: 'Date and Time', width: 140 },
+    { key: 'level', header: 'Level', width: 116 },
+    { key: 'when', header: 'Date and Time', width: 156 },
     { key: 'source', header: 'Source', width: 56 },
     { key: 'name', header: 'Name', width: 190 },
     { key: 'chat', header: 'Chat' }
@@ -211,6 +223,7 @@
           { id: 'filter', testid: 'event-viewer-menu-filter', label: 'Fi&lter Current Log...', action: () => (filtering = { level, text }) },
           { id: 'clear-filter', testid: 'event-viewer-menu-clear-filter', label: 'Clear Fi&lter', disabled: !filterActive, action: () => ((level = 'all'), (text = '')) },
           { separator: true },
+          { id: 'show-all', testid: 'event-viewer-menu-show-all', label: 'Sho&w all events', checked: showAll, action: () => (showAll = !showAll) },
           { id: 'autoscroll', testid: 'event-viewer-menu-autoscroll', label: '&Autoscroll', checked: autoscroll, action: () => (autoscroll = !autoscroll) },
           { separator: true },
           help.paneItem(win.id)
@@ -251,8 +264,9 @@
                 <div class="center">
                   <div class="heading">
                     <strong>{scope.sessionId !== null ? (chatTitle(scope.sessionId) ?? scope.title) : scope.title}</strong>
-                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}</span>
+                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}{hidden > 0 ? `, ${hidden} more with Show all` : ''}</span>
                     <span class="spring"></span>
+                    <CheckBox testid="event-viewer-show-all" bind:checked={showAll}>Show all</CheckBox>
                     <CheckBox testid="event-viewer-autoscroll" bind:checked={autoscroll}>Autoscroll</CheckBox>
                   </div>
                   <div class="grid" bind:this={gridEl}>
@@ -443,7 +457,7 @@
   }
   .actions {
     flex: none;
-    width: 168px;
+    width: 150px;
     height: 100%;
     box-sizing: border-box;
     display: flex;
