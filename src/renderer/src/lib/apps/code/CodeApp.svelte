@@ -10,7 +10,7 @@
   import Icon from '../../kit/atoms/Icon.svelte'
   import Separator from '../../kit/atoms/Separator.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
-  import { closeItems, editItems } from '../../kit/molecules/standardMenu'
+  import { closeItems, editItems, newChatItem } from '../../kit/molecules/standardMenu'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
@@ -477,7 +477,7 @@
 
   async function plugIn(): Promise<void> {
     try {
-      await host.api.drives.plugIn(desktopId)
+      await host.plugInProject()
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
     }
@@ -596,6 +596,8 @@
     {
       label: '&File',
       items: [
+        newChatItem('code', () => void host.startDefaultChat()),
+        { separator: true },
         { id: 'code-open', label: '&Open...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
         { separator: true },
         { id: 'code-plug-in', testid: 'code-menu-plug-in', label: '&Plug in a project...', icon: 'plus', action: () => void plugIn() },

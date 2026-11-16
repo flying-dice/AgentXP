@@ -37,6 +37,16 @@ export class FolderBrowserDialog {
     return this.dialog.getByTestId('dialog-button-cancel')
   }
 
+  /** A group at the top of the tree ("Projects you used before", "Matches"). */
+  group(name: string): Locator {
+    return this.dialog.getByTestId('folder-browser-group').filter({ hasText: name })
+  }
+
+  /** The entry of a project in "Projects you used before" (the first row of that name). */
+  recentNode(name: string): Locator {
+    return this.node(name).first()
+  }
+
   /** A folder of the tree by its exact name. */
   node(name: string): Locator {
     return this.dialog.getByTestId('folder-browser-node').filter({ hasText: new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) })
@@ -60,12 +70,13 @@ export class FolderBrowserDialog {
   async selectByMouse(path: string): Promise<void> {
     const names = path.split('/').filter(Boolean)
     await this.node('/').dblclick(this.hit(1))
+    // A project used before also shows in its own group above Computer, so the row under Computer is the last one.
     for (const [i, name] of names.slice(0, -1).entries()) {
-      const row = this.node(name)
+      const row = this.node(name).last()
       await row.waitFor()
       await row.dblclick(this.hit(i + 2))
     }
-    const last = this.node(names[names.length - 1])
+    const last = this.node(names[names.length - 1]).last()
     await last.waitFor()
     await last.click(this.hit(names.length + 1))
   }

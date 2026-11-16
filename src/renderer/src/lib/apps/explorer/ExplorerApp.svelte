@@ -15,7 +15,7 @@
   import TreeView from '../../kit/organisms/TreeView.svelte'
   import type { TreeNodeData } from '../../kit/organisms/TreeView'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
-  import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
+  import { closeItems, menuBar, newChatItem } from '../../kit/molecules/standardMenu'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
@@ -25,6 +25,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { errorText } from '../shared/listing'
+  import { NOTHING_REMOVED_TIP } from '../../desktop/projectDrives'
   import { opensInNotepad, typeName } from '../paths'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
@@ -273,6 +274,11 @@
 
   const plugIn = async (): Promise<void> => showDrive(await host.plugInProject())
 
+  // Computer selects the newest removed project, so that Plug in again is ready to use.
+  $effect(() => {
+    if (path === '' && removedSelected === null && !selectedDrive && host.recentlyRemoved.length > 0) removedSelected = host.recentlyRemoved[0].folderId
+  })
+
   async function plugInAgain(folderId: Id | null = removedSelected): Promise<void> {
     if (folderId === null) return
     showDrive(await host.plugInAgain(folderId))
@@ -350,6 +356,8 @@
       {
         label: '&File',
         items: [
+          newChatItem('explorer', () => void host.startDefaultChat()),
+          { separator: true },
           { id: 'open', testid: 'explorer-menu-open', label: '&Open', disabled: !selectedEntry && !selectedDrive, action: () => (selectedEntry ? openEntry(selectedEntry) : selectedDrive && go(driveRoot(selectedDrive.letter))) },
           { id: 'plug', testid: 'explorer-menu-plug-in', label: '&Plug in a project...', action: () => void plugIn() },
           { id: 'plug-again', testid: 'explorer-menu-plug-in-again', label: 'Plug in a&gain', disabled: path !== '' || removedSelected === null, action: () => void plugInAgain() },
@@ -425,7 +433,7 @@
       <ToolTip text="Plug in a project folder as a drive so that the agent can see its files. Press F1 for more.">
         <ToolStripButton data-testid="explorer-plug-in" icon="plus" text="Plug in a project..." onclick={() => void plugIn()} />
       </ToolTip>
-      <ToolTip text="Plug the selected removed project in again, without choosing its folder.">
+      <ToolTip text={host.recentlyRemoved.length === 0 ? NOTHING_REMOVED_TIP : 'Plug the selected removed project in again, without choosing its folder.'}>
         <ToolStripButton data-testid="explorer-plug-in-again" icon="usb" text="Plug in again" disabled={removedSelected === null} onclick={() => void plugInAgain()} />
       </ToolTip>
       <ToolTip text="Open the selected drive.">

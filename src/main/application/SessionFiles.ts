@@ -6,7 +6,7 @@ import type { SessionRepository } from '../domain/repositories/session-repositor
 import { AppError, required } from './errors'
 import type { FileChangeRecorder } from './FileChangeRecorder'
 import type { HostFiles } from './ports'
-import { DriveUnavailableError, OutsideDrivesError } from './vfs/errors'
+import { OutsideDrivesError } from './vfs/errors'
 import type { Located, VirtualFileSystem } from './vfs/VirtualFileSystem'
 
 const sliceLines = (text: string, line?: number, limit?: number): string => {
@@ -80,7 +80,7 @@ export class SessionFiles {
     if (!isAbsolute(path)) return vfs.locate(desktopId, vfs.resolveInput(desktopId, this.cwdOf(sessionId), path))
     // Not on any drive: when the chat works on a drive that has been ejected, that is the reason.
     const cwd = parseVPath(this.cwdOf(sessionId))
-    if (cwd && !vfs.mounts(desktopId).some((m) => m.letter === cwd.drive)) throw new DriveUnavailableError(cwd.drive)
+    if (cwd && !vfs.mounts(desktopId).some((m) => m.letter === cwd.drive)) throw vfs.unavailable(desktopId, cwd.drive)
     throw new OutsideDrivesError(resolve(path))
   }
 

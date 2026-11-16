@@ -35,6 +35,8 @@ export interface DesktopHost {
   readonly recentlyRemoved: readonly RemovedProject[]
   /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
   startChat(cwd: VPath): Promise<void>
+  /** File > New chat, Ctrl+N: starts a chat on the default drive of the desktop and focuses its composer. */
+  startDefaultChat(): Promise<void>
   /**
    * "Ask chat about this" (Explain this, Ask chat..., Send selection to chat): opens the requesting window's chat pane
    * and sends the prompt of `askChatPrompt(request)` there ("Ask chat..." only fills the composer, for the user's

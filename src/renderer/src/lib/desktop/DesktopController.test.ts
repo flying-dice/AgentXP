@@ -245,7 +245,22 @@ describe('DesktopController projects and shell feedback', () => {
     expect(drive?.label).toBe('login-app')
     expect(controller.state.drives.some((d) => d.label === 'login-app')).toBe(true)
     expect(controller.balloon?.title).toBe('Project plugged in')
-    expect(controller.balloon?.text).toBe(`login-app (${drive?.letter}:) is ready to use.`)
+    expect(controller.balloon?.text).toBe(`Project plugged in: login-app (${drive?.letter}:) is ready to use.`)
+  })
+
+  it('Plug in a project opens Explorer on the drive and no AutoPlay; the tray route keeps AutoPlay', async () => {
+    const { controller } = await started()
+    const pending = controller.plugInProject()
+    await answerBrowser('C:\\Users\\jonathan\\source\\login-app')
+    const drive = await pending
+    expect(controller.autoPlay).toBeNull()
+    const explorer = controller.state.windows.find((w) => w.view.app === 'explorer')
+    expect(explorer?.view).toMatchObject({ path: `${drive?.letter}:\\` })
+    expect(controller.state.focusedWindowId).toBe(explorer?.id)
+    const letter = drive!.letter
+    await controller.ejectDrive(letter)
+    await controller.plugInAgain(controller.recentlyRemoved[0].folderId, { autoPlay: true })
+    expect(controller.autoPlay?.label).toBe('login-app')
   })
 
   it('Cancel plugs nothing in', async () => {

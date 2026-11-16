@@ -7,7 +7,7 @@
  */
 import type { A2uiSurfaceTarget } from './a2ui'
 import type { Id, IsoDate } from './models'
-import type { DriveDto, VPath } from './vfs'
+import type { DriveDto, RemovedProjectDto, VPath } from './vfs'
 
 export const APP_KINDS = [
   'chat',
@@ -143,6 +143,8 @@ export interface DesktopState {
   title: string
   /** The drives of the desktop: C: first, then the plugged-in USB drives (projects). */
   drives: DriveDto[]
+  /** Projects removed from this desktop, newest first (at most five); Computer offers to plug them in again. Absent in older fixtures. */
+  removedProjects?: RemovedProjectDto[]
   /** The agent's home directory (`AGENT_HOME`, on C:). */
   home: VPath
   focusedWindowId: Id | null
@@ -301,6 +303,8 @@ export interface OpenWindowInput {
   topic?: string
   /** The base ref of a `code-review` window (default `HEAD`). */
   baseRef?: string
+  /** Browser: open another window even when one is open (File > New window). Read by the desktop shell; main ignores it. */
+  newWindow?: boolean
 }
 
 /**
@@ -373,6 +377,10 @@ export interface DesktopApi {
   attachBrowser(windowId: Id, webContentsId: number): Promise<void>
   /** Answers a `desktop.appRequest` push. */
   respondAppRequest(response: AppResponse): Promise<void>
+  /** Brings a window forward and focuses it; a minimized window is restored first ("Show" on a chat card, the taskbar). */
+  raiseWindow(windowId: Id): Promise<void>
+  /** The user typed or clicked in a window of the desktop: for the next 2 seconds a window the agent opens does not take the focus. */
+  userActive(desktopId: Id): Promise<void>
 }
 
 export interface AgentProcessDto {

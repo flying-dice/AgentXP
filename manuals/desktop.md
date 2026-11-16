@@ -84,7 +84,7 @@ Press F6 to move the focus to the next part of the desktop: the desktop icons, t
 
 Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 
-- **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser.
+- **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser. The first item is highlighted when the menu opens. Press the Up and Down arrow keys to move and Enter to start the item. Type to search; Enter starts the first match.
 - **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
 - **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
 - **System Tools** – A folder (under All Programs) with Event Viewer, Task Manager, and Control Center.
@@ -122,7 +122,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 
 ### Other Dialog Boxes
 
-- **AutoPlay** – Appears when you plug in a project. It offers to open the folder, to start a chat, or to do nothing.
+- **AutoPlay** – Appears when the agent plugs in a project. It offers to open the folder, to start a chat, or to do nothing. It does not appear when you plug in a project yourself.
 - **New chat** – Asks on which drive the agent works.
 - **Open file** – Lets you select a file in Notepad, Code, and WordPad.
 - **Message box** – Asks a question or reports an error. Its buttons are named **OK**, **Yes**, **No**, and **Cancel**.
@@ -173,8 +173,9 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Opening button | Shows while an app opens. | `taskbar-item-opening` |
 | Notification area | Holds the tray icons and the clock. | `taskbar-tray` |
 | Clock | Shows time and date. | `taskbar-clock` |
-| Safely Remove Hardware | Opens the list of USB drives. | `usb-tray` |
+| Safely Remove Hardware | Opens the list of USB drives and recently removed projects. | `usb-tray` |
 | Eject drive | Ejects the USB drive of that letter. | `usb-eject-*` |
+| Plug in again (tray) | Plugs a recently removed project in again. It is listed below the drives. | `usb-plug-again` |
 | Action Center flag | Opens the Action Center. | `action-center-flag` |
 | Balloon | Shows a tray message. | `balloon` |
 | Balloon title | Shows the title of the message. | `balloon-title` |
@@ -190,6 +191,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | All Programs | Shows or hides the folders of apps, for example Accessories. | `start-menu-all` |
 | Folder | Opens or closes a folder of apps. | `start-menu-group-*` |
 | Recent chat | Opens a chat. | `start-menu-recent` |
+| Key hint | Names the keys: Ctrl+Esc, Ctrl+N, and F6. | `start-menu-hint` |
 | Search programs and chats | Filters the items. | `start-menu-search` |
 | Place | Opens a place, for example Documents or Help and Support. | `start-menu-place-*` |
 | Pause agent, Resume agent | Pauses the agent or lets it work. | `start-menu-power` |
@@ -234,6 +236,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | AutoPlay | Appears when you plug in a project. | `autoplay-dialog` |
 | Open folder to view files | Opens the drive in Explorer. | `autoplay-open-folder` |
 | Start a chat on this drive | Starts a chat on the drive. | `autoplay-start-chat` |
+| Question | Says that the project is now a drive and asks what to do. | `autoplay-text` |
 | Take no action | Closes the dialog box. | `autoplay-no-action` |
 | New chat | Asks where the agent works. | `new-chat-dialog` |
 | Drive option | Selects the drive for the chat. | `new-chat-drive-*` |
@@ -263,6 +266,7 @@ Right-click a taskbar button to open its menu.
 |---|---|---|
 | F1 | Opens Help and Support on the topic of the focused window. | none |
 | Ctrl+Esc | Opens or closes the Start menu. | none |
+| Ctrl+N | Starts a new chat on the default drive, from the desktop, Code, Explorer, and Chat. The box to type in is ready. | none |
 | Alt+F4 | Closes the focused window. | none |
 | F6, Shift+F6 | Move the focus between the desktop icons, the active window, the bar, the taskbar, and the notification area. | none |
 | Alt+Tab, Alt+Shift+Tab, Ctrl+Alt+Tab | Switch to the next or the previous window. | none |

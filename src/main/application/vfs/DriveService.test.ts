@@ -50,3 +50,24 @@ describe('DriveService', () => {
     await expect(f.drives.plugIn(id, 9999)).rejects.toThrow()
   })
 })
+
+describe('DriveService: recently removed projects', () => {
+  it('records every ejected project, newest first, and keeps five', () => {
+    const folders = Array.from({ length: 6 }, (_, n) => f.repos.folders.add(tempDir('agent7-removed-'), `p${n}`))
+    for (const folder of folders) {
+      const drive = f.drives.plugInFolder(id, folder.id)
+      f.drives.eject(id, drive.letter)
+    }
+    expect(f.drives.removed(id).map((r) => r.label)).toEqual(['p5', 'p4', 'p3', 'p2', 'p1'])
+    expect(f.drives.removed(id)[0]).toMatchObject({ letter: 'E', folderId: folders[5].id })
+  })
+
+  it('forgets a project when it is plugged in again, and names it for the agent while it is removed', () => {
+    f.drives.plugInFolder(id, f.folder.id)
+    f.drives.eject(id, 'E')
+    expect(f.drives.removedLabelOn(id, 'e')).toBe('project')
+    expect(() => f.vfs.mountOf(id, 'E')).toThrow('Drive E: is not plugged in on this desktop. project was removed. Ask the user to open Computer and choose Plug in again.')
+    f.drives.plugInFolder(id, f.folder.id)
+    expect(f.drives.removed(id)).toEqual([])
+  })
+})

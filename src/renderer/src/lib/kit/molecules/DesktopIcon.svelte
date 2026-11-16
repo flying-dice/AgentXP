@@ -80,7 +80,7 @@
   }
   /* The dotted focus rectangle stays visible on the blue desktop (white on blue, over 3:1). */
   .w7-desktop-icon:focus-visible {
-    outline: 1px dotted #fff;
+    outline: 2px dotted #fff;
     outline-offset: -2px;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
   }

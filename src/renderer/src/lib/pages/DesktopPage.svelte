@@ -29,6 +29,8 @@
   import NewReviewDialog from '../desktop/NewReviewDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
+  import { desktopWindowTitle } from '../launcher/launcherModel'
+  import { ctrlNStartsChat, isCtrlN } from '../desktop/shellKeys'
   import { cycleRegion, focusRegion, tabOutOfWindow } from '../desktop/shellRegions'
   import { taskbarItems } from '../desktop/windowOrder'
   import { taskbarMenuItems } from '../desktop/taskbarMenu'
@@ -175,6 +177,10 @@
       event.preventDefault()
       const id = desktop.state.focusedWindowId
       if (id !== null) void desktop.closeWindow(id)
+    } else if (isCtrlN(event) && ctrlNStartsChat(desktop.focusedWindow?.app)) {
+      // Ctrl+N: a new chat on the default drive, from the desktop and from Code, Explorer and Chat (not from Notepad's own New).
+      event.preventDefault()
+      void desktop.startDefaultChat()
     } else if (event.ctrlKey && event.key === 'Escape') {
       event.preventDefault()
       desktop.toggleStart()
@@ -206,10 +212,15 @@
   $effect(() => {
     if (desktop.startOpen) untrack(() => (query = ''))
   })
+
+  // The operating system window is named after the desktop, so it is not mistaken for the launcher or another desktop.
+  $effect(() => {
+    if (desktop.state.title) document.title = desktopWindowTitle(desktop.state.title)
+  })
 </script>
 
 <!-- The browser's own context menu never shows on the desktop: every app and the desktop have their own. -->
-<svelte:window onkeydown={onKeydown} oncontextmenu={(e) => e.preventDefault()} />
+<svelte:window onkeydown={onKeydown} onkeydowncapture={() => desktop.noteUserActivity()} onpointerdowncapture={() => desktop.noteUserActivity()} oncontextmenu={(e) => e.preventDefault()} />
 
 <div class="page" class:busy={desktop.opening.length > 0} bind:this={root}>
   <Desktop
@@ -352,7 +363,7 @@
     {/if}
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />
     {#snippet tray()}
-      <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} />
+      <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} removed={desktop.recentlyRemoved} onplugagain={(id) => void desktop.plugInAgain(id, { autoPlay: true })} />
       <TrayFlag count={approvals.length} open={desktop.actionCenterOpen} bind:element={flag} onclick={() => desktop.toggleActionCenter()} />
     {/snippet}
   </Desktop>

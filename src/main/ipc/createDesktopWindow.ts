@@ -39,7 +39,7 @@ export function createDesktopWindow(): BrowserWindow {
     minWidth: 900,
     minHeight: 600,
     show: false,
-    title: 'Agent7',
+    title: 'Agent7 Desktop', // the page sets the desktop's own name as soon as it loads (`desktopWindowTitle`)
     frame: true,
     backgroundColor: '#1e5aa8',
     icon: join(__dirname, '../../resources/icon-256.png'),
@@ -74,7 +74,7 @@ export function createLauncherWindow(): BrowserWindow {
     maximizable: false,
     fullscreenable: false,
     show: false,
-    title: 'Agent7',
+    title: 'Agent7 Desktop Connection',
     frame: false,
     backgroundColor: '#1e5aa8',
     icon: join(__dirname, '../../resources/icon-256.png'),

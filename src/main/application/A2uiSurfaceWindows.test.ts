@@ -90,6 +90,7 @@ describe('surface windows: opening', () => {
 
   it('does not steal focus from the chat the user types in: the window opens behind it and flashes', async () => {
     const chat = desktops.openWindow({ desktopId, app: 'chat', sessionId })
+    desktops.noteUserActivity(desktopId)
     await render([create('dash', 'Dashboard')], 'window')
     const state = desktops.state(desktopId)
     expect(state.focusedWindowId).toBe(chat.id)

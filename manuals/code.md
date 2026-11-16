@@ -165,6 +165,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 | Name | What it does | data-testid |
 |---|---|---|
+| Menu: new chat | File menu: starts a chat on the default drive. Ctrl+N. | `code-menu-new-chat` |
 | Menu: help | Opens the Help window for this app. F1. | `code-menu-help` |
 | Menu: about | Opens the About Code box. | `code-menu-about` |
 | Dialog: about | The About Code box. | `code-about` |

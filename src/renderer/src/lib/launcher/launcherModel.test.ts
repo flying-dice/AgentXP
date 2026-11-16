@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DriveDto } from '@shared/vfs'
-import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, nameSuggestion, rowStatus, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
+import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, desktopWindowTitle, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, lastUsedText, nameSuggestion, projectSuggestion, rowStatus, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
 
 const usb = (letter: string, label: string): DriveDto => ({ letter, label, kind: 'removable', folderId: 1, pluggedAt: null })
 const system: DriveDto = { letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }
@@ -61,6 +61,15 @@ describe('launcherModel', () => {
     expect(nameSuggestion('', [''])).toBeNull()
   })
 
+  it('suggests the name plus the first project folder, only for a taken name and a free result', () => {
+    const taken = ['Fix login redirect']
+    expect(projectSuggestion('Fix login redirect', 'docs-site', taken)).toBe('Fix login redirect - docs-site')
+    expect(projectSuggestion('Fix login redirect (2)', 'docs-site', [...taken, 'Fix login redirect (2)'])).toBe('Fix login redirect - docs-site')
+    expect(projectSuggestion('Fix login redirect', undefined, taken)).toBeNull()
+    expect(projectSuggestion('Fix login redirect', 'docs-site', [...taken, 'fix login redirect - docs-site'])).toBeNull()
+    expect(projectSuggestion('Free name', 'docs-site', taken)).toBeNull()
+  })
+
   it('gives waiting and failed rows an icon, weight and the failed one a hint', () => {
     expect(rowStatus({ runState: 'awaiting_approval', pendingApprovals: 1 })).toMatchObject({ icon: 'shield', strong: true, label: 'Needs your approval (1)' })
     expect(rowStatus({ runState: 'error', pendingApprovals: 0 })).toMatchObject({ icon: 'error', strong: true, hint: expect.stringContaining('Agents') })
@@ -83,5 +92,17 @@ describe('launcherModel', () => {
     expect(['n', 'C', 'r', 'D', 'x'].map(accessKeyCommand)).toEqual(['new', 'connect', 'rename', 'delete', null])
     expect(connectLabel(false)).toBe('&Connect')
     expect(connectLabel(true)).toBe('Show desktop')
+  })
+})
+
+describe('window titles and launcher text', () => {
+  it('names the operating system windows apart', () => {
+    expect(LAUNCHER_WINDOW_TITLE).toBe('Agent7 Desktop Connection')
+    expect(desktopWindowTitle('Fix login redirect')).toBe('Fix login redirect - Agent7')
+    expect(desktopWindowTitle('  ')).toBe('Desktop - Agent7')
+  })
+
+  it('says what the user can do from the empty launcher', () => {
+    expect(EMPTY_LAUNCHER_HELP).toBe('What you can do: plug in a project folder, ask the agent to read or change it, and approve each change yourself.')
   })
 })

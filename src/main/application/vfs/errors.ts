@@ -3,8 +3,8 @@ import { ToolRefusedError } from '../../domain/agent/ToolGate'
 
 /** The agent touched a drive that is not plugged in (ejected or never there). Refused like a closed app. */
 export class DriveUnavailableError extends ToolRefusedError {
-  constructor(readonly letter: DriveLetter) {
-    super(noDriveMessage(letter))
+  constructor(readonly letter: DriveLetter, removedProject?: string) {
+    super(noDriveMessage(letter, removedProject))
     this.name = 'DriveUnavailableError'
   }
 }

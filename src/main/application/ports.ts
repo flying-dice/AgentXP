@@ -56,6 +56,11 @@ export interface DirectoryBrowser {
   makeFolder(parent: string, name: string): Promise<string>
 }
 
+/** Finds out whether an agent's command exists (like `which`), without starting it. */
+export interface ProgramFinder {
+  exists(command: string): Promise<boolean>
+}
+
 /** Native "choose files" dialog. Resolves to the chosen absolute paths (empty when cancelled). */
 export interface FilePicker {
   pickFiles(): Promise<string[]>

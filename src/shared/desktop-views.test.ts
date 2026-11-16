@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeWindow, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeWindow, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -8,9 +8,9 @@ const inside = (b: Bounds): boolean => b.x >= 0 && b.y >= 0 && b.x + b.width <= 
 const chat: Bounds = DEFAULT_BOUNDS.chat
 
 describe('cascadedBounds', () => {
-  it('offsets by 24px per open window and wraps after six', () => {
+  it('offsets by 32px per open window and wraps after six', () => {
     expect(cascadedBounds('notepad', 0)).toEqual(DEFAULT_BOUNDS.notepad)
-    expect(cascadedBounds('notepad', 2)).toMatchObject({ x: DEFAULT_BOUNDS.notepad.x + 48, y: DEFAULT_BOUNDS.notepad.y + 48 })
+    expect(cascadedBounds('notepad', 2)).toMatchObject({ x: DEFAULT_BOUNDS.notepad.x + 64, y: DEFAULT_BOUNDS.notepad.y + 64 })
     expect(cascadedBounds('notepad', 6)).toEqual(DEFAULT_BOUNDS.notepad)
   })
 })
@@ -62,6 +62,23 @@ describe('placeWindow', () => {
   it('keeps windows that are larger than the desktop inside it', () => {
     const b = placeWindow('code', 0, null, { width: 700, height: 400 })
     expect(b).toEqual({ x: 0, y: WINDOW_MIN_Y, width: 700, height: 400 - WINDOW_MIN_Y })
+  })
+})
+
+describe('numberDuplicateTitles', () => {
+  it('numbers the second and later window of a title in opening order, whatever the stacking order', () => {
+    const list = [
+      { id: 3, title: 'Computer' },
+      { id: 1, title: 'Computer' },
+      { id: 2, title: 'Notepad' },
+      { id: 4, title: 'Computer' }
+    ]
+    expect(numberDuplicateTitles(list).map((w) => w.title)).toEqual(['Computer (2)', 'Computer', 'Notepad', 'Computer (3)'])
+  })
+
+  it('leaves distinct titles alone', () => {
+    const list = [{ id: 1, title: 'a' }, { id: 2, title: 'b' }]
+    expect(numberDuplicateTitles(list)).toEqual(list)
   })
 })
 

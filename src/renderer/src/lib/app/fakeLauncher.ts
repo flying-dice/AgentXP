@@ -70,6 +70,7 @@ export function createFakeLauncher(options: FakeLauncherOptions): LauncherApi {
       items = items.filter((d) => d.id !== id)
       publish()
     },
-    show: async () => {}
+    show: async () => {},
+    checkAgents: async () => {}
   }
 }
