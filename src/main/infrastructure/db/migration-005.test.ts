@@ -23,7 +23,7 @@ describe('migration 005 (surface windows)', () => {
   it('seeds the surface app kind, makes existing surfaces inline and visible, and creates surface_windows', () => {
     const db = database(4)
     seed(db)
-    expect(migrate(db)).toBe(MIGRATIONS.length)
+    expect(migrate(db)).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
     expect(db.prepare("SELECT kind FROM app_kinds WHERE kind = 'surface'").all()).toEqual([{ kind: 'surface' }])
     expect(db.prepare('SELECT target, hidden FROM a2ui_surfaces').all()).toEqual([{ target: 'inline', hidden: 0 }])
     const columns = (db.prepare('PRAGMA table_info(surface_windows)').all() as Array<{ name: string }>).map((c) => c.name)

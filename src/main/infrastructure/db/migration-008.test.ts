@@ -17,7 +17,7 @@ function seeded(upTo: number) {
 describe('migration 008 (aside windows)', () => {
   it('adds aside_windows on top of an existing database', () => {
     const db = seeded(7)
-    expect(migrate(db)).toBe(MIGRATIONS.length)
+    expect(migrate(db)).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
     expect(MIGRATIONS[7]).toMatchObject({ version: 8, name: 'aside_windows' })
     expect((db.prepare('PRAGMA table_info(aside_windows)').all() as Array<{ name: string }>).map((c) => c.name)).toEqual(['window_id', 'session_id'])
   })
@@ -47,7 +47,7 @@ describe('migration 009 (agent default mode)', () => {
   it('adds a nullable default_mode_id that keeps existing agents on the agent default', () => {
     const db = seeded(8)
     const before = db.prepare('SELECT id FROM agents').all()
-    expect(migrate(db)).toBe(MIGRATIONS.length)
+    expect(migrate(db)).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
     expect(MIGRATIONS[8]).toMatchObject({ version: 9, name: 'agent_default_mode' })
     expect(db.prepare('SELECT id, default_mode_id FROM agents').all()).toEqual(before.map((a) => ({ ...(a as object), default_mode_id: null })))
   })

@@ -1,5 +1,6 @@
-import type { PermissionInterruptMetadata } from '@shared/agui-state'
+import type { AguiToolCallState, PermissionInterruptMetadata } from '@shared/agui-state'
 import type { PermissionOptionDto } from '@shared/models'
+import { toolLabel } from './toolTitles'
 
 type Kind = PermissionOptionDto['kind']
 export type PermissionDecision = 'allow' | 'deny'
@@ -56,3 +57,33 @@ export const asPredicate = (title: string): string => {
   const t = title.trim()
   return /^[A-Z][a-z]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t
 }
+
+// ---- keys and the announcement of the answer ------------------------------------------------------------------
+
+/** The access keys of the two answers (Alt+A, Alt+D); the dialogs underline them while Alt is held. */
+export const ACCESS_KEYS: Record<PermissionDecision, string> = { allow: 'a', deny: 'd' }
+
+/** The line under the answers of both permission dialogs. */
+export const KEY_HINT = 'Press Alt+A to allow or Alt+D to deny.'
+
+/** The answer an Alt+key press stands for, or null. */
+export function decisionForKey(event: { key: string; altKey: boolean; ctrlKey?: boolean; metaKey?: boolean }): PermissionDecision | null {
+  if (!event.altKey || event.ctrlKey || event.metaKey) return null
+  const key = event.key.toLowerCase()
+  return key === ACCESS_KEYS.allow ? 'allow' : key === ACCESS_KEYS.deny ? 'deny' : null
+}
+
+/** The index of the access key in a caption ("Allow" 0, "Never allow" 2), or -1 when the caption has no such letter. */
+export const accessKeyIndex = (caption: string, decision: PermissionDecision): number => caption.toLowerCase().indexOf(ACCESS_KEYS[decision])
+
+/** True when the option answers Allow (once or always). */
+export const isAllow = (kind: Kind): boolean => kind === 'allow_once' || kind === 'allow_always'
+
+/** What a request is about, as the Action Center words it ("Change NOTE.md"), for the line that says what the user answered. */
+export function requestLabel(meta: Pick<PermissionInterruptMetadata, 'title' | 'toolKind'>, toolCall?: AguiToolCallState): string {
+  const diff = toolCall?.contents.find((c) => c.kind === 'diff')
+  return toolLabel({ title: meta.title, toolKind: meta.toolKind, path: (diff?.kind === 'diff' ? diff.path : toolCall?.locations[0]?.path) ?? null })
+}
+
+/** What the chat says after the user answers: "You allowed: Change NOTE.md." / "You denied: Run a command." */
+export const decisionText = (allowed: boolean, label: string): string => `You ${allowed ? 'allowed' : 'denied'}: ${label}.`

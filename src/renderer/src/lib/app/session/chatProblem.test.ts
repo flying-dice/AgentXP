@@ -25,7 +25,28 @@ describe('describeProblem', () => {
     const result = describeProblem({ error: 'spawn x ENOENT', problem: notFound, failed: { unanswered: true } })!
     expect(result.text).toContain("'not-a-real-command' was not found")
     expect(result.text).toContain('Your message was not sent.')
-    expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'details'])
+    expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'open-agents', 'choose-agent', 'details'])
+  })
+
+  it('an agent that cannot start offers Try again, Open Agents and Choose another agent, and names the new default agent', () => {
+    expect(describeProblem({ error: null, problem: notFound, failed: null })!.actions.map((a) => a.label)).toEqual(['Try again', 'Open Agents', 'Choose another agent', 'Details...'])
+    expect(describeProblem({ error: null, problem: notFound, failed: null, newDefaultAgent: 'Claude Code' })!.actions[0]).toEqual({ id: 'restart', label: 'Try again with Claude Code' })
+  })
+
+  it('a second failure in a row adds the cause and swaps Restart and send again for Start a new chat', () => {
+    const again = { ...stopped, failures: 2, cause: 'The agent program closed the connection.' }
+    const result = describeProblem({ error: null, problem: again, failed: { unanswered: true } })!
+    expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.\nIt stopped again: the agent program closed the connection. Show in Event Viewer shows the details.')
+    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat', 'Details...', 'Show in Event Viewer'])
+    const first = describeProblem({ error: null, problem: { ...again, failures: 1 }, failed: { unanswered: true } })!
+    expect(first.text).not.toMatch(/stopped again/)
+    expect(first.actions[0].label).toBe('Restart and send again')
+  })
+
+  it('a second start failure names the plain cause and offers a new chat', () => {
+    const result = describeProblem({ error: null, problem: { ...notFound, failures: 2, cause: "The program 'x' was not found." }, failed: null })!
+    expect(result.text).toContain("It stopped again: the program 'x' was not found. Show in Event Viewer")
+    expect(result.actions.map((a) => a.id)).toEqual(['restart', 'open-agents', 'choose-agent', 'new-chat', 'event-viewer', 'details'])
   })
 
   it('an agent ended from Task Manager says so and offers Restart', () => {

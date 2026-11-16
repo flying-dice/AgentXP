@@ -30,7 +30,7 @@ describe('control center', () => {
     await see.text(page('permissions-group').first(), 'What the agent may do')
     await see.text(page('permissions-group').last(), 'Apps the agent may use')
     await see.count(page('permissions-row'), 14)
-    await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }), 'Terminal (run commands)')
+    await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }), 'Run commands (Terminal)')
     await see.text(page('permissions-setting-terminal'), 'Ask')
   })
 

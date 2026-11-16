@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '../../kit/atoms/Button.svelte'
   import type { SendState } from './chatProblem'
+  import { RESUMED_NOTE, isContinueMessage } from './resumeNote'
 
   interface Props {
     text: string
@@ -15,10 +16,14 @@
   }
 
   let { text, attachments = [], state = 'sent', onresend, onedit }: Props = $props()
+
+  /** The message Resume sends to a chat whose step Pause stopped: marked as a resume, not as something the user typed. */
+  const resumed = $derived(isContinueMessage(text))
 </script>
 
 <div class="user-message" class:failed={state !== 'sent'} data-testid="chat-message-user" data-send-state={state}>
   <div class="who">You</div>
+  {#if resumed}<div class="resumed" role="status" data-testid="chat-resume-note">{RESUMED_NOTE}</div>{/if}
   {#if text}<div class="body" data-message-body>{text}</div>{/if}
   {#if attachments.length > 0}
     <div class="files">
@@ -41,6 +46,11 @@
     font-weight: 700;
     color: var(--w7-accent-user, #1b3f8b);
     margin-bottom: 2px;
+  }
+  .resumed {
+    margin-bottom: 2px;
+    color: #4a3b00;
+    font-weight: 700;
   }
   .body {
     font-size: 13px;

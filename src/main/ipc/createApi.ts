@@ -85,6 +85,7 @@ export function createApi(s: ApiServices): InvokeApi {
       setWindowState: async (windowId, state) => s.desktops.setWindowState(windowId, state),
       updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
       setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
+      resumeAgents: (desktopId) => s.desktops.resumeAgents(desktopId),
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
       newChat: async (desktopId, agentId, cwd) => {
         try {

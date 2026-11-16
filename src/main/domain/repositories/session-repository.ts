@@ -28,6 +28,8 @@ export interface SessionRepository {
   create(input: NewSession): SessionDto
   rename(id: Id, title: string): void
   setStatus(id: Id, status: SessionStatus): void
+  /** Moves the chat to another agent program ("Try again with <agent>"): the old agent's ACP session, mode and model are forgotten. */
+  setAgent(id: Id, agentId: Id): void
   setAcpSessionId(id: Id, acpSessionId: string | null): void
   setCurrentMode(id: Id, modeId: string | null): void
   setCurrentModel(id: Id, modelId: string | null): void

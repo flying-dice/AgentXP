@@ -153,10 +153,16 @@ export class SessionService {
     return this.deps.transcripts.removeLastUserMessage(id)
   }
 
-  /** Ends the agent program of a chat (if it runs) and starts a fresh one: "Reconnect" and "Restart". */
+  /**
+   * Ends the agent program of a chat (if it runs) and starts a fresh one: "Reconnect", "Restart" and "Try again".
+   * A chat whose agent could not start moves to the current default agent first when that one has changed since: the
+   * button of the chat says "Try again with <agent>" and a restart must do what the button says.
+   */
   async restartAgent(id: Id): Promise<void> {
-    const { pool, problems, broadcaster, runtime } = this.deps
-    this.requireSession(id)
+    const { pool, problems, broadcaster, runtime, sessions, agents } = this.deps
+    const session = this.requireSession(id)
+    const current = agents.getDefault()
+    if (problems?.get(id)?.kind === 'start-failed' && current && current.id !== session.agentId) sessions.setAgent(id, current.id)
     await pool.dispose(id)
     problems?.clear(id)
     broadcaster.setStatus(id, 'closed')

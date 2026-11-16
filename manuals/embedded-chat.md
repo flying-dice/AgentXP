@@ -44,11 +44,15 @@ Agent7 remembers if the pane is open, and its width, for each window.
 
 ### The Edge Toggle
 
-When the pane is closed, a thin strip shows at the right edge of the window. Click the strip to open the pane.
+When the pane is closed, a strip shows at the right edge of the window. It is 28 pixels wide and reads **Chat** with an arrow. Point to it to read **Open the chat pane: ask about what you are looking at**. Click the strip to open the pane.
 
 ### The Title Bar
 
-The title bar shows **Chat pane** and the state of the agent. The arrow button closes the pane to the thin strip. The **New conversation** button deletes the chat and shows an empty pane. The button shows after the first message.
+The title bar shows **Chat about** and the folder where the pane works, for example **Chat about login-app (E:)**, and the state of the agent. Under it, the link **Open as a chat window** starts a chat in its own window on the same folder. The arrow button closes the pane to the thin strip. The **New conversation** button deletes the chat and shows an empty pane. The button shows after the first message.
+
+### The Empty Pane
+
+Before the first message, the pane says: **Ask about what you are looking at. This is a quick pane: it ends when you close the window. For a chat that you can come back to, use Start > New chat.** The chat pane is not a Chat window. To keep a conversation, start a chat from **Start -> New chat**, or click **Open as a chat window**.
 
 ### The Suggestions
 
@@ -97,7 +101,8 @@ The context menus of the apps have a group of chat items.
 |---|---|---|
 | Panel | The root of the panel. The attributes `data-role` (`aside` for the chat pane), `data-session-id`, and `data-collapsed` describe it. | `embedded-chat` |
 | Chat pane | The holder of the pane in an app window. | `chat-pane` |
-| Edge toggle | The thin strip at the right edge. Click it to open the pane. | `chat-pane-toggle` |
+| Edge toggle | The strip at the right edge, with the word Chat. Click it to open the pane. | `chat-pane-toggle` |
+| Open as a chat window | The link under the title bar. It starts a chat in its own window on the same folder. | `embedded-chat-open-window` |
 | Open or close | Hides the pane. In Code Review it shows or hides the panel. | `embedded-chat-toggle` |
 | Title | The name of the chat. | `embedded-chat-title` |
 | Status | The state of the agent: Ready, Connecting..., Connected, Working..., Disconnected. | `embedded-chat-status` |

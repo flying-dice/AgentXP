@@ -82,7 +82,7 @@ export class SessionRuntime {
         throw new AppError('The chat was removed.')
       }
       pool.add(sessionId, live)
-      this.deps.problems?.clear(sessionId)
+      this.deps.problems?.recovered(sessionId)
       broadcaster.setStatus(sessionId, 'idle')
       void connection.closed.then(() => this.onClosed(sessionId, connection))
       return live

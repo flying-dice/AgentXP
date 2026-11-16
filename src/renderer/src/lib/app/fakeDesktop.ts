@@ -126,7 +126,15 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     },
     setPaused: async (_id, paused) => {
       state.paused = paused
+      if (!paused) state.stoppedByPause = []
       changed()
+    },
+    resumeAgents: async () => {
+      const stopped = state.stoppedByPause ?? []
+      state.paused = false
+      state.stoppedByPause = []
+      changed()
+      return stopped
     },
     setUserInControl: async (_id, on) => {
       state.userInControl = on

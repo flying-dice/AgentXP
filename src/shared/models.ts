@@ -62,6 +62,10 @@ export interface SessionProblemDto {
   kind: 'start-failed' | 'agent-stopped' | 'agent-ended'
   message: string
   detail: string
+  /** The plain cause alone ("The program 'x' was not found."), for the line "It stopped again: ..." (no protocol names). */
+  cause?: string
+  /** How many times in a row this chat's agent failed since it last worked (1 on the first failure); set by main. */
+  failures?: number
 }
 
 export interface SessionDto {

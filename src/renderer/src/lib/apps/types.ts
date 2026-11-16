@@ -53,10 +53,8 @@ export interface DesktopHost {
   chatPaneOpen(windowId: Id): boolean
   /** "Send to chat" with a file: the window's chat pane (or a new chat) gets the text with the file attached. */
   sendFileToChat(windowId: Id, filePath: string, text: string): Promise<void>
-  /** True while the chat has a "Resumed" note waiting (Resume agents stopped a step of it); the chat shows it with a Continue button. */
-  hasResumeNote(sessionId: Id): boolean
-  /** The Continue button of that note: asks the chat's agent to carry on and clears the note. */
-  continueChat(sessionId: Id): Promise<void>
+  /** True while the desktop is paused and Pause stopped a step of this chat: the chat says it continues on Resume. */
+  stoppedByPause(sessionId: Id): boolean
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

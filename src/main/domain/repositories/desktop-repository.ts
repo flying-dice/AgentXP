@@ -28,6 +28,10 @@ export interface DesktopRepository {
   touch(id: Id): void
   setPaused(id: Id, paused: boolean): void
   setUserInControl(id: Id, on: boolean): void
+  /** The chats whose step the last Pause stopped, oldest first. */
+  stoppedChats(id: Id): Id[]
+  /** Replaces the saved list (an empty list clears it). */
+  setStoppedChats(id: Id, sessionIds: readonly Id[]): void
   /** Cascades to the desktop's chats, windows, drives, notes and recycled changes. */
   remove(id: Id): boolean
 }

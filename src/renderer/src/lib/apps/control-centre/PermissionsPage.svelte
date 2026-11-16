@@ -78,7 +78,7 @@
   }
 </script>
 
-<p class="lead">Each row is separate. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. <b>Ask</b> shows a permission request in the Action Center each time.</p>
+<p class="lead">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. <b>Ask</b> shows a permission request in the Action Center each time.</p>
 <div class="all" role="group" aria-label="Set all permissions">
   <span class="all-label">Set every permission to:</span>
   <ComboBox testid="permissions-set-all-value" aria-label="Set every permission to" items={DECISION_ITEMS} bind:value={allValue} style="width:80px" />
@@ -86,17 +86,16 @@
 </div>
 <div class="table" role="table" aria-label="Permissions" data-testid="permissions-table">
   <div class="head" role="row">
-    <span role="columnheader">Permission</span>
+    <span role="columnheader">Permission and what it covers</span>
     <span role="columnheader">Setting</span>
-    <span role="columnheader">What it covers</span>
   </div>
   {#each groups as group (group.id)}
     <div class="group" role="row" data-testid="permissions-group" data-group={group.id}><span role="columnheader">{group.title}</span></div>
     {#each group.rows as row (row.key)}
       <div class="row" role="row" data-testid="permissions-row" data-key={row.key}>
         <span class="name" role="cell">{row.label}</span>
-        <span role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
-        <span class="what" role="cell" title={row.description}>{row.description}</span>
+        <span class="setting" role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
+        <span class="what" role="cell" data-testid="permissions-covers">{row.description}</span>
       </div>
     {/each}
   {:else}
@@ -124,14 +123,16 @@
   .table {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     background: var(--w7-window);
     border: 1px solid var(--w7-list-border);
   }
+  /* Two lines per row: the name and its setting on the first, what it covers (wrapped) on the second. No sideways scroll. */
   .head,
   .row {
     display: grid;
-    grid-template-columns: 150px 96px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 96px;
     align-items: center;
     column-gap: 8px;
     padding: 0 8px;
@@ -152,20 +153,24 @@
     background: #f6f9fd;
   }
   .row {
-    height: 28px;
+    grid-template-areas: 'name setting' 'what what';
+    row-gap: 1px;
+    padding-top: 3px;
+    padding-bottom: 4px;
     border-bottom: 1px solid #f0f0f0;
   }
   .name {
+    grid-area: name;
     font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+  }
+  .setting {
+    grid-area: setting;
   }
   .what {
+    grid-area: what;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
     color: var(--w7-text-muted);
   }
   .footer {

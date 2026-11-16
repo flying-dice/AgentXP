@@ -8,9 +8,11 @@
     /** The buttons of the row (see `describeProblem`). */
     actions?: readonly ProblemAction[]
     onaction?: (id: ProblemActionId) => void
+    /** The technical text behind "Details...", shown inline under the buttons while it is open (null: closed). */
+    details?: string | null
   }
 
-  let { message, actions = [], onaction }: Props = $props()
+  let { message, actions = [], onaction, details = null }: Props = $props()
 </script>
 
 <div class="error-row" role="alert" data-testid="chat-error">
@@ -20,10 +22,11 @@
     {#if actions.length > 0}
       <div class="actions">
         {#each actions as action (action.id)}
-          <Button data-testid="chat-error-{action.id}" onclick={() => onaction?.(action.id)}>{action.label}</Button>
+          <Button data-testid="chat-error-{action.id}" onclick={() => onaction?.(action.id)}>{action.id === 'details' && details !== null ? 'Hide details' : action.label}</Button>
         {/each}
       </div>
     {/if}
+    {#if details !== null}<pre class="details" data-testid="chat-error-details-text">{details}</pre>{/if}
   </div>
 </div>
 
@@ -44,6 +47,19 @@
   .text {
     display: block;
     padding-top: 2px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+  }
+  .details {
+    margin: 4px 0 2px;
+    padding: 4px 6px;
+    max-height: 160px;
+    overflow: auto;
+    border: 1px solid #d9a5a1;
+    background: #fff;
+    color: #333;
+    font: 11px/1.4 Consolas, 'Courier New', monospace;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     user-select: text;

@@ -22,7 +22,7 @@ describe('migration 007 (code review)', () => {
   it('seeds the code-review app kind, makes existing sessions chats and creates the review tables', () => {
     const db = database(6)
     seed(db)
-    expect(migrate(db)).toBe(MIGRATIONS.length)
+    expect(migrate(db)).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
     expect(MIGRATIONS[6]).toMatchObject({ version: 7, name: 'code_review' })
     expect(db.prepare("SELECT kind FROM app_kinds WHERE kind = 'code-review'").all()).toEqual([{ kind: 'code-review' }])
     expect(db.prepare('SELECT role FROM sessions').all()).toEqual([{ role: 'chat' }])

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { folderLabel } from './folderLabel'
+import { chatAboutTitle, folderLabel } from './folderLabel'
 
 const drives = [
   { letter: 'C', label: 'Local Disk' },
@@ -19,5 +19,12 @@ describe('folderLabel', () => {
   it('falls back to the letter for an unknown drive and to the text for a bad path', () => {
     expect(folderLabel('G:\\', drives)).toBe('G:')
     expect(folderLabel('nonsense', drives)).toBe('nonsense')
+  })
+})
+
+describe('chatAboutTitle', () => {
+  it('says where the pane of a window works', () => {
+    expect(chatAboutTitle('E:\\', drives)).toBe('Chat about login-app (E:)')
+    expect(chatAboutTitle('C:\\Users\\Agent', drives)).toBe('Chat about Agent (C:)')
   })
 })
