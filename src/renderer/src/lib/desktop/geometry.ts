@@ -101,8 +101,8 @@ export function fitInsideWorkArea(b: Bounds, area: Size, barHeight: number): Bou
 
 const boundsOverlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
-/** A new window that does not fit beside the window it came from starts this far right of and below it, on top (UX-203). */
-export const OPENER_CASCADE = 24
+/** A new window that does not fit beside the window it came from starts this far right of and below it, on top, so its whole title bar (28 px) stays visible (UX-203). */
+export const OPENER_CASCADE = 28
 
 /** A second chat window is never narrower than this (UX-203). */
 export const CHAT_MIN_WIDTH = 560

@@ -448,7 +448,7 @@ describe('DesktopController projects and shell feedback', () => {
     expect(controller.state.focusedWindowId).toBe(second.id)
   })
 
-  it('a window with no room beside its opener cascades 24 px from it and is in front (UX-203)', async () => {
+  it('a window with no room beside its opener cascades 28 px from it and is in front (UX-203)', async () => {
     const { controller } = await started()
     controller.workArea = () => ({ width: 1280, height: 730 })
     const first = await controller.newChat()
@@ -456,8 +456,8 @@ describe('DesktopController projects and shell feedback', () => {
     const second = await controller.openApp({ app: 'event-viewer' })
     const a = controller.boundsOf(controller.windowById(first.id)!)
     const b = controller.boundsOf(controller.windowById(second.id)!)
-    expect(b.x).toBe(a.x + 24)
-    expect(b.y).toBe(a.y + 24)
+    expect(b.x).toBe(a.x + 28)
+    expect(b.y).toBe(a.y + 28)
     expect(controller.state.focusedWindowId).toBe(second.id)
     expect(controller.state.windows.at(-1)?.id).toBe(second.id)
   })

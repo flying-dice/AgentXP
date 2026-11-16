@@ -136,7 +136,7 @@ describe('placeBesideOpener (UX-181)', () => {
     const b = placeBesideOpener('chat', { x: 700, y: 400, width: 500, height: 600 }, null, area, 68, 2)
     expect(inside(b)).toBe(true)
   })
-  it('cascades 24 px from the opener when the work area has no room beside it (UX-203)', () => {
+  it('cascades 28 px from the opener when the work area has no room beside it (UX-203)', () => {
     const full = { x: 0, y: 72, width: 1280, height: 658 }
     const b = placeBesideOpener('code', { x: 80, y: 100, width: 820, height: 600 }, full, area, 68, 2, 'explorer')
     expect(b.x).toBe(full.x + OPENER_CASCADE)
