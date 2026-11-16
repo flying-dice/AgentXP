@@ -13,6 +13,7 @@ import type { SessionEventBus } from './SessionEventBus'
 import type { TerminalRecorder } from './TerminalRecorder'
 import type { SessionFiles } from './SessionFiles'
 import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
+import { NOT_ALLOWED_IN_REVIEW, readOnlyGate, readOnlyPrompter } from './review/reviewReadOnly'
 
 /** Drops events while closed: `session/load` replays history we already persisted. */
 class MutableSink implements AgentSessionEventSink {
@@ -81,13 +82,20 @@ export class SessionRuntime {
 
   private openConnection(agent: AgentDto, cwd: string, sessionId: Id, sink: AgentSessionEventSink): Promise<LiveAgentConnection> {
     const { broker, files, terminals } = this.deps
+    // The reviewer of a Code Review window only reads: writes are refused, not asked (UX-37).
+    const review = this.deps.sessions.get(sessionId)?.role === 'review'
+    const gate = this.deps.toolGate(sessionId)
     return this.deps.connector.open({
       agent,
       cwd,
       handlers: {
         sink,
-        permissions: broker.forSession(sessionId),
-        gate: this.deps.toolGate(sessionId),
+        permissions: review
+          ? readOnlyPrompter(broker.forSession(sessionId), (request) =>
+              sink.emit(request.sessionKey, { type: 'tool_call_updated', toolCallId: request.toolCallId, patch: { status: 'failed', rawOutput: NOT_ALLOWED_IN_REVIEW } })
+            )
+          : broker.forSession(sessionId),
+        gate: review ? readOnlyGate(gate) : gate,
         tap: this.deps.protocolTap?.(sessionId),
         files: files.forSession(sessionId),
         onTerminalActivity: (activity) => terminals.record(sessionId, activity)

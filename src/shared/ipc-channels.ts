@@ -90,7 +90,7 @@ const INVOKE_METHODS = {
     respondAppRequest: true
   },
   vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
-  git: { status: true, lineChanges: true, headText: true, revertHunk: true },
+  git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },
   review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },
   drives: { list: true, plugIn: true, eject: true },
   launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },

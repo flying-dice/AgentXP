@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { commentCounts, fileView, neighbourFile, openCounts, placeThreads, selectForSend, splitAnchor, unifiedAnchor } from './reviewModel'
+import { baseLabel, chatLabel, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -108,5 +108,37 @@ describe('lists', () => {
     const all = [comment({ id: 1 }), comment({ id: 2, path: 'b.ts', state: 'resolved' }), comment({ id: 3, parentId: 1 }), comment({ id: 4, state: 'sent' })]
     expect(Object.fromEntries(openCounts(all))).toEqual({ 'a.ts': 2 })
     expect(commentCounts(all)).toEqual({ open: 1, resolved: 1, sent: 1, total: 3 })
+  })
+})
+
+describe('opening file, change position and totals (UX-41, UX-42)', () => {
+  const change = (path: string, additions = 1, deletions = 0): ReviewChangeDto => ({ path, status: 'modified', additions, deletions, binary: false })
+
+  it('opens on the first file that has a comment, else the first file', () => {
+    const changes = [change('a.ts'), change('b.ts'), change('c.ts')]
+    expect(openingFile(changes, [comment({ path: 'c.ts' }), comment({ path: 'b.ts', id: 2 })])).toBe('b.ts')
+    expect(openingFile(changes, [])).toBe('a.ts')
+    expect(openingFile([], [])).toBeNull()
+  })
+
+  it('says which change the selected row is in', () => {
+    const regions = [{ start: 1, end: 2 }, { start: 5, end: 5 }, { start: 9, end: 10 }]
+    expect(changePosition(regions, null)).toEqual({ index: 0, total: 3 })
+    expect(changePosition(regions, 2)).toEqual({ index: 1, total: 3 })
+    expect(changePosition(regions, 7)).toEqual({ index: 2, total: 3 })
+    expect(changePositionLabel(regions, 9)).toBe('Change 3 of 3')
+    expect(changePositionLabel(regions, null)).toBe('3 changes')
+    expect(changePositionLabel([], null)).toBe('')
+  })
+
+  it('totals the lines of the files and explains HEAD', () => {
+    expect(changeTotals([change('a', 5, 1), { ...change('b', 7, 2), binary: true }, change('c', 2, 2)])).toBe('3 files, +7 -3')
+    expect(changeTotals([change('a', 1, 0)])).toBe('1 file, +1 -0')
+    expect(baseLabel('HEAD')).toBe('HEAD (the last saved version)')
+    expect(baseLabel('main')).toBe('main')
+    expect(STATUS_LABEL.untracked).toBe('New file')
+    expect(chatLabel({ id: 4, title: 'Fix the login...' })).toBe('Fix the login...')
+    expect(chatLabel({ id: 4, title: 'New session' })).toBe('Chat 4')
+    expect(chatLabel({ id: 5, title: '' })).toBe('Chat 5')
   })
 })

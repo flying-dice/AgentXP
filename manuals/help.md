@@ -91,6 +91,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: back | Goes back. | `help-ctx-back` |
 | Context menu: forward | Goes forward. | `help-ctx-forward` |
 | Context menu: home | Shows the home topic. | `help-ctx-home` |
+| Contents | Shows the list of topics. | `help-contents` |
+| Search result text | A short piece of text around the match. | `help-snippet` |
+| Status: topic | The title of the open topic. | `help-status-topic` |
 
 ### Keys
 

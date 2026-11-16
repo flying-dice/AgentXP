@@ -222,6 +222,8 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Start chat | Starts the chat. | `new-chat-start` |
 | Cancel | Closes the dialog box. | `new-chat-cancel` |
 | Open file | Lets you select a file. | `open-file-dialog` |
+| Save as | Asks for the name of the file to save. | `save-as-dialog` |
+| Save as: file name | The name of the file. | `save-as-name` |
 | Message box | Asks a question. | `message-box` |
 | Dialog button | One button of a dialog box, for example `dialog-button-ok`. | `dialog-button-*` |
 | Menu bar button | One menu of an app, for example `menubar-file`. | `menubar-*` |

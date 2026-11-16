@@ -6,6 +6,8 @@ export interface TabDef {
   title: string
   icon?: IconName
   disabled?: boolean
+  /** Tooltip of the tab header. */
+  tooltip?: string
   /** `data-testid` of the tab header. */
   testid?: string
 }

@@ -9,6 +9,12 @@ export interface TreeRoot {
   name: string
 }
 
+/** The row a context menu was opened on: a project root, a folder or a file. */
+export interface FileTreeTarget {
+  kind: 'project' | 'folder' | 'file'
+  path: VPath
+}
+
 export const dirNodeId = (path: VPath): string => `d:${path}`
 export const fileNodeId = (path: VPath): string => `f:${path}`
 

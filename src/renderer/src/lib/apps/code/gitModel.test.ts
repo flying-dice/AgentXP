@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GitLineChange } from '@shared/git'
-import { anchorLine, changeAtLine, indexGitStatus, marksOf, stepChange } from './gitModel'
+import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
 
 const changes: GitLineChange[] = [
   { kind: 'added', start: 2, end: 3, oldLines: [] },
@@ -39,5 +39,27 @@ describe('change navigation', () => {
     expect(changeAtLine(changes, 3)).toBe(0)
     expect(changeAtLine(changes, 20)).toBe(2)
     expect(changeAtLine(changes, 5)).toBeNull()
+  })
+})
+
+describe('words of the Git list (UX-39)', () => {
+  it('uses plain words instead of M and U', () => {
+    expect(GIT_STATE_WORD.modified).toBe('Modified')
+    expect(GIT_STATE_WORD.untracked).toBe('New file')
+  })
+  it('names the tab and its tooltip', () => {
+    expect(gitTabTitle(3)).toBe('Git (3)')
+    expect(gitTabTitle(0)).toBe('Git')
+    expect(gitTabTooltip(3)).toBe('3 files changed since the last commit')
+    expect(gitTabTooltip(1)).toBe('1 file changed since the last commit')
+  })
+  it('explains a folder that is not tracked', () => {
+    expect(NOT_A_GIT_REPOSITORY).toContain("Run 'git init'")
+  })
+  it('gives the path of a file below a root with slashes', () => {
+    expect(relativeToRoot('E:\\', 'E:\\src\\auth\\redirect.ts')).toBe('src/auth/redirect.ts')
+    expect(relativeToRoot('E:\\app', 'E:\\app\\a.ts')).toBe('a.ts')
+    expect(relativeToRoot('E:\\', 'F:\\a.ts')).toBeNull()
+    expect(relativeToRoot('E:\\app', 'E:\\other\\a.ts')).toBeNull()
   })
 })

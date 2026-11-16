@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { back, forward, parseTopics, plainText, searchTopics, startHistory, titleOf, topicForApp, topicOfHref, visit } from './helpModel'
+import { back, forward, locate, markWords, parseTopics, plainText, queryWords, searchHits, searchTopics, slugOf, startHistory, titleOf, topicForApp, topicOfHref, visit } from './helpModel'
 
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
@@ -81,5 +81,52 @@ describe('history', () => {
   it('ignores a visit to the current topic', () => {
     const h = startHistory('index')
     expect(visit(h, 'index')).toBe(h)
+  })
+})
+
+describe('search that finds the answer (UX-44)', () => {
+  const topics = parseTopics({
+    '/manuals/index.md': '# Agent7 Help and Support\n\nHome.',
+    '/manuals/agent-does-not-start.md': '# The agent does not start\n\n## Troubleshooting\n\nIf the chat gives no answer, the page stays blank. Click **Restart**.',
+    '/manuals/notepad.md': '# Using Notepad\n\n## 3 - The Window\n\nThe page has a menu bar.'
+  })
+
+  it('leaves out stop words', () => {
+    expect(queryWords('Page stays blank')).toEqual(['page', 'blank'])
+    expect(queryWords('no answer')).toEqual(['answer'])
+    expect(queryWords('the')).toEqual(['the'])
+  })
+
+  it('finds the troubleshooting topic for "no answer" and "page stays blank"', () => {
+    expect(searchTopics(topics, 'no answer').map((t) => t.id)).toEqual(['agent-does-not-start'])
+    expect(searchTopics(topics, 'page stays blank').map((t) => t.id)).toEqual(['agent-does-not-start'])
+  })
+
+  it('falls back to topics with half of the words, never to nothing-matching ones', () => {
+    expect(searchTopics(topics, 'blank unicorn').map((t) => t.id)).toEqual(['agent-does-not-start'])
+    expect(searchTopics(topics, 'unicorn')).toEqual([])
+  })
+
+  it('names the section and a snippet around the match', () => {
+    const [hit] = searchHits(topics, 'blank')
+    expect(hit.topic.id).toBe('agent-does-not-start')
+    expect(hit.section).toBe('Troubleshooting')
+    expect(hit.sectionId).toBe('troubleshooting')
+    expect(hit.snippet).toContain('page stays blank')
+  })
+
+  it('locate skips code blocks and falls back to the start of the topic', () => {
+    const topic = { id: 'x', title: 'X', body: '# X\n\n```\nsecret\n```\n\nOpen text.' }
+    expect(locate(topic, ['secret']).section).toBe('')
+    expect(locate(topic, ['secret']).snippet).toContain('Open text')
+  })
+
+  it('marks the words in the text and not in tags or character references', () => {
+    expect(markWords('<p class="page">A page &amp; amp</p>', ['page', 'amp'])).toBe('<p class="page">A <mark>page</mark> &amp; <mark>amp</mark></p>')
+    expect(markWords('<p>x</p>', [])).toBe('<p>x</p>')
+  })
+
+  it('makes slugs the way the article ids are made', () => {
+    expect(slugOf('3 - The Window')).toBe('3-the-window')
   })
 })

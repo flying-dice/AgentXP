@@ -6,6 +6,7 @@
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
+  import { revertConfirmText } from '../../app/changes/changeFormat'
   import TasksPane from '../../app/shell/TasksPane.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
@@ -114,7 +115,7 @@
 
   async function revert(change: (typeof changes)[number]): Promise<void> {
     const answer = await showMessageBox({
-      text: `Revert the changes to ${change.path}?\n\nThe file goes back to how it was before the agent edited it.`,
+      text: revertConfirmText(change.path),
       caption: 'Agent7',
       buttons: 'YesNo',
       icon: 'warning'
@@ -212,7 +213,7 @@
       style="width:170px"
     />
     <span class="spring"></span>
-    <ToolStripButton icon="changes" text={changes.length > 0 ? `Tasks and changes (${changes.length})` : 'Tasks and changes'} bind:checked={panelOpen} checkOnClick data-testid="chat-panel-toggle" />
+    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={panelOpen} checkOnClick data-testid="chat-panel-toggle" />
   </div>
   <div class="row">
     <div class="main">
@@ -228,14 +229,15 @@
       onaction={(event) => void store?.sendA2uiAction(event)}
     />
     {#if panelOpen}
-      <aside class="side" data-testid="chat-side-panel" aria-label="Tasks and changes">
+      <aside class="side" data-testid="chat-side-panel" aria-label="Changes and tasks">
         <TabControl {tabs} bind:selected={panelTab} aria-label="Inspector">
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <ChangesPane
                 {changes}
                 bind:selectedId={selectedChangeId}
-                onrevert={(c) => void revert(c)}
+                onrevert={(c) => revert(c)}
+                onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })}
                 onopeneditor={(c) => folder && void host.openApp({ app: 'code', path: c.path })}
               />
             {:else}

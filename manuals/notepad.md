@@ -76,7 +76,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: view | Opens the View menu. It has one item, Chat pane. | `menubar-view` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `notepad-menu-chat-pane` |
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
-| Menu: close | Closes the window. Alt+F4. | `notepad-menu-close` |
+| Menu: exit | Closes the window. Alt+F4. | `notepad-menu-close` |
+| Menu: save as | Saves the text under a new name. Ctrl+Shift+S. | `notepad-menu-save-as` |
+| Menu: find | Opens the Find box. Ctrl+F. | `notepad-menu-find` |
+| Find: box | The Find box. | `notepad-find-dialog` |
+| Find: text | The words to look for. | `notepad-find-text` |
+| Find: match case | Looks only for the same capital letters. | `notepad-find-case` |
+| Find: find next | Selects the next match. | `notepad-find-next` |
+| Find: not found | Says when the words are not in the text. | `notepad-find-missing` |
+| Find: cancel | Closes the Find box. | `notepad-find-cancel` |
 | Menu: undo | Undoes the last edit. Ctrl+Z. | `notepad-menu-undo` |
 | Menu: cut | Cuts the selected text. Ctrl+X. | `notepad-menu-cut` |
 | Menu: copy | Copies the selected text. Ctrl+C. | `notepad-menu-copy` |

@@ -3,6 +3,7 @@
   import type { HTMLButtonAttributes } from 'svelte/elements'
   import Icon from '../atoms/Icon.svelte'
   import type { IconName } from '../atoms/icons'
+  import { tooltip } from '../actions/tooltip'
 
   interface Props extends Omit<HTMLButtonAttributes, 'children'> {
     icon?: IconName
@@ -29,6 +30,7 @@
     type = 'button',
     ref = $bindable(null),
     class: className = '',
+    title,
     onclick,
     ...rest
   }: Props = $props()
@@ -47,7 +49,8 @@
   {type}
   {disabled}
   aria-pressed={checked === undefined ? undefined : checked}
-  aria-label={text ? undefined : rest['aria-label'] ?? rest.title}
+  aria-label={text ? undefined : (rest['aria-label'] ?? title ?? undefined)}
+  use:tooltip={title ?? undefined}
   onclick={click}
   {...rest}
 >

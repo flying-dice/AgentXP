@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { RecycledChangeDto } from '@shared/desktop'
-import { recycleRows, restoreSummary } from './recycleModel'
+import { recycleRows, restoreSummary, restoredMessage } from './recycleModel'
+
+describe('restoredMessage', () => {
+  it('names the file and the folder it went back to', () => {
+    expect(restoredMessage([{ path: 'E:\\src\\auth\\redirect.ts' }])).toBe("Restored 'redirect.ts' to E:\\src\\auth.")
+  })
+  it('counts several items and says nothing for none', () => {
+    expect(restoredMessage([{ path: 'a' }, { path: 'b' }])).toBe('Restored 2 items.')
+    expect(restoredMessage([])).toBe('')
+  })
+})
 
 const item = (id: number, over: Partial<RecycledChangeDto> = {}): RecycledChangeDto => ({ id, desktopId: 1, sessionId: 1, path: 'E:\\src\\auth\\a.ts', revertedText: 'x', restoredText: 'y', revertedAt: `2026-11-16T09:0${id}:00Z`, ...over })
 

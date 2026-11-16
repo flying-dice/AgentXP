@@ -56,6 +56,7 @@
         icon={tab.icon}
         disabled={tab.disabled}
         testid={tab.testid}
+        tooltip={tab.tooltip}
         selected={tab.id === current?.id}
         onclick={() => select(tab.id)}
       />

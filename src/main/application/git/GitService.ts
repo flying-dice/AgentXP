@@ -97,6 +97,17 @@ export class GitService {
     this.touched(desktopId, path)
   }
 
+  /** `git init` in the folder (a project the user wants tracked); nothing happens when it is already in a repository. */
+  async init(desktopId: Id, root: VPath): Promise<void> {
+    const real = await this.safeReal(desktopId, root)
+    if (real === null) throw new AppError('That folder is not available. Plug the project in again.')
+    if ((await this.deps.cli.run(real, ['rev-parse', '--is-inside-work-tree'])).ok) return
+    const out = await this.deps.cli.run(real, ['init', '-q'])
+    if (out.missing) throw new AppError('Git is not installed on this computer, so the folder cannot be tracked.')
+    if (!out.ok) throw new AppError(`Git could not start tracking the folder: ${out.stderr.trim() || 'unknown error'}`)
+    this.touched(desktopId, root)
+  }
+
   // ---- change notifications ---------------------------------------------------------------------------
 
   /** Something in the repository of the drive of `path` changed (user save, agent edit): push `git.changed`, debounced. */

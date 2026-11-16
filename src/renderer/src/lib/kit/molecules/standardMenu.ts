@@ -28,9 +28,9 @@ export function helpMenu({ app, name, onhelp, onabout }: HelpMenuOptions): MenuD
   }
 }
 
-/** The end of a File menu: a separator and `Close` (Alt+F4 closes the window). */
-export function closeItems(app: string, onclose: () => void): MenuItemDef[] {
-  return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label: '&Close', shortcut: 'Alt+F4', action: onclose }]
+/** The end of a File menu: a separator and `Close` (Alt+F4 closes the window); an editor says `E&xit` instead. */
+export function closeItems(app: string, onclose: () => void, label = '&Close'): MenuItemDef[] {
+  return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label, shortcut: 'Alt+F4', action: onclose }]
 }
 
 export interface ChatPaneItemOptions {

@@ -12,21 +12,28 @@ import {
 } from '@shared/review'
 
 export type ReviewLayout = 'unified' | 'split'
-export type ReviewViewMode = 'outline' | 'expanded'
+/** `all`: every changed file's diff in one scroll (UX-41). */
+export type ReviewViewMode = 'outline' | 'expanded' | 'all'
 
 export interface ReviewThread {
   root: ReviewCommentDto
   replies: ReviewCommentDto[]
 }
 
-export const STATUS_LETTER: Record<ReviewChangeStatus, string> = { modified: 'M', added: 'A', deleted: 'D', renamed: 'R', untracked: 'U' }
+/** The status words of the outline (UX-42): plain words, no git letters. */
 export const STATUS_LABEL: Record<ReviewChangeStatus, string> = {
   modified: 'Modified',
-  added: 'Added',
+  added: 'New file',
   deleted: 'Deleted',
   renamed: 'Renamed',
-  untracked: 'Untracked'
+  untracked: 'New file'
 }
+
+/** What `HEAD` means to a reader who does not know git. */
+export const HEAD_MEANING = 'the last saved version'
+
+/** The base shown in the toolbar and the status bar: `HEAD (the last saved version)`. */
+export const baseLabel = (baseRef: string): string => (baseRef === 'HEAD' ? `HEAD (${HEAD_MEANING})` : baseRef)
 
 /** The row of a unified diff a comment hangs under (the row that shows its last line), or -1 when that line is not in the diff. */
 export function unifiedAnchor(lines: readonly DiffLine[], c: Pick<ReviewCommentDto, 'side' | 'lineEnd'>): number {
@@ -102,4 +109,39 @@ export function fileView(file: ReviewFileDto | null, layout: ReviewLayout): File
   const split = layout === 'split' ? fullSplitRows(lines) : []
   const kinds = layout === 'split' ? splitKinds(split) : unifiedKinds(lines)
   return { lines, split, kinds, blocks: marginBlocks(kinds), regions: changeRegions(kinds) }
+}
+
+/** The file the window opens on: the first one (in list order) that has a comment, else the first file, else null. */
+export function openingFile(changes: readonly ReviewChangeDto[], comments: readonly ReviewCommentDto[]): string | null {
+  const commented = new Set(comments.map((c) => c.path))
+  return (changes.find((c) => commented.has(c.path)) ?? changes[0])?.path ?? null
+}
+
+/** "Change 3 of 7": where the selected row is among the regions of the file (0 before the first one). */
+export function changePosition(regions: readonly ChangeRegion[], selectedRow: number | null): { index: number; total: number } {
+  if (selectedRow === null) return { index: 0, total: regions.length }
+  const inside = regions.findIndex((r) => selectedRow >= r.start && selectedRow <= r.end)
+  if (inside >= 0) return { index: inside + 1, total: regions.length }
+  const before = regions.filter((r) => r.end < selectedRow).length
+  return { index: before, total: regions.length }
+}
+
+/** "Change 3 of 7" as the status bar shows it; empty when the file has no change. */
+export function changePositionLabel(regions: readonly ChangeRegion[], selectedRow: number | null): string {
+  const { index, total } = changePosition(regions, selectedRow)
+  if (total === 0) return ''
+  return index === 0 ? `${total} ${total === 1 ? 'change' : 'changes'}` : `Change ${index} of ${total}`
+}
+
+/** "5 files, +12 -3": the line under the outline. */
+export function changeTotals(changes: readonly ReviewChangeDto[]): string {
+  const added = changes.reduce((n, c) => n + (c.binary ? 0 : c.additions), 0)
+  const removed = changes.reduce((n, c) => n + (c.binary ? 0 : c.deletions), 0)
+  return `${changes.length} ${changes.length === 1 ? 'file' : 'files'}, +${added} -${removed}`
+}
+
+/** A chat in the Send dialog is named by its first words ("Fix the login..."); a chat without words yet is "Chat 3". */
+export function chatLabel(chat: { id: number; title?: string | null }): string {
+  const title = chat.title?.trim() ?? ''
+  return title && title !== 'New session' && title !== 'New chat' ? title : `Chat ${chat.id}`
 }

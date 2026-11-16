@@ -170,7 +170,7 @@
         {/if}
       {/each}
       <div class="divider" style:left="{nameWidth - 2}px">
-        <Splitter orientation="vertical" step={10} onresize={resizeName} />
+        <Splitter orientation="vertical" step={10} value={nameWidth} min={60} max={400} label="Resize the name column" onresize={resizeName} />
       </div>
     </div>
   </div>
@@ -245,7 +245,8 @@
     width: 4px;
     display: flex;
   }
-  .divider :global(.w7-splitter) {
+  .divider :global(.w7-splitter),
+  .divider :global(.w7-splitter:not(:hover)::before) {
     background: transparent !important;
   }
   .desc {

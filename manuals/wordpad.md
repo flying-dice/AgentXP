@@ -56,7 +56,7 @@ Each WordPad window has a chat pane at its right edge. The pane starts closed, a
 | WordPad window | The root of the window. | `wordpad-app` |
 | Read | Shows the formatted document. | `wordpad-mode-read` |
 | Edit | Shows the markdown source. | `wordpad-mode-edit` |
-| B, I, H1, H2, List, 1. List, Code, Link | Add markdown marks in edit mode. | none |
+| B, I, H1 (Heading 1), H2 (Heading 2), List, 1. List, Code, Link | Add markdown marks in edit mode. | none |
 | Document | The formatted page. | `wordpad-reader` |
 | Document source | The text box of the source. | `wordpad-source` |
 
