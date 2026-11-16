@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { see, startConnectedDesktop, type AppId, type ConnectedDesktop } from './fixtures'
 
 /** Every app opens from Start, shows its window frame and its app root, and closes again. */
@@ -41,5 +41,37 @@ describe('apps open from the Start menu', () => {
     const notepad = await ctx.desktop.openApp('notepad')
     await notepad.getByTestId('notepad-text').fill('hello e2e')
     await see.text(notepad.getByTestId('notepad-status'), 'Modified')
+  })
+
+  describe('menu shortcuts work inside the focused window', () => {
+    it('Notepad: Ctrl+N asks before discarding changes, Ctrl+O opens the file dialog', async () => {
+      const notepad = await ctx.desktop.openApp('notepad')
+      await notepad.getByTestId('notepad-text').fill('some text')
+      await ctx.desktopPage.keyboard.press('Control+N')
+      await see.visible(ctx.desktopPage.getByTestId('message-box'))
+      await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
+      await see.eventually(async () => expect(await notepad.getByTestId('notepad-text').inputValue()).toBe(''))
+      await ctx.desktopPage.keyboard.press('Control+O')
+      await see.visible(ctx.desktopPage.getByTestId('open-file-dialog'))
+      await ctx.desktopPage.getByTestId('open-file-dialog').getByTestId('dialog-button-cancel').click()
+      await ctx.desktop.closeWindow('notepad')
+    })
+
+    it('WordPad: Ctrl+O opens the file dialog', async () => {
+      await ctx.desktop.openApp('wordpad')
+      await ctx.desktopPage.keyboard.press('Control+O')
+      await see.visible(ctx.desktopPage.getByTestId('open-file-dialog'))
+      await ctx.desktopPage.getByTestId('open-file-dialog').getByTestId('dialog-button-cancel').click()
+      await ctx.desktop.closeWindow('wordpad')
+    })
+
+    it('Paint: Ctrl+N asks before discarding a drawing', async () => {
+      const paint = await ctx.desktop.openApp('paint')
+      await paint.getByTestId('paint-canvas').click({ position: { x: 40, y: 40 } })
+      await ctx.desktopPage.keyboard.press('Control+N')
+      await see.visible(ctx.desktopPage.getByTestId('message-box'))
+      await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-no').click()
+      await ctx.desktop.closeWindow('paint')
+    })
   })
 })

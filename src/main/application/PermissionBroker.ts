@@ -28,7 +28,9 @@ export class PermissionBroker {
     private readonly permissions: PermissionRepository,
     private readonly transcripts: TranscriptRepository,
     private readonly events: EventPublisher,
-    private readonly broadcaster: SessionBroadcaster
+    private readonly broadcaster: SessionBroadcaster,
+    /** Rewrites the tool call of a prompt before it is stored (host paths to virtual paths). */
+    private readonly mapToolCall: (sessionId: Id, toolCall: PermissionPrompt['toolCall']) => PermissionPrompt['toolCall'] = (_id, toolCall) => toolCall
   ) {}
 
   /** Observes requests as they open and close; returns an unsubscribe function. */
@@ -49,7 +51,7 @@ export class PermissionBroker {
 
   prompt(sessionId: Id, request: PermissionPrompt): Promise<PermissionDecision> {
     if (request.signal.aborted) return Promise.resolve({ outcome: 'cancelled' })
-    this.transcripts.upsertToolCall(sessionId, { toolCallId: request.toolCallId, ...request.toolCall })
+    this.transcripts.upsertToolCall(sessionId, { toolCallId: request.toolCallId, ...this.mapToolCall(sessionId, request.toolCall) })
     const stored = this.permissions.create(sessionId, request.toolCallId, request.options)
     this.broadcaster.setStatus(sessionId, 'awaiting_permission')
     this.publishToolCall(sessionId, request.toolCallId)

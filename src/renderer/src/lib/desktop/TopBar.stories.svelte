@@ -13,10 +13,14 @@
       paused: false,
       userInControl: false,
       tools: ['shell', 'fs.read', 'fs.write', 'terminal'],
+      maximized: false,
       onpause: fn(),
-      ontakecontrol: fn()
+      ontakecontrol: fn(),
+      onminimize: fn(),
+      onmaximize: fn(),
+      ondisconnect: fn()
     },
-    argTypes: { title: { control: 'text' }, working: { control: 'text' }, paused: { control: 'boolean' }, userInControl: { control: 'boolean' }, tools: { control: 'object' }, onpause: { action: 'pause' }, ontakecontrol: { action: 'take control' } }
+    argTypes: { title: { control: 'text' }, working: { control: 'text' }, paused: { control: 'boolean' }, userInControl: { control: 'boolean' }, tools: { control: 'object' }, maximized: { control: 'boolean' }, onminimize: { action: 'minimize' }, onmaximize: { action: 'maximize' }, ondisconnect: { action: 'disconnect' }, onpause: { action: 'pause' }, ontakecontrol: { action: 'take control' } }
   })
 </script>
 

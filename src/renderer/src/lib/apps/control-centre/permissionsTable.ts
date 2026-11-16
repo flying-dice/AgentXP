@@ -10,6 +10,7 @@ export interface PermissionRow {
   decision: PolicyDecision
 }
 
+/** One row per tool group of `TOOL_GROUPS` (the always-on `shell` group is not gated), then the app-opening rule. */
 const META: { key: PolicyKey; label: string; description: string }[] = [
   { key: 'fs.read', label: 'Read files', description: 'Read and list files in the workspace (Explorer, Code)' },
   { key: 'fs.write', label: 'Write files', description: 'Create and change files (Notepad, Code)' },
@@ -17,8 +18,16 @@ const META: { key: PolicyKey; label: string; description: string }[] = [
   { key: 'code', label: 'Code', description: 'Open files, reveal lines and show diffs in Code' },
   { key: 'terminal', label: 'Terminal', description: 'Run commands and read their output' },
   { key: 'browser', label: 'Browser', description: 'Navigate, read and click in web pages' },
+  { key: 'paint', label: 'Paint', description: 'Draw on, read and resize the Paint canvas' },
+  { key: 'wordpad', label: 'WordPad', description: 'Open, read and write documents in WordPad' },
+  { key: 'notes', label: 'Notes', description: 'List, add, change and remove Sticky Notes' },
+  { key: 'events', label: 'Events', description: 'Search the Event Viewer log of protocol messages' },
+  { key: 'snip', label: 'Screen capture', description: 'Take screenshots of the desktop with the Snipping Tool' },
+  { key: 'recycle', label: 'Recycle Bin', description: 'List and restore deleted items' },
   { key: 'openApps', label: 'Agent may open apps', description: 'Let the agent open and close apps on this desktop' }
 ]
+
+export const POLICY_KEYS: readonly PolicyKey[] = META.map((m) => m.key)
 
 export const DECISION_ITEMS: { value: PolicyDecision; label: string }[] = [
   { value: 'allow', label: 'Allow' },

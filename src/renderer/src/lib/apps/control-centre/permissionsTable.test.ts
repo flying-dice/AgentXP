@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_TOOL_POLICY } from '@shared/desktop'
+import { DEFAULT_TOOL_POLICY, TOOL_GROUPS } from '@shared/desktop'
 import { isDecision, permissionRows, policiesEqual, withDecision } from './permissionsTable'
 
 describe('permissionsTable', () => {
@@ -11,8 +11,20 @@ describe('permissionsTable', () => {
       'Code',
       'Terminal',
       'Browser',
+      'Paint',
+      'WordPad',
+      'Notes',
+      'Events',
+      'Screen capture',
+      'Recycle Bin',
       'Agent may open apps'
     ])
+  })
+
+  it('has a row for every tool group except shell', () => {
+    const keys = permissionRows(DEFAULT_TOOL_POLICY).map((r) => r.key)
+    expect(keys.filter((k) => k !== 'openApps').sort()).toEqual(TOOL_GROUPS.filter((g) => g !== 'shell').sort())
+    expect(new Set(keys).size).toBe(keys.length)
   })
 
   it('maps decisions of groups and of opening apps', () => {

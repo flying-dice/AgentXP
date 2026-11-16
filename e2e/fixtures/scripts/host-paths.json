@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "host-paths",
+  "description": "Reports tool calls with HOST paths (the chat's real working directory) like a real agent does: Agent7 shows them as virtual paths.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "read",
+      "match": { "any": true },
+      "steps": [
+        {
+          "type": "toolCall",
+          "id": "t1",
+          "title": "Read {{cwd}}/notes.txt",
+          "kind": "read",
+          "status": "in_progress",
+          "locations": [{ "path": "{{cwd}}/notes.txt", "line": 1 }]
+        },
+        { "type": "message", "text": "Reading the notes." }
+      ]
+    }
+  ]
+}

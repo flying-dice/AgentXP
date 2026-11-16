@@ -11,6 +11,8 @@
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
+  import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
+  import type { MenuDef } from '../../kit/molecules/MenuItem'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
@@ -97,12 +99,40 @@
     }
   }
 
+  async function clearTranscript(): Promise<void> {
+    const answer = await showMessageBox({
+      text: 'Clear the transcript of this chat?\n\nThe messages and tool cards are removed from the window. The agent keeps its own memory of the conversation.',
+      caption: 'Agent7',
+      buttons: 'YesNo',
+      icon: 'warning'
+    })
+    if (answer !== 'yes') return
+    try {
+      await host.api.sessions.clearTranscript(sessionId)
+    } catch (error) {
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  const menus = $derived<MenuDef[]>([
+    {
+      label: '&Chat',
+      items: [
+        { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
+        { id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) },
+        { separator: true },
+        { id: 'chat-close', testid: 'chat-menu-close', label: '&Close', action: () => void host.closeWindow(win.id) }
+      ]
+    }
+  ])
+
   const setModel = (id: string): void => void host.api.sessions.setModel(sessionId, id)
   const setMode = (id: number, modeId: string): Promise<void> => host.api.sessions.setMode(id, modeId)
   const pickFiles = (): Promise<string[]> => host.api.dialogs.pickFiles()
 </script>
 
 <div class="chat" data-testid="chat-app" data-session-id={sessionId}>
+  <MenuStrip {menus} aria-label="Chat menu" />
   <div class="bar">
     <span>Model:</span>
     <ComboBox
@@ -147,7 +177,7 @@
     {/if}
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={store?.error ?? folder?.path ?? ''} spring />
+    <StatusStripLabel testid="chat-cwd" text={store?.error ?? folder?.path ?? ''} spring />
     {#if session}
       <StatusStripLabel borders={['left']}>
         <span>Context</span>

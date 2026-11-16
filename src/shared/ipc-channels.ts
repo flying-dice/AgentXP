@@ -32,6 +32,7 @@ const RENDERER_EVENTS = {
   'session.removed': true,
   'folders.changed': true,
   'status.message': true,
+  'transcript.cleared': true,
   'desktop.changed': true,
   'desktop.appRequest': true,
   'notes.changed': true,

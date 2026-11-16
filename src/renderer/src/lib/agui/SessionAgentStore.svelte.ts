@@ -87,6 +87,18 @@ export class SessionAgentStore {
     this.syncRunState()
   }
 
+  /**
+   * Forgets the local transcript (after `sessions.clearTranscript`): messages, answers and interrupts go,
+   * then the persisted (empty) messages and state are loaded, so no tool card stays "Running...".
+   */
+  async reload(): Promise<void> {
+    this.agent.setMessages([])
+    this.messages = []
+    this.interrupts = []
+    this.answers = {}
+    await this.connect()
+  }
+
   /** Sends a prompt; attachments are absolute paths. Ignored while a run streams or a permission request is open. */
   async send(text: string, attachments: string[] = []): Promise<void> {
     if (this.running || this.interrupts.length > 0) return

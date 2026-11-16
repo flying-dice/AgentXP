@@ -28,8 +28,8 @@
     title: 'Organisms/StartMenu',
     component: StartMenu,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
-    args: { programs, recent, places, powerLabel: 'Pause agent', query: '', onrun: fn(), onrecent: fn(), onplace: fn(), onpower: fn(), onclose: fn() },
-    argTypes: { powerLabel: { control: 'text' }, query: { control: 'text' }, onrun: { action: 'run' }, onrecent: { action: 'recent' }, onplace: { action: 'place' }, onpower: { action: 'power' }, onclose: { action: 'close' } }
+    args: { programs, recent, places, powerLabel: 'Pause agent', query: '', onrun: fn(), onrecent: fn(), onplace: fn(), onpower: fn(), ondisconnect: fn(), onswitch: fn(), ondelete: fn(), onclose: fn() },
+    argTypes: { powerLabel: { control: 'text' }, query: { control: 'text' }, onrun: { action: 'run' }, onrecent: { action: 'recent' }, onplace: { action: 'place' }, onpower: { action: 'power' }, ondisconnect: { action: 'disconnect' }, onswitch: { action: 'switch desktop' }, ondelete: { action: 'delete desktop' }, onclose: { action: 'close' } }
   })
 </script>
 

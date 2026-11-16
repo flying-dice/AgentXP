@@ -20,6 +20,7 @@ import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
 import { ToolGateway } from './application/desktop/ToolGateway'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
+import { ToolCallPaths } from './application/vfs/ToolCallPaths'
 import { SessionEventBus } from './application/SessionEventBus'
 import { AgentService } from './application/AgentService'
 import { ChangeReverter } from './application/ChangeReverter'
@@ -177,9 +178,10 @@ export function composeApp(options: ComposeOptions): AppServices {
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
   const sessionFiles = new SessionFiles({ vfs, host: hostFiles, sessions: repos.sessions, recorder: changeRecorder })
-  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster)
+  const callPaths = new ToolCallPaths(vfs, (sessionId) => repos.sessions.get(sessionId)?.desktopId)
+  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster, (sessionId, toolCall) => callPaths.patch(sessionId, toolCall))
   const pool = new AgentConnectionPool()
-  const eventBus = new SessionEventBus()
+  const eventBus = new SessionEventBus((sessionId, event) => callPaths.event(sessionId, event))
   const projector = new SessionEventProjector(repos.sessions, repos.transcripts, repos.tasks, publisher, broadcaster)
   eventBus.subscribe((sessionId, event) => projector.apply(sessionId, event))
 

@@ -11,7 +11,7 @@
   import { applyOp, fillAt, resizeCanvas } from './paintCanvas'
   import { PALETTE, STROKE_SIZES, boxOf, clampSize, opAnchor, parseColor, parseDrawParams, parseResizeParams, toHex } from './paintOps'
 
-  let { window: win, host }: AppProps<'paint'> = $props()
+  let { window: win, host, focused }: AppProps<'paint'> = $props()
 
   const TOOLS: { id: PaintTool; label: string }[] = [
     { id: 'pencil', label: 'Pencil' },
@@ -235,6 +235,13 @@
     }
   }
 
+  /** Ctrl+N works wherever the focus is inside the focused Paint window (not while typing text on the canvas). */
+  function onWindowKey(event: KeyboardEvent): void {
+    if (!focused || textBox || !event.ctrlKey || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'n') return
+    event.preventDefault()
+    void newImage()
+  }
+
   // ---- canvas resize handle ---------------------------------------------------------------------
   function gripDown(event: PointerEvent): void {
     event.preventDefault()
@@ -303,6 +310,8 @@
     else color1 = color
   }
 </script>
+
+<svelte:window onkeydown={onWindowKey} />
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="paint" data-testid="paint-app" role="application" aria-label="Agent Paint" tabindex="-1" {onkeydown}>

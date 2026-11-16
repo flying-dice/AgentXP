@@ -255,14 +255,34 @@
   let menuX = $state(0)
   let menuY = $state(0)
   let menuDrive = $state.raw<DriveDto | null>(null)
-  const menuItems = $derived<MenuItemDef[]>([
-    { id: 'explorer-drive-open', label: '&Open', action: () => menuDrive && go(driveRoot(menuDrive.letter)) },
-    { separator: true },
-    { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: menuDrive?.kind !== 'removable', action: () => menuDrive && void host.ejectDrive(menuDrive.letter) }
-  ])
+  let menuFolder = $state<VPath | null>(null)
+  const menuItems = $derived<MenuItemDef[]>(
+    menuFolder
+      ? [
+          { id: 'explorer-folder-open', label: '&Open', action: () => menuFolder && go(menuFolder) },
+          { id: 'explorer-folder-chat', label: 'Start a &chat here', icon: 'session', action: () => menuFolder && void host.startChat(menuFolder) }
+        ]
+      : [
+          { id: 'explorer-drive-open', label: '&Open', action: () => menuDrive && go(driveRoot(menuDrive.letter)) },
+          { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: () => menuDrive && void host.startChat(driveRoot(menuDrive.letter)) },
+          { separator: true },
+          { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: menuDrive?.kind !== 'removable', action: () => menuDrive && void host.ejectDrive(menuDrive.letter) }
+        ]
+  )
+
+  function folderMenu(row: ListRow, event: MouseEvent): void {
+    const entry = entries.find((e) => e.path === row.id)
+    if (entry?.kind !== 'directory') return
+    menuDrive = null
+    menuFolder = entry.path
+    menuX = event.clientX
+    menuY = event.clientY
+    menuOpen = true
+  }
 
   function driveMenu(drive: DriveDto, event: MouseEvent): void {
     menuDrive = drive
+    menuFolder = null
     menuX = event.clientX
     menuY = event.clientY
     menuOpen = true
@@ -307,7 +327,7 @@
           {#if path === ''}
             <ComputerView {drives} selected={selected[0] ?? null} onselect={onSelectDrive} onactivate={(d) => go(driveRoot(d.letter))} oncontextmenu={driveMenu} />
           {:else}
-            <ListView testid="explorer-list" rowTestid="explorer-item" {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} />
+            <ListView testid="explorer-list" rowTestid="explorer-item" {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} oncontextmenu={folderMenu} />
           {/if}
         </div>
       {/snippet}
@@ -319,7 +339,7 @@
       <StatusStripLabel testid="explorer-selection" text={selectionText} borders={['left']} />
     {/if}
   </StatusStrip>
-  <ContextMenuStrip items={menuItems} bind:open={menuOpen} x={menuX} y={menuY} label="Drive" />
+  <ContextMenuStrip items={menuItems} bind:open={menuOpen} x={menuX} y={menuY} label={menuFolder ? 'Folder' : 'Drive'} />
 </div>
 
 <style>

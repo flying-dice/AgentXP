@@ -6,7 +6,7 @@
 import type { Component } from 'svelte'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
-import type { DriveLetter } from '@shared/vfs'
+import type { DriveLetter, VPath } from '@shared/vfs'
 import type { AppKind, AppView, AppWindowState, DesktopState, OpenWindowInput, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
 
@@ -22,6 +22,8 @@ export interface DesktopHost {
   updateView(windowId: Id, view: AppView): void
   /** Safely Remove: warns when chats work on the drive, ejects it and shows the balloon. */
   ejectDrive(letter: DriveLetter): Promise<void>
+  /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
+  startChat(cwd: VPath): Promise<void>
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

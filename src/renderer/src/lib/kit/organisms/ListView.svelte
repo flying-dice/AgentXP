@@ -19,6 +19,8 @@
     /** Enter or double click. */
     onactivate?: (row: ListRow) => void
     onsort?: (key: string, direction: SortDirection) => void
+    /** Right click on a row (the row is selected first); the browser menu is suppressed. */
+    oncontextmenu?: (row: ListRow, event: MouseEvent) => void
     class?: string
     'aria-label'?: string
     /** `data-testid` of the list itself. */
@@ -39,6 +41,7 @@
     onselect,
     onactivate,
     onsort,
+    oncontextmenu,
     class: className = '',
     'aria-label': ariaLabel = 'List',
     testid,
@@ -46,6 +49,13 @@
   }: Props = $props()
 
   const uid = $props.id()
+
+  function rowMenu(row: ListRow, event: MouseEvent): void {
+    if (!oncontextmenu) return
+    event.preventDefault()
+    if (!selected.includes(row.id)) pick(shown.indexOf(row), { ctrl: false, shift: false })
+    oncontextmenu(row, event)
+  }
   let widths = $state<Record<string, number>>({})
   let activeId = $state<string | null>(null)
   let anchor = -1
@@ -194,6 +204,7 @@
           aria-selected={selected.includes(row.id)}
           onclick={(e) => pick(shown.indexOf(row), { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey })}
           ondblclick={() => onactivate?.(row)}
+          oncontextmenu={(e) => rowMenu(row, e)}
         >
           {#each columns as col, i (col.key)}
             {@const w = widthOf(col)}
@@ -222,6 +233,7 @@
         aria-selected={selected.includes(row.id)}
         onclick={(e) => pick(shown.indexOf(row), { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey })}
         ondblclick={() => onactivate?.(row)}
+        oncontextmenu={(e) => rowMenu(row, e)}
       >
         {#if row.icon}<Icon name={row.icon} size={view === 'LargeIcon' ? 32 : 16} />{/if}
         <span class="t">{cellText(row, textKey)}</span>
