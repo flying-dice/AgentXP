@@ -58,11 +58,11 @@ describe('chat turn with the fake agent', () => {
   it('lists the edited file under Changes in the chat and in Code', async () => {
     const chat = ctx.desktop.chat()
     await chat.showChanges()
-    await see.text(chat.changes, 'fake-agent-output.txt')
+    await see.attribute(chat.changes.getByTestId('changes-file'), 'title', /fake-agent-output\.txt/)
     expect(await chat.changes.count()).toBe(1)
     const code = ctx.desktop.code()
     await code.showChanges()
-    await see.text(code.changes, 'fake-agent-output.txt')
+    await see.attribute(code.changes.getByTestId('changes-file'), 'title', /fake-agent-output\.txt/)
   })
 
   it('a second request can be approved from the Action Center through the UAC dialog', async () => {
