@@ -84,7 +84,7 @@
   const selectedProcess = $derived(procRows[current.row] ?? null)
 
   const chatColumns: ListColumn[] = [
-    { key: 'title', header: 'Chat', width: 140 },
+    { key: 'title', header: 'Chat', width: 220 },
     { key: 'agent', header: 'Agent', width: 90 },
     { key: 'status', header: 'Status' },
     { key: 'context', header: 'Context', width: 70, align: 'right' }

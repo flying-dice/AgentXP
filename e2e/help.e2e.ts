@@ -20,16 +20,18 @@ describe('Help and Support', () => {
     await see.visible(help.getByTestId('help-app'))
     await see.attribute(help.getByTestId('help-article'), 'data-topic', 'notepad')
     await see.text(help.getByTestId('help-article'), 'Using Notepad')
-    // F1 lands on the section of the app's help anchor (Common Tasks), not on the top of the manual (UX-110).
+    // F1 opens the topic at its top, so its title is the first line (UX-148).
     await see.eventually(async () => {
-      expect(await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThan(0)
+      expect(await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)).toBe(0)
     })
-    // The heading it landed on is in the top third of the pane, so the answer under it is on screen (UX-132).
+    // The whole Help window lies inside the desktop (UX-148).
     await see.eventually(async () => {
-      const article = (await help.getByTestId('help-article').boundingBox())!
-      const heading = (await help.getByTestId('help-target').boundingBox())!
-      expect(heading.y - article.y).toBeGreaterThanOrEqual(-1)
-      expect(heading.y - article.y).toBeLessThanOrEqual(article.height / 3)
+      const frame = (await help.boundingBox())!
+      const viewport = await ctx.desktopPage.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }))
+      expect(frame.x).toBeGreaterThanOrEqual(0)
+      expect(frame.y).toBeGreaterThanOrEqual(0)
+      expect(frame.x + frame.width).toBeLessThanOrEqual(viewport.width + 1)
+      expect(frame.y + frame.height).toBeLessThanOrEqual(viewport.height + 1)
     })
     // The Table of Contents lists the sections of one chapter only (the other chapters are one line each).
     expect(await help.getByTestId('help-toc-open').count()).toBeLessThanOrEqual(1)

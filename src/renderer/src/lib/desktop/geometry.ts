@@ -86,3 +86,14 @@ export function frameStyle(bounds: Bounds, maximized: boolean): string {
   if (maximized) return 'left:0;top:0;right:0;bottom:0;'
   return `left:${bounds.x}px;top:${bounds.y}px;width:${bounds.width}px;height:${bounds.height}px;`
 }
+
+/**
+ * Bounds that lie wholly inside the work area and below the top bar: smaller when the area is smaller than the window,
+ * moved in when the window sticks out (UX-148). `barHeight` is 0 until the bar is measured.
+ */
+export function fitInsideWorkArea(b: Bounds, area: Size, barHeight: number): Bounds {
+  const minY = barHeight > 0 ? minYBelow(barHeight) : 0
+  const width = Math.min(b.width, area.width)
+  const height = Math.min(b.height, Math.max(1, area.height - minY))
+  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, minY, Math.max(minY, area.height - height)), width, height }
+}

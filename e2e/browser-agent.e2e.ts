@@ -62,11 +62,14 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The bar stays 20 seconds after a step that is not a read (a finished read says "The agent read this page." for 5 seconds: unit-tested).
+    // The turn ended: the yellow bar is gone at once, not 20 seconds later (UX-156).
+    await see.gone(browser.getByTestId('browser-agent-bar'))
+
+    // A second job: one click on Take over while the agent works. The bar says the user has control, Take over reads "Taken over",
+    // and the desktop is in the user's control.
+    await chat.send(`Use the chat app at ${web.origin}/ again`)
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-
-    // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
     await browser.getByTestId('browser-agent-takeover').click()
     await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')

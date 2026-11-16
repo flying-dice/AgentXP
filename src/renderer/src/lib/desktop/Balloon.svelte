@@ -8,11 +8,13 @@
     text: string
     icon?: IconName
     onclose?: () => void
+    /** A button under the text (for example "Open Task Manager"). */
+    action?: { label: string; onclick: () => void }
     /** Distance of the tail from the right edge of the balloon, in px. */
     tail?: number
   }
 
-  let { title, text, icon = 'info', onclose, tail = 44 }: Props = $props()
+  let { title, text, icon = 'info', onclose, action, tail = 44 }: Props = $props()
 </script>
 
 <div class="balloon" data-testid="balloon" role="status" style:--tail="{tail}px">
@@ -22,6 +24,9 @@
     <button type="button" class="x" data-testid="balloon-close" aria-label="Close" onclick={onclose}>&times;</button>
   </div>
   <p data-testid="balloon-text">{text}</p>
+  {#if action}
+    <button type="button" class="act" data-testid="balloon-action" onclick={action.onclick}>{action.label}</button>
+  {/if}
 </div>
 
 <style>
@@ -77,6 +82,13 @@
   }
   .x:hover {
     color: #000;
+  }
+  .act {
+    display: block;
+    margin: 8px 0 0 22px;
+    padding: 2px 10px;
+    font: var(--w7-font);
+    cursor: default;
   }
   p {
     margin: 6px 0 0 22px;

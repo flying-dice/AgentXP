@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -75,5 +75,22 @@ describe('belowBar', () => {
     const side = { x: 0, y: 0, width: 200, height: 200 }
     expect(belowBar(low, bar)).toBe(low)
     expect(belowBar(side, bar)).toBe(side)
+  })
+})
+
+describe('fitInsideWorkArea (UX-148)', () => {
+  const area = { width: 900, height: 500 }
+  it('leaves a window that fits', () => {
+    const b = { x: 100, y: 80, width: 400, height: 300 }
+    expect(fitInsideWorkArea(b, area, 68)).toEqual(b)
+  })
+  it('shrinks a window that is larger than the area and keeps it below the bar', () => {
+    const r = fitInsideWorkArea({ x: 150, y: 70, width: 800, height: 560 }, area, 68)
+    expect(r.y).toBe(72)
+    expect(r.y + r.height).toBeLessThanOrEqual(500)
+    expect(r.x + r.width).toBeLessThanOrEqual(900)
+  })
+  it('moves a window that sticks out to the right or bottom back in', () => {
+    expect(fitInsideWorkArea({ x: 700, y: 400, width: 400, height: 200 }, area, 0)).toEqual({ x: 500, y: 300, width: 400, height: 200 })
   })
 })

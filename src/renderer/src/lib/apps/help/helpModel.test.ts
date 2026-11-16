@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HELP_ANCHORS, back, forward, indexSections, markWords, parseTopics, plainText, queryWords, searchSections, sectionsOf, slugOf, snippetOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
+import { back, forward, indexSections, markWords, parseTopics, plainText, queryWords, searchSections, sectionsOf, slugOf, snippetOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
 
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
@@ -50,11 +50,10 @@ describe('searchSections', () => {
 })
 
 describe('topicForApp and topicOfHref', () => {
-  it('uses the app kind and its help anchor as the topic, and the keyboard topic without a window', () => {
-    expect(topicForApp('notepad')).toBe('notepad#common-tasks')
-    expect(topicForApp('code-review')).toBe('code-review#common-tasks')
-    expect(splitTopic(topicForApp('notepad'))).toEqual({ topic: 'notepad', section: 'common-tasks' })
-    expect(Object.keys(HELP_ANCHORS)).toContain('chat')
+  it('uses the app kind, without a section, as the topic, and the keyboard topic without a window (UX-148)', () => {
+    expect(topicForApp('notepad')).toBe('notepad')
+    expect(topicForApp('code-review')).toBe('code-review')
+    expect(splitTopic(topicForApp('notepad'))).toEqual({ topic: 'notepad', section: '' })
     expect(topicForApp(null)).toBe('keyboard')
     expect(topicForApp(undefined)).toBe('keyboard')
   })

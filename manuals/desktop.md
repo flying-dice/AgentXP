@@ -62,13 +62,13 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: talk to the agent**. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens Task Manager, where **Switch to chat** opens one. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
 Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Center**.
 
 ### The Windows
 
-Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from the Task Manager.** A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
+Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from Chats on the desktop.** The balloon has a button, **Open Task Manager**. A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
 
 If the agent opened a window, the label **opened by agent** appears at its edge. The taskbar button of a window that the agent opened behind your chat flashes until you select it.
 
@@ -182,6 +182,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Balloon title | Shows the title of the message. | `balloon-title` |
 | Balloon text | Shows the text of the message. | `balloon-text` |
 | Balloon close | Closes the balloon. | `balloon-close` |
+| Balloon button | Runs the action that the balloon offers, for example Open Task Manager. | `balloon-action` |
 
 ### Start menu
 

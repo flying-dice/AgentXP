@@ -65,7 +65,12 @@ describe('pause, resume and taking control (stepping agent)', () => {
     await control.waitForPause()
     await see.attribute(chat.transcript, 'data-running', 'true')
     await ctx.desktop.closeWindow('chat')
-    await see.text(ctx.desktop.balloonText, 'The agent keeps working. Open it again from the Task Manager.')
+    await see.text(ctx.desktop.balloonText, 'The agent keeps working. Open it again from Chats on the desktop.')
+    // The balloon has a button that opens the list of chats (UX-146).
+    await see.text(ctx.desktop.balloonAction, 'Open Task Manager')
+    await ctx.desktop.balloonAction.click()
+    await see.visible(ctx.desktop.window('agent-manager').getByTestId('agent-manager-app'))
+    await see.gone(ctx.desktop.balloonAction)
     await control.setMode('auto')
   })
 })

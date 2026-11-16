@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clickLabel, findLabel, selectLabel, tabsLabel, typeLabel, WAIT_LABEL, waitDetail } from './browserLabels'
+import { clickLabel, clickTarget, findLabel, selectLabel, tabsLabel, typeLabel, typeTarget, WAIT_LABEL, waitDetail } from './browserLabels'
 
 describe('browser activity labels', () => {
   it('names the clicked element and never shows a ref', () => {
@@ -40,5 +40,15 @@ describe('wait words', () => {
     expect(waitDetail('Reacted (1)', undefined)).toBe('Waiting for the text "Reacted (1)" to show on the page.')
     expect(waitDetail(undefined, 4)).toBe('Waiting for an item on the page to show.')
     expect(waitDetail(undefined, undefined)).toBeUndefined()
+  })
+})
+
+describe('clickTarget and typeTarget (UX-157)', () => {
+  it('name the element for the step list', () => {
+    expect(clickTarget({ role: 'button', name: 'Send' })).toBe("the button 'Send'")
+    expect(clickTarget(undefined)).toBe('an item on the page')
+    expect(typeTarget({ role: 'textbox', name: 'Message #general' })).toBe("'Message #general'")
+    expect(typeTarget({ role: 'textbox', name: '' })).toBe('a text box')
+    expect(typeTarget(undefined)).toBeNull()
   })
 })

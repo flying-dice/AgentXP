@@ -129,7 +129,7 @@ describe('window sizes and placement below the top bar', () => {
     const size = (app: keyof typeof DEFAULT_BOUNDS): [number, number] => [DEFAULT_BOUNDS[app].width, DEFAULT_BOUNDS[app].height]
     expect(size('control-centre')).toEqual([760, 540])
     expect(size('event-viewer')).toEqual([980, 560])
-    expect(size('agent-manager')).toEqual([640, 440])
+    expect(size('agent-manager')).toEqual([820, 440])
     expect(size('recycle-bin')).toEqual([680, 420])
     expect(size('help')).toEqual([800, 560])
     expect(size('chat')).toEqual([680, 560])
