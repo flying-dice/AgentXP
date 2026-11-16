@@ -95,7 +95,7 @@ export const READ_DONE_MS = 5000
 
 /** What the yellow bar over the page says: that the user has control, that the agent finished reading, or what the agent does now. */
 export function agentBarText({ userInControl, readDone, activity }: { userInControl: boolean; readDone: boolean; activity: string | null }): string {
-  if (userInControl) return 'You have control of this page. The agent stops and asks before it uses the page again. Click Give control back at the top to let it go on.'
+  if (userInControl) return 'You have control of this page. The agent stops and asks before it uses the page again. Click Resume at the top to let it go on.'
   if (readDone) return 'The agent read this page.'
   return `Agent is using this page: ${activity ?? 'working'}`
 }

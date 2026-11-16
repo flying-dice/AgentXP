@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createFixture } from '../infrastructure/db/test-helpers'
 import { SqliteSessionRepository } from '../infrastructure/db/sqlite-session-repository'
-import { stoppedUnexpectedly } from './agentProblems'
+import { endedByUser, stoppedUnexpectedly } from './agentProblems'
 import { ProblemAwareSessions, SessionProblems } from './SessionProblems'
 
 const problem = { kind: 'start-failed', message: 'The agent could not start.', detail: 'x' } as const
@@ -26,6 +26,24 @@ describe('one crash mid-turn', () => {
     problems.set(f.sessionId, stoppedUnexpectedly(new Error('x')))
     problems.clear(f.sessionId)
     problems.set(f.sessionId, stoppedUnexpectedly(new Error('x')))
+    expect(problems.get(f.sessionId)?.failures).toBe(2)
+  })
+})
+
+describe('one end in Task Manager', () => {
+  it('counts once, whichever report comes first, and keeps the wording of the end', () => {
+    problems.set(f.sessionId, endedByUser())
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('ACP connection closed')))
+    expect(problems.get(f.sessionId)).toMatchObject({ kind: 'agent-ended', failures: 1 })
+    problems.recovered(f.sessionId)
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('x')))
+    problems.set(f.sessionId, endedByUser())
+    expect(problems.get(f.sessionId)).toMatchObject({ kind: 'agent-ended', failures: 1 })
+  })
+  it('a second end after a restart is the second failure', () => {
+    problems.set(f.sessionId, endedByUser())
+    problems.clear(f.sessionId)
+    problems.set(f.sessionId, endedByUser())
     expect(problems.get(f.sessionId)?.failures).toBe(2)
   })
 })

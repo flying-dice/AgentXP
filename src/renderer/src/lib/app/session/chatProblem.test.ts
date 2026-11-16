@@ -37,7 +37,8 @@ describe('describeProblem', () => {
     const again = { ...stopped, failures: 2, cause: 'The agent program closed the connection.' }
     const result = describeProblem({ error: null, problem: again, failed: { unanswered: true } })!
     expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.\nIt stopped again: the agent program closed the connection. Show in Event Viewer shows the details.')
-    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat', 'Details...', 'Show in Event Viewer'])
+    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat (your text is kept in the box)', 'Details...', 'Show in Event Viewer'])
+    expect(describeProblem({ error: null, problem: again, failed: null })!.actions.map((a) => a.label)).toContain('Start a new chat')
     const first = describeProblem({ error: null, problem: { ...again, failures: 1 }, failed: { unanswered: true } })!
     expect(first.text).not.toMatch(/stopped again/)
     expect(first.actions[0].label).toBe('Restart and send again')

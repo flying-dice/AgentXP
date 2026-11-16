@@ -23,15 +23,17 @@ export const waitingText = (count: number): string => `${WAITING_FOR_YOU}: ${cou
 
 /**
  * What the status area says about the work: a waiting request first ("Waiting for you: 2 requests to approve", `waiting` defaults to the
- * chats that wait), then the running tool, then the title of a working chat; null when idle. "Starting the agent..." shows only while
- * no chat is ready for input (a chat that is ready and idle means nothing is running, whatever another chat is doing at start-up). A running tool in another chat shows only
- * when nothing waits.
+ * chats that wait), then the running tool, then the title of a working chat; null when idle.
+ * With `focusedId` (the chat the user works in) the text follows that chat only: ready is idle, working is its running tool, and
+ * "Starting the agent..." shows only while that chat's own state is `connecting` (UX-145), never for a chat that is ready. Without a
+ * focused chat, every working chat counts and a chat that is still starting is not mentioned.
  */
-export function workingText(chats: readonly ChatActivityInput[], waiting?: number): string | null {
-  // The bar follows the turn, not the connection: a chat that is still starting counts only while no chat is ready for input.
-  const ready = chats.some((c) => c.status === 'idle')
-  const busy = chats.filter((c) => c.status === 'working' || c.status === 'awaiting_permission' || (c.status === 'connecting' && !ready))
-  const waits = waiting ?? busy.filter((c) => c.status === 'awaiting_permission').length
+export function workingText(chats: readonly ChatActivityInput[], waiting?: number, focusedId?: number | null): string | null {
+  const focused = focusedId == null ? undefined : chats.find((c) => c.sessionId === focusedId)
+  const busy = focused
+    ? [focused].filter((c) => c.status === 'working' || c.status === 'awaiting_permission' || c.status === 'connecting')
+    : chats.filter((c) => c.status === 'working' || c.status === 'awaiting_permission')
+  const waits = waiting ?? chats.filter((c) => c.status === 'awaiting_permission').length
   if (waits > 0) return waitingText(waits)
   if (busy.length === 0) return null
   for (const chat of [...busy].reverse()) {
@@ -90,9 +92,15 @@ export interface ToolChip {
   state: ChipState
   /** No app that provides the tool is open, so the agent cannot use it yet (never true for Deny: it reads Deny). */
   closed: boolean
-  /** The tooltip: the setting, why the chip is as it is, and that a click opens Control Center. */
+  /** The tooltip: "Open Control Center.", then the setting and why the chip is as it is. */
   tooltip: string
 }
+
+/** The first words of every chip tooltip; a chip is a button that opens Control Center at Permissions (UX-142). */
+export const OPEN_CONTROL_CENTRE = 'Open Control Center.'
+
+/** The name a screen reader reads for a chip: "Run commands: Ask. Open Control Center to change." */
+export const chipAriaLabel = (chip: Pick<ToolChip, 'label'>): string => `${chip.label}. Open Control Center to change.`
 
 const DECISION_WORD: Record<PolicyDecision, ChipWord> = { allow: 'Allow', ask: 'Ask', deny: 'Deny' }
 
@@ -114,8 +122,7 @@ export function chipTooltip(group: Exclude<ToolGroup, 'shell'>, name: string, wo
   if (word !== setting) parts.push('You are in control, so the agent asks first.')
   if (word === 'Deny') parts.push('The agent cannot use it.')
   else if (closed) parts.push(`The agent cannot use it yet because no ${providerText(group)} is open.`)
-  parts.push('Click to change it in Control Center.')
-  return parts.join(' ')
+  return `${OPEN_CONTROL_CENTRE} ${parts.join(' ')}`
 }
 
 /**
@@ -159,6 +166,8 @@ export function toolsLine(tools: readonly ToolGroup[], chatsOpen: number): strin
 export type BarState = 'idle' | 'working' | 'paused' | 'control' | 'waiting'
 
 export interface BarStatusInput {
+  /** The words of the "waiting" link when they name the chat ("Fix login is waiting: run a command"); else the count text is used. */
+  waitingFor?: string | null
   paused: boolean
   /** "Ask before every action" or the Browser's Take over. */
   userInControl: boolean
@@ -172,6 +181,9 @@ export interface BarStatusInput {
   closedApps?: readonly string[]
 }
 
+/** What taking control does to every tool, in one sentence (the bar, the Activity tile and the Take over tooltip use it). */
+const ASK_FIRST_SENTENCE = 'All tools ask first until you resume.'
+const CONTROL_SENTENCE = `You are in control. ${ASK_FIRST_SENTENCE}`
 export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
 /**
  * The take-over line. It agrees with the chips: every tool asks first, and when some tools need an app that is not open
@@ -179,12 +191,17 @@ export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
  */
 export function controlText(closedApps: readonly string[] = []): string {
   const closed = closedApps.length === 0 ? '' : ` ${closedApps.length === 1 ? closedApps[0] : `${closedApps.slice(0, -1).join(', ')} and ${closedApps[closedApps.length - 1]}`} ${closedApps.length === 1 ? 'is' : 'are'} not open.`
-  return closed ? `You are in control. Tools that need an app ask first.${closed}` : 'You are in control. Every tool asks first until you resume.'
+  return `${CONTROL_SENTENCE}${closed}`
 }
 /** The first line of the Activity gadget while the user is in control and a step was running. */
-export const CONTROL_NOTE = 'Stopped: you took control'
+export const CONTROL_NOTE = `Stopped: you took control. ${ASK_FIRST_SENTENCE}`
 /** The same line while nothing was running: it is true and it does not sit over "Nothing has happened yet". */
-export const CONTROL_IDLE_NOTE = 'You are in control. The agent waits until you resume.'
+export const CONTROL_IDLE_NOTE = CONTROL_SENTENCE
+/** The tooltip of the Browser's Take over button: what one click does to every tool (UX-143). */
+export const TAKE_OVER_TIP = CONTROL_SENTENCE
+/** The button in the bar that ends the take-over, and what it does. */
+export const RESUME_CONTROL_BUTTON = 'Resume'
+export const RESUME_CONTROL_TIP = 'The agent goes back to the settings in Control Center and no longer asks before every action.'
 
 /** The first line of the Activity gadget: null when the user is not in control; "Stopped" only when a step was running (`stoppedStep`: a chat was busy when control was taken) or was stopped. */
 export function controlNote(userInControl: boolean, feed: readonly FeedItem[], stoppedStep = false): string | null {
@@ -198,10 +215,10 @@ export const RESUME_BUTTON = 'Resume agents and continue'
  * Idle (or the short notice that stands in for Idle). Paused wins over control, control over the rest, so what the
  * agent may do is never hidden by what it is doing.
  */
-export function barStatus({ paused, userInControl, working, waiting = 0, notice = null, closedApps = [] }: BarStatusInput): { state: BarState; text: string } {
+export function barStatus({ paused, userInControl, working, waiting = 0, waitingFor = null, notice = null, closedApps = [] }: BarStatusInput): { state: BarState; text: string } {
   if (paused) return { state: 'paused', text: PAUSED_TEXT }
   if (userInControl) return { state: 'control', text: controlText(closedApps) }
-  if (waiting > 0) return { state: 'waiting', text: waitingText(waiting) }
+  if (waiting > 0) return { state: 'waiting', text: waitingFor ?? waitingText(waiting) }
   if (working) return { state: 'working', text: `Working: ${working}` }
   return { state: 'idle', text: notice ?? 'Idle' }
 }

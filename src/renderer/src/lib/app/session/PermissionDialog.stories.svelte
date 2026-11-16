@@ -36,6 +36,9 @@
 <style>
   .stage {
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     background: var(--w7-desktop-bg);
   }
 </style>

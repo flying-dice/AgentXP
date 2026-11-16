@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY } from '@shared/desktop'
 import { permissionInterrupt, permissionTurn } from '../app/session/session.fixtures'
-import { approvalFromInterrupt, approvalGroup, approvalLabel, approvalOrigin, approvalPath, approvalQuestion, approvalReason, optionDescription } from './approval'
+import { approvalFromInterrupt, approvalGroup, approvalLabel, approvalOrigin, approvalPath, approvalQuestion, approvalReason, nextApproval, optionDescription, waitingLinkText, waitingOfText, waitingPosition } from './approval'
 
 describe('approvals', () => {
   it('builds a pending approval with its tool call', () => {
@@ -50,5 +50,28 @@ describe('approvals', () => {
     expect(approvalReason('edit', null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason(null, null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason('edit', DEFAULT_TOOL_POLICY, true)).toMatch(/Ask before every action/)
+  })
+})
+
+describe('the queue of waiting requests (UX-138)', () => {
+  const run = (session: number, chat: string) => ({ ...approvalFromInterrupt(session, permissionInterrupt('t', 'Run npm test', 'execute'), null)!, chatTitle: chat })
+  // `pending` lists the newest chat first: chat 2 asked after chat 1.
+  const pending = [run(2, 'Dotfiles'), run(1, 'Fix login redirect')]
+
+  it('opens the oldest request and names its chat in the link', () => {
+    expect(nextApproval(pending)?.sessionId).toBe(1)
+    expect(waitingLinkText([run(1, 'Fix login redirect')])).toBe('Fix login redirect is waiting: run a command')
+    expect(waitingLinkText(pending)).toBe('Fix login redirect is waiting: run a command (1 of 2 waiting)')
+    expect(waitingLinkText([])).toBeNull()
+  })
+  it('says where the request of a chat stands, only when more than one waits', () => {
+    expect(waitingPosition(pending, 1)).toEqual({ position: 1, total: 2 })
+    expect(waitingPosition(pending, 2)).toEqual({ position: 2, total: 2 })
+    expect(waitingPosition(pending, 3)).toBeNull()
+    expect(waitingPosition([pending[0]], 2)).toBeNull()
+    expect(waitingOfText({ position: 1, total: 2 })).toBe('1 of 2 waiting')
+  })
+  it('shortens a long chat name', () => {
+    expect(waitingLinkText([run(1, 'Fix the login redirect bug and add a test')])).toBe('Fix the login redirect bug a... is waiting: run a command')
   })
 })

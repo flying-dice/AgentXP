@@ -42,11 +42,11 @@ The status area of the top bar always shows one of these:
 
 - **Working** – An agent works. The text names what it does now.
 - **Paused: no agent will act until you resume.** – You paused the desktop.
-- **You are in control. Tools that need an app ask first. Terminal and Browser are not open.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser. The last sentence names the apps that are not open. If every app is open, it reads **You are in control. Every tool asks first until you resume.**
+- **You are in control. All tools ask first until you resume.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser. If some tools need an app that is not open, the status adds a sentence that names the apps, for example **Terminal and Browser are not open.**
 - **Waiting for you: 2 requests to approve** – An agent waits for your answer to a request.
 - **Idle** – No agent works.
 
-When you take control, Agent7 stops the step that runs now. The Activity list shows **Stopped: you took control** when a step was running. If nothing was running, it shows **You are in control. The agent waits until you resume.** The chat status reads **Waiting for you**, not **Working**. The button **Give control back** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
+When you take control, Agent7 stops the step that runs now. The Activity list shows **Stopped: you took control** when a step was running. If nothing was running, it shows **You are in control. All tools ask first until you resume.** The chat status reads **Waiting for you**, not **Working**. The button **Resume** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
 
 The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask**, **Run commands: Ask (no Terminal open)**. See **[Using Control Center](control-centre.md)** for what the part in brackets means. Point to a chip to read its tooltip. Click a chip to change the setting.
 
@@ -60,8 +60,8 @@ The tool chips show one pattern, for example **Read files: Allow**, **Write file
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Give control back | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
-| Stopped: you took control | The first line of the Activity list while you are in control. | `gadget-activity-control` |
+| Resume | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
+| Stopped: you took control | The first line of the Activity list while you are in control. It says what happened and that all tools ask first until you resume. | `gadget-activity-control` |
 | Activity list | The list of what the agent did. Double-click it to open Event Viewer. | `gadget-activity` |
 | Event Viewer (link) | Opens Event Viewer. | `gadget-activity-open-event-viewer` |
 | Event Viewer (menu) | Right-click the Activity list, then click Event Viewer. | `gadget-activity-menu-event-viewer` |

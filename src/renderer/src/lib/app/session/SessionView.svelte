@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte'
   import { effectiveStatus, isStarting } from '../sessionStatus'
+  import { useWaitingText } from '../../desktop/waitingQueue'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
   import type { ChatSuggestion } from './chatPaneText'
-  import { RESTARTED_NOTE, describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
+  import { describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
   import PermissionDialog from './PermissionDialog.svelte'
   import { PAUSED_NOTE, STOPPED_BY_PAUSE_NOTE } from './resumeNote'
   import { permissionMetadata } from './permissionOptions'
@@ -26,7 +27,7 @@
     /** Overrides for the IPC calls (stories, tests); default to `window.agent7`. */
     setMode?: (sessionId: number, modeId: string) => Promise<void>
     pickFiles?: () => Promise<string[]>
-    /** Show permission requests inside this view (a desktop window) instead of over the whole viewport. */
+    /** Not used any more: the permission box is a part of the chat layout, never an overlay (UX-138). Kept so hosts need no change. */
     contained?: boolean
     /** Open, close, delete and move for the surface rows (the Chat app). */
     surfaceControls?: SurfaceControls
@@ -69,7 +70,6 @@
     openFilePath = null,
     setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
     pickFiles = () => window.agent7.dialogs.pickFiles(),
-    contained = false,
     surfaceControls,
     compact = false,
     suggestions = [],
@@ -97,6 +97,8 @@
   const permission = $derived(request ? permissionMetadata(request.metadata) : null)
   const waitingToolCallId = $derived(request?.toolCallId ?? null)
   const starting = $derived(isStarting(effectiveStatus(info.status, session.status)))
+  const waitingText = useWaitingText(() => session.id)
+  const queueText = $derived(waitingText())
 
   // ---- what went wrong: the error row, the state of the failed message -------------------------------------
   const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent, agentName: agent?.name }))
@@ -132,20 +134,23 @@
     if (restart === 'working') return
     if (restartTimer) clearTimeout(restartTimer)
     restart = 'working'
+    const kept = store.failedSend
     await store.reconnect()
     const up = !session.problem && !store.error
     restart = up ? 'done' : null
     if (up) restartTimer = setTimeout(() => (restart = null), RESTART_DONE_MS)
     if (up && then) await then()
+    // A request that stays unsent is said so in the chat, with a button that sends it again (nothing is sent by itself).
+    else if (up && kept) restartedRequest = kept.text
   }
 
   function onproblem(id: ProblemActionId): void {
     if (id === 'send-again') void (session.problem ? restartThen(resendFailed) : resendFailed())
     else if (id === 'restart-send') void restartThen(resendFailed)
-    else if (id === 'restart') void restartThen(store.failedSend ? putBack : undefined)
+    else if (id === 'restart') void restartThen()
     else if (id === 'details') void toggleDetails()
     else if (id === 'open-agents' || id === 'choose-agent') onopenagents?.()
-    else if (id === 'new-chat') onnewchat?.()
+    else if (id === 'new-chat') void keepTextThen(onnewchat)
     else onshowevents?.()
   }
 
@@ -159,15 +164,24 @@
     return store.resend()
   }
 
-  /** After "Restart": the message that was not answered goes back into the message box, and a line says to press Send. */
-  let restartedNote = $state(false)
-  async function putBack(): Promise<void> {
-    restartedNote = await editFailed()
-  }
-  // The line goes away with the next send or the next problem.
+  /** After "Restart" with a request that was not sent again: the text the line in the chat quotes (null: no line). */
+  let restartedRequest = $state<string | null>(null)
+  /** The line goes away with the next send, the next problem, or when there is no failed request left to send. */
+  const restartedShown = $derived(store.failedSend ? restartedRequest : null)
   $effect(() => {
-    if (store.running || problem) untrack(() => (restartedNote = false))
+    if (store.running || problem) untrack(() => (restartedRequest = null))
   })
+  function resendRestarted(): void {
+    restartedRequest = null
+    void resendFailed()
+  }
+
+  /** "Start a new chat": the text of the failed message stays in this chat's message box first ("your text is kept in the box"). */
+  async function keepTextThen(then?: () => void): Promise<void> {
+    const failed = store.failedSend
+    if (failed && !(await editFailed())) edit = { id: --editSeq, text: failed.text }
+    then?.()
+  }
 
   /** "Edit" on a message that was not sent: the text goes back into the message box. */
   /** What the message box is told to do: hold a text again ("Edit"), or empty itself of a message that went out again. */
@@ -194,6 +208,8 @@
     {onproblem}
     problemDetails={detailsText}
     {restart}
+    restartedRequest={restartedShown}
+    onresendrestarted={resendRestarted}
     {sendStates}
     onresend={() => onproblem('send-again')}
     onedit={() => void editFailed()}
@@ -214,11 +230,20 @@
   {#if store.lastDecision}
     <div class="decision" role="status" data-testid="chat-permission-result" data-allowed={store.lastDecision.allowed}>{store.lastDecision.text}</div>
   {/if}
-  {#if restartedNote}
-    <div class="decision" role="status" data-testid="chat-restarted-note">{RESTARTED_NOTE}</div>
-  {/if}
   {#if paused}
     <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>
+  {/if}
+  {#if request && permission}
+    {#key request.id}
+      <PermissionDialog
+        {agentName}
+        title={permission.title}
+        options={permission.options}
+        toolCall={request.toolCallId ? store.state.toolCalls[request.toolCallId] : undefined}
+        {queueText}
+        onanswer={(optionId) => void store.resolveInterrupt(optionId, request.id)}
+      />
+    {/key}
   {/if}
   <Composer
     {agentName}
@@ -237,18 +262,6 @@
     onmode={(id) => void setMode(session.id, id)}
     {pickFiles}
   />
-  {#if request && permission}
-    {#key request.id}
-      <PermissionDialog
-        {agentName}
-        title={permission.title}
-        options={permission.options}
-        toolCall={request.toolCallId ? store.state.toolCalls[request.toolCallId] : undefined}
-        {contained}
-        onanswer={(optionId) => void store.resolveInterrupt(optionId, request.id)}
-      />
-    {/key}
-  {/if}
 </section>
 
 <style>

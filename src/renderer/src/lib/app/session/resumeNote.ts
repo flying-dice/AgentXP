@@ -20,3 +20,18 @@ export const isContinueMessage = (text: string): boolean => text.trim() === CONT
 /** The Action Center line of a chat that Pause stopped (built from the saved list), and of one that resumed. */
 export const stoppedLine = (title: string): string => `In chat '${title}': Paused. The step that was running was stopped. Resume agents and continue carries it on.`
 export const resumedLine = (title: string): string => `In chat '${title}': ${RESUMED_NOTE}`
+
+/** Who a message that Agent7 wrote itself (the one Resume sends) is labelled as, instead of "You". */
+export const AUTOMATIC_SENDER = 'Agent7 (automatic)'
+
+/** The line in the chat after Restart when the last request was not sent again, and its button. */
+export const RESTARTED_LEAD = 'Agent7 restarted. Your last request was not sent again:'
+export const RESTARTED_RESEND = 'Send it again'
+
+const QUOTE_LIMIT = 160
+
+/** The request as the restarted line quotes it: one line, cut after 160 letters. */
+export function quotedRequest(text: string): string {
+  const one = text.replace(/\s+/g, ' ').trim()
+  return one.length > QUOTE_LIMIT ? `${one.slice(0, QUOTE_LIMIT - 1).trimEnd()}…` : one
+}
