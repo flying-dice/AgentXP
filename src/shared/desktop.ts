@@ -289,6 +289,30 @@ export interface OpenWindowInput {
   baseRef?: string
 }
 
+/**
+ * "Ask chat about this": what an app hands to the desktop when the user picks Explain this, Ask chat... or Send
+ * selection to chat from a context menu. `DesktopHost.askChat` turns it into a chat prompt; a chat side panel can
+ * take the same request later, so the apps never change.
+ */
+export interface AskChatRequest {
+  /** The app the request comes from. */
+  app: AppKind
+  /** The window it comes from (its drive decides where a new chat works). */
+  windowId: Id
+  /** explain: "Explain this"; ask: "Ask chat..." (the user adds the question); send: "Send selection to chat". */
+  kind: 'explain' | 'ask' | 'send'
+  /** The selected text, the output or the page text. */
+  text?: string
+  /** The file or folder the request is about (a VPath). */
+  path?: VPath
+  /** The 1-based, inclusive line range the text covers. */
+  range?: { startLine: number; endLine: number }
+  /** The page address of a Browser request. */
+  url?: string
+  /** The page title of a Browser request. */
+  title?: string
+}
+
 /** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */
 export interface DesktopApi {
   /** The desktop shown by this OS window (from the `?desktop=` query); null in the launcher window. */

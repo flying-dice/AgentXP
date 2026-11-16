@@ -34,6 +34,7 @@ describe('Code Review', () => {
     await ctx.desktop.openApp('code-review')
     await see.visible(review.app)
     await see.count(review.files, 2)
+    console.log('DBG', JSON.stringify(await review.files.evaluateAll((els) => els.map((e) => [e.getAttribute('data-path'), e.getAttribute('data-status'), e.textContent]))))
     await see.attribute(review.file('notes.txt'), 'data-status', 'modified')
     await see.attribute(review.file('fresh.txt'), 'data-status', 'untracked')
     // The first prompt went out by itself: the agent calls review_add_comment twice, then review_submit.

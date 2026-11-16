@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Bounds } from './desktop'
-import { cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, placeWindow } from './desktop-views'
+import { cascadedBounds, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, placeWindow, windowTitle } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -62,5 +62,21 @@ describe('placeWindow', () => {
   it('keeps windows that are larger than the desktop inside it', () => {
     const b = placeWindow('code', 0, null, { width: 700, height: 400 })
     expect(b).toEqual({ x: 0, y: 0, width: 700, height: 400 })
+  })
+})
+
+describe('helpWindowTitle', () => {
+  it('titles a help window after the app of its topic', () => {
+    expect(helpWindowTitle('notepad')).toBe('Notepad Help')
+    expect(helpWindowTitle('agent-manager')).toBe('Task Manager Help')
+    expect(helpWindowTitle('explorer')).toBe('Explorer Help')
+  })
+
+  it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
+    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Help and Support')
+  })
+
+  it('is what windowTitle gives a help view', () => {
+    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Terminal Help')
   })
 })

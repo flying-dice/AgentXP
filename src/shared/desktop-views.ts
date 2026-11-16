@@ -3,7 +3,7 @@
  * default window bounds, the initial view of a new window and window titles.
  */
 import { AGENT_HOME, vpathName } from './vfs'
-import { APP_DISPLAY_NAMES, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
+import { APP_DISPLAY_NAMES, APP_KINDS, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
 
 /** Window title of a surface that has no `theme.title`. */
 export const SURFACE_FALLBACK_TITLE = 'Agent window'
@@ -140,6 +140,12 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
   }
 }
 
+/** "Notepad Help" for the topic of an app, "Help and Support" for the home, desktop, launcher and Help topics. */
+export function helpWindowTitle(topic: string): string {
+  const kind = (APP_KINDS as readonly string[]).includes(topic) ? (topic as AppKind) : null
+  return kind && kind !== 'help' ? `${APP_DISPLAY_NAMES[kind]} Help` : APP_DISPLAY_NAMES.help
+}
+
 export function windowTitle(view: AppView): string {
   switch (view.app) {
     case 'chat':
@@ -157,6 +163,8 @@ export function windowTitle(view: AppView): string {
       return `${view.path ? vpathName(view.path) : 'Untitled'} - Agent Paint`
     case 'wordpad':
       return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
+    case 'help':
+      return helpWindowTitle(view.topic)
     case 'code-review':
       return `${view.root.length <= 3 ? view.root : vpathName(view.root)} - Code Review`
     default:
