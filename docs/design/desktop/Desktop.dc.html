@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claude's desktop</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+.btn{min-width:75px;height:23px;padding:0 10px;border:1px solid #707070;border-radius:3px;background:linear-gradient(#f2f2f2 0,#ebebeb 49%,#ddd 50%,#cfcfcf 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8);color:#000;cursor:default;display:inline-flex;align-items:center;justify-content:center}
+.btn:hover{border-color:#3c7fb1;background:linear-gradient(#eaf6fd 0,#d9f0fc 49%,#bee6fd 50%,#a7d9f5 100%)}
+.btn:active{border-color:#2c628b;background:linear-gradient(#e5f4fc 0,#c4e5f6 49%,#98d1ef 50%,#68b3db 100%)}
+.btn.def{border-color:#3399ff;box-shadow:inset 0 0 0 1px #bfe3ff,0 0 3px rgba(51,153,255,.7)}
+.btn:disabled{border-color:#adb2b5;background:#f4f4f4;box-shadow:none;color:#6d6d6d}
+button:focus-visible,a:focus-visible{outline:1px dotted #000;outline-offset:-3px}
+.cap{height:19px;border:0;display:flex;align-items:center;justify-content:center;padding:0;background:linear-gradient(#e6eef9 0,#c3d4ea 48%,#a9c0de 50%,#c3d6ee 100%)}
+.cap:hover{background:linear-gradient(#f0f7ff 0,#cfe3fa 48%,#a6caf0 50%,#cde6ff 100%)}
+.capx{background:linear-gradient(#e9a79f 0,#d4695d 48%,#bb2f1f 50%,#d8584a 100%)}
+.capx:hover{background:linear-gradient(#f7c6bf 0,#ea7b6c 48%,#d4341f 50%,#f06a55 100%)}
+.di{position:absolute;width:76px;padding:4px 2px 3px;border:1px solid transparent;border-radius:3px;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;text-align:center;font-size:12px;line-height:1.2;text-shadow:0 1px 2px #000,0 0 3px #000;cursor:default}
+.di:hover{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.14)}
+.gad{background:linear-gradient(rgba(36,48,66,.78),rgba(10,16,28,.82));border:1px solid rgba(255,255,255,.35);border-radius:7px;box-shadow:0 2px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);color:#fff;padding:8px 10px}
+.gh{font-size:11px;color:#cfe3ff;letter-spacing:.02em;margin-bottom:4px}
+.tbi{width:54px;height:36px;border:1px solid transparent;border-radius:3px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:default}
+.tbi:hover{border-color:rgba(255,255,255,.6);background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.1) 50%,rgba(255,255,255,.04))}
+.sm{width:100%;min-height:34px;padding:3px 8px;border:1px solid transparent;border-radius:3px;background:transparent;display:flex;align-items:center;gap:8px;text-align:left;color:#000;cursor:default}
+.sm:hover{border-color:#a8d8eb;background:linear-gradient(#f4fafe,#d6ebf9)}
+.sml{width:100%;height:30px;padding:0 10px;border:1px solid transparent;border-radius:3px;background:transparent;display:flex;align-items:center;color:#fff;text-align:left;cursor:default;text-shadow:0 0 6px rgba(0,0,0,.6)}
+.sml:hover{border-color:rgba(255,255,255,.55);background:linear-gradient(rgba(255,255,255,.32),rgba(255,255,255,.08))}
+.cmdb{height:28px;padding:0 9px;border:1px solid transparent;border-radius:3px;background:transparent;color:#1e395b;cursor:default;white-space:nowrap}
+.cmdb:hover{border-color:#98b8e0;background:linear-gradient(#fbfcfe,#e3ecf8 49%,#d3e1f4 50%,#e0ebf9)}
+.nav{width:100%;height:22px;display:flex;align-items:center;gap:5px;border:1px solid transparent;border-radius:2px;background:transparent;text-align:left;color:#000;cursor:default;white-space:nowrap;overflow:hidden}
+.nav:hover{border-color:#b8d6fb;background:linear-gradient(#fafbfd,#ebf3fd)}
+.lvr{width:100%;display:flex;height:22px;align-items:center;padding:0;border:1px solid transparent;border-radius:2px;background:transparent;text-align:left;color:#000;cursor:default}
+.lvr:hover{border-color:#b8d6fb;background:linear-gradient(#fafbfd,#ebf3fd)}
+.lvh{height:24px;padding:0 6px;display:flex;align-items:center;border-right:1px solid #e5e5e5;color:#4c607a}
+.tab{height:22px;padding:0 12px;border:1px solid #898c95;border-bottom:0;border-radius:3px 3px 0 0;background:linear-gradient(#f6f6f6,#e4e4e4);color:#000;cursor:default;margin-right:-1px}
+.tab:hover{background:linear-gradient(#f2fafe,#d4ecfa);border-color:#7eb4ea}
+.orb{width:26px;height:26px;border-radius:50%;border:1px solid #2b4c7e;background:radial-gradient(circle at 50% 30%,#d6ecff 0,#5aa2e6 45%,#1d5aa8 80%);display:flex;align-items:center;justify-content:center;padding:0}
+.orb:disabled{background:radial-gradient(circle at 50% 30%,#eef3f8,#b9c6d6);border-color:#8a9bb2}
+.sb{overflow:auto}
+.sb::-webkit-scrollbar{width:17px;height:17px}
+.sb::-webkit-scrollbar-track{background:#f0f0f0;border-left:1px solid #e2e2e2}
+.sb::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#f4f4f4,#dcdcdc 50%,#cfcfcf);border:1px solid #979797;border-radius:2px}
+.seclink{width:100%;padding:8px 14px;border:1px solid transparent;border-radius:4px;background:transparent;color:#fff;font-size:20px;text-align:left;cursor:default}
+.seclink:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.14)}
+</style>
+</helmet>
+
+<div data-desk="1" style="position:relative;width:1280px;height:800px;overflow:hidden;user-select:none;font:12px/1.3 'Segoe UI',Tahoma,'Noto Sans','DejaVu Sans',Arial,sans-serif;color:#000;background:radial-gradient(ellipse 60% 40% at 52% 46%,rgba(255,255,255,.22) 0,rgba(255,255,255,0) 60%),radial-gradient(ellipse 50% 30% at 88% 92%,rgba(217,119,87,.45) 0,rgba(217,119,87,0) 70%),radial-gradient(ellipse 70% 50% at 10% 100%,rgba(4,30,80,.9) 0,rgba(4,30,80,0) 70%),linear-gradient(165deg,#0a3a78 0,#1766b5 48%,#3f9be0 76%,#1a5ea8 100%)" onMouseMove="{{ onMove }}" onMouseUp="{{ onUp }}" onMouseLeave="{{ onUp }}">
+
+  <!-- wallpaper mark + click-away layer -->
+  <div style="position:absolute;left:0;top:0;right:0;bottom:40px;z-index:0" onMouseDown="{{ deskClick }}">
+    <svg width="300" height="300" viewBox="0 0 16 16" aria-hidden="true" style="position:absolute;left:490px;top:220px;opacity:.16"><g stroke="#fff" stroke-width=".9" stroke-linecap="round"><line x1="8" y1="1.5" x2="8" y2="14.5"></line><line x1="1.5" y1="8" x2="14.5" y2="8"></line><line x1="3.4" y1="3.4" x2="12.6" y2="12.6"></line><line x1="12.6" y1="3.4" x2="3.4" y2="12.6"></line></g></svg>
+  </div>
+
+  <!-- ===== Desktop icons ===== -->
+  <sc-for list="{{ icons }}" as="ic" hint-placeholder-count="6">
+    <button class="di" style="{{ ic.style }}" onClick="{{ ic.select }}" onDoubleClick="{{ ic.open }}">
+      <sc-if value="{{ ic.isPc }}" hint-placeholder-val="{{ true }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="26" rx="2" fill="#1d3b63" stroke="#dfe8f3" stroke-width="2"></rect><rect x="8" y="10" width="32" height="20" fill="#4aa3f0"></rect><path d="M8 10h32v8C30 14 18 14 8 22z" fill="#8fd0ff" opacity=".6"></path><path d="M19 35h10l2 6H17z" fill="#dfe8f3" stroke="#7d8da3"></path><rect x="13" y="41" width="22" height="3" rx="1" fill="#c3cfdd"></rect></svg></sc-if>
+      <sc-if value="{{ ic.isMem }}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M4 12h15l4 4h21v26H4z" fill="#e9b949" stroke="#9c7520"></path><rect x="12" y="6" width="22" height="28" fill="#fff" stroke="#8a97a8"></rect><path d="M16 13h14M16 18h14M16 23h10" stroke="#d97757" stroke-width="2"></path><path d="M4 20h40v22H4z" fill="#f4cf6a" stroke="#9c7520"></path></svg></sc-if>
+      <sc-if value="{{ ic.isNet }}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="22" r="17" fill="#3b8fe0" stroke="#dfe8f3" stroke-width="2"></circle><path d="M7 22h34M24 5c-8 9-8 25 0 34M24 5c8 9 8 25 0 34M10 13h28M10 31h28" fill="none" stroke="#cfe8ff" stroke-width="1.5"></path><rect x="16" y="40" width="16" height="4" rx="1" fill="#dfe8f3"></rect></svg></sc-if>
+      <sc-if value="{{ ic.isBin }}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 10h28l-3 33H13z" fill="rgba(220,236,255,.55)" stroke="#e8f1fb" stroke-width="2"></path><ellipse cx="24" cy="10" rx="14" ry="3" fill="rgba(255,255,255,.5)" stroke="#e8f1fb" stroke-width="1.5"></ellipse><path d="M17 16l1 22M24 16v22M31 16l-1 22" stroke="rgba(255,255,255,.7)" stroke-width="1.2"></path><path d="M15 22h18v12H16z" fill="#fff" stroke="#8a97a8" style="{{ ic.binFill }}"></path></svg></sc-if>
+      <sc-if value="{{ ic.isDoc }}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 4h20l9 9v31H10z" fill="#fff" stroke="#8a97a8"></path><path d="M30 4v9h9" fill="#e3eaf2" stroke="#8a97a8"></path><path d="M15 19h18M15 24h18M15 29h14M15 34h16" stroke="#6b7886" stroke-width="1.5"></path><rect x="14" y="8" width="13" height="7" rx="1" fill="#d97757"></rect></svg></sc-if>
+      <sc-if value="{{ ic.isLog }}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 4h20l9 9v31H10z" fill="#fff" stroke="#8a97a8"></path><path d="M30 4v9h9" fill="#e3eaf2" stroke="#8a97a8"></path><rect x="14" y="17" width="21" height="20" fill="#0c0c0c"></rect><path d="M16 21h8M16 25h14M16 29h10M16 33h6" stroke="#3fd23f" stroke-width="1.5"></path></svg></sc-if>
+      <span>{{ ic.label }}</span>
+    </button>
+  </sc-for>
+  <a class="di" href="ControlCentre.dc.html" style="left:10px;top:364px;z-index:1"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="30" rx="3" fill="#e8eef6" stroke="#dfe8f3" stroke-width="2"></rect><rect x="5" y="8" width="38" height="7" rx="3" fill="#3b78c4"></rect><rect x="11" y="26" width="5" height="8" fill="#3fae3f"></rect><rect x="18" y="21" width="5" height="13" fill="#e9a23b"></rect><rect x="25" y="18" width="5" height="16" fill="#3b8fe0"></rect><circle cx="36" cy="32" r="7" fill="#d97757" stroke="#fff" stroke-width="1.5"></circle><circle cx="36" cy="32" r="2.4" fill="#fff"></circle></svg><span>Control Centre</span></a>
+  <a class="di" href="Main.dc.html" style="left:10px;top:444px;z-index:1"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="8" width="40" height="32" rx="3" fill="#fff" stroke="#dfe8f3" stroke-width="2"></rect><rect x="4" y="8" width="40" height="8" rx="3" fill="#8fb4e0"></rect><g stroke="#d97757" stroke-width="3" stroke-linecap="round"><line x1="24" y1="20" x2="24" y2="36"></line><line x1="16" y1="28" x2="32" y2="28"></line><line x1="18.500" y1="22.500" x2="29.500" y2="33.500"></line><line x1="29.500" y1="22.500" x2="18.500" y2="33.500"></line></g></svg><span>Claude Code</span></a>
+
+  <!-- ===== Gadgets ===== -->
+  <div style="position:absolute;right:14px;top:40px;width:204px;display:flex;flex-direction:column;gap:12px;z-index:1">
+    <div class="gad">
+      <div class="gh">Context meter</div>
+      <div style="display:flex;align-items:flex-end;gap:6px">
+        <div style="text-align:center">
+          <svg width="96" height="96" viewBox="0 0 100 100" role="img" aria-label="{{ ctxAria }}"><circle cx="50" cy="50" r="46" fill="#111" stroke="#9aa7b8" stroke-width="3"></circle><circle cx="50" cy="50" r="40" fill="url(#dg)"></circle><defs><radialGradient id="dg" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#3a4656"></stop><stop offset="1" stop-color="#0a0e14"></stop></radialGradient></defs><path d="M22 78A40 40 0 1 1 78 78" fill="none" stroke="#2e3a48" stroke-width="5"></path><path d="M68 84A40 40 0 0 0 78 78" fill="none" stroke="#d9403a" stroke-width="5"></path><line x1="50" y1="50" x2="50" y2="17" stroke="#ff8a4a" stroke-width="3" stroke-linecap="round" transform="rotate({{ ctxAngle }} 50 50)"></line><circle cx="50" cy="50" r="5" fill="#cfd8e3"></circle><text x="50" y="74" text-anchor="middle" font-size="13" fill="#7dff7d" font-family="Consolas,monospace">{{ ctxPct }}</text></svg>
+          <div style="font-size:11px;color:#cfe3ff">Context</div>
+        </div>
+        <div style="text-align:center">
+          <svg width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="{{ rateAria }}"><circle cx="50" cy="50" r="46" fill="#111" stroke="#9aa7b8" stroke-width="4"></circle><path d="M22 78A40 40 0 1 1 78 78" fill="none" stroke="#2e3a48" stroke-width="7"></path><line x1="50" y1="50" x2="50" y2="18" stroke="#ff8a4a" stroke-width="4" stroke-linecap="round" transform="rotate({{ rateAngle }} 50 50)"></line><circle cx="50" cy="50" r="7" fill="#cfd8e3"></circle><text x="50" y="80" text-anchor="middle" font-size="17" fill="#7dff7d" font-family="Consolas,monospace">{{ ratePct }}</text></svg>
+          <div style="font-size:11px;color:#cfe3ff">Rate limit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gad" style="display:flex;align-items:center;gap:10px">
+      <svg width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="Clock"><circle cx="50" cy="50" r="46" fill="#f6f6f2" stroke="#2b2b2b" stroke-width="4"></circle><g stroke="#333" stroke-width="3"><line x1="50" y1="8" x2="50" y2="15"></line><line x1="92" y1="50" x2="85" y2="50"></line><line x1="50" y1="92" x2="50" y2="85"></line><line x1="8" y1="50" x2="15" y2="50"></line></g><line x1="50" y1="50" x2="50" y2="27" stroke="#222" stroke-width="5" stroke-linecap="round" transform="rotate({{ hourAngle }} 50 50)"></line><line x1="50" y1="50" x2="50" y2="16" stroke="#222" stroke-width="3" stroke-linecap="round" transform="rotate({{ minAngle }} 50 50)"></line><circle cx="50" cy="50" r="4" fill="#d97757"></circle></svg>
+      <div><div class="gh">Session clock</div><div style="font-size:15px">{{ uptime }}</div><div style="font-size:11px;color:#cfe3ff">running time</div></div>
+    </div>
+
+    <div class="gad" style="display:flex;align-items:center;gap:10px">
+      <sc-if value="{{ buildSunny }}" hint-placeholder-val="{{ true }}"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="11" fill="#ffd34a" stroke="#f0a400" stroke-width="2"></circle><g stroke="#ffd34a" stroke-width="3" stroke-linecap="round"><line x1="26" y1="4" x2="26" y2="10"></line><line x1="26" y1="42" x2="26" y2="48"></line><line x1="4" y1="26" x2="10" y2="26"></line><line x1="42" y1="26" x2="48" y2="26"></line><line x1="10" y1="10" x2="14" y2="14"></line><line x1="38" y1="38" x2="42" y2="42"></line><line x1="42" y1="10" x2="38" y2="14"></line><line x1="10" y1="42" x2="14" y2="38"></line></g></svg></sc-if>
+      <sc-if value="{{ buildCloudy }}" hint-placeholder-val="{{ false }}"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="20" cy="20" r="9" fill="#ffd34a"></circle><path d="M14 40h26a8 8 0 000-16 11 11 0 00-21 3 7 7 0 00-5 13z" fill="#dfe6ef" stroke="#9aa7b8"></path></svg></sc-if>
+      <div><div class="gh">Build forecast</div><div style="font-size:18px">{{ tests }} tests</div><div style="font-size:11px;color:#cfe3ff">{{ buildText }}</div></div>
+    </div>
+
+    <div class="gad">
+      <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:24px;line-height:1">{{ dayNum }}</span><span class="gh" style="margin:0">{{ dayName }} · Scheduled</span></div>
+      <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;gap:8px"><span style="width:38px;color:#ffcf9e">02:00</span><span>Nightly dependency check</span></div>
+        <div style="display:flex;gap:8px"><span style="width:38px;color:#ffcf9e">08:30</span><span>Morning brief</span></div>
+        <div style="display:flex;gap:8px"><span style="width:38px;color:#ffcf9e">Fri</span><span>Weekly PR summary to Slack</span></div>
+      </div>
+    </div>
+
+    <div class="gad">
+      <div class="gh">Activity</div>
+      <sc-for list="{{ feedTop }}" as="f" hint-placeholder-count="4">
+        <div style="display:flex;gap:7px;padding:3px 0;border-top:1px solid rgba(255,255,255,.12)"><span style="width:34px;flex:none;color:#ffcf9e">{{ f.at }}</span><span style="min-width:0">{{ f.t }}</span></div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ===== Window: Explorer ===== -->
+  <sc-if value="{{ W.explorer.open }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ W.explorer.style }}" onMouseDown="{{ W.explorer.focus }}">
+      <div style="flex:none;height:30px;display:flex;align-items:center;gap:7px;padding-left:2px" onMouseDown="{{ W.explorer.drag }}" onDoubleClick="{{ W.explorer.maxToggle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg>
+        <span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">{{ W.explorer.title }}</span>
+        <div style="display:flex;align-self:flex-start;margin-top:-1px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;overflow:hidden">
+          <button class="cap" aria-label="Minimize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.explorer.min }}"><svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8"></rect></svg></button>
+          <button class="cap" aria-label="Maximize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.explorer.maxToggle }}"><svg width="10" height="9" viewBox="0 0 10 9" aria-hidden="true"><rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.600"></rect></svg></button>
+          <button class="cap capx" aria-label="Close" style="width:44px" onClick="{{ W.explorer.close }}"><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.400" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g></svg></button>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;align-items:center;gap:6px;padding:0 2px 6px">
+        <button class="orb" aria-label="Back" onClick="{{ exBack }}" disabled="{{ exNoBack }}"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M10 6H3M6 2.500L2.500 6 6 9.500" fill="none" stroke="#fff" stroke-width="2"></path></svg></button>
+        <div style="flex:1;height:24px;display:flex;align-items:center;gap:6px;padding:0 6px;background:#fff;border:1px solid #8a9bb2;border-radius:2px;overflow:hidden;white-space:nowrap">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg>
+          <span>{{ exCrumb }}</span>
+        </div>
+        <label style="width:170px;height:24px;display:flex;align-items:center;padding:0 6px;background:#fff;border:1px solid #8a9bb2;border-radius:2px;gap:4px"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Search this location</span><input placeholder="Search" style="flex:1;min-width:0;border:0;outline:0;font-style:italic;color:#555"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="5.500" cy="5.500" r="4" fill="none" stroke="#56606d" stroke-width="1.600"></circle><line x1="8.500" y1="8.500" x2="12.500" y2="12.500" stroke="#56606d" stroke-width="2"></line></svg></label>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#fff;border:1px solid #5d6c82">
+        <div style="flex:none;height:32px;display:flex;align-items:center;gap:2px;padding:0 6px;background:linear-gradient(#f5f9fd,#dce7f4);border-bottom:1px solid #a3b6cf">
+          <sc-for list="{{ exCmds }}" as="c" hint-placeholder-count="3"><button class="cmdb" onClick="{{ c.act }}">{{ c.label }}</button></sc-for>
+        </div>
+        <div style="flex:1;min-height:0;display:flex">
+          <div class="sb" style="flex:none;width:170px;padding:6px 4px;background:linear-gradient(90deg,#fff,#f4f8fd);border-right:1px solid #d6e1ee">
+            <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="8">
+              <button class="nav" style="{{ n.style }}" onClick="{{ n.go }}">
+                <sc-if value="{{ n.folder }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg></sc-if>
+                <sc-if value="{{ n.drive }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.500" y="4" width="13" height="8" rx="1.500" fill="#d8e0ea" stroke="#6b7886"></rect><circle cx="12" cy="8" r="1" fill="#3fae3f"></circle></svg></sc-if>
+                <sc-if value="{{ n.globe }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.500" fill="#3b8fe0" stroke="#1d5fae"></circle><path d="M1.500 8h13M8 1.500c-3 3-3 10 0 13M8 1.500c3 3 3 10 0 13" fill="none" stroke="#cfe8ff"></path></svg></sc-if>
+                <sc-if value="{{ n.bin }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10l-1 11H4z" fill="#e6f0fb" stroke="#6b7886"></path><path d="M6 5v7M8 5v7M10 5v7" stroke="#9aa7b8"></path></svg></sc-if>
+                <span>{{ n.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <sc-if value="{{ exIsDrives }}" hint-placeholder-val="{{ false }}">
+              <div class="sb" style="flex:1;min-height:0;padding:10px 12px">
+                <div style="color:#1e395b;padding-bottom:4px;border-bottom:1px solid #e2e9f2;margin-bottom:8px">Drives available to Claude ({{ driveCount }})</div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                  <sc-for list="{{ drives }}" as="d" hint-placeholder-count="4">
+                    <button class="lvr" style="{{ d.style }}" onClick="{{ d.select }}" onDoubleClick="{{ d.open }}">
+                      <span style="display:flex;gap:8px;align-items:center;padding:4px 6px;width:100%">
+                        <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect x="3" y="10" width="30" height="16" rx="3" fill="#dfe6ee" stroke="#6b7886"></rect><rect x="6" y="20" width="18" height="2" fill="#9aa7b8"></rect><circle cx="28" cy="21" r="1.600" fill="#3fae3f"></circle><path d="{{ d.netPath }}" fill="none" stroke="#3b8fe0" stroke-width="2"></path></svg>
+                        <span style="flex:1;min-width:0">
+                          <span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.label }}</span>
+                          <span style="display:block;height:12px;margin:3px 0;border:1px solid #9aa7b8;background:#e6e6e6"><span style="{{ d.bar }}"></span></span>
+                          <span style="display:block;color:#5a6779;font-size:11px">{{ d.sub }}</span>
+                        </span>
+                      </span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ exIsList }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:none;display:flex;border-bottom:1px solid #e5e5e5"><span class="lvh" style="flex:1">Name</span><span class="lvh" style="width:118px">Date modified</span><span class="lvh" style="width:110px">Type</span><span class="lvh" style="width:110px;border-right:0">Claude status</span></div>
+              <div class="sb" style="flex:1;min-height:0;padding:2px">
+                <sc-for list="{{ exRows }}" as="it" hint-placeholder-count="5">
+                  <button class="lvr" style="{{ it.style }}" onClick="{{ it.select }}" onDoubleClick="{{ it.open }}">
+                    <span style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:0 6px">
+                      <sc-if value="{{ it.isFolder }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg></sc-if>
+                      <sc-if value="{{ it.isFile }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6l4 4v9H3z" fill="#fff" stroke="#6b7886"></path><path d="M9 1.5v4h4" fill="#e3eaf2" stroke="#6b7886"></path></svg></sc-if>
+                      <sc-if value="{{ it.isMemo }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6l4 4v9H3z" fill="#fff" stroke="#6b7886"></path><path d="M5 7h6M5 9.500h6M5 12h4" stroke="#d97757" stroke-width="1.300"></path></svg></sc-if>
+                      <sc-if value="{{ it.isSkill }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h4a2 2 0 114 0h4v4a2 2 0 110 4v1H2z" fill="#9fd36a" stroke="#4d7a2b"></path></svg></sc-if>
+                      <sc-if value="{{ it.isArt }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.500" y="2.500" width="13" height="11" rx="1" fill="#fff" stroke="#6b7886"></rect><rect x="3.500" y="5" width="5" height="6" fill="#8fc1f0"></rect><path d="M10 6h3M10 8.500h3" stroke="#d97757" stroke-width="1.300"></path></svg></sc-if>
+                      <sc-if value="{{ it.isChat }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2z" fill="#d7e9fb" stroke="#4a7fb8"></path></svg></sc-if>
+                      <sc-if value="{{ it.isPlug }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.500" fill="#3b8fe0" stroke="#1d5fae"></circle><path d="M1.500 8h13M8 1.500c-3 3-3 10 0 13M8 1.500c3 3 3 10 0 13" fill="none" stroke="#cfe8ff"></path></svg></sc-if>
+                      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ it.name }}</span>
+                    </span>
+                    <span style="width:118px;padding:0 6px;color:#555;white-space:nowrap">{{ it.date }}</span>
+                    <span style="width:110px;padding:0 6px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.type }}</span>
+                    <span style="{{ it.statusStyle }}">{{ it.status }}</span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ exEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:10px;color:#555">This folder is empty.</div></sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="flex:none;height:54px;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(#fbfcfe,#e3ebf5);border-top:1px solid #c5d3e4">
+          <svg width="38" height="38" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6l4 4v9H3z" fill="#fff" stroke="#6b7886" stroke-width=".6"></path><path d="M9 1.5v4h4" fill="#e3eaf2" stroke="#6b7886" stroke-width=".6"></path></svg>
+          <div style="min-width:0">
+            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ exDetailName }}</div>
+            <div style="color:#4c607a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ exDetailMeta }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Window: Claude shell ===== -->
+  <sc-if value="{{ W.terminal.open }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ W.terminal.style }}" onMouseDown="{{ W.terminal.focus }}">
+      <div style="flex:none;height:30px;display:flex;align-items:center;gap:7px;padding-left:2px" onMouseDown="{{ W.terminal.drag }}" onDoubleClick="{{ W.terminal.maxToggle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c0c0c" stroke="#6b7886"></rect><path d="M3 5l3 2-3 2M7 10h4" fill="none" stroke="#ddd" stroke-width="1.300"></path></svg>
+        <span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">{{ W.terminal.title }}</span>
+        <div style="display:flex;align-self:flex-start;margin-top:-1px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;overflow:hidden">
+          <button class="cap" aria-label="Minimize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.terminal.min }}"><svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8"></rect></svg></button>
+          <button class="cap" aria-label="Maximize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.terminal.maxToggle }}"><svg width="10" height="9" viewBox="0 0 10 9" aria-hidden="true"><rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.600"></rect></svg></button>
+          <button class="cap capx" aria-label="Close" style="width:44px" onClick="{{ W.terminal.close }}"><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.400" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g></svg></button>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#0c0c0c;border:1px solid #5d6c82;color:#c0c0c0;font:12px/1.35 Consolas,'DejaVu Sans Mono','Liberation Mono',monospace">
+        <div class="sb" style="flex:1;min-height:0;display:flex;flex-direction:column-reverse;padding:4px 6px">
+          <div>
+            <sc-for list="{{ termLines }}" as="l" hint-placeholder-count="4"><div style="white-space:pre-wrap;min-height:16px">{{ l.text }}</div></sc-for>
+            <sc-if value="{{ termHuman }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex"><span>C:\workspace\claude-code-win&gt;</span><input aria-label="Command" value="{{ termIn }}" onChange="{{ onTermIn }}" onKeyDown="{{ onTermKey }}" style="flex:1;border:0;outline:0;background:transparent;color:#fff;font:inherit;padding:0 0 0 2px"></div>
+            </sc-if>
+            <sc-if value="{{ termAgent }}" hint-placeholder-val="{{ true }}"><div style="color:#8a8a8a">C:\workspace\claude-code-win&gt;_   ({{ termHint }})</div></sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Window: Notepad ===== -->
+  <sc-if value="{{ W.notepad.open }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ W.notepad.style }}" onMouseDown="{{ W.notepad.focus }}">
+      <div style="flex:none;height:30px;display:flex;align-items:center;gap:7px;padding-left:2px" onMouseDown="{{ W.notepad.drag }}" onDoubleClick="{{ W.notepad.maxToggle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.500" y="2" width="11" height="13" fill="#fff" stroke="#3b78c4"></rect><rect x="2.500" y="2" width="11" height="3" fill="#7fb2ea"></rect><path d="M5 8h6M5 10.500h6M5 13h4" stroke="#9aa7b8"></path></svg>
+        <span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">{{ W.notepad.title }}</span>
+        <div style="display:flex;align-self:flex-start;margin-top:-1px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;overflow:hidden">
+          <button class="cap" aria-label="Minimize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.notepad.min }}"><svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8"></rect></svg></button>
+          <button class="cap" aria-label="Maximize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.notepad.maxToggle }}"><svg width="10" height="9" viewBox="0 0 10 9" aria-hidden="true"><rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.600"></rect></svg></button>
+          <button class="cap capx" aria-label="Close" style="width:44px" onClick="{{ W.notepad.close }}"><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.400" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g></svg></button>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#fff;border:1px solid #5d6c82">
+        <div style="flex:none;height:20px;display:flex;align-items:center;background:#f5f6f7;border-bottom:1px solid #e1e1e1"><span style="padding:0 7px">File</span><span style="padding:0 7px">Edit</span><span style="padding:0 7px">Format</span><span style="padding:0 7px">View</span><span style="padding:0 7px">Help</span></div>
+        <textarea aria-label="Document text" class="sb" value="{{ npText }}" onChange="{{ onNp }}" style="flex:1;min-height:0;border:0;outline:0;resize:none;padding:4px 6px;font:13px/1.4 Consolas,'Lucida Console','DejaVu Sans Mono',monospace;user-select:text"></textarea>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Window: Agent Manager ===== -->
+  <sc-if value="{{ W.agentmgr.open }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ W.agentmgr.style }}" onMouseDown="{{ W.agentmgr.focus }}">
+      <div style="flex:none;height:30px;display:flex;align-items:center;gap:7px;padding-left:2px" onMouseDown="{{ W.agentmgr.drag }}" onDoubleClick="{{ W.agentmgr.maxToggle }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c140c" stroke="#3a4f6e"></rect><path d="M2 11l3-3 2 2 3-5 2 3 2-2" fill="none" stroke="#3fd23f" stroke-width="1.300"></path></svg>
+        <span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">{{ W.agentmgr.title }}</span>
+        <div style="display:flex;align-self:flex-start;margin-top:-1px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;overflow:hidden">
+          <button class="cap" aria-label="Minimize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.agentmgr.min }}"><svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8"></rect></svg></button>
+          <button class="cap" aria-label="Maximize" style="width:27px;border-right:1px solid #3a4f6e" onClick="{{ W.agentmgr.maxToggle }}"><svg width="10" height="9" viewBox="0 0 10 9" aria-hidden="true"><rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.600"></rect></svg></button>
+          <button class="cap capx" aria-label="Close" style="width:44px" onClick="{{ W.agentmgr.close }}"><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.400" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.500" x2="10" y2="8.500"></line><line x1="10" y1="1.500" x2="2" y2="8.500"></line></g></svg></button>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#f0f0f0;border:1px solid #5d6c82">
+        <div style="flex:none;height:20px;display:flex;align-items:center;background:linear-gradient(#fdfefe,#e3ebf6);border-bottom:1px solid #b4bfcf"><span style="padding:0 7px">File</span><span style="padding:0 7px">Options</span><span style="padding:0 7px">View</span><span style="padding:0 7px">Help</span></div>
+        <div style="flex:none;display:flex;padding:6px 6px 0 9px">
+          <button class="tab" style="{{ mtAgents }}" onClick="{{ showAgents }}">Agents</button>
+          <button class="tab" style="{{ mtProcs }}" onClick="{{ showProcs }}">Processes</button>
+          <button class="tab" style="{{ mtPerf }}" onClick="{{ showPerf }}">Performance</button>
+          <button class="tab" style="{{ mtHumans }}" onClick="{{ showHumans }}">Humans</button>
+        </div>
+        <div style="flex:1;min-height:0;margin:0 6px;background:#fff;border:1px solid #898c95;padding:8px;display:flex;flex-direction:column;gap:8px">
+          <sc-if value="{{ isAgents }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;min-height:0;border:1px solid #828790;display:flex;flex-direction:column">
+              <div style="flex:none;display:flex;border-bottom:1px solid #d5d5d5;background:linear-gradient(#fff,#f1f1f1 90%,#e6e6e6)"><span class="lvh" style="flex:1;color:#000">Task</span><span class="lvh" style="width:150px;border-right:0;color:#000">Status</span></div>
+              <div class="sb" style="flex:1;min-height:0">
+                <sc-for list="{{ agentRows }}" as="a" hint-placeholder-count="3">
+                  <button class="lvr" style="{{ a.style }}" onClick="{{ a.select }}"><span style="flex:1;padding:0 6px">{{ a.name }}</span><span style="width:150px;padding:0 6px">{{ a.status }}</span></button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:none;display:flex;justify-content:flex-end;gap:6px">
+              <button class="btn" onClick="{{ endTask }}" disabled="{{ noAgentSel }}">End Task</button>
+              <a class="btn" href="Main.dc.html">Switch To</a>
+              <a class="btn" href="Main.dc.html">New Task…</a>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isProcs }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;min-height:0;border:1px solid #828790;display:flex;flex-direction:column">
+              <div style="flex:none;display:flex;border-bottom:1px solid #d5d5d5;background:linear-gradient(#fff,#f1f1f1 90%,#e6e6e6)"><span class="lvh" style="flex:1;color:#000">Image name</span><span class="lvh" style="width:80px;color:#000">Owner</span><span class="lvh" style="width:70px;color:#000">Tokens</span><span class="lvh" style="width:80px;border-right:0;color:#000">Memory</span></div>
+              <div class="sb" style="flex:1;min-height:0">
+                <sc-for list="{{ procRows }}" as="p" hint-placeholder-count="5">
+                  <button class="lvr" style="{{ p.style }}" onClick="{{ p.select }}"><span style="flex:1;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span><span style="width:80px;padding:0 6px">{{ p.owner }}</span><span style="width:70px;padding:0 6px;text-align:right">{{ p.tok }}</span><span style="width:80px;padding:0 6px;text-align:right">{{ p.mem }}</span></button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:none;display:flex;justify-content:flex-end"><button class="btn" onClick="{{ endProc }}" disabled="{{ noProcSel }}">End Process</button></div>
+          </sc-if>
+          <sc-if value="{{ isPerf }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px">
+              <fieldset style="margin:0;padding:4px 8px 8px;border:1px solid #d5dfe5;border-radius:3px;width:96px"><legend>Context</legend>
+                <div style="height:96px;background:#000;border:1px solid #444;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:4px 0">
+                  <div style="{{ ctxMeterStyle }}"></div>
+                  <div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;color:#3fd23f;font:11px Consolas,monospace">{{ ctxPct }}</div>
+                </div>
+              </fieldset>
+              <fieldset style="margin:0;padding:4px 8px 8px;border:1px solid #d5dfe5;border-radius:3px;flex:1;min-width:0"><legend>Token rate history</legend>
+                <svg width="100%" height="96" viewBox="0 0 240 96" preserveAspectRatio="none" role="img" aria-label="Token rate over the last minute"><defs><pattern id="tmg" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0V12H0" fill="none" stroke="#0f5a2a" stroke-width="1"></path></pattern></defs><rect width="240" height="96" fill="#000"></rect><rect width="240" height="96" fill="url(#tmg)"></rect><polyline points="{{ perfPoints }}" fill="none" stroke="#3fd23f" stroke-width="1.600"></polyline></svg>
+              </fieldset>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px">
+              <div style="display:flex;justify-content:space-between"><span>Tokens this session</span><span>{{ tokensText }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Tool calls</span><span>{{ calls }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Files changed</span><span>{{ filesChanged }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Up time</span><span>{{ uptime }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Subagents</span><span>1 done, 0 running</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Background shells</span><span>{{ shellCount }}</span></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isHumans }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid #828790">
+              <div style="display:flex;border-bottom:1px solid #d5d5d5;background:linear-gradient(#fff,#f1f1f1 90%,#e6e6e6)"><span class="lvh" style="flex:1;color:#000">Person</span><span class="lvh" style="width:110px;color:#000">Status</span><span class="lvh" style="width:110px;border-right:0;color:#000">Client</span></div>
+              <div style="display:flex;height:22px;align-items:center;border:1px solid #7da2ce;background:linear-gradient(#dcebfc,#c1dbfc)"><span style="flex:1;padding:0 6px">Jonathan</span><span style="width:110px;padding:0 6px">{{ humanStatus }}</span><span style="width:110px;padding:0 6px">Claude mobile</span></div>
+            </div>
+            <div style="color:#333">People who can see this desktop. Whoever has control is the only one whose clicks and typing reach Claude's windows.</div>
+            <div style="display:flex;justify-content:flex-end;gap:6px"><button class="btn" onClick="{{ toggleHuman }}">{{ takeLabel }}</button></div>
+          </sc-if>
+        </div>
+        <div style="flex:none;height:22px;display:flex;align-items:center;gap:14px;padding:0 8px;margin-top:4px;border-top:1px solid #d5d5d5"><span>Agents: 1 running</span><span>Tokens/min: {{ rateNow }}</span><span>Context: {{ ctxPct }}</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Agent cursor ===== -->
+  <sc-if value="{{ cursorShow }}" hint-placeholder-val="{{ true }}">
+    <div aria-hidden="true" style="{{ cursorStyle }}">
+      <svg width="20" height="24" viewBox="0 0 20 24"><path d="M2 2l15 11-7 1 4 8-3 1.500-4-8-5 5z" fill="#d97757" stroke="#fff" stroke-width="1.500" stroke-linejoin="round"></path></svg>
+      <span style="margin-left:12px;margin-top:-4px;padding:2px 7px;border-radius:3px;background:#d97757;color:#fff;font-size:11px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.4)">{{ cursorLabel }}</span>
+    </div>
+  </sc-if>
+
+  <!-- ===== Observer (remote desktop style) bar ===== -->
+  <div style="position:absolute;left:350px;top:0;width:580px;height:28px;z-index:990;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;border:1px solid #6a87ad;border-top:0;border-radius:0 0 6px 6px;background:linear-gradient(#f1f6fd,#cddcf0);box-shadow:0 2px 6px rgba(0,0,0,.35)">
+    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.500" fill="{{ stateDot }}" stroke="#fff"></circle></svg>
+    <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>Claude's desktop</b> · {{ rdpState }}</span>
+    <button class="btn" style="min-width:0;height:21px" onClick="{{ togglePause }}" disabled="{{ human }}">{{ pauseLabel }}</button>
+    <button class="btn" style="min-width:0;height:21px" onClick="{{ toggleHuman }}">{{ takeLabel }}</button>
+    <button class="btn" style="min-width:0;height:21px" onClick="{{ openSecure }}">Override…</button>
+  </div>
+
+  <!-- ===== Start menu ===== -->
+  <sc-if value="{{ startOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;bottom:40px;width:420px;height:530px;z-index:900;display:flex;padding:8px 8px 8px 8px;gap:8px;border:1px solid #1f3554;border-radius:7px 7px 0 0;background:linear-gradient(180deg,rgba(80,120,170,.94) 0,rgba(30,62,105,.96) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),4px 0 16px rgba(0,0,0,.5)">
+      <div style="width:252px;display:flex;flex-direction:column;background:#fff;border:1px solid #2b4b74;border-radius:4px;overflow:hidden">
+        <div class="sb" style="flex:1;min-height:0;padding:6px">
+          <sc-if value="{{ showPinned }}" hint-placeholder-val="{{ true }}">
+            <a class="sm" href="Main.dc.html"><svg width="32" height="32" viewBox="0 0 16 16" aria-hidden="true"><g stroke="#d97757" stroke-width="1.700" stroke-linecap="round"><line x1="8" y1="1.500" x2="8" y2="14.500"></line><line x1="1.500" y1="8" x2="14.500" y2="8"></line><line x1="3.400" y1="3.400" x2="12.600" y2="12.600"></line><line x1="12.600" y1="3.400" x2="3.400" y2="12.600"></line></g></svg><span><span style="display:block">Claude Code</span><span style="display:block;color:#555;font-size:11px">Talk to Claude about this work</span></span></a>
+            <button class="sm" onClick="{{ openTerm }}"><svg width="32" height="32" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c0c0c" stroke="#6b7886" stroke-width=".6"></rect><path d="M3 5l3 2-3 2M7 10h4" fill="none" stroke="#ddd" stroke-width="1.100"></path></svg>Claude shell</button>
+            <button class="sm" onClick="{{ openExplorer }}"><svg width="32" height="32" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.500h5l1.500 1.500H15v8H1z" fill="#f4cf6a" stroke="#b8902c" stroke-width=".6"></path></svg>Windows Explorer</button>
+            <button class="sm" onClick="{{ openMgr }}"><svg width="32" height="32" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c140c" stroke="#3a4f6e" stroke-width=".6"></rect><path d="M2 11l3-3 2 2 3-5 2 3 2-2" fill="none" stroke="#3fd23f" stroke-width="1.100"></path></svg>Agent Manager</button>
+            <button class="sm" onClick="{{ openPlan }}"><svg width="32" height="32" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.500" y="2" width="11" height="13" fill="#fff" stroke="#3b78c4" stroke-width=".6"></rect><rect x="2.500" y="2" width="11" height="3" fill="#7fb2ea"></rect><path d="M5 8h6M5 10.500h6M5 13h4" stroke="#9aa7b8" stroke-width=".7"></path></svg>Notepad: PLAN.md</button>
+            <div style="height:1px;margin:6px 4px;background:#e2e8f0"></div>
+            <div style="padding:2px 8px 4px;color:#1e395b">Recent sessions</div>
+            <sc-for list="{{ recentSessions }}" as="s" hint-placeholder-count="3"><button class="sm" style="min-height:26px" onClick="{{ s.act }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2z" fill="#d7e9fb" stroke="#4a7fb8"></path></svg>{{ s.label }}</button></sc-for>
+          </sc-if>
+          <sc-if value="{{ allProgs }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ progList }}" as="p" hint-placeholder-count="8">
+              <sc-if value="{{ p.header }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;padding:5px 6px 2px;color:#1e395b"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.500h5l1.500 1.500H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg>{{ p.label }}</div></sc-if>
+              <sc-if value="{{ p.item }}" hint-placeholder-val="{{ true }}"><button class="sm" style="min-height:24px;padding-left:30px" onClick="{{ p.act }}"><span>{{ p.label }}</span><span style="margin-left:auto;color:#666;font-size:11px">{{ p.sub }}</span></button></sc-if>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ results }}" as="p" hint-placeholder-count="4">
+              <sc-if value="{{ p.header }}" hint-placeholder-val="{{ false }}"><div style="padding:6px 6px 2px;color:#1e395b;border-bottom:1px solid #e2e8f0">{{ p.label }}</div></sc-if>
+              <sc-if value="{{ p.item }}" hint-placeholder-val="{{ true }}"><button class="sm" style="min-height:26px;padding-left:14px" onClick="{{ p.act }}"><span>{{ p.label }}</span><span style="margin-left:auto;color:#666;font-size:11px">{{ p.sub }}</span></button></sc-if>
+            </sc-for>
+            <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}"><div style="padding:10px;color:#555">No tools, files or memories match.</div></sc-if>
+          </sc-if>
+        </div>
+        <div style="flex:none;padding:4px 6px;border-top:1px solid #e2e8f0">
+          <button class="sm" style="min-height:26px" onClick="{{ toggleAll }}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="{{ allArrow }}" fill="#3b5f8f"></path></svg>{{ allLabel }}</button>
+        </div>
+        <div style="flex:none;padding:6px;background:linear-gradient(#e9eef5,#d7e0ec);border-top:1px solid #b9c7da">
+          <label style="display:flex;align-items:center;height:26px;padding:0 6px;background:#fff;border:1px solid #8a9bb2;border-radius:2px;gap:4px"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Search tools, files and memory</span><input placeholder="Search tools, files and memory" value="{{ q }}" onChange="{{ onQ }}" style="flex:1;min-width:0;border:0;outline:0;font-style:italic"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="5.500" cy="5.500" r="4" fill="none" stroke="#56606d" stroke-width="1.600"></circle><line x1="8.500" y1="8.500" x2="12.500" y2="12.500" stroke="#56606d" stroke-width="2"></line></svg></label>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:center;margin:-30px 0 8px"><div style="width:64px;height:64px;border-radius:6px;padding:4px;background:linear-gradient(#f4f8fc,#b9cde6);border:1px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"><div style="width:100%;height:100%;border-radius:3px;background:linear-gradient(160deg,#fbf3ee,#f1d6c9);display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 16 16" aria-hidden="true"><g stroke="#d97757" stroke-width="1.700" stroke-linecap="round"><line x1="8" y1="1.500" x2="8" y2="14.500"></line><line x1="1.500" y1="8" x2="14.500" y2="8"></line><line x1="3.400" y1="3.400" x2="12.600" y2="12.600"></line><line x1="12.600" y1="3.400" x2="3.400" y2="12.600"></line></g></svg></div></div></div>
+        <sc-for list="{{ startLinks }}" as="l" hint-placeholder-count="6">
+          <sc-if value="{{ l.sep }}" hint-placeholder-val="{{ false }}"><div style="height:1px;margin:4px 8px;background:rgba(255,255,255,.25)"></div></sc-if>
+          <sc-if value="{{ l.btn }}" hint-placeholder-val="{{ true }}"><button class="sml" onClick="{{ l.act }}">{{ l.label }}</button></sc-if>
+          <sc-if value="{{ l.link }}" hint-placeholder-val="{{ false }}"><a class="sml" href="ControlCentre.dc.html">{{ l.label }}</a></sc-if>
+        </sc-for>
+        <span style="flex:1"></span>
+        <div style="position:relative;display:flex;justify-content:flex-end;padding:4px 2px">
+          <div style="display:flex;border:1px solid #1d2f48;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)">
+            <button onClick="{{ togglePause }}" style="height:26px;padding:0 12px;border:0;border-right:1px solid #1d2f48;background:linear-gradient(#e6a17f 0,#d97757 48%,#b9542f 52%,#d0704a 100%);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.4)">{{ pauseLabel }}</button>
+            <button aria-label="More stop options" onClick="{{ toggleShut }}" style="width:24px;height:26px;border:0;background:linear-gradient(#e6a17f 0,#d97757 48%,#b9542f 52%,#d0704a 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 1l4 3-4 3z" fill="#fff"></path></svg></button>
+          </div>
+          <sc-if value="{{ shutMenu }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:100%;bottom:0;width:190px;padding:2px;background:#f7f7f7;border:1px solid #979797;box-shadow:3px 3px 4px rgba(0,0,0,.3)">
+              <button class="sm" style="min-height:24px" onClick="{{ toggleHuman }}">{{ takeLabel }}</button>
+              <button class="sm" style="min-height:24px" onClick="{{ openSecure }}">Override screen…</button>
+              <button class="sm" style="min-height:24px" onClick="{{ endSession }}">End Claude's session</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Action Center flyout ===== -->
+  <sc-if value="{{ acOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;right:86px;bottom:44px;width:340px;z-index:950;border:1px solid #27405f;border-radius:6px;padding:6px;background:linear-gradient(rgba(214,230,250,.97),rgba(184,208,240,.97));box-shadow:0 6px 18px rgba(0,0,0,.5)">
+      <div style="background:#fff;border:1px solid #8a9bb2;border-radius:3px">
+        <div style="padding:8px 10px;font-size:14px;color:#1e395b;border-bottom:1px solid #e2e8f0">Action Center</div>
+        <div style="padding:6px 10px 2px;color:#1e395b">Waiting for your approval ({{ acCount }})</div>
+        <sc-for list="{{ approvals }}" as="a" hint-placeholder-count="2">
+          <div style="display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid #f0f2f5">
+            <svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1L14 3.400v4.400c0 3.200-2.400 5.900-6 7.200-3.600-1.300-6-4-6-7.200V3.400z" fill="#e9b949" stroke="#9c7520"></path><path d="M8 4.500v4.300M8 10.300v1.300" stroke="#fff" stroke-width="1.800"></path></svg>
+            <div style="flex:1;min-width:0"><div>{{ a.title }}</div><div style="font:11px Consolas,monospace;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.cmd }}</div></div>
+            <button class="btn" style="min-width:60px" onClick="{{ a.review }}">Review</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noApprovals }}" hint-placeholder-val="{{ false }}"><div style="padding:6px 10px 8px;color:#555">Nothing needs you right now.</div></sc-if>
+        <div style="padding:6px 10px 2px;color:#1e395b">Messages</div>
+        <div style="padding:2px 10px 4px">Context is at {{ ctxPct }}. Claude compacts automatically at 80%.</div>
+        <div style="padding:2px 10px 8px">Next scheduled task: Nightly dependency check at 02:00.</div>
+        <div style="padding:8px 10px;border-top:1px solid #e2e8f0;background:#f5f7fa"><a href="ControlCentre.dc.html" style="color:#0066cc">Open Control Centre</a></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Balloon notification ===== -->
+  <sc-if value="{{ balloonOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;right:96px;bottom:50px;width:300px;z-index:960">
+      <button onClick="{{ balloonClick }}" style="width:100%;display:flex;gap:9px;padding:10px 28px 10px 10px;border:1px solid #767676;border-radius:6px;background:linear-gradient(#fff,#e9eef5);box-shadow:2px 3px 8px rgba(0,0,0,.4);text-align:left;cursor:default">
+        <svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><path d="M8 1L14 3.400v4.400c0 3.200-2.400 5.900-6 7.200-3.600-1.300-6-4-6-7.200V3.400z" fill="#e9b949" stroke="#9c7520"></path><path d="M8 4.500v4.300M8 10.300v1.300" stroke="#fff" stroke-width="1.800"></path></svg>
+        <span><span style="display:block;font-weight:700">Claude needs your approval</span><span style="display:block;margin-top:2px">{{ balloonText }}</span><span style="display:block;margin-top:4px;color:#0066cc">Click to review</span></span>
+      </button>
+      <button aria-label="Dismiss" onClick="{{ balloonClose }}" style="position:absolute;right:6px;top:6px;width:18px;height:18px;border:1px solid transparent;border-radius:2px;background:transparent;display:flex;align-items:center;justify-content:center;padding:0"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="#555" stroke-width="1.500"></path></svg></button>
+      <svg width="20" height="12" viewBox="0 0 20 12" aria-hidden="true" style="position:absolute;right:30px;bottom:-11px"><path d="M0 0h20L8 12z" fill="#e9eef5" stroke="#767676"></path><path d="M1 0h18" stroke="#e9eef5" stroke-width="2"></path></svg>
+    </div>
+  </sc-if>
+
+  <!-- ===== Taskbar ===== -->
+  <div style="position:absolute;left:0;right:0;bottom:0;height:40px;z-index:800;display:flex;align-items:center;gap:2px;padding:0 0 0 4px;background:linear-gradient(180deg,rgba(150,185,225,.82) 0,rgba(60,100,155,.9) 48%,rgba(25,55,100,.94) 50%,rgba(40,80,130,.96) 100%);border-top:1px solid rgba(255,255,255,.55)">
+    <button aria-label="Start" onClick="{{ startToggle }}" style="width:42px;height:40px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-right:4px"><span style="{{ orbStyle }}"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><g stroke="#fff" stroke-width="1.800" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"></line><line x1="2" y1="8" x2="14" y2="8"></line><line x1="3.800" y1="3.800" x2="12.200" y2="12.200"></line><line x1="12.200" y1="3.800" x2="3.800" y2="12.200"></line></g></svg></span></button>
+    <button class="tbi" aria-label="Windows Explorer" style="{{ tb.explorer }}" onClick="{{ tbExplorer }}"><svg width="26" height="26" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 3.500h5l1.500 1.500H15v8H1z" fill="#f4cf6a" stroke="#b8902c" stroke-width=".7"></path></svg></button>
+    <button class="tbi" aria-label="Claude shell" style="{{ tb.terminal }}" onClick="{{ tbTerminal }}"><svg width="26" height="26" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c0c0c" stroke="#9aa7b8" stroke-width=".7"></rect><path d="M3 5l3 2-3 2M7 10h4" fill="none" stroke="#ddd" stroke-width="1.100"></path></svg></button>
+    <button class="tbi" aria-label="Notepad" style="{{ tb.notepad }}" onClick="{{ tbNotepad }}"><svg width="26" height="26" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.500" y="2" width="11" height="13" fill="#fff" stroke="#3b78c4" stroke-width=".7"></rect><rect x="2.500" y="2" width="11" height="3" fill="#7fb2ea"></rect><path d="M5 8h6M5 10.500h6M5 13h4" stroke="#9aa7b8" stroke-width=".7"></path></svg></button>
+    <button class="tbi" aria-label="Agent Manager" style="{{ tb.agentmgr }}" onClick="{{ tbMgr }}"><svg width="26" height="26" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="12" fill="#0c140c" stroke="#9aa7b8" stroke-width=".7"></rect><path d="M2 11l3-3 2 2 3-5 2 3 2-2" fill="none" stroke="#3fd23f" stroke-width="1.100"></path></svg></button>
+    <a class="tbi" aria-label="Claude Code" href="Main.dc.html"><svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true"><g stroke="#ffb08f" stroke-width="1.700" stroke-linecap="round"><line x1="8" y1="1.500" x2="8" y2="14.500"></line><line x1="1.500" y1="8" x2="14.500" y2="8"></line><line x1="3.400" y1="3.400" x2="12.600" y2="12.600"></line><line x1="12.600" y1="3.400" x2="3.400" y2="12.600"></line></g></svg></a>
+    <span style="flex:1"></span>
+    <button class="tbi" aria-label="{{ acAria }}" style="width:30px;position:relative" onClick="{{ acToggle }}">
+      <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1v14" stroke="#fff" stroke-width="1.600"></path><path d="M3.800 2h9l-2 3 2 3h-9z" fill="#fff"></path></svg>
+      <sc-if value="{{ acHas }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;right:1px;top:4px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#d9403a;color:#fff;font-size:10px;line-height:14px;text-align:center;border:1px solid #fff">{{ acCount }}</span></sc-if>
+    </button>
+    <span title="Connectors: 6 connected" style="width:26px;display:flex;justify-content:center"><svg width="18" height="18" viewBox="0 0 16 16" role="img" aria-label="Connectors: 6 connected"><rect x="1" y="11" width="3" height="4" fill="#fff"></rect><rect x="5.500" y="8" width="3" height="7" fill="#fff"></rect><rect x="10" y="4" width="3" height="11" fill="#fff"></rect></svg></span>
+    <span title="{{ ctxRemain }}" style="width:30px;display:flex;justify-content:center"><svg width="22" height="14" viewBox="0 0 22 14" role="img" aria-label="{{ ctxRemain }}"><rect x="1" y="1" width="18" height="12" rx="2" fill="none" stroke="#fff" stroke-width="1.500"></rect><rect x="19.500" y="4.500" width="2" height="5" fill="#fff"></rect><rect x="3" y="3" height="8" width="{{ battW }}" fill="{{ battFill }}"></rect></svg></span>
+    <div style="padding:0 10px;text-align:center;color:#fff;font-size:12px;line-height:1.25;text-shadow:0 0 4px rgba(0,0,0,.7)">{{ clockTime }}<br>{{ clockDate }}</div>
+    <button aria-label="Show desktop" onClick="{{ showDesktop }}" style="width:14px;height:40px;border:0;border-left:1px solid rgba(255,255,255,.4);background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(255,255,255,.28));padding:0"></button>
+  </div>
+
+  <!-- ===== Start menu click-away ===== -->
+  <sc-if value="{{ popupOpen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;top:0;right:0;bottom:40px;z-index:850" onMouseDown="{{ closePopups }}"></div></sc-if>
+
+  <!-- ===== Approval prompt (UAC-style secure desktop) ===== -->
+  <sc-if value="{{ uacOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;top:0;right:0;bottom:0;z-index:2000;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center">
+      <div role="dialog" aria-label="Approve agent action" style="width:470px;padding:0 7px 7px;border:1px solid #27405f;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(214,230,250,.99),rgba(184,208,240,.99));box-shadow:0 10px 40px rgba(0,0,0,.7)">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding-left:2px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1L14 3.400v4.400c0 3.200-2.400 5.900-6 7.200-3.600-1.300-6-4-6-7.200V3.400z" fill="#e9b949" stroke="#9c7520"></path></svg><span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff">Agent Approval Control</span></div>
+        <div style="border:1px solid #5d6c82;background:#fff">
+          <div style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:linear-gradient(#fff7d6,#fbe9a6);border-bottom:1px solid #e0c86a">
+            <svg width="40" height="40" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><path d="M8 1L14 3.400v4.400c0 3.200-2.400 5.900-6 7.200-3.600-1.300-6-4-6-7.200V3.400z" fill="#e9b949" stroke="#9c7520"></path><path d="M8 4.500v4.300M8 10.300v1.300" stroke="#fff" stroke-width="1.800"></path></svg>
+            <div style="font-size:15px;color:#1e395b;line-height:1.3">Do you want to allow Claude to do this outside its sandbox?</div>
+          </div>
+          <div style="padding:12px 16px;display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 10px">
+            <span style="color:#555">Action:</span><span style="font:12px Consolas,monospace">{{ uacCmd }}</span>
+            <span style="color:#555">Requested by:</span><span>Claude · Fix login redirect bug</span>
+            <span style="color:#555">Affects:</span><span>{{ uacTarget }}</span>
+            <span style="color:#555">Why it's asking:</span><span>{{ uacReason }}</span>
+          </div>
+          <sc-if value="{{ uacDetails }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:0 16px 10px;border:1px solid #828790;padding:3px 0;font:12px/17px Consolas,monospace">
+              <sc-for list="{{ uacLines }}" as="d" hint-placeholder-count="3"><span style="display:block;padding:0 6px;white-space:pre">{{ d.text }}</span></sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f0f0f0;border-top:1px solid #dfdfdf">
+            <button onClick="{{ toggleDetails }}" style="border:0;background:transparent;color:#0066cc;padding:0;display:inline-flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#fff" stroke="#8a9bb2"></circle><path d="{{ detailsArrow }}" fill="none" stroke="#3b5f8f" stroke-width="1.500"></path></svg>{{ detailsLabel }}</button>
+            <span style="flex:1"></span>
+            <button class="btn" onClick="{{ uacYes }}">Yes</button>
+            <button class="btn def" onClick="{{ uacNo }}">No</button>
+          </div>
+          <div style="padding:0 16px 10px;background:#f0f0f0;text-align:right"><a href="ControlCentre.dc.html" style="color:#0066cc">Change when these prompts appear</a></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Override screen (Ctrl+Alt+Del style) ===== -->
+  <sc-if value="{{ secureOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;top:0;right:0;bottom:0;z-index:2100;background:radial-gradient(ellipse at 50% 40%,#2d7fd0 0,#0f4d96 55%,#082f63 100%);display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="width:400px;display:flex;flex-direction:column;gap:4px">
+        <div style="color:#cfe3ff;font-size:13px;margin-bottom:8px;padding-left:14px">Claude is paused while this screen is open.</div>
+        <button class="seclink" onClick="{{ secPause }}">{{ secPauseLabel }}</button>
+        <button class="seclink" onClick="{{ secTake }}">{{ secTakeLabel }}</button>
+        <button class="seclink" onClick="{{ secMgr }}">Start Agent Manager</button>
+        <button class="seclink" onClick="{{ endSession }}">End Claude's session</button>
+        <a class="seclink" href="ControlCentre.dc.html">Change permissions…</a>
+      </div>
+      <button class="btn" style="margin-top:40px;width:100px;height:28px" onClick="{{ secCancel }}">Cancel</button>
+      <div style="position:absolute;right:28px;bottom:24px;display:flex;align-items:center;gap:10px;color:#fff">
+        <span>Stop all agents</span>
+        <button aria-label="Stop all agents" onClick="{{ endSession }}" style="width:40px;height:32px;border:1px solid #6b1610;border-radius:4px;background:linear-gradient(#f08a7e 0,#d9403a 48%,#b3241c 52%,#d24a3c 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.500a6 6 0 106 0" fill="none" stroke="#fff" stroke-width="2"></path><path d="M8 1.500v6" stroke="#fff" stroke-width="2"></path></svg></button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  init() {
+    this.tick = 0; this.n = 0; this.z = 30; this.t0 = Date.now() - 42 * 60000;
+    const T = '16/11/2026 ';
+    this.script = [
+      { feed: 'Read src/auth/redirect.ts (142 lines)', target: 'explorer' },
+      { feed: 'Edited src/auth/redirect.ts (+4 −1)', target: 'explorer' },
+      { feed: 'Ran npm test: 12 passed', target: 'terminal', term: ['', 'C:\\workspace\\claude-code-win>npm test', 'PASS  tests/auth.test.ts', 'PASS  tests/redirect.test.ts', 'Tests:  12 passed, 12 total'] },
+      { feed: 'Wrote tests/redirect.test.ts (+31)', target: 'explorer' },
+      { feed: 'Ran npm test: 14 passed', target: 'terminal', tests: '14/14', term: ['', 'C:\\workspace\\claude-code-win>npm test', 'PASS  tests/auth.test.ts', 'PASS  tests/redirect.test.ts (2 new)', 'Tests:  14 passed, 14 total'] },
+      { feed: 'Ticked step 3 in PLAN.md', target: 'notepad', plan: true },
+      { feed: 'Committed 3f9c2ab', target: 'terminal', term: ['', 'C:\\workspace\\claude-code-win>git commit -am "Preserve returnUrl through sign-in"', '[main 3f9c2ab] Preserve returnUrl through sign-in', ' 2 files changed, 35 insertions(+), 1 deletion(-)'] },
+      { feed: 'Asked to run git push origin main', target: 'tray', approval: true }
+    ];
+    this.LOC = {
+      computer: { crumb: 'Workspace', title: 'Workspace' },
+      repo: { crumb: 'Workspace  ▸  claude-code-win (W:)', title: 'claude-code-win (W:)', items: [
+        { n: 'src', k: 'folder', d: T + '01:52', t: 'File folder', s: 'Changed', go: 'src' },
+        { n: 'tests', k: 'folder', d: T + '02:04', t: 'File folder', s: 'Changed', go: 'tests' },
+        { n: 'node_modules', k: 'folder', d: '12/11/2026 18:10', t: 'File folder', s: 'Ignored' },
+        { n: 'CLAUDE.md', k: 'memo', d: '14/11/2026 09:31', t: 'Project memory', s: 'Loaded', doc: 'claude' },
+        { n: 'package.json', k: 'file', d: '12/11/2026 18:09', t: 'JSON file', s: 'Read' },
+        { n: 'README.md', k: 'file', d: '03/11/2026 11:20', t: 'Markdown file', s: '' } ] },
+      src: { crumb: 'Workspace  ▸  claude-code-win (W:)  ▸  src', title: 'src', items: [
+        { n: 'auth', k: 'folder', d: T + '01:52', t: 'File folder', s: 'Changed', go: 'auth' },
+        { n: 'config', k: 'folder', d: '10/11/2026 16:02', t: 'File folder', s: '' },
+        { n: 'index.ts', k: 'file', d: '10/11/2026 16:02', t: 'TypeScript file', s: '' },
+        { n: 'parser.ts', k: 'file', d: '15/11/2026 22:40', t: 'TypeScript file', s: 'Read' } ] },
+      auth: { crumb: 'Workspace  ▸  claude-code-win (W:)  ▸  src  ▸  auth', title: 'auth', items: [
+        { n: 'redirect.ts', k: 'file', d: T + '01:52', t: 'TypeScript file', s: 'dyn-redirect' },
+        { n: 'session.ts', k: 'file', d: '13/11/2026 10:15', t: 'TypeScript file', s: 'Hands off (CLAUDE.md)' } ] },
+      tests: { crumb: 'Workspace  ▸  claude-code-win (W:)  ▸  tests', title: 'tests', items: [
+        { n: 'auth.test.ts', k: 'file', d: '13/11/2026 10:15', t: 'TypeScript file', s: 'Ran' },
+        { n: 'redirect.test.ts', k: 'file', d: T + '02:04', t: 'TypeScript file', s: 'dyn-test' },
+        { n: 'parser.test.ts', k: 'file', d: '15/11/2026 22:41', t: 'TypeScript file', s: '' } ] },
+      dotfiles: { crumb: 'Workspace  ▸  dotfiles (D:)', title: 'dotfiles (D:)', items: [
+        { n: '.bashrc', k: 'file', d: '01/11/2026 20:12', t: 'File', s: '' },
+        { n: 'profile.ps1', k: 'file', d: '01/11/2026 20:30', t: 'PowerShell script', s: '' },
+        { n: 'README.md', k: 'file', d: '01/11/2026 20:31', t: 'Markdown file', s: '' } ] },
+      pc: { crumb: 'Workspace  ▸  Jonathan-PC', title: 'Jonathan-PC', items: [
+        { n: 'source\\claude-code-win', k: 'folder', d: T + '02:04', t: 'Connected folder', s: 'Shared with Claude', go: 'repo' },
+        { n: 'Documents', k: 'folder', d: '', t: 'Folder', s: 'Not shared' },
+        { n: 'Downloads', k: 'folder', d: '', t: 'Folder', s: 'Not shared' } ] },
+      memory: { crumb: 'Libraries  ▸  Memory', title: 'Memory', items: [
+        { n: 'CLAUDE.md (claude-code-win)', k: 'memo', d: '14/11/2026 09:31', t: 'Project memory', s: 'Loaded', doc: 'claude' },
+        { n: 'preferences.md', k: 'memo', d: '02/11/2026 08:12', t: 'User memory', s: 'Loaded', doc: 'prefs' },
+        { n: 'decisions.log', k: 'memo', d: T + '01:50', t: 'Decision log', s: 'Appending' } ] },
+      skills: { crumb: 'Libraries  ▸  Skills', title: 'Skills', items: [
+        { n: 'docx', k: 'skill', d: '', t: 'Skill', s: 'Built-in' },
+        { n: 'xlsx', k: 'skill', d: '', t: 'Skill', s: 'Built-in' },
+        { n: 'pptx', k: 'skill', d: '', t: 'Skill', s: 'Built-in' },
+        { n: 'pdf', k: 'skill', d: '', t: 'Skill', s: 'Built-in' },
+        { n: 'frontend-design', k: 'skill', d: '', t: 'Skill', s: 'Built-in' },
+        { n: 'deep-research', k: 'skill', d: '', t: 'Skill', s: 'Built-in' } ] },
+      artifacts: { crumb: 'Libraries  ▸  Artifacts', title: 'Artifacts', items: [
+        { n: 'Claude Code for Windows 7 (WinForms style)', k: 'art', d: T + '01:55', t: 'Design canvas', s: 'Private' } ] },
+      transcripts: { crumb: 'Libraries  ▸  Transcripts', title: 'Transcripts', items: [
+        { n: 'Fix login redirect bug', k: 'chat', d: T + '02:04', t: 'Session', s: 'Running' },
+        { n: 'Add parser unit tests', k: 'chat', d: '15/11/2026 22:41', t: 'Session', s: 'Finished' },
+        { n: 'Refactor config loader', k: 'chat', d: '15/11/2026 19:05', t: 'Session', s: 'Paused' },
+        { n: 'Tidy shell aliases', k: 'chat', d: '01/11/2026 20:31', t: 'Session', s: 'Finished' } ] },
+      connectors: { crumb: 'Network  ▸  Connectors', title: 'Connectors', items: [
+        { n: 'GitHub', k: 'plug', d: '', t: 'Connector', s: 'Connected' },
+        { n: 'Slack', k: 'plug', d: '', t: 'Connector', s: 'Connected' },
+        { n: 'Gmail', k: 'plug', d: '', t: 'Connector', s: 'Connected' },
+        { n: 'Google Drive', k: 'plug', d: '', t: 'Connector', s: 'Connected' },
+        { n: 'Atlassian (Jira, Confluence)', k: 'plug', d: '', t: 'Connector', s: 'Connected' },
+        { n: 'Todoist', k: 'plug', d: '', t: 'Connector', s: 'Connected' } ] },
+      desktop: { crumb: 'Desktop', title: 'Desktop', items: [
+        { n: 'PLAN.md', k: 'memo', d: T + '01:47', t: 'Markdown file', s: 'Claude\'s notes', doc: 'plan' },
+        { n: 'test-output.log', k: 'file', d: T + '02:04', t: 'Log file', s: 'Latest run', doc: 'log' } ] },
+      bin: { crumb: 'Recycle Bin', title: 'Recycle Bin' }
+    };
+    this.S = {
+      sel: null, start: false, allProgs: false, q: '', ac: false, balloon: null, uac: null, uacDetails: false,
+      secure: false, shutMenu: false, paused: false, human: false, waiting: false, step: 0, target: 'explorer', ended: false,
+      approvals: [{ id: 'zod', title: 'Install a new package', cmd: 'npm install zod@3.23.8', target: 'package.json and package-lock.json', reason: 'Adding a dependency is set to "Ask" in Control Centre.', lines: ['+ "zod": "^3.23.8"', '1 package added, 0 removed'] }],
+      ex: { loc: 'auth', hist: ['repo', 'src'], sel: null, note: '' },
+      bin: [
+        { n: 'redirect.ts (edit at 01:49)', k: 'file', d: T + '01:49', t: 'Reverted edit', s: 'Restorable' },
+        { n: 'loader.ts (async attempt)', k: 'file', d: '15/11/2026 19:04', t: 'Reverted edit', s: 'Restorable' },
+        { n: 'debug-notes.txt', k: 'file', d: '15/11/2026 18:40', t: 'Deleted file', s: 'Restorable' }
+      ],
+      np: 'plan',
+      docs: {
+        plan: '# Fix login redirect bug\n\n[x] 1. Find where sign-in redirects\n[x] 2. Validate returnUrl (same-origin paths only)\n[ ] 3. Add tests for deep links and external URLs\n[ ] 4. Commit and push to main (ask Jonathan first)\n\nNotes\n- handleSignIn ignored ?returnUrl and always went to /home.\n- Leave session.ts alone: Jonathan is refactoring it.\n',
+        log: 'PASS  tests/auth.test.ts\nPASS  tests/redirect.test.ts\n\nTests:  12 passed, 12 total\nTime:   2.4 s\n',
+        claude: '# claude-code-win\n\n- Run npm test before every commit.\n- British English in UI copy.\n- Never push to main without asking.\n- Do not edit src/auth/session.ts (refactor in progress).\n',
+        prefs: '# Preferences\n\n- Small, focused pull requests.\n- Explain the cause before the fix.\n- Times in 24-hour UK format.\n'
+      },
+      mgrTab: 'agents', agentSel: null, procSel: null,
+      procs: [
+        { id: 'p1', name: 'claude-opus-5-5  main agent', owner: 'Claude', tok: 'live', mem: 'ctx' },
+        { id: 'p2', name: 'explore-subagent #2', owner: 'Claude', tok: '12,110', mem: 'Done' },
+        { id: 'p3', name: 'node.exe  npm test --watch', owner: 'Shell', tok: '', mem: '84 MB' },
+        { id: 'p4', name: 'node.exe  vite dev :5173', owner: 'Shell', tok: '', mem: '142 MB' },
+        { id: 'p5', name: 'mcp-github.exe', owner: 'Connector', tok: '', mem: '31 MB' },
+        { id: 'p6', name: 'mcp-slack.exe', owner: 'Connector', tok: '', mem: '27 MB' }
+      ],
+      perf: [10, 14, 30, 42, 38, 55, 61, 40, 22, 35, 48, 52, 66, 58, 44, 30, 26, 41, 57, 63],
+      tokens: 76420, calls: 31, tests: '12/12', filesChanged: 1,
+      term: ['Claude shell  (sandboxed: C:\\ is private, W:\\ is your repo)', '', 'C:\\workspace\\claude-code-win>git status --short', ' M src/auth/redirect.ts', '', 'C:\\workspace\\claude-code-win>rg -n "returnUrl" src', 'src/auth/redirect.ts:22:  const returnUrl = req.query.returnUrl;', 'src/auth/session.ts:41:  // returnUrl is dropped here'],
+      termIn: '',
+      feed: [
+        { t: 'Searched "returnUrl": 7 matches', at: '01:51' },
+        { t: 'Loaded memory from CLAUDE.md', at: '01:48' },
+        { t: 'Opened session "Fix login redirect bug"', at: '01:47' }
+      ],
+      wins: {
+        explorer: { x: 108, y: 44, w: 680, h: 420, z: 21, open: true, min: false, max: false },
+        terminal: { x: 380, y: 360, w: 590, h: 300, z: 22, open: true, min: false, max: false },
+        notepad: { x: 640, y: 90, w: 420, h: 330, z: 20, open: true, min: true, max: false },
+        agentmgr: { x: 240, y: 120, w: 560, h: 450, z: 19, open: false, min: false, max: false }
+      },
+      drag: null
+    };
+  }
+  r() { this.tick += 1; this.setState({ t: this.tick }); }
+  componentDidMount() { if (!this.S) this.init(); this.iv = setInterval(() => this.step(), 2600); }
+  componentWillUnmount() { clearInterval(this.iv); }
+  hhmm() { const d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  feed(t) { const S = this.S; S.feed = [{ t, at: this.hhmm() }].concat(S.feed).slice(0, 8); }
+  term(lines) { const S = this.S; S.term = S.term.concat(lines).slice(-80); }
+  running() { const S = this.S; return !(S.paused || S.human || S.waiting || S.secure || S.ended || S.step >= this.script.length); }
+  step() {
+    const S = this.S; if (!S) return; this.n += 1;
+    const busy = this.running();
+    const v = busy ? 25 + Math.round(Math.abs(Math.sin(this.n * 1.3)) * 60) : 2 + (this.n % 3);
+    S.perf = S.perf.slice(1).concat([v]);
+    if (busy) {
+      const a = this.script[S.step]; S.step += 1; S.tokens += 900 + v * 14; S.calls += 1;
+      this.feed(a.feed); S.target = a.target;
+      if (a.term) this.term(a.term);
+      if (a.tests) S.tests = a.tests;
+      if (a.step === 3) S.filesChanged = 2;
+      if (S.step === 4) S.filesChanged = 2;
+      if (a.plan) S.docs.plan = S.docs.plan.replace('[ ] 3.', '[x] 3.');
+      if (a.tests) S.docs.log = 'PASS  tests/auth.test.ts\nPASS  tests/redirect.test.ts (2 new)\n\nTests:  14 passed, 14 total\nTime:   2.6 s\n';
+      if (a.approval) {
+        S.waiting = true;
+        this.addApproval({ id: 'push', title: 'Push to the main branch', cmd: 'git push origin main', target: 'github.com/jonathan/claude-code-win, branch main', reason: 'CLAUDE.md says: never push to main without asking.', lines: ['3f9c2ab Preserve returnUrl through sign-in', ' src/auth/redirect.ts       |  5 +++--', ' tests/redirect.test.ts     | 31 +++++++++++++', ' 2 files changed, 35 insertions(+), 1 deletion(-)'] });
+      }
+    }
+    this.r();
+  }
+  addApproval(a) { const S = this.S; S.approvals = S.approvals.filter((x) => x.id !== a.id).concat([a]); S.balloon = a.id; }
+  openUac(id) { const S = this.S; S.uac = id; S.balloon = null; S.ac = false; S.start = false; S.uacDetails = false; this.r(); }
+  resolve(yes) {
+    const S = this.S; const a = S.approvals.filter((x) => x.id === S.uac)[0];
+    S.uac = null;
+    if (!a) { this.r(); return; }
+    S.approvals = S.approvals.filter((x) => x.id !== a.id);
+    if (a.id === 'push') {
+      S.waiting = false; S.target = 'terminal';
+      if (yes) {
+        this.term(['', 'C:\\workspace\\claude-code-win>git push origin main', 'To github.com:jonathan/claude-code-win.git', '   9d1e0c4..3f9c2ab  main -> main']);
+        this.feed('Pushed 3f9c2ab to origin/main');
+        S.docs.plan = S.docs.plan.replace('[ ] 4.', '[x] 4.');
+        this.feed('Done. Waiting for the next task');
+      } else {
+        this.feed('Push denied. The commit stays local');
+        this.feed('Waiting for your instructions');
+      }
+    } else if (a.id === 'zod') {
+      if (yes) { this.term(['', 'C:\\workspace\\claude-code-win>npm install zod@3.23.8', 'added 1 package, audited 412 packages in 2s']); this.feed('Installed zod@3.23.8'); }
+      else this.feed('Package install denied');
+    }
+    this.r();
+  }
+  activeId() {
+    const W = this.S.wins; let best = null; let bz = -1;
+    Object.keys(W).forEach((k) => { const w = W[k]; if (w.open && !w.min && w.z > bz) { bz = w.z; best = k; } });
+    return best;
+  }
+  openWin(id) { const S = this.S; const w = S.wins[id]; w.open = true; w.min = false; w.z = ++this.z; S.start = false; S.ac = false; S.allProgs = false; S.q = ''; S.shutMenu = false; }
+  openDoc(doc) { this.S.np = doc; this.openWin('notepad'); this.r(); }
+  tbClick(id) {
+    const S = this.S; const w = S.wins[id];
+    if (!w.open) this.openWin(id);
+    else if (w.min) { w.min = false; w.z = ++this.z; }
+    else if (this.activeId() === id) w.min = true;
+    else w.z = ++this.z;
+    S.start = false; S.ac = false; this.r();
+  }
+  exGo(loc) { const E = this.S.ex; if (E.loc !== loc) { E.hist.push(E.loc); E.loc = loc; E.sel = null; E.note = ''; } this.openWin('explorer'); this.r(); }
+  locItems(loc) {
+    const S = this.S;
+    if (loc === 'bin') return S.bin;
+    const L = this.LOC[loc]; if (!L || !L.items) return [];
+    return L.items.map((it) => {
+      if (it.s === 'dyn-redirect') return Object.assign({}, it, { s: S.step >= 2 ? 'Modified' : 'Read' });
+      if (it.s === 'dyn-test') return Object.assign({}, it, { s: S.step >= 4 ? 'New' : '', t: it.t });
+      return it;
+    }).filter((it) => !(it.s === '' && it.n === 'redirect.test.ts' && S.step < 4));
+  }
+  stub(t) { this.S.ex.note = t; this.r(); }
+  endSession() { const S = this.S; S.ended = true; S.secure = false; S.start = false; S.shutMenu = false; S.balloon = null; this.feed('Session ended by Jonathan'); this.r(); }
+  renderVals() {
+    if (!this.S) this.init();
+    const S = this.S; const self = this; const r = () => self.r();
+    const act = this.activeId();
+    const ctxNum = Math.min(95, Math.round(S.tokens / 2000));
+    const rate = S.perf[S.perf.length - 1] * 22;
+    const ratePctNum = Math.min(100, Math.round(rate / 30));
+    const now = new Date();
+    const mins = Math.floor((Date.now() - this.t0) / 60000);
+    const uptime = Math.floor(mins / 60) + ':' + ('0' + (mins % 60)).slice(-2) + ' h';
+
+    // windows
+    const titles = {
+      explorer: (this.LOC[S.ex.loc] || {}).title || 'Explorer',
+      terminal: 'Claude shell - cmd.exe',
+      notepad: ({ plan: 'PLAN.md', log: 'test-output.log', claude: 'CLAUDE.md', prefs: 'preferences.md' })[S.np] + ' - Notepad',
+      agentmgr: 'Agent Manager'
+    };
+    const W = {};
+    Object.keys(S.wins).forEach((id) => {
+      const w = S.wins[id]; const on = act === id;
+      const g = w.max ? { x: 0, y: 0, w: 1280, h: 760 } : w;
+      const glass = on
+        ? 'linear-gradient(180deg,rgba(214,230,250,.97) 0,rgba(170,200,238,.95) 34px,rgba(184,208,240,.96) 100%)'
+        : 'linear-gradient(180deg,rgba(226,236,248,.94) 0,rgba(205,219,238,.92) 34px,rgba(212,224,240,.93) 100%)';
+      W[id] = {
+        open: w.open, title: titles[id],
+        style: 'position:absolute;left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px;z-index:' + w.z +
+          ';display:' + (w.min ? 'none' : 'flex') + ';flex-direction:column;padding:0 ' + (w.max ? 2 : 7) + 'px ' + (w.max ? 2 : 7) + 'px;border:1px solid ' + (on ? '#27405f' : '#5b6f8c') +
+          ';border-radius:' + (w.max ? '0' : '8px 8px 0 0') + ';background:' + glass + ';box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),' + (on ? '0 10px 30px rgba(0,0,0,.55)' : '0 4px 14px rgba(0,0,0,.35)'),
+        focus: () => { if (self.activeId() !== id) { w.z = ++self.z; r(); } },
+        drag: (e) => {
+          if (w.max) return;
+          const root = e.currentTarget && e.currentTarget.closest ? e.currentTarget.closest('[data-desk]') : null;
+          const sc = root ? (root.getBoundingClientRect().width / 1280) || 1 : 1;
+          S.drag = { id, sx: e.clientX, sy: e.clientY, ox: w.x, oy: w.y, sc };
+        },
+        maxToggle: () => { w.max = !w.max; r(); },
+        min: (e) => { if (e && e.stopPropagation) e.stopPropagation(); w.min = true; S.drag = null; r(); },
+        close: (e) => { if (e && e.stopPropagation) e.stopPropagation(); w.open = false; w.max = false; S.drag = null; r(); }
+      };
+    });
+
+    // desktop icons
+    const iconDefs = [
+      { id: 'pc', label: 'Workspace', top: 44, open: () => self.exGo('computer') },
+      { id: 'mem', label: 'Memory', top: 124, open: () => self.exGo('memory') },
+      { id: 'net', label: 'Connectors', top: 204, open: () => self.exGo('connectors') },
+      { id: 'bin', label: 'Recycle Bin', top: 284, open: () => self.exGo('bin') },
+      { id: 'plan', label: 'PLAN.md', top: 524, open: () => self.openDoc('plan') },
+      { id: 'log', label: 'test-output.log', top: 604, open: () => self.openDoc('log') }
+    ];
+    const icons = iconDefs.map((d) => ({
+      label: d.label,
+      style: 'left:10px;top:' + d.top + 'px;z-index:1;' + (S.sel === d.id ? 'border-color:rgba(255,255,255,.6);background:rgba(120,180,255,.35)' : ''),
+      isPc: d.id === 'pc', isMem: d.id === 'mem', isNet: d.id === 'net', isBin: d.id === 'bin', isDoc: d.id === 'plan', isLog: d.id === 'log',
+      binFill: S.bin.length ? '' : 'display:none',
+      select: () => { S.sel = d.id; r(); },
+      open: () => { S.sel = d.id; d.open(); }
+    }));
+
+    // explorer
+    const E = S.ex; const L = this.LOC[E.loc] || {};
+    const items = this.locItems(E.loc);
+    const selIt = items.filter((it) => it.n === E.sel)[0];
+    const statusColor = (s) => (s === 'Modified' || s === 'Changed' || s === 'New' ? '#a8441f' : s === 'Connected' || s === 'Loaded' || s === 'Shared with Claude' ? '#237a23' : s.indexOf('Hands off') === 0 || s === 'Not shared' ? '#7a5a00' : '#555');
+    const exRows = items.map((it) => ({
+      name: it.n, date: it.d, type: it.t, status: it.s,
+      statusStyle: 'width:110px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + statusColor(it.s || ''),
+      isFolder: it.k === 'folder', isFile: it.k === 'file', isMemo: it.k === 'memo', isSkill: it.k === 'skill', isArt: it.k === 'art', isChat: it.k === 'chat', isPlug: it.k === 'plug',
+      style: E.sel === it.n ? 'border-color:#7da2ce;background:linear-gradient(#dcebfc,#c1dbfc)' : '',
+      select: () => { E.sel = it.n; E.note = ''; r(); },
+      open: () => {
+        E.sel = it.n;
+        if (it.go) self.exGo(it.go);
+        else if (it.doc) self.openDoc(it.doc);
+        else { E.note = E.loc === 'bin' ? 'Use "Restore this item" to put it back.' : 'Opened in Claude\'s editor (simulated)'; r(); }
+      }
+    }));
+    const drivesDef = [
+      { label: 'Sandbox (C:)', sub: '11.8 GB free of 30.0 GB · private to Claude', pct: 61 },
+      { label: 'claude-code-win (W:)', sub: 'Git repository · branch main', pct: 24, go: 'repo' },
+      { label: 'dotfiles (D:)', sub: 'Git repository · branch main', pct: 6, go: 'dotfiles' },
+      { label: 'Jonathan-PC (\\\\JONATHAN-PC)', sub: 'Your computer, via the desktop app', pct: 0, go: 'pc', net: true }
+    ];
+    const drives = drivesDef.map((d) => ({
+      label: d.label, sub: d.sub,
+      bar: 'display:block;height:100%;width:' + d.pct + '%;background:linear-gradient(#a6d4ff,#2c8ce6 50%,#1a6fc4 51%,#4aa3f0)',
+      netPath: d.net ? 'M8 30h20M18 26v4' : '',
+      style: (E.sel === d.label ? 'border-color:#7da2ce;background:linear-gradient(#dcebfc,#c1dbfc);' : '') + 'height:auto',
+      select: () => { E.sel = d.label; E.note = ''; r(); },
+      open: () => { if (d.go) self.exGo(d.go); else { E.note = 'The sandbox is Claude\'s private disk. Nothing here leaves it unless Claude copies it out.'; r(); } }
+    }));
+    const navDef = [
+      { l: 'Favorites', loc: 'desktop', i: 'folder', p: 0 }, { l: 'Desktop', loc: 'desktop', i: 'folder', p: 1 }, { l: 'Recent sessions', loc: 'transcripts', i: 'folder', p: 1 },
+      { l: 'Libraries', loc: 'memory', i: 'folder', p: 0 }, { l: 'Memory', loc: 'memory', i: 'folder', p: 1 }, { l: 'Skills', loc: 'skills', i: 'folder', p: 1 }, { l: 'Artifacts', loc: 'artifacts', i: 'folder', p: 1 }, { l: 'Transcripts', loc: 'transcripts', i: 'folder', p: 1 },
+      { l: 'Workspace', loc: 'computer', i: 'drive', p: 0 }, { l: 'claude-code-win (W:)', loc: 'repo', i: 'drive', p: 1 }, { l: 'dotfiles (D:)', loc: 'dotfiles', i: 'drive', p: 1 }, { l: 'Jonathan-PC', loc: 'pc', i: 'drive', p: 1 },
+      { l: 'Network', loc: 'connectors', i: 'globe', p: 0 }, { l: 'Recycle Bin', loc: 'bin', i: 'bin', p: 0 }
+    ];
+    const navItems = navDef.map((n) => ({
+      label: n.l, folder: n.i === 'folder', drive: n.i === 'drive', globe: n.i === 'globe', bin: n.i === 'bin',
+      style: 'padding-left:' + (4 + n.p * 16) + 'px;' + (n.p === 0 ? 'margin-top:6px;' : '') + (E.loc === n.loc && n.p === 1 || (E.loc === n.loc && n.p === 0 && !navDef.some((m) => m.p === 1 && m.loc === n.loc)) ? 'border-color:#7da2ce;background:linear-gradient(#dcebfc,#c1dbfc)' : ''),
+      go: () => self.exGo(n.loc)
+    }));
+    const cmdMap = {
+      bin: [
+        { label: 'Empty Recycle Bin', act: () => { if (S.bin.length) { self.feed('Emptied the Recycle Bin (' + S.bin.length + ' reverted items)'); } S.bin = []; E.sel = null; E.note = 'Recycle Bin emptied'; r(); } },
+        { label: 'Restore this item', act: () => { const it = S.bin.filter((b) => b.n === E.sel)[0]; if (!it) { self.stub('Select an item to restore first.'); return; } S.bin = S.bin.filter((b) => b !== it); self.feed('Restored ' + it.n); E.sel = null; E.note = 'Restored ' + it.n; r(); } }
+      ],
+      connectors: [{ label: 'Add a connector', act: () => self.stub('Adding connectors happens in Control Centre') }, { label: 'View connection status', act: () => self.stub('All 6 connectors are signed in') }],
+      skills: [{ label: 'Add a skill', act: () => self.stub('Adding skills is not wired up in this prototype') }, { label: 'Uninstall', act: () => self.stub('Built-in skills cannot be uninstalled') }],
+      computer: [{ label: 'Map network drive', act: () => self.stub('Connect another folder from Jonathan-PC (simulated)') }, { label: 'System properties', act: () => self.stub('Sandbox: Linux, 4 CPUs, 30 GB disk, network allowlist on') }]
+    };
+    const exCmds = (cmdMap[E.loc] || [
+      { label: 'Organize', act: () => self.stub('Organize is not wired up in this prototype') },
+      { label: 'Open', act: () => { const it = items.filter((x) => x.n === E.sel)[0]; if (!it) { self.stub('Select an item first.'); return; } if (it.go) self.exGo(it.go); else if (it.doc) self.openDoc(it.doc); else self.stub('Opened ' + it.n + ' in Claude\'s editor (simulated)'); } },
+      { label: 'New folder', act: () => self.stub('New folder is not wired up in this prototype') }
+    ]);
+    let detailName = selIt ? selIt.n : (E.loc === 'computer' ? (E.sel || 'Workspace') : L.title);
+    let detailMeta = selIt ? [selIt.t, selIt.s ? 'Claude status: ' + selIt.s : '', selIt.d ? 'Modified ' + selIt.d : ''].filter(Boolean).join('   ·   ') : (E.loc === 'computer' ? '4 drives · Claude can write to C: and W:' : items.length + ' items');
+    if (E.note) detailMeta = E.note;
+
+    // agent manager
+    const tabStyle = (on) => (on ? 'background:#fff;border-top:2px solid #f0a43c;margin-top:-2px;position:relative;z-index:2;margin-bottom:-1px;height:25px' : 'margin-top:1px;height:22px');
+    const mainStatus = S.ended ? 'Ended' : S.human ? 'Paused (you have control)' : S.paused ? 'Paused' : S.waiting ? 'Waiting for approval' : S.step >= this.script.length ? 'Idle' : 'Running';
+    const agentsDef = [
+      { id: 'a1', name: 'Fix login redirect bug', status: mainStatus },
+      { id: 'a2', name: 'Explore: find returnUrl usages', status: 'Completed' },
+      { id: 'a3', name: 'Nightly dependency check', status: 'Scheduled for 02:00' }
+    ];
+    const agentRows = agentsDef.map((a) => ({
+      name: a.name, status: a.status,
+      style: S.agentSel === a.id ? 'border-color:#7da2ce;background:linear-gradient(#dcebfc,#c1dbfc)' : '',
+      select: () => { S.agentSel = a.id; r(); }
+    }));
+    const procRows = S.procs.map((p) => ({
+      name: p.name, owner: p.owner,
+      tok: p.tok === 'live' ? S.tokens.toLocaleString('en-GB') : p.tok,
+      mem: p.mem === 'ctx' ? ctxNum + '% ctx' : p.mem,
+      style: S.procSel === p.id ? 'border-color:#7da2ce;background:linear-gradient(#dcebfc,#c1dbfc)' : '',
+      select: () => { S.procSel = p.id; r(); }
+    }));
+    const perfPoints = S.perf.map((v, i) => (i * (240 / (S.perf.length - 1))).toFixed(1) + ',' + (96 - v * 0.96).toFixed(1)).join(' ');
+
+    // start menu
+    const sessions = [
+      { label: 'Fix login redirect bug', act: () => { S.start = false; self.openWin('terminal'); r(); } },
+      { label: 'Add parser unit tests', act: () => self.exGo('transcripts') },
+      { label: 'Refactor config loader', act: () => self.exGo('transcripts') }
+    ];
+    const progs = [
+      { header: true, label: 'Accessories' },
+      { label: 'Claude shell', sub: 'Command Prompt', act: () => { self.openWin('terminal'); r(); } },
+      { label: 'Notepad', sub: 'PLAN.md', act: () => self.openDoc('plan') },
+      { label: 'Windows Explorer', sub: '', act: () => { self.openWin('explorer'); r(); } },
+      { header: true, label: 'Skills' },
+      { label: 'docx, xlsx, pptx, pdf', sub: 'Built-in', act: () => self.exGo('skills') },
+      { label: 'frontend-design', sub: 'Built-in', act: () => self.exGo('skills') },
+      { label: 'deep-research', sub: 'Built-in', act: () => self.exGo('skills') },
+      { header: true, label: 'Connectors' },
+      { label: 'GitHub, Slack, Gmail, Drive…', sub: '6 connected', act: () => self.exGo('connectors') },
+      { header: true, label: 'Startup (hooks)' },
+      { label: 'SessionStart: load CLAUDE.md', sub: 'On', act: () => self.openDoc('claude') },
+      { label: 'PreToolUse: block rm -rf', sub: 'On', act: () => { S.start = false; r(); } },
+      { header: true, label: 'Maintenance' },
+      { label: 'Agent Manager', sub: '', act: () => { self.openWin('agentmgr'); r(); } },
+      { label: 'Recycle Bin (reverted changes)', sub: S.bin.length + ' items', act: () => self.exGo('bin') }
+    ].map((p) => Object.assign({ item: !p.header, sub: '' }, p, { sub: p.sub || '' }));
+    const catalog = [
+      { g: 'Programs', label: 'Claude shell', sub: 'cmd.exe', act: () => { self.openWin('terminal'); r(); } },
+      { g: 'Programs', label: 'Windows Explorer', sub: '', act: () => { self.openWin('explorer'); r(); } },
+      { g: 'Programs', label: 'Agent Manager', sub: 'Task Manager', act: () => { self.openWin('agentmgr'); r(); } },
+      { g: 'Programs', label: 'Notepad', sub: '', act: () => self.openDoc('plan') },
+      { g: 'Skills', label: 'docx', sub: 'Word documents', act: () => self.exGo('skills') },
+      { g: 'Skills', label: 'xlsx', sub: 'Spreadsheets', act: () => self.exGo('skills') },
+      { g: 'Skills', label: 'pdf', sub: 'PDF files', act: () => self.exGo('skills') },
+      { g: 'Skills', label: 'deep-research', sub: 'Research reports', act: () => self.exGo('skills') },
+      { g: 'Files', label: 'redirect.ts', sub: 'src\\auth', act: () => self.exGo('auth') },
+      { g: 'Files', label: 'PLAN.md', sub: 'Desktop', act: () => self.openDoc('plan') },
+      { g: 'Files', label: 'test-output.log', sub: 'Desktop', act: () => self.openDoc('log') },
+      { g: 'Memory', label: 'CLAUDE.md', sub: 'Never push to main without asking', act: () => self.openDoc('claude') },
+      { g: 'Memory', label: 'preferences.md', sub: 'Small, focused pull requests', act: () => self.openDoc('prefs') },
+      { g: 'Connectors', label: 'GitHub', sub: 'Connected', act: () => self.exGo('connectors') },
+      { g: 'Connectors', label: 'Slack', sub: 'Connected', act: () => self.exGo('connectors') }
+    ];
+    const ql = S.q.trim().toLowerCase();
+    const hits = ql ? catalog.filter((c) => (c.label + ' ' + c.sub + ' ' + c.g).toLowerCase().indexOf(ql) >= 0) : [];
+    const results = [];
+    let lastG = null;
+    hits.forEach((h) => { if (h.g !== lastG) { results.push({ header: true, item: false, label: h.g, sub: '' }); lastG = h.g; } results.push({ header: false, item: true, label: h.label, sub: h.sub, act: h.act }); });
+    const startLinks = [
+      { btn: true, label: 'Claude', act: () => self.exGo('memory') },
+      { btn: true, label: 'Workspace', act: () => self.exGo('computer') },
+      { btn: true, label: 'Memory', act: () => self.exGo('memory') },
+      { btn: true, label: 'Artifacts', act: () => self.exGo('artifacts') },
+      { btn: true, label: 'Transcripts', act: () => self.exGo('transcripts') },
+      { sep: true },
+      { btn: true, label: 'Connectors', act: () => self.exGo('connectors') },
+      { link: true, label: 'Control Centre' },
+      { btn: true, label: 'Agent Manager', act: () => { self.openWin('agentmgr'); r(); } },
+      { link: true, label: 'Scheduled Tasks' },
+      { btn: true, label: 'Recycle Bin', act: () => self.exGo('bin') }
+    ].map((l) => Object.assign({ sep: false, btn: false, link: false, label: '' }, l));
+
+    // cursor
+    const tgt = S.target; let cx = 1160; let cy = 752;
+    const tw = S.wins[tgt];
+    if (tw && tw.open && !tw.min) { const g = tw.max ? { x: 0, y: 0, w: 1280, h: 760 } : tw; cx = g.x + Math.round(g.w * 0.55); cy = g.y + Math.min(g.h - 40, 120); }
+    else if (tw) { cx = ({ explorer: 70, terminal: 126, notepad: 182, agentmgr: 238 })[tgt] || 160; cy = 752; }
+    const cursorLabel = S.paused ? 'Claude (paused)' : S.waiting ? 'Claude: waiting for you' : S.ended ? 'Claude (session ended)' : 'Claude';
+
+    const state = S.ended ? 'Session ended' : S.human ? 'You have control. Claude is paused' : S.paused ? 'Paused by you' : S.waiting ? 'Waiting for your approval' : S.step >= this.script.length ? 'Idle' : 'Working: ' + ((S.feed[0] || {}).t || '');
+    const stateDot = S.ended ? '#888' : S.human ? '#3b8fe0' : S.paused ? '#e9a23b' : S.waiting ? '#e9b949' : '#3fae3f';
+    const ap = S.approvals.filter((a) => a.id === S.uac)[0] || {};
+    const bal = S.approvals.filter((a) => a.id === S.balloon)[0];
+    const tbStyle = (id) => { const w = S.wins[id]; if (!w.open) return ''; return act === id ? 'border-color:rgba(255,255,255,.75);background:linear-gradient(rgba(255,255,255,.55),rgba(190,220,250,.3) 50%,rgba(150,190,235,.25))' : 'border-color:rgba(255,255,255,.4);background:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.06) 50%,rgba(255,255,255,.02))'; };
+    const remain = 100 - ctxNum;
+
+    return {
+      onMove: (e) => { const d = S.drag; if (!d) return; const w = S.wins[d.id]; w.x = Math.round(d.ox + (e.clientX - d.sx) / d.sc); w.y = Math.max(0, Math.min(720, Math.round(d.oy + (e.clientY - d.sy) / d.sc))); r(); },
+      onUp: () => { if (S.drag) { S.drag = null; } },
+      deskClick: () => { S.sel = null; S.start = false; S.ac = false; S.shutMenu = false; r(); },
+      icons,
+      ctxAngle: (-135 + ctxNum * 2.7).toFixed(1), ctxPct: ctxNum + '%', ctxAria: 'Context used: ' + ctxNum + '%',
+      rateAngle: (-135 + ratePctNum * 2.7).toFixed(1), ratePct: ratePctNum + '%', rateAria: 'Rate limit used: ' + ratePctNum + '%',
+      hourAngle: ((now.getHours() % 12) * 30 + now.getMinutes() * 0.5).toFixed(1), minAngle: (now.getMinutes() * 6).toFixed(1),
+      uptime,
+      buildSunny: true, buildCloudy: false, tests: S.tests, buildText: S.step >= 3 ? 'All passing on main' : 'Last run: all passing',
+      dayNum: String(now.getDate()), dayName: now.toLocaleDateString('en-GB', { weekday: 'long' }),
+      feedTop: S.feed.slice(0, 4),
+      W,
+      exBack: () => { if (E.hist.length) { E.loc = E.hist.pop(); E.sel = null; E.note = ''; r(); } }, exNoBack: E.hist.length === 0,
+      exCrumb: L.crumb || '', exCmds, navItems,
+      exIsDrives: E.loc === 'computer', exIsList: E.loc !== 'computer', drives, driveCount: String(drives.length),
+      exRows, exEmpty: E.loc !== 'computer' && items.length === 0,
+      exDetailName: detailName, exDetailMeta: detailMeta,
+      termLines: S.term.map((t) => ({ text: t })), termHuman: S.human, termAgent: !S.human,
+      termHint: S.ended ? 'session ended' : 'Claude is using this shell. Take control to type',
+      termIn: S.termIn, onTermIn: (e) => { S.termIn = e.target.value; r(); },
+      onTermKey: (e) => { if (e.key === 'Enter') { const c = S.termIn.trim(); S.termIn = ''; self.term(['C:\\workspace\\claude-code-win>' + c, c ? '(prototype) command not run' : '']); self.feed('You ran: ' + (c || '(empty)')); r(); } },
+      npText: S.docs[S.np], onNp: (e) => { S.docs[S.np] = e.target.value; r(); },
+      mtAgents: tabStyle(S.mgrTab === 'agents'), mtProcs: tabStyle(S.mgrTab === 'procs'), mtPerf: tabStyle(S.mgrTab === 'perf'), mtHumans: tabStyle(S.mgrTab === 'humans'),
+      isAgents: S.mgrTab === 'agents', isProcs: S.mgrTab === 'procs', isPerf: S.mgrTab === 'perf', isHumans: S.mgrTab === 'humans',
+      showAgents: () => { S.mgrTab = 'agents'; r(); }, showProcs: () => { S.mgrTab = 'procs'; r(); }, showPerf: () => { S.mgrTab = 'perf'; r(); }, showHumans: () => { S.mgrTab = 'humans'; r(); },
+      agentRows, noAgentSel: S.agentSel !== 'a1',
+      endTask: () => { if (S.agentSel === 'a1') self.endSession(); },
+      procRows, noProcSel: !S.procSel || S.procSel === 'p1',
+      endProc: () => { const p = S.procs.filter((x) => x.id === S.procSel)[0]; if (!p || p.id === 'p1') return; S.procs = S.procs.filter((x) => x !== p); self.feed('You ended ' + p.name.split('  ')[0] + (p.name.indexOf('  ') > 0 ? ' (' + p.name.split('  ')[1] + ')' : '')); S.procSel = null; r(); },
+      perfPoints, ctxMeterStyle: 'width:44px;height:' + ctxNum * 0.8 + 'px;background:repeating-linear-gradient(0deg,#3fd23f 0,#3fd23f 2px,#000 2px,#000 3px)',
+      tokensText: S.tokens.toLocaleString('en-GB'), calls: String(S.calls), filesChanged: String(S.step >= 4 ? 2 : 1),
+      shellCount: String(S.procs.filter((p) => p.owner === 'Shell').length),
+      rateNow: rate.toLocaleString('en-GB'),
+      humanStatus: S.human ? 'In control' : 'Observing',
+      takeLabel: S.human ? 'Hand back to Claude' : 'Take control',
+      toggleHuman: () => { S.human = !S.human; S.shutMenu = false; S.start = false; S.secure = false; self.feed(S.human ? 'Jonathan took control' : 'Jonathan handed control back'); r(); },
+      human: S.human,
+      pauseLabel: S.paused ? 'Resume Claude' : 'Pause Claude',
+      togglePause: () => { if (S.human) return; S.paused = !S.paused; self.feed(S.paused ? 'Paused by Jonathan' : 'Resumed'); r(); },
+      openSecure: () => { S.secure = true; S.start = false; S.shutMenu = false; S.ac = false; r(); },
+      rdpState: state, stateDot,
+      cursorShow: !S.human, cursorLabel,
+      cursorStyle: 'position:absolute;left:' + cx + 'px;top:' + cy + 'px;z-index:980;pointer-events:none;display:flex;flex-direction:column;transition:left .9s ease,top .9s ease',
+      startOpen: S.start, startToggle: () => { S.start = !S.start; S.ac = false; S.shutMenu = false; S.q = ''; S.allProgs = false; r(); },
+      orbStyle: 'width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid #0a2a58;background:radial-gradient(circle at 50% 22%,' + (S.start ? '#ffe2d4 0,#f09a72 38%,#c4532c 70%,#7a2a10 100%' : '#c4e8ff 0,#4a9be6 38%,#14509a 70%,#0a2f66 100%') + ');box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 6px rgba(120,190,255,.6)',
+      showPinned: !S.allProgs && !ql, allProgs: S.allProgs && !ql, hasQ: !!ql, results, noResults: !!ql && hits.length === 0,
+      progList: progs, recentSessions: sessions,
+      toggleAll: () => { S.allProgs = !S.allProgs; S.q = ''; r(); }, allLabel: S.allProgs ? 'Back' : 'All Programs', allArrow: S.allProgs ? 'M7 1L2 5l5 4z' : 'M3 1l5 4-5 4z',
+      q: S.q, onQ: (e) => { S.q = e.target.value; r(); },
+      openTerm: () => { self.openWin('terminal'); r(); }, openExplorer: () => { self.openWin('explorer'); r(); }, openMgr: () => { self.openWin('agentmgr'); r(); }, openPlan: () => self.openDoc('plan'),
+      startLinks, shutMenu: S.shutMenu, toggleShut: () => { S.shutMenu = !S.shutMenu; r(); },
+      endSession: () => self.endSession(),
+      acOpen: S.ac, acToggle: () => { S.ac = !S.ac; S.start = false; S.balloon = null; r(); },
+      acCount: String(S.approvals.length), acHas: S.approvals.length > 0, acAria: 'Action Center: ' + S.approvals.length + ' waiting',
+      approvals: S.approvals.map((a) => ({ title: a.title, cmd: a.cmd, review: () => self.openUac(a.id) })), noApprovals: S.approvals.length === 0,
+      balloonOpen: !!bal && !S.uac && !S.secure, balloonText: bal ? bal.cmd : '',
+      balloonClick: () => { if (bal) self.openUac(bal.id); }, balloonClose: () => { S.balloon = null; r(); },
+      popupOpen: S.start || S.ac, closePopups: () => { S.start = false; S.ac = false; S.shutMenu = false; r(); },
+      uacOpen: !!S.uac, uacCmd: ap.cmd || '', uacTarget: ap.target || '', uacReason: ap.reason || '',
+      uacDetails: S.uacDetails, uacLines: (ap.lines || []).map((t) => ({ text: t })),
+      toggleDetails: () => { S.uacDetails = !S.uacDetails; r(); }, detailsLabel: S.uacDetails ? 'Hide details' : 'Show details', detailsArrow: S.uacDetails ? 'M4 8.500l3-3 3 3' : 'M4 5.500l3 3 3-3',
+      uacYes: () => self.resolve(true), uacNo: () => self.resolve(false),
+      secureOpen: S.secure,
+      secPauseLabel: S.paused ? 'Resume Claude' : 'Pause Claude', secPause: () => { S.paused = !S.paused; S.secure = false; self.feed(S.paused ? 'Paused by Jonathan' : 'Resumed'); r(); },
+      secTakeLabel: S.human ? 'Hand the desktop back to Claude' : 'Take over this desktop', secTake: () => { S.human = !S.human; S.secure = false; self.feed(S.human ? 'Jonathan took control' : 'Jonathan handed control back'); r(); },
+      secMgr: () => { S.secure = false; self.openWin('agentmgr'); r(); }, secCancel: () => { S.secure = false; r(); },
+      tb: { explorer: tbStyle('explorer'), terminal: tbStyle('terminal'), notepad: tbStyle('notepad'), agentmgr: tbStyle('agentmgr') },
+      tbExplorer: () => self.tbClick('explorer'), tbTerminal: () => self.tbClick('terminal'), tbNotepad: () => self.tbClick('notepad'), tbMgr: () => self.tbClick('agentmgr'),
+      ctxRemain: 'Context left: ' + remain + '%', battW: String(Math.max(1, Math.round(14 * remain / 100))), battFill: remain < 25 ? '#ff6b5a' : '#7dff7d',
+      clockTime: this.hhmm(), clockDate: now.toLocaleDateString('en-GB'),
+      showDesktop: () => {
+        const ws = S.wins; const anyVisible = Object.keys(ws).some((k) => ws[k].open && !ws[k].min);
+        Object.keys(ws).forEach((k) => { if (ws[k].open) ws[k].min = anyVisible; });
+        r();
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -14,8 +14,8 @@ export class SessionsStore {
     return id == null ? null : (this.items.find((s) => s.id === id) ?? null)
   }
 
-  forFolder(folderId: Id): SessionDto[] {
-    return this.items.filter((s) => s.folderId === folderId)
+  forDesktop(desktopId: Id): SessionDto[] {
+    return this.items.filter((s) => s.desktopId === desktopId)
   }
 
   async load(): Promise<void> {
@@ -44,8 +44,8 @@ export class SessionsStore {
     }
   }
 
-  async create(folderId: Id, agentId?: Id): Promise<SessionDto> {
-    const session = await this.api.create(folderId, agentId)
+  async create(desktopId: Id, agentId?: Id, cwd?: string): Promise<SessionDto> {
+    const session = await this.api.create(desktopId, agentId, cwd)
     this.upsert(session)
     return session
   }

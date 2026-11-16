@@ -1,0 +1,82 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { allowTerminal, createWorkspace, plugWorkspaceIn, see, startConnectedDesktop, type ConnectedDesktop, type Workspace } from './fixtures'
+
+/** A full chat turn with the fixture ACP agent: it asks to edit a file, then writes it and runs a command. */
+describe('chat turn with the fake agent', () => {
+  let ctx: ConnectedDesktop
+  let workspace: Workspace
+
+  beforeAll(async () => {
+    workspace = await createWorkspace({ 'README.md': '# Chat project\n' })
+    ctx = await startConnectedDesktop({ title: 'Chat desktop' })
+  })
+  afterAll(async () => {
+    await ctx?.app.close()
+    await workspace?.remove()
+  })
+
+  it('opens Code and Terminal (tools follow apps) and lets the shell run without asking', async () => {
+    await allowTerminal(ctx.desktopPage)
+    await ctx.desktop.openApp('terminal')
+    await ctx.desktop.openApp('code')
+    await see.visible(ctx.desktop.toolChip('fs.write'))
+  })
+
+  it('plugs the project in and starts a chat on it from AutoPlay', async () => {
+    await plugWorkspaceIn(ctx.desktopPage, ctx.desktopId, workspace)
+    await see.visible(ctx.desktop.autoPlay)
+    await ctx.desktopPage.getByTestId('autoplay-start-chat').click()
+    await see.visible(ctx.desktop.window('chat'))
+    await see.visible(ctx.desktop.chat().composer)
+  })
+
+  it('sends a prompt and the agent asks for permission, in the chat and in the Action Center', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.send('Write the output file')
+    await see.text(chat.userMessages, 'Write the output file')
+    await see.visible(chat.permissionDialog)
+    await see.text(ctx.desktop.actionCenterFlag, '1')
+    await ctx.desktop.openActionCenter()
+    await see.count(ctx.desktop.approvals, 1)
+    await see.text(ctx.desktop.approvals, 'Write output')
+  })
+
+  it('allowing the request completes the tool call (status done)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.answerPermission('allow')
+    await see.gone(chat.permissionDialog)
+    await see.attribute(chat.toolCalls, 'data-status', 'done')
+    await see.visible(chat.agentMessage('Working on it'))
+    await see.text(ctx.desktop.terminal().output, 'terminal-says-hi')
+  })
+
+  it('lists the edited file under Changes in the chat and in Code', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.showChanges()
+    await see.text(chat.changes, 'fake-agent-output.txt')
+    expect(await chat.changes.count()).toBe(1)
+    const code = ctx.desktop.code()
+    await code.showChanges()
+    await see.text(code.changes, 'fake-agent-output.txt')
+  })
+
+  it('a second request can be approved from the Action Center through the UAC dialog', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.send('Write it again')
+    await see.visible(chat.permissionDialog)
+    await ctx.desktop.openActionCenter()
+    await see.count(ctx.desktop.approvals, 1)
+    await ctx.desktopPage.getByTestId('action-center-review').click()
+    await see.visible(ctx.desktop.uac)
+    await ctx.desktop.uacAllow.click()
+    await see.gone(ctx.desktop.uac)
+    await see.gone(chat.permissionDialog)
+    await see.count(ctx.desktop.approvals, 0)
+  })
+
+  it('the Event Viewer logged the traffic of the turn', async () => {
+    const viewer = await ctx.desktop.openApp('event-viewer')
+    await see.visible(viewer.getByTestId('event-viewer-row'))
+    await see.visible(viewer.getByTestId('event-viewer-count'))
+  })
+})

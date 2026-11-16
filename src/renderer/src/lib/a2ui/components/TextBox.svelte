@@ -11,6 +11,7 @@
 
 <Validated {errors}>
   <TextBox
+    data-testid="a2ui-textbox"
     multiline={asBoolean(view.multiline)}
     password={asBoolean(view.password)}
     placeholder={asString(view.placeholder) || undefined}

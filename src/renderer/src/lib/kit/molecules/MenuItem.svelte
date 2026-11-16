@@ -28,6 +28,7 @@
 {:else}
   <div
     {id}
+    data-testid={item.testid ?? (item.id ? `menu-item-${item.id}` : undefined)}
     class="mi"
     class:hot
     class:disabled={item.disabled}

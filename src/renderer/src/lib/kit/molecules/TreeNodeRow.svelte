@@ -23,6 +23,7 @@
     /** Dotted connector lines (ShowLines): per-ancestor "line continues" flags and last-sibling flag. */
     lines?: { ancestors: boolean[]; last: boolean }
     id?: string
+    testid?: string
     ariaSetSize?: number
     ariaPosInSet?: number
     ontoggle?: () => void
@@ -45,6 +46,7 @@
     badge,
     lines,
     id,
+    testid,
     ariaSetSize,
     ariaPosInSet,
     ontoggle,
@@ -56,6 +58,7 @@
 
 <div
   {id}
+  data-testid={testid}
   class="trow"
   role="treeitem"
   tabindex="-1"

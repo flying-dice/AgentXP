@@ -8,7 +8,7 @@
   let { text, attachments = [] }: Props = $props()
 </script>
 
-<div class="user-message">
+<div class="user-message" data-testid="chat-message-user">
   <div class="who">You</div>
   {#if text}<div class="body">{text}</div>{/if}
   {#if attachments.length > 0}

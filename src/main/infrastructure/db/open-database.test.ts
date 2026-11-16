@@ -41,27 +41,29 @@ describe('openDatabase', () => {
   })
 })
 
+const LATEST = MIGRATIONS[MIGRATIONS.length - 1].version
+
 describe('migrate', () => {
   const m = (version: number, sql: string): Migration => ({ version, name: `m${version}`, sql })
 
   it('is idempotent', () => {
     const db = openDatabase(':memory:')
-    expect(migrate(db)).toBe(1)
-    expect(migrate(db)).toBe(1)
+    expect(migrate(db)).toBe(LATEST)
+    expect(migrate(db)).toBe(LATEST)
   })
 
   it('applies only pending migrations in order', () => {
     const db = openDatabase(':memory:')
-    const next = [...MIGRATIONS, m(2, 'CREATE TABLE extra (id INTEGER PRIMARY KEY)'), m(3, 'ALTER TABLE extra ADD COLUMN v TEXT')]
-    expect(migrate(db, next)).toBe(3)
+    const next = [...MIGRATIONS, m(LATEST + 1, 'CREATE TABLE extra (id INTEGER PRIMARY KEY)'), m(LATEST + 2, 'ALTER TABLE extra ADD COLUMN v TEXT')]
+    expect(migrate(db, next)).toBe(LATEST + 2)
     expect(db.prepare('PRAGMA table_info(extra)').all()).toHaveLength(2)
   })
 
   it('rolls a failing migration back and keeps the version', () => {
     const db = openDatabase(':memory:')
-    const bad = m(2, 'CREATE TABLE half (id INTEGER); THIS IS NOT SQL;')
+    const bad = m(LATEST + 1, 'CREATE TABLE half (id INTEGER); THIS IS NOT SQL;')
     expect(() => migrate(db, [...MIGRATIONS, bad])).toThrow()
-    expect(readPragma(db, 'user_version')).toBe(1)
+    expect(readPragma(db, 'user_version')).toBe(LATEST)
     expect(db.prepare("SELECT name FROM sqlite_master WHERE name = 'half'").get()).toBeUndefined()
   })
 

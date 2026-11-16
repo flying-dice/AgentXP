@@ -1,4 +1,5 @@
 import type { A2uiSurfaceDto } from '@shared/a2ui'
+import type { Bounds } from '@shared/desktop'
 import type {
   AgentDto,
   ContentBlockDto,
@@ -16,6 +17,7 @@ import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSin
 import type { FileAccess, FileAccessProvider } from '../domain/agent/FileAccess'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import type { PermissionPrompter } from '../domain/agent/PermissionPrompter'
+import type { ToolGate } from '../domain/agent/ToolGate'
 
 /**
  * Events that stay inside the main process. The AG-UI backend translates them into the AG-UI
@@ -84,11 +86,59 @@ export interface TerminalActivity {
   exitStatus: { exitCode: number | null; signal: string | null } | null
 }
 
+/** Sees every JSON-RPC message of one ACP connection. `in`: agent to Agent7, `out`: Agent7 to the agent. */
+export type ProtocolTap = (direction: 'in' | 'out', message: unknown) => void
+
+/** Captures what the desktop window shows. */
+export interface ScreenCapturer {
+  /** PNG data URL of the desktop window, or of `region` (CSS px of the window). Rejects when the window is not open. */
+  capture(desktopId: Id, region?: Bounds): Promise<string>
+}
+
+/** One directory entry or file as the host file system reports it. */
+export interface HostEntry {
+  name: string
+  isDirectory: boolean
+  size: number | null
+  /** ISO date; null when unknown. */
+  modifiedAt: string | null
+}
+
+/**
+ * The real file system under the virtual drives. Every path is `root` + a path relative to it
+ * and is confined to `root` (symlinks included); anything else rejects with a readable error.
+ */
+export interface HostFiles {
+  /** One directory level, unsorted, nothing hidden. */
+  list(root: string, relativePath: string): Promise<HostEntry[]>
+  readText(root: string, relativePath: string): Promise<string>
+  /** Creates missing parent directories. */
+  writeText(root: string, relativePath: string, text: string): Promise<void>
+  /** Removes a file; a missing file is not an error. */
+  remove(root: string, relativePath: string): Promise<void>
+  /** null when nothing exists there. */
+  stat(root: string, relativePath: string): Promise<HostEntry | null>
+  /** The absolute path of `relativePath` below `root`, checked against escapes (symlinks included). */
+  resolveInside(root: string, relativePath: string): Promise<string>
+  /** Trusted calls for the desktop's own system disk: create a directory tree / delete one. */
+  ensureDirectory(path: string): Promise<void>
+  removeTree(path: string): Promise<void>
+}
+
+/** Writes text files into a registered folder (sandboxed to it). */
+export interface FolderWriter {
+  writeText(root: string, relativePath: string, text: string): Promise<void>
+}
+
 /** Everything an agent connection needs from the harness, already bound to one session row. */
 export interface ConnectionHandlers {
   sink: AgentSessionEventSink
   permissions: PermissionPrompter
   files: FileAccessProvider
+  /** Gates the client-side fs and terminal requests of this session. */
+  gate: ToolGate
+  /** Observes the raw protocol traffic of this session (the Event Viewer). */
+  tap?: ProtocolTap
   onTerminalActivity(activity: TerminalActivity): void
 }
 
@@ -114,6 +164,8 @@ export type StopReason = 'end_turn' | 'max_tokens' | 'max_turn_requests' | 'refu
 /** One live agent (process + protocol connection) serving exactly one session. */
 export interface LiveAgentConnection {
   readonly canLoadSession: boolean
+  /** The agent process id, when known. */
+  readonly pid?: number | null
   /** Resolves when the agent went away (crash or dispose). */
   readonly closed: Promise<void>
   newSession(cwd: string, mcpServers: McpServerConfig[]): Promise<OpenedAcpSession>

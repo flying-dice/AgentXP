@@ -12,11 +12,14 @@ import {
   type Stream
 } from '@agentclientprotocol/sdk'
 import type { ContentBlockDto, PermissionOptionDto } from '@shared/models'
+import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { AgentSessionEventSink } from '../../domain/agent/AgentSessionEventSink'
 import type { FileAccessProvider } from '../../domain/agent/FileAccess'
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import type { PermissionDecision, PermissionPrompter } from '../../domain/agent/PermissionPrompter'
+import { TOOL_REFUSED_CODE, ToolRefusedError, allowAllTools, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
 import { toAcpContentBlock } from './contentMapping'
+import { ToolCallScope } from './ToolCallScope'
 import { mapSessionUpdate, toToolCallPatch } from './mapSessionUpdate'
 import { extractSessionState, type SessionState } from './sessionState'
 import type { TerminalManager } from './TerminalManager'
@@ -52,6 +55,8 @@ export interface AcpAgentConnectionDeps {
   permissions: PermissionPrompter
   files: FileAccessProvider
   terminals: TerminalManager
+  /** Refuses fs/terminal requests whose app is closed or that policy forbids. Default: allow all. */
+  gate?: ToolGate
   clientName?: string
   clientVersion?: string
 }
@@ -93,6 +98,10 @@ export class AcpAgentConnection {
   private init: AgentInitInfo | null = null
   private readonly modelConfigIds = new Map<string, string>()
   private readonly permissionAborts = new Map<string, Set<AbortController>>()
+  /** Tool calls of each session that have not reached a final status (to mark them cancelled when the turn is cancelled). */
+  private readonly openToolCalls = new Map<string, Set<string>>()
+  /** Makes tool call ids unique per turn (agents reuse `t1` in every prompt). */
+  private readonly toolCallScope = new ToolCallScope()
 
   constructor(private readonly deps: AcpAgentConnectionDeps) {
     this.connection = this.buildApp().connect(deps.stream)
@@ -143,11 +152,31 @@ export class AcpAgentConnection {
   }
 
   async prompt(acpSessionId: string, blocks: ContentBlockDto[]): Promise<StopReason> {
+    this.toolCallScope.beginTurn(acpSessionId)
     const response = await this.connection.agent.request(methods.agent.session.prompt, {
       sessionId: acpSessionId,
       prompt: blocks.map(toAcpContentBlock)
     })
+    // ACP: a cancelled turn leaves tool calls the agent never finished; the client shows them as cancelled.
+    if (response.stopReason === 'cancelled') this.cancelOpenToolCalls(acpSessionId)
     return response.stopReason
+  }
+
+  private cancelOpenToolCalls(acpSessionId: string): void {
+    const open = this.openToolCalls.get(acpSessionId)
+    if (!open) return
+    for (const toolCallId of open) this.deps.sink.emit(acpSessionId, { type: 'tool_call_updated', toolCallId, patch: { status: 'cancelled' } })
+    open.clear()
+  }
+
+  private trackToolCall(acpSessionId: string, event: { type: string; toolCallId?: string; status?: string; patch?: { status?: string } }): void {
+    if (event.type !== 'tool_call_created' && event.type !== 'tool_call_updated') return
+    const status = event.status ?? event.patch?.status
+    if (status === undefined) return
+    const open = this.openToolCalls.get(acpSessionId) ?? new Set<string>()
+    if (status === 'completed' || status === 'failed' || status === 'cancelled') open.delete(event.toolCallId!)
+    else open.add(event.toolCallId!)
+    this.openToolCalls.set(acpSessionId, open)
   }
 
   /** Cancels the running turn and dismisses pending permission prompts. */
@@ -201,54 +230,77 @@ export class AcpAgentConnection {
 
   private buildApp(): ReturnType<typeof client> {
     const { files, terminals } = this.deps
+    const gate = this.deps.gate ?? allowAllTools
+    /** Runs `run` after the gate agreed. */
+    const gated = <T>(
+      sessionId: string,
+      group: GatedToolGroup,
+      title: string,
+      run: () => Promise<T>,
+      askUser = true
+    ): Promise<T> =>
+      guard(async () => {
+        await gate.check(sessionId, { group, title, askUser })
+        return run()
+      })
     return client({ name: 'agent7' })
       .onNotification(methods.client.session.update, ({ params }) => this.handleUpdate(params))
       .onRequest(methods.client.session.requestPermission, ({ params }) => this.handlePermission(params))
       .onRequest(methods.client.fs.readTextFile, ({ params }) =>
-        guard(async () => ({
+        gated(params.sessionId, 'fs.read', `Read ${params.path}`, async () => ({
           content: await files.forSession(params.sessionId).readTextFile(params.path, params.line ?? undefined, params.limit ?? undefined)
         }))
       )
       .onRequest(methods.client.fs.writeTextFile, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'fs.write', `Write ${params.path}`, async () => {
           await files.forSession(params.sessionId).writeTextFile(params.path, params.content)
           return {}
         })
       )
       .onRequest(methods.client.terminal.create, ({ params }) =>
-        guard(async () => ({
+        gated(params.sessionId, 'terminal', `Run ${[params.command, ...(params.args ?? [])].join(' ')}`, async () => ({
           terminalId: terminals.create(params.sessionId, {
             command: params.command,
             args: params.args,
-            cwd: params.cwd ?? undefined,
+            // The terminal starts inside a drive of the desktop (the chat's cwd by default), never anywhere else.
+            cwd: await files.forSession(params.sessionId).resolveCwd(params.cwd ?? undefined),
             env: Object.fromEntries((params.env ?? []).map((e) => [e.name, e.value])),
             outputByteLimit: params.outputByteLimit ?? undefined
           })
         }))
       )
       .onRequest(methods.client.terminal.output, ({ params }) =>
-        guard(async () => terminals.output(params.terminalId))
+        gated(params.sessionId, 'terminal', 'Read terminal output', async () => terminals.output(params.terminalId), false)
       )
       .onRequest(methods.client.terminal.waitForExit, ({ params }) =>
-        guard(() => terminals.waitForExit(params.terminalId))
+        gated(params.sessionId, 'terminal', 'Wait for terminal', () => terminals.waitForExit(params.terminalId), false)
       )
       .onRequest(methods.client.terminal.kill, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'terminal', 'Kill terminal', async () => {
           await terminals.kill(params.terminalId)
           return {}
-        })
+        }, false)
       )
       .onRequest(methods.client.terminal.release, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'terminal', 'Release terminal', async () => {
           await terminals.release(params.terminalId)
           return {}
-        })
+        }, false)
       )
   }
 
   private handleUpdate(notification: SessionNotification): void {
-    const event = mapSessionUpdate(notification.update)
-    if (event) this.deps.sink.emit(notification.sessionId, event)
+    const mapped = mapSessionUpdate(notification.update)
+    if (!mapped) return
+    const event = this.scopeToolCall(notification.sessionId, mapped)
+    this.trackToolCall(notification.sessionId, event)
+    this.deps.sink.emit(notification.sessionId, event)
+  }
+
+  private scopeToolCall(sessionId: string, event: AgentSessionEvent): AgentSessionEvent {
+    if (event.type === 'tool_call_created') return { ...event, toolCallId: this.toolCallScope.forCreate(sessionId, event.toolCallId) }
+    if (event.type === 'tool_call_updated') return { ...event, toolCallId: this.toolCallScope.forUpdate(sessionId, event.toolCallId) }
+    return event
   }
 
   private async handlePermission(params: RequestPermissionRequest): Promise<RequestPermissionResponse> {
@@ -257,7 +309,7 @@ export class AcpAgentConnection {
       const decision = await Promise.race([
         this.deps.permissions.prompt({
           sessionKey: params.sessionId,
-          toolCallId: params.toolCall.toolCallId,
+          toolCallId: this.toolCallScope.forCreate(params.sessionId, params.toolCall.toolCallId),
           toolCall: toToolCallPatch(params.toolCall),
           options: params.options.map(toOptionDto),
           signal: abort.signal
@@ -294,6 +346,7 @@ async function guard<T>(run: () => Promise<T>): Promise<T> {
     return await run()
   } catch (error) {
     if (error instanceof RequestError) throw error
+    if (error instanceof ToolRefusedError) throw new RequestError(TOOL_REFUSED_CODE, error.message)
     if (isNodeError(error) && error.code === 'ENOENT') throw RequestError.resourceNotFound(error.path)
     throw RequestError.internalError(undefined, error instanceof Error ? error.message : String(error))
   }

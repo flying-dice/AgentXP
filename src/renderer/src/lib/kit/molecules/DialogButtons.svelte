@@ -48,6 +48,7 @@
     <Button
       isDefault={spec.result === accept}
       disabled={spec.disabled}
+      data-testid="dialog-button-{spec.result}"
       data-autofocus={spec.result === accept ? '' : undefined}
       onclick={() => onresult?.(spec.result)}
     >

@@ -55,7 +55,14 @@ async function createSession(): Promise<SessionDto> {
     args: ['--experimental-strip-types', '--no-warnings', fixture],
     env: {}
   })
-  return app.api.sessions.create(folder.id, agent.id)
+  const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
+  const session = await app.api.sessions.create(desktop.id, agent.id, 'E:\\')
+  // The fake agent writes a file and runs a command: those need the apps that provide them.
+  const desktopId = session.desktopId!
+  app.api.desktop.openWindow({ desktopId, app: 'code' })
+  app.api.desktop.openWindow({ desktopId, app: 'terminal' })
+  app.api.desktop.setPolicy({ ...(await app.api.desktop.policy()), groups: { ...(await app.api.desktop.policy()).groups, terminal: 'allow' } })
+  return session
 }
 
 describe('app composition with the fake ACP agent', () => {
@@ -77,7 +84,11 @@ describe('app composition with the fake ACP agent', () => {
 
     const transcript = await app.api.sessions.transcript(session.id)
     expect(transcript.map((e) => e.kind)).toEqual(['message', 'message', 'tool_call'])
-    expect(transcript[0]).toMatchObject({ role: 'user', blocks: [{ kind: 'text', text: 'Write the output file' }] })
+    // The prompt carries the desktop state first (stored, but not shown as the user's text).
+    expect(transcript[0]).toMatchObject({
+      role: 'user',
+      blocks: [{ kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json' }, { kind: 'text', text: 'Write the output file' }]
+    })
     expect(transcript[1]).toMatchObject({ role: 'agent', blocks: [{ kind: 'text', text: 'Working on it' }] })
     expect(transcript[2]).toMatchObject({
       toolCallId: 'tc-1',
@@ -88,7 +99,7 @@ describe('app composition with the fake ACP agent', () => {
     expect(await app.api.sessions.tasks(session.id)).toMatchObject([{ content: 'Write file', status: 'in_progress' }])
 
     const changes = await app.api.sessions.changes(session.id)
-    expect(changes).toMatchObject([{ path: 'fake-agent-output.txt', kind: 'added', originalText: null }])
+    expect(changes).toMatchObject([{ path: 'E:\\fake-agent-output.txt', kind: 'added', originalText: null }])
     expect(await readFile(join(workspace, 'fake-agent-output.txt'), 'utf8')).toBe('hello from fake agent\n')
 
     const terminals = await app.api.sessions.terminals(session.id)
@@ -123,9 +134,9 @@ describe('app composition with the fake ACP agent', () => {
   }, 30_000)
 
   it('reports a readable error when the agent command does not exist', async () => {
-    const folder = await app.api.folders.add(workspace)
+    const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [] })
     const agent = await app.api.agents.create({ name: 'Broken', command: 'definitely-not-a-command-xyz', args: [], env: {} })
-    await expect(app.api.sessions.create(folder.id, agent.id)).rejects.toThrow(/agent process ended before it was ready/)
+    await expect(app.api.sessions.create(desktop.id, agent.id)).rejects.toThrow(/agent process ended before it was ready/)
     expect(await app.api.sessions.list()).toEqual([])
   })
 
@@ -141,4 +152,101 @@ describe('app composition with the fake ACP agent', () => {
     await expect(app.api.folders.readFile(folder.id, '../outside.txt')).rejects.toThrow('outside the workspace')
     await expect(app.api.folders.readDir(folder.id, '..')).rejects.toThrow('outside the workspace')
   })
+
+  it('desktops: a chat lives on a desktop, its window follows the chat, and desktop events carry the derived tools and drives', async () => {
+    const folder = await app.api.folders.add(workspace)
+    const agent = await app.api.agents.create({ name: 'Fake agent', command: 'node', args: ['--experimental-strip-types', '--no-warnings', fixture], env: {} })
+    const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
+    expect(desktop).toMatchObject({ title: 'Project', connected: false, chatCount: 0, runState: 'idle' })
+    expect(desktop.drives.map((d) => `${d.letter}:${d.folderId}`)).toEqual(['C:null', `E:${folder.id}`])
+
+    const chat = await app.api.desktop.newChat(desktop.id, agent.id, 'E:\\')
+    const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
+    expect(await app.api.sessions.get(sessionId)).toMatchObject({ desktopId: desktop.id, status: 'idle', cwd: 'E:\\' })
+
+    await app.api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
+    const changed = publisher.payloads('desktop.changed')
+    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: ['shell', 'terminal'], home: 'C:\\Users\\Agent' })
+    expect(changed.at(-1)?.drives.map((d) => d.letter)).toEqual(['C', 'E'])
+    expect(changed.at(-1)?.windows.map((w) => w.app)).toEqual(['chat', 'terminal'])
+
+    // Running agents show up in the Agent Manager, and ending the process closes the chat.
+    expect(await app.api.processes.list()).toMatchObject([{ agentId: agent.id, desktopId: desktop.id, sessionIds: [sessionId] }])
+    await app.api.processes.end(agent.id, desktop.id)
+    expect((await app.api.sessions.get(sessionId)).status).toBe('closed')
+
+    // Deleting the chat removes its window.
+    await app.api.sessions.remove(sessionId)
+    expect(publisher.payloads('desktop.changed').at(-1)?.windows.map((w) => w.app)).toEqual(['terminal'])
+    expect((await app.api.launcher.list()).map((d) => d.id)).toEqual([desktop.id])
+  }, 30_000)
+
+  it('the virtual file system: C: is seeded, the project is E:, ejecting cuts the agent off', async () => {
+    const folder = await app.api.folders.add(workspace)
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'a.txt'), 'A')
+    const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
+
+    expect((await app.api.vfs.readDir(desktop.id, '')).map((e) => e.path)).toEqual(['C:\\', 'E:\\'])
+    expect((await app.api.vfs.readDir(desktop.id, 'C:\\Users\\Agent')).map((e) => e.name)).toEqual(['Desktop', 'Documents', 'Downloads'])
+    expect(await app.api.vfs.readFile(desktop.id, 'E:\\a.txt')).toBe('A')
+    await app.api.vfs.writeFile(desktop.id, 'C:\\Users\\Agent\\Documents\\n.md', '# hi')
+    expect(await app.api.vfs.stat(desktop.id, 'C:\\Users\\Agent\\Documents\\n.md')).toMatchObject({ kind: 'file', size: 4 })
+    await expect(app.api.vfs.readFile(desktop.id, 'E:\\..\\..\\x')).rejects.toThrow(/Not a valid path/)
+
+    await app.api.drives.eject(desktop.id, 'E')
+    await expect(app.api.vfs.readFile(desktop.id, 'E:\\a.txt')).rejects.toThrow('Drive E: is not plugged in')
+    expect((await app.api.drives.list(desktop.id)).map((d) => d.letter)).toEqual(['C'])
+    expect(await app.api.drives.plugIn(desktop.id)).toMatchObject({ letter: 'E', label: expect.any(String) }) // the picker returns the workspace again
+    expect(await app.api.vfs.readFile(desktop.id, 'E:\\a.txt')).toBe('A')
+  })
+
+  it('removing a desktop stops its agents and deletes C:, chats and rows, but never the real project folder', async () => {
+    const folder = await app.api.folders.add(workspace)
+    const agent = await app.api.agents.create({ name: 'Fake agent', command: 'node', args: ['--experimental-strip-types', '--no-warnings', fixture], env: {} })
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'keep.txt'), 'keep')
+    const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
+    const chat = await app.api.desktop.newChat(desktop.id, agent.id, 'E:\\')
+    const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
+    const systemDisk = join(app.vfs.systemRoot(desktop.id))
+    expect(existsSync(systemDisk)).toBe(true)
+
+    await app.api.launcher.remove(desktop.id)
+
+    expect(existsSync(systemDisk)).toBe(false)
+    expect(existsSync(join(systemDisk, '..'))).toBe(false)
+    expect(await app.api.launcher.list()).toEqual([])
+    await expect(app.api.sessions.get(sessionId)).rejects.toThrow('Session not found')
+    expect(await readFile(join(workspace, 'keep.txt'), 'utf8')).toBe('keep')
+    expect(await app.api.folders.list()).toHaveLength(1)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM desktop_drives').get()).toEqual({ n: 0 })
+  }, 30_000)
+
+  it('a disconnected desktop keeps its chat and its turn running', async () => {
+    const session = await createSession()
+    const desktopId = session.desktopId!
+    app.launcher.connect(desktopId)
+    expect((await app.api.launcher.list())[0]).toMatchObject({ id: desktopId, connected: true })
+    const turn = app.api.sessions.prompt({ sessionId: session.id, text: 'Write the output file', attachments: [] })
+    const requestId = await waitFor(async () => {
+      const entry = (await app.api.sessions.transcript(session.id)).find((e) => e.kind === 'tool_call')
+      return entry?.kind === 'tool_call' && entry.permission?.outcome === 'pending' ? entry.permission.id : null
+    }, 'the permission request')
+    expect((await app.api.launcher.list())[0]).toMatchObject({ runState: 'awaiting_approval', pendingApprovals: 1 })
+
+    await app.api.launcher.disconnect(desktopId)
+    expect((await app.api.launcher.list())[0]).toMatchObject({ connected: false, runState: 'awaiting_approval', pendingApprovals: 1, chatCount: 1 })
+    expect((await app.api.sessions.get(session.id)).status).toBe('awaiting_permission')
+
+    // Approving later (e.g. from a notification) finishes the turn that kept waiting in the background.
+    await app.api.sessions.respondPermission(requestId, 'allow')
+    await turn
+    expect(await readFile(join(workspace, 'fake-agent-output.txt'), 'utf8')).toBe('hello from fake agent\n')
+    expect((await app.api.launcher.list())[0]).toMatchObject({ runState: 'idle', pendingApprovals: 0 })
+
+    app.launcher.connect(desktopId)
+    expect((await app.api.desktop.policy()).openApps).toBe('allow')
+    expect((await app.api.sessions.get(session.id)).status).toBe('idle')
+  }, 30_000)
 })

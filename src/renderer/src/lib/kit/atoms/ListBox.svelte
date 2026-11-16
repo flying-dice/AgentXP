@@ -20,6 +20,8 @@
     /** Fired on Space or double click on an item. */
     onitemactivate?: (item: ListBoxItem<T>) => void
     class?: string
+    /** `data-testid` of the list. */
+    testid?: string
   }
 
   let {
@@ -35,6 +37,7 @@
     onselectionchange,
     onitemactivate,
     class: className = '',
+    testid,
     ...rest
   }: Props = $props()
 
@@ -108,6 +111,7 @@
 <div
   bind:this={box}
   {...rest}
+  data-testid={testid}
   role="listbox"
   tabindex={disabled ? -1 : 0}
   aria-label={label}
@@ -127,6 +131,7 @@
     <div
       id="{uid}-{i}"
       role="option"
+      data-testid={item.testid}
       tabindex="-1"
       aria-selected={isSel}
       aria-disabled={item.disabled}

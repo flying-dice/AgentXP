@@ -8,7 +8,7 @@
   const { Story } = defineMeta({
     title: 'App/FileTree',
     component: FileTree,
-    args: { rootName: 'claude-code-win', changedPaths: ['src/auth/redirect.ts'], readDir: (path: string) => api.folders.readDir(1, path) },
+    args: { roots: [{ path: 'E:\\', name: 'claude-code-win (E:)' }], changedPaths: ['E:\\src\\auth\\redirect.ts'], readDir: (path: string) => api.vfs.readDir(1, path) },
     argTypes: { onopen: { action: 'open' } }
   })
 </script>

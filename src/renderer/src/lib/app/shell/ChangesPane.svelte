@@ -23,7 +23,7 @@
   ]
 
   const rows = $derived<ListRow[]>(
-    changes.map((c) => ({ id: String(c.id), icon: 'file-code', file: c.path, kind: changeKindLabel(c.kind), lines: linesLabel(c) }))
+    changes.map((c) => ({ id: String(c.id), testid: 'changes-item', icon: 'file-code', file: c.path, kind: changeKindLabel(c.kind), lines: linesLabel(c) }))
   )
   const selected = $derived(changes.find((c) => c.id === selectedId) ?? null)
 </script>
@@ -33,13 +33,14 @@
     <ListView
       {columns}
       {rows}
+      testid="changes-list"
       selected={selected ? [String(selected.id)] : []}
       emptyText="No pending changes in this session."
       aria-label="Changed files"
       onselect={(ids) => (selectedId = ids[0] ? Number(ids[0]) : null)}
     />
   </div>
-  <div class="diff">
+  <div class="diff" data-testid="changes-diff">
     {#if selected}
       {#key selected.id}
         <DiffViewer oldText={selected.originalText ?? ''} newText={selected.currentText ?? ''} fileName={selected.path} toolbar={false} label="Diff of {selected.path}" />
@@ -49,8 +50,8 @@
     {/if}
   </div>
   <div class="buttons">
-    <Button disabled={!selected} onclick={() => selected && onrevert?.(selected)}>Revert</Button>
-    <Button disabled={!selected || selected.kind === 'deleted'} onclick={() => selected && onopeneditor?.(selected)}>Open in editor</Button>
+    <Button data-testid="changes-revert" disabled={!selected} onclick={() => selected && onrevert?.(selected)}>Revert</Button>
+    <Button data-testid="changes-open-editor" disabled={!selected || selected.kind === 'deleted'} onclick={() => selected && onopeneditor?.(selected)}>Open in editor</Button>
   </div>
 </div>
 

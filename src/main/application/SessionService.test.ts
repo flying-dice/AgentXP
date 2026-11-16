@@ -1,4 +1,6 @@
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { allowAllTools } from '../domain/agent/ToolGate'
 import { AgentConnectionPool } from './AgentConnectionPool'
 import { FileChangeRecorder } from './FileChangeRecorder'
 import { PermissionBroker } from './PermissionBroker'
@@ -6,19 +8,19 @@ import { SessionBroadcaster } from './SessionBroadcaster'
 import { SessionEventBus } from './SessionEventBus'
 import { SessionEventProjector } from './SessionEventProjector'
 import { SessionRuntime } from './SessionRuntime'
-import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt } from './SessionService'
+import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt, type SessionServiceDeps } from './SessionService'
 import { TerminalRecorder } from './TerminalRecorder'
-import { WorkspaceFiles } from './WorkspaceFiles'
-import { createAppFixture, FakeConnector } from './test-helpers'
-import { NodeWorkspaceFileSystem } from '../infrastructure/fs/NodeWorkspaceFileSystem'
+import { SessionFiles } from './SessionFiles'
+import { createVfsFixture, FakeConnector } from './test-helpers'
 
-let f: ReturnType<typeof createAppFixture>
+let f: Awaited<ReturnType<typeof createVfsFixture>>
 let connector: FakeConnector
 let pool: AgentConnectionPool
 let service: SessionService
+let serviceDeps: SessionServiceDeps
 
-beforeEach(() => {
-  f = createAppFixture()
+beforeEach(async () => {
+  f = await createVfsFixture()
   connector = new FakeConnector()
   pool = new AgentConnectionPool()
   const { repos, publisher } = f
@@ -31,18 +33,19 @@ beforeEach(() => {
     pool,
     sessions: repos.sessions,
     agents: repos.agents,
-    folders: repos.folders,
+    vfs: f.vfs,
     events: bus,
     broker: new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster),
-    workspaceFiles: new WorkspaceFiles(new NodeWorkspaceFileSystem(), new FileChangeRecorder(repos.changes, publisher)),
+    files: new SessionFiles({ vfs: f.vfs, host: f.host, sessions: repos.sessions, recorder: new FileChangeRecorder(repos.changes, publisher) }),
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
+    toolGate: () => allowAllTools,
     a2uiMcpConfig: (id) => ({ kind: 'stdio', name: 'a2ui', command: 'electron', args: ['a2ui-mcp.js'], env: { KEY: String(id) } })
   })
-  service = new SessionService({
+  serviceDeps = {
     sessions: repos.sessions,
     agents: repos.agents,
-    folders: repos.folders,
+    vfs: f.vfs,
     transcripts: repos.transcripts,
     surfaces: repos.surfaces,
     permissions: repos.permissions,
@@ -50,38 +53,50 @@ beforeEach(() => {
     runtime,
     broadcaster,
     events: publisher
-  })
+  }
+  service = new SessionService(serviceDeps)
 })
 
 const status = (id: number): string | undefined => f.repos.sessions.get(id)?.status
 
 describe('SessionService.create', () => {
-  it('spawns the agent in the folder, opens an ACP session with the A2UI MCP server and ends idle', async () => {
-    const session = await service.create(f.folderId)
+  it('spawns the agent in the real folder behind the chat\'s working directory (default: the agent home on C:)', async () => {
+    const session = await service.create(f.desktop.id)
 
-    expect(session).toMatchObject({ title: DEFAULT_SESSION_TITLE, status: 'idle', acpSessionId: 'acp-1', currentModeId: 'default' })
-    expect(connector.launches[0]).toMatchObject({ cwd: '/work/project', agent: { id: f.agentId } })
+    expect(session).toMatchObject({ title: DEFAULT_SESSION_TITLE, status: 'idle', acpSessionId: 'acp-1', currentModeId: 'default', cwd: 'C:\\Users\\Agent' })
+    expect(connector.launches[0]).toMatchObject({ cwd: join(f.desktopsDir, String(f.desktop.id), 'C', 'Users', 'Agent'), agent: { id: f.agentId } })
     expect(connector.connections[0]!.mcpServers[0]).toMatchObject({ name: 'a2ui', env: { KEY: String(session.id) } })
     expect(session.modes.map((m) => m.id)).toEqual(['default'])
+  })
+
+  it('starts the agent in a plugged-in project when the chat\'s cwd is on its drive', async () => {
+    const session = await service.create(f.desktop.id, undefined, 'E:\\')
+    expect(session.cwd).toBe('E:\\')
+    expect(connector.launches[0]!.cwd).toBe(f.projectDir)
+  })
+
+  it('refuses a working directory on a drive that is not plugged in or that does not exist', async () => {
+    await expect(service.create(f.desktop.id, undefined, 'G:\\')).rejects.toThrow('Drive G: is not plugged in')
+    await expect(service.create(f.desktop.id, undefined, 'E:\\missing')).rejects.toThrow('does not exist')
+    await expect(service.create(f.desktop.id, undefined, 'src')).rejects.toThrow('Not a valid working directory')
   })
 
   it('removes the row and rethrows when the agent cannot start', async () => {
     connector.openError = new Error('spawn failed')
     const before = f.repos.sessions.list().length
-    await expect(service.create(f.folderId)).rejects.toThrow('spawn failed')
+    await expect(service.create(f.desktop.id)).rejects.toThrow('spawn failed')
     expect(f.repos.sessions.list()).toHaveLength(before)
     expect(f.publisher.payloads('session.removed')).toHaveLength(1)
   })
 
-  it('fails readably for unknown folders and agents', async () => {
-    await expect(service.create(999)).rejects.toThrow('Folder not found')
-    await expect(service.create(f.folderId, 999)).rejects.toThrow('Agent not found')
+  it('fails readably for unknown agents', async () => {
+    await expect(service.create(f.desktop.id, 999)).rejects.toThrow('Agent not found')
   })
 })
 
 describe('SessionService.prompt', () => {
   it('persists the user message first, goes working, then idle, and auto-titles', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     const connection = connector.connections[0]!
     const seen: string[] = []
     connection.onPrompt = async () => {
@@ -98,7 +113,7 @@ describe('SessionService.prompt', () => {
   })
 
   it('keeps a custom title and sends attachments as resource links', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     service.rename(session.id, 'Mine')
     await service.prompt({ sessionId: session.id, text: 'hello', attachments: ['/work/project/a b.ts'] })
 
@@ -111,29 +126,60 @@ describe('SessionService.prompt', () => {
   })
 
   it('sets error status and rethrows when the turn fails', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     connector.connections[0]!.promptError = new Error('boom')
     await expect(service.prompt({ sessionId: session.id, text: 'x', attachments: [] })).rejects.toThrow('boom')
     expect(status(session.id)).toBe('error')
   })
 
   it('rejects empty prompts', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await expect(service.prompt({ sessionId: session.id, text: '  ', attachments: [] })).rejects.toThrow('Nothing to send')
   })
 
   it('sendHidden runs a turn without touching the transcript', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await service.sendHidden(session.id, 'action')
     expect(f.repos.transcripts.list(session.id)).toHaveLength(0)
     expect(connector.connections[0]!.prompts).toHaveLength(1)
   })
 })
 
+describe('SessionService.prompt desktop context', () => {
+  const json = '{"desktopId":1}'
+  const resource = { kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json', text: json }
+
+  it('puts the client\'s desktop state before the user\'s text and stores it with the message', async () => {
+    const session = await service.create(f.desktop.id)
+    await service.promptTurn({ sessionId: session.id, text: 'hello', attachments: [], desktopContext: json })
+    expect(connector.connections[0]!.prompts[0]).toEqual([resource, { kind: 'text', text: 'hello' }])
+    expect(f.repos.transcripts.list(session.id)[0]).toMatchObject({ role: 'user', blocks: [resource, { kind: 'text', text: 'hello' }] })
+  })
+
+  it('adds the current desktop state itself when the client sent none (main is the truth)', async () => {
+    service = new SessionService({ ...serviceDeps, desktopContext: { contextOfSession: () => json } })
+    const session = await service.create(f.desktop.id)
+    await service.prompt({ sessionId: session.id, text: 'hello', attachments: [] })
+    expect(connector.connections[0]!.prompts[0]).toEqual([resource, { kind: 'text', text: 'hello' }])
+  })
+
+  it('sends only the text for a chat without a desktop', async () => {
+    service = new SessionService({ ...serviceDeps, desktopContext: { contextOfSession: () => null } })
+    const session = await service.create(f.desktop.id)
+    await service.prompt({ sessionId: session.id, text: 'hello', attachments: [] })
+    expect(connector.connections[0]!.prompts[0]).toEqual([{ kind: 'text', text: 'hello' }])
+  })
+
+  it('does not count the desktop block as something to send alone', async () => {
+    const session = await service.create(f.desktop.id)
+    await expect(service.promptTurn({ sessionId: session.id, text: '  ', attachments: [], desktopContext: json })).rejects.toThrow('Nothing to send')
+  })
+})
+
 describe('SessionService reconnect', () => {
   it('reconnects a closed session lazily; loads the ACP session when supported', async () => {
     connector.canLoadSession = true
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await pool.disposeAll()
     service.recoverAfterRestart()
     expect(status(session.id)).toBe('closed')
@@ -145,7 +191,7 @@ describe('SessionService reconnect', () => {
   })
 
   it('starts a new ACP session silently when load is unsupported', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await pool.disposeAll()
     await service.prompt({ sessionId: session.id, text: 'again', attachments: [] })
 
@@ -155,7 +201,7 @@ describe('SessionService reconnect', () => {
   })
 
   it('marks the session closed when the agent process dies', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     connector.connections[0]!.crash()
     await new Promise((r) => setTimeout(r, 0))
     expect(status(session.id)).toBe('closed')
@@ -165,7 +211,7 @@ describe('SessionService reconnect', () => {
 
 describe('SessionService other commands', () => {
   it('cancels, sets mode/model and publishes the session', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await service.cancel(session.id)
     await service.setMode(session.id, 'plan')
     await service.setModel(session.id, 'fast')
@@ -175,7 +221,7 @@ describe('SessionService other commands', () => {
   })
 
   it('removes a session and disposes its connection', async () => {
-    const session = await service.create(f.folderId)
+    const session = await service.create(f.desktop.id)
     await service.remove(session.id)
     expect(connector.connections[0]!.disposed).toBe(true)
     expect(f.repos.sessions.get(session.id)).toBeNull()

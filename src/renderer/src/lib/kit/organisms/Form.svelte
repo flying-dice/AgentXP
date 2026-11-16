@@ -40,6 +40,8 @@
     style?: string
     role?: 'dialog' | 'alertdialog' | 'group' | 'application'
     'aria-modal'?: boolean
+    /** `data-testid` of the form's outer frame. */
+    testid?: string
   }
 
   let {
@@ -68,7 +70,8 @@
     class: className = '',
     style = '',
     role,
-    'aria-modal': ariaModal
+    'aria-modal': ariaModal,
+    testid
   }: Props = $props()
 
   const maximized = $derived(windowState === 'Maximized' && !dialog)
@@ -93,6 +96,7 @@
   class:maximized
   class:dialog
   data-w7-form
+  data-testid={testid}
   role={role ?? (dialog ? 'dialog' : 'group')}
   aria-modal={ariaModal}
   aria-labelledby={frameless ? undefined : titleId}

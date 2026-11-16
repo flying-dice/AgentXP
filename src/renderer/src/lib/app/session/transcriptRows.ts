@@ -1,4 +1,5 @@
 import { contentToText, type Message } from '@ag-ui/core'
+import { STOP_NOTICE_ACTIVITY_TYPE } from '@shared/agui-state'
 import type { SurfaceActivity } from '../../agui/activities'
 
 export type TranscriptRow =
@@ -7,6 +8,7 @@ export type TranscriptRow =
   | { kind: 'reasoning'; id: string; text: string }
   | { kind: 'tool'; id: string; toolCallId: string; name: string; rawInput: string; result: string | null }
   | { kind: 'surface'; id: string; surfaceId: string }
+  | { kind: 'stop'; id: string; reason: string }
 
 const baseName = (path: string): string => path.replace(/[\\/]+$/, '').split(/[\\/]/).pop() ?? path
 
@@ -39,7 +41,7 @@ const toolResults = (messages: readonly Message[]): Map<string, string> => {
 /**
  * Orders AG-UI messages into transcript rows: user and assistant text, reasoning, one row per
  * assistant tool call (carrying its result message), and A2UI surfaces at the place of their
- * (latest) activity message. Tool, system and other activity messages produce no row of their own.
+ * (latest) activity message, and stop notices (a turn that ended with a refusal or output limit). Tool, system and other activity messages produce no row of their own.
  */
 export function buildTranscriptRows(messages: readonly Message[], surfaces: ReadonlyMap<string, SurfaceActivity>): TranscriptRow[] {
   const results = toolResults(messages)
@@ -65,6 +67,10 @@ export function buildTranscriptRows(messages: readonly Message[], surfaces: Read
     } else if (m.role === 'activity') {
       const surface = liveSurfaces.get(m.id)
       if (surface) rows.push({ kind: 'surface', id: m.id, surfaceId: surface.surfaceId })
+      else if (m.activityType === STOP_NOTICE_ACTIVITY_TYPE) {
+        const reason = (m.content as { reason?: unknown }).reason
+        if (typeof reason === 'string') rows.push({ kind: 'stop', id: m.id, reason })
+      }
     }
   }
   return rows

@@ -1,5 +1,7 @@
+import type { RunAgentInput } from '@ag-ui/core'
 import { ipcMain } from 'electron'
 import { AGUI_CHANNELS } from '../../shared/ipc-channels'
+import type { AguiEvent } from '../application/agui/AgentEventTranslator'
 import type { AguiRunner } from '../application/agui/AguiRunCoordinator'
 import { parseRunInput, streamAguiRun } from './streamAguiRun'
 
@@ -7,7 +9,7 @@ import { parseRunInput, streamAguiRun } from './streamAguiRun'
  * Registers the AG-UI IPC channels: `agui.run` streams the run's events to the calling window on
  * `agui.event` and resolves when the stream ended; `agui.abort` cancels the session's turn.
  */
-export function registerAguiHandlers(runner: AguiRunner, options: { validate: boolean }): () => void {
+export function registerAguiHandlers(runner: AguiRunner, options: { validate: boolean; onEvent?(input: RunAgentInput, event: AguiEvent): void }): () => void {
   ipcMain.handle(AGUI_CHANNELS.run, async (event, raw: unknown) => {
     const input = parseRunInput(raw)
     const sender = event.sender
@@ -17,7 +19,7 @@ export function registerAguiHandlers(runner: AguiRunner, options: { validate: bo
       (message) => {
         if (!sender.isDestroyed()) sender.send(AGUI_CHANNELS.event, message)
       },
-      { validate: options.validate, isClosed: () => sender.isDestroyed() }
+      { validate: options.validate, isClosed: () => sender.isDestroyed(), onEvent: (e) => options.onEvent?.(input, e) }
     )
   })
   ipcMain.handle(AGUI_CHANNELS.abort, (_event, threadId: string, runId: string) => runner.abort(threadId, runId))

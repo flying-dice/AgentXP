@@ -1,7 +1,7 @@
 import { buildResumeArray, type RunAgentInput } from '@ag-ui/client'
 import { EventType, type Event, type Interrupt, type Message } from '@ag-ui/core'
 import { A2UI_ACTIVITY_TYPE, type AguiSessionState } from '@shared/agui-state'
-import type { PromptInput } from '@shared/ipc'
+import { DESKTOP_CONTEXT_DESCRIPTION, type DesktopState } from '@shared/desktop'
 import type { A2uiClientEvent } from '@shared/a2ui'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
@@ -10,6 +10,7 @@ import { PermissionBroker } from '../PermissionBroker'
 import { SessionBroadcaster } from '../SessionBroadcaster'
 import { SessionEventBus } from '../SessionEventBus'
 import { SessionQueryService } from '../SessionQueryService'
+import type { PromptTurnInput } from '../SessionService'
 import { createAppFixture } from '../test-helpers'
 import { AguiRunCoordinator } from './AguiRunCoordinator'
 import { collect, expectValidStream, RunnerAgent, types } from './test-helpers'
@@ -20,7 +21,7 @@ let fan: FanOutEventPublisher
 let broker: PermissionBroker
 let broadcaster: SessionBroadcaster
 let coordinator: AguiRunCoordinator
-let script: (input: PromptInput) => Promise<string>
+let script: (input: PromptTurnInput) => Promise<string>
 let dispatched: A2uiClientEvent[]
 let cancelled: number[]
 let onCancel: () => void
@@ -90,8 +91,31 @@ const askPermission = (): Promise<unknown> =>
   broker.prompt(f.sessionId, { sessionKey: 'acp', toolCallId: 't1', toolCall: { title: 'Write file', toolKind: 'edit' }, options, signal: new AbortController().signal })
 
 describe('AguiRunCoordinator: prompt', () => {
+  it.each(['refusal', 'max_tokens'])('a turn that ends with stopReason %s adds a stop notice and the reason as RUN_FINISHED.result', async (reason) => {
+    script = async () => {
+      emit(chunk('Cut o'))
+      return reason
+    }
+    const events = await collect(coordinator.run(input({ messages: [user('go')] })))
+    await expectValidStream(events)
+    const notices = ofType(events, EventType.ACTIVITY_SNAPSHOT)
+    expect(notices).toHaveLength(1)
+    expect(notices[0]).toMatchObject({ activityType: 'stop-notice', content: { reason } })
+    const finished = ofType(events, EventType.RUN_FINISHED)[0]
+    expect(finished).toMatchObject({ outcome: { type: 'success' }, result: { stopReason: reason } })
+    expect(types(events).at(-2)).toBe(EventType.ACTIVITY_SNAPSHOT)
+  })
+
+  it('end_turn and cancelled add no stop notice', async () => {
+    for (const reason of ['end_turn', 'cancelled']) {
+      script = async () => reason
+      const events = await collect(coordinator.run(input({ messages: [user(`go ${reason}`)] })))
+      expect(ofType(events, EventType.ACTIVITY_SNAPSHOT)).toHaveLength(0)
+    }
+  })
+
   it('streams a turn: RUN_STARTED, state snapshot, messages, tool call, state deltas, RUN_FINISHED', async () => {
-    let seenPrompt: PromptInput | undefined
+    let seenPrompt: PromptTurnInput | undefined
     script = async (prompt) => {
       seenPrompt = prompt
       broadcaster.setStatus(f.sessionId, 'working')
@@ -106,7 +130,7 @@ describe('AguiRunCoordinator: prompt', () => {
     const events = await collect(coordinator.run(input({ messages: [user('Please write')] })))
 
     await expectValidStream(events)
-    expect(seenPrompt).toEqual({ sessionId: f.sessionId, text: 'Please write', attachments: [] })
+    expect(seenPrompt).toEqual({ sessionId: f.sessionId, text: 'Please write', attachments: [], desktopContext: null })
     expect(types(events)).toEqual([
       EventType.RUN_STARTED,
       EventType.STATE_SNAPSHOT,
@@ -131,7 +155,7 @@ describe('AguiRunCoordinator: prompt', () => {
   })
 
   it('passes file: URL attachments as paths and rejects other media', async () => {
-    let seen: PromptInput | undefined
+    let seen: PromptTurnInput | undefined
     script = async (prompt) => ((seen = prompt), 'end_turn')
     const withFile: Message = {
       id: 'u-file',
@@ -142,7 +166,7 @@ describe('AguiRunCoordinator: prompt', () => {
       ]
     }
     await collect(coordinator.run(input({ messages: [withFile] })))
-    expect(seen).toEqual({ sessionId: f.sessionId, text: 'look', attachments: ['/tmp/a b.txt'] })
+    expect(seen).toEqual({ sessionId: f.sessionId, text: 'look', attachments: ['/tmp/a b.txt'], desktopContext: null })
 
     const withImage: Message = {
       id: 'u-img',
@@ -467,5 +491,55 @@ describe('AguiRunCoordinator: A2UI and abort', () => {
     await coordinator.abort(threadId(), 'r')
     expect(cancelled).toEqual([f.sessionId])
     expect(ofType(await running, EventType.RUN_FINISHED)[0]?.outcome).toEqual({ type: 'cancelled' })
+  })
+})
+
+const desktopState = (desktopId: number, tools: DesktopState['tools']): DesktopState => ({
+  desktopId,
+  title: 'project',
+  drives: [{ letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }],
+  home: 'C:\\Users\\Agent',
+  focusedWindowId: null,
+  windows: [],
+  tools,
+  paused: false,
+  userInControl: false,
+  notes: []
+})
+
+describe('AguiRunCoordinator: desktop', () => {
+  it('passes the desktop context of the run to the prompt, or null when the client sent none', async () => {
+    const seen: (string | null | undefined)[] = []
+    script = async (prompt) => (seen.push(prompt.desktopContext), 'end_turn')
+    const context = [{ description: DESKTOP_CONTEXT_DESCRIPTION, value: '{"desktopId":1}' }]
+    await collect(coordinator.run(input({ messages: [user('one')], context })))
+    await collect(coordinator.run(input({ messages: [user('two')], context: [{ description: 'other', value: 'x' }] })))
+    expect(seen).toEqual(['{"desktopId":1}', null])
+  })
+
+  it('has the desktop in the state snapshot and keeps it current with STATE_DELTA, for the chats of that desktop only', async () => {
+    const queries = new SessionQueryService(f.repos.sessions, f.repos.transcripts, f.repos.tasks, f.repos.changes, f.repos.terminals, f.repos.surfaces, {
+      stateOfSession: (id) => (id === f.sessionId ? desktopState(1, ['shell']) : null)
+    })
+    const withDesktop = new AguiRunCoordinator({
+      queries,
+      sessions: { promptTurn: (input) => script(input), cancel: async () => {} },
+      a2ui: { dispatch: async () => {} },
+      broker,
+      events: bus,
+      appEvents: fan,
+      newId: () => `id-${++counter}`
+    })
+    script = async () => {
+      fan.publish('desktop.changed', desktopState(2, ['shell', 'browser'])) // another desktop
+      fan.publish('desktop.changed', desktopState(1, ['shell', 'terminal']))
+      return 'end_turn'
+    }
+    const events = await collect(withDesktop.run(input({ messages: [user('hi')] })))
+
+    const snapshot = ofType(events, EventType.STATE_SNAPSHOT)[0]!.snapshot as { desktop: DesktopState }
+    expect(snapshot.desktop).toMatchObject({ desktopId: 1, tools: ['shell'] })
+    const ops = ofType(events, EventType.STATE_DELTA).flatMap((e) => e.delta as { op: string; path: string; value?: unknown }[])
+    expect(ops.filter((o) => o.path.startsWith('/desktop'))).toEqual([{ op: 'add', path: '/desktop/tools/1', value: 'terminal' }])
   })
 })

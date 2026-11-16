@@ -28,6 +28,15 @@
   {/snippet}
 </Story>
 
+<Story
+  name="FlashingButton"
+  args={{ items: [...items.slice(0, 2), { id: 'code', title: 'Code', icon: 'terminal', running: true, flashing: true }] }}
+>
+  {#snippet template(args)}
+    <div class="bg"><Taskbar {...args} /></div>
+  {/snippet}
+</Story>
+
 <Story name="LiveClock" args={{ clock: undefined }}>
   {#snippet template(args)}
     <div class="bg"><Taskbar {...args} /></div>

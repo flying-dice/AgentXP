@@ -31,7 +31,13 @@ const RENDERER_EVENTS = {
   'session.changed': true,
   'session.removed': true,
   'folders.changed': true,
-  'status.message': true
+  'status.message': true,
+  'desktop.changed': true,
+  'desktop.appRequest': true,
+  'notes.changed': true,
+  'events.appended': true,
+  'recycle.changed': true,
+  'launcher.changed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -39,7 +45,7 @@ export const isRendererEvent = (name: string): name is Agent7EventName => name i
 /** Every invoke method, as `true` flags. The type forces this list to match `Agent7Api` exactly. */
 const INVOKE_METHODS = {
   agents: { list: true, create: true, update: true, remove: true, setDefault: true },
-  folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true },
+  folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true, writeFile: true },
   sessions: {
     list: true,
     get: true,
@@ -60,6 +66,31 @@ const INVOKE_METHODS = {
     clearTranscript: true,
     exportTranscript: true
   },
+  desktop: {
+    current: true,
+    rename: true,
+    openWindow: true,
+    closeWindow: true,
+    focusWindow: true,
+    setBounds: true,
+    setWindowState: true,
+    updateView: true,
+    setPaused: true,
+    setUserInControl: true,
+    newChat: true,
+    policy: true,
+    setPolicy: true,
+    attachBrowser: true,
+    respondAppRequest: true
+  },
+  vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
+  drives: { list: true, plugIn: true, eject: true },
+  launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },
+  notes: { list: true, add: true, update: true, remove: true },
+  events: { query: true, clear: true },
+  recycle: { list: true, restore: true, remove: true, empty: true },
+  snip: { capture: true },
+  processes: { list: true, end: true },
   app: { version: true },
   a2ui: { dispatch: true },
   shell: { openPath: true },

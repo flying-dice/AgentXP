@@ -3,6 +3,8 @@ import type { IconName } from '../atoms/icons'
 /** Data definition of a menu entry (MenuStrip, ContextMenuStrip, drop-down buttons). */
 export interface MenuItemDef {
   id?: string
+  /** `data-testid` of the rendered item; defaults to `menu-item-<id>` when the item has an id. */
+  testid?: string
   /** Text. A `&` marks the mnemonic letter (`&File`); `&&` is a literal ampersand. */
   label?: string
   icon?: IconName

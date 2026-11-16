@@ -25,7 +25,7 @@ src/
       acp/         ACP client built on @agentclientprotocol/sdk: agent process, connection,
                    client-side handlers (fs, terminals, permissions), session update mapping.
       a2ui/        Stdio MCP server (@modelcontextprotocol/sdk) handed to agents + bridge into the app.
-      fs/          Workspace file system access, sandboxed to registered folders.
+      fs/          Host file access (`NodeHostFiles`), sandboxed per drive root; thumbnail store.
     ipc/           ipcMain handlers that adapt Agent7Api calls to application services, the AG-UI
                    stream transport (streamAguiRun), window caption handlers, Electron dialogs and
                    the event publisher that pushes the renderer-facing events to windows.
@@ -79,16 +79,16 @@ component properties and data models). Images from agents are stored as BLOB.
 
 ## Agent flow
 
-1. The user adds a folder (workspace) and creates a session in it.
+1. The user creates a desktop in the launcher, plugs a folder (project) in as a drive (E:) and starts a chat with a working directory (a VPath).
 2. `SessionService` spawns the configured agent command (default
    `npx -y @zed-industries/claude-code-acp`) via `AgentProcess`, initialises ACP,
-   and calls `session/new` with the folder as `cwd` and the A2UI MCP server in
+   and calls `session/new` with the real path of the chat's cwd and the A2UI MCP server in
    `mcpServers`.
 3. `session/update` notifications are mapped to domain events, projected into repository writes (transcript,
    tool calls, plan, modes, commands, usage) and translated into the AG-UI stream (see below).
 4. Client-side ACP requests (`fs/read_text_file`, `fs/write_text_file`,
    `terminal/*`, `session/request_permission`) are served by the harness,
-   sandboxed to the session folder. Writes are recorded as file changes for the
+   allowed inside C: and the plugged-in drives only. Writes are recorded as file changes for the
    Changes pane (with revert).
 5. The A2UI MCP tool lets the agent draw WinForms surfaces inline in the
    transcript; user actions on a surface are delivered back to the agent as a
@@ -123,6 +123,68 @@ surfaces are stored relationally and travel to the renderer as `a2ui-surface` ac
 In the renderer, `SurfaceController` feeds the messages to web_core's `MessageProcessor` and
 `registry.ts` maps each catalog component to a Svelte component built from the kit. User actions go
 back to the agent through an AG-UI run (`forwardedProps.a2uiAction`).
+
+## Desktop
+
+Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool group table, `enabledToolGroups`,
+`DesktopApi`), `src/shared/desktop-views.ts` (default bounds, initial views, window titles).
+
+- **State.** `DesktopService` (application/desktop) is the source of truth. Windows are persisted
+  (`app_windows` + `chat_windows` / `path_windows` / `browser_windows`, migration 002); focus and the transient view live in
+  memory. Every change recomputes `DesktopState` and publishes `desktop.changed` unless it equals the last one published.
+  Three things listen: (a) `ElectronEventPublisher` sends it to the owning desktop's window only (chat events go the same way
+  via `SessionDto.desktopId`), (b) `AguiRunCoordinator` turns it into STATE_DELTA on `/desktop` for the chats of that desktop
+  (`buildSessionState` fills `desktop`), (c) the bridge pushes `toolsChanged` when `tools` changed.
+- **Virtual file system and launcher.** Desktops are long-lived virtual PCs (docs/DESKTOP_DESIGN.md, section 8b). `VirtualFileSystem`
+  and `DriveService` (application/vfs) map VPaths (`C:\...`, `E:\...`) to real paths through the desktop's live drives (C: is
+  `<userData>/desktops/<id>/C`; E: to Z: are plugged-in `folders`), `SessionFiles` gates the ACP file/terminal requests the same way,
+  and `HostFiles` (`NodeHostFiles`, sandbox guard, symlink-safe) is the only code that touches the disk. `LauncherService`
+  (application/launcher) lists/creates/connects/disconnects/renames/removes desktops; `ThumbnailService` keeps a PNG per desktop
+  (served as `agent7-thumb://`). Disconnecting only closes the OS window.
+- **Windows.** One `BrowserWindow` per connected desktop plus the launcher window (`?launcher=1`) (`ipc/DesktopWindowManager`, URL `?desktop=<id>`, `webviewTag` on). The
+  manager is the `DesktopWindowHost` port: `open` focuses or creates a window, reusing the blank first-run window. Closing an
+  OS window only disconnects (`is_open = 0`, not when the app quits); nothing running stops. `desktop.current` and `desktop.attachBrowser` need the calling window
+  and are registered per sender (`ipc/registerDesktopHandlers`); every other call goes through `createApi`.
+- **Tools follow apps.** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
+  (`agent7`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
+  every `tools/list`, forwards other calls to the app and sends `notifications/tools/list_changed` when the bridge pushes
+  `toolsChanged` (the child holds a subscription socket per desktop). Handlers are one module per group
+  (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`, `paintTools`, `wordpadTools`,
+  `notesTools`, `eventsTools`, `snipTools`, `recycleTools`); `DesktopToolService` validates the
+  arguments, applies the gate and runs them. Tools that change what a window shows go through `DesktopService.updateView`.
+- **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, app closed, policy deny, then ask (policy ask or
+  "take control"). `ToolGateway` applies it to both channels: MCP tools (closed app = MCP error result with
+  `closedAppMessage`) and the ACP client methods (`AcpAgentConnection` calls the `ToolGate` port for `fs/*` and `terminal/*`
+  and answers refusals with a JSON-RPC error). "Ask" shows an Agent7 permission request through `PermissionBroker`; an allow
+  the agent's own prompt just obtained covers the next gated call of that session (60 s, once), so users are not asked twice.
+- **Prompt context.** The AG-UI client sends the desktop as `RunAgentInput.context` (`agent7.desktop`);
+  `SessionService.promptTurn` puts it (or, if absent, the current state) before the user's text as an ACP `resource` block
+  (`agent7://desktop/state`). The block is stored but left out of the AG-UI messages and the Markdown export.
+- **Browser.** The Browser app renders a `<webview partition="persist:agent7-browser">` and reports its
+  `getWebContentsId()` with `desktop.attachBrowser(windowId, id)`; main checks the guest belongs to the caller and hands it to
+  `ElectronBrowserDriver` (navigate, read with numbered refs, screenshot, click, type, back).
+- **App requests.** Some tools need what only the renderer has (the Paint canvas, WordPad's unsaved text). `AppRequestBroker`
+  (application/desktop) pushes `desktop.appRequest` `{ requestId, desktopId, windowId, method, params }` to the owning window and
+  resolves when the app answers with `desktop.respondAppRequest`; it rejects after 10 s with a readable message. Methods:
+  Paint `draw` / `read` (PNG data URL) / `resize`, WordPad `read` (markdown) / `open` (best effort).
+- **Sticky Notes.** `sticky_notes` rows (migration 003) behind `StickyNoteService`: CRUD, `notes.changed` to the owning window,
+  and the notes are part of `DesktopState.notes` so the agent sees them in `desktop_state`. A note with `planSessionId` mirrors
+  that chat's tasks (the renderer renders them); `notes_add` with `plan: true` makes one for the calling chat (at most one per chat).
+- **Recycle Bin.** `ChangeReverter` records a `recycled_changes` row (path, the text the revert threw away, the text it wrote back)
+  for the desktop of the chat, then removes the change. `RecycleService.restore` writes `revertedText` back (or deletes the file
+  when the agent had deleted it), records that as a new file change of the chat when the chat still exists, and removes the row.
+  `recycle.changed` goes to the owning window.
+- **Event Viewer.** `ProtocolEventLog` (application/events) keeps a ring buffer of 5,000 events per desktop in memory (payload =
+  pretty JSON cut at 64 KB) and pushes `events.appended` in 250 ms batches. Three taps feed it: (a) ACP JSON-RPC in both
+  directions, `infrastructure/acp/tapStream` wraps the SDK stream and calls the `ProtocolTap` port that `SessionRuntime` binds
+  per chat (`ConnectionHandlers.tap`); responses are named after their request, (b) AG-UI events, `streamAguiRun` reports each
+  sent event through `onEvent`, (c) MCP tool calls, `DesktopToolService` reports the call and its result (`ToolCallLog`). Level:
+  `error` for JSON-RPC errors, `RUN_ERROR` and failed tool calls; `warning` for refusals (error code -32010, refused tools),
+  `stopReason` refusal / cancelled and `session/cancel`; else `info`.
+- **Screen capture.** `snip.capture` / `screen_capture` use the `ScreenCapturer` port; `ElectronScreenCapturer` calls
+  `webContents.capturePage(rect)` on the desktop's window and returns a PNG data URL.
+- **Saving by the user.** `vfs.writeFile` (Notepad, WordPad saves) writes to a VPath through the same sandbox as
+  `vfs.readFile` and is not recorded as an agent change; the agent's `wordpad_write` goes through `SessionFiles` and is.
 
 ## Window
 

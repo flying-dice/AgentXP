@@ -15,6 +15,7 @@
     label?: string
     onitemcheck?: (value: T, checked: boolean) => void
     class?: string
+    testid?: string
   }
 
   let {
@@ -26,7 +27,8 @@
     height = 120,
     label = 'Checked list',
     onitemcheck,
-    class: className = ''
+    class: className = '',
+    testid
   }: Props = $props()
 
   function toggle(item: ListBoxItem<T>): void {
@@ -44,6 +46,7 @@
   {width}
   {height}
   {label}
+  {testid}
   class={className}
   onitemactivate={toggle}
 >
@@ -53,6 +56,7 @@
       class:on={checked.includes(item.value)}
       class:off={disabled || item.disabled}
       role="checkbox"
+      data-testid={item.testid ? `${item.testid}-check` : undefined}
       aria-checked={checked.includes(item.value)}
       aria-label={item.label}
       tabindex="-1"

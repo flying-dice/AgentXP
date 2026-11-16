@@ -1,18 +1,20 @@
 import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { PromptInput } from '@shared/ipc'
+import { AGENT_HOME, normaliseVPath, type VPath } from '@shared/vfs'
 import type { ContentBlockDto, Id, SessionDto } from '@shared/models'
 import type { A2uiSurfaceRepository } from '../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
-import type { FolderRepository } from '../domain/repositories/folder-repository'
 import type { PermissionRepository } from '../domain/repositories/permission-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
 import type { AgentConnectionPool } from './AgentConnectionPool'
+import { desktopBlock } from './desktop/desktopBlock'
 import { AppError, required } from './errors'
 import type { EventPublisher, StopReason } from './ports'
 import type { SessionBroadcaster } from './SessionBroadcaster'
 import type { SessionRuntime } from './SessionRuntime'
+import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
 
 export const DEFAULT_SESSION_TITLE = 'New session'
 const TITLE_MAX_LENGTH = 40
@@ -20,7 +22,8 @@ const TITLE_MAX_LENGTH = 40
 export interface SessionServiceDeps {
   sessions: SessionRepository
   agents: AgentRepository
-  folders: FolderRepository
+  /** Validates a chat's working directory (its drive is plugged in and the folder exists). */
+  vfs: Pick<VirtualFileSystem, 'stat'>
   transcripts: TranscriptRepository
   surfaces: A2uiSurfaceRepository
   permissions: PermissionRepository
@@ -28,12 +31,19 @@ export interface SessionServiceDeps {
   runtime: SessionRuntime
   broadcaster: SessionBroadcaster
   events: EventPublisher
+  /** The desktop state of a chat as JSON, for the prompt's desktop resource block. */
+  desktopContext?: { contextOfSession(sessionId: Id): string | null }
 }
 
 /** A short single-line title taken from the start of a prompt. */
 export function titleFromPrompt(text: string): string {
   const line = text.replace(/\s+/g, ' ').trim()
   return line.length <= TITLE_MAX_LENGTH ? line : `${line.slice(0, TITLE_MAX_LENGTH - 1).trimEnd()}…`
+}
+
+/** A prompt, plus the desktop state the AG-UI client sent with it (`RunAgentInput.context`). */
+export interface PromptTurnInput extends PromptInput {
+  desktopContext?: string | null
 }
 
 const toBlocks = ({ text, attachments }: PromptInput): ContentBlockDto[] => [
@@ -50,12 +60,15 @@ const toBlocks = ({ text, attachments }: PromptInput): ContentBlockDto[] => [
 export class SessionService {
   constructor(private readonly deps: SessionServiceDeps) {}
 
-  async create(folderId: Id, agentId?: Id): Promise<SessionDto> {
-    const { sessions, folders, runtime, events } = this.deps
-    const folder = required(folders.get(folderId), 'Folder')
+  /** Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. */
+  async create(desktopId: Id, agentId?: Id, cwd: VPath = AGENT_HOME): Promise<SessionDto> {
+    const { sessions, runtime, events } = this.deps
     const agent = required(agentId === undefined ? this.deps.agents.getDefault() : this.deps.agents.get(agentId), 'Agent')
-    const session = sessions.create({ folderId: folder.id, agentId: agent.id, title: DEFAULT_SESSION_TITLE })
-    folders.touch(folder.id)
+    const workingDirectory = normaliseVPath(cwd)
+    if (!workingDirectory) throw new AppError(`Not a valid working directory: ${cwd}`)
+    const folder = await this.deps.vfs.stat(desktopId, workingDirectory)
+    if (folder?.kind !== 'directory') throw new AppError(`The working directory ${workingDirectory} does not exist.`)
+    const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title: DEFAULT_SESSION_TITLE })
     try {
       await runtime.ensureConnected(session.id)
     } catch (error) {
@@ -87,10 +100,13 @@ export class SessionService {
   }
 
   /** Like `prompt`, but resolves with the stop reason when the turn ends (one run = one turn). */
-  async promptTurn(input: PromptInput): Promise<StopReason> {
+  async promptTurn(input: PromptTurnInput): Promise<StopReason> {
     const session = this.requireSession(input.sessionId)
-    const blocks = toBlocks(input)
-    if (blocks.length === 0) throw new AppError('Nothing to send')
+    const userBlocks = toBlocks(input)
+    if (userBlocks.length === 0) throw new AppError('Nothing to send')
+    // Main is the truth about the desktop: what the client sent is used, otherwise the current state.
+    const desktop = input.desktopContext ?? this.deps.desktopContext?.contextOfSession(session.id) ?? null
+    const blocks = desktop ? [desktopBlock(desktop), ...userBlocks] : userBlocks
     const entry = this.deps.transcripts.appendMessage(session.id, 'user', blocks)
     this.deps.events.publish('transcript.upserted', { sessionId: session.id, entry })
     this.autoTitle(session, input.text)

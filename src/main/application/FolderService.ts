@@ -2,7 +2,7 @@ import { basename, resolve } from 'node:path'
 import type { FileNodeDto, FolderDto, Id } from '@shared/models'
 import type { FolderRepository } from '../domain/repositories/folder-repository'
 import { AppError, required } from './errors'
-import type { EventPublisher, FolderBrowser, FolderPicker } from './ports'
+import type { EventPublisher, FolderBrowser, FolderPicker, FolderWriter } from './ports'
 
 /** Registered workspace folders and sandboxed browsing of them. */
 export class FolderService {
@@ -10,7 +10,8 @@ export class FolderService {
     private readonly folders: FolderRepository,
     private readonly browser: FolderBrowser,
     private readonly picker: FolderPicker,
-    private readonly events: EventPublisher
+    private readonly events: EventPublisher,
+    private readonly writer: FolderWriter
   ) {}
 
   list(): FolderDto[] {
@@ -46,6 +47,11 @@ export class FolderService {
 
   readFile(folderId: Id, relativePath: string): Promise<string> {
     return this.browser.readText(this.require(folderId).path, relativePath)
+  }
+
+  /** Saves a text file the user edited (Notepad, WordPad). Not an agent change, so not recorded. */
+  async writeFile(folderId: Id, relativePath: string, text: string): Promise<void> {
+    await this.writer.writeText(this.require(folderId).path, relativePath, text)
   }
 
   gitBranch(folderId: Id): Promise<string | null> {

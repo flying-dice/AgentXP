@@ -1,0 +1,40 @@
+<script module lang="ts">
+  import { defineMeta } from '@storybook/addon-svelte-csf'
+  import Gadgets from './Gadgets.svelte'
+
+  const now = new Date(2026, 10, 16, 3, 56)
+
+  const { Story } = defineMeta({
+    title: 'Desktop/Gadgets',
+    component: Gadgets,
+    parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
+    args: {
+      chatTitle: 'Fix login redirect bug',
+      contextUsed: 78000,
+      contextSize: 200000,
+      since: new Date(2026, 10, 16, 3, 14),
+      now,
+      feed: [
+        { key: '1', chatTitle: 'Fix login redirect bug', title: 'Read src/auth/redirect.ts', status: 'completed' },
+        { key: '2', chatTitle: 'Fix login redirect bug', title: 'Edit src/auth/redirect.ts', status: 'in_progress' },
+        { key: '3', chatTitle: 'Add parser unit tests', title: 'npm test -- auth', status: 'failed' }
+      ]
+    },
+    argTypes: { chatTitle: { control: 'text' }, contextUsed: { control: 'number' }, contextSize: { control: 'number' } }
+  })
+</script>
+
+<Story name="Default">
+  {#snippet template(args)}<div class="stage"><Gadgets {...args} /></div>{/snippet}
+</Story>
+<Story name="NoChat" args={{ chatTitle: null, contextUsed: 0, contextSize: 0, feed: [] }}>
+  {#snippet template(args)}<div class="stage"><Gadgets {...args} /></div>{/snippet}
+</Story>
+
+<style>
+  .stage {
+    position: relative;
+    height: 100vh;
+    background: var(--w7-desktop-bg);
+  }
+</style>

@@ -11,6 +11,8 @@
     readonly?: boolean
     name?: string
     class?: string
+    /** `data-testid` of the box button. */
+    testid?: string
     onchange?: (checked: boolean) => void
     children?: Snippet
   }
@@ -22,6 +24,7 @@
     disabled = false,
     readonly = false,
     name,
+    testid,
     class: className = '',
     onchange,
     children
@@ -45,6 +48,7 @@
     tabindex={readonly ? -1 : undefined}
     {disabled}
     {name}
+    data-testid={testid}
     onclick={toggle}
   >
     {#if indeterminate}

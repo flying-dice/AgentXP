@@ -1,8 +1,14 @@
 /** An in-memory `Agent7Api` for Storybook: the "Fix login redirect bug" session of the design. */
 import { EventType, type BaseEvent, type RunAgentInput } from '@ag-ui/core'
+import { createFakeDesktop } from './fakeDesktop'
+import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
+import { createFakeVfs } from './fakeVfs'
+import { createFakeExtras } from './fakeExtras'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
+import type { DesktopSummaryDto, DriveDto, VPath } from '@shared/vfs'
+import { AGENT_HOME, parseVPath } from '@shared/vfs'
 import { sampleNew, sampleOld } from '../kit/organisms/stories.samples'
 import { completedTurn, modes } from './session/session.fixtures'
 
@@ -11,14 +17,42 @@ export const sampleAgents: AgentDto[] = [
   { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false }
 ]
 
+export const sampleMarkdown = `# claude-code-win
+
+A Windows-friendly build of the **login service**. It keeps the \`?next=\` parameter when it redirects.
+
+## Getting started
+
+1. Install the dependencies with \`npm install\`
+2. Run the tests with \`npm test\`
+3. Start the dev server
+
+## Notes
+
+- Redirects only go to paths on the same site
+- Sessions expire after _30 minutes_
+
+\`\`\`ts
+export function parseRedirect(url: string): string {
+  const next = new URL(url).searchParams.get('next')
+  return next && next.startsWith('/') ? next : '/'
+}
+\`\`\`
+
+## License
+
+MIT
+`
+
 export const sampleFolders: FolderDto[] = [
   { id: 1, name: 'claude-code-win', path: 'C:\\Users\\jonathan\\source\\claude-code-win', lastOpenedAt: null },
   { id: 2, name: 'dotfiles', path: 'C:\\Users\\jonathan\\dotfiles', lastOpenedAt: null }
 ]
 
-const session = (id: number, folderId: number, title: string, over: Partial<SessionDto> = {}): SessionDto => ({
+const session = (id: number, desktopId: number, title: string, over: Partial<SessionDto> = {}): SessionDto => ({
   id,
-  folderId,
+  desktopId,
+  cwd: 'E:\\',
   agentId: 1,
   title,
   status: 'idle',
@@ -46,8 +80,8 @@ export const sampleSessions: SessionDto[] = [
 ]
 
 export const sampleChanges: FileChangeDto[] = [
-  { id: 1, sessionId: 1, path: 'src/auth/redirect.ts', kind: 'modified', additions: 5, deletions: 2, originalText: sampleOld, currentText: sampleNew },
-  { id: 2, sessionId: 1, path: 'src/auth/urls.ts', kind: 'added', additions: 14, deletions: 0, originalText: null, currentText: "export const sanitizeReturnUrl = (v: string): string | null => (v.startsWith('/') ? v : null)\n" }
+  { id: 1, sessionId: 1, path: 'E:\\src\\auth\\redirect.ts', kind: 'modified', additions: 5, deletions: 2, originalText: sampleOld, currentText: sampleNew },
+  { id: 2, sessionId: 1, path: 'E:\\src\\auth\\urls.ts', kind: 'added', additions: 14, deletions: 0, originalText: null, currentText: "export const sanitizeReturnUrl = (v: string): string | null => (v.startsWith('/') ? v : null)\n" }
 ]
 
 export const sampleTasks: TaskDto[] = [
@@ -56,22 +90,21 @@ export const sampleTasks: TaskDto[] = [
   { id: 3, sessionId: 1, position: 2, content: 'Run the auth tests', priority: 'medium', status: 'pending' }
 ]
 
-const tree: Record<string, FileNodeDto[]> = {
-  '': [
-    { name: 'src', path: 'src', isDirectory: true },
-    { name: 'tests', path: 'tests', isDirectory: true },
-    { name: 'package.json', path: 'package.json', isDirectory: false },
-    { name: 'README.md', path: 'README.md', isDirectory: false }
-  ],
-  src: [
-    { name: 'auth', path: 'src/auth', isDirectory: true },
-    { name: 'index.ts', path: 'src/index.ts', isDirectory: false }
-  ],
-  'src/auth': [
-    { name: 'redirect.ts', path: 'src/auth/redirect.ts', isDirectory: false },
-    { name: 'session.ts', path: 'src/auth/session.ts', isDirectory: false }
-  ],
-  tests: [{ name: 'auth.test.ts', path: 'tests/auth.test.ts', isDirectory: false }]
+/** The files of a plugged-in project, relative to the drive root. */
+export function sampleProjectFiles(folder: Pick<FolderDto, 'name'>): Record<string, string> {
+  if (folder.name === 'claude-code-win') {
+    return {
+      'README.md': sampleMarkdown,
+      'package.json': '{\n  "name": "claude-code-win",\n  "version": "1.4.2",\n  "scripts": { "test": "vitest run" }\n}\n',
+      'src/index.ts': sampleNew,
+      'src/auth/redirect.ts': sampleOld,
+      'src/auth/session.ts': 'export const SESSION_MINUTES = 30\n',
+      'docs/guide.md': '# Guide\n\nSee the [README](../README.md) first.\n',
+      'tests/auth.test.ts': "import { describe, it, expect } from 'vitest'\nimport { parseRedirect } from '../src/auth/redirect'\n\ndescribe('parseRedirect', () => {\n  it('keeps ?next=', () => expect(parseRedirect('https://a.b/?next=/x')).toBe('/x'))\n})\n"
+    }
+  }
+  if (folder.name === 'dotfiles') return { '.bashrc': "alias ll='ls -la'\n", 'aliases.sh': "alias gs='git status'\n", 'README.md': '# dotfiles\n\nShell aliases and settings.\n' }
+  return { 'README.md': `# ${folder.name}\n` }
 }
 
 export const sampleState = (): AguiSessionState => {
@@ -81,8 +114,8 @@ export const sampleState = (): AguiSessionState => {
 
 const noop = (): void => {}
 
-/** Fake AG-UI transport: every run (connect included) answers with the sample transcript and state. */
-function fakeAgui(): Agent7Api['agui'] {
+/** Fake AG-UI transport: every run (connect included) answers with the sample transcript and `stateOf()` (default: the sample state). */
+export function fakeAgui(stateOf: () => AguiSessionState = sampleState): Agent7Api['agui'] {
   const listeners = new Map<string, (event: BaseEvent) => void>()
   return {
     run: async (input: RunAgentInput) => {
@@ -90,7 +123,7 @@ function fakeAgui(): Agent7Api['agui'] {
       const { messages } = completedTurn()
       const events: BaseEvent[] = [
         { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
-        { type: EventType.STATE_SNAPSHOT, snapshot: sampleState() } as BaseEvent,
+        { type: EventType.STATE_SNAPSHOT, snapshot: stateOf() } as BaseEvent,
         { type: EventType.MESSAGES_SNAPSHOT, messages } as BaseEvent,
         { type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent
       ]
@@ -105,15 +138,46 @@ function fakeAgui(): Agent7Api['agui'] {
 }
 
 /** Builds the fake backend; `agents` starts with the sample agents, `folders` and `sessions` can start empty. */
-export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
+export type FakeApi = Agent7Api & {
+  pushEvent: ReturnType<typeof createFakeExtras>['pushEvent']
+  /** The current drives (C: and the plugged-in USB drives). */
+  driveList(): DriveDto[]
+  /** Follow plug in / eject (a story host keeps its own desktop in step). */
+  watchDrives(listener: (drives: DriveDto[]) => void): () => void
+}
+
+export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSummaryDto[] } = {}): FakeApi {
   let agents = [...sampleAgents]
   let folders = options.empty ? [] : [...sampleFolders]
   let sessions = options.empty ? [] : [...sampleSessions]
   const listeners: { [K in keyof Agent7Events]?: ((payload: Agent7Events[K]) => void)[] } = {}
   const emit = <K extends keyof Agent7Events>(event: K, payload: Agent7Events[K]): void => (listeners[event] ?? []).forEach((l) => l(payload))
   let nextId = 100
+  const extras = createFakeExtras(emit as unknown as Parameters<typeof createFakeExtras>[0])
+  let desktopApi: ReturnType<typeof createFakeDesktop> | null = null
+  const driveWatchers = new Set<(drives: DriveDto[]) => void>()
+  const fakeVfs = createFakeVfs({
+    resolveFolder: (folderId) => {
+      if (folderId !== undefined) return folders.find((f) => f.id === folderId) ?? null
+      const plugged = new Set(fakeVfs.list().map((d) => d.folderId))
+      const free = folders.find((f) => !plugged.has(f.id))
+      if (free) return free
+      const created: FolderDto = { id: nextId++, name: 'new-project', path: 'C:\\Users\\jonathan\\source\\new-project', lastOpenedAt: null }
+      folders = [...folders, created]
+      return created
+    },
+    filesOf: sampleProjectFiles,
+    onDrives: (drives) => {
+      desktopApi?.setDrives(drives)
+      driveWatchers.forEach((w) => w(drives))
+    }
+  })
+  if (!options.empty) fakeVfs.mount(sampleFolders[0], 'E')
+  const launcher = createFakeLauncher({ folders: () => folders, emit: emit as never, desktops: options.desktops ?? (options.empty ? [] : sampleDesktops()) })
+  /** The path of a folder-relative `FileNodeDto` listing, now served by the VFS: the drive a folder is plugged in as. */
+  const driveRoot = (folderId: number): VPath => `${fakeVfs.list().find((d) => d.folderId === folderId)?.letter ?? 'E'}:\\`
 
-  return {
+  const api: Agent7Api = {
     agents: {
       list: async () => agents,
       create: async (input) => {
@@ -142,15 +206,22 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
         return folder
       },
       remove: async (id) => void (folders = folders.filter((f) => f.id !== id)),
-      readDir: async (_id, path) => tree[path] ?? [],
-      readFile: async (_id, path) => (path.endsWith('.md') ? '# claude-code-win\n\nSample project.\n' : sampleNew),
-      gitBranch: async () => 'main'
+      readDir: async (id, path) => {
+        const entries = await fakeVfs.vfs.readDir(1, `${driveRoot(id)}${path.replaceAll('/', '\\')}`)
+        return entries.map((e): FileNodeDto => ({ name: e.name, path: (parseVPath(e.path)?.segments ?? []).join('/'), isDirectory: e.kind === 'directory' }))
+      },
+      readFile: async (id, path) => fakeVfs.vfs.readFile(1, `${driveRoot(id)}${path.replaceAll('/', '\\')}`),
+      gitBranch: async () => 'main',
+      writeFile: async (id, path, text) => fakeVfs.vfs.writeFile(1, `${driveRoot(id)}${path.replaceAll('/', '\\')}`, text)
     },
+    vfs: fakeVfs.vfs,
+    drives: fakeVfs.drives,
+    launcher,
     sessions: {
-      list: async () => sessions,
+      list: async (desktopId) => (desktopId === undefined ? sessions : sessions.filter((s) => s.desktopId === desktopId)),
       get: async (id) => sessions.find((s) => s.id === id)!,
-      create: async (folderId, agentId) => {
-        const created = session(nextId++, folderId, 'New session', { agentId: agentId ?? 1 })
+      create: async (desktopId, agentId, cwd) => {
+        const created = session(nextId++, desktopId, 'New session', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
         sessions = [...sessions, created]
         return created
       },
@@ -176,6 +247,15 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       clearTranscript: async () => {},
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
     },
+    desktop: (desktopApi = createFakeDesktop({ windows: options.empty ? [] : ['chat'], drives: fakeVfs.list(), onChange: (state) => emit('desktop.changed', state) })),
+    notes: extras.notes,
+    events: extras.events,
+    recycle: extras.recycle,
+    snip: extras.snip,
+    processes: {
+      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
+      end: async () => {}
+    },
     a2ui: { dispatch: async () => {} },
     dialogs: { pickFiles: async () => [] },
     shell: { openPath: async () => {} },
@@ -194,4 +274,12 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       return () => void list.splice(list.indexOf(listener as (payload: never) => void), 1)
     }
   }
+  return Object.assign(api, {
+    pushEvent: extras.pushEvent,
+    driveList: () => fakeVfs.list(),
+    watchDrives: (listener: (drives: DriveDto[]) => void) => {
+      driveWatchers.add(listener)
+      return () => void driveWatchers.delete(listener)
+    }
+  })
 }

@@ -6,5 +6,5 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 export default defineConfig({
   plugins: [svelte()],
   resolve: { alias: { '@shared': resolve('src/shared') } },
-  test: { include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/renderer/src/**/*.test.ts'], environment: 'node' }
+  test: { include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/renderer/src/**/*.test.ts', 'agents/**/*.test.ts'], environment: 'node' }
 })

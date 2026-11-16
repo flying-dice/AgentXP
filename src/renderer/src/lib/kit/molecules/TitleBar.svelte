@@ -51,7 +51,7 @@
   <span class="app-icon">
     {#if icon}{@render icon()}{:else if iconName}<Icon name={iconName} />{/if}
   </span>
-  <span class="text">{title}</span>
+  <span class="text" data-testid="window-title">{title}</span>
   <CaptionButtons
     {windowState}
     {active}

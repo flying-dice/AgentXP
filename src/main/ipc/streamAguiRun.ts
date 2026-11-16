@@ -16,6 +16,8 @@ export interface StreamOptions {
   validate: boolean
   /** True when the receiver is gone; the run is detached (the turn itself keeps going). */
   isClosed(): boolean
+  /** Sees every event sent (the Event Viewer's AG-UI tap). A throwing observer is ignored. */
+  onEvent?(event: AguiEvent): void
 }
 
 /** Pumps one run's AG-UI events to `send` as `{ runId, event }`. Pure transport: no Electron, no translation. */
@@ -25,7 +27,14 @@ export async function streamAguiRun(
   send: (message: AguiEventMessage) => void,
   options: StreamOptions
 ): Promise<void> {
-  const emit = (event: AguiEvent): void => send({ runId: input.runId, event })
+  const emit = (event: AguiEvent): void => {
+    try {
+      options.onEvent?.(event)
+    } catch (error) {
+      console.error('AG-UI tap failed', error)
+    }
+    send({ runId: input.runId, event })
+  }
   const stream = runner.run(input)
   try {
     for await (const event of stream) {

@@ -6,12 +6,13 @@
     agentName: string
     text: string
     onlink?: (href: string) => void
+    testid?: string
   }
 
-  let { agentName, text, onlink }: Props = $props()
+  let { agentName, text, onlink, testid = 'chat-message-agent' }: Props = $props()
 </script>
 
-<div class="agent-message">
+<div class="agent-message" data-testid={testid}>
   <div class="who"><Icon name="claude" size={12} />{agentName}</div>
   <div class="body"><MarkdownView source={text} {onlink} label="{agentName} message" /></div>
 </div>

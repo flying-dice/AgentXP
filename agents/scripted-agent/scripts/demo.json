@@ -1,0 +1,86 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "demo",
+  "description": "A typical coding turn: greeting, plan, read a file, propose an edit (permission with allow/deny branches), run the tests, finish.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0",
+    "modes": [
+      { "id": "default", "name": "Default" },
+      { "id": "plan", "name": "Plan", "description": "Plan only" }
+    ],
+    "models": [
+      { "id": "scripted-1", "name": "Scripted 1" },
+      { "id": "scripted-2", "name": "Scripted 2" }
+    ]
+  },
+  "defaults": { "stepMode": "auto", "delayMs": 0 },
+  "rules": [
+    {
+      "id": "greeting",
+      "match": { "regex": "^(hi|hello|hey)\\b", "ignoreCase": true },
+      "steps": [{ "type": "message", "text": "Hello from the scripted agent. Say anything else to run the demo turn." }]
+    },
+    {
+      "id": "work",
+      "match": { "any": true },
+      "steps": [
+        { "type": "message", "text": "On it: {{prompt}}", "chunked": 8, "label": "acknowledge" },
+        { "type": "thought", "text": "Reading the README first, then proposing a small edit." },
+        {
+          "type": "plan",
+          "label": "plan",
+          "entries": [
+            { "content": "Read README.md", "status": "in_progress", "priority": "high" },
+            { "content": "Edit SCRIPTED.md", "status": "pending", "priority": "high" },
+            { "content": "Run the tests", "status": "pending", "priority": "medium" }
+          ]
+        },
+        { "type": "readFile", "path": "{{cwd}}/README.md", "saveAs": "readme", "label": "read README" },
+        { "type": "message", "text": "Read README.md (error: {{readme.isError}}).\n" },
+        {
+          "type": "toolCall",
+          "id": "edit-1",
+          "title": "Write SCRIPTED.md",
+          "kind": "edit",
+          "status": "pending",
+          "rawInput": { "path": "SCRIPTED.md" },
+          "locations": [{ "path": "{{cwd}}/SCRIPTED.md" }],
+          "content": [{ "diff": { "path": "{{cwd}}/SCRIPTED.md", "newText": "# Scripted\n\nWritten by the scripted agent.\n" } }]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-1",
+          "title": "Write SCRIPTED.md",
+          "label": "ask permission",
+          "options": [
+            { "optionId": "allow", "name": "Allow", "kind": "allow_once" },
+            { "optionId": "deny", "name": "Deny", "kind": "reject_once" }
+          ],
+          "branches": {
+            "allow": [
+              { "type": "toolCallUpdate", "id": "edit-1", "status": "in_progress" },
+              { "type": "writeFile", "path": "{{cwd}}/SCRIPTED.md", "content": "# Scripted\n\nWritten by the scripted agent.\n" },
+              { "type": "toolCallUpdate", "id": "edit-1", "status": "completed", "rawOutput": { "written": true } },
+              { "type": "toolCall", "id": "test-1", "title": "npm test", "kind": "execute", "status": "in_progress" },
+              { "type": "terminal", "command": "npm", "args": ["test"], "cwd": "{{cwd}}", "saveAs": "tests" },
+              { "type": "toolCallUpdate", "id": "test-1", "status": "completed", "rawOutput": { "exitCode": "{{tests.exitCode}}" } },
+              { "type": "message", "text": "Edit applied; npm test exited with {{tests.exitCode}}." }
+            ],
+            "deny": [
+              { "type": "toolCallUpdate", "id": "edit-1", "status": "failed" },
+              { "type": "message", "text": "Understood, I left the files alone." },
+              { "type": "end", "stopReason": "end_turn" }
+            ],
+            "cancelled": [
+              { "type": "toolCallUpdate", "id": "edit-1", "status": "failed" },
+              { "type": "end", "stopReason": "cancelled" }
+            ]
+          }
+        },
+        { "type": "usage", "used": 1200, "size": 200000 },
+        { "type": "message", "text": " Done." }
+      ]
+    }
+  ]
+}

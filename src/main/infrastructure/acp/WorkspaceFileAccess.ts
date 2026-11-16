@@ -23,6 +23,10 @@ export class WorkspaceFileAccess implements FileAccess {
     return sliceLines(text, line, limit)
   }
 
+  async resolveCwd(cwd?: string): Promise<string> {
+    return cwd === undefined ? this.root : resolveInsideRoot(this.root, cwd)
+  }
+
   async writeTextFile(path: string, content: string): Promise<void> {
     const target = await resolveInsideRoot(this.root, path)
     const before = await readFile(target, 'utf8').catch(() => null)

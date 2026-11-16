@@ -107,3 +107,18 @@
   --w7-statusbar-face: linear-gradient(#f5f7fa, #dbe4f1);
   --w7-menubar-face: linear-gradient(#fdfefe, #e3ebf6);
 }
+
+/* Added by the desktop shell: glass gadgets, start menu, action center, UAC */
+:root {
+  --w7-gadget-face: linear-gradient(rgba(34, 66, 112, 0.82), rgba(10, 26, 58, 0.88));
+  --w7-gadget-border: rgba(190, 215, 245, 0.55);
+  --w7-gadget-text: #eef5ff;
+  --w7-gadget-muted: #b4c8e4;
+  --w7-glass-face: linear-gradient(rgba(124, 164, 214, 0.93), rgba(52, 92, 148, 0.95) 48%, rgba(38, 76, 130, 0.96) 52%, rgba(64, 108, 166, 0.96));
+  --w7-glass-border: rgba(20, 44, 84, 0.9);
+  --w7-start-hover: linear-gradient(rgba(255, 255, 255, 0.55), rgba(190, 220, 250, 0.4));
+  --w7-popup-border: #6f7f96;
+  --w7-uac-band: linear-gradient(#3b88d8, #1f5cab);
+  --w7-uac-band-warn: linear-gradient(#f6c94a, #d79a12);
+  --w7-agent-glow: 0 0 0 2px rgba(255, 196, 80, 0.9), 0 0 22px 4px rgba(255, 190, 70, 0.75);
+}

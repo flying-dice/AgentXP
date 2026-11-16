@@ -1,0 +1,23 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "errors",
+  "description": "Failure paths chosen by the prompt: error, refusal, max_tokens, cancelled, failed expect, unknown template variable.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    { "id": "rpc-error", "match": { "contains": "error" }, "steps": [{ "type": "message", "text": "About to fail.\n" }, { "type": "error", "message": "Scripted failure", "code": -32603 }] },
+    { "id": "refusal", "match": { "contains": "refuse" }, "steps": [{ "type": "message", "text": "I can't help with that." }, { "type": "end", "stopReason": "refusal" }] },
+    { "id": "max-tokens", "match": { "contains": "long" }, "steps": [{ "type": "message", "text": "This answer is cut o" }, { "type": "end", "stopReason": "max_tokens" }] },
+    { "id": "cancelled", "match": { "contains": "cancelled" }, "steps": [{ "type": "end", "stopReason": "cancelled" }] },
+    {
+      "id": "bad-expect",
+      "match": { "contains": "expect" },
+      "steps": [
+        { "type": "readFile", "path": "{{cwd}}/does-not-exist.txt", "saveAs": "missing" },
+        { "type": "expect", "from": "missing", "contains": "will not be there", "message": "Scripted expectation failed" }
+      ]
+    },
+    { "id": "typo", "match": { "contains": "template" }, "steps": [{ "type": "message", "text": "Hello {{nobody}}" }] },
+    { "id": "slow", "match": { "contains": "slow" }, "steps": [{ "type": "message", "text": "Waiting...\n" }, { "type": "wait", "ms": 60000 }, { "type": "message", "text": "never shown" }] }
+  ],
+  "fallback": [{ "type": "message", "text": "Try: error, refuse, long, cancelled, expect, template or slow." }]
+}

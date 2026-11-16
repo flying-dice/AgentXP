@@ -1,5 +1,14 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
-import type { FilePicker } from '../application/ports'
+import type { FilePicker, ScreenCapturer } from '../application/ports'
+import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
+import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
+import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
+import type { DriveService } from '../application/vfs/DriveService'
+import type { LauncherService } from '../application/launcher/LauncherService'
+import type { RecycleService } from '../application/RecycleService'
+import type { StickyNoteService } from '../application/desktop/StickyNoteService'
+import type { DesktopService } from '../application/desktop/DesktopService'
+import type { ProcessService } from '../application/ProcessService'
 import type { A2uiService } from '../application/A2uiService'
 import type { AgentService } from '../application/AgentService'
 import type { ChangeReverter } from '../application/ChangeReverter'
@@ -20,9 +29,22 @@ export interface ApiServices {
   exporter: TranscriptExporter
   a2ui: A2uiService
   shell: ShellService
+  desktops: DesktopService
+  vfs: VirtualFileSystem
+  drives: DriveService
+  launcher: LauncherService
+  processes: ProcessService
   files: FilePicker
+  appRequests: AppRequestBroker
+  notes: StickyNoteService
+  eventLog: ProtocolEventLog
+  recycle: RecycleService
+  screen: ScreenCapturer
   appVersion: string
 }
+
+/** Calls that depend on the calling window are answered per window (see `registerDesktopHandlers`). */
+const perWindow = (channel: string) => (): Promise<never> => Promise.reject(new Error(`${channel} is answered per window`))
 
 /** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
 export function createApi(s: ApiServices): InvokeApi {
@@ -41,15 +63,71 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: async (id) => s.folders.remove(id),
       readDir: (folderId, relativePath) => s.folders.readDir(folderId, relativePath),
       readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath),
-      gitBranch: (folderId) => s.folders.gitBranch(folderId)
+      gitBranch: (folderId) => s.folders.gitBranch(folderId),
+      writeFile: (folderId, relativePath, text) => s.folders.writeFile(folderId, relativePath, text)
     },
+    desktop: {
+      current: perWindow('desktop.current'),
+      rename: async (id, title) => s.launcher.rename(id, title),
+      openWindow: async (input) => s.desktops.openWindow(input),
+      closeWindow: async (windowId) => s.desktops.closeWindow(windowId),
+      focusWindow: async (windowId) => s.desktops.focusWindow(windowId),
+      setBounds: async (windowId, bounds) => s.desktops.setBounds(windowId, bounds),
+      setWindowState: async (windowId, state) => s.desktops.setWindowState(windowId, state),
+      updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
+      setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
+      setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
+      newChat: (desktopId, agentId, cwd) => s.desktops.newChat(desktopId, agentId, cwd),
+      policy: async () => s.desktops.policy(),
+      setPolicy: async (policy) => s.desktops.setPolicy(policy),
+      attachBrowser: perWindow('desktop.attachBrowser'),
+      respondAppRequest: async (response) => s.appRequests.respond(response)
+    },
+    vfs: {
+      readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),
+      readFile: (desktopId, path) => s.vfs.readFile(desktopId, path),
+      writeFile: (desktopId, path, text) => s.vfs.writeFile(desktopId, path, text),
+      stat: (desktopId, path) => s.vfs.stat(desktopId, path)
+    },
+    drives: {
+      list: async (desktopId) => s.drives.list(desktopId),
+      plugIn: (desktopId, folderId) => s.drives.plugIn(desktopId, folderId),
+      eject: async (desktopId, letter) => s.drives.eject(desktopId, letter)
+    },
+    launcher: {
+      list: async () => s.launcher.list(),
+      create: (input) => s.launcher.create(input),
+      connect: async (id) => s.launcher.connect(id),
+      disconnect: (id) => s.launcher.disconnect(id),
+      rename: async (id, title) => s.launcher.rename(id, title),
+      remove: (id) => s.launcher.remove(id),
+      show: async () => s.launcher.show()
+    },
+    notes: {
+      list: async (desktopId) => s.notes.list(desktopId),
+      add: async (desktopId, text, color) => s.notes.add(desktopId, text, color),
+      update: async (id, patch) => s.notes.update(id, patch),
+      remove: async (id) => s.notes.remove(id)
+    },
+    events: {
+      query: async (query) => s.eventLog.query(query),
+      clear: async (desktopId) => s.eventLog.clear(desktopId)
+    },
+    recycle: {
+      list: async (desktopId) => s.recycle.list(desktopId),
+      restore: (id) => s.recycle.restore(id),
+      remove: async (id) => s.recycle.remove(id),
+      empty: async (desktopId) => s.recycle.empty(desktopId)
+    },
+    snip: { capture: (desktopId, region) => s.screen.capture(desktopId, region) },
+    processes: { list: async () => s.processes.list(), end: (agentId, desktopId) => s.processes.end(agentId, desktopId) },
     app: {
       version: async () => s.appVersion
     },
     sessions: {
-      list: async (folderId) => s.queries.list(folderId),
+      list: async (desktopId) => s.queries.list(desktopId),
       get: async (id) => s.queries.get(id),
-      create: (folderId, agentId) => s.sessions.create(folderId, agentId),
+      create: (desktopId, agentId, cwd) => s.sessions.create(desktopId, agentId, cwd),
       rename: async (id, title) => s.sessions.rename(id, title),
       remove: (id) => s.sessions.remove(id),
       transcript: async (id) => s.queries.transcript(id),

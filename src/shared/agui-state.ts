@@ -22,6 +22,7 @@ import type {
   ToolCallStatus,
   ToolKind
 } from './models'
+import type { DesktopState } from './desktop'
 
 /** The slice of the session row the UI keeps live (title, status, modes, usage...). */
 export interface AguiSessionInfo {
@@ -65,6 +66,8 @@ export interface AguiSessionState {
   toolCalls: Record<string, AguiToolCallState>
   /** Keyed by the ACP terminal id (referenced by `toolCalls[*].contents`). */
   terminals: Record<string, AguiTerminalState>
+  /** The desktop this chat runs on (null before the desktop is known). */
+  desktop: DesktopState | null
 }
 
 /** `ActivityMessage.activityType` of an A2UI surface. */
@@ -84,6 +87,32 @@ export interface A2uiSurfaceActivity {
   messages: A2uiServerMessage[]
   deleted?: boolean
 }
+
+/** `ActivityMessage.activityType` of the notice that a turn ended for another reason than `end_turn`. */
+export const STOP_NOTICE_ACTIVITY_TYPE = 'stop-notice'
+
+/** `ActivityMessage.content` of a stop notice (`reason` is the ACP stop reason: `refusal`, `max_tokens`, ...). */
+export interface StopNoticeActivity {
+  reason: string
+}
+
+/** The notice text for an ACP stop reason (`cancelled` and `end_turn` need none). */
+export function stopNoticeText(reason: string): string {
+  switch (reason) {
+    case 'max_tokens':
+      return 'The agent stopped: it reached its output limit.'
+    case 'max_turn_requests':
+      return 'The agent stopped: it reached the limit of model requests for one turn.'
+    case 'refusal':
+      return 'The agent declined to continue.'
+    default:
+      return `The agent stopped (${reason}).`
+  }
+}
+
+/** True for stop reasons the user should be told about. */
+export const isNoticeableStopReason = (reason: string | void): reason is string =>
+  typeof reason === 'string' && reason !== 'end_turn' && reason !== 'cancelled'
 
 /** `Interrupt.reason` of a tool permission request. */
 export const PERMISSION_INTERRUPT_REASON = 'tool_permission'
@@ -112,5 +141,6 @@ export const emptyAguiState = (): AguiSessionState => ({
   tasks: [],
   changes: [],
   toolCalls: {},
-  terminals: {}
+  terminals: {},
+  desktop: null
 })

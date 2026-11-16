@@ -4,8 +4,8 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { A2UI_CATALOG_ID, type A2uiServerMessage } from '@shared/a2ui'
 import type { A2uiMessageSink, A2uiSinkResult } from '../../domain/a2ui/ports'
 import { A2uiBridgeServer, buildA2uiMcpServerConfig, defaultSocketPath } from './bridge-server'
-import { SocketForwarder } from './bridge-client'
-import { createA2uiMcpServer } from './mcp-tools'
+import { SocketBridgeClient } from './bridge-client'
+import { createAgent7McpServer } from './mcp-tools'
 
 class FakeSink implements A2uiMessageSink {
   calls: { sessionKey: string; messages: A2uiServerMessage[] }[] = []
@@ -27,7 +27,7 @@ describe('A2UI MCP <-> bridge', () => {
     sink = new FakeSink()
     bridge = new A2uiBridgeServer(sink, defaultSocketPath(process.pid + Math.floor(Math.random() * 1e6)))
     await bridge.start()
-    const server = createA2uiMcpServer(new SocketForwarder(bridge.socketPath, 'sess-1'))
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, 'sess-1'))
     const [a, b] = InMemoryTransport.createLinkedPair()
     client = new Client({ name: 't', version: '0' })
     await Promise.all([server.connect(a), client.connect(b)])
@@ -91,7 +91,7 @@ describe('A2UI MCP <-> bridge', () => {
   it('also validates on the app side of the bridge', async () => {
     // A client that skips the MCP-side validation (e.g. an older MCP server build) is still checked by the bridge.
     const lenient = { validate: (m: unknown) => ({ ok: true as const, messages: m as A2uiServerMessage[] }) }
-    const server = createA2uiMcpServer(new SocketForwarder(bridge.socketPath, 'sess-1'), lenient as never)
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, 'sess-1'), lenient as never)
     const [a, b] = InMemoryTransport.createLinkedPair()
     const other = new Client({ name: 't2', version: '0' })
     await Promise.all([server.connect(a), other.connect(b)])
@@ -112,15 +112,47 @@ describe('A2UI MCP <-> bridge', () => {
 
 describe('buildA2uiMcpServerConfig', () => {
   it('builds the ACP stdio shape', () => {
-    expect(buildA2uiMcpServerConfig({ electronPath: '/e', scriptPath: '/s.js', socketPath: '/sock', sessionKey: 'k' })).toEqual({
-      name: 'agent7-a2ui',
+    expect(buildA2uiMcpServerConfig({ electronPath: '/e', scriptPath: '/s.js', socketPath: '/sock', sessionKey: 'k', desktopId: '3' })).toEqual({
+      name: 'agent7',
       command: '/e',
       args: ['/s.js'],
       env: [
         { name: 'ELECTRON_RUN_AS_NODE', value: '1' },
         { name: 'AGENT7_A2UI_SOCKET', value: '/sock' },
-        { name: 'AGENT7_SESSION_KEY', value: 'k' }
+        { name: 'AGENT7_SESSION_KEY', value: 'k' },
+        { name: 'AGENT7_DESKTOP_ID', value: '3' }
       ]
     })
+  })
+})
+
+describe('A2UI tool calls in the protocol log', () => {
+  it('records a2ui_* calls and their results through the bridge, also rejected ones', async () => {
+    const calls: string[] = []
+    const sink = new FakeSink()
+    const bridge = new A2uiBridgeServer(sink, defaultSocketPath(process.pid + Math.floor(Math.random() * 1e6)), undefined, undefined, {
+      called: (sessionId, tool, args) => calls.push(`in ${sessionId} ${tool} ${JSON.stringify(args)}`),
+      finished: (sessionId, tool, result) => calls.push(`out ${sessionId} ${tool} ${result.isError ? 'error' : 'ok'} ${textOf(result)}`)
+    })
+    await bridge.start()
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, '5'))
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: 't', version: '0' })
+    await Promise.all([server.connect(a), client.connect(b)])
+    try {
+      await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } }] } })
+      await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ nonsense: true }] } })
+      await client.callTool({ name: 'a2ui_delete_surface', arguments: { surfaceId: 's' } })
+    } finally {
+      await client.close()
+      await bridge.stop()
+    }
+    expect(calls).toHaveLength(6)
+    expect(calls[0]).toMatch(/^in 5 a2ui_render .*createSurface/)
+    expect(calls[1]).toBe('out 5 a2ui_render ok ok')
+    expect(calls[2]).toMatch(/^in 5 a2ui_render .*nonsense/)
+    expect(calls[3]).toMatch(/^out 5 a2ui_render error Rejected/)
+    expect(calls[4]).toBe('in 5 a2ui_delete_surface {"surfaceId":"s"}')
+    expect(calls[5]).toBe('out 5 a2ui_delete_surface ok ok')
   })
 })

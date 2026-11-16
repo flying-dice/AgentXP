@@ -1,4 +1,5 @@
 import { EventType, type Interrupt, type RunFinishedOutcome } from '@ag-ui/core'
+import { isNoticeableStopReason, STOP_NOTICE_ACTIVITY_TYPE, type StopNoticeActivity } from '@shared/agui-state'
 import type { Id, PermissionRequestDto } from '@shared/models'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { AppEventMessage } from '../FanOutEventPublisher'
@@ -104,7 +105,7 @@ export class AguiThread {
     this.turn = (async () => work())().then(
       (stopReason) => {
         this.turn = null
-        this.finish(stopReason === 'cancelled' ? { type: 'cancelled' } : { type: 'success' })
+        this.finishTurn(stopReason)
       },
       (error: unknown) => {
         this.turn = null
@@ -113,11 +114,31 @@ export class AguiThread {
     )
   }
 
+  /**
+   * The turn ended with `stopReason`. Besides the outcome, a reason the user should know about (refusal,
+   * output limit...) travels as `RUN_FINISHED.result` and as a stop-notice activity message in the transcript.
+   */
+  private finishTurn(stopReason: string | void): void {
+    if (stopReason === 'cancelled') return this.finish({ type: 'cancelled' })
+    if (!isNoticeableStopReason(stopReason)) return this.finish({ type: 'success' })
+    const notice: AguiEvent = {
+      type: EventType.ACTIVITY_SNAPSHOT,
+      messageId: `stop:${this.deps.newId()}`,
+      activityType: STOP_NOTICE_ACTIVITY_TYPE,
+      content: { reason: stopReason } satisfies StopNoticeActivity,
+      replace: true
+    }
+    this.finish({ type: 'success' }, { result: { stopReason }, before: [notice] })
+  }
+
   // ---- finishing the attached run ---------------------------------------------------------------------
 
   /** RUN_FINISHED with outcome success (or cancelled); flushes open elements and pending state first. */
-  finish(outcome: RunFinishedOutcome): void {
-    this.closeRun({ type: EventType.RUN_FINISHED, threadId: this.threadId, runId: this.attachment?.runId ?? '', outcome })
+  finish(outcome: RunFinishedOutcome, extra: { result?: unknown; before?: AguiEvent[] } = {}): void {
+    this.closeRun(
+      { type: EventType.RUN_FINISHED, threadId: this.threadId, runId: this.attachment?.runId ?? '', outcome, ...(extra.result === undefined ? {} : { result: extra.result }) },
+      extra.before
+    )
   }
 
   /** RUN_FINISHED with the open permission requests as interrupts (the turn stays suspended). */
@@ -133,12 +154,12 @@ export class AguiThread {
     this.closeRun({ type: EventType.RUN_ERROR, message })
   }
 
-  private closeRun(terminal: AguiEvent): void {
+  private closeRun(terminal: AguiEvent, before: AguiEvent[] = []): void {
     const attachment = this.attachment
     if (!attachment) return
     this.push(...this.translator.flush())
     this.pushStateDelta()
-    this.push(terminal)
+    this.push(...before, terminal)
     this.detach(attachment)
   }
 
@@ -157,6 +178,8 @@ export class AguiThread {
     switch (message.name) {
       case 'session.changed':
         return this.updateState(() => this.model.setSession(message.payload))
+      case 'desktop.changed':
+        return this.updateState(() => this.model.setDesktop(message.payload))
       case 'tasks.changed':
         return this.updateState(() => this.model.setTasks(message.payload.tasks))
       case 'changes.changed':

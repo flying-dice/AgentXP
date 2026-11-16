@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { EventType, type ResumeEntry, type RunAgentInput } from '@ag-ui/core'
 import type { Id, PermissionRequestDto } from '@shared/models'
-import type { PromptInput } from '@shared/ipc'
 import type { A2uiClientEvent } from '@shared/a2ui'
 import type { AppEventMessage } from '../FanOutEventPublisher'
 import type { PermissionChange } from '../PermissionBroker'
 import type { SessionEventListener } from '../SessionEventBus'
 import { AppError } from '../errors'
+import type { PromptTurnInput } from '../SessionService'
 import { surfaceSnapshotEvent } from './a2uiActivity'
 import type { AguiEvent } from './AgentEventTranslator'
 import { AguiThread, type RunAttachment } from './AguiThread'
@@ -21,7 +21,7 @@ const ABORT_SETTLE_TIMEOUT_MS = 3000
 export interface AguiRunCoordinatorDeps {
   queries: AguiQueries
   sessions: {
-    promptTurn(input: PromptInput): Promise<string>
+    promptTurn(input: PromptTurnInput): Promise<string>
     cancel(id: Id): Promise<void>
   }
   a2ui: { dispatch(event: A2uiClientEvent): Promise<void> }
@@ -137,6 +137,11 @@ export class AguiRunCoordinator implements AguiRunner {
       }
       case 'session.changed':
         return this.threads.get(message.payload.id)?.onAppEvent(message)
+      case 'desktop.changed':
+        for (const thread of this.threads.values()) {
+          if (thread.model.current().desktop?.desktopId === message.payload.desktopId) thread.onAppEvent(message)
+        }
+        return
       case 'surface.changed':
       case 'terminal.changed':
         return this.threads.get(message.payload.sessionId)?.onAppEvent(message)
@@ -160,7 +165,12 @@ export class AguiRunCoordinator implements AguiRunner {
         thread.handledMessageIds.add(intent.messageId)
         thread.pushStateSnapshot()
         thread.startTurn(() =>
-          this.deps.sessions.promptTurn({ sessionId: thread.sessionId, text: intent.text, attachments: intent.attachments })
+          this.deps.sessions.promptTurn({
+            sessionId: thread.sessionId,
+            text: intent.text,
+            attachments: intent.attachments,
+            desktopContext: intent.desktopContext
+          })
         )
         return
       case 'a2ui':

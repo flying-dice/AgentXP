@@ -14,13 +14,15 @@
     /** Fixed width in px. */
     width?: number
     class?: string
+    testid?: string
     children?: Snippet
   }
 
-  let { text, icon, spring = false, borders = [], textAlign = 'left', width, class: className = '', children }: Props = $props()
+  let { text, icon, spring = false, borders = [], textAlign = 'left', width, class: className = '', testid, children }: Props = $props()
 </script>
 
 <span
+  data-testid={testid}
   class="sl {className}"
   class:spring
   class:bl={borders.includes('left')}

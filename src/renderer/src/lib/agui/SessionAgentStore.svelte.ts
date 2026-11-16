@@ -1,5 +1,5 @@
 import { buildResumeArray, randomUUID, type AgentSubscriber } from '@ag-ui/client'
-import type { ContentPart, Interrupt, Message, UserMessage } from '@ag-ui/core'
+import type { Context, ContentPart, Interrupt, Message, UserMessage } from '@ag-ui/core'
 import type { A2uiClientEvent } from '@shared/a2ui'
 import { emptyAguiState, type AguiSessionState } from '@shared/agui-state'
 import type { AguiApi } from '@shared/ipc'
@@ -48,6 +48,9 @@ export class SessionAgentStore {
   private answers = $state.raw<ResumeResponses>({})
   private readonly agent: IpcAgent
   private readonly subscription: { unsubscribe(): void }
+
+  /** AG-UI context entries sent with every run; the desktop apps set it to the desktop state. */
+  contextProvider: (() => Context[]) | undefined
 
   constructor(sessionId: number, api: AguiApi = window.agent7.agui) {
     this.sessionId = sessionId
@@ -136,7 +139,8 @@ export class SessionAgentStore {
   private async run(parameters?: Parameters<IpcAgent['runAgent']>[0]): Promise<void> {
     this.error = null
     try {
-      await this.agent.runAgent(parameters)
+      const context = this.contextProvider?.()
+      await this.agent.runAgent(context ? { ...parameters, context } : parameters)
     } catch (error) {
       this.error = this.error ?? messageOf(error)
     }

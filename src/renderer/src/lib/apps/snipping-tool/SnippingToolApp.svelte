@@ -1,0 +1,176 @@
+<script lang="ts">
+  import type { Bounds } from '@shared/desktop'
+  import type { AppProps } from '../types'
+  import ComboBox from '../../kit/atoms/ComboBox.svelte'
+  import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
+  import type { MenuItemDef } from '../../kit/molecules/MenuItem'
+  import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
+  import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
+  import ToolStripDropDownButton from '../../kit/molecules/ToolStripDropDownButton.svelte'
+  import Dialog from '../../kit/organisms/Dialog.svelte'
+  import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
+  import ToolStrip from '../../kit/organisms/ToolStrip.svelte'
+  import { showMessageBox } from '../../kit/organisms/messageBox'
+  import { getDesktopContext } from '../../desktop/context'
+  import type { DesktopController } from '../../desktop/DesktopController.svelte'
+
+  let { window: win, host }: AppProps<'snipping-tool'> = $props()
+
+  type Mode = 'rect' | 'window' | 'full'
+
+  // The overlay lives on the desktop page; without one (stories) the tool captures a fixed region.
+  // svelte-ignore state_referenced_locally
+  const desktop: DesktopController | null = (() => {
+    try {
+      return getDesktopContext().desktop
+    } catch {
+      return null
+    }
+  })()
+
+  let image = $state<string | null>(null)
+  let size = $state<{ width: number; height: number } | null>(null)
+  let status = $state('Click New to capture a snip.')
+  let busy = $state(false)
+  let delay = $state(0)
+  let options = $state(false)
+  let counter = 0
+
+  const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+
+  async function snip(mode: Mode): Promise<void> {
+    if (busy) return
+    busy = true
+    try {
+      let region: Bounds | undefined
+      if (mode !== 'full') {
+        status = mode === 'rect' ? 'Drag to select the area to capture.' : 'Click the window to capture.'
+        const picked = desktop ? await desktop.pickSnipRegion(mode) : ({ x: 100, y: 100, width: 240, height: 140 } satisfies Bounds)
+        if (!picked) {
+          status = 'Snip cancelled.'
+          return
+        }
+        region = picked
+      }
+      // Get this window out of the picture, let the overlay and animations settle.
+      const minimized = desktop && win.windowState !== 'minimized'
+      if (minimized) await desktop.minimize(win.id)
+      await wait(300 + delay * 1000)
+      try {
+        image = await host.api.snip.capture(host.state.desktopId, region)
+        counter++
+        size = region ? { width: region.width, height: region.height } : null
+        status = region ? `Captured ${region.width} × ${region.height}.` : 'Captured the whole desktop.'
+        host.updateView(win.id, { app: 'snipping-tool', lastSnipId: `snip-${Date.now().toString(36)}-${counter}` })
+      } finally {
+        if (minimized) await desktop.focusWindow(win.id)
+      }
+    } catch (error) {
+      status = 'The snip failed.'
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Snipping Tool', buttons: 'OK', icon: 'error' })
+    } finally {
+      busy = false
+    }
+  }
+
+  function cancel(): void {
+    desktop?.snipOverlay?.resolve(null)
+  }
+
+  async function copy(): Promise<void> {
+    if (!image) return
+    try {
+      const blob = await (await fetch(image)).blob()
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })])
+      status = 'Copied to the clipboard.'
+    } catch {
+      status = 'The snip could not be copied.'
+    }
+  }
+
+  const newItems = $derived<MenuItemDef[]>([
+    { label: 'Free-form Snip', disabled: true },
+    { label: '&Rectangular Snip', action: () => void snip('rect') },
+    { label: '&Window Snip', action: () => void snip('window') },
+    { label: '&Full-screen Snip', action: () => void snip('full') }
+  ])
+  const delays = [0, 1, 3, 5].map((s) => ({ value: String(s), label: s === 0 ? 'No delay' : `${s} second${s === 1 ? '' : 's'}` }))
+</script>
+
+<div class="sn" data-testid="snipping-tool-app">
+  <ToolStrip aria-label="Snipping Tool">
+    <ToolStripButton data-testid="snipping-tool-new" icon="scissors" text="New" disabled={busy} onclick={() => void snip('rect')} />
+    <ToolStripDropDownButton text="▾" title="Snip type" items={newItems} disabled={busy} />
+    <ToolStripButton icon="close" text="Cancel" disabled={!busy} onclick={cancel} />
+    <ToolStripButton icon="options" text="Options" onclick={() => (options = true)} />
+    {#snippet trailing()}
+      <ToolStripButton icon="copy" text="Copy" disabled={!image} onclick={() => void copy()} />
+    {/snippet}
+  </ToolStrip>
+  <div class="view w7-scroll" aria-label="Snip">
+    {#if image}
+      <img src={image} alt="The last snip" width={size?.width} height={size?.height} />
+    {:else}
+      <p class="empty">Select the snip type using the New button, or click New for a rectangular snip.</p>
+    {/if}
+  </div>
+  <StatusStrip sizeGrip={false}>
+    <StatusStripLabel text={status} spring />
+    {#if delay > 0}<StatusStripLabel text="Delay: {delay} s" borders={['left']} width={90} />{/if}
+  </StatusStrip>
+  {#if options}
+    <Dialog title="Snipping Tool Options" iconName="options" width="340px" contained onclose={() => (options = false)}>
+      <div class="opts">
+        <span>Delay before the capture:</span>
+        <ComboBox aria-label="Delay" items={delays} value={String(delay)} onchange={(v) => (delay = Number(v))} />
+        <p class="note">Send to chat is not available yet: use Copy and paste the snip into a chat.</p>
+      </div>
+      {#snippet buttons()}
+        <DialogButtons buttons={['ok']} onresult={() => (options = false)} />
+      {/snippet}
+    </Dialog>
+  {/if}
+</div>
+
+<style>
+  .sn {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--w7-face);
+  }
+  .view {
+    flex: 1;
+    min-height: 0;
+    margin: 6px;
+    overflow: auto;
+    background: var(--w7-window);
+    border: 1px solid var(--w7-list-border);
+    display: flex;
+  }
+  img {
+    display: block;
+    margin: auto;
+    max-width: none;
+    box-shadow: 0 0 0 1px #888;
+  }
+  .empty {
+    margin: auto;
+    padding: 10px 16px;
+    max-width: 320px;
+    color: var(--w7-text-muted);
+    text-align: center;
+  }
+  .opts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+  .note {
+    margin: 6px 0 0;
+    color: var(--w7-text-muted);
+  }
+</style>

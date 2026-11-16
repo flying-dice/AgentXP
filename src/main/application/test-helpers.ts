@@ -1,4 +1,13 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { Database } from '../infrastructure/db/sql'
+import { NodeHostFiles } from '../infrastructure/fs/NodeHostFiles'
+import { SqliteDesktopRepository } from '../infrastructure/db/sqlite-desktop-repository'
+import { SqliteDriveRepository } from '../infrastructure/db/sqlite-drive-repository'
+import { DriveService } from './vfs/DriveService'
+import { VirtualFileSystem } from './vfs/VirtualFileSystem'
+import { afterEach } from 'vitest'
 import type { ContentBlockDto } from '@shared/models'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import { createFixture, type Fixture } from '../infrastructure/db/test-helpers'
@@ -54,7 +63,9 @@ export function createRepos(db: Database) {
     changes: new SqliteFileChangeRepository(db),
     terminals: new SqliteTerminalRepository(db),
     permissions: new SqlitePermissionRepository(db),
-    surfaces: new SqliteA2uiSurfaceRepository(db)
+    surfaces: new SqliteA2uiSurfaceRepository(db),
+    desktops: new SqliteDesktopRepository(db),
+    drives: new SqliteDriveRepository(db)
   }
 }
 
@@ -64,6 +75,40 @@ export type Repos = ReturnType<typeof createRepos>
 export function createAppFixture(): Fixture & { repos: Repos; publisher: RecordingPublisher } {
   const fixture = createFixture()
   return { ...fixture, repos: createRepos(fixture.db), publisher: new RecordingPublisher() }
+}
+
+const tempDirs: string[] = []
+afterEach(() => {
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
+
+/** A fresh temp directory removed after the test. */
+export function tempDir(prefix = 'agent7-test-'): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix))
+  tempDirs.push(dir)
+  return dir
+}
+
+/**
+ * The app fixture plus a desktop with its seeded C: disk and the drive services over a temp folder.
+ * `projectDir` is a real folder that is plugged in as E: when `plugProject` is true (the default).
+ */
+export async function createVfsFixture(options: { plugProject?: boolean } = {}) {
+  const base = createAppFixture()
+  const desktopsDir = tempDir('agent7-desktops-')
+  const projectDir = tempDir('agent7-project-')
+  const drives = new DriveService({
+    drives: base.repos.drives,
+    folders: base.repos.folders,
+    desktops: base.repos.desktops,
+    pickFolder: async () => null
+  })
+  const vfs = new VirtualFileSystem({ host: new NodeHostFiles(), folders: base.repos.folders, drives, desktopsDir })
+  const desktop = base.repos.desktops.create({ agentId: base.agentId, title: 'Desktop', isOpen: false })
+  await vfs.seedSystemDisk(desktop.id)
+  const folder = base.repos.folders.add(projectDir, 'project')
+  if (options.plugProject !== false) drives.plugInFolder(desktop.id, folder.id)
+  return { ...base, desktopsDir, projectDir, folder, drives, vfs, desktop, host: new NodeHostFiles() }
 }
 
 export class FakeLiveConnection implements LiveAgentConnection {

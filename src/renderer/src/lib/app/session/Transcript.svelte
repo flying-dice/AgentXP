@@ -7,6 +7,7 @@
   import A2uiActivity from './A2uiActivity.svelte'
   import AgentMessage from './AgentMessage.svelte'
   import ErrorRow from './ErrorRow.svelte'
+  import StopNotice from './StopNotice.svelte'
   import ReasoningBlock from './ReasoningBlock.svelte'
   import ToolCallItem from './ToolCallItem.svelte'
   import UserMessage from './UserMessage.svelte'
@@ -66,7 +67,7 @@
   })
 </script>
 
-<div class="transcript w7-scroll" bind:this={scroller} onscroll={onScroll} role="log" aria-label="Conversation" aria-live="polite">
+<div class="transcript w7-scroll" data-testid="chat-transcript" data-running={running} bind:this={scroller} onscroll={onScroll} role="log" aria-label="Conversation" aria-live="polite">
   <div class="rows">
     {#each rows as row (row.id)}
       <div class="row">
@@ -83,6 +84,8 @@
             terminals={agentState.terminals}
             waiting={waitingToolCallId === row.toolCallId}
           />
+        {:else if row.kind === 'stop'}
+          <StopNotice reason={row.reason} />
         {:else}
           {@const surface = activities.get(row.surfaceId)}
           {#if surface}<A2uiActivity messages={surface.messages} {sessionId} {onaction} />{/if}
@@ -90,7 +93,7 @@
       </div>
     {:else}
       <div class="row">
-        <AgentMessage {agentName} text="Ready in {folderName}. What would you like to work on?" />
+        <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
       </div>
     {/each}
     {#if error}

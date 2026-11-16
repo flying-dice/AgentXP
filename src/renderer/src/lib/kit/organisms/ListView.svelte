@@ -21,6 +21,10 @@
     onsort?: (key: string, direction: SortDirection) => void
     class?: string
     'aria-label'?: string
+    /** `data-testid` of the list itself. */
+    testid?: string
+    /** `data-testid` of every row; a row's own `testid` field wins. Rows also carry `data-row-id`. */
+    rowTestid?: string
   }
 
   let {
@@ -36,7 +40,9 @@
     onactivate,
     onsort,
     class: className = '',
-    'aria-label': ariaLabel = 'List'
+    'aria-label': ariaLabel = 'List',
+    testid,
+    rowTestid
   }: Props = $props()
 
   const uid = $props.id()
@@ -131,6 +137,8 @@
     root?.querySelector(`#${CSS.escape(domId(activeId))}`)?.scrollIntoView({ block: 'nearest' })
   })
 
+  /** Extra `data-*` attributes a row carries in its `attrs` field. */
+  const rowAttrs = (row: ListRow): Record<string, string> => (typeof row.attrs === 'object' && row.attrs !== null ? (row.attrs as Record<string, string>) : {})
   const cellText = (row: ListRow, key: string): string => String(row[key] ?? '')
 </script>
 
@@ -142,6 +150,7 @@
 <div
   bind:this={root}
   class="w7-listview w7-scroll {view} {className}"
+  data-testid={testid}
   role={details ? 'grid' : 'listbox'}
   tabindex="0"
   aria-label={ariaLabel}
@@ -174,6 +183,10 @@
         <div
           id={domId(row.id)}
           class="lvr"
+          data-testid={typeof row.testid === 'string' ? row.testid : rowTestid}
+          data-row-id={row.id}
+        {...rowAttrs(row)}
+          {...rowAttrs(row)}
           class:selected={selected.includes(row.id)}
           class:focus={focused && row.id === activeId}
           role="row"
@@ -199,6 +212,9 @@
       <div
         id={domId(row.id)}
         class="item"
+        data-testid={typeof row.testid === 'string' ? row.testid : rowTestid}
+        data-row-id={row.id}
+        {...rowAttrs(row)}
         class:selected={selected.includes(row.id)}
         class:focus={focused && row.id === activeId}
         role="option"

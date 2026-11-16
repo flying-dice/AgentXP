@@ -1,0 +1,130 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "a2ui",
+  "description": "Draws a small WinForms form through the agent7 MCP tool a2ui_render and checks the tool accepted it; the Send button's action comes back as a prompt and is answered by the first rule.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "action",
+      "match": {
+        "regex": "triggered the action \"(?<action>[^\"]+)\" on component \"(?<component>[^\"]+)\"[\\s\\S]*\"dataModel\":\\s*\\{\\s*\"name\":\\s*\"(?<who>[^\"]*)\""
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Got action {{match.action}} from {{match.component}}; hello {{match.who}}."
+        }
+      ]
+    },
+    {
+      "id": "form",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Drawing a form.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "saveAs": "render",
+          "arguments": {
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "contact",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Contact"
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "contact",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "name-label",
+                        "name",
+                        "subscribe",
+                        "send"
+                      ]
+                    },
+                    {
+                      "id": "name-label",
+                      "component": "Label",
+                      "text": "Your name:"
+                    },
+                    {
+                      "id": "name",
+                      "component": "TextBox",
+                      "value": {
+                        "path": "/name"
+                      },
+                      "placeholder": "Ann"
+                    },
+                    {
+                      "id": "subscribe",
+                      "component": "CheckBox",
+                      "text": "Subscribe",
+                      "checked": {
+                        "path": "/subscribe"
+                      }
+                    },
+                    {
+                      "id": "send",
+                      "component": "Button",
+                      "text": "Send",
+                      "isDefault": true,
+                      "action": {
+                        "event": {
+                          "name": "send",
+                          "context": {
+                            "name": {
+                              "path": "/name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "contact",
+                  "value": {
+                    "name": "",
+                    "subscribe": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "expect",
+          "from": "render",
+          "equals": "ok",
+          "message": "a2ui_render did not answer ok: {{render}}"
+        },
+        {
+          "type": "message",
+          "text": "The form is on screen."
+        }
+      ]
+    }
+  ]
+}

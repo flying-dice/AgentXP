@@ -8,16 +8,20 @@ import type {
 } from '@shared/models'
 
 export interface NewSession {
-  folderId: Id
   agentId: Id
   title: string
+  desktopId?: Id | null
+  /** Working directory (VPath); default `AGENT_HOME`. */
+  cwd?: string
 }
 
 export interface SessionRepository {
-  /** Newest activity first; optionally restricted to one folder. */
-  list(folderId?: Id): SessionDto[]
+  /** Newest activity first; optionally restricted to one desktop. */
+  list(desktopId?: Id): SessionDto[]
   get(id: Id): SessionDto | null
   getByAcpSessionId(agentId: Id, acpSessionId: string): SessionDto | null
+  /** Chats of a desktop, newest activity first. */
+  listByDesktop(desktopId: Id): SessionDto[]
   create(input: NewSession): SessionDto
   rename(id: Id, title: string): void
   setStatus(id: Id, status: SessionStatus): void

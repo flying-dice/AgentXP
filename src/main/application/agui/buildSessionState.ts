@@ -1,6 +1,7 @@
 import type { AguiSessionState, AguiToolCallState } from '@shared/agui-state'
 import type { Id, TaskDto, TerminalDto, TranscriptEntryDto, FileChangeDto, SessionDto } from '@shared/models'
 import type { A2uiSurfaceDto } from '@shared/a2ui'
+import type { DesktopState } from '@shared/desktop'
 import { sessionInfoOf, terminalStateOf } from './SessionStateModel'
 
 /** The read side the AG-UI backend needs (satisfied by SessionQueryService). */
@@ -11,6 +12,8 @@ export interface AguiQueries {
   changesOf(id: Id): FileChangeDto[]
   terminalsOf(id: Id): TerminalDto[]
   surfacesOf(id: Id): A2uiSurfaceDto[]
+  /** The desktop the chat lives on (null for chats without one). */
+  desktopOf(id: Id): DesktopState | null
 }
 
 /** The full shared state of a session, read from the persisted data. */
@@ -36,6 +39,7 @@ export function buildSessionState(
     tasks: queries.tasksOf(sessionId),
     changes: queries.changesOf(sessionId),
     toolCalls,
-    terminals: Object.fromEntries(queries.terminalsOf(sessionId).map((t) => [t.terminalId, terminalStateOf(t)]))
+    terminals: Object.fromEntries(queries.terminalsOf(sessionId).map((t) => [t.terminalId, terminalStateOf(t)])),
+    desktop: queries.desktopOf(sessionId)
   }
 }

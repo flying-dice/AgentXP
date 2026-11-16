@@ -6,6 +6,8 @@ export interface TabDef {
   title: string
   icon?: IconName
   disabled?: boolean
+  /** `data-testid` of the tab header. */
+  testid?: string
 }
 
 export interface TabControlProps<T extends TabDef> {

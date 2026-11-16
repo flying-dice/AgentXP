@@ -15,6 +15,11 @@ export class AgentConnectionPool {
     return this.live.get(sessionId)
   }
 
+  /** Every live session with its id. */
+  entries(): [Id, LiveSession][] {
+    return [...this.live.entries()]
+  }
+
   add(sessionId: Id, session: LiveSession): void {
     this.live.set(sessionId, session)
   }

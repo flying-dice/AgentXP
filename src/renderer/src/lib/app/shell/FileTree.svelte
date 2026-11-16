@@ -1,30 +1,31 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import type { FileNodeDto } from '@shared/models'
+  import type { VfsEntryDto, VPath } from '@shared/vfs'
   import TreeView from '../../kit/organisms/TreeView.svelte'
-  import { buildFileTree, dirOfNode, fileOfNode, ROOT_NODE } from '../files/fileTree'
+  import { buildFileTree, dirNodeId, dirOfNode, fileOfNode, type TreeRoot } from '../files/fileTree'
 
   interface Props {
-    /** Name of the root node (the folder's name). */
-    rootName: string
-    /** Lists one directory level below the folder (`''` is the folder itself). */
-    readDir: (relativePath: string) => Promise<FileNodeDto[]>
-    /** Relative paths of files the agent changed in this session; they get an "M" badge. */
-    changedPaths?: string[]
+    /** The root nodes: the plugged-in project drives. */
+    roots: TreeRoot[]
+    /** Lists one directory (a VPath). */
+    readDir: (path: VPath) => Promise<VfsEntryDto[]>
+    /** VPaths of files the agent changed; they get an "M" badge. */
+    changedPaths?: VPath[]
     /** Double click or Enter on a file. */
-    onopen?: (relativePath: string) => void
+    onopen?: (path: VPath) => void
     onerror?: (error: unknown) => void
   }
 
-  let { rootName, readDir, changedPaths = [], onopen, onerror }: Props = $props()
+  let { roots, readDir, changedPaths = [], onopen, onerror }: Props = $props()
 
-  const listings = new SvelteMap<string, FileNodeDto[]>()
-  const requested = new Set<string>()
-  let expanded = $state(new Set<string>([ROOT_NODE]))
+  const listings = new SvelteMap<VPath, VfsEntryDto[]>()
+  const requested = new Set<VPath>()
+  // svelte-ignore state_referenced_locally
+  let expanded = $state(new Set<string>(roots.map((r) => dirNodeId(r.path))))
   let selected = $state<string | null>(null)
 
-  const nodes = $derived(buildFileTree(rootName, listings, changedPaths))
+  const nodes = $derived(buildFileTree(roots, listings, changedPaths))
 
   // Load the listing of every expanded directory that has none yet.
   $effect(() => {
@@ -47,6 +48,7 @@
 
 <TreeView
   class="file-tree"
+  testid="file-tree"
   aria-label="Files"
   {nodes}
   bind:selected

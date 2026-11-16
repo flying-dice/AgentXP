@@ -17,7 +17,8 @@ export const folder: FolderDto = { id: 1, name: 'claude-code-win', path: 'C:\\Us
 
 export const session: SessionDto = {
   id: 1,
-  folderId: 1,
+  desktopId: 1,
+  cwd: 'E:\\',
   agentId: 1,
   title: 'Fix login redirect bug',
   status: 'idle',
@@ -74,9 +75,9 @@ const testOutput = `\u001b[1m$ npm test -- auth\u001b[0m
 export const completedTurn = (): { messages: Message[]; state: AguiSessionState } => {
   const state = baseState()
   state.toolCalls = {
-    t1: { title: 'Read src/auth/redirect.ts', kind: 'read', status: 'completed', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'src/auth/redirect.ts', line: null }], contents: [{ kind: 'content', block: { kind: 'text', text: redirectOld } }] },
+    t1: { title: 'Read src/auth/redirect.ts', kind: 'read', status: 'completed', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'E:\\src\\auth\\redirect.ts', line: null }], contents: [{ kind: 'content', block: { kind: 'text', text: redirectOld } }] },
     t2: { title: 'grep redirect', kind: 'search', status: 'completed', rawInput: '{"pattern":"res.redirect","path":"src"}', locations: [], contents: [] },
-    t3: { title: 'Edit src/auth/redirect.ts', kind: 'edit', status: 'completed', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'src/auth/redirect.ts', line: 18 }], contents: [{ kind: 'diff', path: 'src/auth/redirect.ts', oldText: redirectOld, newText: redirectNew }] },
+    t3: { title: 'Edit src/auth/redirect.ts', kind: 'edit', status: 'completed', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'E:\\src\\auth\\redirect.ts', line: 18 }], contents: [{ kind: 'diff', path: 'E:\\src\\auth\\redirect.ts', oldText: redirectOld, newText: redirectNew }] },
     t4: { title: 'npm test -- auth', kind: 'execute', status: 'completed', rawInput: '{"command":"npm test -- auth"}', locations: [], contents: [{ kind: 'terminal', terminalId: 'term1' }] },
     t5: { title: 'Edit src/auth/session.ts', kind: 'edit', status: 'failed', rawInput: '{"file_path":"src/auth/session.ts"}', locations: [], contents: [] }
   }
@@ -114,7 +115,7 @@ export const permissionTurn = (): { messages: Message[]; state: AguiSessionState
   state.session.status = 'awaiting_permission'
   state.toolCalls = {
     t1: { title: 'Read src/auth/redirect.ts', kind: 'read', status: 'completed', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [], contents: [] },
-    t2: { title: 'Edit src/auth/redirect.ts', kind: 'edit', status: 'pending', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'src/auth/redirect.ts', line: 18 }], contents: [{ kind: 'diff', path: 'src/auth/redirect.ts', oldText: redirectOld, newText: redirectNew }] }
+    t2: { title: 'Edit src/auth/redirect.ts', kind: 'edit', status: 'pending', rawInput: '{"file_path":"src/auth/redirect.ts"}', locations: [{ path: 'E:\\src\\auth\\redirect.ts', line: 18 }], contents: [{ kind: 'diff', path: 'E:\\src\\auth\\redirect.ts', oldText: redirectOld, newText: redirectNew }] }
   }
   const messages: Message[] = [
     { id: 'u1', role: 'user', content: 'Fix the login redirect so deep links survive sign-in' },

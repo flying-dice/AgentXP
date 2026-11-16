@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { PermissionDecision, PermissionPrompt } from '../../domain/agent/PermissionPrompter'
+import { ToolRefusedError, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
 import { AcpAgentConnection } from './AcpAgentConnection'
 import { AgentProcess } from './AgentProcess'
 import { TerminalManager, type TerminalChange } from './TerminalManager'
@@ -36,7 +37,7 @@ interface Harness {
   terminalChanges: TerminalChange[]
 }
 
-function start(decide: (p: PermissionPrompt) => Promise<PermissionDecision>): Harness {
+function start(decide: (p: PermissionPrompt) => Promise<PermissionDecision>, gate?: ToolGate): Harness {
   const h: Harness = { events: [], prompts: [], writes: [], terminalChanges: [] }
   terminals = new TerminalManager((c) => h.terminalChanges.push(c))
   proc = new AgentProcess({
@@ -55,7 +56,8 @@ function start(decide: (p: PermissionPrompt) => Promise<PermissionDecision>): Ha
       }
     },
     files: { forSession: () => files },
-    terminals
+    terminals,
+    gate
   })
   return h
 }
@@ -100,12 +102,26 @@ describe('AcpAgentConnection with a fake agent', () => {
     expect(h.terminalChanges.some((c) => c.output.includes('terminal-says-hi'))).toBe(true)
   })
 
+  it('gives a tool call id that the agent reuses in the next turn a new id (events and permission)', async () => {
+    const h = start(allow)
+    await connection!.initialize()
+    const { acpSessionId } = await connection!.newSession(workspace)
+    await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'one' }])
+    await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'two' }])
+    const created = h.events.filter((e) => e.type === 'tool_call_created').map((e) => (e.type === 'tool_call_created' ? e.toolCallId : ''))
+    expect(created).toEqual(['tc-1', 'tc-1@2'])
+    expect(h.events.filter((e) => e.type === 'tool_call_updated').map((e) => (e.type === 'tool_call_updated' ? e.toolCallId : ''))).toEqual(['tc-1', 'tc-1@2'])
+    expect(h.prompts.map((p) => p.toolCallId)).toEqual(['tc-1', 'tc-1@2'])
+  })
+
   it('ends the turn as cancelled and writes nothing when permission is rejected', async () => {
     const h = start(async () => ({ outcome: 'selected', optionId: 'reject' }))
     await connection!.initialize()
     const { acpSessionId } = await connection!.newSession(workspace)
     expect(await connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).toBe('cancelled')
     expect(h.writes).toEqual([])
+    // The agent already failed the edit itself; nothing is left open to cancel.
+    expect(h.events.at(-1)).toMatchObject({ type: 'tool_call_updated', toolCallId: 'tc-1', patch: { status: 'failed' } })
     await expect(readFile(join(workspace, 'fake-agent-output.txt'))).rejects.toThrow()
   })
 
@@ -137,6 +153,39 @@ describe('AcpAgentConnection with a fake agent', () => {
     start(allow)
     await connection!.initialize()
     await expect(connection!.loadSession('x', workspace)).rejects.toThrow(/does not support/)
+  })
+})
+
+describe('AcpAgentConnection tool gate', () => {
+  const refusing = (group: GatedToolGroup, message: string): ToolGate & { seen: string[] } => {
+    const seen: string[] = []
+    return {
+      seen,
+      check: async (acpSessionId, request) => {
+        seen.push(`${acpSessionId}:${request.group}:${request.askUser}`)
+        if (request.group === group) throw new ToolRefusedError(message)
+      }
+    }
+  }
+
+  it('answers fs/write_text_file with a JSON-RPC error carrying the message when the gate refuses', async () => {
+    const gate = refusing('fs.write', 'The Code app is closed on this desktop. Call desktop_open_app with app "code" to open it.')
+    start(allow, gate)
+    await connection!.initialize()
+    const { acpSessionId } = await connection!.newSession(workspace)
+    await expect(connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).rejects.toThrow(/The Code app is closed/)
+    await expect(readFile(join(workspace, 'fake-agent-output.txt'))).rejects.toThrow()
+    expect(gate.seen).toEqual(['fake-session:fs.write:true'])
+  })
+
+  it('refuses terminal/create but lets the earlier write through', async () => {
+    const gate = refusing('terminal', 'Agent7 is paused by the user.')
+    start(allow, gate)
+    await connection!.initialize()
+    const { acpSessionId } = await connection!.newSession(workspace)
+    await expect(connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).rejects.toThrow(/paused/)
+    expect(await readFile(join(workspace, 'fake-agent-output.txt'), 'utf8')).toBe('hello from fake agent\n')
+    expect(gate.seen).toEqual(['fake-session:fs.write:true', 'fake-session:terminal:true'])
   })
 })
 

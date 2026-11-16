@@ -5,6 +5,24 @@ import { buildTranscriptRows, userParts } from './transcriptRows'
 const none = new Map()
 
 describe('buildTranscriptRows', () => {
+  it('turns a stop-notice activity into a stop row after the agent text', () => {
+    const messages: Message[] = [
+      { id: 'a', role: 'assistant', content: 'Cut o' },
+      { id: 'stop:1', role: 'activity', activityType: 'stop-notice', content: { reason: 'max_tokens' } }
+    ]
+    expect(buildTranscriptRows(messages, none).map((r) => r.kind)).toEqual(['agent', 'stop'])
+    expect(buildTranscriptRows(messages, none)[1]).toMatchObject({ reason: 'max_tokens' })
+  })
+
+  it('shows tool calls with different ids of different turns as separate rows with their own results', () => {
+    const call = (id: string): Message => ({ id: `a-${id}`, role: 'assistant', toolCalls: [{ id, type: 'function', function: { name: 'x', arguments: '{}' } }] })
+    const rows = buildTranscriptRows(
+      [call('t1'), { id: 'r1', role: 'tool', toolCallId: 't1', content: 'one' }, call('t1@2'), { id: 'r2', role: 'tool', toolCallId: 't1@2', content: 'two' }],
+      none
+    )
+    expect(rows.map((r) => (r.kind === 'tool' ? r.result : null))).toEqual(['one', 'two'])
+  })
+
   it('orders text, reasoning and tool calls, attaching tool results', () => {
     const messages: Message[] = [
       { id: 'u1', role: 'user', content: 'fix it' },
