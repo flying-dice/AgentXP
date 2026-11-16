@@ -8,9 +8,10 @@ import { buildBrief, RECORD_TEMPLATE } from './lib/brief.mjs'
 import { scrollReport, scrollWarning } from './lib/args.mjs'
 import { answerOrderNotes } from './checks/chat.mjs'
 import { canonicalTaskId, contextConflicts, contextProblem, parsePrevious, withStepsLine } from './lib/tasktext.mjs'
-import { answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq, answerTooShort, seqProblem, startDecision, syncSeq } from './lib/tasktext.mjs'
+import { effectiveSteps, recordAnswerProblem, stepsToPassOf, answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq, answerTooShort, seqProblem, startDecision, syncSeq } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
-import { barChipConflicts } from './checks/chat.mjs'
+import { barChipConflicts, countsThreeAndThree } from './checks/chat.mjs'
+import { gateProblem, readBuild, withBuildLine } from './lib/build.mjs'
 import { T162_NO, T162_WHY } from './checks/settings.mjs'
 import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, saysCouldNotTell, userText } from './checks/util.mjs'
 import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
@@ -181,7 +182,7 @@ describe('H-04 T13.1 progress', () => {
     expect(lastProgress([...progress(3), ...progress(7), msg('user', 'x')])).toBe(7)
   })
   it('passes when the number grew although the row count did not (one row mutates)', async () => {
-    const ctx = fakeCtx({ state: { progressAtStart: 3, toolCallsAtStart: 0 }, desktop: { windows: [] }, entries: progress(9), list: [{ id: 'd1', runState: 'working' }] })
+    const ctx = fakeCtx({ state: { progressAtStart: 3, toolCallsAtStart: 0 }, desktop: { windows: [win('chat', { sessionId: 's1' })] }, entries: progress(9), list: [{ id: 'd1', runState: 'working' }] })
     const r = await run('T13.1', ctx)
     expect(r.status).toBe('PASS')
     expect(r.notes.join(' ')).toContain('working')
@@ -681,7 +682,8 @@ describe('H-53 the rating comes from the record, H-59 answer tasks need --answer
     const task = loadTasks()['T22.1']
     expect(answerProblem(task, {})).toContain('--no-answer')
     expect(answerProblem(task, { answer: 'It plugs in a folder' })).toBe(null)
-    expect(answerProblem(task, { noAnswer: true })).toBe(null)
+    expect(answerProblem(task, { noAnswer: true })).toContain('--accept-no-answer') // H-90: --no-answer alone is refused
+    expect(answerProblem(task, { noAnswer: true, acceptNoAnswer: true })).toBe(null)
     expect(answerProblem(loadTasks()['T04.2'], {})).toBe(null)
   })
   it('"Find out" scenarios without an Answer: line do not ask a question (T01.1, T07.1)', () => {
@@ -1225,5 +1227,165 @@ describe('H-86 one id for the second crash', () => {
     expect(Object.keys(TASKS)).not.toContain('T23.1-twice')
     expect(source('session.mjs')).toContain('canonicalTaskId(flags.task)')
     expect(loadTasks()['T23.1b']).toBeTruthy()
+  })
+})
+
+// ---------------------------------------------------------------- round 6 harness defects H-87 .. H-95
+describe('H-87 T27.2 counts the panes and the strip, not the Focus bar', () => {
+  // R6 state: the Focus bar has a Chat button (code-focus-chat) and the chat pane is collapsed; the editor fills the window.
+  const page = ({ open, edge, editor, app }) => ({
+    locator: (sel) => ({
+      count: async () => (sel.includes('data-collapsed="false"') ? open : edge),
+      first: () => ({ boundingBox: async () => ({ width: sel.includes('code-editor') ? editor : app }) })
+    })
+  })
+  it('passes with a collapsed pane, the Focus bar button and an editor of 792 of 800 px', async () => {
+    expect((await run('T27.2', fakeCtx({ page: page({ open: 0, edge: 2, editor: 792, app: 800 }) }))).status).toBe('PASS')
+  })
+  it('the open-pane selector names only the embedded chat, never the Focus bar', () => {
+    const src = source('checks/features.mjs')
+    const line = src.split('\n').find((l) => l.includes('const open = await page.locator'))
+    expect(line).toContain('data-collapsed="false"')
+    expect(line).not.toContain('code-focus')
+  })
+})
+
+describe('H-88 T06.1 accepts the counts in any spelling', () => {
+  const ctxFor = () => {
+    const root = mkdtempSync(join(tmpdir(), 'ux-h88-'))
+    mkdirSync(join(root, 'src/auth'), { recursive: true })
+    writeFileSync(join(root, 'src/auth/redirect.ts'), REDIRECT_FIXED)
+    const ctx = fakeCtx({ entries: [{ kind: 'tool_call', permission: { outcome: 'selected', selectedOptionId: 'allow' } }] })
+    ctx.fixtures = { loginApp: root }
+    return ctx
+  }
+  it('countsThreeAndThree', () => {
+    for (const t of ['3 lines added and 3 removed', '+3 / -3', '3 added, 3 removed', 'it added 3 lines and removed 3 lines', '3 additions and 3 deletions', '+3 and −3']) expect(countsThreeAndThree(t), t).toBe(true)
+    for (const t of ['3 lines added', '5 lines added and 5 removed', 'lines 1 to 5', 'I could not tell']) expect(countsThreeAndThree(t), t).toBe(false)
+  })
+  it('the R6 intermediate answer passes (counts, and a range of the hunk header)', async () => {
+    const r6 = 'Yes it changes src/auth/redirect.ts: 3 lines added and 3 removed, in lines 1 to 5 (hunk -1,5 +1,5)'
+    expect((await run('T06.1', ctxFor(), r6)).status).toBe('PASS')
+  })
+  it('still rejects a range alone and "could not tell"', async () => {
+    expect((await run('T06.1', ctxFor(), 'It changes the new code in lines 1 to 5 of redirect.ts')).status).toBe('FAIL')
+    expect((await run('T06.1', ctxFor(), 'I could not tell which lines change, lines 1 to 5 maybe')).status).toBe('FAIL')
+  })
+})
+
+describe('H-89 T17.2 matches "set ... as default"', () => {
+  const ctx = () => ({ ...fakeCtx({ state: { appPid: 7 } }), app: { process: () => ({ pid: 7 }) } })
+  it('accepts the R6 wording and "default" with "agent"', async () => {
+    expect((await run('T17.2', ctx(), 'not-a-real-command was not found; on the Agents page set Claude Code as default')).status).toBe('PASS')
+    expect((await run('T17.2', ctx(), 'not found: open Agents and make another agent the default')).status).toBe('PASS')
+    expect((await run('T17.2', ctx(), 'not-a-real-command is wrong; Agents page; start a new chat')).status).toBe('PASS')
+  })
+  it('still fails without an action', async () => {
+    expect((await run('T17.2', ctx(), 'not-a-real-command was not found, shown on the Agents page')).status).toBe('FAIL')
+  })
+})
+
+describe('H-90 answer tasks need an answer and an Answer line', () => {
+  const task = () => loadTasks()['T10.1']
+  it('check refuses --no-answer alone; stop refuses a record without an Answer line', () => {
+    expect(answerProblem(task(), { noAnswer: true })).toContain('H-90')
+    expect(recordAnswerProblem(task(), '# rec\n- SEQ: 5 - ok')).toContain('Answer')
+    expect(recordAnswerProblem(task(), '# rec\n- Answer: none')).toContain('Answer')
+    expect(recordAnswerProblem(task(), '# rec\n- Answer: the top bar has no Terminal chip')).toBe(null)
+    expect(recordAnswerProblem(task(), '# rec', { acceptNoAnswer: true })).toBe(null)
+    expect(recordAnswerProblem(loadTasks()['T04.2'], '# rec')).toBe(null)
+  })
+  it('session.mjs uses both', () => {
+    expect(source('session.mjs')).toContain('recordAnswerProblem')
+    expect(source('session.mjs')).toContain("acceptNoAnswer: flags['accept-no-answer']")
+  })
+})
+
+describe('H-91 T13.1 needs a window of the original chat', () => {
+  const progress = [{ kind: 'message', role: 'agent', blocks: [{ text: 'Progress 9 of 30.' }] }]
+  it('is MANUAL with progress and no window of the chat (reopened: false)', async () => {
+    const r = await run('T13.1', fakeCtx({ state: { progressAtStart: 3 }, desktop: { windows: [] }, entries: progress }))
+    expect(r.status).toBe('MANUAL')
+    expect(r.notes.join(' ')).toContain('reopened: false')
+  })
+  it('is MANUAL when the open chat window belongs to another chat', async () => {
+    const r = await run('T13.1', fakeCtx({ state: { progressAtStart: 3 }, desktop: { windows: [win('chat', { sessionId: 'other' })] }, entries: progress }))
+    expect(r.status).toBe('MANUAL')
+  })
+  it('passes with the same session id open', async () => {
+    const r = await run('T13.1', fakeCtx({ state: { progressAtStart: 3 }, desktop: { windows: [win('chat', { sessionId: 's1' })] }, entries: progress }))
+    expect(r.status).toBe('PASS')
+    expect(r.notes.join(' ')).toContain('reopened: true')
+  })
+  it('tasks.md says so', () => {
+    expect(readFileSync(join(hereDir, '../../docs/ux/tasks.md'), 'utf8')).toContain('same session id')
+  })
+})
+
+describe('H-92 stepsToPass', () => {
+  it('uses the steps when the check first held', () => {
+    expect(stepsToPassOf({ runs: [], checkerStatus: 'PASS', steps: 6 })).toBe(6)
+    expect(stepsToPassOf({ runs: [{ checkerStatus: 'FAIL', steps: 1 }, { checkerStatus: 'PASS', steps: 2 }], checkerStatus: 'PASS', steps: 6 })).toBe(2)
+    expect(stepsToPassOf({ explicit: 2, runs: [], checkerStatus: 'PASS', steps: 6 })).toBe(2)
+    expect(stepsToPassOf({ runs: [], checkerStatus: 'FAIL', steps: 6 })).toBe(null)
+  })
+  it('the budget and the weak rule use it (T01.1 at the limit of 3 after the goal at 2)', () => {
+    expect(effectiveSteps(3, 2)).toBe(2)
+    expect(effectiveSteps(3, null)).toBe(3)
+    expect(budgetVerdict('PASS', 3, 3, 6).weak).toBe(true)
+    expect(budgetVerdict('PASS', effectiveSteps(3, 2), 3, 6).weak).toBe(false)
+    expect(budgetVerdict('PASS', effectiveSteps(5, 2), 3, 6).status).toBe('PASS')
+  })
+  it('tasks.md T01.1 documents it', () => {
+    expect(readFileSync(join(hereDir, '../../docs/ux/tasks.md'), 'utf8')).toContain('stepsToPass')
+  })
+})
+
+describe('H-93 one Steps heading, rerun and finishedByFacilitator', () => {
+  it('no Think-aloud heading in the templates', () => {
+    expect(RECORD_TEMPLATE).toContain('Steps (the numbered step list of the final report)')
+    expect(RECORD_TEMPLATE).not.toMatch(/think-aloud/i)
+    expect(source('FACILITATOR.md')).not.toMatch(/- Think-aloud/)
+    expect(source('PANELIST.md')).not.toMatch(/think-aloud/i)
+  })
+  it('stop writes the flags', () => {
+    const src = source('session.mjs')
+    expect(src).toContain("'finished-by-facilitator'")
+    expect(src).toContain('finishedByFacilitator')
+    expect(src).toContain('rerun')
+  })
+})
+
+describe('H-94 build id', () => {
+  it('readBuild says packaged only with an existing executable', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ux-h94-'))
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+    expect(readBuild({ repoRoot: root, env: { UX_BUILD_COMMIT: 'abcdef1234567' } })).toEqual({ packaged: false, version: '1.2.3', commit: 'abcdef1234567' })
+    const exe = join(root, 'Agent7.exe')
+    writeFileSync(exe, '')
+    expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'x' } }).packaged).toBe(true)
+    expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: join(root, 'missing.exe'), UX_BUILD_COMMIT: 'x' } }).packaged).toBe(false)
+  })
+  it('a round without packaged: true does not count for the gate', () => {
+    expect(gateProblem([{ build: { packaged: true } }, { build: { packaged: true } }])).toBe(null)
+    expect(gateProblem([{ build: { packaged: true } }, { build: { packaged: false } }, {}])).toContain('2 of 3')
+  })
+  it('the record header gets the build line once', () => {
+    const text = withBuildLine('# T01.1 Find the start - novice\n- Result: PASS', { packaged: false, version: '0.1.0', commit: 'abcdef1234567' })
+    expect(text).toContain('- Build: unpackaged build, version 0.1.0, commit abcdef1234')
+    expect(withBuildLine(text, { packaged: true })).toBe(text)
+  })
+  it('server and session wire it', () => {
+    expect(source('server.mjs')).toContain('readBuild')
+    expect(source('session.mjs')).toContain('withBuildLine')
+  })
+})
+
+describe('H-95 T23.2 documents the flaky script', () => {
+  it('tasks.md says the first send after each Reconnect fails again; the script fails once per process', () => {
+    const md = readFileSync(join(hereDir, '../../docs/ux/tasks.md'), 'utf8')
+    expect(md).toContain('first send after each Reconnect fails again')
+    const script = JSON.parse(source('scripts/flaky.json'))
+    expect(script.rules[0]).toMatchObject({ id: 'first-fails', once: true })
   })
 })

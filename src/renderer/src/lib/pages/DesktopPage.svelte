@@ -61,7 +61,7 @@
   const since = new Date()
 
   onMount(() => {
-    void desktop.start().then(() => desktop.showIconHint())
+    void desktop.start().then(() => desktop.showProjectHint() || desktop.showIconHint())
     const stopRequests = startAppRequests(desktop.api)
     void desktop.api.window.getState().then((s) => (maximized = s.maximized)).catch(() => {})
     const stopWindow = desktop.api.window.onStateChanged((s) => (maximized = s.maximized))
@@ -135,7 +135,7 @@
           return desktop.openApp({ app: 'explorer', path: '' })
         case 'chats': {
           // With chats, the Chats icon shows the list of them (Task Manager), also when chat windows are open (UX-146).
-          return desktop.chats.length > 0 ? desktop.openApp({ app: 'agent-manager' }) : desktop.newChatFlow()
+          return desktop.chats.length > 0 ? desktop.openTaskManager('chats') : desktop.newChatFlow()
         }
         case 'recycle':
           return desktop.openApp({ app: 'recycle-bin' })
@@ -249,7 +249,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} />
+      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} {api} desktopId={desktop.state.desktopId} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
@@ -270,7 +270,7 @@
         {policy}
         onpause={() => void desktop.togglePaused()}
         ontakecontrol={() => void desktop.toggleUserInControl()}
-        onopenpermissions={() => void desktop.openControlCentre('permissions')}
+        onopenpermissions={(row) => void desktop.openControlCentre('permissions', row)}
         {maximized}
         onminimize={() => void desktop.api.window.minimize()}
         onmaximize={() => void desktop.api.window.toggleMaximize()}

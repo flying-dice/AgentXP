@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProtocolEventDto } from '@shared/desktop'
-import { SOURCE_HINT, ALL_NODE, appendEvents, chatNode, eventForToolCall, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
+import { SOURCE_HINT, ALL_NODE, eventView, lastProblem, FALLBACK_COUNT, appendEvents, chatNode, eventForToolCall, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
 
 const ev = (id: number, over: Partial<ProtocolEventDto> = {}): ProtocolEventDto => ({ id, at: '2026-11-16T09:00:00Z', desktopId: 1, sessionId: 1, source: 'acp', direction: 'in', level: 'info', name: `m${id}`, payload: '{}', ...over })
 
@@ -75,5 +75,39 @@ describe('source hints', () => {
     expect(SOURCE_HINT.acp).toBe('ACP: how Agent7 talks to the agent')
     const acp = logTree([]).flatMap((n) => n.children ?? []).flatMap((n) => n.children ?? []).find((n) => n.id === 'source:acp')
     expect(acp?.title).toBe(SOURCE_HINT.acp)
+  })
+})
+
+describe('eventView', () => {
+  const infos = Array.from({ length: 27 }, (_, i) => ev(i + 1))
+  it('shows warnings and errors first and counts what Show all adds', () => {
+    const list = [...infos, ev(40, { level: 'error' })]
+    const view = eventView(list, noFilter(), false)
+    expect(view.shown.map((e) => e.id)).toEqual([40])
+    expect(view.hidden).toBe(27)
+    expect(view.latest).toBe(false)
+  })
+  it('shows the newest events when there is no warning or error, so the first view is not empty', () => {
+    const view = eventView(infos, noFilter(), false)
+    expect(view.shown).toHaveLength(FALLBACK_COUNT)
+    expect(view.shown.at(-1)?.id).toBe(27)
+    expect(view.hidden).toBe(27 - FALLBACK_COUNT)
+    expect(view.latest).toBe(true)
+  })
+  it('shows everything with Show all or with a chosen level, and nothing for an empty log', () => {
+    expect(eventView(infos, noFilter(), true).shown).toHaveLength(27)
+    expect(eventView(infos, { ...noFilter(), level: 'info' }, false).hidden).toBe(0)
+    expect(eventView([], noFilter(), false)).toEqual({ shown: [], hidden: 0, latest: false })
+  })
+})
+
+describe('lastProblem', () => {
+  it('names the newest warning or error with its own message', () => {
+    const list = [ev(1, { level: 'error', payload: '{"error":{"message":"Old"}}' }), ev(2, { level: 'warning', payload: '{"error":{"message":"Drive E: was removed"}}' }), ev(3)]
+    expect(lastProblem(list)).toEqual({ level: 'warning', text: 'Drive E: was removed' })
+  })
+  it('is null without a warning or an error, and falls back to the event name', () => {
+    expect(lastProblem([ev(1)])).toBeNull()
+    expect(lastProblem([ev(1, { level: 'error', name: 'session/prompt', payload: '{}' })])?.text).toBe('session/prompt')
   })
 })

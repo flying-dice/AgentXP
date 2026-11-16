@@ -47,6 +47,9 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 | Waiting count | The line **1 of 2 waiting** in the box, when more than one request waits. | `permission-queue` |
 | Waiting count (Action Center) | The same line in the permission dialog box of the Action Center. | `uac-queue` |
 | Setting line | The setting that made Agent7 ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
+| Change preview | The lines that change in the permission box of a chat. It shows at least 8 rows and up to 14, then it scrolls. It is the only part of the box that scrolls. | `permission-detail-view` |
+| Show all lines | Shows every line of a long change. When the chat window is too small for 8 rows it reads **Show the whole change**. | `permission-detail-more` |
+| Change preview (Action Center) | The same preview in the permission dialog box of the Action Center. | `uac-detail-view` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |
 
 ## 5 - Troubleshooting

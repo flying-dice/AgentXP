@@ -107,12 +107,12 @@ describe('Help and Support', () => {
     await see.count(ctx.desktop.windows('help'), 0)
   })
 
-  it('F1 with no window focused opens the Keyboard topic (UX-81)', async () => {
+  it('F1 with no window focused opens Using the Desktop (UX-81, UX-165)', async () => {
     await ctx.desktop.closeWindow('terminal')
     await ctx.desktop.closeWindow('notepad')
     await ctx.desktopPage.keyboard.press('F1')
     const help = ctx.desktop.window('help')
     await see.visible(help.getByTestId('help-app'))
-    await see.attribute(help.getByTestId('help-article'), 'data-topic', 'keyboard')
+    await see.attribute(help.getByTestId('help-article'), 'data-topic', 'desktop')
   })
 })

@@ -32,9 +32,13 @@ Click **Start -> System Tools -> Task Manager**, or click **Start -> Task Manage
 
 ### The Chats Tab
 
-The window opens on the **Chats** tab. It opens on the **Processes** tab when a chat has a problem or a chat is still working, because that is where you stop the agent program.
+The **Chats** icon on the desktop opens Task Manager on the **Chats** tab. When you open Task Manager from the Start menu, it opens on the **Processes** tab if a chat has a problem or a chat is still working, because that is where you stop the agent program. Otherwise it opens on the **Chats** tab.
 
-The tab lists the chats with the columns **Chat**, **Agent**, **Status**, and **Context**. A chat that waits for your next message reads **Idle (the agent program is still running)**. The tokens of each chat are on the **Performance** tab. **End Task** stops the turn of the selected chat. The button works only while the chat is busy.
+The tab lists the chats with the columns **Chat**, **Agent**, **Status**, and **Context**. A chat that waits for your next message reads **Idle (the agent program is still running)**. A chat that works shows what it does now after the status, for example **Working: Step 12 of 30**. The tokens of each chat are on the **Performance** tab.
+
+To open a chat, double-click its row, or select it and press Enter or click **Open chat**. The window of that chat opens with its messages and comes to the front, also when you closed the window before. **End Task** stops the turn of the selected chat. The button works only while the chat is busy. To end the agent program itself, use the **Processes** tab.
+
+The **Chats** tab has no chat pane: the list is where you open a chat. The other tabs have the chat pane.
 
 ### The Processes Tab
 
@@ -54,7 +58,7 @@ The window refreshes the lists every two seconds. The status bar shows the numbe
 
 ### The Chat Pane
 
-Each Task Manager window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+Each Task Manager window has a chat pane at its right edge, except on the **Chats** tab. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
@@ -64,6 +68,7 @@ Each Task Manager window has a chat pane at its right edge. The pane starts clos
 | Tabs | Chats, Processes, Terminals, Performance. | none |
 | Chats | The list of chats. | `agent-manager-chats` |
 | Chat | One chat. | `agent-manager-chat` |
+| Open chat | Opens the window of the selected chat and brings it to the front. Double-click a row or press Enter to do the same. | `agent-manager-open-chat` |
 | End Task | Stops the turn of the selected chat. | `agent-manager-end-task` |
 | Reason note | Says why End process or End Task is off, for example **Select a chat first**. | `agent-manager-reason` |
 | End process | Stops the selected agent program after a question. | `agent-manager-end-process` |
@@ -99,6 +104,11 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 ## 5 - Common Tasks
 
+To open a chat that you closed, follow the steps below:
+
+1. Click **Chats** on the desktop. Task Manager opens on the **Chats** tab.
+2. Double-click the chat.
+
 To stop a chat that does not respond, follow the steps below:
 
 1. Open the **Chats** tab.
@@ -113,6 +123,7 @@ To end an agent program, follow the steps below:
 
 ## 6 - Troubleshooting
 
+- **Open chat is dimmed.** No chat is selected. Select a chat first.
 - **End Task is dimmed.** The selected chat does not work now.
 - **The Processes tab is empty.** No agent runs. Start a chat.
 - **The status bar shows an error.** Task Manager could not read the lists. Wait for the next refresh.

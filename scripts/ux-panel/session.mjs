@@ -18,12 +18,13 @@ import { parseArgs } from './lib/args.mjs'
 import { countSteps, readLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
 import { buildBrief } from './lib/brief.mjs'
-import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, contextProblem, loadTasks, normalizeLevel, parsePrevious, scenarioText, startDecision, syncSeq, withStepsLine } from './lib/tasktext.mjs'
+import { buildLine, withBuildLine } from './lib/build.mjs'
+import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, contextProblem, effectiveSteps, loadTasks, normalizeLevel, parsePrevious, recordAnswerProblem, scenarioText, startDecision, stepsToPassOf, syncSeq, withStepsLine } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool', 'steps-to-pass': 'string', rerun: 'string', 'finished-by-facilitator': 'bool' })
 // H-86: one id for the second crash (T23.1b); the old name is only accepted here.
 if (flags.task) flags.task = canonicalTaskId(flags.task)
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
@@ -144,7 +145,7 @@ async function check() {
   const task = flags.task ?? info.task
   const t = loadTasks()[baseTaskId(task)]
   // H-59: no verdict for an answer task without the panelist's answer (or an explicit --no-answer).
-  const missing = answerProblem(t, { answer: flags.answer, noAnswer: flags['no-answer'] })
+  const missing = answerProblem(t, { answer: flags.answer, noAnswer: flags['no-answer'], acceptNoAnswer: flags['accept-no-answer'] })
   if (missing) throw new Error(missing)
   const tooShort = answerTooShort(flags.answer) // H-67
   if (tooShort) throw new Error(tooShort)
@@ -156,23 +157,30 @@ async function check() {
   const level = normalizeLevel(flags.level ?? info.level)
   const budget = t ? budgetFor(t, level) : null
   const lines = [`${result.status}: ${result.reason}`, ...result.notes.map((n) => `  note: ${n}`), `steps: ${steps}${budget ? ` of budget ${budget}` : ''}`]
-  const verdict = budgetVerdict(result.status, steps, budget, null)
+  const previousFile = join(outDir(), 'check.json')
+  const earlier = existsSync(previousFile) ? JSON.parse(readFileSync(previousFile, 'utf8')) : null
+  const earlierRuns = earlier?.runs ?? (earlier ? [{ checkerStatus: earlier.checkerStatus, steps: earlier.steps }] : [])
+  // H-92: the budget and the weak rule use the steps when the check first held, not the steps the panelist spent afterwards.
+  const explicitSteps = flags['steps-to-pass'] === undefined ? undefined : Number(flags['steps-to-pass'])
+  const stepsToPass = stepsToPassOf({ explicit: explicitSteps, runs: earlierRuns, checkerStatus: result.status, steps })
+  const verdict = budgetVerdict(result.status, effectiveSteps(steps, stepsToPass), budget, null)
   const status = verdict.status
   lines.push(...verdict.lines)
+  if (stepsToPass !== null && stepsToPass < steps) lines.push(`steps to pass: ${stepsToPass} (the check first held there; the budget uses it, H-92)`)
   console.log(lines.join('\n'))
   // H-67: every run is appended to `runs`; the top level holds the last run, and the record shows all runs.
   const file = join(outDir(), 'check.json')
   const previous = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
   const checkedAt = new Date().toISOString()
-  const run = { checkedAt, status, checkerStatus: result.status, reason: result.reason, steps, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']) }
+  const run = { checkedAt, status, checkerStatus: result.status, reason: result.reason, steps, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), stepsToPass }
   const runs = [...(previous?.runs ?? (previous ? [{ checkedAt: previous.checkedAt, status: previous.status, checkerStatus: previous.checkerStatus, reason: previous.reason, steps: previous.steps, answer: previous.answer, noAnswer: previous.noAnswer }] : [])), run]
-  const next = { task, level, context: info.context ?? { previousTasks: [] }, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: previous?.seq ?? null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), checkedAt, runs }
+  const next = { task, level, context: info.context ?? { previousTasks: [] }, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: previous?.seq ?? null, build: info.build ?? null, stepsToPass, rerun: previous?.rerun ?? null, finishedByFacilitator: previous?.finishedByFacilitator ?? false, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), checkedAt, runs }
   writeFileSync(file, JSON.stringify(next.seq === null ? next : withSeqKeep(next), null, 2))
   if (runs.length > 1) console.log(`this is run ${runs.length} of this session; check.json keeps all runs (${runs.map((r) => r.status).join(', ')}); the record must explain the earlier ones`)
   process.exitCode = status === 'PASS' ? 0 : status === 'FAIL' ? 1 : 2
 }
 
-const withSeqKeep = (check) => ({ ...check, weak: budgetVerdict(check.status, check.steps, check.budget, check.seq).weak })
+const withSeqKeep = (check) => ({ ...check, weak: budgetVerdict(check.status, effectiveSteps(check.steps, check.stepsToPass), check.budget, check.seq).weak })
 
 /** H-72: copies the SEQ of a record into a check.json. Throws on a missing, out-of-range or contradictory rating. Returns a message, or null without a check.json. */
 function applyRecord(checkFile, recordFile, confirmed = Boolean(flags['seq-confirmed'])) {
@@ -216,6 +224,11 @@ async function stop() {
     if (asksQuestion(loadTasks()[baseTaskId(last.task ?? info.task)]) && !last.answer && !flags['accept-no-answer']) {
       throw new Error('the last check of this answer task had no answer (--no-answer): run `check --answer "<text after Answer:>"` with the panelist\'s answer, or pass --accept-no-answer to stop when the panelist really gave none')
     }
+    // H-90: and the record must carry the Answer line.
+    if (flags.record && existsSync(resolve(flags.record))) {
+      const refused = recordAnswerProblem(loadTasks()[baseTaskId(last.task ?? info.task)], readFileSync(resolve(flags.record), 'utf8'), { acceptNoAnswer: Boolean(flags['accept-no-answer']) })
+      if (refused) throw new Error(refused)
+    }
   }
   // H-83: the Result line of the record always has "Steps: N of M" (from check.json) when the panelist left it out.
   if (flags.record && existsSync(join(out, 'check.json')) && existsSync(resolve(flags.record))) {
@@ -226,6 +239,18 @@ async function stop() {
       writeFileSync(resolve(flags.record), fixed)
       console.log(`added "Steps: ${last.steps}${last.budget ? ` of ${last.budget}` : ''}" to the Result line of ${flags.record}`)
     }
+  }
+  // H-94: the build line goes under the title of the record; H-93: rerun and finishedByFacilitator go into check.json.
+  if (flags.record && existsSync(resolve(flags.record))) {
+    const text = readFileSync(resolve(flags.record), 'utf8')
+    const withBuild = withBuildLine(text, info.build)
+    if (withBuild !== text) writeFileSync(resolve(flags.record), withBuild)
+    console.log(`build: ${buildLine(info.build)}${info.build?.packaged ? '' : ' (this session does not count for the release gate)'}`)
+  }
+  if (existsSync(join(out, 'check.json')) && (flags.rerun || flags['finished-by-facilitator'])) {
+    const file = join(out, 'check.json')
+    const last = JSON.parse(readFileSync(file, 'utf8'))
+    writeFileSync(file, JSON.stringify({ ...last, ...(flags.rerun ? { rerun: { reason: flags.rerun } } : {}), ...(flags['finished-by-facilitator'] ? { finishedByFacilitator: true } : {}) }, null, 2))
   }
   // H-53/H-72: the rating comes from the record (`- SEQ: n`), never from a command line option; the scale guard refuses a record whose rating contradicts its text.
   if (flags.record) {

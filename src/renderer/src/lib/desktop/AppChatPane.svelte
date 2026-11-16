@@ -12,7 +12,6 @@
   import ChatStrip from '../apps/shared/ChatStrip.svelte'
   import { chatStripHidden } from './chatStrip.svelte'
   import { chatAboutTitle } from '../app/session/folderLabel'
-  import { OPEN_PANE_TIP } from '../app/session/chatPaneText'
   import { PANE_MIN_WIDTH, suggestionsFor } from './chatPane'
   import { asideCwd } from '@shared/desktop-views'
   import type { DesktopController } from './DesktopController.svelte'
@@ -76,7 +75,7 @@
 
 {#if pane.collapsed}
   {#if !chatStripHidden.has(w.id)}
-    <ChatStrip testid="chat-pane-toggle" {news} title="{OPEN_PANE_TIP} (Ctrl+Shift+C)" onopen={() => desktop.setChatPane(w.id, true)} />
+    <ChatStrip testid="chat-pane-toggle" {news} title="Chat (Ctrl+Shift+C): ask about what you are looking at" onopen={() => desktop.setChatPane(w.id, true)} />
   {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->

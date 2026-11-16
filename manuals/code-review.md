@@ -76,7 +76,7 @@ The right edge of the window holds the chat with the reviewer. You can ask a que
 
 ### The Status Bar
 
-The status bar shows the folder, how many files changed (for example "2 files changed. Showing 1 (the one you opened)."), the number of open comments, and what the reviewer does. Every number in the window is written in digits.
+The status bar shows the folder, how many files changed (for example "2 files changed", or "Showing 1 of 2 changed files" when you opened one of them). In a narrow window the least important parts are left out, so no part is cut, the number of open comments, and what the reviewer does. Every number in the window is written in digits.
 
 ## 4 - Controls Reference
 

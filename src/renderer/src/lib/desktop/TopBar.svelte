@@ -28,8 +28,8 @@
     onopenrequest?: () => void
     /** The "Ask before every action" check box and the "Resume" button: switches the flag. */
     ontakecontrol?: () => void
-    /** A chip was clicked: open Control Center at Permissions. */
-    onopenpermissions?: () => void
+    /** A chip was clicked: open Control Center at Permissions with the row of that tool selected. */
+    onopenpermissions?: (group: string) => void
     /** The OS window is maximised. */
     maximized?: boolean
     onminimize?: () => void
@@ -67,7 +67,7 @@
     <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use" title="The agent can use only what is open here. Closing an app takes its tool away.">
       <span class="lead">Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.()}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)}>{chip.label}</button>
       {/each}
       {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
@@ -202,10 +202,14 @@
     background: linear-gradient(#fffbea, #fff0c2);
     color: #5f4300;
   }
+  /* Denied: still a button with a setting, so the border stays solid. */
   .chip[data-state='off'] {
-    border-style: dashed;
-    background: #f7f9fc;
+    background: linear-gradient(#fbfbfc, #eceef2);
     color: #4b5666;
+  }
+  /* The dashed border is only for a chip with no setting to change yet: its app is not open (UX-159). */
+  .chip[data-closed='true'] {
+    border-style: dashed;
   }
   .chip:hover {
     border-color: var(--w7-hot-border);

@@ -30,6 +30,7 @@ describe('launcher', () => {
   it('the New dialog says that Create opens the desktop', async () => {
     await page.getByTestId('launcher-new').click()
     await see.text(page.getByTestId('new-desktop-opens-note'), 'Agent7 opens the new desktop when you click Create.')
+    await see.text(page.getByTestId('new-desktop-projects-note'), 'You can add projects later.')
     await page.getByTestId('dialog-button-cancel').click()
   })
 
@@ -40,6 +41,10 @@ describe('launcher', () => {
     await see.visible(launcher.connectedChip('Alpha'))
     const desktopPage = await app.desktopWindow(await desktopIdByTitle(page, 'Alpha'))
     await see.visible(desktopPage.getByTestId('taskbar-start'))
+    // A desktop without a project says what to do next and names Computer (UX-164).
+    await see.text(desktopPage.getByTestId('balloon-text'), 'Plug in a project to let the agent work on it: open Computer, then Plug in a project.')
+    await desktopPage.getByTestId('balloon-action').click()
+    await see.visible(desktopPage.getByTestId('window-explorer'))
   })
 
   it('connects: Show desktop brings the open window forward and the row shows Connected', async () => {

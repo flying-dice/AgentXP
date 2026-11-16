@@ -62,13 +62,13 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens Task Manager, where **Switch to chat** opens one. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens Task Manager on the **Chats** tab, where a double-click on a chat opens its window. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
 Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Center**.
 
 ### The Windows
 
-Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from Chats on the desktop.** The balloon has a button, **Open Task Manager**. A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
+Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from Chats on the desktop.** The balloon names the chat, for example **"start the long job" is still working.** Its button, **Open Task Manager**, opens the **Chats** tab with that chat selected. A desktop with no project shows a balloon the first time: **Plug in a project to let the agent work on it: open Computer, then Plug in a project.** Its button, **Open Computer**, opens Computer. A new window opens to the right of the desktop icons, so it never covers an icon. A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
 
 If the agent opened a window, the label **opened by agent** appears at its edge. The taskbar button of a window that the agent opened behind your chat flashes until you select it.
 
@@ -143,7 +143,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
-| Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask**. Its tooltip is **Open Control Center.** A click opens Control Center at Permissions. | `topbar-tool-chip-*` |
+| Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask**. Its tooltip starts with **Open Control Center to change this.** A chip for an app that is not open has a dashed border. A click opens Control Center at Permissions with the row of that tool selected. | `topbar-tool-chip-*` |
 | Nothing yet | Shows that no app and no chat is open, or that only chats are. | `topbar-tool-chips-none` |
 | Waiting link | The status while requests wait. It names the chat, for example "Fix login redirect is waiting: run a command (1 of 2 waiting)". Click it to go to the chat with the oldest request. | `topbar-waiting-link` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
@@ -182,7 +182,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Balloon title | Shows the title of the message. | `balloon-title` |
 | Balloon text | Shows the text of the message. | `balloon-text` |
 | Balloon close | Closes the balloon. | `balloon-close` |
-| Balloon button | Runs the action that the balloon offers, for example Open Task Manager. | `balloon-action` |
+| Balloon button | Runs the action that the balloon offers, for example Open Task Manager or Open Computer. | `balloon-action` |
 
 ### Start menu
 
@@ -224,6 +224,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Details | Shows the change to the file or the command. | `uac-detail` |
 | Details: file | Shows the full path of the file. | `uac-detail-path` |
 | Details: size | Tells how many lines are added and removed. | `uac-detail-summary` |
+| Change preview | The lines that change, at least 8 rows. | `uac-detail-view` |
 | Show all lines | Shows every line of a long change. | `uac-detail-more` |
 | Allow | Allows the action. | `uac-allow` |
 | Other answer | Gives another answer that the agent offers, for example Deny. The focus starts on the first refusal. | `uac-option-*` |
@@ -267,7 +268,7 @@ Right-click a taskbar button to open its menu.
 
 | Name | What it does | data-testid |
 |---|---|---|
-| F1 | Opens Help and Support on the topic of the focused window. | none |
+| F1 | Opens Help and Support on the topic of the focused window. With no window focused, it opens **Using the Desktop**. | none |
 | Ctrl+Esc | Opens or closes the Start menu. | none |
 | Ctrl+N | Starts a new chat on the default drive, from the desktop, Code, Explorer, and Chat. The box to type in is ready. | none |
 | Alt+F4 | Closes the focused window. | none |

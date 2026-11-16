@@ -175,11 +175,36 @@ export function verdictLine(verdict: ReviewVerdict, comments: readonly Pick<Revi
 }
 
 /**
- * The status bar: "2 files changed", and "2 files changed. Showing 1 (the one you opened)." when one of several files is
- * open (UX-77, UX-131). With a single changed file there is nothing to explain.
+ * The status bar: "2 files changed", and "Showing 1 of 2 changed files" when one of several files is open (UX-77, UX-131,
+ * UX-167: the longer sentence confused readers twice). With a single changed file there is nothing to explain.
  */
 export const filesStatusLabel = (total: number, shown: number): string =>
-  `${plural(total, 'file', 'files')} changed${shown > 0 && total > shown ? `. Showing ${shown} (the one you opened).` : ''}`
+  shown > 0 && total > shown ? `Showing ${shown} of ${total} changed files` : `${plural(total, 'file', 'files')} changed`
+
+export interface StatusField {
+  key: string
+  text: string
+}
+
+/**
+ * The status fields that fit in `width` pixels. `fields` come in order of importance (most important first); a field that does
+ * not fit is left out, with every less important one after it, so no field is ever cut in the middle (UX-167). The room of the
+ * folder text (the spring) is what is left, at least `MIN_ROOT`.
+ */
+export const STATUS_CHAR_PX = 7
+export const STATUS_PAD_PX = 24
+export const MIN_ROOT = 140
+export function fitStatusFields<T extends StatusField>(fields: readonly T[], width: number): T[] {
+  if (width <= 0) return [...fields]
+  const kept: T[] = []
+  let used = MIN_ROOT
+  for (const field of fields) {
+    used += field.text.length * STATUS_CHAR_PX + STATUS_PAD_PX
+    if (used > width && kept.length > 0) break
+    kept.push(field)
+  }
+  return kept
+}
 
 /** The words under the severity list of the comment box (UX-76). */
 export const SEVERITY_HELP = 'Minor is the usual choice for a suggestion. Use Blocker only when the change must not be accepted as it is.'

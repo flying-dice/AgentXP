@@ -4,8 +4,10 @@ import { asksQuestion } from './tasktext.mjs'
 
 /** The record template (also in FACILITATOR.md). */
 export const RECORD_TEMPLATE = `# <task> <title> - <level>
+- Build: <the line that stop prints; it is added when missing>
 - Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
 - Context: fresh panelist, previous tasks: none
+- Answer: <the text after 'Answer:' in the final report; tasks without a question: not asked>
 - SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
 - Check runs (all runs of check.json.runs and why they differ; "one run" if only one): ...
 - Errors (wrong clicks, undo, dead ends, error messages seen): ...
@@ -24,7 +26,7 @@ export function buildBrief({ task, level, taskInfo, panelist, round = 'r1', out,
   const record = `docs/ux/panel/${round}/${task}-${level}.md`
   const asks = asksQuestion(taskInfo)
   const checkCmd = asks
-    ? `node ${session} check --out ${folder} --answer "<the text after 'Answer:' in your final report>"\n(if your final report has no Answer: line, use --no-answer instead; an answer of fewer than 5 words is refused)`
+    ? `node ${session} check --out ${folder} --answer "<the text after 'Answer:' in your final report>"\n(an answer of fewer than 5 words is refused; --no-answer alone is refused too, H-90: if your final report truly has no Answer: line, report that to the orchestrator instead of guessing)`
     : `node ${session} check --out ${folder}`
   return [
     `# One task, one fresh panelist: ${task} at level ${level}`,

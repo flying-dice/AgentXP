@@ -15,12 +15,11 @@
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
-  import { TAKE_OVER_TIP } from '../../desktop/activity'
   import { ViewSync } from '../viewSync'
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
-  import { agentBarText, ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, READ_DONE_MS, zoomText } from './pageStatus'
+  import { agentBarText, ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, READ_DONE_MS, TAKE_OVER_BUTTON_TIP, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -400,7 +399,7 @@
           class="bar-button takeover"
           data-testid="browser-agent-takeover"
           disabled={userInControl}
-          title={TAKE_OVER_TIP}
+          title={TAKE_OVER_BUTTON_TIP}
           onclick={() => setControl(true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
       </div>
     {/if}
@@ -633,18 +632,21 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    height: 28px;
-    padding: 0 8px;
+    min-height: 28px;
+    box-sizing: border-box;
+    padding: 3px 8px;
     background: linear-gradient(#fff6c7, #ffe58a);
     border-bottom: 1px solid #c9a227;
     color: #4a3a00;
     pointer-events: none;
   }
+  /* The sentence wraps to a second line (never cut with "..."): it says what the agent may do next (UX-172). */
   .agentbar span {
     flex: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    min-width: 0;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .bar-button {
     flex: none;

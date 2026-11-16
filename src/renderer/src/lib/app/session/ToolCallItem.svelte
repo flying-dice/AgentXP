@@ -6,6 +6,7 @@
   import { expandsByDefault, plainToolResult, toolArgument, toolLabel } from './toolSummary'
   import { DENIED_NOTE, FAILED_NOTE, toolStatusView } from './toolStatus'
   import { plainToolTitle } from './toolTitles'
+  import { browserNow, browserStep } from './browserSteps'
 
   interface Props {
     row: Extract<TranscriptRow, { kind: 'tool' }>
@@ -28,6 +29,11 @@
   const status = $derived(toolStatusView(toolCall?.status, waiting, denied))
   // The agent's own name for the tool ("fs.read_text_file") is replaced by what it does ("Read a file").
   const plainTitle = $derived(plainToolTitle(toolCall?.title ?? row.name) ?? plainToolTitle(row.name))
+  // A Browser step names its target and the typed text ("Typed 'Standup' in the search messages box"); a running one says what it does now.
+  const browserTitle = $derived(
+    status.kind === 'running' ? browserNow(row.name, rawInput) : status.kind === 'failed' ? null : browserStep(row.name, rawInput, row.result)
+  )
+  const title = $derived(browserTitle ?? plainTitle)
   const argument = $derived(toolArgument(toolCall?.kind, rawInput, toolCall?.locations ?? [], toolCall?.title ?? row.name))
   const result = $derived(row.result ? plainToolResult(row.result) : null)
   const contents = $derived(toolCall?.contents ?? [])
@@ -37,8 +43,8 @@
 </script>
 
 <ToolCallCard
-  name={plainTitle ?? toolLabel(toolCall?.kind, row.name, rawInput)}
-  argument={plainTitle && plainToolTitle(argument) ? '' : argument}
+  name={title ?? toolLabel(toolCall?.kind, row.name, rawInput)}
+  argument={title && plainToolTitle(argument) ? '' : argument}
   {status}
   note={denied ? DENIED_NOTE : status.kind === 'failed' ? FAILED_NOTE : undefined}
   onshowevent={onshowevent ? () => onshowevent(row.toolCallId) : undefined}

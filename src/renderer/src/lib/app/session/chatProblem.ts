@@ -52,7 +52,14 @@ export function plainError(error: string, unanswered: boolean): { text: string; 
 export const RESTART_DONE_MS = 4000
 
 const DETAILS: ProblemAction = { id: 'details', label: 'Details...' }
-const EVENT_VIEWER: ProblemAction = { id: 'event-viewer', label: 'Show in Event Viewer' }
+/** Not a button: the row shows it as the link in "The details are in Event Viewer." after the buttons (UX-160). */
+const EVENT_VIEWER: ProblemAction = { id: 'event-viewer', label: 'Event Viewer' }
+
+/** The recovery that works: the answer a crash box highlights (the default button), never Details or Event Viewer. */
+const RECOVERY: readonly ProblemActionId[] = ['send-again', 'restart-send', 'restart']
+
+/** The action the row highlights: the first recovery of the list; null when there is none (a plain agent error with no way to retry). */
+export const defaultActionId = (actions: readonly ProblemAction[]): ProblemActionId | null => actions.find((a) => RECOVERY.includes(a.id))?.id ?? null
 /** Both open Control Center > Agents: one to correct the command of the agent, one to pick another agent as the default. */
 const OPEN_AGENTS: ProblemAction = { id: 'open-agents', label: 'Open Agents' }
 const CHOOSE_AGENT: ProblemAction = { id: 'choose-agent', label: 'Choose another agent' }
@@ -83,10 +90,10 @@ export function namedStartFailure(message: string, agentName: string | null | un
   return `${name} could not start: ${lowerFirst(message.slice(START_LEAD.length))}`
 }
 
-/** The line a second failure in a row adds: "It stopped again: the program 'x' was not found. Show in Event Viewer shows the details." */
+/** The line a second failure in a row adds: "It stopped again: the program 'x' was not found." (The row says where the details are after its buttons.) */
 export function repeatLine(problem: SessionProblemDto): string {
   const cause = lowerFirst((problem.cause ?? problem.message).trim().replace(/\.$/, ''))
-  return `It stopped again: ${cause}. Show in Event Viewer shows the details.`
+  return `It stopped again: ${cause}.`
 }
 
 /**

@@ -65,7 +65,7 @@ The peek shows the old lines and the new lines of a block. **Revert hunk** write
 The pane is at the bottom. It has two tabs.
 
 - **Agent changes** – The same list as the chat, with **Revert** and **Open in editor**.
-- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Double-click a file, or select it and press Enter, to see its changes in Code Review. The review opens on that file. Point to a row to read which lines of the file changed, for example "redirect.ts: lines 1, 3 and 4 changed". If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
+- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Click a file to see its changes in the pane below the list. No window opens. Double-click the file, or select it and press Enter, to open it in Code Review. The status bar then says "Opening Review...". Point to a row to read which lines of the file changed, for example "redirect.ts: lines 1, 3 and 4 changed". If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
 
 ### Focus on the File
 
@@ -152,7 +152,9 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Git pane | Holds the git summary and list. | `code-git-pane` |
 | Git summary | Shows the branch and the number of changed files. | `code-git-summary` |
 | Git list | Lists the changed files. | `code-git-list` |
-| Git entry | One changed file. | `code-git-entry` |
+| Git entry | One changed file. Click it to see its changes below. Double-click it to open Code Review. | `code-git-entry` |
+| Git changes | The pane below the list: the changes of the file that you clicked. | `code-git-preview` |
+| Git changes hint | The words in that pane before you click a file. | `code-git-preview-hint` |
 | Changed files | The list in the Agent changes tab. | `changes-list` |
 | Diff | The diff of the selected change. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
@@ -254,7 +256,8 @@ To ask about some lines, select them in the file and click **Ask about selection
 To see what changed in a file that Git lists, follow the steps below:
 
 1. Click the **Git** tab at the bottom.
-2. Double-click the file, or select it and press Enter. Code Review opens on that file. Point to the row first to see which lines changed.
+2. Click the file. Its changes show in the pane below the list. Point to the row to see which lines changed.
+3. To review the file with comments, double-click it, or select it and press Enter. Code Review opens on that file.
 
 ## 6 - Troubleshooting
 

@@ -46,6 +46,7 @@
   import {
     HEAD_MEANING,
     addCommentButtonTitle,
+    fitStatusFields,
     projectNameOf,
     STATUS_LABEL,
     baseLabel,
@@ -133,6 +134,19 @@
   const opens = $derived(openCounts(review.comments))
   const reviewing = $derived(store?.running ?? false)
   const status = $derived(store?.state.session.status && store.state.session.status !== 'closed' ? store.state.session.status : (session?.status ?? null))
+  // The status bar drops its least important field when the window is narrow, instead of cutting a field (UX-167).
+  const commentsStatus = $derived(`${counts.open} open, ${counts.resolved} resolved, ${counts.sent} sent`)
+  const shownFields = $derived(
+    fitStatusFields(
+      [
+        { key: 'files', text: filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0) },
+        { key: 'comments', text: commentsStatus },
+        ...(mode === 'expanded' && positionLabel ? [{ key: 'change', text: positionLabel }] : []),
+        { key: 'agent', text: connectionLabel(status) }
+      ],
+      clientWidth
+    )
+  )
 
   // ---- view state: report ours, follow the agent's ------------------------------------------------
   const sync = new ViewSync<{ baseRef: string; selectedPath: string | null }>((v) => JSON.stringify([v.baseRef, v.selectedPath]))
@@ -639,12 +653,12 @@
 
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="review-status-root" text="{root} against {baseLabel(baseRef)}" spring />
-    <StatusStripLabel testid="review-status-files" class="keep" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />
-    {#if mode === 'expanded' && positionLabel}
+    {#if shownFields.some((f) => f.key === 'files')}<StatusStripLabel testid="review-status-files" class="keep" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />{/if}
+    {#if shownFields.some((f) => f.key === 'change')}
       <StatusStripLabel testid="review-status-change" class="keep" text={positionLabel} borders={['left']} />
     {/if}
-    <StatusStripLabel testid="review-status-comments" class="keep" text="{counts.open} open, {counts.resolved} resolved, {counts.sent} sent" borders={['left']} />
-    <StatusStripLabel testid="review-status-agent" text={connectionLabel(status)} borders={['left']} />
+    {#if shownFields.some((f) => f.key === 'comments')}<StatusStripLabel testid="review-status-comments" class="keep" text={commentsStatus} borders={['left']} />{/if}
+    {#if shownFields.some((f) => f.key === 'agent')}<StatusStripLabel testid="review-status-agent" class="keep" text={connectionLabel(status)} borders={['left']} />{/if}
   </StatusStrip>
 
   <AppAbout {help} />

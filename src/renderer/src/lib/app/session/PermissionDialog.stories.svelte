@@ -29,6 +29,11 @@
   {#snippet template(args)}<div class="stage"><PermissionDialog {...args} /></div>{/snippet}
 </Story>
 
+<!-- UX-158: a 5-line change in a chat window 480 px high. The preview keeps 8 rows when it can, or shrinks and offers "Show the whole change". -->
+<Story name="SmallChangeInShortWindow" args={{ toolCall: edit }}>
+  {#snippet template(args)}<div class="stage short"><PermissionDialog {...args} /></div>{/snippet}
+</Story>
+
 <Story name="OnlyOnceOptions" args={{ title: 'Fetch https://example.com', options: permissionOptions.filter((o) => o.kind.endsWith('once')) }}>
   {#snippet template(args)}<div class="stage"><PermissionDialog {...args} /></div>{/snippet}
 </Story>
@@ -40,5 +45,8 @@
     flex-direction: column;
     justify-content: flex-end;
     background: var(--w7-desktop-bg);
+  }
+  .stage.short {
+    height: 480px;
   }
 </style>

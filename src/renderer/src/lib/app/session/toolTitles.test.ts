@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { approvalTitle, plainToolTitle, toolLabel, toolPredicate, toolTitleOr } from './toolTitles'
+import { approvalTitle, plainToolTitle, toolLabel, toolPredicate, toolTitleOr, liveToolTitle } from './toolTitles'
 
 describe('toolTitles', () => {
   it('words changes with the file', () => {
@@ -53,5 +53,13 @@ describe('plainToolTitle', () => {
     expect(plainToolTitle('Read src/a.ts')).toBeNull()
     expect(toolTitleOr('Read src/a.ts')).toBe('Read src/a.ts')
     expect(toolTitleOr('terminal')).toBe('Run a command')
+  })
+})
+
+describe('liveToolTitle', () => {
+  it('gives a sentence for a running Browser step and the plain title for other tools', () => {
+    expect(liveToolTitle('agent7.browser_type', '{"text":"hi"}')).toBe("Typing 'hi'")
+    expect(liveToolTitle('terminal_run')).toBe('Run a command')
+    expect(liveToolTitle('mystery')).toBeNull()
   })
 })

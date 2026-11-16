@@ -1,6 +1,7 @@
 /** Pure summaries of what the agent is doing, from the chats of a desktop. */
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
+import { liveToolTitle } from '../app/session/toolTitles'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
@@ -39,7 +40,7 @@ export function workingText(chats: readonly ChatActivityInput[], waiting?: numbe
   for (const chat of [...busy].reverse()) {
     const calls = Object.values(chat.toolCalls)
     for (let i = calls.length - 1; i >= 0; i--) {
-      if (RUNNING.includes(calls[i].status)) return calls[i].title
+      if (RUNNING.includes(calls[i].status)) return liveToolTitle(calls[i].title, calls[i].rawInput) ?? calls[i].title
     }
   }
   const first = busy[busy.length - 1]
@@ -92,12 +93,12 @@ export interface ToolChip {
   state: ChipState
   /** No app that provides the tool is open, so the agent cannot use it yet (never true for Deny: it reads Deny). */
   closed: boolean
-  /** The tooltip: "Open Control Center.", then the setting and why the chip is as it is. */
+  /** The tooltip: "Open Control Center to change this.", then the setting and why the chip is as it is. */
   tooltip: string
 }
 
 /** The first words of every chip tooltip; a chip is a button that opens Control Center at Permissions (UX-142). */
-export const OPEN_CONTROL_CENTRE = 'Open Control Center.'
+export const OPEN_CONTROL_CENTRE = 'Open Control Center to change this.'
 
 /** The name a screen reader reads for a chip: "Run commands: Ask. Open Control Center to change." */
 export const chipAriaLabel = (chip: Pick<ToolChip, 'label'>): string => `${chip.label}. Open Control Center to change.`

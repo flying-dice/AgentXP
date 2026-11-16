@@ -32,4 +32,15 @@ describe('permission box: edit of an existing file', () => {
     expect(await chat.permissionDialog.innerText()).not.toContain('cannot show what changes')
     await see.visible(chat.frame.getByTestId('permission-detail'))
   })
+
+  it('gives the change about 6 rows even in the default window, in one scroll area (UX-158)', async () => {
+    const chat = ctx.desktop.chat()
+    const view = chat.frame.getByTestId('permission-detail-view')
+    await see.visible(view)
+    await see.eventually(async () => expect((await view.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(110))
+    // Below 8 rows the box offers the whole change.
+    await see.visible(chat.frame.getByTestId('permission-detail-more'))
+    // The answers stay in the window next to the preview.
+    await see.visible(chat.frame.getByTestId('permission-hint'))
+  })
 })

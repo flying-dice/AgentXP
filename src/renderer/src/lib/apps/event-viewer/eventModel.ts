@@ -49,6 +49,35 @@ export function matchesFilter(e: ProtocolEventDto, f: EventFilter): boolean {
 
 export const filterEvents = (events: readonly ProtocolEventDto[], f: EventFilter): ProtocolEventDto[] => events.filter((e) => matchesFilter(e, f))
 
+/** How many of the newest events the first view shows when it has no warning or error to show. */
+export const FALLBACK_COUNT = 5
+
+export interface EventView {
+  /** The rows to show. */
+  shown: ProtocolEventDto[]
+  /** Events the view leaves out and Show all would add. */
+  hidden: number
+  /** The list has no warning or error, so it shows the newest events instead (the reason a chat stopped is among them). */
+  latest: boolean
+}
+
+/**
+ * What the list shows. With "Show all" off and no level chosen, warnings and errors only; when there are none, the newest
+ * few events so the first view is never empty while the log is not (UX-171). `hidden` counts what Show all would add.
+ */
+export function eventView(events: readonly ProtocolEventDto[], f: EventFilter, showAll: boolean): EventView {
+  const all = filterEvents(events, { ...f, quiet: false })
+  if (showAll || f.level !== 'all') return { shown: all, hidden: 0, latest: false }
+  const notable = all.filter(isNotable)
+  if (notable.length > 0 || all.length === 0) return { shown: notable, hidden: all.length - notable.length, latest: false }
+  const shown = all.slice(-FALLBACK_COUNT)
+  return { shown, hidden: all.length - shown.length, latest: true }
+}
+
+/** The line of an empty list: what is true and the way out, "Nothing to show with this filter. Show all (27)" is the link part. */
+export const EMPTY_TEXT = 'Nothing to show with this filter.'
+export const showAllText = (total: number): string => `Show all (${total})`
+
 /**
  * The event that belongs to a failed tool call: an error of that call first, else the newest event that names the call.
  * `events` is oldest first (the order of the log); null when no event names the call.
@@ -155,4 +184,18 @@ export function findNext(events: readonly ProtocolEventDto[], text: string, from
     if (`${e.name} ${e.payload}`.toLowerCase().includes(needle)) return i
   }
   return -1
+}
+
+export interface ProblemLine {
+  level: Exclude<EventLevel, 'info'>
+  /** One plain line: the message the event carries, else its name. */
+  text: string
+}
+
+/** The newest warning or error of the log, for the Activity gadget; null when there is none. `events` is oldest first. */
+export function lastProblem(events: readonly ProtocolEventDto[]): ProblemLine | null {
+  const e = events.findLast(isNotable)
+  if (!e) return null
+  const text = summaryOf(e.payload).replace(/\s+/g, ' ').trim() || e.name
+  return { level: e.level as ProblemLine['level'], text }
 }

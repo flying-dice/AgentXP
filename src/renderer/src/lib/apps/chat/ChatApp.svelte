@@ -13,6 +13,7 @@
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import { revertConfirmText } from '../../app/changes/changeFormat'
+  import { undoRevertItem } from '../../app/changes/changeMenu'
   import TasksPane from '../../app/shell/TasksPane.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
@@ -207,6 +208,22 @@
       await host.api.sessions.revertChange(change.id)
       await store?.connect()
       selectedChangeId = null
+      lastWasRevert = true
+    } catch (error) {
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  /** Edit > Undo revert: takes the newest reverted file out of the Recycle Bin (UX-169). It is there while the last thing done to the changes was a revert. */
+  let lastWasRevert = $state(false)
+  const canUndoRevert = $derived(lastWasRevert && revertedChanges.list.length > 0)
+  async function undoRevert(): Promise<void> {
+    const newest = revertedChanges.list.at(-1)
+    if (!newest) return
+    lastWasRevert = false
+    try {
+      await host.api.recycle.restore(newest.id)
+      await store?.connect()
     } catch (error) {
       await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
     }
@@ -279,7 +296,7 @@
           ...closeItems('chat', () => void host.closeWindow(win.id), '&Close', 'Close this window. The agent keeps working.')
         ]
       },
-      { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }) },
+      { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }).concat(undoRevertItem(canUndoRevert, () => void undoRevert())) },
       {
         label: '&Tools',
         items: [
@@ -324,7 +341,7 @@
       style="width:170px"
     />
     <span class="spring"></span>
-    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={panelOpen} checkOnClick data-testid="chat-panel-toggle" />
+    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={panelOpen} checkOnClick title="Changes the agent made: review, revert" data-testid="chat-panel-toggle" />
   </div>
   <div class="row">
     <div class="main">

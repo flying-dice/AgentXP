@@ -12,8 +12,11 @@
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
   import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
+import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import { ContextMenu } from '../../apps/shared/ContextMenu.svelte'
+  import { changeRowItems } from '../changes/changeMenu'
   import { localStore } from '../../desktop/chatPane'
-  import { REVERTED_LABEL, REVERTED_NOTE, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import { REVERTED_KIND, REVERTED_LABEL, REVERTED_NOTE, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
   import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
 
   interface Props {
@@ -99,6 +102,10 @@
   const gitSentence = $derived(`The agent changed nothing in this chat. Git shows ${gitCount} changed ${gitCount === 1 ? 'file' : 'files'}.`)
   const reason = $derived(changes.length === 0 ? null : (revertReason ?? editorReason))
 
+  // The right-click menu of a row: Revert on a changed row, "Restore from the Recycle Bin" on a reverted one (UX-169).
+  const menu = new ContextMenu()
+  const rowItems = (id: string) => changeRowItems({ change: id.startsWith('reverted-') ? null : (changes.find((c) => String(c.id) === id) ?? null), onrevert, onopeneditor, onopenrecyclebin })
+
   async function revert(): Promise<void> {
     if (selected) await onrevert?.(selected)
   }
@@ -113,6 +120,7 @@
       selected={selected ? [String(selected.id)] : []}
       emptyText={gitOnly ? 'The agent changed nothing in this chat.' : 'No pending changes in this chat.'}
       aria-label="Changed files"
+      oncontextmenu={(row, event) => menu.show(event, rowItems(row.id))}
       onselect={(ids) => (selectedId = ids[0] && !ids[0].startsWith('reverted-') ? Number(ids[0]) : null)}
     >
       {#snippet cell(row, col)}
@@ -121,7 +129,7 @@
           {@const name = splitForMiddleEllipsis(parts.name)}
           <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : `${row.file} (${String(row.kind).toLowerCase()})`} data-testid="changes-file">
             <b class="name"><span class="head" data-testid="changes-name-head">{name.head}</span><span class="tail" data-testid="changes-name-tail">{name.tail}</span></b>
-            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text">{REVERTED_LABEL}</span>{:else}<span class="kind">{row.kind}</span>{#if parts.dir}<span class="dir">{parts.dir}</span>{/if}{/if}
+            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text" title={REVERTED_LABEL}>{REVERTED_KIND}</span>{:else}<span class="kind">{row.kind}</span>{#if parts.dir}<span class="dir">{parts.dir}</span>{/if}{/if}
           </span>
         {:else}
           <span class="t" class:reverted={row.reverted} data-testid="changes-lines">{row.label}</span>
@@ -143,7 +151,7 @@
   </div>
 {/snippet}
 
-<div class="changes" data-testid="changes-pane" bind:clientWidth={paneWidth} bind:clientHeight={paneHeight}>
+<div class="changes" data-testid="changes-pane" role="presentation" onkeydown={(e) => menu.key(e, () => rowItems(selected ? String(selected.id) : (reverted[0] ? `reverted-${reverted[0].id}` : '')))} bind:clientWidth={paneWidth} bind:clientHeight={paneHeight}>
   {#if gitOnly}
     <div class="note" data-testid="changes-git-note">
       {gitSentence}
@@ -176,6 +184,7 @@
       </span>
     </span>
   </div>
+  <ContextMenuStrip bind:open={menu.open} x={menu.x} y={menu.y} items={menu.items} label="Changed files" />
 </div>
 
 <style>
@@ -223,7 +232,7 @@
   .name {
     flex: 0 1 auto;
     display: flex;
-    min-width: 5em;
+    min-width: 9em;
     overflow: hidden;
     white-space: nowrap;
   }

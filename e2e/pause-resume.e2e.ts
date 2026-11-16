@@ -58,19 +58,41 @@ describe('pause, resume and taking control (stepping agent)', () => {
     await see.text(ctx.desktop.status, 'Idle')
   })
 
-  it('closing a chat while the agent works says that the agent keeps working (UX-136)', async () => {
+  it('closing a chat while the agent works names it, and Task Manager opens it again (UX-136, UX-163)', async () => {
     const chat = ctx.desktop.chat()
     await control.setMode('manual')
     await chat.send('step through once more')
     await control.waitForPause()
     await see.attribute(chat.transcript, 'data-running', 'true')
+    const sessionId = await chat.sessionId()
     await ctx.desktop.closeWindow('chat')
-    await see.text(ctx.desktop.balloonText, 'The agent keeps working. Open it again from Chats on the desktop.')
-    // The balloon has a button that opens the list of chats (UX-146).
+    await see.text(ctx.desktop.balloonText, 'is still working. Open it again from Chats on the desktop.')
+    // The balloon has a button that opens the list of chats, on the Chats tab with the chat selected (UX-146, UX-163).
     await see.text(ctx.desktop.balloonAction, 'Open Task Manager')
     await ctx.desktop.balloonAction.click()
-    await see.visible(ctx.desktop.window('agent-manager').getByTestId('agent-manager-app'))
+    const manager = ctx.desktop.window('agent-manager')
+    await see.visible(manager.getByTestId('agent-manager-app'))
     await see.gone(ctx.desktop.balloonAction)
+    const row = manager.getByTestId('agent-manager-chat').first()
+    await see.attribute(row, 'aria-selected', 'true')
+    await see.count(manager.getByTestId('chat-pane-toggle'), 0)
+    // A double-click opens that chat's window again: the same chat, with its messages.
+    await row.dblclick()
+    await see.visible(ctx.desktop.chat().frame)
+    expect(await ctx.desktop.chat().sessionId()).toBe(sessionId)
+    await see.text(ctx.desktop.chat().transcript, 'step through once more')
+    await ctx.desktop.closeWindow('agent-manager')
     await control.setMode('auto')
+  })
+
+  it('the Chats icon opens Task Manager on the Chats tab; the stop notice names where the program ends (UX-163)', async () => {
+    await ctx.desktop.icon('chats').dblclick()
+    const manager = ctx.desktop.window('agent-manager')
+    await see.visible(manager.getByTestId('agent-manager-open-chat'))
+    await see.count(manager.getByTestId('chat-pane-toggle'), 0)
+    await manager.getByTestId('agent-manager-chat').first().click()
+    await manager.getByTestId('agent-manager-open-chat').click()
+    await see.visible(ctx.desktop.chat().frame)
+    await ctx.desktop.closeWindow('agent-manager')
   })
 })

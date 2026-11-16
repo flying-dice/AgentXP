@@ -27,7 +27,7 @@ Use Event Viewer to see what an agent sent and received. Read it to find out why
 
 ## 2 - Open It
 
-Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event.
+Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event. The Activity list on the desktop also shows the last warning or error, for example **Warning: Drive E: was removed**, above the steps of the agent.
 
 ## 3 - The Window
 
@@ -37,11 +37,11 @@ The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **
 
 ### The Event List
 
-The list shows warnings and errors at first. Select **Show all** to see every message. The list has the columns **Level**, **Date and Time**, **Source**, **Name**, and **Chat**. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
+The list shows warnings and errors at first. The heading says how many other events are hidden, for example **27 more: Show all**. Click it to see every message. If the log has no warning or error, the list shows the newest events and the heading says so, so the reason a chat stopped is in view. If the log or the chat has events but none match the filter, the list says **Nothing to show with this filter.** and the link **Show all (27)** brings them back. The list has the columns **Level**, **Date and Time**, **Source**, **Name**, and **Chat**. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
 
 ### The Event Details
 
-Select an event to see its details. The **General** tab has a short text and the lines **Log Name**, **Event**, **Direction**, **Level**, and **Logged**. The **Details** tab shows the message as JSON.
+Select an event to see its details. The **General** tab has a short text and the lines **Log Name**, **Event**, **Direction**, **Level**, and **Logged**. The **Details** tab shows the message as JSON. The lines wrap, so the whole message is in view without scrolling to the side.
 
 ### The Actions Pane
 
@@ -69,6 +69,9 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 | Number of events | Shows the count, with the word filtered while a filter is on. | `event-viewer-count` |
 | Autoscroll | Keeps the newest event in view. | `event-viewer-autoscroll` |
 | Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
+| More: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
+| Show all (n) | A link in an empty list. It clears the filter and shows every event. | `event-viewer-empty-show-all` |
+| Last problem | The last warning or error in the Activity list on the desktop. | `gadget-activity-problem` |
 | Events | The list of events. | `event-viewer-list` |
 | Event | One row of the list. | `event-viewer-row` |
 | Details | The pane of the selected event. | `event-viewer-detail` |
@@ -135,7 +138,7 @@ To find a word, click **Find...**, type the word, and click **OK**.
 
 ## 6 - Troubleshooting
 
-- **The list is empty.** The window says **No events**. Start a chat.
+- **The list is empty.** The window says **No events** when the log is empty. Start a chat. When it says **Nothing to show with this filter**, click **Show all**.
 - **New events do not appear at the bottom.** Select **Autoscroll**.
 - **I cleared the log by mistake.** Agent7 cannot restore deleted events.
 - **Find says that it cannot find the text.** No event in the current list contains the text.

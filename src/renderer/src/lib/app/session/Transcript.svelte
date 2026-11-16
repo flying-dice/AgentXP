@@ -16,6 +16,7 @@
   import StopNotice from './StopNotice.svelte'
   import ReasoningBlock from './ReasoningBlock.svelte'
   import ToolCallItem from './ToolCallItem.svelte'
+  import { browserNow } from './browserSteps'
   import VirtualList from '../../kit/organisms/VirtualList.svelte'
   import UserMessage from './UserMessage.svelte'
   import { RESTARTED_LEAD, RESTARTED_RESEND, quotedRequest } from './resumeNote'
@@ -116,7 +117,8 @@
       const current = rows.findLast((r) => r.kind === 'tool')
       if (current?.kind === 'tool') {
         const call = agentState.toolCalls[current.toolCallId]
-        return `Working… ${toolLabel(call?.kind, current.name, call?.rawInput ?? current.rawInput)}`
+        const input = call?.rawInput ?? current.rawInput
+        return `Working… ${browserNow(current.name, input) ?? toolLabel(call?.kind, current.name, input)}`
       }
       return 'Thinking…'
     }
@@ -279,7 +281,7 @@
   {/snippet}
   {#snippet empty()}
     <div class="row">
-      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />{/if}
+      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on? To undo a change, open Changes and click Revert." />{/if}
     </div>
   {/snippet}
   {#snippet tail()}

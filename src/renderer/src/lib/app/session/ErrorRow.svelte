@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '../../kit/atoms/Button.svelte'
   import MessageIcon from '../../kit/molecules/MessageIcon.svelte'
-  import type { ProblemAction, ProblemActionId } from './chatProblem'
+  import { defaultActionId, type ProblemAction, type ProblemActionId } from './chatProblem'
 
   interface Props {
     message: string
@@ -13,18 +13,27 @@
   }
 
   let { message, actions = [], onaction, details = null }: Props = $props()
+
+  /** The buttons; Event Viewer is a link in the sentence after them. */
+  const buttons = $derived(actions.filter((a) => a.id !== 'event-viewer'))
+  const hasEventViewer = $derived(actions.some((a) => a.id === 'event-viewer'))
+  /** The recovery that works is the highlighted button. */
+  const primary = $derived(defaultActionId(actions))
 </script>
 
 <div class="error-row" role="alert" data-testid="chat-error">
   <MessageIcon kind="error" size={20} />
   <div class="main">
     <span class="text" data-testid="chat-error-text">{message}</span>
-    {#if actions.length > 0}
+    {#if buttons.length > 0}
       <div class="actions">
-        {#each actions as action (action.id)}
-          <Button data-testid="chat-error-{action.id}" onclick={() => onaction?.(action.id)}>{action.id === 'details' && details !== null ? 'Hide details' : action.label}</Button>
+        {#each buttons as action (action.id)}
+          <Button data-testid="chat-error-{action.id}" isDefault={action.id === primary} onclick={() => onaction?.(action.id)}>{action.id === 'details' && details !== null ? 'Hide details' : action.label}</Button>
         {/each}
       </div>
+    {/if}
+    {#if hasEventViewer}
+      <p class="where">The details are in <button type="button" class="link" data-testid="chat-error-event-viewer" onclick={() => onaction?.('event-viewer')}>Event Viewer</button>.</p>
     {/if}
     {#if details !== null}<pre class="details" data-testid="chat-error-details-text">{details}</pre>{/if}
   </div>
@@ -63,6 +72,22 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     user-select: text;
+  }
+  .where {
+    margin: 4px 0 0;
+    color: #333;
+  }
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--w7-link);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .link:focus-visible {
+    outline: var(--w7-focus-outline);
   }
   .actions {
     display: flex;

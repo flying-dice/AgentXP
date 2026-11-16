@@ -24,8 +24,10 @@ export function withAnswer(state, answer, { keywords = [], expect }) {
     return manual(`state ok (${state.reason}); researcher must verify the panelist's answer: ${expect ?? keywords.map((k) => [k].flat().join('|')).join(' + ')}`, state.notes)
   }
   const lower = answer.toLowerCase()
-  const missing = keywords.filter((group) => ![group].flat().some((k) => lower.includes(k.toLowerCase())))
-  if (missing.length) return fail(`state ok but the answer lacks: ${missing.map((g) => [g].flat().join('|')).join(' + ')}`, state.notes)
+  // H-89: a keyword may be a RegExp (tested against the answer as written).
+  const hit = (k) => (k instanceof RegExp ? k.test(answer) : lower.includes(k.toLowerCase()))
+  const missing = keywords.filter((group) => ![group].flat().some(hit))
+  if (missing.length) return fail(`state ok but the answer lacks: ${missing.map((g) => [g].flat().map(String).join('|')).join(' + ')}`, state.notes)
   return pass(`${state.reason}; answer ok`, state.notes)
 }
 

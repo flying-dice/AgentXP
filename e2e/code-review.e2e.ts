@@ -52,7 +52,7 @@ describe('Code Review', () => {
   it('says every number in digits and shows how many files are shown (UX-77)', async () => {
     const review = ctx.desktop.codeReview()
     await see.text(review.verdict.getByTestId('review-verdict-line'), /Changes requested\. 2 comments/)
-    await see.text(review.frame.getByTestId('review-status-files'), '2 files changed. Showing 1 (the one you opened).')
+    await see.text(review.frame.getByTestId('review-status-files'), 'Showing 1 of 2 changed files')
     await see.visible(review.frame.getByTestId('review-send-comments'))
     await see.enabled(review.frame.getByTestId('review-send-comments'))
   })

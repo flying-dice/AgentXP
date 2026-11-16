@@ -166,6 +166,36 @@ describe('SessionAgentStore', () => {
       expect(store.error).toBeNull()
     })
 
+    it('the same text sent again from the box (after Reconnect) replaces the failed copy: one bubble per message (UX-162)', async () => {
+      api.script = failing
+      await store.send('list the files')
+      expect(await store.send('list the files')).toBe(false)
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+      expect(store.failedSend).toMatchObject({ text: 'list the files', unanswered: true })
+      expect(calls).toEqual(['retry'])
+      api.script = (input) => bookends(input)
+      expect(await store.send('list the files')).toBe(true)
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+      expect(store.failedSend).toBeNull()
+    })
+
+    it('another text leaves the failed message in place', async () => {
+      api.script = failing
+      await store.send('one')
+      await store.send('two')
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(2)
+    })
+
+    it('a copy that came back from a reload under another id is taken back too', async () => {
+      api.script = failing
+      await store.send('go')
+      const [only] = store.messages
+      store['agent'].setMessages([{ ...only, id: 'reloaded' }])
+      api.script = (input) => bookends(input)
+      expect(await store.send('go')).toBe(true)
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+    })
+
     it('Restart and send again starts a fresh agent first', async () => {
       api.script = failing
       await store.send('go')

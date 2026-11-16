@@ -13,6 +13,11 @@ describe('workingText', () => {
   it('shows the running tool of a working chat', () => {
     expect(workingText([chat(1, { status: 'working', toolCalls: { a: call('Read a.ts'), b: call('Edit b.ts', 'in_progress') } })])).toBe('Edit b.ts')
   })
+  it('words a running Browser step as a sentence, never as a tool id (UX-170)', () => {
+    const typing = { ...call('agent7.browser_type', 'in_progress'), rawInput: '{"ref":7,"text":"Standup"}' }
+    expect(workingText([chat(1, { status: 'working', toolCalls: { a: typing } })])).toBe("Typing 'Standup'")
+    expect(workingText([chat(1, { status: 'working', toolCalls: { a: call('agent7.browser_read', 'in_progress') } })])).toBe('Reading the page')
+  })
   it('falls back to the chat title, or the approval wait', () => {
     expect(workingText([chat(1, { status: 'working' })])).toBe('Chat 1')
     expect(workingText([chat(1, { status: 'awaiting_permission' })])).toBe('Waiting for you: 1 request to approve')
@@ -157,11 +162,11 @@ describe('toolChips', () => {
   })
   it('keeps the setting word while no app that gives the tool is open, and the tooltip names the setting and the reason', () => {
     const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({ terminal: 'ask' }))
-    expect(read.tooltip).toBe('Open Control Center. Read files is set to Allow.')
+    expect(read.tooltip).toBe('Open Control Center to change this. Read files is set to Allow.')
     expect(run).toMatchObject({ label: 'Run commands: Ask (no Terminal open)', word: 'Ask', closed: true, state: 'off' })
-    expect(run.tooltip).toBe('Open Control Center. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
-    expect(browser.tooltip).toBe('Open Control Center. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
-    expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
+    expect(run.tooltip).toBe('Open Control Center to change this. Run commands is set to Ask. The agent cannot use it yet because no Terminal is open.')
+    expect(browser.tooltip).toBe('Open Control Center to change this. Browser is set to Allow. The agent cannot use it yet because no Browser is open.')
+    expect(toolChips([], policy({}))[0].tooltip).toBe('Open Control Center to change this. Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open.')
   })
   it('never reads Off, and never says Off against an Ask or Deny setting', () => {
     for (const askFirst of [false, true]) for (const setting of ['allow', 'ask', 'deny'] as const) {

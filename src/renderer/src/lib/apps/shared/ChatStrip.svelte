@@ -15,7 +15,7 @@
     title?: string
   }
 
-  let { onopen, testid, news = false, title = 'Open the chat (Ctrl+Shift+C)' }: Props = $props()
+  let { onopen, testid, news = false, title = 'Chat' }: Props = $props()
 </script>
 
 <button type="button" class="tab" class:news data-testid={testid} data-news={news} aria-label={news ? 'Open the chat. It has news.' : 'Open the chat'} {title} onclick={onopen}>
