@@ -1,14 +1,13 @@
 /**
  * What the person sees after pressing a button on a form the agent drew: "Sending..." (the button is disabled, so a
- * second click cannot send the form again) until the agent's reply has arrived, then "Sent." under the button.
+ * second click cannot send the form again) until the agent's reply has arrived, then "Sent." under the button, which
+ * stays until the person edits a field again or the agent draws the form again (UX-216).
  * One per surface; `A2uiSurface` owns it and the Button wrapper reads it through Svelte context.
  */
 import { getContext, setContext } from 'svelte'
 
 export type SubmitPhase = 'idle' | 'sending' | 'sent'
 
-/** "Sent." stays under the button this long, then goes. */
-export const SENT_VISIBLE_MS = 3000
 const REPLY_LENGTH = 120
 
 /** The line under the button: "Sent." and, when the reply text is known, what the agent answered. */
@@ -47,7 +46,7 @@ export class SurfaceSubmit {
     else if (this.sawBusy) this.finish()
   }
 
-  /** The agent changed the form after "Sent.": it can be sent again. */
+  /** The person edited a field, or the agent changed the form, after "Sent.": the line goes and the form can be sent again. */
   reset(): void {
     if (this.phase === 'sent') this.phase = 'idle'
   }

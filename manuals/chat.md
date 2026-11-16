@@ -160,7 +160,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Reopened note | Tells once that the chat was opened again after the program restarted. | `chat-reopened-note` |
 | Dismiss note | Hides the reopened note. | `chat-reopened-dismiss` |
 | Reconnect | Starts the agent again when it is disconnected. | `chat-reconnect` |
-| Sent | A drawn form says "Sent. The agent answered: ..." (the start of the next reply) for 3 seconds after you use a button on it. | `a2ui-sent` |
+| Sent | A drawn form says "Sent. The agent answered: ..." (the start of the next reply) until you change a field of the form again. | `a2ui-sent` |
 | Composer | Holds the controls to write. | `chat-composer` |
 | Message box | The input for your message. | `chat-composer-input` |
 | Mode | Opens the list of modes. Each entry has a short description. | `chat-mode` |

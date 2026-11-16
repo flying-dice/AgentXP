@@ -446,7 +446,8 @@
           "server": "agent7",
           "tool": "browser_wait",
           "arguments": {
-            "text": "Message 121 from"
+            "text": "Message 121 from",
+            "timeoutMs": 15000
           },
           "saveAs": "w3",
           "label": "older messages load (1)"
@@ -489,7 +490,8 @@
           "server": "agent7",
           "tool": "browser_wait",
           "arguments": {
-            "text": "Standup notes"
+            "text": "Standup notes",
+            "timeoutMs": 15000
           },
           "saveAs": "w4",
           "label": "older messages load (2)"
@@ -503,7 +505,8 @@
         {
           "type": "expect",
           "from": "w4",
-          "contains": "Done waiting"
+          "contains": "Done waiting",
+          "message": "The page did not show the older messages in time. Send the request again."
         },
         {
           "type": "mcpCall",

@@ -41,9 +41,6 @@ export function surfaceCaption(messages: readonly A2uiServerMessage[]): string |
   return null
 }
 
-/** The title of a surface in rows and tabs: its caption, else a generic name. */
-export const surfaceDisplayTitle = (messages: readonly A2uiServerMessage[]): string => surfaceCaption(messages) ?? SURFACE_FALLBACK_TITLE
-
 /** Components that take what the person types or chooses; a surface with one is a form. */
 const INPUT_COMPONENTS = new Set(['TextBox', 'ComboBox', 'CheckBox', 'CheckedListBox', 'RadioButtonGroup', 'NumericUpDown', 'DateTimePicker', 'TrackBar', 'ListBox', 'MonthCalendar'])
 
@@ -55,14 +52,20 @@ export function surfacePurpose(messages: readonly A2uiServerMessage[]): 'form' |
   return 'panel'
 }
 
-/** What a sidebar tab says: a form is called "Form" ("Form 2" for the next one), a panel keeps its title; the tooltip has the full title (UX-135). */
+/** What the agent opened has one name in the chat row, the sidebar tab and the window: the title the agent gave, else "Form" for a form (UX-216). */
+export const FORM_NAME = 'Form'
+export function surfaceDisplayTitle(messages: readonly A2uiServerMessage[]): string {
+  return surfaceCaption(messages) ?? (surfacePurpose(messages) === 'form' ? FORM_NAME : SURFACE_FALLBACK_TITLE)
+}
+
+/** What a sidebar tab says: the same name as the chat row ("Form 2" for the next form that has no title); the tooltip repeats it (UX-216). */
 export function surfaceTabLabels(surfaces: readonly Pick<SurfaceActivity, 'surfaceId' | 'messages'>[]): Map<string, { label: string; tooltip: string }> {
-  const forms = surfaces.filter((s) => surfacePurpose(s.messages) === 'form')
+  const untitled = surfaces.filter((s) => surfaceCaption(s.messages) === null && surfacePurpose(s.messages) === 'form')
   return new Map(
     surfaces.map((s) => {
       const title = surfaceDisplayTitle(s.messages)
-      const at = forms.findIndex((f) => f.surfaceId === s.surfaceId)
-      return [s.surfaceId, { label: at < 0 ? title : forms.length > 1 ? `Form ${at + 1}` : 'Form', tooltip: title }]
+      const at = untitled.findIndex((f) => f.surfaceId === s.surfaceId)
+      return [s.surfaceId, { label: at >= 0 && untitled.length > 1 ? `${FORM_NAME} ${at + 1}` : title, tooltip: title }]
     })
   )
 }

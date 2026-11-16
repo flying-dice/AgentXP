@@ -73,8 +73,15 @@ export function terminalLabel(entry: TerminalEntry, withChat: boolean): string {
 /** The notice a key press in the Terminal shows (the Terminal is read-only: the agent runs the commands). */
 export const READ_ONLY_NOTICE = 'Read-only: the agent runs the commands here. You can watch but not type. Ask the agent in Chat to run a command.'
 
-/** How long the notice stays at the bottom of the screen. */
+/** How long the notice stays at the top of the window. */
 export const NOTICE_MS = 4000
+
+/** A key press flashes the note for this long, and the status bar says nothing was typed (UX-215). */
+export const FLASH_MS = 1000
+
+/** The status bar while the note flashes, and when it does not. */
+export const NOTHING_TYPED = 'Read-only: nothing was typed'
+export const READ_ONLY_STATUS = 'Read-only: the agent is the only user of this shell. You can watch, not type.'
 
 /** True for a key that would be typing in a real console: a character, Enter, Backspace or Delete (not Ctrl, Alt or Meta shortcuts, arrows or Tab). */
 export function isTypingKey(event: { key: string; ctrlKey: boolean; altKey: boolean; metaKey: boolean }): boolean {

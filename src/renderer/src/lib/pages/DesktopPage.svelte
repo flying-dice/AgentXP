@@ -249,7 +249,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} />
+      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
