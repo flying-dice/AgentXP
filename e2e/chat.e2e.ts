@@ -142,6 +142,8 @@ describe('chat turn with the fake agent', () => {
     await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
     await see.text(terminal.readOnlyNotice, 'Ask the agent in Chat to run a command.')
     await see.visible(terminal.frame.getByTestId('console-cursor-locked'))
+    // The cursor is a steady block: it says "read only", so it does not blink (UX-132).
+    expect(await terminal.frame.getByTestId('console-cursor-locked').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
     await see.gone(terminal.readOnlyNotice) // it goes after a few seconds
   })
 })

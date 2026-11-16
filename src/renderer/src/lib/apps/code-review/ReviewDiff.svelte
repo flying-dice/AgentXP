@@ -73,8 +73,20 @@
     scroller.scrollTop = at * scroller.scrollHeight - scroller.clientHeight / 2
   }
 
+  // Every route to the box (the "+", the number, a double click, the menu, the toolbar) selects the line first, so the line stays marked.
   const startComment = (row: number, side: ReviewSide, line: number | undefined): void => {
-    if (line !== undefined) composing = { row, side, line }
+    if (line === undefined) return
+    onselectrow?.(row)
+    composing = { row, side, line }
+  }
+
+  /** Opens the box for the selected line (the toolbar's "Add comment"); false when no line is selected or it has nothing to comment on. */
+  export function commentOnSelected(): boolean {
+    if (selectedRow === null) return false
+    const target = layout === 'split' ? splitTarget(selectedRow) : unifiedTarget(selectedRow)
+    if (!target || target.line === undefined) return false
+    startComment(target.row, target.side, target.line)
+    return true
   }
 
   // Hover "+", the number, a double click, the right-click menu and Ctrl+Alt+M all open the same box (UX-76).
@@ -100,18 +112,18 @@
     ])
   }
 
+  /** The line of a side by side row: the new side when it has one, else the old. */
+  const splitTarget = (i: number): { row: number; side: ReviewSide; line: number | undefined } | null => {
+    const row = view.split[i]
+    if (row?.right) return { row: i, side: 'new', line: row.right.newNo }
+    return row?.left ? { row: i, side: 'old', line: row.left.oldNo } : null
+  }
+
   /** Ctrl+Alt+M with a line selected opens the box for it. */
   function onrowskey(event: KeyboardEvent): void {
     if (!(event.ctrlKey && event.altKey && event.key.toLowerCase() === 'm') || selectedRow === null) return
     event.preventDefault()
-    if (layout === 'split') {
-      const row = view.split[selectedRow]
-      if (row?.right) startComment(selectedRow, 'new', row.right.newNo)
-      else if (row?.left) startComment(selectedRow, 'old', row.left.oldNo)
-    } else {
-      const target = unifiedTarget(selectedRow)
-      startComment(target.row, target.side, target.line)
-    }
+    commentOnSelected()
   }
 
   const label = (side: ReviewSide, line: number): string => `${file.path}:${line}${side === 'old' ? ' (before the change)' : ''}`
@@ -145,7 +157,7 @@
     disabled={target.line === undefined}
     aria-label={addCommentTitle(target.line)}
     title={addCommentTitle(target.line)}
-    onclick={() => startComment(target.row, target.side, target.line)}>+</button
+    onclick={() => startComment(target.row, target.side, target.line)}><span class="glyph" data-testid="review-gutter-plus-glyph" aria-hidden="true">+</span></button
   >
 {/snippet}
 
@@ -368,10 +380,13 @@
     text-align: right;
     cursor: default;
   }
-  /* The "+" is always there at 40% strength, full strength on hover and focus; its box is 24 x 24 px, centred on the 17 px row. */
+  /* The "+" is always there at 55% strength, full strength on hover and focus: a 16 px square with a 14 px sign, in a 24 x 24 px target centred on the 17 px row. */
   .plus {
     flex: none;
     align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 24px;
     height: 24px;
     margin: -4px 0;
@@ -380,9 +395,20 @@
     background: transparent;
     color: #0b5bd3;
     font: inherit;
-    font-weight: 700;
     cursor: default;
-    opacity: 0.4;
+    opacity: 0.55;
+  }
+  .plus .glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
   }
   .plus:disabled {
     opacity: 0;

@@ -69,3 +69,14 @@ describe('cutting a name in the middle (UX-111)', () => {
     }
   })
 })
+
+describe('a 30-character file name (UX-116)', () => {
+  it('keeps the end of the stem and the extension whole, so only the middle can be cut', () => {
+    const name = 'redirect-handler-with-logs.ts'
+    expect(name.length).toBeGreaterThanOrEqual(28)
+    const { head, tail } = splitForMiddleEllipsis(name)
+    expect(head + tail).toBe(name)
+    expect(tail.endsWith('.ts')).toBe(true)
+    expect(tail.length).toBeLessThan(name.length / 2)
+  })
+})

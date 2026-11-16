@@ -11,6 +11,8 @@
     language?: string
     /** 1-based line numbers (relative to `startLine`) drawn with a highlight band. */
     highlightLines?: number[]
+    /** 1-based line numbers marked as selected (a soft band that stays when the viewer loses focus, UX-126). */
+    selectedLines?: number[]
     startLine?: number
     wordWrap?: boolean
     /** Show the Word wrap / Copy bar. */
@@ -39,6 +41,7 @@
     code,
     language = 'text',
     highlightLines = [],
+    selectedLines = [],
     startLine = 1,
     wordWrap = $bindable(false),
     toolbar = false,
@@ -57,6 +60,7 @@
 
   const lines = $derived(tokens.length > 0 ? tokens : plainTokens(code))
   const highlighted = $derived(new Set(highlightLines.map((n) => n + startLine - 1)))
+  const marked = $derived(new Set(selectedLines.map((n) => n + startLine - 1)))
   const marks = $derived(gutterMarks ?? [])
   /** Per displayed line number: the bar kind and mark index (added/modified), and the deletions sitting below it. */
   const barAt = $derived.by(() => {
@@ -118,7 +122,7 @@
         {@const bar = barAt.get(no)}
         {@const tri = trianglesBelow.get(no)}
         {@const topTri = i === 0 ? trianglesBelow.get(0) : undefined}
-        <div class="row" class:hl={highlighted.has(no)} data-testid="code-line" data-line={no}>
+        <div class="row" class:hl={highlighted.has(no)} class:sel={marked.has(no)} data-testid="code-line" data-line={no} data-selected={marked.has(no) ? "true" : undefined}>
           {#if gutterMarks}
             <span class="gutter">
               {#if bar}
@@ -215,6 +219,12 @@
   }
   .row.hl {
     background: var(--w7-code-highlight);
+  }
+  .row.sel {
+    background: var(--w7-select-face, #dcebfc);
+  }
+  .row.sel .no {
+    background: var(--w7-select-face, #dcebfc);
   }
   .gutter {
     position: sticky;

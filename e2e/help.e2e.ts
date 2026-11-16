@@ -24,6 +24,15 @@ describe('Help and Support', () => {
     await see.eventually(async () => {
       expect(await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThan(0)
     })
+    // The heading it landed on is in the top third of the pane, so the answer under it is on screen (UX-132).
+    await see.eventually(async () => {
+      const article = (await help.getByTestId('help-article').boundingBox())!
+      const heading = (await help.getByTestId('help-target').boundingBox())!
+      expect(heading.y - article.y).toBeGreaterThanOrEqual(-1)
+      expect(heading.y - article.y).toBeLessThanOrEqual(article.height / 3)
+    })
+    // The Table of Contents lists the sections of one chapter only (the other chapters are one line each).
+    expect(await help.getByTestId('help-toc-open').count()).toBeLessThanOrEqual(1)
   })
 
   it('F1 on another window moves the same Help window to its topic', async () => {

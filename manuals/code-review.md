@@ -62,7 +62,7 @@ The outline lists each changed file with its status, the number of added and rem
 
 ### The Expanded View
 
-The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. To write a comment on a line, click the blue **+** at its left (it is always there, faint until you point to it), or click the line number, or double-click the line, or right-click the line and choose **Add comment on this line**. Ctrl+Alt+M does the same for the selected line. Comments of the reviewer and your answers appear under the line. Under each comment, the buttons **Resolve**, **Reply**, **Send to chat**, and **Delete** say what they do in words, also in a narrow window.
+The expanded view shows the whole file. A bar at the left edge marks the changes. Red blocks are removed lines. Yellow blocks are added lines. Click a block to jump to it. To write a comment on a line, select the line and click **Add comment** in the toolbar, or click the **+** in a small square at its left (it is always there, and it is clearer when you point to it), or click the line number (this selects the line and opens the box), or double-click the line, or right-click the line and choose **Add comment on this line**. Ctrl+Alt+M does the same for the selected line. Comments of the reviewer and your answers appear under the line. Under each comment, the buttons **Resolve**, **Reply**, **Send to chat**, and **Delete** say what they do in words, also in a narrow window.
 
 Press F7 to go to the next change. Press Shift+F7 to go to the previous change. At the last change of a file, F7 goes on to the next file. The **Side by side** button shows the old and new text in two columns.
 
@@ -76,7 +76,7 @@ The right edge of the window holds the chat with the reviewer. You can ask a que
 
 ### The Status Bar
 
-The status bar shows the folder, how many files changed (for example "2 files changed, 1 shown"), the number of open comments, and what the reviewer does. Every number in the window is written in digits.
+The status bar shows the folder, how many files changed (for example "2 files changed. Showing 1 (the one you opened)."), the number of open comments, and what the reviewer does. Every number in the window is written in digits.
 
 ## 4 - Controls Reference
 
@@ -125,7 +125,9 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Margin bar | The bar at the left edge. Click it to jump to a place. | `review-margin` |
 | Margin block | One red or yellow block. The attribute `data-kind` tells which. | `review-margin-block` |
 | Line | One line of the file. | `review-row` |
-| Add comment (+) | The blue **+** at the left of a line. It is faint until you point to it or move the focus to it. It starts a comment on that line. The tooltip says: Add a comment on this line. | `review-gutter-plus` |
+| Add comment (+) | The blue **+** at the left of a line. It is clearer when you point to it or move the focus to it. It starts a comment on that line. The tooltip says: Add a comment on this line. | `review-gutter-plus` |
+| Add comment (+) sign | The small square with the **+** in it, 16 pixels wide. | `review-gutter-plus-glyph` |
+| Add comment (toolbar) | Starts a comment on the selected line. It is dimmed until you select a line in the expanded view, and the tooltip says why. | `review-add-comment` |
 | Add comment on this line (right-click) | Starts a comment on the line you right-clicked. Ctrl+Alt+M does the same for the selected line. | `review-ctx-add-comment` |
 | Line number | Starts a comment on the line. The unified view has one column: the new line number, or the old one on a removed line. | `review-gutter-add` |
 | Lost comments | Lists comments whose line is not in the file any more. | `review-orphans` |
@@ -153,13 +155,14 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Send comments to chat | Opens the **Send to chat** dialog box. | `review-send-all` |
 | Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. | `review-send-comments` |
 | Verdict text | The verdict and the numbers of comments and blockers, for example "Changes requested. 2 comments, 1 is a blocker." | `review-verdict-line` |
-| Send to chat dialog | Asks which chat gets the comments. | `review-send-dialog` |
+| Send to chat dialog | Asks which chat gets the comments. The chat that is open reads "Chat: name (in folder)". The other choice reads "Start a new chat for these comments". | `review-send-dialog` |
+| Open chat | The line of an open chat in the dialog box: its name and the folder it works in. | `review-send-chat-name` |
 | Chat (option) | An existing chat, named as its window is: by its title, or New chat (project name) while it has no title. The attribute `data-session-id` gives it. | `review-send-chat` |
 | New chat (option) | Starts a new chat. | `review-send-new-chat` |
 | Send | Sends the comments. | `review-send-confirm` |
 | Cancel (send) | Closes the dialog box. | `review-send-cancel` |
 | Status: folder | The folder of the review. | `review-status-root` |
-| Status: files | How many files changed, and how many are shown. | `review-status-files` |
+| Status: files | How many files changed, and which one is shown. | `review-status-files` |
 | Status: comments | The number of open comments. | `review-status-comments` |
 | Status: reviewer | What the reviewer does. | `review-status-agent` |
 | All changes | Shows every changed file on one page. | `review-all` |

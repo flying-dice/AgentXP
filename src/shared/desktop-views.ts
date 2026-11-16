@@ -12,7 +12,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   chat: { x: 40, y: 40, width: 680, height: 560 },
   explorer: { x: 120, y: 80, width: 620, height: 420 },
   notepad: { x: 200, y: 120, width: 520, height: 380 },
-  code: { x: 80, y: 60, width: 820, height: 560 },
+  code: { x: 80, y: 60, width: 820, height: 640 },
   terminal: { x: 160, y: 300, width: 640, height: 300 },
   browser: { x: 100, y: 50, width: 860, height: 600 },
   'control-centre': { x: 180, y: 90, width: 760, height: 540 },
@@ -142,6 +142,19 @@ export const PARENT_OFFSET = 28
 /** Tools that open beside the window that asked for them (on the side with more free width) instead of on top of it. */
 const SIDE_APPS: ReadonlySet<AppKind> = new Set<AppKind>(['help', 'event-viewer', 'snipping-tool', 'agent-manager'])
 
+/** The Review window opens this wide at least, and this share of the work area wide when that is more (UX-129). */
+export const REVIEW_MIN_WIDTH = 720
+const REVIEW_WIDTH_SHARE = 0.7
+
+/**
+ * The Review window next to a window that is not a chat: wide enough for whole code lines (70% of the work area, at least
+ * 720 px), against the right edge so the window it came from stays visible on the left.
+ */
+function placeReview(base: Bounds, parent: Bounds, area: { width: number; height: number }, minY: number): Bounds {
+  const width = Math.min(area.width, Math.max(REVIEW_MIN_WIDTH, Math.round(area.width * REVIEW_WIDTH_SHARE)))
+  return within({ ...base, x: area.width - width, y: Math.max(parent.y, minY), width }, area, minY)
+}
+
 /** The window that has the focus when a new one opens. */
 export interface PlacementParent {
   app: AppKind
@@ -168,6 +181,7 @@ export function placeNewWindow(
   if (parent.app === 'chat') return placeWindow(app, openCount, parent.bounds, area, size, minY)
   const base = within(cascadedBounds(app, openCount, size), area, minY)
   const p = parent.bounds
+  if (app === 'code-review') return placeReview(base, p, area, minY)
   if (SIDE_APPS.has(app)) {
     const left = p.x
     const right = area.width - (p.x + p.width)

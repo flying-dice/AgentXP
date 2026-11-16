@@ -34,7 +34,7 @@
   import { driveRoot, driveTitle, sortDrives } from '../explorer/explorerModel'
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
   import { errorText } from '../shared/listing'
-  import { useDesktopStores } from '../sessionStores.svelte'
+  import { chatSessionIds, useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
   import { closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout, type Panes } from './codeModel'
   import { localStore } from '../../desktop/chatPane'
@@ -43,6 +43,7 @@
   import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitRowTooltip, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
+  import { useRevertedChanges } from '../../app/changes/revertedChanges.svelte'
   import type { FileTreeTarget } from '../../app/files/fileTree'
 
   let { window: win, host, focused = false }: AppProps<'code'> = $props()
@@ -98,6 +99,13 @@
   // A revert from anywhere updates the Changes list at once (UX-79).
   $effect(() => refreshOnRevert(host.api, desktopId, () => untrack(() => stores)))
   const changes = $derived<FileChangeDto[]>(stores.flatMap((s) => s.state.changes))
+  // Files reverted by any chat of this desktop stay in the list after a reopen (UX-117).
+  const revertedChanges = useRevertedChanges(
+    host.api,
+    () => desktopId,
+    () => chatSessionIds(host),
+    () => changes
+  )
   const changedPaths = $derived(changes.map((c) => normaliseVPath(c.path) ?? c.path))
   const editing = $derived(
     active !== null &&
@@ -770,6 +778,10 @@
   const eol = $derived(text === null ? '' : text.includes('\r\n') ? 'CRLF' : 'LF')
 
   const highlightLines = $derived(revealed ? Array.from({ length: Math.min(80, revealed[1] - revealed[0] + 1) }, (_, i) => revealed![0] + i) : [])
+  // The selected lines stay marked when the focus moves away (to the chat pane, for "Ask about selection"); while the code has the
+  // focus the browser draws its own selection (UX-126).
+  let codeFocused = $state(false)
+  const selectedLines = $derived(selection && !codeFocused ? Array.from({ length: Math.min(400, selection.endLine - selection.startLine + 1) }, (_, i) => selection!.startLine + i) : [])
   const language = $derived(active ? languageFromPath(active) : 'text')
   /** "Line 1 of 6": short enough that the status bar never cuts it. */
   const lineLabel = $derived(active && text !== null ? `Line ${caret.line} of ${totalLines}` : '')
@@ -872,7 +884,7 @@
             </div>
           {/each}
         </div>
-        <div class="view" data-testid="code-editor" data-path={active} bind:this={host_el}>
+        <div class="view" data-testid="code-editor" data-path={active} bind:this={host_el} onfocusin={() => (codeFocused = true)} onfocusout={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && (codeFocused = false)}>
           {#if active === null}
             <div class="hint" data-testid="code-hint">Open a file from the tree to view it here.</div>
           {:else if files[active]?.error}
@@ -885,6 +897,7 @@
                 code={text}
                 {language}
                 {highlightLines}
+                selectedLines={selectedLines}
                 label={active}
                 gutterMarks={marks}
                 ruler={showRuler}
@@ -903,7 +916,7 @@
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <div class="changes" data-testid="code-changes">
-                <ChangesPane {changes} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
+                <ChangesPane {changes} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
               </div>
             {:else}
               <div class="gitpane" data-testid="code-git-pane">
@@ -936,7 +949,7 @@
     {/snippet}
     {#snippet center()}
       {#if showLogs}
-        <SplitContainer orientation="horizontal" splitterDistance={175} panel1MinSize={120} panel2MinSize={110} fixedPanel="panel2">
+        <SplitContainer orientation="horizontal" splitterDistance={120} panel1MinSize={100} panel2MinSize={110} fixedPanel="panel2">
           {#snippet panel1()}{@render editor()}{/snippet}
           {#snippet panel2()}{@render logs()}{/snippet}
         </SplitContainer>

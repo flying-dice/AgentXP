@@ -4,7 +4,7 @@
   import Icon from '../../kit/atoms/Icon.svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import Dialog from '../../kit/organisms/Dialog.svelte'
-  import { chatLabel } from './reviewModel'
+  import { NEW_CHAT_FOR_COMMENTS, chatChoiceLabel } from './reviewModel'
 
   export type SendTarget = { kind: 'chat'; sessionId: number } | { kind: 'new' }
 
@@ -37,14 +37,14 @@
         <li>
           <button type="button" class="option" role="radio" aria-checked={choice === `chat:${chat.id}`} class:on={choice === `chat:${chat.id}`} data-testid="review-send-chat" data-session-id={chat.id} onclick={() => (chosen = `chat:${chat.id}`)}>
             <Icon name="session" size={24} />
-            <span class="text"><span class="title">{chatLabel(chat, projectName(chat.cwd))}</span><span class="sub">{chat.cwd}</span></span>
+            <span class="text"><span class="title" data-testid="review-send-chat-name">{chatChoiceLabel(chat, projectName(chat.cwd))}</span></span>
           </button>
         </li>
       {/each}
       <li>
         <button type="button" class="option" role="radio" aria-checked={choice === 'new'} class:on={choice === 'new'} data-testid="review-send-new-chat" onclick={() => (chosen = 'new')}>
           <Icon name="new" size={24} />
-          <span class="text"><span class="title">Start a new chat</span><span class="sub">The agent works in {cwd}</span></span>
+          <span class="text"><span class="title">{NEW_CHAT_FOR_COMMENTS}</span><span class="sub">The agent works in {cwd}</span></span>
         </button>
       </li>
     </ul>
