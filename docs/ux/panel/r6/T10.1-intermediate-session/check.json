@@ -1,0 +1,30 @@
+{
+  "task": "T10.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "Terminal policy is Deny (Permissions route); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 8,
+  "answer": "Run commands is set to Deny, shown in the top bar as Run commands: Deny",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:56:18.154Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:56:18.154Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Terminal policy is Deny (Permissions route); answer ok",
+      "steps": 4,
+      "answer": "Run commands is set to Deny, shown in the top bar as Run commands: Deny",
+      "noAnswer": false
+    }
+  ]
+}

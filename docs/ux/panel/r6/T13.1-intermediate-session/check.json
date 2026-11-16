@@ -1,0 +1,34 @@
+{
+  "task": "T13.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 3,
+  "checkerStatus": "PASS",
+  "reason": "the desktop is connected again; the chat shows new progress (last \"N of 30\" is 13, was 0 at the start; 0 tool calls, was 0)",
+  "notes": [
+    "run state at reconnect: working",
+    "chat window is not open",
+    "researcher: the session log should show the chat window or the desktop was closed (disconnect) and later reopened from the launcher"
+  ],
+  "steps": 8,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:00:19.920Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:00:19.920Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop is connected again; the chat shows new progress (last \"N of 30\" is 13, was 0 at the start; 0 tool calls, was 0)",
+      "steps": 8,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

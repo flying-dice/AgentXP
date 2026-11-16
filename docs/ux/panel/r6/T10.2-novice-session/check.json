@@ -1,0 +1,30 @@
+{
+  "task": "T10.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "read files is on; run commands is off; browse is on; answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 4,
+  "answer": "It can read files and browse the web (Read files: Allow, Browser: Allow); running commands is set to Ask (no Terminal open).",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:56:19.006Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:56:19.006Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "read files is on; run commands is off; browse is on; answer ok",
+      "steps": 1,
+      "answer": "It can read files and browse the web (Read files: Allow, Browser: Allow); running commands is set to Ask (no Terminal open).",
+      "noAnswer": false
+    }
+  ]
+}

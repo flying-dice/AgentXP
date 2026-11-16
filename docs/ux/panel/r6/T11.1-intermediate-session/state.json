@@ -1,0 +1,21 @@
+{
+  "task": "T11.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-deMday",
+  "testPagePort": 43121,
+  "testPageUrl": "http://127.0.0.1:43121/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:56:59.960Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-deMday/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "controlSocket": "/tmp/a7ux-deMday/ctl-0.sock",
+  "preset": "agent-running",
+  "note": null
+}

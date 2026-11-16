@@ -1,0 +1,30 @@
+{
+  "task": "T10.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "read files is on; run commands is off; browse is on; answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 3,
+  "answer": "Read files: Allow, so it can read files. Browser: Allow, so it can browse. Run commands: Ask (no Terminal open), so it cannot run commands without asking.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:57:21.549Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:57:21.549Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "read files is on; run commands is off; browse is on; answer ok",
+      "steps": 1,
+      "answer": "Read files: Allow, so it can read files. Browser: Allow, so it can browse. Run commands: Ask (no Terminal open), so it cannot run commands without asking.",
+      "noAnswer": false
+    }
+  ]
+}

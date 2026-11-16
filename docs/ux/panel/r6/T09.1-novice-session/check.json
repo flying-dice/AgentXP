@@ -1,0 +1,30 @@
+{
+  "task": "T09.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "redirect.ts on disk equals the agent version; the Recycle Bin has 0 item(s)",
+  "notes": [],
+  "steps": 4,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:55:39.202Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:55:39.202Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "redirect.ts on disk equals the agent version; the Recycle Bin has 0 item(s)",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

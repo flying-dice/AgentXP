@@ -1,0 +1,30 @@
+{
+  "task": "T12.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "login-app is plugged in again; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 24,
+  "answer": "I could not read README.md: Drive E: is not plugged in on this desktop. login-app was removed. Ask the user to open Computer and choose Plug in again.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:59:17.289Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:59:17.289Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "login-app is plugged in again; answer ok",
+      "steps": 2,
+      "answer": "I could not read README.md: Drive E: is not plugged in on this desktop. login-app was removed. Ask the user to open Computer and choose Plug in again.",
+      "noAnswer": false
+    }
+  ]
+}

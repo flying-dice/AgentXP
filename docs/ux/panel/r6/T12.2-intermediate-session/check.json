@@ -1,0 +1,30 @@
+{
+  "task": "T12.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "login-app is plugged in again; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 18,
+  "answer": "login-app was removed and drive E: is not plugged in, so it could not read README.md",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:59:05.680Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:59:05.680Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "login-app is plugged in again; answer ok",
+      "steps": 2,
+      "answer": "login-app was removed and drive E: is not plugged in, so it could not read README.md",
+      "noAnswer": false
+    }
+  ]
+}

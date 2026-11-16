@@ -1,0 +1,23 @@
+{
+  "task": "T09.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-fZdgSN",
+  "testPagePort": 40513,
+  "testPageUrl": "http://127.0.0.1:40513/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:55:01.194Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-fZdgSN/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 2,
+  "changeCount": 2,
+  "redirectAgentText": "// Deep links survive sign-in: go back to the address in ?next=, but only inside this site.\nexport function afterLogin(url: string): string {\n  const next = new URL(url, 'http://app.local').searchParams.get('next')\n  return next && next.startsWith('/') ? next : '/home'\n}\n",
+  "revertShownInList": true,
+  "preset": "recycled-change",
+  "note": null
+}

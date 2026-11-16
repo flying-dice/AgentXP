@@ -1,0 +1,30 @@
+{
+  "task": "T12.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "removable drives: F:docs-site (want only docs-site); the login-app folder on disk is untouched",
+  "notes": [],
+  "steps": 2,
+  "budget": 8,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:58:24.531Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:58:24.531Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "removable drives: F:docs-site (want only docs-site); the login-app folder on disk is untouched",
+      "steps": 2,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

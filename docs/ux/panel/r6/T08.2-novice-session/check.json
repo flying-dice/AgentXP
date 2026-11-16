@@ -1,0 +1,30 @@
+{
+  "task": "T08.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "5 agent changes exist; answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 24,
+  "answer": "5 files changed (5 files, +15 -5 in 003.png); most changed file is README.md (+7 / -1 in 002.png); lines 3 to 9 changed (line numbers 3 to 9 in 004.png)",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:55:19.565Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:55:19.565Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "5 agent changes exist; answer ok",
+      "steps": 4,
+      "answer": "5 files changed (5 files, +15 -5 in 003.png); most changed file is README.md (+7 / -1 in 002.png); lines 3 to 9 changed (line numbers 3 to 9 in 004.png)",
+      "noAnswer": false
+    }
+  ]
+}

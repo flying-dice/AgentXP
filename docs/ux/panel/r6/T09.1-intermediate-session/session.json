@@ -1,0 +1,22 @@
+{
+  "task": "T09.1",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-PYmvL6/ux.sock",
+  "admin": "/tmp/a7ux-PYmvL6/admin.sock",
+  "pid": 3480,
+  "tmp": "/tmp/a7ux-PYmvL6",
+  "userData": "/tmp/a7ux-PYmvL6/user-data",
+  "testPageUrl": "http://127.0.0.1:46337/",
+  "home": "/tmp/a7ux-PYmvL6/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-PYmvL6/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-PYmvL6/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-PYmvL6/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "recycled-change",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

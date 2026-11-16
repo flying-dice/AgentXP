@@ -1,0 +1,30 @@
+{
+  "task": "T10.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "MANUAL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "MANUAL",
+  "reason": "state ok (Terminal policy is Deny (Permissions route)); researcher must verify the panelist's answer: the panelist names the chip list (Workspace bar / Agent can use), the closed Terminal or the Deny policy as the proof",
+  "notes": [],
+  "steps": 4,
+  "budget": 10,
+  "answer": null,
+  "noAnswer": true,
+  "checkedAt": "2026-11-16T18:56:13.365Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:56:13.365Z",
+      "status": "MANUAL",
+      "checkerStatus": "MANUAL",
+      "reason": "state ok (Terminal policy is Deny (Permissions route)); researcher must verify the panelist's answer: the panelist names the chip list (Workspace bar / Agent can use), the closed Terminal or the Deny policy as the proof",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": true
+    }
+  ]
+}

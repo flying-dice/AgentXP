@@ -1,0 +1,32 @@
+{
+  "task": "T14.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the desktop with the pending request is connected; answer ok",
+  "notes": [
+    "researcher: record whether the waiting row was preselected when the launcher opened"
+  ],
+  "steps": 2,
+  "budget": 8,
+  "answer": "Docs site has the problem: Agent problem, the program 'not-a-real-command' was not found.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:00:17.342Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:00:17.342Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop with the pending request is connected; answer ok",
+      "steps": 2,
+      "answer": "Docs site has the problem: Agent problem, the program 'not-a-real-command' was not found.",
+      "noAnswer": false
+    }
+  ]
+}
