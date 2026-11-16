@@ -32,8 +32,8 @@ Every document has the same parts, in this order:
 
 1. A title in the form "Introduction to Agent7" or "Using the Changes Pane".
 2. A Table of Contents. List each numbered chapter. Indent the sections under each chapter.
-3. Numbered chapters. Write the number, a space, a hyphen, a space, and the name: `## 1 - The Main Window`.
-4. Sections inside a chapter, as `###` headings with no number: `### The Sessions Tab`.
+3. Numbered chapters. Write the number, a space, a hyphen, a space, and the name: `## 3 - The Desktop`.
+4. Sections inside a chapter, as `###` headings with no number: `### The Taskbar`.
 5. A last chapter named "Need Help?". It tells the reader where to go next.
 
 Use a horizontal rule (`---`) between the Table of Contents and the first chapter.
@@ -50,7 +50,7 @@ These rules come from SimpleEnglish. They apply to all prose in the documentatio
 2. In a procedure, use the imperative mood. Write one instruction per sentence and 20 words at most.
 3. In a description, use simple tenses. Write 25 words at most per sentence. Write one topic per paragraph and six sentences per paragraph at most.
 4. Write the condition before the command, with a comma: "If the agent asks for permission, click **Allow**."
-5. Use active voice and name the actor: "Agent7 saves the session." Do not write "The session is saved."
+5. Use active voice and name the actor: "Agent7 saves the chat." Do not write "The chat is saved."
 6. Do not use the present perfect. Write "Agent7 created the file", not "has created".
 7. Use only these modal verbs: can, will, must. Do not use should, would, may, might, or could.
 8. Do not use contractions. Keep the articles ("the", "a") and keep "that".
@@ -70,45 +70,51 @@ These rules come from SimpleEnglish. They apply to all prose in the documentatio
 | select | pick, highlight (for an item in a list) |
 | make sure that | check, verify, confirm, validate, ensure |
 | configuration | config, settings, options (except as a menu name) |
-| folder | directory, workspace (in user text) |
-| session | chat, conversation, thread |
+| folder | directory (in user text) |
+| chat | session, conversation, thread (one conversation with an agent in a Chat window) |
+| desktop | workspace, virtual machine, VM (a long-lived virtual computer for one or more projects) |
+| drive | disk, volume (C: or a plugged-in project on a desktop) |
+| USB drive | mounted folder, removable disk (a project that you plug in to a desktop) |
+| app | program, application (a program that opens as a window on a desktop) |
+| tool | function, capability, skill (what an agent can use on a desktop) |
+| project | repository, repo (a folder that you plug in to a desktop) |
 | agent | bot, AI, assistant, model |
 | window | screen, view (for an Agent7 window) |
-| pane | panel, sidebar, section (for a part of the main window) |
+| pane | panel, sidebar, section (for a part of a window) |
 | dialog box | popup, modal |
 
 ## 4 - Procedures
 
 A procedure is a numbered list of steps. Use a procedure for every task that has more than one step.
 
-Put a heading or a lead-in sentence before the list. The lead-in sentence starts with "To" and ends with a colon: "To start a new session, follow the steps below:"
+Put a heading or a lead-in sentence before the list. The lead-in sentence starts with "To" and ends with a colon: "To start a new chat, follow the steps below:"
 
 Follow these rules for each step:
 
 1. Write one action per step.
 2. Start with the verb, or with the condition and then the verb.
 3. Put the name of each control that the reader clicks in bold, exactly as it appears on the screen.
-4. Write a menu path with `->` between the items, all in bold: **File -> New Session**.
+4. Write a menu path with `->` between the items, all in bold: **Start -> New chat**.
 5. If a step has choices, write them as lettered sub-steps (a, b, c).
 6. If a step causes something to appear, say what appears in the next sentence of the same step.
 
 Example:
 
-> To open a folder, follow the steps below:
+> To plug in a project, follow the steps below:
 >
-> 1. Click **File -> Open Folder**. The **Browse For Folder** dialog box appears.
+> 1. Click **Plug in a project** in the toolbar of Explorer. The **Browse For Folder** dialog box appears.
 > 2. Select the folder that contains your project.
-> 3. Click **OK**. The folder appears in the **Sessions** tab.
+> 3. Click **OK**. The project appears as a USB drive in the **Computer** window.
 
-Write a short task with a single step as one sentence, not a list: "To stop the agent, click **Stop** on the toolbar."
+Write a short task with a single step as one sentence, not a list: "To stop the agent, click **Stop** in the Chat window."
 
 ## 5 - Describing the Screen
 
 To describe the parts of a window, use a definition list. Write it as a bulleted list. Each item is the name of the part in bold, a space, an en dash ( – ), a space, and the description.
 
-> - **Sessions** – Shows each folder and the sessions inside it.
-> - **Files** – Shows the files in the folder of the current session.
-> - **Changes** – Lists each file that the agent changed in this session.
+> - **Chat** – Shows the messages between you and the agent.
+> - **Explorer** – Shows the files on each drive of the desktop.
+> - **Changes** – Lists each file that the agent changed in this chat.
 
 Follow these rules for a definition list:
 
@@ -130,9 +136,9 @@ Use a callout for information that is not a step. Start the paragraph with the l
 
 Write a caution with the command or condition first, then the risk:
 
-> **Caution:** Do not click **Revert** if you want to keep the change. Agent7 writes the original file back to the disk.
+> **Caution:** Do not click **Revert** if you want to keep the change. Agent7 writes the original file back to the drive.
 
-> **Tip:** Press F1 in any window to open Agent7 Help.
+> **Tip:** Press Ctrl+Esc to open the Start menu.
 
 Use one callout per section at most. Do not put a callout inside a numbered list.
 
@@ -141,22 +147,22 @@ Use one callout per section at most. Do not put a callout inside a numbered list
 Each chapter that describes a window has a screenshot of that window.
 
 1. Take the screenshot of the real application or of the Storybook story. Do not use a mock-up.
-2. Show the whole window, including the title bar, on the Windows 7 blue desktop or on a plain background.
-3. Use sample data that looks real: a folder named `claude-code-win`, a session named "Fix login redirect bug".
-4. Save the image as PNG in `docs/images/`. Use a lowercase name with hyphens: `main-window.png`.
+2. Show the whole window, including the title bar, on the Windows 7 blue desktop or on a plain background. A dialog box or a menu can have a tight crop.
+3. Use sample data that looks real: a project named `claude-code-win`, a chat named "Fix login redirect bug".
+4. Save the image as PNG in `docs/images/`. Use a lowercase name with hyphens: `start-menu.png`.
 5. Put the image after the first paragraph of the chapter.
-6. Write alt text that names the window and its state: "The Agent7 main window with one session open".
+6. Write alt text that names the window and its state: "The Agent7 desktop with one chat open".
 7. Do not add arrows, circles, or text to an image. Describe the location in the text.
 
 ## 8 - Formatting Reference
 
 | Item | How to write it | Example |
 |---|---|---|
-| Chapter heading | `##`, number, hyphen, name | `## 2 - Working with Sessions` |
-| Section heading | `###`, name, no number | `### The Tasks Tab` |
+| Chapter heading | `##`, number, hyphen, name | `## 4 - The Desktop` |
+| Section heading | `###`, name, no number | `### The Taskbar` |
 | Button, tab, menu, field | Bold, as on screen | **Send** |
-| Menu path | Bold, items joined with `->` | **Tools -> Options** |
-| Key | Plain text, with + between keys | Ctrl+N |
+| Menu path | Bold, items joined with `->` | **Start -> Control Centre** |
+| Key | Plain text, with + between keys | Ctrl+Esc |
 | Text that the reader types | Code | `npm install` |
 | File, folder, command | Code | `docs/images` |
 | Web address | Bold, as a link | **[agentclientprotocol.com](https://agentclientprotocol.com)** |

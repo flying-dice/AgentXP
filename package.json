@@ -17,6 +17,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "dist": "npm run build && electron-builder",
+    "docs:screenshots": "node scripts/docs-screenshots.mjs",
     "agent:scripted": "node --experimental-strip-types --no-warnings agents/scripted-agent/index.ts"
   },
   "dependencies": {

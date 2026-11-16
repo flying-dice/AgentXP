@@ -1,0 +1,767 @@
+{
+  "name": "docs",
+  "description": "Scripts for the documentation screenshots (scripts/docs-screenshots.mjs): a bug fix turn, a form, a drawing.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0",
+    "modes": [
+      {
+        "id": "default",
+        "name": "Default"
+      }
+    ],
+    "models": [
+      {
+        "id": "scripted-1",
+        "name": "Scripted 1"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "action",
+      "match": {
+        "contains": "triggered the action"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Thank you. I will deploy `fix/login-redirect` to Staging."
+        }
+      ]
+    },
+    {
+      "id": "form",
+      "match": {
+        "contains": "form",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I drew the deployment form below. Make your choices and click Deploy.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "arguments": {
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "deploy",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Deployment"
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "deploy",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "env-box",
+                        "opts-box",
+                        "actions"
+                      ]
+                    },
+                    {
+                      "id": "env-box",
+                      "component": "GroupBox",
+                      "text": "Target",
+                      "children": [
+                        "env-label",
+                        "env",
+                        "branch-label",
+                        "branch"
+                      ]
+                    },
+                    {
+                      "id": "env-label",
+                      "component": "Label",
+                      "text": "Environment:"
+                    },
+                    {
+                      "id": "env",
+                      "component": "ComboBox",
+                      "options": [
+                        "Development",
+                        "Staging",
+                        "Production"
+                      ],
+                      "value": {
+                        "path": "/env"
+                      }
+                    },
+                    {
+                      "id": "branch-label",
+                      "component": "Label",
+                      "text": "Branch:"
+                    },
+                    {
+                      "id": "branch",
+                      "component": "TextBox",
+                      "value": {
+                        "path": "/branch"
+                      }
+                    },
+                    {
+                      "id": "opts-box",
+                      "component": "GroupBox",
+                      "text": "Options",
+                      "children": [
+                        "tests",
+                        "notify"
+                      ]
+                    },
+                    {
+                      "id": "tests",
+                      "component": "CheckBox",
+                      "text": "Run the tests first",
+                      "checked": {
+                        "path": "/tests"
+                      }
+                    },
+                    {
+                      "id": "notify",
+                      "component": "CheckBox",
+                      "text": "Tell the team in the chat channel",
+                      "checked": {
+                        "path": "/notify"
+                      }
+                    },
+                    {
+                      "id": "actions",
+                      "component": "FlowLayoutPanel",
+                      "gap": 8,
+                      "children": [
+                        "deploy",
+                        "cancel"
+                      ]
+                    },
+                    {
+                      "id": "deploy",
+                      "component": "Button",
+                      "text": "Deploy",
+                      "isDefault": true,
+                      "action": {
+                        "event": {
+                          "name": "deploy",
+                          "context": {
+                            "env": {
+                              "path": "/env"
+                            },
+                            "branch": {
+                              "path": "/branch"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cancel",
+                      "component": "Button",
+                      "text": "Cancel",
+                      "action": {
+                        "event": {
+                          "name": "cancel",
+                          "context": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "deploy",
+                  "value": {
+                    "env": "Staging",
+                    "branch": "fix/login-redirect",
+                    "tests": true,
+                    "notify": false
+                  }
+                }
+              }
+            ]
+          },
+          "saveAs": "render"
+        },
+        {
+          "type": "expect",
+          "from": "render",
+          "equals": "ok"
+        }
+      ]
+    },
+    {
+      "id": "paint",
+      "match": {
+        "contains": "draw",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I will draw a little house in Agent Paint.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "paint_resize",
+          "arguments": {
+            "width": 700,
+            "height": 470
+          },
+          "saveAs": "resized",
+          "report": false
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "paint_draw",
+          "arguments": {
+            "ops": [
+              {
+                "type": "clear",
+                "color": "#cfeaff"
+              },
+              {
+                "type": "ellipse",
+                "x": 560,
+                "y": 24,
+                "w": 100,
+                "h": 100,
+                "color": "#e0a800",
+                "fill": "#ffd94a",
+                "width": 2
+              },
+              {
+                "type": "ellipse",
+                "x": 70,
+                "y": 50,
+                "w": 130,
+                "h": 44,
+                "color": "#ffffff",
+                "fill": "#ffffff",
+                "width": 1
+              },
+              {
+                "type": "ellipse",
+                "x": 120,
+                "y": 34,
+                "w": 90,
+                "h": 48,
+                "color": "#ffffff",
+                "fill": "#ffffff",
+                "width": 1
+              },
+              {
+                "type": "ellipse",
+                "x": 330,
+                "y": 84,
+                "w": 120,
+                "h": 38,
+                "color": "#ffffff",
+                "fill": "#ffffff",
+                "width": 1
+              },
+              {
+                "type": "ellipse",
+                "x": -140,
+                "y": 270,
+                "w": 560,
+                "h": 300,
+                "color": "#3f8f3f",
+                "fill": "#5fb85f",
+                "width": 2
+              },
+              {
+                "type": "ellipse",
+                "x": 280,
+                "y": 300,
+                "w": 600,
+                "h": 280,
+                "color": "#36803a",
+                "fill": "#4fa850",
+                "width": 2
+              },
+              {
+                "type": "rect",
+                "x": 200,
+                "y": 240,
+                "w": 220,
+                "h": 140,
+                "color": "#6b3d1f",
+                "fill": "#f0cf8e",
+                "width": 3
+              },
+              {
+                "type": "path",
+                "points": [
+                  {
+                    "x": 180,
+                    "y": 242
+                  },
+                  {
+                    "x": 310,
+                    "y": 140
+                  },
+                  {
+                    "x": 440,
+                    "y": 242
+                  },
+                  {
+                    "x": 180,
+                    "y": 242
+                  }
+                ],
+                "color": "#7a1f1f",
+                "width": 4
+              },
+              {
+                "type": "fill",
+                "x": 310,
+                "y": 200,
+                "color": "#c0392b"
+              },
+              {
+                "type": "rect",
+                "x": 285,
+                "y": 305,
+                "w": 50,
+                "h": 75,
+                "color": "#4a2a12",
+                "fill": "#8a5a2b",
+                "width": 3
+              },
+              {
+                "type": "rect",
+                "x": 220,
+                "y": 268,
+                "w": 46,
+                "h": 38,
+                "color": "#27456b",
+                "fill": "#9fd3ff",
+                "width": 3
+              },
+              {
+                "type": "rect",
+                "x": 355,
+                "y": 268,
+                "w": 46,
+                "h": 38,
+                "color": "#27456b",
+                "fill": "#9fd3ff",
+                "width": 3
+              },
+              {
+                "type": "rect",
+                "x": 360,
+                "y": 158,
+                "w": 24,
+                "h": 46,
+                "color": "#6b3d1f",
+                "fill": "#b5651d",
+                "width": 3
+              },
+              {
+                "type": "line",
+                "points": [
+                  {
+                    "x": 495,
+                    "y": 385
+                  },
+                  {
+                    "x": 495,
+                    "y": 320
+                  }
+                ],
+                "color": "#6b3d1f",
+                "width": 8
+              },
+              {
+                "type": "ellipse",
+                "x": 460,
+                "y": 255,
+                "w": 70,
+                "h": 70,
+                "color": "#2e6b2e",
+                "fill": "#3f9a3f",
+                "width": 2
+              },
+              {
+                "type": "text",
+                "x": 150,
+                "y": 432,
+                "text": "Hello from Agent7",
+                "font": "bold 34px sans-serif",
+                "color": "#1e3287"
+              }
+            ]
+          },
+          "saveAs": "drawn"
+        },
+        {
+          "type": "message",
+          "text": "Done. The picture is in the Agent Paint window."
+        }
+      ]
+    },
+    {
+      "id": "again",
+      "match": {
+        "contains": "another look",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I also want to tidy the sign-in handler.\n"
+        },
+        {
+          "type": "toolCall",
+          "id": "edit-2",
+          "title": "Edit src/auth/login.ts",
+          "kind": "edit",
+          "status": "pending",
+          "locations": [
+            {
+              "path": "{{cwd}}/src/auth/login.ts"
+            }
+          ],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/src/auth/login.ts",
+                "oldText": "import { redirectAfterLogin } from './redirect'\n\nexport function onLogin(user: string, next: string | null): string {\n  console.log(`Signed in as ${user}`)\n  return redirectAfterLogin(next)\n}\n",
+                "newText": "import { redirectAfterLogin } from './redirect'\n\nexport function onLogin(user: string, next: string | null): string {\n  console.info(`Signed in as ${user}`)\n  return redirectAfterLogin(next)\n}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-2",
+          "title": "Edit src/auth/login.ts",
+          "options": [
+            {
+              "optionId": "allow",
+              "name": "Allow",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "deny",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ],
+          "branches": {
+            "allow": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-2",
+                "status": "completed"
+              },
+              {
+                "type": "message",
+                "text": "Done."
+              }
+            ],
+            "deny": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-2",
+                "status": "failed"
+              },
+              {
+                "type": "message",
+                "text": "Understood. I left the files alone."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "login",
+      "match": {
+        "contains": "login redirect",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "thought",
+          "text": "Deep links probably lose their address during sign-in. I will read the redirect handler first."
+        },
+        {
+          "type": "message",
+          "text": "I will start with the code that runs after sign-in.\n"
+        },
+        {
+          "type": "plan",
+          "entries": [
+            {
+              "content": "Read the redirect handler",
+              "status": "in_progress",
+              "priority": "high"
+            },
+            {
+              "content": "Keep the saved address through sign-in",
+              "status": "pending",
+              "priority": "high"
+            },
+            {
+              "content": "Run the tests",
+              "status": "pending",
+              "priority": "medium"
+            }
+          ]
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "desktop_open_app",
+          "arguments": {
+            "app": "sticky-notes"
+          },
+          "saveAs": "opened",
+          "report": false
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "notes_add",
+          "arguments": {
+            "plan": true,
+            "color": "yellow"
+          },
+          "saveAs": "note",
+          "report": false
+        },
+        {
+          "type": "toolCall",
+          "id": "read-1",
+          "title": "Read src/auth/redirect.ts",
+          "kind": "read",
+          "status": "in_progress",
+          "locations": [
+            {
+              "path": "{{cwd}}/src/auth/redirect.ts"
+            }
+          ]
+        },
+        {
+          "type": "readFile",
+          "path": "{{cwd}}/src/auth/redirect.ts",
+          "saveAs": "redirect"
+        },
+        {
+          "type": "toolCallUpdate",
+          "id": "read-1",
+          "status": "completed"
+        },
+        {
+          "type": "message",
+          "text": "Found it. `redirectAfterLogin` ignores the saved address and always returns `/home`.\n"
+        },
+        {
+          "type": "plan",
+          "entries": [
+            {
+              "content": "Read the redirect handler",
+              "status": "completed",
+              "priority": "high"
+            },
+            {
+              "content": "Keep the saved address through sign-in",
+              "status": "in_progress",
+              "priority": "high"
+            },
+            {
+              "content": "Run the tests",
+              "status": "pending",
+              "priority": "medium"
+            }
+          ]
+        },
+        {
+          "type": "toolCall",
+          "id": "search-1",
+          "title": "Search for redirectAfterLogin in src",
+          "kind": "search",
+          "status": "in_progress"
+        },
+        {
+          "type": "wait",
+          "ms": 9000,
+          "label": "searching"
+        },
+        {
+          "type": "toolCallUpdate",
+          "id": "search-1",
+          "status": "completed"
+        },
+        {
+          "type": "toolCall",
+          "id": "edit-1",
+          "title": "Edit src/auth/redirect.ts",
+          "kind": "edit",
+          "status": "pending",
+          "locations": [
+            {
+              "path": "{{cwd}}/src/auth/redirect.ts"
+            }
+          ],
+          "content": [
+            {
+              "diff": {
+                "path": "{{cwd}}/src/auth/redirect.ts",
+                "oldText": "const HOME = '/home'\n\n// Returns the address to open after sign-in.\nexport function redirectAfterLogin(next: string | null): string {\n  // BUG: the saved address is dropped, so deep links end on the home page.\n  return HOME\n}\n",
+                "newText": "const HOME = '/home'\n\n// Returns the address to open after sign-in.\nexport function redirectAfterLogin(next: string | null): string {\n  // Keep the saved address, but only when it stays on this site.\n  if (next && next.startsWith('/') && !next.startsWith('//')) return next\n  return HOME\n}\n"
+              }
+            }
+          ]
+        },
+        {
+          "type": "requestPermission",
+          "toolCallId": "edit-1",
+          "title": "Edit src/auth/redirect.ts",
+          "label": "ask permission",
+          "options": [
+            {
+              "optionId": "allow",
+              "name": "Allow",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "deny",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ],
+          "branches": {
+            "allow": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "in_progress"
+              },
+              {
+                "type": "writeFile",
+                "path": "{{cwd}}/src/auth/redirect.ts",
+                "content": "const HOME = '/home'\n\n// Returns the address to open after sign-in.\nexport function redirectAfterLogin(next: string | null): string {\n  // Keep the saved address, but only when it stays on this site.\n  if (next && next.startsWith('/') && !next.startsWith('//')) return next\n  return HOME\n}\n"
+              },
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "completed"
+              },
+              {
+                "type": "plan",
+                "entries": [
+                  {
+                    "content": "Read the redirect handler",
+                    "status": "completed",
+                    "priority": "high"
+                  },
+                  {
+                    "content": "Keep the saved address through sign-in",
+                    "status": "completed",
+                    "priority": "high"
+                  },
+                  {
+                    "content": "Run the tests",
+                    "status": "in_progress",
+                    "priority": "medium"
+                  }
+                ]
+              },
+              {
+                "type": "toolCall",
+                "id": "test-1",
+                "title": "Run npm test",
+                "kind": "execute",
+                "status": "in_progress"
+              },
+              {
+                "type": "terminal",
+                "command": "node",
+                "args": [
+                  "-e",
+                  "console.log('PASS tests/redirect.test.ts');console.log('');console.log('Tests: 1 passed, 1 total')"
+                ],
+                "cwd": "{{cwd}}",
+                "saveAs": "tests"
+              },
+              {
+                "type": "toolCallUpdate",
+                "id": "test-1",
+                "status": "completed"
+              },
+              {
+                "type": "plan",
+                "entries": [
+                  {
+                    "content": "Read the redirect handler",
+                    "status": "completed",
+                    "priority": "high"
+                  },
+                  {
+                    "content": "Keep the saved address through sign-in",
+                    "status": "completed",
+                    "priority": "high"
+                  },
+                  {
+                    "content": "Run the tests",
+                    "status": "completed",
+                    "priority": "medium"
+                  }
+                ]
+              },
+              {
+                "type": "usage",
+                "used": 18400,
+                "size": 200000
+              },
+              {
+                "type": "message",
+                "text": "Deep links now survive sign-in. `redirectAfterLogin` keeps the saved address when it stays on this site. The tests pass."
+              }
+            ],
+            "deny": [
+              {
+                "type": "toolCallUpdate",
+                "id": "edit-1",
+                "status": "failed"
+              },
+              {
+                "type": "message",
+                "text": "Understood. I left the files alone."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "any",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Hello. Ask me to fix the login redirect bug, to draw a picture, or to show a form."
+        }
+      ]
+    }
+  ]
+}
