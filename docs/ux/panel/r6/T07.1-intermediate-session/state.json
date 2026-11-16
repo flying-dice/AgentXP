@@ -1,0 +1,23 @@
+{
+  "task": "T07.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-r0HuNU",
+  "testPagePort": 33591,
+  "testPageUrl": "http://127.0.0.1:33591/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:14:13.907Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-r0HuNU/home/Documents/login-app"
+  ],
+  "sessionIds": [
+    1,
+    2
+  ],
+  "flagCountAtStart": 2,
+  "preset": "two-chats-pending",
+  "note": null
+}

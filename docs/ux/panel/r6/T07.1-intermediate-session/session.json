@@ -1,0 +1,22 @@
+{
+  "task": "T07.1",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-r0HuNU/ux.sock",
+  "admin": "/tmp/a7ux-r0HuNU/admin.sock",
+  "pid": 5255,
+  "tmp": "/tmp/a7ux-r0HuNU",
+  "userData": "/tmp/a7ux-r0HuNU/user-data",
+  "testPageUrl": "http://127.0.0.1:33591/",
+  "home": "/tmp/a7ux-r0HuNU/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-r0HuNU/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-r0HuNU/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-r0HuNU/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "two-chats-pending",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}
