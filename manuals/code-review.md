@@ -125,7 +125,7 @@ The status bar shows the folder, the number of files, the number of open comment
 | Margin bar | The bar at the left edge. Click it to jump to a place. | `review-margin` |
 | Margin block | One red or yellow block. The attribute `data-kind` tells which. | `review-margin-block` |
 | Line | One line of the file. | `review-row` |
-| Line number | Starts a comment on the line. | `review-gutter-add` |
+| Line number | Starts a comment on the line. The unified view has one column: the new line number, or the old one on a removed line. | `review-gutter-add` |
 | Lost comments | Lists comments whose line is not in the file any more. | `review-orphans` |
 | New comment | The form to write a comment. | `review-compose` |
 | Comment text | The input for the comment. | `review-compose-input` |

@@ -124,8 +124,17 @@
     {:else if layout === 'unified'}
       {#each view.lines as line, i (i)}
         <div class="row {line.kind}" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={line.kind} role="row">
-          <button type="button" class="no old" data-testid="review-gutter-add" data-side="old" data-line={line.oldNo} disabled={line.oldNo === undefined || line.kind === 'add'} aria-label="Comment on old line {line.oldNo}" onclick={() => startComment(i, 'old', line.oldNo)}>{line.oldNo ?? ''}</button>
-          <button type="button" class="no new" data-testid="review-gutter-add" data-side="new" data-line={line.newNo} disabled={line.newNo === undefined} aria-label="Comment on line {line.newNo}" onclick={() => startComment(i, 'new', line.newNo)}>{line.newNo ?? ''}</button>
+          <!-- One number column: the new line number, or the old one on a removed line (it has no new number). -->
+          <button
+            type="button"
+            class="no"
+            data-testid="review-gutter-add"
+            data-side={line.kind === 'del' ? 'old' : 'new'}
+            data-line={line.kind === 'del' ? line.oldNo : line.newNo}
+            disabled={(line.kind === 'del' ? line.oldNo : line.newNo) === undefined}
+            aria-label={line.kind === 'del' ? `Comment on old line ${line.oldNo}` : `Comment on line ${line.newNo}`}
+            onclick={() => (line.kind === 'del' ? startComment(i, 'old', line.oldNo) : startComment(i, 'new', line.newNo))}>{(line.kind === 'del' ? line.oldNo : line.newNo) ?? ''}</button
+          >
           <span class="mark">{line.kind === 'add' ? '+' : line.kind === 'del' ? '-' : ' '}</span>
           <span class="text" role="cell" tabindex="-1" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{line.text}</span>
         </div>
