@@ -89,7 +89,7 @@ Source: `findings-manuals-audit.md`. Every gap is either a row above (marked "Me
 
 ## Panel round 7 findings
 
-Source: `panel/r7/SYNTHESIS.md` (themes TH-105 to TH-122) and `FIX-BACKLOG-R7.md` (UX-173 to UX-192). Ids continue from F-048. Severity is Nielsen (3 = rubric S2, 2 = S3, 1 = S4). Status of every row: open. Shots are named `<task>-<level> <number>` and are in `panel/r7/<task>-<level>-session/shots/`. R6 findings were tracked in `FIX-BACKLOG-R6.md`; the R6 items that are fixed in part or not fixed are carried into the rows below (UX-158 to UX-177, UX-159 to UX-178, UX-163 to UX-176 and UX-180, UX-164 to UX-179, UX-167 to UX-184 and UX-191, UX-169 to UX-185, UX-171 to UX-188, UX-172 to UX-189).
+Source: `panel/r7/SYNTHESIS.md` (themes TH-105 to TH-122) and `FIX-BACKLOG-R7.md` (UX-173 to UX-192). Ids continue from F-048. Severity is Nielsen (3 = rubric S2, 2 = S3, 1 = S4). Status of every row: open. Shots are named `<task>-<level> <number>` and are in `panel/r7/<task>-<level>-session/shots/`. After round 8 the status of each row is in "Panel round 8 findings" below (table "Status of the round 7 findings after round 8"). R6 findings were tracked in `FIX-BACKLOG-R6.md`; the R6 items that are fixed in part or not fixed are carried into the rows below (UX-158 to UX-177, UX-159 to UX-178, UX-163 to UX-176 and UX-180, UX-164 to UX-179, UX-167 to UX-184 and UX-191, UX-169 to UX-185, UX-171 to UX-188, UX-172 to UX-189).
 
 | id | journey / app | guideline | sev | finding | evidence | recommended fix |
 |---|---|---|---|---|---|---|
@@ -113,3 +113,62 @@ Source: `panel/r7/SYNTHESIS.md` (themes TH-105 to TH-122) and `FIX-BACKLOG-R7.md
 | F-066 | J31 Terminal | H1, H5, D9 | 1 | The read-only reason shows only after typing. (UX-190, TH-120) | T31.2-novice record step 1 | Show the note when the window opens. |
 | F-067 | J25, J26 Review banner | H4, D8 | 1 | The banner repeats itself in a column about 90 px wide; "Showing 1 of 2 changed files". (UX-191, TH-121) | `T26.1-novice 005` | One sentence, full width. |
 | F-068 | J30 About and Explorer menu | H2, D8 | 1 | "part of Agent7 version 0.1.0" is ambiguous; "Open" does not say which program. (UX-192, TH-122) | T30.2 and T30.1 novice records | Reword both. |
+
+
+## Panel round 8 findings
+
+Source: `panel/r8/SYNTHESIS.md` (themes TH-123 to TH-143) and `FIX-BACKLOG-R8.md` (UX-193 to UX-216). Ids continue from F-068. Severity is Nielsen (3 = rubric S2, 2 = S3, 1 = S4). Status of every row: open (F-069 is open and in progress). Shots are named `<task>-<level> <number>` and are in `panel/r8/<task>-<level>-session/shots/`. R7 findings that are fixed in part or not fixed are carried into the rows below; the table "Status of the round 7 findings after round 8" at the end of this section maps each one.
+
+| id | journey / app | guideline | sev | finding | evidence | recommended fix |
+|---|---|---|---|---|---|---|
+| F-069 | J25, J26 Code Review | H1, H3, D1, D7 | 2 | The chat that the user asked for a review cannot use the review tools (they work only for the Code Review window's own reviewer session) and lists the comments as text. Owner report. (UX-193, TH-129) | owner report; no panel run | The requesting chat adds the inline comments; when the review is submitted the conversation returns to the IDE chat. Re-test with H-115 (T25.3). |
+| F-070 | J05, J06, J07 permission box | H1, H3, D1, D9 | 2 | "Show the whole change" does nothing in a short window: two shots are identical; the third changed line stays cut; the second chat window shows three rows. T06.1 intermediate weak (3 of 3). (UX-194, TH-123; R7 UX-177 in part) | `T06.1-novice 001`, `002`, `T07.1-novice 001` | Hide the link when it cannot grow the box; else grow the box or open the Changes pane. |
+| F-071 | J28, J23 chat error | H9, H1, D4, D9 | 2 | A failed turn says "The agent did not answer in time." with a cut status ("Click D"), no "Send again", a Reconnect that sends nothing, and a script log in Details. T28.1 intermediate failed. (UX-195, TH-124) | `T28.1-intermediate 006`, `T28.1-novice 006`, `007` | Highlighted "Send again", one plain sentence, a short status, Details led by the sentence. |
+| F-072 | J17, J23 Details | H2, H9, D8, D4 | 2 | Details of a start failure start with "Internal error" and "ACP session/new (response) (error)". T17.2 novice SEQ 2. (UX-196, TH-125; R7 UX-174 in part) | `T17.2-novice 009`, `010` | Lead with the box's sentence and "What to do"; protocol lines under "Technical details". |
+| F-073 | J17 Agents list | H5, H6, D4, D7 | 2 | The Agents list offers Claude Code first although its program cannot start; nothing marks it. (UX-197, TH-125) | `T17.2-novice 002`, `008` | Mark an agent whose program is missing ("Not found") and ask before Set as Default. |
+| F-074 | J10, J16 Permissions page | H4, H8, D6, D8 | 2 | With the chat pane open the Permissions page keeps a column about 100 px wide for 30 lines of help and the "Set every permission to" row falls off the page. (UX-198, TH-126) | `T10.1-novice 006` | Help text over the full width, the row inside the page, a minimum page width. |
+| F-075 | J06, J11, J28 take-control box | H2, H4, D8, D7 | 1 | The label ("until I untick it"), the bar ("until you resume") and the note ("This is not saved") use three phrases and contradict each other. (UX-199, TH-130; R7 UX-173) | `T06.3-novice 002` | One phrase: "(this session only)". |
+| F-076 | J02, J05, J10, J11, J16 words | H2, H6, D8 | 1 | "Ask (Terminal is closed)", Stop against Pause all agents, the mixed stop notice, "Agent can use nothing yet" reads like a failure, chip tooltips are native `title` and not visible. (UX-200, TH-131; R7 UX-178) | `T10.2-novice 002`, `T02.1-novice` 007 | Plainer chip words, the app's own tooltip, one meaning per notice. |
+| F-077 | J20, J23 recovery | H3, H9, D4, D9 | 1 | The user's own "End the agent program" shows a red box, refills the message box and cuts the status; Restart does not resend; the old window keeps its error; the request shows twice. (UX-201, TH-132; R7 UX-175 and UX-176) | `T20.2-novice 008`, `009`, `T23.1-novice 002` | A plain notice, no refill, "Continued in a new chat", one marker per attempt. |
+| F-078 | J13, J14 launcher | H6, H7, D2, D3 | 1 | The launcher selects the first row, not the row that needs the user. (UX-202, TH-133) | `T14.1-novice 001` | Select the first row that needs the user. |
+| F-079 | J03, J07, J08, J12, J20 window placement | H4, D6 | 1 | New windows open over or behind the window that opened them; the second chat window is narrow and its Send wraps. (UX-203, TH-134; R7 UX-181 not fixed) | `T20.1-novice 002`, `T07.1-novice 001` | Place beside the source window; same size for a second chat. |
+| F-080 | J04, J13 Chats tab | H1, H6, D6, D2 | 1 | "Chats - Task Manager" does not say it reopens closed chats and does not show open or closed. (UX-204, TH-135; R7 UX-180 in part) | `T04.2-novice 003` | A line of help and a Window column. |
+| F-081 | J22, J31 Help | H1, H10, D11 | 1 | The text above a jump target is cut; F1 lands at the top of a 4284 px topic; "Save a file" has no number. (UX-205, TH-136; R7 UX-183 in part) | `T22.1-novice 004` | Scroll with a margin; F1 to the section of the control. |
+| F-082 | J30 Explorer menu and About | H2, H4, D8 | 1 | Two Notepad entries in the context menu; About names no Notepad version. (UX-206, TH-137; R7 UX-192 in part) | `T30.2-novice 003`, T30.1 N and I records | One entry; say Notepad has no separate version. |
+| F-083 | J08, J09, J24 Changes pane | H1, H6, D1, D3 | 2 | Status and Path are cut ("Modi...", "M...", "R...", "E:\..."); "Select a changed file first." stays under a selected row. (UX-207, TH-128; R7 UX-184 in part) | `T08.2-novice 002`, `T09.1-novice 003` | Size the columns to their words; show the hint only when nothing is selected. |
+| F-084 | J22, J24 Changes tab | H2, H9, D8 | 1 | "This chat did not change any file" beside a Git list; a plain folder does not say why there are no marks. (UX-208, TH-138; R7 UX-187 in part) | T24.1 N record 001, T24.2 N | Reword and link to the Git tab. |
+| F-085 | J09 Restore | H2, H4, D4, D8 | 1 | "Restore..." opens the Recycle Bin instead of restoring. (UX-209, TH-138; R7 UX-185) | `T09.1-novice 003` | Restore in one click, or label it "Open Recycle Bin...". |
+| F-086 | J27 Code and the chat pane | H4, D1, D6 | 1 | The question quotes half of line 2 while the status says "Selected 1-2"; the editor is about 190 px wide with the pane open; the Chat tab is a narrow label. (UX-210, TH-139; R7 UX-186; expert F-008) | `T27.1-intermediate 003` | Quote whole lines; give the editor room; name the tab. |
+| F-087 | J25, J26 Code Review | H1, D9, D2 | 1 | No line says the comments reached the chat; the comment box shows no focus; the level is a coloured dot; the chat panel starts empty. (UX-211, TH-140; R7 UX-191) | `T26.1-novice 005`, `T25.2-novice 001` | A "comments sent" line, a focus border, level words. |
+| F-088 | J13, J20, J23 Activity gadget | H1, H2, D9, D8 | 2 | The gadget says "Nothing has happened yet." beside a warning, during a running job and after a crash; "RUN_ERROR" is gone. (UX-212, TH-127; R7 UX-188 not fixed) | `T20.1-novice 001`, `002`, `T13.1-novice 005`, `T23.1-novice 002` | Show the unresolved warning, the running job, the last finished item. |
+| F-089 | J17, J20 Event Viewer | H2, H9, D8, D4 | 2 | Event rows carry protocol names ("session/new (response)", "fs/read_text_file (response)"); the General tab says "Internal error"; the Chat column is cut; "Number of events: 1" beside "25 more". (UX-213, TH-125, TH-141) | `T17.2-novice 011`, `T20.1-novice 002` | A "What happened" sentence per row, raw names in Details, a wider Chat column. |
+| F-090 | J19, J28, J29 Browser | H1, H6, D7, D9 | 1 | "Taken over" is greyed and reads like a status; the "+" has no label; the chat pane covers the page; the yellow bar vanishes. (UX-214, TH-142; R7 UX-189 not fixed) | T28.2 N, T29.1 N, T19.1 N, T28.1 I records | Give back button, tooltip, narrower page, a short hold of the bar. |
+| F-091 | J31 Terminal | H1, H5, D9 | 1 | Typing in the read-only Terminal gives no sign (the note shows at open now). (UX-215, TH-143; R7 UX-190 in part) | `T31.2-novice 003` | Flash the note on a key press. |
+| F-092 | J18 A2UI forms | H1, H4, D9, D8 | 1 | The "Sent." line under a form disappears; "(Closed)" is the only state sign on the card; the card says "Notes" and the tab says "Form". (UX-216, TH-143) | T18.1 inline I and sidebar I records, T18.2 N | Keep the confirmation; a button with the state in words; one name. |
+
+### Status of the round 7 findings after round 8
+
+Status words: fixed (the panel shows the fix, no residue), fixed in part (residue carried to the row named), open (not fixed). The UX lead or a fresh reviewer sets `verified`.
+
+| R7 finding | Status after R8 | Carried to |
+|---|---|---|
+| F-049 (UX-173) | fixed | F-075 (wording, S4) |
+| F-050 (UX-174) | fixed in part | F-072, F-073, F-089 |
+| F-051 (UX-175) | fixed | F-077 (old window, S4) |
+| F-052 (UX-176) | fixed | F-077 (red box, S4) |
+| F-053 (UX-177) | fixed in part | F-070 |
+| F-054 (UX-178) | fixed in part | F-076 |
+| F-055 (UX-179) | fixed | |
+| F-056 (UX-180) | fixed in part | F-080 |
+| F-057 (UX-181) | open | F-079 |
+| F-058 (UX-182) | fixed | |
+| F-059 (UX-183) | fixed in part | F-081 |
+| F-060 (UX-184) | fixed in part | F-083 |
+| F-061 (UX-185) | fixed | F-085 (label, S4) |
+| F-062 (UX-186) | fixed | F-086 (partial line, S4) |
+| F-063 (UX-187) | fixed in part | F-084 |
+| F-064 (UX-188) | open | F-088 |
+| F-065 (UX-189) | open | F-090 |
+| F-066 (UX-190) | fixed in part | F-091 |
+| F-067 (UX-191) | fixed | F-087 (S4) |
+| F-068 (UX-192) | fixed in part | F-082 |
