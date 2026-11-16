@@ -1,7 +1,7 @@
-import type { AgentXpApi } from '../shared/ipc'
+import type { Agent7Api } from '../shared/ipc'
 
 declare global {
   interface Window {
-    agentxp: AgentXpApi
+    agent7: Agent7Api
   }
 }

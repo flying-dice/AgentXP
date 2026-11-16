@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Agent7</title>
+  <defs>
+    <linearGradient id="a7-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7cc3ff"/>
+      <stop offset="0.5" stop-color="#2f86e0"/>
+      <stop offset="0.5" stop-color="#1f6fcc"/>
+      <stop offset="1" stop-color="#3f9bf0"/>
+    </linearGradient>
+    <linearGradient id="a7-cyan" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fe9ff"/>
+      <stop offset="0.5" stop-color="#22b8e0"/>
+      <stop offset="0.5" stop-color="#109fca"/>
+      <stop offset="1" stop-color="#3cc8ee"/>
+    </linearGradient>
+    <linearGradient id="a7-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="0.5" stop-color="#f6a93a"/>
+      <stop offset="0.5" stop-color="#e88f17"/>
+      <stop offset="1" stop-color="#ffb84d"/>
+    </linearGradient>
+    <linearGradient id="a7-gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <g stroke-width="1.5" stroke-linejoin="round">
+    <rect x="4" y="4" width="26" height="26" rx="3" fill="url(#a7-blue)" stroke="#124a8c"/>
+    <rect x="34" y="4" width="26" height="26" rx="3" fill="url(#a7-cyan)" stroke="#0b6a8a"/>
+    <rect x="34" y="34" width="26" height="26" rx="3" fill="url(#a7-amber)" stroke="#9a5a06"/>
+  </g>
+  <g fill="url(#a7-gloss)">
+    <rect x="6" y="6" width="22" height="11" rx="2"/>
+    <rect x="36" y="6" width="22" height="11" rx="2"/>
+    <rect x="36" y="36" width="22" height="11" rx="2"/>
+  </g>
+</svg>

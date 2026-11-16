@@ -1,33 +1,22 @@
-@import 'tailwindcss';
+@import './lib/kit/reset.css';
 @import './lib/kit/tokens.css';
-
-@source './**/*.{svelte,ts}';
+@import './lib/kit/scrollbars.css';
 
 html,
 body,
 #app {
   height: 100%;
-  margin: 0;
+}
+
+#app {
+  position: relative;
+  overflow: hidden;
 }
 
 body {
-  font: var(--xp-font);
-  color: var(--xp-text);
-  background: var(--xp-face);
+  font: var(--w7-font);
+  color: var(--w7-text);
+  background: var(--w7-face);
   user-select: none;
   cursor: default;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-  color: inherit;
 }

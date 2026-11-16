@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      # scripts/test.mjs runs vitest under ELECTRON_RUN_AS_NODE, which needs no display.
+      - run: npm test
+      - run: npx electron-vite build
+      - run: npm run build-storybook

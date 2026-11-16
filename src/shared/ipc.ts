@@ -1,9 +1,10 @@
 /**
  * The typed contract between renderer and main. The preload script exposes
- * an object implementing `AgentXpApi` as `window.agentxp`. Every invoke
+ * an object implementing `Agent7Api` as `window.agent7`. Every invoke
  * method maps 1:1 to an `ipcMain.handle` channel named after the key path
  * (e.g. `sessions.create`); every event maps to a `webContents.send` channel.
  */
+import type { BaseEvent, RunAgentInput } from '@ag-ui/core'
 import type {
   AgentDto,
   FileChangeDto,
@@ -31,7 +32,41 @@ export interface AgentInput {
   env: Record<string, string>
 }
 
-export interface AgentXpApi {
+/** What main sends on the `agui.event` channel: one AG-UI event of one run. */
+export interface AguiEventMessage {
+  runId: string
+  event: BaseEvent
+}
+
+/**
+ * AG-UI over IPC. The renderer is the AG-UI client, main is the agent backend.
+ * Call `onEvent(runId, ...)` before `run(input)` so no event is missed; the
+ * stream ends with RUN_FINISHED or RUN_ERROR and `run` resolves after it.
+ */
+export interface AguiApi {
+  run(input: RunAgentInput): Promise<void>
+  /** Cancels the turn running in the session `threadId` (the ACP turn ends as cancelled). */
+  abort(threadId: string, runId: string): Promise<void>
+  onEvent(runId: string, listener: (event: BaseEvent) => void): () => void
+}
+
+/** Frame state of the main window, pushed on maximize / unmaximize / focus / blur. */
+export interface WindowStateDto {
+  maximized: boolean
+  focused: boolean
+}
+
+/** Window chrome control for the frameless main window. */
+export interface WindowApi {
+  minimize(): Promise<void>
+  toggleMaximize(): Promise<void>
+  close(): Promise<void>
+  /** Current state (the first push may predate the renderer's listener). */
+  getState(): Promise<WindowStateDto>
+  onStateChanged(listener: (state: WindowStateDto) => void): () => void
+}
+
+export interface Agent7Api {
   agents: {
     list(): Promise<AgentDto[]>
     create(input: AgentInput): Promise<AgentDto>
@@ -48,6 +83,8 @@ export interface AgentXpApi {
     /** Lists one directory level, sorted folders first; ignores .git and node_modules. */
     readDir(folderId: Id, relativePath: string): Promise<FileNodeDto[]>
     readFile(folderId: Id, relativePath: string): Promise<string>
+    /** Current git branch (or short commit when detached) read from `.git/HEAD`; null when the folder is not a repository. */
+    gitBranch(folderId: Id): Promise<string | null>
   }
   sessions: {
     list(folderId?: Id): Promise<SessionDto[]>
@@ -76,22 +113,29 @@ export interface AgentXpApi {
   shell: {
     openPath(path: string): Promise<void>
   }
-  on<K extends keyof AgentXpEvents>(event: K, listener: (payload: AgentXpEvents[K]) => void): () => void
+  dialogs: {
+    /** Shows the native open-file dialog (multi-select); resolves to the chosen absolute paths, empty when cancelled. */
+    pickFiles(): Promise<string[]>
+  }
+  app: {
+    /** The application version (package.json). */
+    version(): Promise<string>
+  }
+  window: WindowApi
+  agui: AguiApi
+  on<K extends keyof Agent7Events>(event: K, listener: (payload: Agent7Events[K]) => void): () => void
 }
 
-/** Push events from main to renderer. */
-export interface AgentXpEvents {
+/**
+ * Push events from main to renderer. Transcript, tasks, changes, terminals and
+ * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
+ * What remains feeds the session list and the status bar.
+ */
+export interface Agent7Events {
   'session.changed': SessionDto
   'session.removed': { id: Id }
-  'transcript.upserted': { sessionId: Id; entry: TranscriptEntryDto }
-  'transcript.cleared': { sessionId: Id }
-  'tasks.changed': { sessionId: Id; tasks: TaskDto[] }
-  'changes.changed': { sessionId: Id; changes: FileChangeDto[] }
-  'terminal.changed': TerminalDto
-  'surface.changed': A2uiSurfaceDto
-  'surface.removed': { sessionId: Id; surfaceId: string }
   'folders.changed': FolderDto[]
   'status.message': { text: string }
 }
 
-export type AgentXpEventName = keyof AgentXpEvents
+export type Agent7EventName = keyof Agent7Events

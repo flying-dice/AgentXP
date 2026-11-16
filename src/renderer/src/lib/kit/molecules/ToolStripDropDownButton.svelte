@@ -1,0 +1,94 @@
+<script lang="ts">
+  import { clickOutside } from '../actions/clickOutside'
+  import type { IconName } from '../atoms/icons'
+  import type { MenuItemDef } from './MenuItem'
+  import MenuPopup from './MenuPopup.svelte'
+  import ToolStripButton from './ToolStripButton.svelte'
+
+  interface Props {
+    icon?: IconName
+    text?: string
+    items: MenuItemDef[]
+    disabled?: boolean
+    onselect?: (item: MenuItemDef) => void
+    title?: string
+  }
+
+  let { icon, text, items, disabled = false, onselect, title }: Props = $props()
+
+  let open = $state(false)
+  let button = $state<HTMLButtonElement | null>(null)
+  let pos = $state({ left: 0, top: 0 })
+  let byKeyboard = $state(false)
+
+  function show(keyboard: boolean): void {
+    if (!button || disabled) return
+    const r = button.getBoundingClientRect()
+    pos = { left: r.left, top: r.bottom - 1 }
+    byKeyboard = keyboard
+    open = true
+  }
+
+  function close(refocus: boolean): void {
+    open = false
+    if (refocus) button?.focus()
+  }
+
+  function select(item: MenuItemDef): void {
+    item.action?.()
+    onselect?.(item)
+    close(true)
+  }
+
+  function onkeydown(event: KeyboardEvent): void {
+    if (event.key === 'ArrowDown' && !open) {
+      show(true)
+      event.preventDefault()
+    }
+  }
+</script>
+
+<span class="wrap" use:clickOutside={{ handler: () => (open = false) }}>
+  <ToolStripButton
+    bind:ref={button}
+    {icon}
+    {text}
+    {disabled}
+    {title}
+    expanded={open}
+    aria-haspopup="menu"
+    aria-expanded={open}
+    onclick={() => (open ? close(false) : show(false))}
+    {onkeydown}
+  >
+  </ToolStripButton>
+  <svg class="arrow" width="7" height="4" viewBox="0 0 7 4" aria-hidden="true"><path d="M0 0h7L3.5 4z" fill="#404040" /></svg>
+  {#if open}
+    <MenuPopup
+      {items}
+      label={text ?? title}
+      autofocus
+      activateFirst={byKeyboard}
+      style="position:fixed;left:{pos.left}px;top:{pos.top}px"
+      onselect={select}
+      onclose={() => close(true)}
+    />
+  {/if}
+</span>
+
+<style>
+  .wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .arrow {
+    position: absolute;
+    right: 6px;
+    top: 12px;
+    pointer-events: none;
+  }
+  .wrap :global(.tb) {
+    padding-right: 18px;
+  }
+</style>

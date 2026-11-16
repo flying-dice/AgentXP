@@ -1,0 +1,75 @@
+<script lang="ts">
+  import type { Snippet } from 'svelte'
+  import Button from '../../kit/atoms/Button.svelte'
+  import ToolStatusIcon from './ToolStatusIcon.svelte'
+  import type { ToolStatusView } from './toolStatus'
+
+  interface Props {
+    /** Bold tool name: Read, Edit, Bash... */
+    name: string
+    /** One-line argument (path, command, pattern). */
+    argument: string
+    status: ToolStatusView
+    /** Whether there is a body to show; enables the Show/Hide button. */
+    expandable?: boolean
+    open?: boolean
+    onopenchange?: (open: boolean) => void
+    /** The body (result, diff, console). */
+    children?: Snippet
+  }
+
+  let { name, argument, status, expandable = false, open = false, onopenchange, children }: Props = $props()
+</script>
+
+<div class="tool-card" data-status={status.kind}>
+  <div class="head">
+    <ToolStatusIcon kind={status.kind} label={status.label} />
+    <span class="name">{name}</span>
+    <span class="arg" title={argument}>{argument}</span>
+    <span class="state">{status.label}</span>
+    {#if expandable}
+      <Button class="toggle" aria-expanded={open} onclick={() => onopenchange?.(!open)}>{open ? 'Hide' : 'Show'}</Button>
+    {/if}
+  </div>
+  {#if expandable && open}<div class="body">{@render children?.()}</div>{/if}
+</div>
+
+<style>
+  .tool-card {
+    border: 1px solid #c5d1e1;
+    border-radius: 3px;
+    background: #f7f9fc;
+    overflow: hidden;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 26px;
+    padding: 3px 7px;
+  }
+  .name {
+    font-weight: 700;
+  }
+  .arg {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: var(--w7-font-mono);
+    color: #222;
+  }
+  .state {
+    white-space: nowrap;
+    color: #444;
+  }
+  .head :global(.toggle) {
+    min-width: 0;
+    height: 19px;
+    padding: 0 7px;
+  }
+  .body {
+    border-top: 1px solid #c5d1e1;
+  }
+</style>

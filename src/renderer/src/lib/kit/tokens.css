@@ -4,63 +4,106 @@
  * when a token exists.
  */
 :root {
-  --xp-font: 12px/1.35 'Segoe UI', 'Noto Sans', Tahoma, sans-serif;
-  --xp-font-mono: 12px/17px Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+  --w7-font: 12px/1.35 'Segoe UI', 'Noto Sans', Tahoma, sans-serif;
+  --w7-font-mono: 12px/17px Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
 
-  --xp-text: #000;
-  --xp-text-disabled: #6d6d6d;
-  --xp-text-muted: #555;
-  --xp-face: #f0f0f0;
-  --xp-window: #fff;
-  --xp-desktop: #1e5aa8;
+  --w7-text: #000;
+  --w7-text-disabled: #6d6d6d;
+  --w7-text-muted: #555;
+  --w7-face: #f0f0f0;
+  --w7-window: #fff;
+  --w7-desktop: #1e5aa8;
 
-  --xp-border: #707070;
-  --xp-border-light: #d5d5d5;
-  --xp-border-disabled: #adb2b5;
-  --xp-input-border: #abadb3;
-  --xp-input-border-top: #8e9097;
-  --xp-group-border: #d5dfe5;
-  --xp-panel-border: #898c95;
+  --w7-border: #707070;
+  --w7-border-light: #d5d5d5;
+  --w7-border-disabled: #adb2b5;
+  --w7-input-border: #abadb3;
+  --w7-input-border-top: #8e9097;
+  --w7-group-border: #d5dfe5;
+  --w7-panel-border: #898c95;
 
-  --xp-btn-face: linear-gradient(#f2f2f2 0, #ebebeb 49%, #ddd 50%, #cfcfcf 100%);
-  --xp-btn-hover-border: #3c7fb1;
-  --xp-btn-hover-face: linear-gradient(#eaf6fd 0, #d9f0fc 49%, #bee6fd 50%, #a7d9f5 100%);
-  --xp-btn-active-border: #2c628b;
-  --xp-btn-active-face: linear-gradient(#e5f4fc 0, #c4e5f6 49%, #98d1ef 50%, #68b3db 100%);
-  --xp-btn-default-border: #3399ff;
+  --w7-btn-face: linear-gradient(#f2f2f2 0, #ebebeb 49%, #ddd 50%, #cfcfcf 100%);
+  --w7-btn-hover-border: #3c7fb1;
+  --w7-btn-hover-face: linear-gradient(#eaf6fd 0, #d9f0fc 49%, #bee6fd 50%, #a7d9f5 100%);
+  --w7-btn-active-border: #2c628b;
+  --w7-btn-active-face: linear-gradient(#e5f4fc 0, #c4e5f6 49%, #98d1ef 50%, #68b3db 100%);
+  --w7-btn-default-border: #3399ff;
 
-  --xp-hot-border: #b8d6fb;
-  --xp-hot-face: linear-gradient(#fafbfd, #ebf3fd);
-  --xp-select-border: #7da2ce;
-  --xp-select-face: linear-gradient(#dcebfc, #c1dbfc);
-  --xp-select-inactive-face: linear-gradient(#f8f8f8, #e5e5e5);
+  --w7-hot-border: #b8d6fb;
+  --w7-hot-face: linear-gradient(#fafbfd, #ebf3fd);
+  --w7-select-border: #7da2ce;
+  --w7-select-face: linear-gradient(#dcebfc, #c1dbfc);
+  --w7-select-inactive-face: linear-gradient(#f8f8f8, #e5e5e5);
 
-  --xp-toolbar-hover-border: #98b8e0;
-  --xp-toolbar-hover-face: linear-gradient(#fbfcfe, #e3ecf8 49%, #d3e1f4 50%, #e0ebf9);
-  --xp-toolbar-face: linear-gradient(#fdfeff, #e8eff8 50%, #dce6f4 51%, #e6eef9);
+  --w7-toolbar-hover-border: #98b8e0;
+  --w7-toolbar-hover-face: linear-gradient(#fbfcfe, #e3ecf8 49%, #d3e1f4 50%, #e0ebf9);
+  --w7-toolbar-face: linear-gradient(#fdfeff, #e8eff8 50%, #dce6f4 51%, #e6eef9);
 
-  --xp-menu-face: #f7f7f7;
-  --xp-menu-border: #979797;
-  --xp-menu-hot-border: #a8d8eb;
-  --xp-menu-hot-face: linear-gradient(#f4fafe, #d6ebf9);
-  --xp-menubar-hot-border: #a8c4e6;
-  --xp-menubar-hot-face: linear-gradient(#f6faff, #dbe9f9);
+  --w7-menu-face: #f7f7f7;
+  --w7-menu-border: #979797;
+  --w7-menu-hot-border: #a8d8eb;
+  --w7-menu-hot-face: linear-gradient(#f4fafe, #d6ebf9);
+  --w7-menubar-hot-border: #a8c4e6;
+  --w7-menubar-hot-face: linear-gradient(#f6faff, #dbe9f9);
 
-  --xp-tab-accent: #f0a43c;
-  --xp-progress-fill: linear-gradient(#bff2b4 0, #4fd34e 45%, #1fa71f 50%, #5de35c 100%);
+  --w7-tab-accent: #f0a43c;
+  --w7-progress-fill: linear-gradient(#bff2b4 0, #4fd34e 45%, #1fa71f 50%, #5de35c 100%);
 
-  --xp-focus-outline: 1px dotted #000;
-  --xp-shadow-popup: 3px 3px 4px rgba(0, 0, 0, 0.3);
+  --w7-focus-outline: 1px dotted #000;
+  --w7-shadow-popup: 3px 3px 4px rgba(0, 0, 0, 0.3);
 
-  --xp-diff-hunk-bg: #eef3fb;
-  --xp-diff-hunk-fg: #1c3d6e;
-  --xp-diff-del-bg: #ffe3e3;
-  --xp-diff-del-fg: #7a0000;
-  --xp-diff-add-bg: #e1f7e1;
-  --xp-diff-add-fg: #0b4d0b;
-  --xp-console-bg: #0c0c0c;
-  --xp-console-fg: #cccccc;
+  --w7-diff-hunk-bg: #eef3fb;
+  --w7-diff-hunk-fg: #1c3d6e;
+  --w7-diff-del-bg: #ffe3e3;
+  --w7-diff-del-fg: #7a0000;
+  --w7-diff-add-bg: #e1f7e1;
+  --w7-diff-add-fg: #0b4d0b;
+  --w7-console-bg: #0c0c0c;
+  --w7-console-fg: #cccccc;
 
-  --xp-accent-claude: #c15f3c;
-  --xp-link: #0066cc;
+  --w7-accent-claude: #c15f3c;
+  --w7-link: #0066cc;
+}
+
+/* Added by atoms batch 2: lists, progress, sliders, calendar */
+:root {
+  --w7-list-border: #828790;
+  --w7-list-select-face: linear-gradient(#3399ff, #3399ff);
+  --w7-list-select-text: #fff;
+  --w7-progress-fill-paused: linear-gradient(#fff3b0 0, #f2d94a 45%, #dcb800 50%, #f5e36a 100%);
+  --w7-progress-fill-error: linear-gradient(#ffb8b0 0, #f0605a 45%, #d01818 50%, #f27a74 100%);
+  --w7-progress-track: #e6e6e6;
+  --w7-progress-border: #bcbcbc;
+  --w7-calendar-today: #3d82d4;
+  --w7-calendar-header: linear-gradient(#fdfdfe, #e4ecf7);
+  --w7-etched-dark: #b5c2d6;
+}
+
+/* Added by organisms batch: Aero Basic window frame, caption buttons, taskbar, code viewer */
+:root {
+  --w7-frame-border: #27405f;
+  --w7-frame-active: linear-gradient(180deg, rgba(214, 230, 250, 0.97) 0, rgba(170, 200, 238, 0.95) 34px, rgba(184, 208, 240, 0.96) 100%);
+  --w7-frame-inactive: linear-gradient(180deg, #eef1f5 0, #e1e6ed 34px, #e4e8ee 100%);
+  --w7-frame-inactive-border: #7c8794;
+  --w7-frame-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 10px 36px rgba(0, 0, 0, 0.55);
+  --w7-frame-shadow-inactive: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --w7-client-border: #5d6c82;
+  --w7-title-glow: 0 0 9px #fff, 0 0 5px #fff, 0 0 2px #fff;
+  --w7-caption-border: #3a4f6e;
+  --w7-caption-face: linear-gradient(#e6eef9 0, #c3d4ea 48%, #a9c0de 50%, #c3d6ee 100%);
+  --w7-caption-hover-face: linear-gradient(#f4fbff 0, #cfeafc 48%, #8fd0f5 50%, #bfe6fb 100%);
+  --w7-caption-close-face: linear-gradient(#e9a79f 0, #d4695d 48%, #bb2f1f 50%, #d8584a 100%);
+  --w7-caption-close-hover-face: linear-gradient(#f6c1b8 0, #ec7d6c 48%, #d4301c 50%, #f07a62 100%);
+  --w7-caption-close-active-face: linear-gradient(#b4574c 0, #9e2a1d 48%, #8a1608 50%, #a9392a 100%);
+  --w7-desktop-bg: radial-gradient(ellipse at 72% 22%, rgba(150, 215, 250, 0.9) 0, rgba(150, 215, 250, 0) 46%),
+    radial-gradient(ellipse at 15% 90%, rgba(8, 52, 120, 0.85) 0, rgba(8, 52, 120, 0) 55%),
+    linear-gradient(160deg, #134b8a 0, #2a86c8 55%, #7cc4ee 100%);
+  --w7-taskbar-face: linear-gradient(180deg, rgba(150, 185, 225, 0.82) 0, rgba(60, 100, 155, 0.9) 48%, rgba(25, 55, 100, 0.94) 50%, rgba(40, 80, 130, 0.96) 100%);
+  --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.55), rgba(190, 220, 250, 0.28) 50%, rgba(150, 190, 235, 0.25));
+  --w7-code-bg: #fff;
+  --w7-code-gutter: #2b91af;
+  --w7-code-gutter-bg: #fff;
+  --w7-code-highlight: #fff6c0;
+  --w7-statusbar-face: linear-gradient(#f5f7fa, #dbe4f1);
+  --w7-menubar-face: linear-gradient(#fdfefe, #e3ebf6);
 }
