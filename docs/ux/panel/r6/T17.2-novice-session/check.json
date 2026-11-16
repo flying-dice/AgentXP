@@ -1,0 +1,30 @@
+{
+  "task": "T17.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "checkerStatus": "FAIL",
+  "reason": "state ok but the answer lacks: agents page|agents|agent manager|settings + edit|change|choose another|set as default|new chat",
+  "notes": [],
+  "steps": 5,
+  "budget": 12,
+  "answer": "Default agent My assistant runs not-a-real-command, which was not found; set Claude Code as default.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:03:27.233Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:03:27.233Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "state ok but the answer lacks: agents page|agents|agent manager|settings + edit|change|choose another|set as default|new chat",
+      "steps": 5,
+      "answer": "Default agent My assistant runs not-a-real-command, which was not found; set Claude Code as default.",
+      "noAnswer": false
+    }
+  ]
+}

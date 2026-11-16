@@ -1,0 +1,30 @@
+{
+  "task": "T16.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the answer says no and gives the reason (Write files / separate)",
+  "notes": [],
+  "steps": 4,
+  "budget": 16,
+  "answer": "No. Turning off Code only affects opening files in Code. Saving from Notepad is controlled by Write files, set to Ask.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:02:21.543Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:02:21.543Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the answer says no and gives the reason (Write files / separate)",
+      "steps": 4,
+      "answer": "No. Turning off Code only affects opening files in Code. Saving from Notepad is controlled by Write files, set to Ask.",
+      "noAnswer": false
+    }
+  ]
+}

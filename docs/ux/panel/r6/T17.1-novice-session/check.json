@@ -1,0 +1,30 @@
+{
+  "task": "T17.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "an agent with command node and my-agent.js exists; it is the default",
+  "notes": [],
+  "steps": 8,
+  "budget": 32,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:02:44.451Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:02:44.451Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "an agent with command node and my-agent.js exists; it is the default",
+      "steps": 8,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T17.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-U82l1C/ux.sock",
+  "admin": "/tmp/a7ux-U82l1C/admin.sock",
+  "pid": 16305,
+  "tmp": "/tmp/a7ux-U82l1C",
+  "userData": "/tmp/a7ux-U82l1C/user-data",
+  "testPageUrl": "http://127.0.0.1:33107/",
+  "home": "/tmp/a7ux-U82l1C/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-U82l1C/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-U82l1C/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-U82l1C/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "bad-default-agent",
+  "note": "new chat attempt: chat opened",
+  "context": {
+    "previousTasks": []
+  }
+}

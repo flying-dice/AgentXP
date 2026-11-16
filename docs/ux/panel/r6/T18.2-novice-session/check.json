@@ -1,0 +1,30 @@
+{
+  "task": "T18.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "1 surface window(s) open (want exactly one)",
+  "notes": [],
+  "steps": 1,
+  "budget": 8,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:04:49.205Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:04:49.205Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "1 surface window(s) open (want exactly one)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

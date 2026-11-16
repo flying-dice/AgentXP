@@ -1,0 +1,30 @@
+{
+  "task": "T17.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the app is still the same process (pid 16706, was 16706); answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 9,
+  "answer": "The assistant could not start because the agent My assistant is set to run the program not-a-real-command, which was not found; fix it with Edit in Agents (Control Center) to a real program, or choose another agent such as Claude Code, then Try again",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:03:19.896Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:03:19.896Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the app is still the same process (pid 16706, was 16706); answer ok",
+      "steps": 2,
+      "answer": "The assistant could not start because the agent My assistant is set to run the program not-a-real-command, which was not found; fix it with Edit in Agents (Control Center) to a real program, or choose another agent such as Claude Code, then Try again",
+      "noAnswer": false
+    }
+  ]
+}

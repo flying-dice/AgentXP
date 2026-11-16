@@ -1,0 +1,22 @@
+{
+  "task": "T18.1-inline",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-MmDabd",
+  "testPagePort": 46787,
+  "testPageUrl": "http://127.0.0.1:46787/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:03:30.217Z",
+  "options": {
+    "variant": "inline"
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-MmDabd/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "variant": "inline",
+  "preset": "a2ui",
+  "note": null
+}
