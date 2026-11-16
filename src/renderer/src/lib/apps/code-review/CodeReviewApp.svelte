@@ -245,6 +245,8 @@
   // ---- ask the agent to review ------------------------------------------------------------------
   // Opening a review starts nothing: the reviewer reads and comments only when the user asks (UX-37).
   const ASK_HINT = 'The agent will read the changes and add comments. It cannot change files.'
+  /** The hint, or why the button is grey (UX-155). */
+  const askTitle = $derived(!store ? 'Start the chat of this window first: this review has no agent to ask.' : reviewing ? 'The agent is reading the changes already.' : ASK_HINT)
 
   async function askAgent(): Promise<void> {
     const s = store
@@ -497,11 +499,11 @@
     <Separator orientation="vertical" />
     <ToolStripButton icon="changes" text="Side by side" checked={layout === 'split'} onclick={toggleLayout} data-testid="review-split-toggle" title="Show the old and the new text in two columns" />
     <Separator orientation="vertical" />
-    <ToolStripButton icon="chevron-up" text="Previous" onclick={() => step(-1)} disabled={changes.length === 0} data-testid="review-prev-change" title="Previous change (Shift+F7)" />
-    <ToolStripButton icon="chevron-down" text="Next" onclick={() => step(1)} disabled={changes.length === 0} data-testid="review-next-change" title="Next change (F7)" />
+    <ToolStripButton icon="chevron-up" text="Previous" onclick={() => step(-1)} disabled={changes.length === 0} data-testid="review-prev-change" title={changes.length === 0 ? 'There are no changes to step through.' : 'Previous change (Shift+F7)'} />
+    <ToolStripButton icon="chevron-down" text="Next" onclick={() => step(1)} disabled={changes.length === 0} data-testid="review-next-change" title={changes.length === 0 ? 'There are no changes to step through.' : 'Next change (F7)'} />
     <ToolStripButton icon="new" text="Add comment" onclick={() => diff?.commentOnSelected()} disabled={!canAddComment} data-testid="review-add-comment" title={addCommentButtonTitle(mode === 'expanded', selectedRow !== null)} />
     {#if mode === 'all'}
-      <ToolStripButton icon="chevron-down" text="Next file" onclick={() => scrollAll(1)} disabled={changes.length === 0} data-testid="review-next-file" title="Go to the next file" />
+      <ToolStripButton icon="chevron-down" text="Next file" onclick={() => scrollAll(1)} disabled={changes.length === 0} data-testid="review-next-file" title={changes.length === 0 ? 'There are no changes to step through.' : 'Go to the next file'} />
     {/if}
     <Separator orientation="vertical" />
     <span class="against">
@@ -529,8 +531,8 @@
       <ComboBox aria-label="File" testid="review-file-select" items={fileItems} value={selectedPath ?? ''} onchange={(path) => void goToFile(path, null)} disabled={changes.length === 0} style="width:230px" />
     {/if}
     <span class="spring"></span>
-    <ToolStripButton icon="agent" text="Start a new review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={ASK_HINT} />
-    <ToolStripButton icon="properties" text="Comments ({counts.open})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" title="Show or hide the list of comments" />
+    <ToolStripButton icon="agent" text="Start a new review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={askTitle} />
+    <ToolStripButton icon="properties" text="Comments ({counts.total})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" title="Show or hide the list of comments. The number counts every comment, open or not." />
     <ToolStripButton icon="session" text="Send comments to chat..." onclick={() => void openSend('open')} disabled={counts.open === 0} data-testid="review-send-comments" title={counts.open === 0 ? 'There are no open comments to send.' : 'Send the open comments to a chat, so the agent can fix them'} />
   </div>
 
@@ -637,11 +639,11 @@
 
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="review-status-root" text="{root} against {baseLabel(baseRef)}" spring />
-    <StatusStripLabel testid="review-status-files" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />
+    <StatusStripLabel testid="review-status-files" class="keep" text={filesStatusLabel(changes.length, mode === 'expanded' && file ? 1 : 0)} borders={['left']} />
     {#if mode === 'expanded' && positionLabel}
-      <StatusStripLabel testid="review-status-change" text={positionLabel} borders={['left']} />
+      <StatusStripLabel testid="review-status-change" class="keep" text={positionLabel} borders={['left']} />
     {/if}
-    <StatusStripLabel testid="review-status-comments" text="{counts.open} open, {counts.resolved} resolved, {counts.sent} sent" borders={['left']} />
+    <StatusStripLabel testid="review-status-comments" class="keep" text="{counts.open} open, {counts.resolved} resolved, {counts.sent} sent" borders={['left']} />
     <StatusStripLabel testid="review-status-agent" text={connectionLabel(status)} borders={['left']} />
   </StatusStrip>
 
@@ -752,6 +754,9 @@
   }
   .banner.pending {
     color: var(--w7-text-muted);
+  }
+  .review :global(.sl.keep) {
+    flex: none;
   }
   .banner .body {
     flex: 1;

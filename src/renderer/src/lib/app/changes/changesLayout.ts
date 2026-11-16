@@ -6,12 +6,29 @@ const HEADER = 26
 const ROW = 20
 const BORDER = 2
 
-/** The list starts with room for its rows, between two and four of them: the diff below gets everything else (UX-116). */
-export const defaultListHeight = (rows: number): number => HEADER + Math.min(4, Math.max(2, rows)) * ROW + BORDER
+/** Width of the bar between the list and the diff. */
+export const SPLITTER = 4
 
-/** The least height of the list (header and one row) and of the diff (about eight lines) when the user drags the bar. */
+/** The least height of the list (header and one row) and of the diff (about six lines) when the user drags the bar. */
 export const LIST_MIN_HEIGHT = HEADER + ROW + BORDER
-export const DIFF_MIN_HEIGHT = 150
+export const DIFF_MIN_HEIGHT = 100
+
+/** The list shows at least this many rows when the chat has that many changes, and at most `MAX_ROWS` before it scrolls (UX-151). */
+export const MIN_ROWS = 6
+const MAX_ROWS = 10
+
+/** The height that holds `rows` rows with the header. */
+export const listHeightFor = (rows: number): number => HEADER + rows * ROW + BORDER
+
+/**
+ * The list starts with at least half of the room (the diff gets at most half) and with room for six rows; more rows grow it up to ten.
+ * The diff keeps its least height when the room allows it. `available` is the height of the list and the diff together.
+ */
+export function defaultListHeight(rows: number, available: number): number {
+  const wanted = Math.max(available / 2, listHeightFor(Math.min(MAX_ROWS, Math.max(MIN_ROWS, rows))))
+  // Six rows win over the diff's least height: the pane then scrolls as a whole instead of squeezing the list.
+  return Math.round(Math.min(wanted, Math.max(available - SPLITTER - DIFF_MIN_HEIGHT, listHeightFor(MIN_ROWS))))
+}
 
 /** A pane at least this wide and less than this high shows the diff beside the list; the list is then at least this wide and the diff this wide. */
 export const BESIDE_MIN_WIDTH = 460
@@ -19,7 +36,7 @@ export const BESIDE_MAX_HEIGHT = 380
 export const LIST_MIN_WIDTH = 200
 export const DIFF_MIN_WIDTH = 180
 
-const keyOf = (layoutKey: string): string => `agent7.changes.list.${layoutKey}`
+const keyOf = (layoutKey: string): string => `agent7.changes.list.v2.${layoutKey}`
 
 /** The list size (height, or width when the diff is beside it) the user chose for this window, or null. Reads never throw. */
 export function readListSize(store: Pick<Storage, 'getItem'> | null, layoutKey: string): number | null {

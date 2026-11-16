@@ -188,6 +188,53 @@ describe('Code app git awareness', () => {
     await see.text(review.frame.getByTestId('review-file-head'), 'notes.txt')
     await ctx.desktop.closeWindow('code-review')
   })
+
+  it('one click on a Git row opens its diff in the review pane (UX-152)', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-logs-tab-git').click()
+    await code.frame.getByTestId('code-git-entry').filter({ hasText: 'fresh.txt' }).click()
+    const review = ctx.desktop.codeReview()
+    await see.visible(review.app)
+    await see.text(review.frame.getByTestId('review-file-head'), 'fresh.txt')
+    await ctx.desktop.closeWindow('code-review')
+  })
+
+  it('the Changes tab never says "No pending changes" beside a Git list: it names the Git count and links to Git (UX-152)', async () => {
+    const code = ctx.desktop.code()
+    await code.showChanges()
+    await see.text(code.frame.getByTestId('changes-git-note'), 'The agent changed nothing in this chat. Git shows 2 changed files.')
+    await see.count(code.frame.getByTestId('changes-item'), 0)
+    expect(await code.frame.getByTestId('changes-list').innerText()).not.toContain('No pending changes')
+    await code.frame.getByTestId('changes-open-git').click()
+    await see.visible(code.frame.getByTestId('code-git-pane'))
+  })
+
+  it('Code has a Plug in a folder button in Management and its Open button says "Open a file" (UX-154)', async () => {
+    const code = ctx.desktop.code()
+    await code.frame.getByTestId('code-mgmt-tab-projects').click()
+    await see.text(code.frame.getByTestId('code-tree-plug-in'), 'Plug in a folder')
+    await see.attribute(code.frame.getByTestId('code-open'), 'aria-label', 'Open a file')
+  })
+
+  it('the collapsed chat strip is a tab with the word Chat; Focus mode hides it and the Focus bar brings the chat back (UX-153)', async () => {
+    const code = ctx.desktop.code()
+    const strip = code.frame.getByTestId('chat-pane-toggle')
+    await see.visible(strip)
+    await see.text(strip, 'Chat')
+    expect((await strip.boundingBox())!.width).toBeGreaterThanOrEqual(40)
+    await code.frame.getByTestId('code-focus-toggle').click()
+    await see.gone(strip)
+    await see.visible(code.frame.getByTestId('code-focus-chat'))
+    await code.frame.getByTestId('code-focus-chat').click()
+    await see.visible(ctx.desktop.aside('code').panel)
+    await see.gone(code.frame.getByTestId('code-focus-chat'))
+    // Hiding the chat with no other pane open is Focus mode again; Show panes brings the strip back.
+    await ctx.desktop.aside('code').hide.click()
+    await see.visible(code.frame.getByTestId('code-focus-chat'))
+    await code.frame.getByTestId('code-focus-toggle').click()
+    await see.visible(code.frame.getByTestId('code-management'))
+    await see.visible(strip)
+  })
 })
 
 /** UX-82: turning on Git asks first. */
