@@ -2,19 +2,19 @@ import { describe, expect, it, vi } from 'vitest'
 import { askAboutFileItem, askChatItems, selectionLines, startChatHereItem } from './contextItems'
 
 describe('askChatItems', () => {
-  it('lists the same three chat items in every app: Explain this, Ask chat about this..., Open in Chat window', () => {
+  it('lists the same two chat items in every app: Ask the agent about this..., Explain this', () => {
     const ask = vi.fn()
     const items = askChatItems('notepad', { hasSelection: true, ask })
     expect(items[0].separator).toBe(true)
-    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-explain', 'notepad-ctx-ask', 'notepad-ctx-open-chat'])
-    expect(items.slice(1).map((i) => i.label)).toEqual(['&Explain this', 'Ask &chat about this...', 'Open in Chat &window'])
+    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-ask', 'notepad-ctx-explain'])
+    expect(items.slice(1).map((i) => i.label)).toEqual(['&Ask the agent about this...', '&Explain this'])
     items.slice(1).forEach((i) => i.action?.())
-    expect(ask.mock.calls.map((c) => c[0])).toEqual(['explain', 'ask', 'window'])
+    expect(ask.mock.calls.map((c) => c[0])).toEqual(['ask', 'explain'])
   })
 
-  it('needs a selection for Explain this and Open in Chat window only', () => {
+  it('needs a selection for Explain this only', () => {
     const items = askChatItems('code', { hasSelection: false, ask: () => {} })
-    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain', 'code-ctx-open-chat'])
+    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain'])
   })
 })
 

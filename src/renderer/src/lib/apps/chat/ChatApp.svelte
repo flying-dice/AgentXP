@@ -4,6 +4,7 @@
   import type { AppProps } from '../types'
   import { cwdLabel } from '../explorer/explorerModel'
   import { chatTitleLabels } from '../../app/chatTitles'
+  import { describeProblem } from '../../app/session/chatProblem'
   import { folderLabel } from '../../app/session/folderLabel'
   import { connectionLabel, contextPercent, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
   import { getDesktopContext } from '../../desktop/context'
@@ -46,6 +47,8 @@
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   /** Where the chat works, as a person says it ("login-app (E:)"); the full path is the tooltip. */
   const where = $derived(session ? folderLabel(session.cwd, host.state.drives) : '')
+  /** What went wrong, in plain words with the next step; the status bar shows this and never the raw error. */
+  const problemLine = $derived(describeProblem({ error: store?.error ?? null, problem: session?.problem, failed: store?.failedSend ?? null })?.status ?? null)
   let panelOpen = $state(false)
   let panelTab = $state('changes')
   let selectedChangeId = $state<number | null>(null)
@@ -355,7 +358,7 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Chat" />
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel testid="chat-cwd" spring><span title={folder?.path}>{store?.error ?? where}</span></StatusStripLabel>
+    <StatusStripLabel testid="chat-cwd" spring><span title={folder?.path} data-testid={problemLine ? 'chat-problem-line' : undefined}>{problemLine ?? where}</span></StatusStripLabel>
     {#if session}
       <StatusStripLabel borders={['left']}>
         <span>Context</span>

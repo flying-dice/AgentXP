@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, composeAppContext, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
+import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, composeAppContext, explainChip, explainRequest, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
+import { askChatPrompt } from '../apps/askChat'
 
 const memory = (initial: Record<string, string> = {}): Storage => {
   const data = new Map(Object.entries(initial))
@@ -40,6 +41,33 @@ describe('composeAppContext', () => {
     const win = { id: 4, app: 'code' as const, title: 'a.ts - Code' }
     expect(composeAppContext(win, undefined)).toEqual({ windowId: 4, app: 'code', title: 'a.ts - Code' })
     expect(composeAppContext(win, { openFile: 'E:\\a.ts', title: 'A' })).toEqual({ windowId: 4, app: 'code', title: 'A', openFile: 'E:\\a.ts' })
+  })
+})
+
+describe('the chip Explain this', () => {
+  const selected = { openFile: 'E:\\src\\index.ts', selection: 'a\nb', range: { startLine: 1, endLine: 2 } }
+
+  it('sends the selection with the lines and the file, the same message as the right-click route', () => {
+    const chip = suggestionsFor('code', selected, 3).find((s) => s.id === 'explain')!
+    expect(chip.disabled).toBeUndefined()
+    expect(chip.text.split('\n')[0]).toBe('Explain lines 1 to 2 of index.ts.')
+    expect(chip.text).toContain('```ts\na\nb\n```')
+    expect(chip.text).toBe(askChatPrompt({ app: 'code', windowId: 3, kind: 'explain', path: 'E:\\src\\index.ts', text: 'a\nb', range: { startLine: 1, endLine: 2 } }))
+  })
+
+  it('is disabled with the tooltip "Select some text first." while nothing is selected, and still sends only text that exists', () => {
+    const chip = suggestionsFor('code', { openFile: 'E:\\src\\index.ts' }, 3).find((s) => s.id === 'explain')!
+    expect(chip).toMatchObject({ disabled: true, tip: 'Select some text first.' })
+    expect(explainRequest('code', 3, { openFile: 'E:\\a.ts', selection: '   ' })).toBeNull()
+    expect(explainChip('notepad', 1, {})).toMatchObject({ disabled: true, tip: 'Select some text first.' })
+  })
+
+  it('works in the other apps: Browser page, Terminal output, Explorer item, Event Viewer row', () => {
+    expect(explainRequest('browser', 2, { selection: 'hi', url: 'https://example.com/', title: 'Example' })).toMatchObject({ kind: 'explain', url: 'https://example.com/', text: 'hi' })
+    expect(explainRequest('terminal', 2, { lastOutput: ['ok', 'done'] })).toMatchObject({ text: 'ok\ndone' })
+    expect(explainRequest('explorer', 2, { selectedItems: ['E:\\src'] })).toEqual({ app: 'explorer', windowId: 2, kind: 'explain', path: 'E:\\src' })
+    expect(explainRequest('explorer', 2, { selectedItems: [] })).toBeNull()
+    expect(explainRequest('event-viewer', 2, { selectedRow: { id: 9, source: 'acp', name: 'session/prompt', payload: '{}' } })?.text).toBe('Event 9, acp session/prompt\n{}')
   })
 })
 

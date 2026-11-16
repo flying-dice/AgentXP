@@ -171,10 +171,20 @@ export class DesktopController implements DesktopHost {
       return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: store.state.session.status === 'closed' ? s.status : store.state.session.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
   }
-  /** "Read src/a.ts", "Waiting for approval" or null (idle). */
+  /** A chat was busy when the user took control: the Activity gadget says "Stopped: you took control". */
+  stoppedStep = $state(false)
+  /** Requests that wait for the user's answer: the one count of the bar, the Activity gadget and the taskbar flag. */
+  get waitingCount(): number {
+    return this.inbox.pending.length
+  }
+  /** Open chat windows: an open chat is something the agent can use (the line next to the chips of the bar). */
+  get chatsOpen(): number {
+    return this.state.windows.filter((w) => w.view.app === 'chat').length
+  }
+  /** "Waiting for you: 2 requests to approve", "Read src/a.ts" or null (idle). */
   get working(): string | null {
     const inputs = this.activityInputs
-    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
+    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })), this.waitingCount)
   }
   /** "Agent: not started" while a chat of this desktop has an agent that could not start (the red chip of the bar); else null. */
   get agentProblem(): string | null {
@@ -490,6 +500,12 @@ export class DesktopController implements DesktopHost {
     await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
   }
 
+  /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event: the flag menu and "Show in Event Viewer". */
+  async openEventViewer(scope: { sessionId?: Id | null; selectedEventId?: number | null } = {}): Promise<void> {
+    const window = await this.openApp({ app: 'event-viewer' })
+    await this.api.desktop.updateView(window.id, { app: 'event-viewer', sessionId: scope.sessionId ?? null, level: 'all', selectedEventId: scope.selectedEventId ?? null })
+  }
+
   /**
    * Pause all agents / Resume agents and continue. Pause saves in main which chats it stopped; Resume sends each of them
    * `CONTINUE_TEXT` as the user's message, so the stopped step carries on. With nothing to continue the bar says so.
@@ -543,6 +559,7 @@ export class DesktopController implements DesktopHost {
    */
   async toggleUserInControl(): Promise<void> {
     const on = !this.state.userInControl
+    this.stoppedStep = on && this.busy
     if (this.current) this.current = { ...this.current, userInControl: on }
     await this.api.desktop.setUserInControl(this.state.desktopId, on)
   }
@@ -983,6 +1000,12 @@ export class DesktopController implements DesktopHost {
     } catch {
       this.policy = null
     }
+  }
+
+  /** The "Waiting for you" link of the bar: opens the next request of the inbox. */
+  async openNextRequest(): Promise<void> {
+    const next = this.inbox.pending[0]
+    if (next) await this.review(next)
   }
 
   /** The reviewed approval answered (option id) or dismissed without answering (undefined). */

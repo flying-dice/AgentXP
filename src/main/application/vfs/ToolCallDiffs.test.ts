@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { ToolCallPatch } from '../../domain/agent/AgentSessionEvent'
 import { createVfsFixture } from '../test-helpers'
+import { changeCounts } from '@shared/lineCounts'
 import { ToolCallDiffs } from './ToolCallDiffs'
 
 let f: Awaited<ReturnType<typeof createVfsFixture>>
@@ -34,8 +35,20 @@ describe('ToolCallDiffs', () => {
     expect(full.contents?.[0]).toMatchObject({ oldText: '' })
   })
 
-  it('keeps null when the path cannot be read or the chat has no desktop', async () => {
-    expect((await diffs.complete(1, edit('/not/a/vpath'))).contents?.[0]).toMatchObject({ oldText: null })
+  it('keeps null and names the error when the path cannot be read', async () => {
+    expect((await diffs.complete(1, edit('/not/a/vpath'))).contents?.[0]).toMatchObject({ oldText: null, oldTextError: 'unreadable' })
+  })
+
+  it('keeps null when the chat has no desktop', async () => {
     expect((await diffs.complete(2, edit('E:\\a.ts'))).contents?.[0]).toMatchObject({ oldText: null })
+  })
+
+  it('a three-line change keeps the real old text, so the counts equal the Changes pane (3 and 3)', async () => {
+    writeFileSync(join(f.projectDir, 'three.ts'), 'a\nb\nc\nd\ne\n')
+    const patch: ToolCallPatch = { contents: [{ kind: 'diff', path: 'E:\\three.ts', oldText: null, newText: 'a\nX\nY\nZ\ne\n' }] }
+    const full = await diffs.complete(1, patch)
+    const diff = full.contents?.[0]
+    expect(diff).toMatchObject({ oldText: 'a\nb\nc\nd\ne\n' })
+    expect(diff && diff.kind === 'diff' ? changeCounts(diff.oldText, diff.newText) : null).toEqual({ kind: 'partial', additions: 3, deletions: 3 })
   })
 })

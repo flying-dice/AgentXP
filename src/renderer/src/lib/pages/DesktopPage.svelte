@@ -4,7 +4,7 @@
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
-  import { CONTROL_NOTE } from '../desktop/activity'
+  import { controlNote } from '../desktop/activity'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
@@ -92,7 +92,7 @@
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
-  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser']
+  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser', 'event-viewer']
   const groupOf = (id: string, title: string, kinds: AppKind[]): StartGroup => ({
     id,
     title,
@@ -100,7 +100,7 @@
   })
   const groups: StartGroup[] = [
     groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes']),
-    groupOf('system-tools', 'System Tools', ['event-viewer', 'agent-manager', 'control-centre'])
+    groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre'])
   ]
   const programs = $derived<StartItem[]>(
     START_APPS.map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
@@ -244,7 +244,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={desktop.state.userInControl ? CONTROL_NOTE : null} {since} />
+      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
@@ -253,6 +253,9 @@
       <TopBar
         title={desktop.state.title}
         working={desktop.working}
+        waiting={desktop.waitingCount}
+        chatsOpen={desktop.chatsOpen}
+        onopenrequest={() => void desktop.openNextRequest()}
         agentProblem={desktop.agentProblem}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
@@ -316,6 +319,10 @@
           onopencontrolcentre={() => {
             desktop.actionCenterOpen = false
             void desktop.openApp({ app: 'control-centre' })
+          }}
+          onopeneventviewer={() => {
+            desktop.actionCenterOpen = false
+            void desktop.openEventViewer()
           }}
           onclose={() => (desktop.actionCenterOpen = false)}
         />

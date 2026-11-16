@@ -42,20 +42,7 @@ describe('Context menus and in-app Help', () => {
     await see.visible(aside.panel)
     await see.attribute(aside.panel, 'data-role', 'aside')
     await see.text(aside.userMessages.first(), 'Hello from the readme')
-    await see.count(ctx.desktop.windows('chat'), 0) // the old behaviour (a new Chat window) is "Open in Chat window"
-  })
-
-  it('Notepad: Open in Chat window starts a full chat with the selected text', async () => {
-    const notepad = ctx.desktop.window('notepad')
-    const text = notepad.getByTestId('notepad-text')
-    await text.click()
-    await ctx.desktopPage.keyboard.press('Control+A')
-    await text.click({ button: 'right' })
-    await ctx.desktopPage.getByTestId('notepad-ctx-open-chat').click()
-    const chat = ctx.desktop.window('chat')
-    await see.visible(chat.getByTestId('chat-app'))
-    await see.text(chat.getByTestId('chat-message-user'), 'Hello from the readme')
-    await chat.getByTestId('window-close').first().click()
+    await see.count(ctx.desktop.windows('chat'), 0) // the explain route stays in the pane
   })
 
   it('Notepad: Ask chat... fills the composer of the pane and does not send', async () => {

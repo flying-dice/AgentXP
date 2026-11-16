@@ -7,8 +7,10 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import type { DesktopHost } from '../types'
   import {
+    ASK_HELP,
     DECISION_ITEMS,
     SAVED_MS,
+    decisionNote,
     SAVED_TEXT,
     isDecision,
     permissionGroups,
@@ -78,7 +80,7 @@
   }
 </script>
 
-<p class="lead">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. <b>Ask</b> shows a permission request in the Action Center each time.</p>
+<p class="lead">Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. {ASK_HELP}</p>
 <div class="all" role="group" aria-label="Set all permissions">
   <span class="all-label">Set every permission to:</span>
   <ComboBox testid="permissions-set-all-value" aria-label="Set every permission to" items={DECISION_ITEMS} bind:value={allValue} style="width:80px" />
@@ -93,8 +95,9 @@
     <div class="group" role="row" data-testid="permissions-group" data-group={group.id}><span role="columnheader">{group.title}</span></div>
     {#each group.rows as row (row.key)}
       <div class="row" role="row" data-testid="permissions-row" data-key={row.key}>
-        <span class="name" role="cell">{row.label}</span>
+        <span class="name" role="cell" title={row.tooltip}>{row.label}</span>
         <span class="setting" role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
+        <span class="mode" role="cell" data-testid="permissions-mode">{decisionNote(row.decision)}.</span>
         <span class="what" role="cell" data-testid="permissions-covers">{row.description}</span>
       </div>
     {/each}
@@ -153,7 +156,7 @@
     background: #f6f9fd;
   }
   .row {
-    grid-template-areas: 'name setting' 'what what';
+    grid-template-areas: 'name setting' 'what what' 'mode mode';
     row-gap: 1px;
     padding-top: 3px;
     padding-bottom: 4px;
@@ -172,6 +175,11 @@
     min-width: 0;
     overflow-wrap: anywhere;
     color: var(--w7-text-muted);
+  }
+  .mode {
+    grid-area: mode;
+    min-width: 0;
+    color: #1e3287;
   }
   .footer {
     flex: none;

@@ -3,6 +3,7 @@ import type { Interrupt } from '@ag-ui/core'
 import type { AguiSessionState, AguiToolCallState } from '@shared/agui-state'
 import type { PermissionOptionDto, ToolKind } from '@shared/models'
 import type { PolicyDecision, ToolGroup, ToolPolicyDto } from '@shared/desktop'
+import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { permissionMetadata } from '../app/session/permissionOptions'
 import { approvalTitle, toolLabel, type ToolTitleInput } from '../app/session/toolTitles'
 
@@ -84,22 +85,6 @@ const KIND_GROUP: Partial<Record<ToolKind, Exclude<ToolGroup, 'shell'>>> = {
   fetch: 'browser'
 }
 
-const GROUP_ACTION: Record<Exclude<ToolGroup, 'shell'>, string> = {
-  'fs.read': 'Reading files',
-  'fs.write': 'Writing files',
-  terminal: 'Running commands',
-  browser: 'Using the browser',
-  notepad: 'Using Notepad',
-  code: 'Using Code',
-  paint: 'Drawing in Agent Paint',
-  wordpad: 'Writing in WordPad',
-  notes: 'Using Sticky Notes',
-  events: 'Reading the Event Viewer',
-  snip: 'Capturing the screen',
-  recycle: 'Restoring from the Recycle Bin',
-  review: 'Reviewing code'
-}
-
 export const approvalGroup = (kind: ToolKind | null): Exclude<ToolGroup, 'shell'> | null => (kind ? (KIND_GROUP[kind] ?? null) : null)
 
 /** The reason line of the UAC dialog (shown after "Reason:"): the policy that caused the question when it is known. */
@@ -107,6 +92,6 @@ export function approvalReason(kind: ToolKind | null, policy: ToolPolicyDto | nu
   if (userInControl) return 'Ask before every action is on, so every action needs your approval.'
   const group = approvalGroup(kind)
   const decision: PolicyDecision | undefined = group && policy ? policy.groups[group] : undefined
-  if (group && decision === 'ask') return `${GROUP_ACTION[group]} is set to Ask in Control Center.`
+  if (group && decision === 'ask') return `${PERMISSION_NAMES[group]} is set to Ask in Control Center.`
   return 'The agent asked for your permission.'
 }

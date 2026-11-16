@@ -27,7 +27,7 @@ Use Event Viewer to see what an agent sent and received. Read it to find out why
 
 ## 2 - Open It
 
-Click **Start -> System Tools -> Event Viewer**.
+Click **Start -> Event Viewer**. You can also click the flag in the taskbar and then **Open Event Viewer**.
 
 ## 3 - The Window
 

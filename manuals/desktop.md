@@ -58,7 +58,7 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 - **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
 - **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask*, *Deny*, or *Off*, for example **Run commands: Ask**. **Off** means that no app which gives the agent this tool is open. Point to a chip to read what it means. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
 - **Pause all agents or Resume agents and continue** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents and continue**. Then each chat that was stopped gets the message **Please continue where you stopped.** and carries on. The Action Center has a line for each chat that was stopped.
-- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads **You are in control: the agent asks before every action.** and the button **Give control back** shows. Click the button, or clear the box, to go back to the settings in Control Center.
+- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads **You are in control. Browser and all other tools are set to Ask until you resume.** and the button **Give control back** shows. Click the button, or clear the box, to go back to the settings in Control Center.
 
 ### The Desktop Icons
 
@@ -87,7 +87,7 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser. The first item is highlighted when the menu opens. Press the Up and Down arrow keys to move and Enter to start the item. Type to search; Enter starts the first match.
 - **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
 - **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
-- **System Tools** – A folder (under All Programs) with Event Viewer, Task Manager, and Control Center.
+- **System Tools** – A folder (under All Programs) with Task Manager and Control Center. Event Viewer is in the left column of the Start menu.
 - **Recent chats** – Lists your latest chats.
 - **Search programs and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
 - **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
@@ -144,7 +144,8 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
 | Tool chip | Names one tool group, for example Read files. Opens Control Center at Permissions. | `topbar-tool-chip-*` |
-| Nothing yet | Shows that no app gives the agent a tool. | `topbar-tool-chips-none` |
+| Nothing yet | Shows that no app and no chat is open, or that only chats are. | `topbar-tool-chips-none` |
+| Waiting for you | The status while requests wait, for example "Waiting for you: 2 requests to approve". Click it to open the next request. | `topbar-waiting-link` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
 | Ask before every action | A check box. Makes the agent ask before every action. | `topbar-take-control` |
 | Give control back | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
@@ -213,6 +214,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Request chat | Names the chat that asked and when it started. | `action-center-approval-chat` |
 | Message | Shows one message. | `action-center-message` |
 | Open Control Center | Opens Control Center. | `action-center-open-control-centre` |
+| Open Event Viewer | Opens Event Viewer, the list of what happened. | `action-center-open-event-viewer` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |
 | Permission dialog box | Asks if the agent can do the action. | `uac-dialog` |
 | Question | Asks, in plain words, if the agent can do the action. | `uac-question` |

@@ -86,10 +86,9 @@ The agent works in the folder of the drive that the window shows. Without a driv
 
 The context menus of the apps have a group of chat items.
 
-- **Explain this** opens the pane and sends the selected text with the question.
+- **Ask the agent about this...** opens the pane and puts a draft in the message box. Type your question below the draft and press Enter.
+- **Explain this** opens the pane and sends the selected text with the question. The chat shows, for example, "Explain lines 1 to 2 of index.ts." The button **Explain this** above the message box sends the same message. It is dimmed until you select some text.
 - **Send selection to chat** opens the pane and sends the selected text.
-- **Ask chat...** opens the pane and puts a draft in the message box. Type your question below the draft and press Enter.
-- **Open in Chat window** starts a full chat in the Chat window with the selected text.
 
 ### The Other Panels
 

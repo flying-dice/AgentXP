@@ -108,7 +108,7 @@
     const proc = selectedProcess
     if (!proc) return
     const answer = await showMessageBox({
-      text: `End '${proc.agent}'? Its ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will stop and work in progress is lost.`,
+      text: `End '${proc.agent}'? Its ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will stop and work in progress is lost. The chats and their messages stay.`,
       caption: 'Agent7 Task Manager',
       buttons: 'YesNo',
       icon: 'warning'
@@ -207,14 +207,14 @@
               {#if procRows.length === 0}<div class="empty">No agent is running. Start a chat to launch one.</div>{/if}
             </div>
             <div class="buttons">
-              <Button data-testid="agent-manager-end-process" disabled={!selectedProcess} onclick={endProcess}>End process</Button>
+              <Button data-testid="agent-manager-end-process" title="End this agent's process" disabled={!selectedProcess} onclick={endProcess}>End process</Button>
             </div>
           {:else if t.id === 'chats'}
             <div class="grid">
               <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
             <div class="buttons">
-              <Button data-testid="agent-manager-end-task" disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
+              <Button data-testid="agent-manager-end-task" title="Stop the step that this chat is working on" disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
             </div>
           {:else if t.id === 'terminals'}
             <div class="grid">

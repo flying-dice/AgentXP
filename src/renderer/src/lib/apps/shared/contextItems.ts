@@ -16,22 +16,20 @@ export interface AskChatItemsOptions {
 /** The words of the chat items, the same in every app (F-019). */
 export const CHAT_ITEM_LABELS = {
   explain: '&Explain this',
-  ask: 'Ask &chat about this...',
+  ask: '&Ask the agent about this...',
   askFile: 'Ask &chat about this file...',
-  openWindow: 'Open in Chat &window',
   startHere: 'Start a &chat here'
 } as const
 
 /**
- * The chat group of a selection menu: separator, Explain this, "Ask chat about this..." (both use the chat pane) and
- * "Open in Chat window" (a full chat instead of the pane). The same three items, in the same words, in every app.
+ * The chat group of a selection menu: separator, "Ask the agent about this..." and Explain this (both use the chat pane).
+ * The same two items, in the same words, in every app.
  */
 export function askChatItems(app: string, { hasSelection, ask }: AskChatItemsOptions): MenuItemDef[] {
   return [
     { separator: true },
-    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: CHAT_ITEM_LABELS.explain, icon: 'session', disabled: !hasSelection, action: () => ask('explain') },
     { id: `${app}-ctx-ask`, testid: `${app}-ctx-ask`, label: CHAT_ITEM_LABELS.ask, icon: 'session', action: () => ask('ask') },
-    { id: `${app}-ctx-open-chat`, testid: `${app}-ctx-open-chat`, label: CHAT_ITEM_LABELS.openWindow, icon: 'session', disabled: !hasSelection, action: () => ask('window') }
+    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: CHAT_ITEM_LABELS.explain, icon: 'session', disabled: !hasSelection, action: () => ask('explain') }
   ]
 }
 

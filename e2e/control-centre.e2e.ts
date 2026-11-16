@@ -30,8 +30,9 @@ describe('control center', () => {
     await see.text(page('permissions-group').first(), 'What the agent may do')
     await see.text(page('permissions-group').last(), 'Apps the agent may use')
     await see.count(page('permissions-row'), 14)
-    await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }), 'Run commands (Terminal)')
+    await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }), 'Run commands')
     await see.text(page('permissions-setting-terminal'), 'Ask')
+    await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }).getByTestId('permissions-mode'), 'Ask: asks you each time')
   })
 
   it('Set all changes every row, says Not applied yet, and Apply saves and shows the chips', async () => {

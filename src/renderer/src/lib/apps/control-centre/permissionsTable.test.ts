@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, TOOL_GROUPS } from '@shared/desktop'
-import { isDecision, permissionGroups, permissionRows, policiesEqual, settingTestid, withAllDecisions, withDecision } from './permissionsTable'
+import { toolChips } from '../../desktop/activity'
+import { ASK_HELP, decisionNote, isDecision, permissionGroups, permissionRows, policiesEqual, settingTestid, withAllDecisions, withDecision } from './permissionsTable'
 
 describe('permissionsTable', () => {
   it('lists the human names in order, abilities first', () => {
     expect(permissionRows(DEFAULT_TOOL_POLICY).map((r) => r.label)).toEqual([
       'Read files',
       'Write files',
-      'Run commands (Terminal)',
+      'Run commands',
       'Code',
       'Notepad',
       'Browser',
@@ -22,10 +23,28 @@ describe('permissionsTable', () => {
     ])
   })
 
-  it('the Notepad row says in one place that saving uses Write files; the Terminal row is named like its chip', () => {
+  it('the Notepad row says in one place that saving uses Write files', () => {
     const rows = permissionRows(DEFAULT_TOOL_POLICY)
     expect(rows.find((r) => r.key === 'notepad')?.description).toBe('Open and read documents. Saving a file uses Write files.')
-    expect(rows.find((r) => r.key === 'terminal')?.label).toBe('Run commands (Terminal)')
+  })
+
+  it('has one label for each permission: the name of the chip, with "(Terminal)" only as the tooltip', () => {
+    const rows = permissionRows(DEFAULT_TOOL_POLICY)
+    const terminal = rows.find((r) => r.key === 'terminal')
+    expect(terminal?.label).toBe('Run commands')
+    expect(terminal?.tooltip).toBe('Run commands (Terminal)')
+    expect(rows.filter((r) => r.label.includes('('))).toEqual([])
+    const chips = toolChips(['shell', 'terminal', 'paint', 'fs.read', 'browser'], DEFAULT_TOOL_POLICY).map((c) => c.name)
+    expect(chips).toEqual(['Read files', 'Run commands', 'Browser', 'Agent Paint'])
+    expect(chips.every((n) => rows.some((r) => r.label === n))).toBe(true)
+    expect(new Set(rows.map((r) => r.label)).size).toBe(rows.length)
+  })
+
+  it('says what each setting does and where an Ask request shows', () => {
+    expect(decisionNote('allow')).toBe('Allow: runs without asking')
+    expect(decisionNote('ask')).toBe('Ask: asks you each time')
+    expect(decisionNote('deny')).toBe('Deny: never runs')
+    expect(ASK_HELP).toBe('Ask shows a request in the chat that wants to run something.')
   })
 
   it('splits the rows into the two blocks of the page', () => {

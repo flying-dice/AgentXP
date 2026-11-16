@@ -4,7 +4,7 @@
   import ToolCallCard from './ToolCallCard.svelte'
   import type { TranscriptRow } from './transcriptRows'
   import { expandsByDefault, plainToolResult, toolArgument, toolLabel } from './toolSummary'
-  import { DENIED_NOTE, toolStatusView } from './toolStatus'
+  import { DENIED_NOTE, FAILED_NOTE, toolStatusView } from './toolStatus'
   import { plainToolTitle } from './toolTitles'
 
   interface Props {
@@ -16,11 +16,13 @@
     waiting?: boolean
     /** The user denied the request for this tool call. */
     denied?: boolean
+    /** "Show in Event Viewer" of a failed step; gets the id of the tool call. */
+    onshowevent?: (toolCallId: string) => void
     /** The card belongs to an earlier step (it gets the caption "Earlier step"). */
     earlier?: boolean
   }
 
-  let { row, toolCall, terminals, waiting = false, denied = false, earlier = false }: Props = $props()
+  let { row, toolCall, terminals, waiting = false, denied = false, earlier = false, onshowevent }: Props = $props()
 
   const rawInput = $derived(toolCall?.rawInput ?? row.rawInput)
   const status = $derived(toolStatusView(toolCall?.status, waiting, denied))
@@ -38,7 +40,8 @@
   name={plainTitle ?? toolLabel(toolCall?.kind, row.name, rawInput)}
   argument={plainTitle && plainToolTitle(argument) ? '' : argument}
   {status}
-  note={denied ? DENIED_NOTE : undefined}
+  note={denied ? DENIED_NOTE : status.kind === 'failed' ? FAILED_NOTE : undefined}
+  onshowevent={onshowevent ? () => onshowevent(row.toolCallId) : undefined}
   {earlier}
   expandable={contents.length > 0 || !!row.result}
   {open}

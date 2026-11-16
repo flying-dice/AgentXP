@@ -35,6 +35,21 @@ export function rangeLabel(range: AskChatRequest['range']): string {
   return range.startLine === range.endLine ? `line ${range.startLine}` : `lines ${range.startLine}-${range.endLine}`
 }
 
+/** "lines 3 to 5" or "line 7" ("" without a range): the words of the explain message. */
+export function rangePhrase(range: AskChatRequest['range']): string {
+  if (!range) return ''
+  return range.startLine === range.endLine ? `line ${range.startLine}` : `lines ${range.startLine} to ${range.endLine}`
+}
+
+const fileName = (path: string): string => path.split(/[\\/]/).filter(Boolean).pop() ?? path
+
+/** "Explain lines 1 to 2 of index.ts." for a selection in a file, "Explain index.ts." for a file; null for any other request. */
+function explainLead(request: AskChatRequest): string | null {
+  if (request.kind !== 'explain' || !request.path || request.url) return null
+  const lines = rangePhrase(request.range)
+  return lines ? `Explain ${lines} of ${fileName(request.path)}.` : request.text !== undefined ? `Explain this selection from ${fileName(request.path)}.` : `Explain ${fileName(request.path)}.`
+}
+
 /** What the request is about, in words: the file and lines, the page, or the app. */
 export function subjectOf(request: AskChatRequest): string {
   if (request.url) return `the page ${request.title ? `"${request.title}" ` : ''}at ${request.url}`
@@ -61,14 +76,15 @@ const TAIL: Record<AskChatRequest['kind'], string> = {
 
 /** The prompt text the chat receives. */
 export function askChatPrompt(request: AskChatRequest): string {
-  const parts = [`${LEAD[request.kind]} ${subjectOf(request)}.`]
+  const lead = explainLead(request)
+  const parts = [lead ? `${lead}\nFile: ${request.path}` : `${LEAD[request.kind]} ${subjectOf(request)}.`]
   if (request.text?.trim()) parts.push(fenced(request.text, request.path ? (FENCE_LANGUAGES[extensionOf(request.path)] ?? '') : ''))
   parts.push(TAIL[request.kind])
   return parts.join('\n\n')
 }
 
 /**
- * What "Ask chat..." puts into the chat pane's composer: what it is about and the selected text, then a blank
+ * What "Ask the agent about this..." puts into the chat pane's composer: what it is about and the selected text, then a blank
  * line where the user types the question (the pane does not send it).
  */
 export function askChatDraft(request: AskChatRequest): string {

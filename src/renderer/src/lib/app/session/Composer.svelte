@@ -154,7 +154,7 @@
     </span>
     <span class="spacer"></span>
     <Button data-testid="chat-attach" onclick={attach}>Attach…</Button>
-    <span title="Stops this reply. You can send another message."><Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button></span>
+    <span title="Stop this step. The chat stays and you can send another message."><Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button></span>
     <span title={sendReason ?? (starting ? 'Your message will be sent when the agent is ready.' : 'Send the message (Enter)')}><Button data-testid="chat-send" isDefault disabled={!canSend} onclick={send}>Send</Button></span>
   </div>
 </div>
