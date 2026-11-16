@@ -50,11 +50,11 @@ The pane is at the left. It has three tabs.
 
 - **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
-- **Changes** – Lists each change of the agent.
+- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. A row marked "Reverted" shows "This change was undone" and a **Restore...** button that opens the Recycle Bin on that file. When the chat did not change any file, the list says so; if Git shows changed files from before, the line above the list says how many and links to Git. In a folder without Git it says that the folder is not tracked by Git.
 
 ### The Editor
 
-The editor shows one tab for each open file. A dot on a tab means that the file has a change. Each line has a number. A mark in the margin shows a changed block. Click the mark to open the peek.
+The editor shows one tab for each open file. A dot on a tab means that the file has a change. Each line has a number. Click a number to select that line, or drag over several numbers to select those lines. While nothing is selected, the status bar says "Select some lines first." A mark in the margin shows a changed block. Click the mark to open the peek.
 
 ### The Change Peek
 
@@ -160,16 +160,22 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the file in the editor. | `changes-open-editor` |
 | Open Recycle Bin | The link in the one line above the list after a revert. It opens the Recycle Bin. A reverted file stays in the list, in grey, after you close and open the pane or the window. | `changes-open-recycle-bin` |
-| Changes pane | The whole pane: the list, the diff and the buttons. The list has at least half of the height and shows six rows. In a wide, short pane the diff is beside the list. | `changes-pane` |
-| Nothing changed note | The line above the list when the agent changed nothing in this chat but Git shows changed files. | `changes-git-note` |
+| Changes pane | The whole pane: the list, the diff and the buttons. The list is as high as its rows (two rows at least, a third of the pane at most) and the diff gets the rest, about 12 lines. The diff scrolls on its own. In a wide, short pane the diff is beside the list. | `changes-pane` |
+| Nothing changed note | The line above an empty list. When Git shows changed files it says how many, from before this chat. In a folder without Git it says that the folder is not tracked by Git. | `changes-git-note` |
 | Open Git | The link in that line. It shows the Git tab. | `changes-open-git` |
 | Reverted note | One line above the list after a revert, with the link to the Recycle Bin. | `changes-reverted-note` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
 | Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
-| Why a button is dimmed | The line above the buttons that says what to do first. | `changes-reason` |
+| Why a button is dimmed | The line above the buttons that says what to do first: "Nothing to revert yet." while the list is empty, "Select a changed file first." when nothing is selected. | `changes-reason` |
+| Undone change | The words in place of the diff when you select a reverted row: "This change was undone. Restore it from the Recycle Bin." | `changes-undone` |
+| Undone change text | The sentence itself. | `changes-undone-text` |
+| Restore | The button below that sentence. It opens the Recycle Bin on that file. | `changes-restore` |
 | Path | Shows the active file. | `code-status-path` |
 | Agent editing | Shows that the agent writes. | `code-status-editing` |
 | Caret | Shows the line and the column. | `code-status-caret` |
+| Selected lines | Shows which lines are selected, for example "Selected 1-2". | `code-status-selected` |
+| Select lines hint | "Select some lines first." It shows while no line is selected, which is why Ask about selection is dimmed. | `code-status-select-hint` |
+| Line number | The number at the start of a line. Click it to select the line, or drag over several numbers to select those lines. | `code-line-number` |
 | Branch | Shows the git branch. | `code-git-branch` |
 
 ### Menu Bar and Context Menu

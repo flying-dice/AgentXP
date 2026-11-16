@@ -2,11 +2,12 @@
   /**
    * The Changes pane: the files an agent changed, with a preview of the selected change and Revert. It is the one
    * place to review changes: the chat window and the Code window show this same pane (UX-40).
-   * The list shows the whole file name beside its counts (UX-111, UX-116); it takes at least half of the pane and room for six
-   * rows (UX-151), and a bar between the list and the diff remembers where the user put it. Reverted files stay in the list
-   * (UX-117); the notice about them is one line above the list, so it never takes height from the list.
+   * The list shows the whole file name beside its counts (UX-111, UX-116). It takes only the height of its rows (two at least, 35% of the
+   * pane at most) so the diff has the rest, about 12 lines (UX-184); a bar between them remembers where the user put it. Reverted files
+   * stay in the list (UX-117); selecting one says where the change is and offers "Restore..." (UX-185). The notice about them is one
+   * line above the list, so it never takes height from the list.
    */
-  import type { FileChangeDto } from '@shared/models'
+  import type { FileChangeDto, Id } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
@@ -15,9 +16,10 @@
 import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../../apps/shared/ContextMenu.svelte'
   import { changeRowItems } from '../changes/changeMenu'
+  import { CHANGES_EMPTY, UNDONE_TEXT, gitNote, revertReasonText } from '../changes/changesText'
   import { localStore } from '../../desktop/chatPane'
   import { REVERTED_KIND, REVERTED_LABEL, REVERTED_NOTE, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
-  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
+  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, MIN_ROWS, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
 
   interface Props {
     changes: FileChangeDto[]
@@ -30,15 +32,17 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     /** Asks the user and reverts (the caller owns the question and the write). Resolves when it is done or declined. */
     onrevert?: (change: FileChangeDto) => void | Promise<void>
     onopeneditor?: (change: FileChangeDto) => void
-    /** The link under a reverted row; without it the link is not shown. */
-    onopenrecyclebin?: () => void
+    /** The link above the list and the "Restore..." button of a reverted row (with that row's Recycle Bin entry); without it they are not shown. */
+    onopenrecyclebin?: (entryId?: Id) => void
     /** How many files Git lists as changed. When the agent changed nothing but this is more than 0, the pane says so (UX-152). */
     gitCount?: number
+    /** Whether the folder is under Git; false adds the line "This folder is not tracked by Git". Undefined: not known, no line. */
+    gitTracked?: boolean
     /** The link beside that sentence; without it the link is not shown. */
     onopengit?: () => void
   }
 
-  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin, gitCount = 0, onopengit }: Props = $props()
+  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin, gitCount = 0, gitTracked, onopengit }: Props = $props()
   const uid = $props.id()
   const reasonId = `${uid}-reason`
 
@@ -72,19 +76,24 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     }))
   ])
   const selected = $derived(changes.find((c) => c.id === selectedId) ?? null)
+  // A reverted row can be selected too: the pane then says where the change is (UX-185). The pick is the Recycle Bin entry's id.
+  let revertedPick = $state<number | null>(null)
+  const pickedReverted = $derived(selected ? null : (reverted.find((c) => c.id === revertedPick) ?? null))
 
-  // The list opens with at least half of the room and six rows; the diff has the rest. A height the user chose for this window wins.
+  // The list opens with the height of its rows; the diff has the rest. A height the user chose for this window wins.
   // svelte-ignore state_referenced_locally
   const chosenHeight = readListSize(localStore(), layoutKey)
   let splitHeight = $state(0)
   let listHeight = $state(chosenHeight ?? 0)
   let autoHeight = 0
+  let autoRows = 0
   $effect(() => {
     if (chosenHeight !== null || splitHeight <= 0) return
     // Only the room and the number of rows move it; the user's drag (a value other than the automatic one) is kept after that.
     const next = defaultListHeight(rows.length, splitHeight)
-    // It grows with the room and never shrinks by itself: a notice above the list takes height from the diff, not from the list.
-    if (listHeight === 0 || (listHeight === autoHeight && next > listHeight)) listHeight = autoHeight = next
+    // It grows with the room and with the rows, and shrinks only when rows go: a notice above the list takes height from the diff, not from the list.
+    if (listHeight === 0 || (listHeight === autoHeight && (next > listHeight || rows.length < autoRows))) listHeight = autoHeight = next
+    autoRows = rows.length
   })
 
   // A wide, short pane (the Code window's dock) puts the diff beside the list instead of under it, so the diff keeps its height.
@@ -95,16 +104,22 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   let listWidth = $state(readListSize(localStore(), `${layoutKey}-beside`) ?? 260)
 
   // Why a button is grey, in words (the tooltip and the line beside the buttons).
-  const revertReason = $derived(selected ? null : 'Select a changed file first.')
+  const revertReason = $derived(revertReasonText(changes.length > 0, selected !== null))
   const editorReason = $derived(!selected ? 'Select a changed file first.' : selected.kind === 'deleted' ? 'A deleted file cannot be opened.' : null)
-  // Git lists files but the agent changed none: say so, with the way to Git (UX-152).
-  const gitOnly = $derived(changes.length === 0 && reverted.length === 0 && gitCount > 0)
-  const gitSentence = $derived(`The agent changed nothing in this chat. Git shows ${gitCount} changed ${gitCount === 1 ? 'file' : 'files'}.`)
-  const reason = $derived(changes.length === 0 ? null : (revertReason ?? editorReason))
+  // The agent changed none: say so, then what Git knows or why there is nothing more (UX-152, UX-187).
+  const nothingChanged = $derived(changes.length === 0 && reverted.length === 0)
+  const note = $derived(nothingChanged ? gitNote(gitCount, gitTracked) : null)
+  const reason = $derived(revertReason ?? editorReason)
 
   // The right-click menu of a row: Revert on a changed row, "Restore from the Recycle Bin" on a reverted one (UX-169).
   const menu = new ContextMenu()
-  const rowItems = (id: string) => changeRowItems({ change: id.startsWith('reverted-') ? null : (changes.find((c) => String(c.id) === id) ?? null), onrevert, onopeneditor, onopenrecyclebin })
+  const rowItems = (id: string) =>
+    changeRowItems({
+      change: id.startsWith('reverted-') ? null : (changes.find((c) => String(c.id) === id) ?? null),
+      onrevert,
+      onopeneditor,
+      onopenrecyclebin: onopenrecyclebin ? () => onopenrecyclebin(id.startsWith('reverted-') ? Number(id.slice('reverted-'.length)) : undefined) : undefined
+    })
 
   async function revert(): Promise<void> {
     if (selected) await onrevert?.(selected)
@@ -117,11 +132,15 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
       {columns}
       {rows}
       testid="changes-list"
-      selected={selected ? [String(selected.id)] : []}
-      emptyText={gitOnly ? 'The agent changed nothing in this chat.' : 'No pending changes in this chat.'}
+      selected={selected ? [String(selected.id)] : pickedReverted ? [`reverted-${pickedReverted.id}`] : []}
+      emptyText={CHANGES_EMPTY}
       aria-label="Changed files"
       oncontextmenu={(row, event) => menu.show(event, rowItems(row.id))}
-      onselect={(ids) => (selectedId = ids[0] && !ids[0].startsWith('reverted-') ? Number(ids[0]) : null)}
+      onselect={(ids) => {
+        const picked = ids[0]?.startsWith('reverted-') ?? false
+        revertedPick = picked ? Number(ids[0].slice('reverted-'.length)) : null
+        selectedId = ids[0] && !picked ? Number(ids[0]) : null
+      }}
     >
       {#snippet cell(row, col)}
         {#if col.key === 'file'}
@@ -145,6 +164,11 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
       {#key selected.id}
         <DiffViewer oldText={selected.originalText ?? ''} newText={selected.currentText ?? ''} fileName={selected.path} toolbar={false} wrap label="Diff of {selected.path}" />
       {/key}
+    {:else if pickedReverted}
+      <div class="hint undone" data-testid="changes-undone">
+        <span data-testid="changes-undone-text">{UNDONE_TEXT}</span>
+        {#if onopenrecyclebin}<Button data-testid="changes-restore" onclick={() => onopenrecyclebin?.(pickedReverted.id)}>Restore...</Button>{/if}
+      </div>
     {:else}
       <div class="hint">Select a changed file to view its diff.</div>
     {/if}
@@ -152,20 +176,22 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
 {/snippet}
 
 <div class="changes" data-testid="changes-pane" role="presentation" onkeydown={(e) => menu.key(e, () => rowItems(selected ? String(selected.id) : (reverted[0] ? `reverted-${reverted[0].id}` : '')))} bind:clientWidth={paneWidth} bind:clientHeight={paneHeight}>
-  {#if gitOnly}
+  {#if note?.kind === 'files'}
     <div class="note" data-testid="changes-git-note">
-      {gitSentence}
+      {note.text}
       {#if onopengit}<button type="button" class="link" data-testid="changes-open-git" onclick={onopengit}>Open Git</button>{/if}
     </div>
+  {:else if note}
+    <div class="note" data-testid="changes-git-note">{note.text}</div>
   {/if}
   {#if reverted.length > 0 && onopenrecyclebin}
     <div class="note line" data-testid="changes-reverted-note">
       <span class="text">{REVERTED_NOTE}</span>
-      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open Recycle Bin</button>
+      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={() => onopenrecyclebin?.()}>Open Recycle Bin</button>
     </div>
   {/if}
-  <!-- The split never gets less than its list and the diff's least height: the pane scrolls as a whole instead (UX-151). -->
-  <div class="split" class:beside bind:clientHeight={splitHeight} style:min-height={beside ? undefined : `${Math.max(listHeight, listHeightFor(6)) + SPLITTER + DIFF_MIN_HEIGHT}px`}>
+  <!-- The split never gets less than its list and room for about 12 diff lines: the pane scrolls as a whole instead (UX-151, UX-184). -->
+  <div class="split" class:beside bind:clientHeight={splitHeight} style:min-height={beside ? undefined : `${Math.max(listHeight, listHeightFor(MIN_ROWS)) + SPLITTER + DIFF_WANTED_HEIGHT}px`}>
     {#if beside}
       <SplitContainer orientation="vertical" bind:splitterDistance={listWidth} panel1MinSize={LIST_MIN_WIDTH} panel2MinSize={DIFF_MIN_WIDTH} fixedPanel="panel2" splitterLabel="Resize the list of changed files" onchange={(w) => writeListSize(localStore(), `${layoutKey}-beside`, w)} panel1={listPanel} panel2={diffPanel} />
     {:else if listHeight > 0}
@@ -304,6 +330,13 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   .hint {
     padding: 8px;
     color: var(--w7-text-muted);
+  }
+  .hint.undone {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--w7-text);
   }
   .bottom {
     flex: none;

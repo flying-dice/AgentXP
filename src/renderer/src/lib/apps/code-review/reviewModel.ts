@@ -165,21 +165,25 @@ export const addCommentButtonTitle = (expanded: boolean, lineSelected: boolean):
 
 const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
 
-/** "Changes requested. 2 comments, 1 is a blocker.": the verdict bar says every number in digits (UX-77). */
+/**
+ * The one sentence of the verdict banner: "Changes requested." and, when comments are blockers, "1 comment is a blocker." The
+ * number of comments is not in it: the link "2 comments" at its end says it, so the banner never says the same thing twice (UX-191).
+ */
 export function verdictLine(verdict: ReviewVerdict, comments: readonly Pick<ReviewCommentDto, 'parentId' | 'severity'>[]): string {
-  const roots = comments.filter((c) => c.parentId === null)
-  if (roots.length === 0) return `${VERDICT_LABELS[verdict]}.`
-  const blockers = roots.filter((c) => c.severity === 'blocker').length
-  const tail = blockers === 0 ? '' : blockers === 1 ? ', 1 is a blocker' : `, ${blockers} are blockers`
-  return `${VERDICT_LABELS[verdict]}. ${plural(roots.length, 'comment', 'comments')}${tail}.`
+  const blockers = comments.filter((c) => c.parentId === null && c.severity === 'blocker').length
+  const tail = blockers === 0 ? '' : blockers === 1 ? ' 1 comment is a blocker.' : ` ${blockers} comments are blockers.`
+  return `${VERDICT_LABELS[verdict]}.${tail}`
 }
 
 /**
- * The status bar: "2 files changed", and "Showing 1 of 2 changed files" when one of several files is open (UX-77, UX-131,
- * UX-167: the longer sentence confused readers twice). With a single changed file there is nothing to explain.
+ * The status bar: "2 files changed", and "Showing redirect.ts (1 of 2 changed files)" when one of several files is open (UX-77,
+ * UX-131, UX-167, UX-191: the file's name says which one). With a single changed file there is nothing to explain.
+ * `path` is the open file; its name (not the folder) goes in the label.
  */
-export const filesStatusLabel = (total: number, shown: number): string =>
-  shown > 0 && total > shown ? `Showing ${shown} of ${total} changed files` : `${plural(total, 'file', 'files')} changed`
+export const filesStatusLabel = (total: number, shown: number, path?: string): string => {
+  const name = path ? (path.split(/[\\/]/).filter(Boolean).pop() ?? path) : ''
+  return shown > 0 && total > shown ? (name ? `Showing ${name} (${shown} of ${total} changed files)` : `Showing ${shown} of ${total} changed files`) : `${plural(total, 'file', 'files')} changed`
+}
 
 export interface StatusField {
   key: string

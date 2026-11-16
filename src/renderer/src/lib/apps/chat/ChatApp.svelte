@@ -12,6 +12,7 @@
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
+  import { openRecycleBin } from '../../app/changes/openRecycleBin'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { undoRevertItem } from '../../app/changes/changeMenu'
   import TasksPane from '../../app/shell/TasksPane.svelte'
@@ -375,7 +376,7 @@
                 layoutKey={`chat-${sessionId}`}
                 bind:selectedId={selectedChangeId}
                 onrevert={(c) => revert(c)}
-                onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })}
+                onopenrecyclebin={(id) => void openRecycleBin(host, id)}
                 onopeneditor={(c) => folder && void host.openApp({ app: 'code', path: c.path })}
               />
             {:else}

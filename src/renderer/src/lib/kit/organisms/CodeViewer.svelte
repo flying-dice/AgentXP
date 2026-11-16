@@ -136,7 +136,7 @@
               {/if}
             </span>
           {/if}
-          <span class="no" class:marked={gutterMarks !== undefined} aria-hidden="true">{no}</span>
+          <span class="no" class:marked={gutterMarks !== undefined} data-testid="code-line-number" aria-hidden="true">{no}</span>
           <code class="code"
             >{#each line as t, j (j)}<span
                 style:color={t.color}
