@@ -45,6 +45,11 @@ export interface FolderPicker {
   pickFolder(): Promise<string | null>
 }
 
+/** Native "choose files" dialog. Resolves to the chosen absolute paths (empty when cancelled). */
+export interface FilePicker {
+  pickFiles(): Promise<string[]>
+}
+
 /** Native "save as" dialog plus writing. Resolves to the saved path or null when cancelled. */
 export interface TextFileSaver {
   saveText(defaultName: string, content: string): Promise<string | null>
@@ -59,6 +64,8 @@ export interface FolderBrowser {
   /** One directory level, folders first, `.git` and `node_modules` ignored. */
   list(root: string, relativePath: string): Promise<FileNodeDto[]>
   readText(root: string, relativePath: string): Promise<string>
+  /** Current branch (short commit when detached) from `.git/HEAD`; null when `root` is not a git repository. */
+  gitBranch(root: string): Promise<string | null>
 }
 
 /** Creates sandboxed file access for a folder and removes files inside it. */

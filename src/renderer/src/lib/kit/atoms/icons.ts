@@ -9,7 +9,7 @@ export const iconNames = [
   'shield', 'terminal', 'search', 'edit', 'check', 'close', 'minimize', 'maximize', 'restore',
   'chevron-down', 'chevron-right', 'chevron-up', 'chevron-left', 'plus', 'minus', 'refresh',
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
-  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help'
+  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agent7'
 ] as const
 
 export type IconName = (typeof iconNames)[number]
@@ -263,6 +263,14 @@ const markup: Record<IconName, string> = {
     rg('c', '#fff6c0', '#f0b81c'),
     '<circle cx="8" cy="8" r="6.8" fill="url(#~c)" stroke="#a87a0c"/>' +
       '<path d="M5.8 6.2a2.2 2.2 0 114 1c-.8.7-1.8 1-1.8 2.3" fill="none" stroke="#4a3a00" stroke-width="1.7"/><circle cx="8" cy="12" r="1.1" fill="#4a3a00"/>'
+  ),
+  agent7: defs(
+    vg('b', '#7cc3ff', '#3f9bf0', '#2f86e0') + vg('c', '#8fe9ff', '#3cc8ee', '#22b8e0') + vg('a', '#ffe08a', '#ffb84d', '#f6a93a'),
+    '<g transform="scale(.25)" stroke-width="3" stroke-linejoin="round">' +
+      '<rect x="4" y="4" width="26" height="26" rx="3" fill="url(#~b)" stroke="#124a8c"/>' +
+      '<rect x="34" y="4" width="26" height="26" rx="3" fill="url(#~c)" stroke="#0b6a8a"/>' +
+      '<rect x="34" y="34" width="26" height="26" rx="3" fill="url(#~a)" stroke="#9a5a06"/></g>' +
+      '<g fill="#fff" opacity=".4"><rect x="1.5" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="9" width="5.5" height="2.6" rx=".5"/></g>'
   )
 }
 

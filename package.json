@@ -49,5 +49,9 @@
     "typescript": "5.9.3",
     "vite": "7.3.8",
     "vitest": "5.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flying-dice/AgentXP.git"
   }
 }

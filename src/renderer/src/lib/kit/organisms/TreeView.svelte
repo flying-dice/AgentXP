@@ -183,6 +183,8 @@
       selected={row.node.id === selected}
       focused={focused && row.node.id === active?.node.id}
       disabled={row.node.disabled}
+      bold={row.node.bold}
+      badge={row.node.badge}
       loading={loading.has(row.node.id)}
       lines={showLines ? { ancestors: row.ancestors, last: row.last } : undefined}
       ariaSetSize={row.setSize}

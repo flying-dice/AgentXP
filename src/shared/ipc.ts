@@ -50,6 +50,22 @@ export interface AguiApi {
   onEvent(runId: string, listener: (event: BaseEvent) => void): () => void
 }
 
+/** Frame state of the main window, pushed on maximize / unmaximize / focus / blur. */
+export interface WindowStateDto {
+  maximized: boolean
+  focused: boolean
+}
+
+/** Window chrome control for the frameless main window. */
+export interface WindowApi {
+  minimize(): Promise<void>
+  toggleMaximize(): Promise<void>
+  close(): Promise<void>
+  /** Current state (the first push may predate the renderer's listener). */
+  getState(): Promise<WindowStateDto>
+  onStateChanged(listener: (state: WindowStateDto) => void): () => void
+}
+
 export interface Agent7Api {
   agents: {
     list(): Promise<AgentDto[]>
@@ -67,6 +83,8 @@ export interface Agent7Api {
     /** Lists one directory level, sorted folders first; ignores .git and node_modules. */
     readDir(folderId: Id, relativePath: string): Promise<FileNodeDto[]>
     readFile(folderId: Id, relativePath: string): Promise<string>
+    /** Current git branch (or short commit when detached) read from `.git/HEAD`; null when the folder is not a repository. */
+    gitBranch(folderId: Id): Promise<string | null>
   }
   sessions: {
     list(folderId?: Id): Promise<SessionDto[]>
@@ -95,6 +113,15 @@ export interface Agent7Api {
   shell: {
     openPath(path: string): Promise<void>
   }
+  dialogs: {
+    /** Shows the native open-file dialog (multi-select); resolves to the chosen absolute paths, empty when cancelled. */
+    pickFiles(): Promise<string[]>
+  }
+  app: {
+    /** The application version (package.json). */
+    version(): Promise<string>
+  }
+  window: WindowApi
   agui: AguiApi
   on<K extends keyof Agent7Events>(event: K, listener: (payload: Agent7Events[K]) => void): () => void
 }

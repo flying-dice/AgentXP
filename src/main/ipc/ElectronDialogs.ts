@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises'
 import { BrowserWindow, dialog, shell } from 'electron'
-import type { FolderPicker, PathOpener, TextFileSaver } from '../application/ports'
+import type { FilePicker, FolderPicker, PathOpener, TextFileSaver } from '../application/ports'
 
 const focusedWindow = (): BrowserWindow | undefined => BrowserWindow.getFocusedWindow() ?? undefined
 
@@ -10,6 +10,15 @@ export class ElectronFolderPicker implements FolderPicker {
     const win = focusedWindow()
     const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
     return result.canceled ? null : (result.filePaths[0] ?? null)
+  }
+}
+
+export class ElectronFilePicker implements FilePicker {
+  async pickFiles(): Promise<string[]> {
+    const options = { properties: ['openFile' as const, 'multiSelections' as const] }
+    const win = focusedWindow()
+    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
+    return result.canceled ? [] : result.filePaths
   }
 }
 

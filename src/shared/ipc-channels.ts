@@ -4,7 +4,7 @@ import type { Agent7Api, Agent7EventName } from './ipc'
  * The request/response part of the API handled generically (everything except the `on`
  * subscription and `agui`, whose streaming handlers need the sending window).
  */
-export type InvokeApi = Omit<Agent7Api, 'on' | 'agui'>
+export type InvokeApi = Omit<Agent7Api, 'on' | 'agui' | 'window'>
 
 /** AG-UI transport channels. */
 export const AGUI_CHANNELS = {
@@ -14,6 +14,16 @@ export const AGUI_CHANNELS = {
   abort: 'agui.abort',
   /** main -> renderer: `AguiEventMessage`. */
   event: 'agui.event'
+} as const
+
+/** Window chrome channels (handled per sending window, not part of `InvokeApi`). */
+export const WINDOW_CHANNELS = {
+  minimize: 'window.minimize',
+  toggleMaximize: 'window.toggleMaximize',
+  close: 'window.close',
+  getState: 'window.getState',
+  /** main -> renderer: `WindowStateDto`. */
+  state: 'window.state'
 } as const
 
 /** Push events that reach the renderer (the type forces this list to match `Agent7Events`). */
@@ -29,7 +39,7 @@ export const isRendererEvent = (name: string): name is Agent7EventName => name i
 /** Every invoke method, as `true` flags. The type forces this list to match `Agent7Api` exactly. */
 const INVOKE_METHODS = {
   agents: { list: true, create: true, update: true, remove: true, setDefault: true },
-  folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true },
+  folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true },
   sessions: {
     list: true,
     get: true,
@@ -50,8 +60,10 @@ const INVOKE_METHODS = {
     clearTranscript: true,
     exportTranscript: true
   },
+  app: { version: true },
   a2ui: { dispatch: true },
-  shell: { openPath: true }
+  shell: { openPath: true },
+  dialogs: { pickFiles: true }
 } as const satisfies { [G in keyof InvokeApi]: { [M in keyof InvokeApi[G]]: true } }
 
 export interface InvokeChannel {

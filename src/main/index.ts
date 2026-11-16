@@ -5,7 +5,8 @@ import { composeApp, type AppServices } from './compose'
 import { openDatabase } from './infrastructure/db/open-database'
 import { registerAguiHandlers } from './ipc/registerAguiHandlers'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
-import { ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from './ipc/ElectronDialogs'
+import { publishWindowState, registerWindowHandlers } from './ipc/registerWindowHandlers'
+import { ElectronFilePicker, ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from './ipc/ElectronDialogs'
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
@@ -22,12 +23,16 @@ function createMainWindow(): BrowserWindow {
     minHeight: 600,
     show: false,
     title: 'Agent7',
+    frame: false,
+    backgroundColor: '#1e5aa8',
+    icon: join(__dirname, '../../resources/icon-256.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false
     }
   })
+  publishWindowState(window)
   window.on('ready-to-show', () => window.show())
   window.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)
@@ -48,16 +53,20 @@ async function bootstrap(): Promise<() => Promise<void>> {
     db,
     publisher: new ElectronEventPublisher(),
     picker: new ElectronFolderPicker(),
+    filePicker: new ElectronFilePicker(),
     saver: new ElectronTextFileSaver(),
     opener: new ElectronPathOpener(),
+    appVersion: app.getVersion(),
     a2uiMcp: { electronPath: process.execPath, scriptPath: join(__dirname, 'a2ui-mcp.js') }
   })
   await services.start()
   const unregister = registerIpcHandlers(services.api)
   const unregisterAgui = registerAguiHandlers(services.agui, { validate: is.dev })
+  const unregisterWindow = registerWindowHandlers()
   return async () => {
     unregister()
     unregisterAgui()
+    unregisterWindow()
     await services.shutdown()
     db.close()
   }

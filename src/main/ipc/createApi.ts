@@ -1,4 +1,5 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
+import type { FilePicker } from '../application/ports'
 import type { A2uiService } from '../application/A2uiService'
 import type { AgentService } from '../application/AgentService'
 import type { ChangeReverter } from '../application/ChangeReverter'
@@ -19,6 +20,8 @@ export interface ApiServices {
   exporter: TranscriptExporter
   a2ui: A2uiService
   shell: ShellService
+  files: FilePicker
+  appVersion: string
 }
 
 /** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
@@ -37,7 +40,11 @@ export function createApi(s: ApiServices): InvokeApi {
       add: async (path) => s.folders.add(path),
       remove: async (id) => s.folders.remove(id),
       readDir: (folderId, relativePath) => s.folders.readDir(folderId, relativePath),
-      readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath)
+      readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath),
+      gitBranch: (folderId) => s.folders.gitBranch(folderId)
+    },
+    app: {
+      version: async () => s.appVersion
     },
     sessions: {
       list: async (folderId) => s.queries.list(folderId),
@@ -60,6 +67,7 @@ export function createApi(s: ApiServices): InvokeApi {
       exportTranscript: (id) => s.exporter.export(id)
     },
     a2ui: { dispatch: (event) => s.a2ui.dispatch(event) },
-    shell: { openPath: (path) => s.shell.openPath(path) }
+    shell: { openPath: (path) => s.shell.openPath(path) },
+    dialogs: { pickFiles: () => s.files.pickFiles() }
   }
 }

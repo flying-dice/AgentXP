@@ -10,6 +10,10 @@ export interface TreeNodeData {
   /** Node has children that are not loaded yet; `onexpand` provides them. */
   hasChildren?: boolean
   disabled?: boolean
+  /** Bold label (the active item). */
+  bold?: boolean
+  /** Small coloured suffix after the label (e.g. a modified marker). */
+  badge?: string
 }
 
 export interface FlatNode {

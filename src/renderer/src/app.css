@@ -8,6 +8,11 @@ body,
   height: 100%;
 }
 
+#app {
+  position: relative;
+  overflow: hidden;
+}
+
 body {
   font: var(--w7-font);
   color: var(--w7-text);

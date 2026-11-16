@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Agent7Api, Agent7EventName, Agent7Events, AguiApi, AguiEventMessage } from '../shared/ipc'
-import { AGUI_CHANNELS, INVOKE_CHANNELS, readableIpcError, type InvokeApi } from '../shared/ipc-channels'
+import type { Agent7Api, Agent7EventName, Agent7Events, AguiApi, AguiEventMessage, WindowApi, WindowStateDto } from '../shared/ipc'
+import { AGUI_CHANNELS, INVOKE_CHANNELS, WINDOW_CHANNELS, readableIpcError, type InvokeApi } from '../shared/ipc-channels'
 
 type Invoker = (...args: unknown[]) => Promise<unknown>
 
@@ -50,6 +50,20 @@ const agui: AguiApi = {
   }
 }
 
-const api: Agent7Api = { ...buildInvokeApi(), agui, on }
+const windowApi: WindowApi = {
+  minimize: async () => void (await invoke(WINDOW_CHANNELS.minimize)()),
+  toggleMaximize: async () => void (await invoke(WINDOW_CHANNELS.toggleMaximize)()),
+  close: async () => void (await invoke(WINDOW_CHANNELS.close)()),
+  getState: async () => (await invoke(WINDOW_CHANNELS.getState)()) as WindowStateDto,
+  onStateChanged: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, state: WindowStateDto): void => listener(state)
+    ipcRenderer.on(WINDOW_CHANNELS.state, handler)
+    return () => {
+      ipcRenderer.removeListener(WINDOW_CHANNELS.state, handler)
+    }
+  }
+}
+
+const api: Agent7Api = { ...buildInvokeApi(), window: windowApi, agui, on }
 
 contextBridge.exposeInMainWorld('agent7', api)

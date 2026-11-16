@@ -48,6 +48,10 @@ export class FolderService {
     return this.browser.readText(this.require(folderId).path, relativePath)
   }
 
+  gitBranch(folderId: Id): Promise<string | null> {
+    return this.browser.gitBranch(this.require(folderId).path)
+  }
+
   private publishChanged(): void {
     this.events.publish('folders.changed', this.folders.list())
   }

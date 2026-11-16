@@ -14,6 +14,7 @@ import type {
   A2uiMcpConfigFactory,
   AgentConnector,
   EventPublisher,
+  FilePicker,
   FolderPicker,
   PathOpener,
   TextFileSaver
@@ -49,6 +50,10 @@ export interface ComposeOptions {
   picker: FolderPicker
   saver: TextFileSaver
   opener: PathOpener
+  /** Native multi-file picker for attachments; defaults to "nothing picked". */
+  filePicker?: FilePicker
+  /** Reported by `app.version()`. */
+  appVersion?: string
   /** How the A2UI MCP server is launched by agents. */
   a2uiMcp: { electronPath: string; scriptPath: string }
   /** Defaults to spawning real ACP agent processes. */
@@ -161,7 +166,9 @@ export function composeApp(options: ComposeOptions): AppServices {
     reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder),
     exporter: new TranscriptExporter(repos.sessions, repos.transcripts, options.saver),
     a2ui,
-    shell: new ShellService(options.opener)
+    shell: new ShellService(options.opener),
+    files: options.filePicker ?? { pickFiles: async () => [] },
+    appVersion: options.appVersion ?? '0.0.0'
   })
 
   const bridge = a2uiBridge

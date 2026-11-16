@@ -18,6 +18,8 @@
     /** Children are being loaded. */
     loading?: boolean
     bold?: boolean
+    /** Suffix after the label. */
+    badge?: string
     /** Dotted connector lines (ShowLines): per-ancestor "line continues" flags and last-sibling flag. */
     lines?: { ancestors: boolean[]; last: boolean }
     id?: string
@@ -40,6 +42,7 @@
     disabled = false,
     loading = false,
     bold = false,
+    badge,
     lines,
     id,
     ariaSetSize,
@@ -87,6 +90,7 @@
   <span class="tlabel" class:selected class:focused class:disabled class:bold {onclick} {ondblclick} {oncontextmenu}>
     {#if icon}<Icon name={icon} />{/if}
     <span class="text">{text}</span>
+    {#if badge}<span class="badge">{badge}</span>{/if}
   </span>
 </div>
 
@@ -167,5 +171,10 @@
   }
   .tlabel.disabled {
     color: var(--w7-text-disabled);
+  }
+  .badge {
+    margin-left: 4px;
+    color: #8a4b00;
+    font-weight: 700;
   }
 </style>

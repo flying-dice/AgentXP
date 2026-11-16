@@ -7,6 +7,8 @@
     indeterminate?: boolean
     label?: string
     disabled?: boolean
+    /** Shows the state but cannot be changed (text stays black, unlike `disabled`). */
+    readonly?: boolean
     name?: string
     class?: string
     onchange?: (checked: boolean) => void
@@ -18,6 +20,7 @@
     indeterminate = $bindable(false),
     label,
     disabled = false,
+    readonly = false,
     name,
     class: className = '',
     onchange,
@@ -25,19 +28,21 @@
   }: Props = $props()
 
   function toggle(): void {
-    if (disabled) return
+    if (disabled || readonly) return
     checked = indeterminate ? true : !checked
     indeterminate = false
     onchange?.(checked)
   }
 </script>
 
-<label class="xp-check {className}" class:disabled>
+<label class="xp-check {className}" class:disabled class:readonly>
   <button
     type="button"
     class="box"
     role="checkbox"
     aria-checked={indeterminate ? 'mixed' : checked}
+    aria-readonly={readonly || undefined}
+    tabindex={readonly ? -1 : undefined}
     {disabled}
     {name}
     onclick={toggle}
@@ -85,11 +90,11 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     outline: none;
   }
-  .xp-check:hover:not(.disabled) .box {
+  .xp-check:hover:not(.disabled):not(.readonly) .box {
     border-color: var(--w7-btn-hover-border);
     background: linear-gradient(135deg, #c4e5f6 0%, #e4f4fc 50%, #fff 100%);
   }
-  .xp-check:active:not(.disabled) .box {
+  .xp-check:active:not(.disabled):not(.readonly) .box {
     border-color: var(--w7-btn-active-border);
     background: linear-gradient(135deg, #8cc8e8 0%, #c4e5f6 100%);
   }
