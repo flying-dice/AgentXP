@@ -16,10 +16,10 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
-  import { HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchSections, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
+  import { CONTROL_PREFIX, HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchSections, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
   import { escapeHtml, renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
-  import { collapseContents, scrollTopFor } from './contents'
+  import { collapseContents, scrollTopFor, tailPadding } from './contents'
 
   let { window: win, host, focused = false }: AppProps<'help'> = $props()
   const topics: HelpTopic[] = helpTopics
@@ -38,6 +38,10 @@
   let pendingSection = $state<string | null>(opening.section || null)
   let searchBox = $state<HTMLInputElement | HTMLTextAreaElement | null>(null)
   let flashTimer: ReturnType<typeof setTimeout> | undefined
+  let settle: ResizeObserver | undefined
+  let settleTimer: ReturnType<typeof setTimeout> | undefined
+  /** How long after a jump the target is kept in place while the window is laid out (milliseconds). */
+  const SETTLE_MS = 1000
   /** The heading the last jump went to: the right half of the status bar names it (the left half names the topic). */
   let sectionName = $state('')
 
@@ -61,25 +65,68 @@
     history = visit(history, name)
   }
 
-  /** Scrolls to a heading of the article and marks it; the matched line under it is highlighted for 2 seconds. */
+  /** The heading of the chapter or section that a table row sits under: the nearest heading before its table. */
+  function headingOf(row: HTMLElement): HTMLElement | null {
+    let node: Element | null = row.closest('table')
+    while (node) {
+      node = node.previousElementSibling
+      if (node && /^H[1-4]$/.test(node.tagName) && node.id) return node as HTMLElement
+    }
+    return null
+  }
+
+  /** The table row of a control (F1 on it): the row of the manual's Controls Reference that has its name in the first column. */
+  function controlRow(name: string): HTMLElement | null {
+    const cell = [...(article?.querySelectorAll('td:first-child') ?? [])].find((c) => c.textContent?.trim() === name)
+    return cell?.closest('tr') ?? null
+  }
+
+  /** Scrolls to a heading (or the table row of a control) of the article and marks it; the matched line under it is highlighted for 2 seconds. */
   function goToSection(wanted: string): void {
     if (!article) return
     for (const old of article.querySelectorAll('.target, .flash')) {
       old.classList.remove('target', 'flash')
       old.removeAttribute('data-testid')
     }
+    const row = wanted.startsWith(CONTROL_PREFIX) ? controlRow(wanted.slice(CONTROL_PREFIX.length)) : null
     const ids = [...article.querySelectorAll<HTMLElement>('h1[id], h2[id], h3[id], h4[id]')].map((h) => h.id)
-    const id = resolveSection(ids, wanted)
-    const heading = id ? article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) : null
+    const parent = row ? headingOf(row) : null
+    const id = row ? (parent?.id ?? null) : resolveSection(ids, wanted)
+    const heading = row ?? (id ? article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) : null)
     if (!heading) return
     heading.classList.add('target')
     heading.setAttribute('data-testid', 'help-target')
-    // The contents shrink to this chapter first, so the heading lands where it will stay; then it goes 8 px below the top (UX-132, UX-183).
+    // The contents shrink to this chapter first, so the heading lands where it will stay; then it goes 24 px below the top (UX-132, UX-205).
     collapseContents(article, id)
-    const top = heading.getBoundingClientRect().top - article.getBoundingClientRect().top + article.scrollTop
-    article.scrollTop = scrollTopFor(top)
-    sectionName = heading.textContent?.trim() ?? ''
+    scrollToTarget(heading)
+    keepInPlace(heading)
+    sectionName = (row ? (parent?.textContent ?? '') : heading.textContent)?.trim() ?? ''
     flashMatch(heading)
+  }
+
+  /** Scrolls the article so that `heading` has 24 px above it. A heading near the end of a long topic gets room under the text first, so it can reach the top. */
+  function scrollToTarget(heading: HTMLElement): void {
+    if (!article) return
+    const top = heading.getBoundingClientRect().top - article.getBoundingClientRect().top + article.scrollTop
+    const tail = article.querySelector<HTMLElement>('.w7-help-md')
+    if (tail) {
+      const own = parseFloat(tail.style.paddingBottom) || 0
+      tail.style.paddingBottom = `${tailPadding(top, article.scrollHeight, article.clientHeight, own)}px`
+    }
+    article.scrollTop = scrollTopFor(top)
+  }
+
+  /**
+   * The Help window is placed and sized just after it opens, and the text reflows when its width changes. For a moment after a jump the
+   * article keeps the target where the jump put it (UX-205), so a heading is not left half cut by a reflow.
+   */
+  function keepInPlace(heading: HTMLElement): void {
+    settle?.disconnect()
+    clearTimeout(settleTimer)
+    if (!article || typeof ResizeObserver === 'undefined') return
+    settle = new ResizeObserver(() => heading.isConnected && scrollToTarget(heading))
+    settle.observe(article)
+    settleTimer = setTimeout(() => settle?.disconnect(), SETTLE_MS)
   }
 
   /** The first marked word after the heading: its paragraph, item or cell flashes. */
@@ -111,7 +158,11 @@
   $effect(() => {
     if (focused && searchBox && !untrack(() => ctx.open)) searchBox.focus()
   })
-  $effect(() => () => clearTimeout(flashTimer))
+  $effect(() => () => {
+    clearTimeout(flashTimer)
+    clearTimeout(settleTimer)
+    settle?.disconnect()
+  })
   // A new article starts at the top, or at the section and the first marked word of a search hit.
   $effect(() => {
     void html

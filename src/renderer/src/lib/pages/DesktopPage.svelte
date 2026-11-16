@@ -36,7 +36,8 @@
   import { taskbarItems } from '../desktop/windowOrder'
   import { taskbarMenuItems } from '../desktop/taskbarMenu'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
-  import { HOME_TOPIC, topicForApp } from '../apps/help/helpModel'
+  import { helpTopicFor } from '../apps/help/helpFocus'
+  import { HOME_TOPIC } from '../apps/help/helpModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -193,7 +194,7 @@
     } else if (event.key === 'F1') {
       event.preventDefault()
       const focused = desktop.state.windows.find((w) => w.id === desktop.state.focusedWindowId && w.windowState !== 'minimized')
-      void desktop.openApp({ app: 'help', topic: topicForApp(focused?.app) })
+      void desktop.openApp({ app: 'help', topic: helpTopicFor(focused?.app) })
     } else if (event.key === 'F6' && root) {
       // F6 and Shift+F6: desktop icons, the active window, the bar, the taskbar, the tray.
       event.preventDefault()

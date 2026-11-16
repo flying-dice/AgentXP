@@ -83,4 +83,14 @@ describe('window placement below the top bar', () => {
       expect(b.y + b.height).toBeLessThanOrEqual(viewport.height + 1)
     }
   })
+
+  it('a window that an app opens for a task is in front and has the focus (UX-203)', async () => {
+    await ctx.desktop.focusWindow('chat')
+    const computer = await ctx.desktop.openComputer()
+    await see.attribute(computer.frame, 'data-focused', 'true')
+    await ctx.desktop.focusWindow('chat')
+    const code = await ctx.desktop.openApp('code')
+    await see.attribute(code, 'data-focused', 'true')
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'false')
+  })
 })

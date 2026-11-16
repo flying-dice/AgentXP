@@ -34,7 +34,7 @@ Click **Start -> System Tools -> Task Manager**, or click **Start -> Task Manage
 
 The **Chats** icon on the desktop opens Task Manager on the **Chats** tab. When you open Task Manager from the Start menu, it opens on the **Processes** tab if a chat has a problem or a chat is still working, because that is where you stop the agent program. Otherwise it opens on the **Chats** tab.
 
-The tab lists the chats with the columns **Chat**, **Agent**, **Status**, and **Context**. A chat that waits for your next message reads **Idle (the agent program is still running)**. A chat that works shows what it does now after the status, for example **Working: Step 12 of 30**. The tokens of each chat are on the **Performance** tab.
+A line above the list says **Closed chats stay here. Double-click a chat to open it again.** The tab lists the chats with the columns **Chat**, **Agent**, **Window**, **Status**, and **Context**. **Window** says **Open** when the chat has a window on the desktop and **Closed** when you closed it. A closed chat is not ended: if it works, its status still reads **Working**. A chat that waits for your next message reads **Idle (the agent program is still running)**. A chat that works shows what it does now after the status, for example **Working: Step 12 of 30**. The tokens of each chat are on the **Performance** tab.
 
 To open a chat, double-click its row, or select it and press Enter or click **Open chat**. The window of that chat opens with its messages and comes to the front, also when you closed the window before. **End Task** stops the turn of the selected chat. The button works only while the chat is busy. To end the agent program itself, use the **Processes** tab.
 
@@ -68,7 +68,7 @@ Each Task Manager window has a chat pane at its right edge, except on the **Chat
 | Tabs | Chats, Processes, Terminals, Performance. | none |
 | Chats | The list of chats. | `agent-manager-chats` |
 | Chat | One chat. The first chat is selected when the window opens, so **Open chat** is ready. | `agent-manager-chat` |
-| Hint | Says that a double-click on a chat opens it. | `agent-manager-hint` |
+| Hint | The line above the chats: closed chats stay in the list, and a double-click opens one again. | `agent-manager-hint` |
 | Open chat | Opens the window of the selected chat and brings it to the front. Double-click a row or press Enter to do the same. | `agent-manager-open-chat` |
 | End Task | Stops the turn of the selected chat. | `agent-manager-end-task` |
 | Reason note | Says why End process or End Task is off, for example **Select a chat first**. | `agent-manager-reason` |

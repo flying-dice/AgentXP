@@ -60,7 +60,12 @@ export interface ChatRow {
   tokens: string
   percent: number
   busy: boolean
+  /** Whether the chat has a window on this desktop: Open or Closed (UX-204). */
+  window: 'Open' | 'Closed'
 }
+
+/** The line above the Chats list (UX-204). */
+export const CHATS_HINT = 'Closed chats stay here. Double-click a chat to open it again.'
 
 /** A chat that is idle has its agent program running: the table says so, because "Idle" next to a process reads like "off". */
 export const chatStatusText = (status: SessionDto['status']): string => (status === 'idle' ? 'Idle (the agent program is still running)' : statusLabel(status))
@@ -69,7 +74,12 @@ export const chatStatusText = (status: SessionDto['status']): string => (status 
 /** `Working: Step 12 of 30`; the status alone when there is nothing to add. */
 export const withProgress = (status: string, progress: string | null): string => (progress ? `${status}: ${progress}` : status)
 
-export function chatRows(sessions: readonly SessionDto[], agents: readonly AgentDto[], progress: (sessionId: number) => string | null = () => null): ChatRow[] {
+export function chatRows(
+  sessions: readonly SessionDto[],
+  agents: readonly AgentDto[],
+  progress: (sessionId: number) => string | null = () => null,
+  isOpen: (sessionId: number) => boolean = () => false
+): ChatRow[] {
   return sessions.map((s) => {
     const percent = contextPercent(s.contextUsed, s.contextSize)
     return {
@@ -80,7 +90,8 @@ export function chatRows(sessions: readonly SessionDto[], agents: readonly Agent
       context: s.contextSize > 0 ? `${percent}%` : '-',
       tokens: s.contextSize > 0 ? `${formatTokens(s.contextUsed)} / ${formatTokens(s.contextSize)}` : '-',
       percent,
-      busy: isBusy(s.status)
+      busy: isBusy(s.status),
+      window: isOpen(s.id) ? 'Open' : 'Closed'
     }
   })
 }

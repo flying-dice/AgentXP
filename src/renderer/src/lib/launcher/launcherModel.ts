@@ -57,18 +57,20 @@ export function rowStatus(
   }
 }
 
-/** The row to select when the launcher opens: a desktop that waits for approval, else the most recent one. */
+/** The row to select when the launcher opens: the first row that needs the user (approval, then an agent problem), else the most recent one. */
 export function initialSelection<T extends Pick<DesktopSummaryDto, 'id' | 'runState' | 'lastUsedAt' | 'title'>>(list: readonly T[]): number | null {
-  const sorted = sortDesktops(list)
-  return (sorted.find((d) => d.runState === 'awaiting_approval') ?? sorted[0])?.id ?? null
+  return sortDesktops(list)[0]?.id ?? null
 }
 
 export const stateTone = (d: Pick<DesktopSummaryDto, 'runState'>): StateTone =>
   d.runState === 'working' ? 'running' : d.runState === 'awaiting_approval' ? 'approval' : d.runState === 'error' ? 'error' : 'idle'
 
-/** Most recently used first; ties by title. */
-export function sortDesktops<T extends Pick<DesktopSummaryDto, 'lastUsedAt' | 'title'>>(list: readonly T[]): T[] {
-  return [...list].sort((a, b) => b.lastUsedAt.localeCompare(a.lastUsedAt) || a.title.localeCompare(b.title))
+/** How urgent a row is for the user: 0 waits for an approval, 1 has an agent problem, 2 needs nothing. */
+export const attentionRank = (d: Pick<DesktopSummaryDto, 'runState'>): number => (d.runState === 'awaiting_approval' ? 0 : d.runState === 'error' ? 1 : 2)
+
+/** Rows that need the user first (approval, then agent problem), then most recently used first; ties by title. */
+export function sortDesktops<T extends Pick<DesktopSummaryDto, 'runState' | 'lastUsedAt' | 'title'>>(list: readonly T[]): T[] {
+  return [...list].sort((a, b) => attentionRank(a) - attentionRank(b) || b.lastUsedAt.localeCompare(a.lastUsedAt) || a.title.localeCompare(b.title))
 }
 
 /** "E: claude-code-win, F: dotfiles" (only plugged-in projects; C: is always there). */

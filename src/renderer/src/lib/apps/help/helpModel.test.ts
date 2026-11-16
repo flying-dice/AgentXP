@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { back, forward, indexSections, markWords, parseTopics, plainText, queryWords, searchSections, sectionsOf, slugOf, snippetOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection } from './helpModel'
+import { back, forward, indexSections, markWords, parseTopics, plainText, queryWords, searchSections, sectionsOf, slugOf, snippetOf, startHistory, titleOf, topicForApp, topicOfHref, visit, splitTopic, sectionOfHref, resolveSection, controlRowsOf, controlSection, CONTROL_PREFIX } from './helpModel'
 
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
@@ -197,5 +197,23 @@ describe('section search (UX-110)', () => {
   it('indexes the sections once per list of topics', () => {
     expect(indexSections(topics)).toBe(indexSections(topics))
     expect(indexSections(topics).map((s) => s.sectionId)).toContain('3-the-window')
+  })
+})
+
+describe('F1 on a control (UX-205)', () => {
+  const body = '| Name | What it does | data-testid |\n|---|---|---|\n| Save | Saves. | `notepad-save` |\n| Icon | Opens an app. | `desktop-icon-*` |\n| Ctrl+S | Saves. | none |\n'
+  it('lists the rows of the tables that have a test id, by name', () => {
+    expect(controlRowsOf(body)).toEqual([
+      { name: 'Save', id: 'notepad-save' },
+      { name: 'Icon', id: 'desktop-icon-*' }
+    ])
+  })
+  it('finds the row of the innermost control that the manual lists', () => {
+    expect(controlSection(body, ['notepad-save'])).toBe(`${CONTROL_PREFIX}Save`)
+    expect(controlSection(body, ['unknown', 'desktop-icon-computer'])).toBe(`${CONTROL_PREFIX}Icon`)
+  })
+  it('gives null when the manual lists none of them', () => {
+    expect(controlSection(body, ['unknown', 'window-notepad'])).toBeNull()
+    expect(controlSection(body, [])).toBeNull()
   })
 })

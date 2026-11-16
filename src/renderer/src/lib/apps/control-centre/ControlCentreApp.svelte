@@ -89,7 +89,7 @@
       {#if page === 'agents'}
         <AgentsPage {host} />
       {:else if page === 'permissions'}
-        <PermissionsPage {host} selectedRow={win.view.row ?? null} />
+        <PermissionsPage {host} windowId={win.id} selectedRow={win.view.row ?? null} />
       {:else if page === 'appearance'}
         <AppearancePage />
       {:else}

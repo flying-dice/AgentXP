@@ -112,7 +112,7 @@ describe('control center', () => {
     await page('control-centre-menu-about').click()
     const box = page('control-centre-about')
     await see.visible(box)
-    await see.text(box, 'Control Center, part of Agent7. Agent7 version 0.1.0.')
+    await see.text(box, 'Control Center is part of Agent7 (version 0.1.0). It has no separate version.')
     const frame = await box.boundingBox()
     const close = await box.getByTestId('window-close').boundingBox()
     expect(frame && close && close.y >= frame.y && close.y + close.height <= frame.y + 30 && close.height >= 18).toBe(true)

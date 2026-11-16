@@ -25,7 +25,7 @@ Use Help and Support to learn an app. Each app has a manual. A manual lists ever
 
 ## 2 - Open It
 
-- Press F1. Help opens on the manual of the window that has focus, at the top of the manual, so the title is the first line. The Help window always opens whole on the desktop, also on a small screen. Opening Help closes the welcome balloon. If no window has focus, it opens **[Using the Desktop](desktop.md)**. The window opens 760 by 520 pixels in the middle of the desktop. On a small desktop it is 40 pixels smaller than the desktop, but never narrower than 640 pixels. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
+- Press F1. Help opens on the manual of the window that has focus. If a button, box, or other control has the focus and the manual lists it, Help opens at the row of that control in the **Controls Reference** table, so you read its description at once. Otherwise Help opens at the top of the manual, so the title is the first line. The Help window always opens whole on the desktop, also on a small screen. Opening Help closes the welcome balloon. If no window has focus, it opens **[Using the Desktop](desktop.md)**. The window opens 760 by 520 pixels in the middle of the desktop. On a small desktop it is 40 pixels smaller than the desktop, but never narrower than 640 pixels. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
 - Click **Start -> Help and Support**.
 - Click the **Help** menu of an app that has a menu, for example Notepad, Chat, Code, WordPad, or Agent Paint.
 
@@ -68,7 +68,7 @@ Each Help and Support window has a chat pane at its right edge. The pane starts 
 | Article | Shows the manual. | `help-article` |
 | Link | A link to another topic. | `help-link` |
 | Contents link | A line of the Table of Contents. Click it to go to that section. | `help-contents-link` |
-| Section heading | The heading Help scrolled to. It has a little space above it, so no text above it is cut. | `help-target` |
+| Section heading | The heading Help scrolled to, or the table row of the control that you pressed F1 on. It has 24 pixels of space above it, so no text above it is cut. | `help-target` |
 | Contents chapter (open) | A chapter of the Table of Contents that lists its sections. Only the current chapter does. | `help-toc-open` |
 | Contents chapter (closed) | A chapter of the Table of Contents shown as one line. | `help-toc-collapsed` |
 | Missing topic | Shows when the topic does not exist. | `help-missing` |
@@ -105,7 +105,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help 
 
 | Name | What it does | data-testid |
 |---|---|---|
-| F1 | Opens the manual of the focused window, at its top. With no window focused, it opens **Using the Desktop**. | none |
+| F1 | Opens the manual of the focused window, at the row of the focused control when the manual lists it, else at the top. With no window focused, it opens **Using the Desktop**. | none |
 
 ## 5 - Common Tasks
 

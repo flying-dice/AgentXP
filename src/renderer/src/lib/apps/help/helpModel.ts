@@ -223,6 +223,43 @@ export function sectionOfHref(href: string): string {
   return match ? match[1] : ''
 }
 
+/** A section that names a control instead of a heading: `control:Save` is the table row named Save (F1 on a control, UX-205). */
+export const CONTROL_PREFIX = 'control:'
+
+/** One row of a Controls Reference table: the name in its first column and the test id in its last (`desktop-icon-*` stands for a family). */
+export interface ControlRow {
+  name: string
+  id: string
+}
+
+/** The rows of the manual's tables that list a test id. The test id column is not shown in Help, so the row is found by its name. */
+export function controlRowsOf(body: string): ControlRow[] {
+  const rows: ControlRow[] = []
+  for (const line of body.split(/\r?\n/)) {
+    if (!line.startsWith('|')) continue
+    const cells = line.replace(/\|\s*$/, '').slice(1).split('|')
+    const id = /^\s*`([^`]+)`\s*$/.exec(cells.at(-1) ?? '')?.[1]
+    const name = plainText(cells[0] ?? '')
+    if (id && name && cells.length > 1) rows.push({ name, id })
+  }
+  return rows
+}
+
+const matchesId = (listed: string, testid: string): boolean => (listed.includes('*') ? new RegExp(`^${listed.split('*').map(escapeRegExp).join('.*')}$`).test(testid) : listed === testid)
+
+/**
+ * The section that F1 opens for a focused control: the table row of the first test id (innermost first) that the manual lists,
+ * as `control:<name of the row>`; null when the manual does not list any of them (Help then opens at the top of the topic).
+ */
+export function controlSection(body: string, testids: readonly string[]): string | null {
+  const rows = controlRowsOf(body)
+  for (const testid of testids) {
+    const found = rows.find((r) => matchesId(r.id, testid))
+    if (found) return `${CONTROL_PREFIX}${found.name}`
+  }
+  return null
+}
+
 /**
  * The heading a section name points to, among the heading ids of an article: the exact id, else the id without its
  * number (`troubleshooting` finds `6-troubleshooting`, the way the manuals number their sections); null when none fits.

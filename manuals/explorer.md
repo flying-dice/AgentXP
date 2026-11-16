@@ -49,7 +49,7 @@ The pane is at the left. It has **Favorites**, **Libraries**, and **Computer** w
 
 ### The File List
 
-The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click an item to see **Open**, **Open with Notepad** and **Open with Code** (files only), **Copy as path**, **Start a chat here**, **Ask the agent about this...**, and **Properties**.
+The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click an item to see **Open**, **Open with** (files only, it lists the other program: Code for a text file, Notepad for the rest), **Copy as path**, **Start a chat here**, **Ask the agent about this...**, and **Properties**.
 
 ### The Computer Window
 
@@ -125,9 +125,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: select all | Edit menu: selects all items in the folder. Ctrl+A. | `explorer-menu-select-all` |
 | Menu: up | View menu: goes up one level. Alt+Up. | `explorer-menu-up` |
 | Menu: refresh | View menu: reads the folder again. F5. | `explorer-menu-refresh` |
-| Context menu: open | Opens the file or folder. For a file it names the program: **Open (default: Notepad)** for text files, **Open (default: Code)** for the rest. | `explorer-ctx-open` |
-| Context menu: open code | Opens the file in Code. | `explorer-ctx-open-code` |
-| Context menu: open notepad | Opens the file in Notepad. | `explorer-ctx-open-notepad` |
+| Context menu: open | Opens the file or folder. A file opens in Notepad (text, markdown, and log files) or in Code (all other files). | `explorer-ctx-open` |
+| Context menu: open with | Files only. Opens a list with the program that **Open** does not use. | `explorer-ctx-open-with` |
+| Context menu: open code | In **Open with** for a text file: opens the file in Code. | `explorer-ctx-open-code` |
+| Context menu: open notepad | In **Open with** for the other files: opens the file in Notepad. | `explorer-ctx-open-notepad` |
 | Context menu: copy path | Copies the path of the item. | `explorer-ctx-copy-path` |
 | Context menu: start chat | Starts a chat in the folder. | `explorer-ctx-start-chat` |
 | Context menu: ask the agent about this | Opens the chat pane with a draft about the item or the folder. | `explorer-ctx-ask` |
