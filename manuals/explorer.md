@@ -53,7 +53,7 @@ The list shows the files of the folder. It has the columns **Name**, **Type**, a
 
 ### The Computer Window
 
-The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the C: drive. The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
+The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the private C: drive (files made on this desktop). The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
 
 The group **Recently removed** shows the last five projects that you ejected from this desktop. The newest one is selected when you open the group. If nothing was removed yet, the dimmed button says so in its tooltip. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
 
@@ -99,7 +99,7 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Selection | Describes the selected items. | `explorer-selection` |
 | Open (menu) | Opens a folder or a drive. | `menu-item-explorer-folder-open`, `menu-item-explorer-drive-open` |
 | Start a chat here | Starts a chat in that folder or drive. | `menu-item-explorer-folder-chat`, `menu-item-explorer-drive-chat` |
-| Eject (menu) | Ejects the drive. | `menu-item-explorer-drive-eject` |
+| Eject (menu) | Ejects the drive. The menu entry reads "Eject (remove from this desktop)". | `menu-item-explorer-drive-eject` |
 
 ### Menu Bar and Context Menu
 
@@ -170,7 +170,7 @@ To eject a project, select it in **Computer** and click **Eject**, or right-clic
 
 - **A message says that Windows cannot find the path.** Fix the spelling of the path. Make sure that the drive is plugged in.
 - **The window went back to Computer.** Someone ejected the drive that you looked at.
-- **Eject is dimmed.** Select a USB drive. The C: drive cannot be ejected.
+- **Eject is dimmed.** Select a USB drive. The private C: drive cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
 
 ## 7 - Need Help?

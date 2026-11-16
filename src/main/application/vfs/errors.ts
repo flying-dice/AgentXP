@@ -12,7 +12,7 @@ export class DriveUnavailableError extends ToolRefusedError {
 /** A real path that is on no drive of the desktop (neither C: nor a plugged-in project). */
 export class OutsideDrivesError extends ToolRefusedError {
   constructor(path: string) {
-    super(`Path is outside the drives of this desktop (C: and the plugged-in projects): ${path}`)
+    super(`Path is outside the drives of this desktop (the private C: drive and the project folders that are plugged in): ${path}`)
     this.name = 'OutsideDrivesError'
   }
 }

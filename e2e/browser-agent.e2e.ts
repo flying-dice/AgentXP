@@ -45,7 +45,7 @@ describe('Browser agent: a local chat web app', () => {
     // While the agent works, the Browser window says so and rings its target.
     await see.visible(browser.getByTestId('browser-agent-bar'))
     await see.text(browser.getByTestId('browser-agent-bar'), 'Agent is using this page')
-    // The status bar says whether the assistant can see the page.
+    // The status bar says whether the agent can see the page.
     await see.visible(browser.getByTestId('browser-assistant-status'))
 
     // The last step is a message that quotes the agent's own message as the page shows it.
@@ -54,10 +54,10 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The bar stays after the last step (and no element number shows in it); the status bar says the assistant can see the page.
+    // The bar stays after the last step (and no element number shows in it); the status bar says the agent can see the page.
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-    await see.text(browser.getByTestId('browser-assistant-status'), 'Assistant: can see this page')
+    await see.text(browser.getByTestId('browser-assistant-status'), 'Agent: can see this page')
 
     // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
     await browser.getByTestId('browser-agent-takeover').click()
@@ -118,5 +118,15 @@ describe('Browser agent: a local chat web app', () => {
     await browser.getByTestId('browser-error-address').fill(`${web.origin}/`)
     await browser.getByTestId('browser-error-go').click()
     await see.gone(browser.getByTestId('browser-error-page'))
+  })
+
+  it('the Help link of the error page opens the Browser manual at its Troubleshooting section', async () => {
+    const browser = ctx.desktop.window('browser')
+    await browser.getByTestId('browser-address').fill('127.0.0.1:9')
+    await browser.getByTestId('browser-go').click()
+    await browser.getByTestId('browser-error-help').click()
+    const article = ctx.desktop.window('help').getByTestId('help-article')
+    await see.attribute(article, 'data-topic', 'browser')
+    await see.eventually(async () => expect(await article.evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThan(0))
   })
 })

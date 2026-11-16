@@ -31,7 +31,7 @@
     <span class="sentcol" aria-hidden="true">Sent</span>
   </div>
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="list w7-scroll" role="list" tabindex="0" aria-label="Comments">
+  <div class="list w7-scroll" role="group" tabindex="0" aria-label="Comments">
     {#each roots as c (c.id)}
       <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">

@@ -7,6 +7,7 @@
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import type { ChatProblem, ProblemActionId, SendState } from './chatProblem'
   import A2uiActivity from './A2uiActivity.svelte'
+  import { lastReply } from '../../apps/surface/lastReply'
   import SurfaceRow from './SurfaceRow.svelte'
   import { noSurfaceControls, surfaceRowModel, type SurfaceControls } from './surfaceRow'
   import AgentMessage from './AgentMessage.svelte'
@@ -77,6 +78,8 @@
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
+  /** What the agent said last: an inline form quotes it after Send. */
+  const latestReply = $derived(lastReply(messages))
   const items = $derived(groupTranscript(rows))
   const rowDenied = (rowId: string): boolean => {
     const row = rows.find((r) => r.id === rowId)
@@ -209,7 +212,7 @@
         ondelete={() => surfaceControls.remove(surface)}
         onmove={(target) => surfaceControls.move(surface, target)}
       />
-      {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} /></div>{/if}
+      {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} reply={latestReply} /></div>{/if}
     {/if}
   {/if}
 {/snippet}

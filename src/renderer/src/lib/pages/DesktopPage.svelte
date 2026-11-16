@@ -82,7 +82,7 @@
   ])
 
   const desktopIcons = $derived<DesktopIconDef[]>([
-    { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the plugged-in projects' },
+    { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the project folders (plugged in)' },
     { id: 'chats', label: 'Chats', icon: 'session', title: 'Chats: talk to the agent' },
     { id: 'code', label: 'Code', icon: 'file-code', title: 'Code: read the files of a project' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },

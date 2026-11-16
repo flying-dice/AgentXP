@@ -286,7 +286,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Your mouse is broken. Open a new conversation, send 'hello', and answer a request from the assistant with Allow."
 - Start state: desktop open; `demo`; Write files = Ask. Driver mouse actions are disabled.
 - Success check: message sent, request answered Allow, using keys only.
-- Min 12. Budget 36 / 48.
+- Min 6 (Ctrl+N starts the chat, UX-57). Budget 18 / 18.
 
 ### J22 Help and discoverability
 

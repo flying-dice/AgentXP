@@ -1,6 +1,6 @@
 import type { A2uiClientEvent, A2uiComponent, A2uiServerMessage, A2uiSurfaceDto, A2uiSurfaceTarget } from '@shared/a2ui'
 import { surfaceSizeHint, surfaceTitle } from '@shared/a2ui/messages'
-import { SURFACE_FALLBACK_TITLE } from '@shared/desktop-views'
+import { SURFACE_FALLBACK_TITLE, surfaceWindowTitle } from '@shared/desktop-views'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
 import type { Id } from '@shared/models'
 import type { A2uiApplyOptions, A2uiMessageSink, A2uiSinkResult } from '../domain/a2ui/ports'
@@ -150,7 +150,7 @@ export class A2uiService implements A2uiMessageSink {
     const { surfaceId, sessionId } = surface
     if (surface.target === 'window') {
       if (this.windows?.isOpen(sessionId, surfaceId)) {
-        if (created) notes.add(`Shown in its own window "${title}" (surface "${surfaceId}"). The user can close and reopen it.`)
+        if (created) notes.add(`Shown in its own window "${surfaceWindowTitle(title)}" (surface "${surfaceId}"). The user can close and reopen it.`)
       } else notes.add(`Surface "${surfaceId}": The user closed this window; it updates in the background.`)
     } else if (surface.target === 'sidebar') {
       if (surface.hidden) notes.add(`Surface "${surfaceId}": The user closed this sidebar tab; it updates in the background.`)

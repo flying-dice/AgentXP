@@ -48,7 +48,7 @@ The toolbar has the buttons for files, for changes, and for the panes. Some butt
 
 The pane is at the left. It has three tabs.
 
-- **Projects** – Shows the tree of each plugged-in project. A colored mark shows the git status of a file.
+- **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file.
 - **Files** – Lists the open files, then the files that git or the agent changed.
 - **Changes** – Lists each change of the agent.
 
@@ -188,7 +188,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Tree menu: open with Notepad | Opens the file in Notepad. | `code-ctx-open-notepad` |
 | Tree menu: copy as path | Copies the path of the file or folder. | `code-ctx-copy-path` |
 | Tree menu: ask chat | Asks the chat about this file. | `code-ctx-ask-file` |
-| Tree menu: eject | Takes the project off the desktop. Its folder stays on your disk. | `code-ctx-eject` |
+| Tree menu: eject | Takes the project off the desktop (the entry reads "Eject (remove from this desktop)"). Its folder stays on your disk. | `code-ctx-eject` |
 | Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
 | Project tree | The folders and files of the project. | `code-tree` |
 | Menu: eject | Takes the open project off the desktop. | `code-menu-eject` |

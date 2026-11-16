@@ -46,6 +46,7 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await surface.getByTestId('a2ui-checkbox').click()
       await surface.getByTestId('a2ui-button').filter({ hasText: 'Send' }).click()
       await see.visible(chat().agentMessage('Got action send from send on contact; hello Ann.'))
+      await see.text(surface.getByTestId('a2ui-sent'), 'Sent. The agent answered: Got action send from send on contact')
       await settled()
       // The action is a hidden prompt: no user message is added for it.
       expect(await chat().userMessages.count()).toBe(1)
@@ -69,8 +70,8 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await settled()
       await see.attribute(chat().surfaceRow('Notes'), 'data-state', 'open')
       await see.attribute(chat().surfaceRow('Notes'), 'data-target', 'sidebar')
-      // The row names what the assistant opened and where it is.
-      await see.text(chat().surfaceRow('Notes'), 'The assistant opened a form: Notes.')
+      // The row names what the agent opened and where it is.
+      await see.text(chat().surfaceRow('Notes'), 'The agent opened a form: Notes.')
       await see.text(chat().surfaceRow('Notes').getByTestId('chat-surface-where'), "It is in the sidebar 'Notes'.")
       expect(await ctx.desktop.windows('surface').count()).toBe(0)
     })
@@ -79,6 +80,7 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await chat().sidebar.getByTestId('a2ui-textbox').fill('Bob')
       await chat().sidebar.getByTestId('a2ui-button').filter({ hasText: 'Send' }).click()
       await see.visible(chat().agentMessage('Got action send from send on notes; hello Bob.'))
+      await see.text(chat().sidebar.getByTestId('a2ui-sent'), 'Sent. The agent answered: Got action send from send on notes')
       await settled()
     })
 
@@ -99,13 +101,13 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await see.visible(surfaceWindow().getByTestId('a2ui-surface'))
       await see.visible(surfaceWindow().getByTestId('a2ui-textbox'))
       await see.visible(surfaceWindow().getByTestId('a2ui-button').filter({ hasText: 'Send' }))
-      await see.text(surfaceWindow().getByTestId('window-title'), 'Board - from the assistant')
+      await see.text(surfaceWindow().getByTestId('window-title'), 'Board - from the agent')
       await see.visible(chat().agentMessage('The window is open.'))
-      await see.visible(chat().agentMessage('Shown in its own window "Board"'))
+      await see.visible(chat().agentMessage('Shown in its own window "Board - from the agent"'))
       await settled()
       await see.attribute(chat().surfaceRow('Board'), 'data-state', 'open')
       await see.attribute(chat().surfaceRow('Board'), 'data-target', 'window')
-      await see.text(chat().surfaceRow('Board').getByTestId('chat-surface-where'), "It is in the window 'Board - from the assistant'.")
+      await see.text(chat().surfaceRow('Board').getByTestId('chat-surface-where'), "It is in the window 'Board - from the agent'.")
       // The window did not take focus from the chat the user is working in.
       await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
     })

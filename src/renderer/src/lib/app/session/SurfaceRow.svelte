@@ -24,7 +24,7 @@
   {#if model.hasOpenClose}
     <Icon name={model.icon} />
     <span class="label" title={model.stateText}>
-      <span class="intro">The assistant opened a {model.purpose}: <span class="title" data-testid="chat-surface-title">{model.title}</span>.<span class="state" data-testid="chat-surface-state"> ({model.stateLabel})</span></span>
+      <span class="intro">The agent opened a {model.purpose}: <span class="title" data-testid="chat-surface-title">{model.title}</span>.<span class="state" data-testid="chat-surface-state"> ({model.stateLabel})</span></span>
       <span class="where" data-testid="chat-surface-where">{model.where}</span>
     </span>
   {:else}

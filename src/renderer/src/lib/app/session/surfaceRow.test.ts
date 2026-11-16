@@ -51,11 +51,11 @@ describe('what a surface says about itself', () => {
 
   it('names the surface by purpose and says where it is', () => {
     expect(surfaceRowModel(form('window'), true)).toMatchObject({
-      intro: 'The assistant opened a form: Your name.',
-      where: "It is in the window 'Your name - from the assistant'."
+      intro: 'The agent opened a form: Your name.',
+      where: "It is in the window 'Your name - from the agent'."
     })
     expect(surfaceRowModel(form('sidebar'), false).where).toBe("It is in the sidebar 'Your name'.")
-    expect(surfaceRowModel(form('window'), false).where).toBe("It is closed. It was in the window 'Your name - from the assistant'.")
+    expect(surfaceRowModel(form('window'), false).where).toBe("It is closed. It was in the window 'Your name - from the agent'.")
   })
 
   it('needs no line for an inline surface', () => {

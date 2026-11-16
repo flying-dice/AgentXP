@@ -49,17 +49,17 @@ export function failureHint(failure: LoadFailure): string {
   return hint.replace(':{port}', `:${portOf(failure.url) || '?'}`)
 }
 
-/** The assistant's access to the page, from the Browser permission (Control Center > Permissions). */
+/** The agent's access to the page, from the Browser permission (Control Center > Permissions). */
 export type AssistantAccess = 'allow' | 'ask' | 'deny'
 
-/** The "Assistant:" segment of the status bar: whether the assistant can see the page that is open. */
+/** The "Agent:" segment of the status bar: whether the agent can see the page that is open. */
 export function assistantStatus(access: AssistantAccess, reading: boolean): string {
-  if (access === 'deny') return 'Assistant: cannot see pages'
-  if (reading) return 'Assistant: reading'
-  return access === 'ask' ? 'Assistant: asks first' : 'Assistant: can see this page'
+  if (access === 'deny') return 'Agent: cannot see pages'
+  if (reading) return 'Agent: reading'
+  return access === 'ask' ? 'Agent: asks first' : 'Agent: can see this page'
 }
 
-export const ASSISTANT_TOOLTIP = 'The assistant can read the page that is open here. Change this in Control Center > Permissions > Browser.'
+export const ASSISTANT_TOOLTIP = 'The agent can read the page that is open here. Change this in Control Center > Permissions > Browser.'
 
 export interface PageStatusInput {
   url: string

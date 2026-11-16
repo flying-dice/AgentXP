@@ -14,7 +14,7 @@
   const valid = $derived(view.isValid !== false)
   /** This button sent the form and the reply is not in yet: it says so and cannot send again. */
   const sending = $derived(submit.phase === 'sending' && action !== undefined)
-  const sent = $derived(submit.phase === 'sent' && submit.sourceId === node.id)
+  const sent = $derived(submit.phase === 'sent' && submit.sourceId === node.componentId)
   /** "Sent." shows for three seconds, then goes (the form can be sent again). */
   let showSent = $state(false)
   $effect(() => {
@@ -27,7 +27,7 @@
 
 <div class="button">
   <KitButton data-testid="a2ui-button" isDefault={asBoolean(view.isDefault)} icon={toIcon(view.icon)} disabled={!asBoolean(view.enabled, true) || !valid || sending} onclick={() => action?.()}>
-    {sending && submit.sourceId === node.id ? 'Sending...' : asString(view.text)}
+    {sending && submit.sourceId === node.componentId ? 'Sending...' : asString(view.text)}
   </KitButton>
   {#if showSent}<div class="sent" role="status" data-testid="a2ui-sent">{sentLine(submit.reply)}</div>{/if}
 </div>

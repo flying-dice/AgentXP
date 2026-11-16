@@ -28,13 +28,13 @@
       letter: d.letter,
       root: driveRoot(d.letter),
       title: driveTitle(d),
-      sub: d.kind === 'removable' ? 'Plugged-in project' : 'Private system disk (not a git repository)',
+      sub: d.kind === 'removable' ? 'Project folder (plugged in)' : 'Private system disk (not a git repository)',
       icon: d.kind === 'removable' ? ('usb' as const) : ('drive' as const)
     }))
   )
   // svelte-ignore state_referenced_locally
   let chosen = $state<string | null>(root ?? null)
-  const current = $derived(options.find((o) => o.root === chosen) ?? options.find((o) => o.sub === 'Plugged-in project') ?? options[0] ?? null)
+  const current = $derived(options.find((o) => o.root === chosen) ?? options.find((o) => o.sub === 'Project folder (plugged in)') ?? options[0] ?? null)
   let baseRef = $state('HEAD')
   const ref = $derived(baseRef.trim())
   const start = (): void => {

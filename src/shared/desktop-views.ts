@@ -173,16 +173,20 @@ export const HELP_PROGRAM_NAME = 'Agent7 Help and Support'
 
 /** "Agent7 Help and Support: Using Notepad" for the topic of an app, "Agent7 Help and Support" for the home, desktop, launcher and Help topics. */
 export function helpWindowTitle(topic: string): string {
-  const kind = (APP_KINDS as readonly string[]).includes(topic) ? (topic as AppKind) : null
+  const base = topic.split('#')[0] // "browser#troubleshooting": the title comes from the topic
+  const kind = (APP_KINDS as readonly string[]).includes(base) ? (base as AppKind) : null
   return kind && kind !== 'help' ? `${HELP_PROGRAM_NAME}: Using ${APP_DISPLAY_NAMES[kind]}` : HELP_PROGRAM_NAME
 }
+
+/** The title of the window of an agent's form: "<title> - from the agent". */
+export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
 
 export function windowTitle(view: AppView): string {
   switch (view.app) {
     case 'chat':
       return view.title
     case 'surface':
-      return `${view.title} - from the assistant`
+      return surfaceWindowTitle(view.title)
     case 'explorer':
       return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'
     case 'notepad':

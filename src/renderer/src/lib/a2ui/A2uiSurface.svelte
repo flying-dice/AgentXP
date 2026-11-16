@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import type { A2uiClientEvent, A2uiServerMessage } from '@shared/a2ui'
   import NodeView from './NodeView.svelte'
   import { SurfaceController } from './SurfaceController'
@@ -14,7 +15,7 @@
     sessionId?: number
     /** True while the agent works on a turn: the form says "Sending..." until the reply is in, then "Sent." Omit it when unknown. */
     busy?: boolean
-    /** The assistant's latest reply as plain text; the form quotes it under the button: "Sent. The assistant answered: ...". */
+    /** The agent's latest reply as plain text; the form quotes it under the button: "Sent. The agent answered: ...". */
     reply?: string
     class?: string
   }
@@ -43,7 +44,7 @@
   // The agent drew the form again after "Sent.": it can be sent again.
   $effect(() => {
     void messages.length
-    submit.reset()
+    untrack(() => submit.reset()) // reset reads the phase: without untrack "sent" would reset itself at once
   })
 
   // Messages are replayed on top of what is applied; options are read at dispatch time.

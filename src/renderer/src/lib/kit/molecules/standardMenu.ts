@@ -34,8 +34,8 @@ export function newChatItem(app: string, onnewchat: () => void): MenuItemDef {
 }
 
 /** The end of a File menu: a separator and `Close` (Alt+F4 closes the window); an editor says `E&xit` instead. */
-export function closeItems(app: string, onclose: () => void, label = '&Close'): MenuItemDef[] {
-  return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label, shortcut: 'Alt+F4', action: onclose }]
+export function closeItems(app: string, onclose: () => void, label = '&Close', title?: string): MenuItemDef[] {
+  return [{ separator: true }, { id: `${app}-close`, testid: `${app}-menu-close`, label, shortcut: 'Alt+F4', action: onclose, ...(title ? { title } : {}) }]
 }
 
 export interface ChatPaneItemOptions {

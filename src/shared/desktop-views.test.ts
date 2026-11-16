@@ -87,6 +87,8 @@ describe('helpWindowTitle', () => {
     expect(helpWindowTitle('notepad')).toBe('Agent7 Help and Support: Using Notepad')
     expect(helpWindowTitle('agent-manager')).toBe('Agent7 Help and Support: Using Task Manager')
     expect(helpWindowTitle('explorer')).toBe('Agent7 Help and Support: Using Explorer')
+    expect(helpWindowTitle('browser#troubleshooting')).toBe('Agent7 Help and Support: Using Browser')
+    expect(helpWindowTitle('nonsense#top')).toBe('Agent7 Help and Support')
   })
 
   it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {

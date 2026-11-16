@@ -89,7 +89,7 @@
   })
   $effect(() => {
     const incoming = win.view.topic
-    if (!incoming || !sync.isExternal({ topic: splitTopic(incoming).topic })) return
+    if (!incoming || !sync.isExternal({ topic: incoming })) return
     untrack(() => {
       preferred = splitTopic(incoming).topic
       show(incoming)

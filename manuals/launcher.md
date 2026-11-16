@@ -26,7 +26,7 @@ A desktop is a long-lived virtual computer for one or more projects. Desktop Con
 
 Closing a desktop window only disconnects it. Its agents keep running.
 
-**Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own C: drive, its own chats, and the project folders that you plug in as drives.
+**Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own private C: drive (files made on this desktop), its own chats, and the project folders that you plug in as drives.
 
 ## 2 - Open It
 
@@ -157,7 +157,7 @@ To rename a desktop, follow the steps below:
 To delete a desktop, follow the steps below:
 
 1. Select the desktop and click **Delete...**. A question appears.
-2. Read the warning. Agent7 removes the C: drive, the chats, the notes, and the logs of the desktop. Plugged-in projects are removed from this desktop. The folders and files stay on your disk.
+2. Read the warning. Agent7 removes the private C: drive (files made on this desktop), the chats, the notes, and the logs of the desktop. Project folders (plugged in) are removed from this desktop. The folders and files stay on your disk.
 3. Click **Yes**.
 
 ## 6 - Troubleshooting

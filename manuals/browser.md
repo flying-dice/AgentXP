@@ -45,7 +45,7 @@ The page area shows the web page of the active tab. A new tab shows **Type an ad
 
 ### The Status Bar
 
-The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can see the page, and the zoom of the page. The part **Assistant:** says **can see this page**, **asks first**, **cannot see pages**, or **reading** while the assistant reads the page. Point to it to read where to change it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the agent can see the page, and the zoom of the page. The part **Agent:** says **can see this page**, **asks first**, **cannot see pages**, or **reading** while the assistant reads the page. Point to it to read where to change it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
@@ -71,7 +71,7 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'"), or that you have control. | `browser-agent-bar-text` |
 | Take over | Pauses the agent on this page so that you can use it. It stays at the right of the bar and then reads **Taken over**. The agent must ask before it uses the page again. | `browser-agent-takeover` |
 | Give control back | Shows after you took over. The agent may use the page again, and it asks first. | `browser-agent-giveback` |
-| Assistant status | Says whether the assistant can see the page: can see this page, asks first, cannot see pages, or reading. | `browser-assistant-status` |
+| Agent status | Says whether the agent can see the page: can see this page, asks first, cannot see pages, or reading. | `browser-assistant-status` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
 | Error page | Shows when a page could not be opened. | `browser-error-page` |
 | Error title | "This page can't be displayed". | `browser-error-title` |
@@ -80,7 +80,7 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Error hint | The next step for this error. | `browser-error-hint` |
 | Error address | The address to try instead. | `browser-error-address` |
 | Error go | Opens the address in the error address box. | `browser-error-go` |
-| Error help | Opens this manual. | `browser-error-help` |
+| Error help | Opens this manual at the section Troubleshooting. | `browser-error-help` |
 | Highlight ring | An orange frame around the item the agent used. | `browser-agent-ring` |
 
 ### Menu Bar and Context Menu
@@ -143,7 +143,7 @@ The agent can use a web app such as a team chat, mail, or documents. Follow the 
 
 While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. The bar stays while the agent works, also when it only reads. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says that you have control, and the agent stops and asks before it uses the page again. Click **Give control back** to let the agent go on. You can also click **Pause all agents** on the top bar.
 
-The chip **Browser** on the top bar and the part **Assistant:** in the status bar of Browser show that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one. To change what the agent may do, open **Control Center**, click **Permissions**, and set **Browser**.
+The chip **Browser** on the top bar and the part **Agent:** in the status bar of Browser show that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one. To change what the agent may do, open **Control Center**, click **Permissions**, and set **Browser**.
 
 ### What the Agent Can Do
 

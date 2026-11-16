@@ -154,7 +154,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
-    padding: 2px 0 2px 2px;
+    padding: 0 0 0 2px;
     font-size: 11px;
   }
   .lead,
@@ -163,8 +163,14 @@
   }
   /* Flat labels that read as state, not raised buttons: a click opens Permissions. */
   .chip {
+    box-sizing: border-box;
+    /* 24 x 24 px at least (WCAG 2.5.8 target size). */
+    min-width: 24px;
+    min-height: 24px;
+    /* The bottom margin keeps the bar as high as before: the hit area reaches into the padding under the row. */
+    margin: 0 0 -3px;
     padding: 0 6px;
-    line-height: 15px;
+    line-height: 20px;
     border: 1px solid #b9c7da;
     border-radius: 8px;
     background: #f4f7fb;

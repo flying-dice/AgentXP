@@ -28,7 +28,7 @@ Use Chat to tell the agent what to do and to read what the agent does. The trans
 
 ## 2 - Open It
 
-- Click **Start -> New chat**. If you have a plugged-in project, a dialog box asks where the agent works.
+- Click **Start -> New chat**. If you have a project folder (plugged in), a dialog box asks where the agent works.
 - Double-click **Chats** on the desktop. The latest chat opens.
 - Click a chat under **Recent chats** in the Start menu.
 - Click **Start a chat on this drive** in the AutoPlay dialog box.
@@ -110,7 +110,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
-| Close | Closes the window. | `chat-menu-close` |
+| Close | Closes the window. The agent keeps working. (Tooltip: "Close this window. The agent keeps working.") | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
 | View Help | Opens the Chat Help window. F1. | `chat-menu-help` |
 | Model | Selects the model of the agent. | `chat-model` |
@@ -145,7 +145,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Reopened note | Tells once that the chat was opened again after the program restarted. | `chat-reopened-note` |
 | Dismiss note | Hides the reopened note. | `chat-reopened-dismiss` |
 | Reconnect | Starts the agent again when it is disconnected. | `chat-reconnect` |
-| Sent | A drawn form says "Sent." after you use a button on it. | `a2ui-sent` |
+| Sent | A drawn form says "Sent. The agent answered: ..." (the start of the next reply) for 3 seconds after you use a button on it. | `a2ui-sent` |
 | Composer | Holds the controls to write. | `chat-composer` |
 | Message box | The input for your message. | `chat-composer-input` |
 | Mode | Opens the list of modes. Each entry has a short description. | `chat-mode` |

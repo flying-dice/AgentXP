@@ -52,7 +52,7 @@
 
   // The agent working on the page: the bar and the ring around its target.
   let activity = $state<string | null>(null)
-  /** The agent is reading the page right now (the status bar says "Assistant: reading"). */
+  /** The agent is reading the page right now (the status bar says "Agent: reading"). */
   let reading = $state(false)
   /** The user took control while the agent worked: the bar stays, with Give control back, until the user gives it back. */
   let engaged = $state(false)
@@ -355,7 +355,7 @@
         testId="browser-page-{tab.id}"
         onpatch={(change) => patch(tab.id, change)}
         onready={(wc) => void ready(tab.id, wc)}
-        onhelp={help.open}
+        onhelp={() => help.openSection('troubleshooting')}
         oncontext={(info) => ((pageSelection = info.selectionText), ctx.showAt(info.x, info.y, contextItems(info)))}
       />
     {/each}

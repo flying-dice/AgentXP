@@ -9,9 +9,11 @@
     onaction?: (event: A2uiClientEvent) => void
     /** True while the agent works on a turn (the form says "Sending..." then "Sent."). */
     running?: boolean
+    /** The agent's latest reply as plain text; the form quotes it after Send ("Sent. The agent answered: ..."). */
+    reply?: string
   }
 
-  let { messages, sessionId, onaction, running }: Props = $props()
+  let { messages, sessionId, onaction, running, reply }: Props = $props()
 
   const title = $derived.by(() => {
     for (const m of messages) if ('createSurface' in m) return m.createSurface.theme?.title ?? ''
@@ -22,7 +24,7 @@
 <!-- The surface paints the window face (Panel), the transcript is white: one face-coloured frame keeps the box filled. -->
 <div class="frame">
   <GroupBox text={title}>
-    <A2uiSurface {messages} {sessionId} {onaction} busy={running} />
+    <A2uiSurface {messages} {sessionId} {onaction} busy={running} {reply} />
   </GroupBox>
 </div>
 

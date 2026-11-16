@@ -23,7 +23,7 @@ describe('SurfaceSubmit', () => {
 
   it('quotes the reply under the button, shortened, or just says Sent.', () => {
     expect(sentLine('')).toBe('Sent.')
-    expect(sentLine('  Hello Ann,\n  welcome. ')).toBe('Sent. The assistant answered: Hello Ann, welcome.')
+    expect(sentLine('  Hello Ann,\n  welcome. ')).toBe('Sent. The agent answered: Hello Ann, welcome.')
     expect(sentLine('x'.repeat(300)).length).toBeLessThan(170)
     expect(sentLine('x'.repeat(300)).endsWith('...')).toBe(true)
   })

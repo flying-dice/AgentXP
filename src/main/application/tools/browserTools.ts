@@ -123,7 +123,7 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
       return await run()
     } finally {
       clearInterval(timer)
-      if (reading) announce(desktopId, id, label, undefined, false) // done reading: the bar stays, "Assistant: reading" goes
+      if (reading) announce(desktopId, id, label, undefined, false) // done reading: the bar stays, "Agent: reading" goes
     }
   }
 
@@ -152,7 +152,7 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
   const where = (r: PageInfo): string => `Now at ${r.url} ("${r.title}").`
   const say = (r: ActionResult, text: string): string => `${text}${r.note ? ` (${r.note})` : ''} ${where(r)}`
 
-  /** A tool that only looks: it announces too ("Reading the page"), so the bar and "Assistant: reading" show it. */
+  /** A tool that only looks: it announces too ("Reading the page"), so the bar and "Agent: reading" show it. */
   const look =
     <A extends { window?: number }>(label: (args: A) => string, run: (id: Id, args: A) => Promise<ToolResult>) =>
     (args: A, { desktopId }: ToolContext) =>

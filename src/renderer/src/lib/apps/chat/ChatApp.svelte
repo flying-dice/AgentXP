@@ -32,6 +32,7 @@
   import type { SurfaceActivity } from '../../agui/activities'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import SurfaceSidebar from './SurfaceSidebar.svelte'
+  import { lastReply } from '../surface/lastReply'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
 
   let { window: win, host, focused }: AppProps<'chat'> = $props()
@@ -262,7 +263,7 @@
           { id: 'chat-new', testid: 'chat-menu-new', label: 'New &chat', shortcut: 'Ctrl+N', action: () => void newChat() },
           { separator: true },
           { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },
-          ...closeItems('chat', () => void host.closeWindow(win.id))
+          ...closeItems('chat', () => void host.closeWindow(win.id), '&Close', 'Close this window. The agent keeps working.')
         ]
       },
       { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }) },
@@ -329,6 +330,7 @@
       onclose={(s) => surfaceControls.close(s)}
       onaction={(event) => void store?.sendA2uiAction(event)}
       running={store?.running}
+      reply={lastReply(store?.messages ?? [])}
     />
     {#if panelOpen}
       <aside class="side" data-testid="chat-side-panel" aria-label="Changes and tasks">

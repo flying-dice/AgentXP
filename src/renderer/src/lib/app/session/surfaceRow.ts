@@ -15,9 +15,9 @@ export interface SurfaceRowModel {
   stateText: string
   /** What the surface is for, in a word: a form (it has fields to fill in) or a panel (it only shows things). */
   purpose: 'form' | 'panel'
-  /** "The assistant opened a form: Your name." */
+  /** "The agent opened a form: Your name." */
   intro: string
-  /** Where it is, said plainly: "It is in the window 'Your name - from the assistant'." Empty for an inline surface (it is in the chat). */
+  /** Where it is, said plainly: "It is in the window 'Your name - from the agent'." Empty for an inline surface (it is in the chat). */
   where: string
   /** The caption of the button that shows the surface: "Open" for a closed one, "Show" for one that is already open. */
   openLabel: 'Open' | 'Show'
@@ -70,7 +70,7 @@ export function surfaceRowModel(surface: Pick<SurfaceActivity, 'surfaceId' | 'ta
     stateLabel: open ? 'Open' : 'Closed',
     stateText: `${title}: ${open ? 'Open' : 'Closed'}`,
     purpose,
-    intro: `The assistant opened a ${purpose}: ${title}.`,
+    intro: `The agent opened a ${purpose}: ${title}.`,
     where: target === 'inline' ? '' : open ? `It is in the ${place}.` : `It is closed. It was in the ${place}.`,
     openLabel: open ? 'Show' : 'Open',
     icon: ICONS[target],

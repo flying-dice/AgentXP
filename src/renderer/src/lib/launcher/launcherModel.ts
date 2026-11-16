@@ -113,7 +113,7 @@ export function projectSuggestion(name: string, project: string | undefined, exi
 
 /** The warning shown before a desktop is deleted. */
 export const DELETE_WARNING =
-  'Deleting this desktop removes its C: drive, chats, notes and logs. Plugged-in projects are removed from this desktop; the folders and files stay on your disk.'
+  'Deleting this desktop removes its private C: drive (files made on this desktop), chats, notes and logs. Project folders (plugged in) are removed from this desktop; the folders and files stay on your disk.'
 
 export type LauncherCommand = 'new' | 'connect' | 'rename' | 'delete'
 

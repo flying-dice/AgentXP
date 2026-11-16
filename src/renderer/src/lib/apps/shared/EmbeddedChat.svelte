@@ -425,15 +425,19 @@
     max-height: 260px;
     color: var(--w7-text-muted);
   }
+  /* A 24 px wide hit area (WCAG 2.5.8) that takes the room of 5 px; only the middle 5 px is painted. */
   .resizer {
     flex: none;
-    width: 5px;
+    box-sizing: border-box;
+    width: 24px;
+    margin: 0 -9.5px;
+    padding: 0 9.5px;
     cursor: col-resize;
-    background: transparent;
+    background: transparent content-box;
   }
   .resizer:hover,
   .resizer:focus-visible {
-    background: var(--w7-panel-border);
+    background: var(--w7-panel-border) content-box;
   }
   .start {
     flex: 1;
