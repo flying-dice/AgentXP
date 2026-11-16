@@ -1,0 +1,39 @@
+{
+  "task": "T31.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 6,
+  "answer": "The Terminal window is read-only by design: the agent runs the commands, so ask the agent in Chat to run the command and watch the output in Terminal.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:04:34.613Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:04:34.613Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+      "steps": 3,
+      "answer": "The Terminal window is read-only by design: the agent runs the commands, so ask the agent in Chat to run the command and watch the output in Terminal.",
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

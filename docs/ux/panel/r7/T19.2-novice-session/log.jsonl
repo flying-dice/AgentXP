@@ -1,0 +1,4 @@
+{"ts":"2026-11-16T20:19:50.739Z","cmd":"windows","args":[],"ok":true,"ms":24}
+{"ts":"2026-11-16T20:19:52.554Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T19.2-novice/shots/001.png","window":"Fix login redirect - Agent7","ok":true,"ms":631}
+{"ts":"2026-11-16T20:19:57.399Z","cmd":"click","args":[264,472],"screenshot":"/tmp/ux-sessions/r7/T19.2-novice/shots/002.png","window":"Fix login redirect - Agent7","ok":true,"ms":760}
+{"ts":"2026-11-16T20:20:01.060Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T19.2-novice/shots/003.png","window":"Fix login redirect - Agent7","ok":true,"ms":575}

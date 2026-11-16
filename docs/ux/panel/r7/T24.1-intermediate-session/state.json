@@ -1,0 +1,24 @@
+{
+  "task": "T24.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-kVqLM8",
+  "testPagePort": 33869,
+  "testPageUrl": "http://127.0.0.1:33869/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:23:15.400Z",
+  "options": {
+    "git": true,
+    "modifyGit": true,
+    "open": [
+      "code"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-kVqLM8/home/Documents/git-copies/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

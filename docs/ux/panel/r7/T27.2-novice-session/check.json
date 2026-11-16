@@ -1,0 +1,41 @@
+{
+  "task": "T27.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the chat pane is hidden; the Code window still offers a way to show it again; the file area is 792 px wide of 800 px (want at least 90 percent)",
+  "notes": [
+    "editor width 792 of window width 800"
+  ],
+  "steps": 1,
+  "budget": 4,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:26:11.458Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:26:11.458Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the chat pane is hidden; the Code window still offers a way to show it again; the file area is 792 px wide of 800 px (want at least 90 percent)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

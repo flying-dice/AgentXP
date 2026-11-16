@@ -1,0 +1,39 @@
+{
+  "task": "T20.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 3,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 15,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "agent processes left on the desktop: 0; the app still runs",
+  "notes": [],
+  "steps": 15,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:22:22.925Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:22:22.925Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "agent processes left on the desktop: 0; the app still runs",
+      "steps": 15,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 15
+    }
+  ]
+}

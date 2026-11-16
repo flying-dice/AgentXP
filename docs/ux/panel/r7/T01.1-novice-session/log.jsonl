@@ -1,0 +1,5 @@
+{"ts":"2026-11-16T20:04:08.403Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-novice/shots/001.png","window":"Agent7 Desktop Connection","ok":true,"ms":478}
+{"ts":"2026-11-16T20:04:12.316Z","cmd":"click","args":[971,766],"screenshot":"/tmp/ux-sessions/r7/T01.1-novice/shots/002.png","window":"Agent7 Desktop Connection","ok":true,"ms":701}
+{"ts":"2026-11-16T20:04:15.593Z","cmd":"click","args":[728,582],"screenshot":"/tmp/ux-sessions/r7/T01.1-novice/shots/003.png","window":"Agent7 Desktop Connection","ok":true,"ms":642}
+{"ts":"2026-11-16T20:04:19.346Z","cmd":"key","args":["F1"],"screenshot":"/tmp/ux-sessions/r7/T01.1-novice/shots/004.png","window":"New desktop - Agent7","ok":true,"ms":889}
+{"ts":"2026-11-16T20:04:22.528Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r7/T01.1-novice/shots/005.png","window":"New desktop - Agent7","ok":true,"ms":675}

@@ -1,0 +1,39 @@
+{
+  "task": "T16.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the answer says no and gives the reason (Write files / separate)",
+  "notes": [],
+  "steps": 2,
+  "budget": 12,
+  "answer": "No. Turning off Code only stops opening files, revealing lines and showing diffs in Code; writing files with Notepad is covered by the separate Write files row",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:16:49.848Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:16:49.848Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the answer says no and gives the reason (Write files / separate)",
+      "steps": 2,
+      "answer": "No. Turning off Code only stops opening files, revealing lines and showing diffs in Code; writing files with Notepad is covered by the separate Write files row",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

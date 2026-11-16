@@ -1,0 +1,39 @@
+{
+  "task": "T24.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Git project start state is in place; answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 20,
+  "answer": "login.ts, redirect.ts and session.ts; in redirect.ts lines 1, 3 and 4 are new.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:23:25.764Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:23:25.764Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Git project start state is in place; answer ok",
+      "steps": 3,
+      "answer": "login.ts, redirect.ts and session.ts; in redirect.ts lines 1, 3 and 4 are new.",
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

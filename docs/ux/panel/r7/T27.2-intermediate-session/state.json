@@ -1,0 +1,21 @@
+{
+  "task": "T27.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-3kjcSH",
+  "testPagePort": 38433,
+  "testPageUrl": "http://127.0.0.1:38433/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:26:55.742Z",
+  "options": {
+    "paneOpen": true
+  },
+  "desktopId": 1,
+  "desktopTitle": "Aside project",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-3kjcSH/home/Documents/aside-project"
+  ],
+  "codeWindowId": 1,
+  "preset": "aside-code",
+  "note": "Code with index.ts, chat pane open"
+}

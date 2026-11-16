@@ -1,0 +1,41 @@
+{
+  "task": "T06.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the request was answered allow (want allow); redirect.ts on disk contains the fix; answer ok",
+  "notes": [
+    "opening the details is optional because the diff is inline"
+  ],
+  "steps": 2,
+  "budget": 4,
+  "answer": "It changes lines 1, 3 and 4 of src/auth/redirect.ts.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:58:11.391Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:58:11.391Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the request was answered allow (want allow); redirect.ts on disk contains the fix; answer ok",
+      "steps": 2,
+      "answer": "It changes lines 1, 3 and 4 of src/auth/redirect.ts.",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

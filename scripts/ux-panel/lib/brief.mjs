@@ -4,7 +4,7 @@ import { asksQuestion } from './tasktext.mjs'
 
 /** The record template (also in FACILITATOR.md). */
 export const RECORD_TEMPLATE = `# <task> <title> - <level>
-- Build: <the line that stop prints; it is added when missing>
+- Build: <leave this line as it is; stop fills it in>
 - Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
 - Context: fresh panelist, previous tasks: none
 - Answer: <the text after 'Answer:' in the final report; tasks without a question: not asked>

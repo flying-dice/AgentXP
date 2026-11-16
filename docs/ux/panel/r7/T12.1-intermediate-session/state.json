@@ -1,0 +1,24 @@
+{
+  "task": "T12.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-PCNSmw",
+  "testPagePort": 40081,
+  "testPageUrl": "http://127.0.0.1:40081/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:12:49.328Z",
+  "options": {
+    "projects": [
+      "loginApp",
+      "docsSite"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-PCNSmw/home/Documents/login-app",
+    "/tmp/a7ux-PCNSmw/home/Documents/docs-site"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

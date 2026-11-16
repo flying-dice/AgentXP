@@ -1,0 +1,39 @@
+{
+  "task": "T28.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 3,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 7,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+  "notes": [],
+  "steps": 7,
+  "budget": 12,
+  "answer": "Yellow banner \"Agent is using this page\" at top of page (005.png); assistant searched Standup in #general and said it sent the message (007.png).",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:02:25.977Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:02:25.977Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+      "steps": 7,
+      "answer": "Yellow banner \"Agent is using this page\" at top of page (005.png); assistant searched Standup in #general and said it sent the message (007.png).",
+      "noAnswer": false,
+      "stepsToPass": 7
+    }
+  ]
+}

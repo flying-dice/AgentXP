@@ -1,0 +1,39 @@
+{
+  "task": "T16.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Write files = ask; Read files = allow",
+  "notes": [],
+  "steps": 4,
+  "budget": 20,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:15:53.082Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:15:53.082Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Write files = ask; Read files = allow",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

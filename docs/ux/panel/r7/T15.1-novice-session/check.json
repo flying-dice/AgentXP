@@ -1,0 +1,39 @@
+{
+  "task": "T15.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "\"Try new ideas\" is deleted; the project folder remains; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 12,
+  "answer": "Its chats, notes and logs are lost; your project folders stay where they are.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:15:14.519Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:15:14.519Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "\"Try new ideas\" is deleted; the project folder remains; answer ok",
+      "steps": 2,
+      "answer": "Its chats, notes and logs are lost; your project folders stay where they are.",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

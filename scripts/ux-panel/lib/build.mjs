@@ -45,6 +45,8 @@ export function gateProblem(checks) {
 
 /** The record text with the build line under the title (once). */
 export function withBuildLine(text, build) {
-  if (/^- Build:/m.test(text)) return text
+  // A placeholder Build line (a panelist copied the template) is replaced; a real one is kept.
+  if (/^- Build:.*\bbuild, version\b/m.test(text)) return text
+  if (/^- Build:/m.test(text)) return text.replace(/^- Build:.*$/m, `- Build: ${buildLine(build)}`)
   return text.replace(/^(# .*)$/m, (m) => `${m}\n- Build: ${buildLine(build)}`)
 }

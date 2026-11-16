@@ -1,0 +1,41 @@
+{
+  "task": "T28.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "userInControl is true, paused is false (want one of them true); no tool call in the last 3 s (5 -> 5)",
+  "notes": [
+    "control used: userInControl; researcher: see log.jsonl, was it the bar's Take over, the top bar's Pause all agents, or the taskbar or tray control?"
+  ],
+  "steps": 1,
+  "budget": 4,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:03:22.799Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:03:22.799Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "userInControl is true, paused is false (want one of them true); no tool call in the last 3 s (5 -> 5)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

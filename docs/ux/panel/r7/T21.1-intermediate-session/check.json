@@ -1,0 +1,39 @@
+{
+  "task": "T21.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "\"hello\" was sent and the request was answered Allow (the mouse was disabled by the driver)",
+  "notes": [],
+  "steps": 4,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:01:41.607Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:01:41.607Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "\"hello\" was sent and the request was answered Allow (the mouse was disabled by the driver)",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "task": "T22.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "no Help window is open (neither \"Help and Support\" nor \"Chat Help\"; no window with app help)",
+  "notes": [],
+  "steps": 1,
+  "budget": 16,
+  "answer": "Open Changes and click Revert",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:02:29.610Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:02:29.610Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "no Help window is open (neither \"Help and Support\" nor \"Chat Help\"; no window with app help)",
+      "steps": 1,
+      "answer": "Open Changes and click Revert",
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}

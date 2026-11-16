@@ -1,0 +1,39 @@
+{
+  "task": "T11.3",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "paused is false; a new turn finished (success,cancelled,success)",
+  "notes": [],
+  "steps": 1,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:13:01.087Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:13:01.087Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "paused is false; a new turn finished (success,cancelled,success)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

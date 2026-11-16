@@ -1,0 +1,25 @@
+{
+  "task": "T20.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-np406T",
+  "testPagePort": 37265,
+  "testPageUrl": "http://127.0.0.1:37265/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:21:19.827Z",
+  "options": {
+    "taskManagerClosed": true
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-np406T/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "messagesAtStart": 1,
+  "progressAtStart": 0,
+  "toolCallsAtStart": 0,
+  "preset": "long-turn-running",
+  "note": null
+}

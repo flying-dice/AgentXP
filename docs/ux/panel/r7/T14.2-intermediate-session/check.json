@@ -1,0 +1,39 @@
+{
+  "task": "T14.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the desktop is called \"Experiments\"; the old name is gone",
+  "notes": [],
+  "steps": 4,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:15:18.148Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:15:18.148Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop is called \"Experiments\"; the old name is gone",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

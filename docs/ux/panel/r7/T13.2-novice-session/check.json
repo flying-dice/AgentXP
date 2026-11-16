@@ -1,0 +1,39 @@
+{
+  "task": "T13.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the request was answered Allow; the desktop is connected",
+  "notes": [],
+  "steps": 2,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:00:38.058Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:00:38.058Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the request was answered Allow; the desktop is connected",
+      "steps": 2,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

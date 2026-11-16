@@ -1,0 +1,27 @@
+{
+  "task": "T12.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-LjPVGu/ux.sock",
+  "admin": "/tmp/a7ux-LjPVGu/admin.sock",
+  "pid": 19555,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "tmp": "/tmp/a7ux-LjPVGu",
+  "userData": "/tmp/a7ux-LjPVGu/user-data",
+  "testPageUrl": "http://127.0.0.1:36147/",
+  "home": "/tmp/a7ux-LjPVGu/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-LjPVGu/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-LjPVGu/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-LjPVGu/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "eject-mid-job",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

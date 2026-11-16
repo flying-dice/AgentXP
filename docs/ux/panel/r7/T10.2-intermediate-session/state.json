@@ -1,0 +1,23 @@
+{
+  "task": "T10.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-NEreSA",
+  "testPagePort": 39347,
+  "testPageUrl": "http://127.0.0.1:39347/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:11:37.580Z",
+  "options": {
+    "open": [
+      "explorer",
+      "browser"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-NEreSA/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

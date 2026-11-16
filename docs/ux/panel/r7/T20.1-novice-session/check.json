@@ -1,0 +1,39 @@
+{
+  "task": "T20.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "f29521dd345e26119866ddcaf053d2f80fcda93d"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Event Viewer is open; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 20,
+  "answer": "Drive E: is not plugged in on this desktop",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:21:11.182Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:21:11.182Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Event Viewer is open; answer ok",
+      "steps": 2,
+      "answer": "Drive E: is not plugged in on this desktop",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

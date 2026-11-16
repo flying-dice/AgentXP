@@ -1,0 +1,20 @@
+{
+  "task": "T28.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-ZapSDW",
+  "testPagePort": 43223,
+  "testPageUrl": "http://127.0.0.1:43223/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:02:47.819Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-ZapSDW/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "webAppUrl": "http://127.0.0.1:4174/",
+  "preset": "web-app-busy",
+  "note": "the agent is working in the Browser"
+}

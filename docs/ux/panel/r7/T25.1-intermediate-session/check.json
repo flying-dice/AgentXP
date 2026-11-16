@@ -1,0 +1,39 @@
+{
+  "task": "T25.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 0,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Code Review window is still open; answer ok",
+  "notes": [],
+  "steps": 0,
+  "budget": 9,
+  "answer": "The most serious remark is the Blocker, in notes.txt, on line 4",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:24:07.991Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:24:07.991Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Code Review window is still open; answer ok",
+      "steps": 0,
+      "answer": "The most serious remark is the Blocker, in notes.txt, on line 4",
+      "noAnswer": false,
+      "stepsToPass": 0
+    }
+  ]
+}

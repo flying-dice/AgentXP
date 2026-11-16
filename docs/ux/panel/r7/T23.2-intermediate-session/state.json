@@ -1,0 +1,24 @@
+{
+  "task": "T23.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-Yla09j",
+  "testPagePort": 42997,
+  "testPageUrl": "http://127.0.0.1:42997/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T20:22:45.665Z",
+  "options": {
+    "script": "flaky",
+    "firstMessage": "Please list the files in my project"
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-Yla09j/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "firstMessage": "Please list the files in my project",
+  "preset": "chat-open",
+  "note": null
+}

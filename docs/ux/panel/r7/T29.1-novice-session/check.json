@@ -1,0 +1,39 @@
+{
+  "task": "T29.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "2 tab(s) (want 2); the first tab is the active one; the first tab still shows the test page (http://127.0.0.1:36983/); the second tab has the address http://127.0.0.1:36983/second (http://127.0.0.1:36983/second); the second page loaded (tab title \"Second page\")",
+  "notes": [],
+  "steps": 5,
+  "budget": 20,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:27:30.557Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:27:30.557Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "2 tab(s) (want 2); the first tab is the active one; the first tab still shows the test page (http://127.0.0.1:36983/); the second tab has the address http://127.0.0.1:36983/second (http://127.0.0.1:36983/second); the second page loaded (tab title \"Second page\")",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "task": "T06.3",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "840aaf8687bd7d34273ec5b5f64e1d8f9d9f2bd0"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "not met: Terminal policy is allow",
+  "notes": [],
+  "steps": 4,
+  "budget": 24,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T20:00:24.338Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T20:00:24.338Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "not met: Terminal policy is allow",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}
