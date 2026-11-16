@@ -83,3 +83,19 @@ export function withDecision(policy: ToolPolicyDto, key: PolicyKey, decision: Po
 export const policiesEqual = (a: ToolPolicyDto, b: ToolPolicyDto): boolean => META.every((m) => decisionOf(a, m.key) === decisionOf(b, m.key))
 
 export const isDecision = (value: string): value is PolicyDecision => value === 'allow' || value === 'ask' || value === 'deny'
+
+/** The help above the table. The last sentence names the top bar box the way the box itself does (UX-199). */
+export const PERMISSIONS_HELP = `Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. ${ASK_HELP} These settings are always kept. The top bar box 'Ask before every action (this session only)' is different: all tools ask first until you click Resume, and it is not saved.`
+
+/** Under this width the help shows its first two sentences with a "More" link (UX-198). */
+export const NARROW_PAGE_PX = 520
+
+/** True when the page is narrower than 520 px (a width of 0 means "not measured yet"). */
+export const isNarrowPage = (widthPx: number): boolean => widthPx > 0 && widthPx < NARROW_PAGE_PX
+
+/** The help as the page shows it: all of it, or in a narrow page its first two sentences until "More" is clicked. */
+export function helpFor(narrow: boolean, expanded: boolean, full: string = PERMISSIONS_HELP): { text: string; collapsed: boolean } {
+  if (!narrow || expanded) return { text: full, collapsed: false }
+  const sentences = full.match(/[^.]+\.(?:\s+|$)/g) ?? [full]
+  return { text: sentences.slice(0, 2).join('').trim(), collapsed: sentences.length > 2 }
+}

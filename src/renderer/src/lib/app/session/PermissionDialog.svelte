@@ -48,6 +48,8 @@
   function onkeydown(event: KeyboardEvent): void {
     // Several chat windows can each show a box: only the keys pressed inside this one count.
     if (!box || !(event.target instanceof Node) || !box.contains(event.target)) return
+    // The box with the whole change has its own keys (Esc closes it); A and Esc there never answer the request.
+    if (event.target instanceof Element && event.target.closest('[data-testid="permission-whole-change"]')) return
     alt.keydown(event)
     if (event.key === 'Escape') {
       event.preventDefault()

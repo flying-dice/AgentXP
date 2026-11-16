@@ -95,5 +95,11 @@ describe('scripted agent: failures and stop reasons (errors.json)', () => {
     await chat.stop.click()
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.eventually(async () => expect(await stopReason(6)).toBe('cancelled'))
+    // UX-200: one notice says one thing; the way to end the agent program is its second line, while the program runs.
+    const notice = chat.stopNotices.last()
+    await see.attribute(notice, 'data-reason', 'cancelled')
+    await see.text(chat.frame.getByTestId('chat-stop-notice-text').last(), 'You stopped this reply. The agent waits for your next message.')
+    await see.text(chat.frame.getByTestId('chat-stop-notice-program').last(), 'To end the agent program, use File > End the agent program.')
+    expect(await notice.innerText()).not.toMatch(/Pause all agents|Task Manager|Processes/)
   })
 })

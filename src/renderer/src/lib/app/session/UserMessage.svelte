@@ -7,7 +7,7 @@
     text: string
     /** File names attached to the message. */
     attachments?: string[]
-    /** `not-sent`: the agent never got it; `stopped`: the agent started on it and then stopped. */
+    /** `not-sent`: the agent never got it; `stopped`: the agent started on it and then stopped; `sent-again`: the repeat of a stopped message. */
     state?: SendState
     /** "Send again" (only for a message that is not sent). */
     onresend?: () => void
@@ -21,7 +21,7 @@
   const resumed = $derived(isContinueMessage(text))
 </script>
 
-<div class="user-message" class:failed={state !== 'sent'} class:automatic={resumed} data-testid="chat-message-user" data-send-state={state}>
+<div class="user-message" class:failed={state === 'not-sent' || state === 'stopped'} class:automatic={resumed} data-testid="chat-message-user" data-send-state={state}>
   <div class="who" data-testid="chat-message-sender">{resumed ? AUTOMATIC_SENDER : 'You'}</div>
   {#if resumed}<div class="resumed" role="status" data-testid="chat-resume-note">{RESUMED_NOTE}</div>{/if}
   {#if text}<div class="body" data-message-body>{text}</div>{/if}
@@ -38,6 +38,8 @@
     </div>
   {:else if state === 'stopped'}
     <div class="notice" role="status"><span class="label stopped" data-testid="chat-message-stopped">Stopped</span></div>
+  {:else if state === 'sent-again'}
+    <div class="notice" role="status"><span class="label stopped" data-testid="chat-message-sent-again">Sent again</span></div>
   {/if}
 </div>
 

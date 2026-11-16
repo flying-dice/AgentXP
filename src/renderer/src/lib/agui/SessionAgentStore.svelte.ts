@@ -62,6 +62,15 @@ export class SessionAgentStore {
   lastDecision = $state.raw<{ allowed: boolean; text: string } | null>(null)
   /** The user pressed Stop and the turn ended: the transcript says so until the next message. */
   stoppedByUser = $state(false)
+  /** The user started a new chat with the text of a failed message: this chat says "Continued in a new chat" until it runs again (UX-201). */
+  continued = $state(false)
+  /** The failed request that a Reconnect did not send again (the chat offers "Send it again"); null when there is none (UX-195). */
+  notResent = $state<string | null>(null)
+  /** Messages of a cut-off turn that were sent again: the first shows "Stopped" and the repeat "Sent again", once each (UX-201). */
+  stoppedIds = $state.raw<ReadonlySet<string>>(new Set())
+  resentIds = $state.raw<ReadonlySet<string>>(new Set())
+  /** The id of the cut-off message that the next `send` repeats. */
+  private resendOf: string | null = null
   /** Interrupts of the last run that still wait for an answer. */
   interrupts = $state.raw<Interrupt[]>([])
   /** The first interrupt that has no answer yet (a tool permission request), or null. */
@@ -135,6 +144,10 @@ export class SessionAgentStore {
   async reload(): Promise<void> {
     this.failedSend = null
     this.stoppedByUser = false
+    this.continued = false
+    this.notResent = null
+    this.stoppedIds = new Set()
+    this.resentIds = new Set()
     this.deniedToolCalls = new Set()
     this.agent.setMessages([])
     this.messages = []
@@ -150,8 +163,12 @@ export class SessionAgentStore {
   async send(text: string, attachments: string[] = []): Promise<boolean> {
     if (this.running || this.interrupts.length > 0) return false
     const previous = this.failedSend
+    const repeatOf = this.resendOf
+    this.resendOf = null
     this.failedSend = null
     this.stoppedByUser = false
+    this.continued = false
+    this.notResent = null
     this.lastDecision = null
     // The same text again after a failure ("Press Send to try again", also after Reconnect): the failed copy is taken back first,
     // so the message is in the transcript once (UX-162).
@@ -167,6 +184,10 @@ export class SessionAgentStore {
     const message: UserMessage = { id: randomUUID(), role: 'user', content: userContent(text, attachments) }
     this.agent.addMessage(message)
     this.messages = [...this.agent.messages]
+    if (repeatOf) {
+      this.stoppedIds = new Set([...this.stoppedIds, repeatOf])
+      this.resentIds = new Set([...this.resentIds, message.id])
+    }
     await this.run()
     if (!this.error) return true
     const later = this.agent.messages.slice(this.agent.messages.findIndex((m) => m.id === message.id) + 1)
@@ -191,6 +212,8 @@ export class SessionAgentStore {
       return false
     }
     this.failedSend = null
+    // A turn that was cut off stays in the transcript: the repeat is marked, so the request is not listed twice without a word.
+    this.resendOf = failed.unanswered ? null : failed.messageId
     return this.send(failed.text, failed.attachments)
   }
 
@@ -223,8 +246,11 @@ export class SessionAgentStore {
     this.messages = [...this.agent.messages]
   }
 
-  /** Starts a fresh agent program for this chat ("Reconnect") and loads the chat again. */
-  async reconnect(): Promise<void> {
+  /**
+   * Starts a fresh agent program for this chat ("Reconnect") and loads the chat again. A failed request is not sent by it: the chat
+   * says so (`notResent`) unless `announce` is false (the user ended the program on purpose; nothing is owed).
+   */
+  async reconnect({ announce = true }: { announce?: boolean } = {}): Promise<void> {
     this.error = null
     try {
       await this.sessionsApi().restartAgent(this.sessionId)
@@ -233,6 +259,13 @@ export class SessionAgentStore {
       return
     }
     await this.connect()
+    // The request that failed is not sent by a Reconnect: the chat says so and offers the button (UX-195).
+    this.notResent = announce && !this.error ? (this.failedSend?.text ?? null) : null
+  }
+
+  /** "Start a new chat with your text": this chat keeps its history and says it went on elsewhere (UX-201). */
+  markContinued(): void {
+    this.continued = true
   }
 
   /**

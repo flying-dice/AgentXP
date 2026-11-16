@@ -30,7 +30,9 @@ To start the agent again, follow the steps below:
 4. Make sure that the project folder is plugged in. An ejected project stops the chats that work on it. See **[Add or Remove a Project](projects.md)**.
 5. Start a new chat. Click **Start -> New chat**, or press Ctrl+N in the Chat window.
 
-Click **Details...** in the red row to read the technical text under the buttons. Click **Hide details** to close it.
+Click **Details...** in the red row to read more under the buttons. The first line is the same sentence as the row, and the next line says what to do. The technical text is below a line, under the words **Technical details**. Click **Hide details** to close it.
+
+In the list of **Agents**, an agent whose program is missing says **Not installed** or **Not found** in the **About** column. Choose an agent that does not say this.
 
 If the agent fails a second time, the row adds the cause, and the button **Start a new chat** shows. Click **Show in Event Viewer** to see the last rows of the log, or open **Event Viewer** yourself. The last rows tell what the agent said when it stopped.
 

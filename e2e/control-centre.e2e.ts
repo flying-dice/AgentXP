@@ -35,6 +35,28 @@ describe('control center', () => {
     await see.text(page('permissions-row').filter({ has: page('permissions-setting-terminal') }).getByTestId('permissions-mode'), 'Ask: asks you each time')
   })
 
+  it('with the chat pane open the Permissions page keeps readable columns and a whole page (UX-198)', async () => {
+    await centre.getByTestId('chat-pane-toggle').click()
+    const pageBody = page('permissions-page')
+    await see.visible(pageBody)
+    // The pane never takes so much that the app has under 420 px; the pages go in a strip on top, so the text keeps the width.
+    await see.eventually(async () => expect((await pageBody.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(300))
+    await see.eventually(async () => expect((await page('permissions-covers').first().boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(300))
+    // "Set every permission to" and the buttons stay in the page: they are reachable (the page scrolls).
+    await page('permissions-set-all').scrollIntoViewIfNeeded()
+    await see.visible(page('permissions-set-all'))
+    await page('permissions-ok').scrollIntoViewIfNeeded()
+    await see.visible(page('permissions-ok'))
+    // A narrow page shows the first two sentences of the help, with More for the rest.
+    if ((await pageBody.getAttribute('data-narrow')) === 'true') {
+      await see.visible(page('permissions-help-more'))
+      await page('permissions-help-more').click()
+      await see.visible(page('permissions-help-less'))
+    }
+    await centre.getByTestId('embedded-chat-toggle').click()
+    await see.visible(centre.getByTestId('chat-pane-toggle'))
+  })
+
   it('Set all changes every row, says Not applied yet, and Apply saves and shows the chips', async () => {
     await see.attribute(page('permissions-status'), 'data-kind', 'none')
     await pick('permissions-set-all-value', 'deny')

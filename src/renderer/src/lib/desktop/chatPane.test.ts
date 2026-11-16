@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, composeAppContext, explainChip, explainRequest, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
+import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, PANE_MIN_WIDTH, paneMaxWidth, composeAppContext, explainChip, explainRequest, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
 import { askChatPrompt } from '../apps/askChat'
 
 const memory = (initial: Record<string, string> = {}): Storage => {
@@ -89,5 +89,18 @@ describe('suggestionsFor', () => {
       expect(chips.length).toBeGreaterThan(0)
       for (const c of chips) expect(c.text.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('paneMaxWidth (UX-198)', () => {
+  it('is 60 percent of a wide window', () => {
+    expect(paneMaxWidth(2000)).toBe(1200)
+  })
+  it('leaves the app 420 px in a mid-size window', () => {
+    expect(paneMaxWidth(900)).toBe(480)
+    expect(paneMaxWidth(760)).toBe(340)
+  })
+  it('never goes under the narrowest pane', () => {
+    expect(paneMaxWidth(500)).toBe(PANE_MIN_WIDTH)
   })
 })

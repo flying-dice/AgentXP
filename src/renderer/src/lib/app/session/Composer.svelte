@@ -41,6 +41,8 @@
     onaskfirst?: (on: boolean) => void
     /** The last message did not go through and its text is in the box: the box says "Press Send to try again." until a send works. */
     retry?: boolean
+    /** Why Send is off while the agent cannot take a message at all ("The agent program is ended. Click Restart in the chat."); null when it can (UX-201). */
+    blocked?: string | null
   }
 
   let {
@@ -59,7 +61,8 @@
     starting = false,
     askFirst = false,
     onaskfirst,
-    retry = false
+    retry = false,
+    blocked = null
   }: Props = $props()
 
   let draft = $state('')
@@ -104,10 +107,10 @@
     if (draft === '' && input instanceof HTMLTextAreaElement) input.style.height = ''
   })
 
-  const canSend = $derived(!running && (draft.trim() !== '' || attached.length > 0))
+  const canSend = $derived(!running && !blocked && (draft.trim() !== '' || attached.length > 0))
   /** Why Send is off, as the tooltip of the button (null when it is on). */
   const sendReason = $derived(
-    canSend ? null : running ? 'The agent is working. Wait for the reply, or click Stop.' : 'Type a message first.'
+    canSend ? null : blocked ? blocked : running ? 'The agent is working. Wait for the reply, or click Stop.' : 'Type a message first.'
   )
   const modeItems = $derived(
     modeMenuItems({ modes, modeId, onmode: (id) => onmode?.(id), askFirst, ...(onaskfirst ? { onaskfirst } : {}) })

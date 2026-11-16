@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aboutOf, agentToSelect, commandOf } from './agentRows'
+import { MISSING_DEFAULT_QUESTION, aboutOf, agentToSelect, commandOf, missingWord, probePrograms } from './agentRows'
 
 const agent = (name: string, command = 'node', args: string[] = []) => ({ name, command, args })
 
@@ -25,5 +25,39 @@ describe('agentToSelect (UX-149)', () => {
     expect(agentToSelect([{ agentId: 1, problem: null, updatedAt: '2026-11-03T00:00:00Z' }], [{ id: 1 }])).toBeNull()
     expect(agentToSelect([{ agentId: 9, problem, updatedAt: '2026-11-03T00:00:00Z' }], [{ id: 1 }])).toBeNull()
     expect(agentToSelect([], [])).toBeNull()
+  })
+})
+
+describe('the state of each agent (UX-197)', () => {
+  it('says "Not installed" for a known agent and "Not found" for one you added, whose program is missing', () => {
+    expect(aboutOf(agent('Claude Code', 'npx', ['claude-agent']), 'missing')).toBe('Not installed')
+    expect(aboutOf(agent('My assistant', 'not-a-real-command'), 'missing')).toBe('Not found')
+    expect(missingWord(agent('Scripted Agent', 'node', ['scripted-agent.js']))).toBe('Not installed')
+  })
+  it('keeps the normal About text for a program that is there, or not looked up yet', () => {
+    expect(aboutOf(agent('Claude Code', 'npx', ['claude-agent']), 'found')).toContain('Claude Code')
+    expect(aboutOf(agent('My assistant', 'node', ['a.js']))).toBe('node a.js')
+    expect(aboutOf(agent('My assistant', 'node', ['a.js']), 'unknown')).toBe('node a.js')
+  })
+  it('asks before a missing program becomes the default', () => {
+    expect(MISSING_DEFAULT_QUESTION).toBe('This program was not found. Make it the default anyway?')
+  })
+
+  it('probes the program of every agent, a shared command once', async () => {
+    const asked: string[] = []
+    const check = async (command: string): Promise<boolean> => (asked.push(command), command !== 'not-a-real-command')
+    const agents = [
+      { id: 1, command: 'npx' },
+      { id: 2, command: 'node' },
+      { id: 3, command: 'not-a-real-command' },
+      { id: 4, command: 'node' }
+    ]
+    const states = await probePrograms(agents, check)
+    expect([...states]).toEqual([[1, 'found'], [2, 'found'], [3, 'missing'], [4, 'found']])
+    expect(asked).toEqual(['npx', 'node', 'not-a-real-command'])
+  })
+  it('leaves an agent unknown when the check itself fails', async () => {
+    const states = await probePrograms([{ id: 1, command: 'x' }], async () => Promise.reject(new Error('no')))
+    expect(states.get(1)).toBe('unknown')
   })
 })

@@ -86,8 +86,8 @@ export type ChipWord = 'Allow' | 'Ask' | 'Deny'
 export interface ToolChip {
   group: Exclude<ToolGroup, 'shell'>
   /**
-   * The chip text: `<Name>: <Allow|Ask|Deny>`. "(now)" follows Ask while "Ask before every action" is on and the saved setting is
-   * another (UX-173); "(Terminal is closed)" follows while no app that provides the tool is open (UX-178).
+   * The chip text: `<Name>: <Allow|Ask first|Deny>`. "(now)" follows Ask first while "Ask before every action" is on and the saved
+   * setting is another (UX-173). That no app that provides the tool is open is not in the text; the tooltip says it (UX-200).
    */
   label: string
   /** The name before the colon. */
@@ -116,9 +116,6 @@ function providerText(group: Exclude<ToolGroup, 'shell'>): string {
   const apps = TOOL_GROUP_PROVIDERS[group].map((k) => APP_DISPLAY_NAMES[k])
   return apps.length <= 1 ? (apps[0] ?? 'app') : `${apps.slice(0, -1).join(', ')} or ${apps[apps.length - 1]}`
 }
-
-/** Why the tool cannot be used yet, short: "Terminal is closed" for one app, "no app is open" for several (UX-178). */
-const closedReason = (group: Exclude<ToolGroup, 'shell'>): string => (TOOL_GROUP_PROVIDERS[group].length === 1 ? `${APP_DISPLAY_NAMES[TOOL_GROUP_PROVIDERS[group][0]]} is closed` : 'no app is open')
 
 /**
  * The tooltip of a chip; every chip has one. It names the setting and, when the chip differs from it, the reason; a chip that
@@ -149,8 +146,7 @@ export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | n
     const word: ChipWord = decision === 'deny' ? 'Deny' : askFirst || decision === 'ask' ? 'Ask' : 'Allow'
     const closed = word !== 'Deny' && !open.has(group)
     const state: ChipState = word === 'Deny' || closed ? 'off' : word === 'Ask' ? 'asks' : 'on'
-    const notes = [...(word !== setting && word === 'Ask' ? ['now'] : []), ...(closed ? [closedReason(group)] : [])]
-    const label = `${name}: ${word}${notes.length === 0 ? '' : ` (${notes.join(', ')})`}`
+    const label = `${name}: ${word === 'Ask' ? 'Ask first' : word}${word !== setting && word === 'Ask' ? ' (now)' : ''}`
     return { group, name, word, state, closed, label, tooltip: chipTooltip(group, name, word, setting, closed) }
   }
   const headline = new Set<ToolGroup>(HEADLINE)
@@ -169,7 +165,7 @@ export const noToolsOpen = (tools: readonly ToolGroup[], chatsOpen = 0): boolean
 
 /** The line next to the chips: "nothing yet" when no app and no chat is open, "this chat" when only chats are, otherwise none. */
 export function toolsLine(tools: readonly ToolGroup[], chatsOpen: number): string | null {
-  if (noToolsOpen(tools, chatsOpen)) return 'Agent can use nothing yet. Open an app to give it a tool.'
+  if (noToolsOpen(tools, chatsOpen)) return 'Open an app (Terminal, Browser, Code) to give the agent a tool.'
   return tools.every((g) => g === 'shell') ? 'The agent can use this chat.' : null
 }
 
@@ -193,8 +189,9 @@ export interface BarStatusInput {
 }
 
 /** What taking control does to every tool, in one sentence (the bar, the Activity tile and the Take over tooltip use it). */
-const ASK_FIRST_SENTENCE = 'All tools ask first until you resume.'
-const CONTROL_SENTENCE = `You are in control. ${ASK_FIRST_SENTENCE}`
+const CONTROL_SENTENCE = 'You are in control. All tools ask first until you click Resume.'
+/** The bar adds that the mode is not kept (UX-199: the box, the bar and the Permissions page say the same thing). */
+const NOT_KEPT = 'This is not saved.'
 export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
 /**
  * The take-over line. It agrees with the chips: every tool asks first, and when some tools need an app that is not open
@@ -202,21 +199,23 @@ export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
  */
 export function controlText(closedApps: readonly string[] = []): string {
   const closed = closedApps.length === 0 ? '' : ` ${closedApps.length === 1 ? closedApps[0] : `${closedApps.slice(0, -1).join(', ')} and ${closedApps[closedApps.length - 1]}`} ${closedApps.length === 1 ? 'is' : 'are'} not open.`
-  return `${CONTROL_SENTENCE}${closed}`
+  return `${CONTROL_SENTENCE}${closed} ${NOT_KEPT}`
 }
 /** The first line of the Activity gadget while the user is in control and a step was running (UX-178: no "Stopped:"). */
-export const CONTROL_NOTE = 'You are in control. The agent asks first.'
+export const CONTROL_NOTE = `You are in control. The agent asks first. ${NOT_KEPT}`
 /**
  * What the box does not do (UX-173): it is not a saved setting. The bar and the Activity gadget show it next to the
  * link that opens Permissions: `before`, the link text, `after`.
  */
-export const NOT_SAVED_NOTE = { before: 'This is not saved. To keep a tool on Ask, change it in ', link: 'Control Center', after: '.' } as const
+export const NOT_SAVED_NOTE = { before: 'To keep a tool on Ask, change it in ', link: 'Control Center', after: '.' } as const
 export const NOT_SAVED_TEXT = `${NOT_SAVED_NOTE.before}${NOT_SAVED_NOTE.link}${NOT_SAVED_NOTE.after}`
-/** The label of the take-control check box: it says how long it lasts (UX-173). */
-export const TAKE_CONTROL_LABEL = 'Ask before every action (until I untick it)'
-export const PAUSE_TIP = 'Pause every agent on this desktop'
+/** The mode in one phrase, in the check box, the bar and the Permissions page (UX-199). */
+export const ASK_EVERY_ACTION = 'Ask before every action (this session only)'
+/** The label of the take-control check box. */
+export const TAKE_CONTROL_LABEL = ASK_EVERY_ACTION
+export const PAUSE_TIP = 'Pause all agents on this desktop. Stop in a chat stops that chat only'
 /** The same line while nothing was running: it is true and it does not sit over "Nothing has happened yet". */
-export const CONTROL_IDLE_NOTE = CONTROL_SENTENCE
+export const CONTROL_IDLE_NOTE = `${CONTROL_SENTENCE} ${NOT_KEPT}`
 /** The tooltip of the Browser's Take over button: what one click does to every tool (UX-143). */
 export const TAKE_OVER_TIP = CONTROL_SENTENCE
 /** The button in the bar that ends the take-over, and what it does. */
