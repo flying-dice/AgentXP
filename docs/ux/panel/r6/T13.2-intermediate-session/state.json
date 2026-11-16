@@ -1,0 +1,19 @@
+{
+  "task": "T13.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-wVmBHv",
+  "testPagePort": 39765,
+  "testPageUrl": "http://127.0.0.1:39765/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:44:44.728Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-wVmBHv/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "preset": "disconnected-pending",
+  "note": null
+}

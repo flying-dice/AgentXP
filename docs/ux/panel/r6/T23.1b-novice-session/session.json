@@ -1,0 +1,22 @@
+{
+  "task": "T23.1b",
+  "level": "novice",
+  "socket": "/tmp/a7ux-4qAX6y/ux.sock",
+  "admin": "/tmp/a7ux-4qAX6y/admin.sock",
+  "pid": 15595,
+  "tmp": "/tmp/a7ux-4qAX6y",
+  "userData": "/tmp/a7ux-4qAX6y/user-data",
+  "testPageUrl": "http://127.0.0.1:38199/",
+  "home": "/tmp/a7ux-4qAX6y/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-4qAX6y/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-4qAX6y/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-4qAX6y/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "crashed-agent",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

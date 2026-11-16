@@ -1,0 +1,9 @@
+{"ts":"2026-11-16T18:45:39.227Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/001.png","window":"Fix login redirect - Agent7","ok":true,"ms":590}
+{"ts":"2026-11-16T18:45:43.173Z","cmd":"click","args":[50,125],"flags":{"double":true},"ok":false,"note":"The mouse is not working. Use the keyboard.","ms":0}
+{"ts":"2026-11-16T18:45:46.354Z","cmd":"key","args":["Tab"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/002.png","window":"Fix login redirect - Agent7","ok":true,"ms":711}
+{"ts":"2026-11-16T18:45:50.155Z","cmd":"key","args":["Tab"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/003.png","window":"Fix login redirect - Agent7","ok":true,"ms":711}
+{"ts":"2026-11-16T18:45:53.674Z","cmd":"key","args":["Enter"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/004.png","window":"Fix login redirect - Agent7","ok":true,"ms":797}
+{"ts":"2026-11-16T18:45:57.451Z","cmd":"type","args":["hello"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/005.png","window":"Fix login redirect - Agent7","ok":true,"ms":798}
+{"ts":"2026-11-16T18:46:00.795Z","cmd":"key","args":["Enter"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/006.png","window":"Fix login redirect - Agent7","ok":true,"ms":760}
+{"ts":"2026-11-16T18:46:04.556Z","cmd":"key","args":["a"],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/007.png","window":"Fix login redirect - Agent7","ok":true,"ms":710}
+{"ts":"2026-11-16T18:46:08.111Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T21.1-novice/shots/008.png","window":"Fix login redirect - Agent7","ok":true,"ms":571}

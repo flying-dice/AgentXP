@@ -1,0 +1,18 @@
+{
+  "task": "T21.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-pUmepU",
+  "testPagePort": 33639,
+  "testPageUrl": "http://127.0.0.1:33639/",
+  "noMouse": true,
+  "startedAt": "2026-11-16T18:45:35.720Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-pUmepU/home/Documents/login-app"
+  ],
+  "preset": "keyboard-only",
+  "note": null
+}

@@ -1,0 +1,30 @@
+{
+  "task": "T06.3",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "Terminal policy is ask; a request appeared for the command",
+  "notes": [],
+  "steps": 8,
+  "budget": 24,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:44:51.450Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:44:51.450Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Terminal policy is ask; a request appeared for the command",
+      "steps": 8,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}
