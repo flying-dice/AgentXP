@@ -146,26 +146,26 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--xp-text);
+    color: var(--w7-text);
     white-space: nowrap;
     cursor: default;
   }
   .tlabel:hover:not(.disabled) {
-    border-color: var(--xp-hot-border);
-    background: var(--xp-hot-face);
+    border-color: var(--w7-hot-border);
+    background: var(--w7-hot-face);
   }
   .tlabel.selected {
-    border-color: var(--xp-select-border);
-    background: var(--xp-select-face);
+    border-color: var(--w7-select-border);
+    background: var(--w7-select-face);
   }
   .tlabel.focused {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -3px;
   }
   .tlabel.bold {
     font-weight: 700;
   }
   .tlabel.disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

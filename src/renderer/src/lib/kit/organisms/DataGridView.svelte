@@ -186,7 +186,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 <div
   bind:this={root}
-  class="xp-grid xp-scroll {className}"
+  class="xp-grid w7-scroll {className}"
   role="grid"
   tabindex="0"
   aria-label={ariaLabel}
@@ -270,7 +270,7 @@
     height: 100%;
     min-height: 0;
     background: #ababab;
-    border: 1px solid var(--xp-list-border);
+    border: 1px solid var(--w7-list-border);
     outline: none;
   }
   .inner {
@@ -304,7 +304,7 @@
     display: flex;
     height: 22px;
     border-bottom: 1px solid #a0a0a0;
-    background: var(--xp-window);
+    background: var(--w7-window);
   }
   .rh {
     border-bottom: 0;
@@ -318,7 +318,7 @@
     align-items: center;
     padding: 0 3px;
     border-right: 1px solid #a0a0a0;
-    background: var(--xp-window);
+    background: var(--w7-window);
     overflow: hidden;
     position: relative;
   }
@@ -326,11 +326,11 @@
     justify-content: flex-end;
   }
   .cell.sel {
-    background: var(--xp-list-select-face);
-    color: var(--xp-list-select-text);
+    background: var(--w7-list-select-face);
+    color: var(--w7-list-select-text);
   }
   .cell.ro:not(.sel) {
-    color: var(--xp-text-muted);
+    color: var(--w7-text-muted);
   }
   .cell :global(.xp-check) {
     margin: 0 auto;

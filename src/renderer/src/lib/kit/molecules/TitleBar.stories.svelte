@@ -58,13 +58,13 @@
     flex-direction: column;
     width: 520px;
     padding: 0 7px;
-    background: var(--xp-frame-active);
-    border: 1px solid var(--xp-frame-border);
+    background: var(--w7-frame-active);
+    border: 1px solid var(--w7-frame-border);
     border-radius: 8px 8px 0 0;
   }
   .frame.inactive {
-    background: var(--xp-frame-inactive);
-    border-color: var(--xp-frame-inactive-border);
+    background: var(--w7-frame-inactive);
+    border-color: var(--w7-frame-inactive-border);
   }
   .hint {
     font-size: 11px;

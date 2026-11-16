@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { AgentXpApi, AgentXpEventName, AgentXpEvents, AguiApi, AguiEventMessage } from '../shared/ipc'
+import type { Agent7Api, Agent7EventName, Agent7Events, AguiApi, AguiEventMessage } from '../shared/ipc'
 import { AGUI_CHANNELS, INVOKE_CHANNELS, readableIpcError, type InvokeApi } from '../shared/ipc-channels'
 
 type Invoker = (...args: unknown[]) => Promise<unknown>
@@ -24,8 +24,8 @@ function buildInvokeApi(): InvokeApi {
   return groups as unknown as InvokeApi
 }
 
-const on: AgentXpApi['on'] = <K extends AgentXpEventName>(event: K, listener: (payload: AgentXpEvents[K]) => void) => {
-  const handler = (_event: Electron.IpcRendererEvent, payload: AgentXpEvents[K]): void => listener(payload)
+const on: Agent7Api['on'] = <K extends Agent7EventName>(event: K, listener: (payload: Agent7Events[K]) => void) => {
+  const handler = (_event: Electron.IpcRendererEvent, payload: Agent7Events[K]): void => listener(payload)
   ipcRenderer.on(event, handler)
   return () => {
     ipcRenderer.removeListener(event, handler)
@@ -50,6 +50,6 @@ const agui: AguiApi = {
   }
 }
 
-const api: AgentXpApi = { ...buildInvokeApi(), agui, on }
+const api: Agent7Api = { ...buildInvokeApi(), agui, on }
 
-contextBridge.exposeInMainWorld('agentxp', api)
+contextBridge.exposeInMainWorld('agent7', api)

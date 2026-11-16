@@ -57,10 +57,10 @@
     justify-content: flex-end;
     width: 220px;
     padding: 0 7px;
-    background: var(--xp-frame-active);
-    border: 1px solid var(--xp-frame-border);
+    background: var(--w7-frame-active);
+    border: 1px solid var(--w7-frame-border);
   }
   .frame.inactive {
-    background: var(--xp-frame-inactive);
+    background: var(--w7-frame-inactive);
   }
 </style>

@@ -95,18 +95,18 @@
     box-sizing: border-box;
     height: 21px;
     background: #fff;
-    border: 1px solid var(--xp-input-border);
-    border-top-color: var(--xp-input-border-top);
-    font: var(--xp-font);
+    border: 1px solid var(--w7-input-border);
+    border-top-color: var(--w7-input-border-top);
+    font: var(--w7-font);
   }
   .xp-dtp:hover:not(.disabled),
   .xp-dtp.open {
     border-color: #3c7fb1;
   }
   .xp-dtp.disabled {
-    background: var(--xp-face);
-    color: var(--xp-text-disabled);
-    border-color: var(--xp-border-disabled);
+    background: var(--w7-face);
+    color: var(--w7-text-disabled);
+    border-color: var(--w7-border-disabled);
   }
   .field {
     flex: 1;
@@ -118,7 +118,7 @@
     outline: none;
   }
   .field:focus-visible {
-    background: var(--xp-list-select-face);
+    background: var(--w7-list-select-face);
     color: #fff;
   }
   .drop {
@@ -133,7 +133,7 @@
     color: #3c4a60;
   }
   .drop:hover:not(:disabled) {
-    background: var(--xp-btn-hover-face);
+    background: var(--w7-btn-hover-face);
   }
   .drop:disabled {
     background: #f4f4f4;
@@ -144,7 +144,7 @@
     left: 0;
     top: 100%;
     z-index: 50;
-    box-shadow: var(--xp-shadow-popup);
+    box-shadow: var(--w7-shadow-popup);
   }
   .xp-dtp-wrap {
     position: relative;

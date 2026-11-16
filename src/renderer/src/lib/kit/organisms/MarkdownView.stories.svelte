@@ -28,6 +28,6 @@
     width: 560px;
     padding: 10px 14px;
     background: #fff;
-    border: 1px solid var(--xp-list-border);
+    border: 1px solid var(--w7-list-border);
   }
 </style>

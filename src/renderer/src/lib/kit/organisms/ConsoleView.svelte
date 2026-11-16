@@ -38,7 +38,7 @@
 <div class="xp-console {className}" style:max-height={maxHeight}>
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
-    class="scroll xp-scroll"
+    class="scroll w7-scroll"
     bind:this={scroller}
     onscroll={onScroll}
     role="log"
@@ -62,14 +62,14 @@
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    background: var(--xp-console-bg);
+    background: var(--w7-console-bg);
     border: 1px solid #000;
   }
   .scroll {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    background: var(--xp-console-bg);
+    background: var(--w7-console-bg);
     color-scheme: light;
   }
   .scroll:focus-visible {
@@ -80,9 +80,9 @@
     margin: 0;
     padding: 6px 8px;
     min-height: 100%;
-    background: var(--xp-console-bg);
-    color: var(--xp-console-fg);
-    font: var(--xp-font-mono);
+    background: var(--w7-console-bg);
+    color: var(--w7-console-fg);
+    font: var(--w7-font-mono);
     line-height: 1.4;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -95,7 +95,7 @@
     height: 1.1em;
     margin-left: 1px;
     vertical-align: text-bottom;
-    background: var(--xp-console-fg);
+    background: var(--w7-console-fg);
     animation: blink 1s steps(1) infinite;
   }
   @keyframes blink {

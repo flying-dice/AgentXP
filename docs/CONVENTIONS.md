@@ -13,7 +13,7 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/main-window.pn
 - One component per file, PascalCase, WinForms control names. Layout:
   `src/renderer/src/lib/kit/<level>/<Name>.svelte` + `<Name>.stories.svelte` next to it.
   Pure helpers in `<Name>.ts` next to it when needed.
-- Visuals: scoped `<style>` in the component using the `--xp-*` tokens. Add new tokens
+- Visuals: scoped `<style>` in the component using the `--w7-*` tokens. Add new tokens
   to `tokens.css` (append only, grouped with a comment) rather than hard-coding a colour
   that will be reused. No Tailwind, no CSS frameworks.
 - Behaviour/accessibility: pure Svelte 5. No third-party UI libraries (no bits-ui, no

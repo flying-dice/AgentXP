@@ -1,6 +1,6 @@
 import type { A2uiServerMessage, A2uiSurfaceDto } from '../a2ui'
 
-/** Protocol version written into every message AgentXP produces. */
+/** Protocol version written into every message Agent7 produces. */
 export const A2UI_VERSION = 'v0.9'
 
 const isEmptyModel = (model: unknown): boolean =>

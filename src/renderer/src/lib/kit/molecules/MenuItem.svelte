@@ -71,17 +71,17 @@
     padding: 0 0 0 0;
     border: 1px solid transparent;
     border-radius: 2px;
-    color: var(--xp-text);
+    color: var(--w7-text);
     white-space: nowrap;
     cursor: default;
     outline: none;
   }
   .mi.hot:not(.disabled) {
-    border-color: var(--xp-menu-hot-border);
-    background: var(--xp-menu-hot-face);
+    border-color: var(--w7-menu-hot-border);
+    background: var(--w7-menu-hot-face);
   }
   .mi.disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .mi.disabled :global(.xp-icon) {
     opacity: 0.45;
@@ -99,7 +99,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--xp-menu-hot-border);
+    border: 1px solid var(--w7-menu-hot-border);
     border-radius: 2px;
     background: linear-gradient(#f4fafe, #dff0fa);
   }
@@ -125,7 +125,7 @@
     color: #444;
   }
   .disabled .shortcut {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .arrow {
     flex: none;

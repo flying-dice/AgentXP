@@ -20,7 +20,7 @@
 </script>
 
 {#snippet demo(args: ComponentProps<typeof DialogButtons>)}
-  <div class="form" tabindex="-1" data-xp-form>
+  <div class="form" tabindex="-1" data-w7-form>
     <p>Focus anywhere in this box and press Enter (AcceptButton) or Esc (CancelButton).</p>
     <input class="field" value="a text box" aria-label="Sample field" />
     <DialogButtons {...args} onresult={(r) => (last = r)} />
@@ -48,8 +48,8 @@
   .form {
     width: 360px;
     padding: 12px;
-    background: var(--xp-face);
-    border: 1px solid var(--xp-panel-border);
+    background: var(--w7-face);
+    border: 1px solid var(--w7-panel-border);
     outline: none;
   }
   p {
@@ -59,7 +59,7 @@
     width: 100%;
     margin-bottom: 12px;
     font: inherit;
-    border: 1px solid var(--xp-input-border);
+    border: 1px solid var(--w7-input-border);
     padding: 2px 3px;
   }
   .result {

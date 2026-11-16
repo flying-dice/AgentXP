@@ -169,21 +169,21 @@
     padding: 0 8px;
     border: 1px solid transparent;
     background: transparent;
-    color: var(--xp-text);
+    color: var(--w7-text);
     cursor: default;
     outline: none;
   }
   .mb:hover,
   .mb:focus-visible,
   .mb.open {
-    border-color: var(--xp-menubar-hot-border);
-    background: var(--xp-menubar-hot-face);
+    border-color: var(--w7-menubar-hot-border);
+    background: var(--w7-menubar-hot-face);
   }
   .mb.open {
     border-bottom-color: transparent;
-    background: var(--xp-menu-face);
-    border-color: var(--xp-menu-border);
-    border-bottom-color: var(--xp-menu-face);
+    background: var(--w7-menu-face);
+    border-color: var(--w7-menu-border);
+    border-bottom-color: var(--w7-menu-face);
     position: relative;
     z-index: 101;
   }

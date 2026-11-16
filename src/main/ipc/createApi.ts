@@ -21,7 +21,7 @@ export interface ApiServices {
   shell: ShellService
 }
 
-/** Adapts the application services to the renderer-facing `AgentXpApi` (minus `on`). */
+/** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
 export function createApi(s: ApiServices): InvokeApi {
   return {
     agents: {

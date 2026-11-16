@@ -118,7 +118,7 @@ const unifiedDiff = `diff --git a/src/shared/a2ui.ts b/src/shared/a2ui.ts
 +
 +export type A2uiServerMessage = A2uiMessage
  
- export const A2UI_CATALOG_ID = 'https://agentxp.dev/a2ui/catalogs/winforms/v1'
+ export const A2UI_CATALOG_ID = 'https://agent7.dev/a2ui/catalogs/winforms/v1'
 `
 
 const sample = `export function a2uiSurfaceToMessages(surface: A2uiSurfaceDto): A2uiServerMessage[] {
@@ -226,7 +226,7 @@ export const projectOverview = surface(
       text: '## Release notes\n\n* A2UI now runs on **@a2ui/web_core**\n* New `winforms-catalog.json`\n\n```ts\nconst catalog = Catalog.fromJson(document)\n```\n\nSee the [protocol docs](https://a2ui.org).'
     }
   ],
-  { props: { name: 'agentxp', version: '0.1.0', private: true, license: 'MIT', workers: 4, target: 'electron45' }, folder: 'src', file: [] }
+  { props: { name: 'agent7', version: '0.1.0', private: true, license: 'MIT', workers: 4, target: 'electron45' }, folder: 'src', file: [] }
 )
 
 const dot = (color: string): string =>

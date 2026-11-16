@@ -3,7 +3,7 @@ import { SqliteA2uiSurfaceRepository } from './sqlite-a2ui-surface-repository'
 import { SqliteTranscriptRepository } from './sqlite-transcript-repository'
 import { count, createFixture, createSession } from './test-helpers'
 
-const base = { surfaceId: 'form', catalogId: 'https://agentxp.dev/a2ui/catalogs/winforms/v1', title: 'Form' }
+const base = { surfaceId: 'form', catalogId: 'https://agent7.dev/a2ui/catalogs/winforms/v1', title: 'Form' }
 
 function setup() {
   const f = createFixture()

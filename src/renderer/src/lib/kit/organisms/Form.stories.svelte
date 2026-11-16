@@ -43,9 +43,9 @@
 {#snippet strip(css: string, text: string)}
   <div class="strip" style={css}>{text}</div>
 {/snippet}
-{#snippet menu()}{@render strip('height:22px;background:var(--xp-menubar-face);border-bottom:1px solid #b4bfcf', 'File   Edit   View   Session   Tools   Help')}{/snippet}
-{#snippet toolbar()}{@render strip('height:30px;background:var(--xp-toolbar-face);border-bottom:1px solid #b4bfcf', 'New session   Open folder   Save')}{/snippet}
-{#snippet statusbar()}{@render strip('height:24px;background:var(--xp-statusbar-face);border-top:1px solid #a9b6c9', 'Ready')}{/snippet}
+{#snippet menu()}{@render strip('height:22px;background:var(--w7-menubar-face);border-bottom:1px solid #b4bfcf', 'File   Edit   View   Session   Tools   Help')}{/snippet}
+{#snippet toolbar()}{@render strip('height:30px;background:var(--w7-toolbar-face);border-bottom:1px solid #b4bfcf', 'New session   Open folder   Save')}{/snippet}
+{#snippet statusbar()}{@render strip('height:24px;background:var(--w7-statusbar-face);border-top:1px solid #a9b6c9', 'Ready')}{/snippet}
 
 {#snippet content()}
   <div class="pad">
@@ -112,7 +112,7 @@
     height: 100vh;
     padding: 24px;
     box-sizing: border-box;
-    background: var(--xp-desktop-bg);
+    background: var(--w7-desktop-bg);
   }
   .stage.small {
     padding: 0;

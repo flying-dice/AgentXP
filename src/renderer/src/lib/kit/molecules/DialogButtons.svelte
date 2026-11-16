@@ -23,7 +23,7 @@
 
   /** Enter / Esc act on the whole form, like WinForms AcceptButton / CancelButton. */
   $effect(() => {
-    const scope = root?.closest<HTMLElement>('[data-xp-form]') ?? root?.parentElement
+    const scope = root?.closest<HTMLElement>('[data-w7-form]') ?? root?.parentElement
     if (!scope) return
     const onKey = (event: KeyboardEvent): void => {
       if (event.defaultPrevented) return

@@ -104,9 +104,9 @@
     align-items: center;
     gap: 8px;
     padding: 0 8px 0 6px;
-    background: var(--xp-taskbar-face);
+    background: var(--w7-taskbar-face);
     border-top: 1px solid rgba(255, 255, 255, 0.55);
-    font: var(--xp-font);
+    font: var(--w7-font);
     color: #000;
     user-select: none;
   }
@@ -175,7 +175,7 @@
     width: 130px;
     min-width: 46px;
     border-color: rgba(255, 255, 255, 0.65);
-    background: var(--xp-taskbtn-face);
+    background: var(--w7-taskbtn-face);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   .task.running.active {

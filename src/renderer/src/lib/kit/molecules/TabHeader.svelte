@@ -43,11 +43,11 @@
     height: 22px;
     margin: 1px -1px 0 0;
     padding: 0 12px;
-    border: 1px solid var(--xp-panel-border);
+    border: 1px solid var(--w7-panel-border);
     border-bottom: 0;
     border-radius: 3px 3px 0 0;
     background: linear-gradient(#f6f6f6, #e4e4e4);
-    color: var(--xp-text);
+    color: var(--w7-text);
     cursor: default;
     outline: none;
   }
@@ -59,15 +59,15 @@
     height: 25px;
     margin-top: -2px;
     margin-bottom: -1px;
-    border-top: 2px solid var(--xp-tab-accent);
-    background: var(--xp-window);
+    border-top: 2px solid var(--w7-tab-accent);
+    background: var(--w7-window);
     z-index: 2;
   }
   .tab:focus-visible > span {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: 1px;
   }
   .tab:disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

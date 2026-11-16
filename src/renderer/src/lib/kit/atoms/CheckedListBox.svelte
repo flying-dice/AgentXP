@@ -77,7 +77,7 @@
     background: linear-gradient(135deg, #d9f0fc, #fff 60%);
   }
   .box.off {
-    border-color: var(--xp-border-disabled);
+    border-color: var(--w7-border-disabled);
     background: #f4f4f4;
   }
   .box.on::after {

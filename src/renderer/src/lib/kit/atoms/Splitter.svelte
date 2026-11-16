@@ -68,7 +68,7 @@
 <style>
   .xp-splitter {
     flex: none;
-    background: var(--xp-face);
+    background: var(--w7-face);
     touch-action: none;
   }
   .vertical {
@@ -84,7 +84,7 @@
     background: #bcc7d8;
   }
   .xp-splitter:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -1px;
   }
   .xp-splitter[aria-disabled='true'] {

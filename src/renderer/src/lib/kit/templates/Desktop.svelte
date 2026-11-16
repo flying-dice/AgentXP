@@ -33,9 +33,9 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    font: var(--xp-font);
-    color: var(--xp-text);
-    background: var(--xp-desktop-bg);
+    font: var(--w7-font);
+    color: var(--w7-text);
+    background: var(--w7-desktop-bg);
   }
   .area {
     position: relative;

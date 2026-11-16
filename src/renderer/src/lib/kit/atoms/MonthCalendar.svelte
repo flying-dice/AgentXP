@@ -169,19 +169,19 @@
     box-sizing: border-box;
     padding: 0;
     background: #fff;
-    border: 1px solid var(--xp-list-border);
-    font: var(--xp-font);
-    color: var(--xp-text);
+    border: 1px solid var(--w7-list-border);
+    font: var(--w7-font);
+    color: var(--w7-text);
   }
   .xp-cal.disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .head {
     display: flex;
     align-items: center;
     height: 28px;
     padding: 0 3px;
-    background: var(--xp-calendar-header);
+    background: var(--w7-calendar-header);
     border-bottom: 1px solid #d5dfe5;
   }
   .nav,
@@ -206,19 +206,19 @@
   }
   .nav:hover:not(:disabled),
   .title:hover:not(:disabled) {
-    border-color: var(--xp-hot-border);
-    background: var(--xp-hot-face);
+    border-color: var(--w7-hot-border);
+    background: var(--w7-hot-face);
   }
   .nav:active:not(:disabled) {
-    border-color: var(--xp-select-border);
-    background: var(--xp-select-face);
+    border-color: var(--w7-select-border);
+    background: var(--w7-select-face);
   }
   .body {
     padding: 4px 6px;
     outline: none;
   }
   .body:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -3px;
   }
   .row {
@@ -252,18 +252,18 @@
   }
   .day:hover:not(:disabled),
   .tile:hover {
-    border-color: var(--xp-hot-border);
-    background: var(--xp-hot-face);
+    border-color: var(--w7-hot-border);
+    background: var(--w7-hot-face);
   }
   .day.today {
-    border-color: var(--xp-calendar-today);
-    background: linear-gradient(#5b9be0, var(--xp-calendar-today));
+    border-color: var(--w7-calendar-today);
+    background: linear-gradient(#5b9be0, var(--w7-calendar-today));
     color: #fff;
   }
   .day.selected,
   .tile.selected {
-    border-color: var(--xp-select-border);
-    background: var(--xp-select-face);
+    border-color: var(--w7-select-border);
+    background: var(--w7-select-face);
     color: #000;
   }
   .day.today.selected {
@@ -273,11 +273,11 @@
   }
   .day.focus:focus-visible,
   .body:focus-visible .day.focus {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -2px;
   }
   .day:disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
     opacity: 0.6;
   }
   .tiles {
@@ -308,13 +308,13 @@
     text-align: left;
   }
   .foot:hover:not(:disabled) {
-    background: var(--xp-hot-face);
+    background: var(--w7-hot-face);
   }
   .todaybox {
     width: 12px;
     height: 12px;
-    border: 1px solid var(--xp-calendar-today);
+    border: 1px solid var(--w7-calendar-today);
     border-radius: 2px;
-    background: linear-gradient(#5b9be0, var(--xp-calendar-today));
+    background: linear-gradient(#5b9be0, var(--w7-calendar-today));
   }
 </style>

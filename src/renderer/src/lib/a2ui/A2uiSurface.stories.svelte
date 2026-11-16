@@ -99,13 +99,13 @@
 <style>
   .window {
     border: 1px solid #5a6a84;
-    background: var(--xp-face);
+    background: var(--w7-face);
     box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
   }
   .caption {
     padding: 4px 8px;
     color: #000;
-    font: var(--xp-font);
+    font: var(--w7-font);
     background: linear-gradient(#dbe8f7, #bcd2ee 50%, #aac4e6 51%, #c1d6f0);
     border-bottom: 1px solid #7e94b8;
   }
@@ -114,8 +114,8 @@
   }
   .log-title {
     margin: 10px 0 2px;
-    font: var(--xp-font);
-    color: var(--xp-text-muted);
+    font: var(--w7-font);
+    color: var(--w7-text-muted);
   }
   .log {
     max-width: 640px;
@@ -123,9 +123,9 @@
     overflow: auto;
     margin: 0;
     padding: 4px 6px;
-    border: 1px solid var(--xp-input-border);
-    background: var(--xp-window);
-    font: var(--xp-font-mono);
+    border: 1px solid var(--w7-input-border);
+    background: var(--w7-window);
+    font: var(--w7-font-mono);
     user-select: text;
   }
 </style>

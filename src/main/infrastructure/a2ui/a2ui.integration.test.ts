@@ -113,13 +113,13 @@ describe('A2UI MCP <-> bridge', () => {
 describe('buildA2uiMcpServerConfig', () => {
   it('builds the ACP stdio shape', () => {
     expect(buildA2uiMcpServerConfig({ electronPath: '/e', scriptPath: '/s.js', socketPath: '/sock', sessionKey: 'k' })).toEqual({
-      name: 'agentxp-a2ui',
+      name: 'agent7-a2ui',
       command: '/e',
       args: ['/s.js'],
       env: [
         { name: 'ELECTRON_RUN_AS_NODE', value: '1' },
-        { name: 'AGENTXP_A2UI_SOCKET', value: '/sock' },
-        { name: 'AGENTXP_SESSION_KEY', value: 'k' }
+        { name: 'AGENT7_A2UI_SOCKET', value: '/sock' },
+        { name: 'AGENT7_SESSION_KEY', value: 'k' }
       ]
     })
   })

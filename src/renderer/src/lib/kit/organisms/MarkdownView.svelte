@@ -40,8 +40,8 @@
 
 <style>
   .xp-markdown {
-    font: var(--xp-font);
-    color: var(--xp-text);
+    font: var(--w7-font);
+    color: var(--w7-text);
     line-height: 1.5;
     overflow-wrap: anywhere;
     user-select: text;
@@ -102,14 +102,14 @@
     margin: 2px 0;
   }
   .xp-markdown :global(a) {
-    color: var(--xp-link);
+    color: var(--w7-link);
     text-decoration: underline;
     cursor: pointer;
   }
   .xp-markdown :global(blockquote) {
     padding: 2px 12px;
     border-left: 3px solid #b5c2d6;
-    color: var(--xp-text-muted);
+    color: var(--w7-text-muted);
   }
   .xp-markdown :global(hr) {
     border: 0;
@@ -127,9 +127,9 @@
   .xp-markdown :global(pre) {
     padding: 6px 8px;
     background: #fff;
-    border: 1px solid var(--xp-list-border);
+    border: 1px solid var(--w7-list-border);
     overflow: auto;
-    font: var(--xp-font-mono);
+    font: var(--w7-font-mono);
   }
   .xp-markdown :global(pre code) {
     padding: 0;

@@ -107,7 +107,7 @@ export class AcpAgentConnection {
     const response = await this.connection.agent.request(methods.agent.initialize, {
       protocolVersion: PROTOCOL_VERSION,
       clientCapabilities: { fs: { readTextFile: true, writeTextFile: true }, terminal: true },
-      clientInfo: { name: this.deps.clientName ?? 'agentxp', version: this.deps.clientVersion ?? '0.1.0' }
+      clientInfo: { name: this.deps.clientName ?? 'agent7', version: this.deps.clientVersion ?? '0.1.0' }
     })
     this.init = {
       agentName: response.agentInfo?.name ?? null,
@@ -201,7 +201,7 @@ export class AcpAgentConnection {
 
   private buildApp(): ReturnType<typeof client> {
     const { files, terminals } = this.deps
-    return client({ name: 'agentxp' })
+    return client({ name: 'agent7' })
       .onNotification(methods.client.session.update, ({ params }) => this.handleUpdate(params))
       .onRequest(methods.client.session.requestPermission, ({ params }) => this.handlePermission(params))
       .onRequest(methods.client.fs.readTextFile, ({ params }) =>

@@ -163,7 +163,7 @@
 
 <div
   bind:this={root}
-  class="xp-tree xp-scroll {className}"
+  class="xp-tree w7-scroll {className}"
   role="tree"
   tabindex="0"
   aria-label={ariaLabel}
@@ -208,8 +208,8 @@
     height: 100%;
     min-height: 0;
     padding: 3px 2px;
-    background: var(--xp-window);
-    border: 1px solid var(--xp-panel-border);
+    background: var(--w7-window);
+    border: 1px solid var(--w7-panel-border);
     outline: none;
   }
 </style>

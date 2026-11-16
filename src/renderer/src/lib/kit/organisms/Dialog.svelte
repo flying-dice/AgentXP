@@ -99,7 +99,7 @@
   .bar {
     flex: none;
     padding: 12px 12px 12px;
-    background: var(--xp-face);
+    background: var(--w7-face);
     border-top: 1px solid #dfdfdf;
   }
 </style>

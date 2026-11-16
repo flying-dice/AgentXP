@@ -79,7 +79,7 @@
     display: inline-flex;
     align-self: flex-start;
     margin-top: -1px;
-    border: 1px solid var(--xp-caption-border);
+    border: 1px solid var(--w7-caption-border);
     border-top: 0;
     border-radius: 0 0 5px 5px;
     overflow: hidden;
@@ -91,8 +91,8 @@
     height: 19px;
     padding: 0;
     border: 0;
-    border-right: 1px solid var(--xp-caption-border);
-    background: var(--xp-caption-face);
+    border-right: 1px solid var(--w7-caption-border);
+    background: var(--w7-caption-face);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -102,24 +102,24 @@
   .cb.close {
     width: 47px;
     border-right: 0;
-    background: var(--xp-caption-close-face);
+    background: var(--w7-caption-close-face);
   }
   .cb:hover:not(:disabled) {
-    background: var(--xp-caption-hover-face);
+    background: var(--w7-caption-hover-face);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
   }
   .cb.close:hover:not(:disabled) {
-    background: var(--xp-caption-close-hover-face);
+    background: var(--w7-caption-close-hover-face);
   }
   .cb:active:not(:disabled) {
     filter: brightness(0.82);
   }
   .cb.close:active:not(:disabled) {
-    background: var(--xp-caption-close-active-face);
+    background: var(--w7-caption-close-active-face);
     filter: none;
   }
   .cb:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -3px;
   }
   .cb:disabled {

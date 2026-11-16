@@ -141,7 +141,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role, a11y_no_noninteractive_tabindex -->
 <div
   bind:this={root}
-  class="xp-listview xp-scroll {view} {className}"
+  class="xp-listview w7-scroll {view} {className}"
   role={details ? 'grid' : 'listbox'}
   tabindex="0"
   aria-label={ariaLabel}
@@ -221,8 +221,8 @@
     width: 100%;
     height: 100%;
     min-height: 0;
-    background: var(--xp-window);
-    border: 1px solid var(--xp-list-border);
+    background: var(--w7-window);
+    border: 1px solid var(--w7-list-border);
     outline: none;
   }
   .head {
@@ -230,8 +230,8 @@
     top: 0;
     z-index: 1;
     display: flex;
-    border-bottom: 1px solid var(--xp-border-light);
-    background: var(--xp-window);
+    border-bottom: 1px solid var(--w7-border-light);
+    background: var(--w7-window);
   }
   .lvr,
   .item {
@@ -239,22 +239,22 @@
     align-items: center;
     height: 20px;
     border: 1px solid transparent;
-    color: var(--xp-text);
+    color: var(--w7-text);
     cursor: default;
   }
   .lvr:hover,
   .item:hover {
-    border-color: var(--xp-hot-border);
-    background: var(--xp-hot-face);
+    border-color: var(--w7-hot-border);
+    background: var(--w7-hot-face);
   }
   .lvr.selected,
   .item.selected {
-    border-color: var(--xp-select-border);
-    background: var(--xp-select-face);
+    border-color: var(--w7-select-border);
+    background: var(--w7-select-face);
   }
   .lvr.focus,
   .item.focus {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -2px;
   }
   .cell {
@@ -276,7 +276,7 @@
   }
   .empty {
     padding: 8px;
-    color: var(--xp-text-muted);
+    color: var(--w7-text-muted);
   }
 
   /* View modes other than Details */

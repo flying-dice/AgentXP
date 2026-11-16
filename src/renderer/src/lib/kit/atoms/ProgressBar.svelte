@@ -43,22 +43,22 @@
 
 <style>
   :global(.xp-progress) {
-    --fill: var(--xp-progress-fill);
+    --fill: var(--w7-progress-fill);
     position: relative;
     display: block;
     height: 15px;
     box-sizing: border-box;
     overflow: hidden;
-    border: 1px solid var(--xp-progress-border);
+    border: 1px solid var(--w7-progress-border);
     border-radius: 2px;
-    background: linear-gradient(#e0e0e0, var(--xp-progress-track) 30%, #f1f1f1);
+    background: linear-gradient(#e0e0e0, var(--w7-progress-track) 30%, #f1f1f1);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.12);
   }
   :global(.xp-progress.paused) {
-    --fill: var(--xp-progress-fill-paused);
+    --fill: var(--w7-progress-fill-paused);
   }
   :global(.xp-progress.error) {
-    --fill: var(--xp-progress-fill-error);
+    --fill: var(--w7-progress-fill-error);
   }
   .fill {
     position: relative;

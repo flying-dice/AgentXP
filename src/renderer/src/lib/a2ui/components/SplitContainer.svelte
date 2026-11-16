@@ -30,8 +30,8 @@
   .split {
     min-height: 150px;
     display: flex;
-    border: 1px solid var(--xp-panel-border);
-    background: var(--xp-face);
+    border: 1px solid var(--w7-panel-border);
+    background: var(--w7-face);
   }
   .pane {
     flex: 1;

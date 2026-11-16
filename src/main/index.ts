@@ -9,10 +9,10 @@ import { ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from 
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
-const userDataOverride = process.env['AGENTXP_USER_DATA']
+const userDataOverride = process.env['AGENT7_USER_DATA']
 if (userDataOverride) app.setPath('userData', userDataOverride)
 
-const databasePath = (): string => process.env['AGENTXP_DB_PATH'] ?? join(app.getPath('userData'), 'agentxp.sqlite')
+const databasePath = (): string => process.env['AGENT7_DB_PATH'] ?? join(app.getPath('userData'), 'agent7.sqlite')
 
 function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -21,7 +21,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: 900,
     minHeight: 600,
     show: false,
-    title: 'AgentXP',
+    title: 'Agent7',
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
@@ -67,7 +67,7 @@ let shutdown: (() => Promise<void>) | null = null
 let shuttingDown = false
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.flyingdice.agentxp')
+  electronApp.setAppUserModelId('com.flyingdice.agent7')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
   shutdown = await bootstrap()
   createMainWindow()
@@ -75,7 +75,7 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
 }).catch((error: unknown) => {
-  dialog.showErrorBox('AgentXP could not start', error instanceof Error ? error.message : String(error))
+  dialog.showErrorBox('Agent7 could not start', error instanceof Error ? error.message : String(error))
   app.exit(1)
 })
 

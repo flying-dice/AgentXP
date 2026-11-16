@@ -73,7 +73,7 @@
     align-items: center;
     gap: 7px;
     padding-left: 2px;
-    font: var(--xp-font);
+    font: var(--w7-font);
     color: #000;
     overflow: hidden;
   }
@@ -90,7 +90,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow: var(--xp-title-glow);
+    text-shadow: var(--w7-title-glow);
   }
   .inactive .text {
     color: #4d5560;

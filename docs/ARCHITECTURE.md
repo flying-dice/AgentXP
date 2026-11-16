@@ -1,6 +1,6 @@
-# AgentXP architecture
+# Agent7 architecture
 
-AgentXP is an Electron desktop harness for coding agents that speak the
+Agent7 is an Electron desktop harness for coding agents that speak the
 [Agent Client Protocol](https://agentclientprotocol.com) (ACP). It looks and
 behaves like a Windows 7 WinForms application (see `docs/design/`).
 
@@ -21,11 +21,11 @@ src/
       a2ui/        Stdio MCP server handed to agents + bridge into the app.
       fs/          Workspace file system access, sandboxed to registered folders.
     application/agui/  The AG-UI backend: run coordinator, event translator, shared state, interrupts.
-    ipc/           ipcMain handlers that adapt AgentXpApi calls to application services,
+    ipc/           ipcMain handlers that adapt Agent7Api calls to application services,
                    the AG-UI stream transport, and the event publisher that pushes the
-                   renderer-facing AgentXpEvents (session list, status bar) to windows.
+                   renderer-facing Agent7Events (session list, status bar) to windows.
     index.ts       Composition root: builds everything and wires it together.
-  preload/         contextBridge implementation of AgentXpApi.
+  preload/         contextBridge implementation of Agent7Api.
   renderer/src/
     lib/kit/       WinForms UI kit, atomic design:
       atoms/       One standard WinForms control per component (Button, TextBox, ...).
@@ -35,7 +35,7 @@ src/
       tokens.css   Win7 design tokens. Components use these variables.
       actions/     Shared behaviour (click-outside, popup positioning, roving focus).
     lib/a2ui/      A2UI surface store + renderer mapping catalog components to kit components.
-    lib/stores/    Svelte 5 rune stores over window.agentxp (one store per concern).
+    lib/stores/    Svelte 5 rune stores over window.agent7 (one store per concern).
     lib/agui/      AG-UI client: IpcAgent (AbstractAgent over IPC) and SessionAgentStore.
     lib/pages/     Pages (the main window) composed from kit templates/organisms.
 ```
@@ -43,7 +43,7 @@ src/
 Dependency rule: arrows point inwards. `domain` imports nothing from other
 layers; `application` imports `domain`; `infrastructure` implements domain
 ports; `ipc` and `index.ts` wire it all. The renderer talks to main only via
-`window.agentxp` (typed by `src/shared/ipc.ts`).
+`window.agent7` (typed by `src/shared/ipc.ts`).
 
 ## Principles
 
@@ -70,7 +70,7 @@ component properties and data models). Images from agents are stored as BLOB.
    and calls `session/new` with the folder as `cwd` and the A2UI MCP server in
    `mcpServers`.
 3. `session/update` notifications are mapped to repository writes and pushed
-   to the renderer as `AgentXpEvents`: message chunks, tool calls, plan (tasks),
+   to the renderer as `Agent7Events`: message chunks, tool calls, plan (tasks),
    modes, commands, usage.
 4. Client-side ACP requests (`fs/read_text_file`, `fs/write_text_file`,
    `terminal/*`, `session/request_permission`) are served by the harness,

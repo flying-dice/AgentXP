@@ -71,7 +71,7 @@
     </div>
   {/if}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="scroll xp-scroll" bind:this={scroller} tabindex="0" role="region" aria-label={label}>
+  <div class="scroll w7-scroll" bind:this={scroller} tabindex="0" role="region" aria-label={label}>
     <div class="lines" class:wrap={wordWrap} style:--digits="{digits}ch">
       {#each lines as line, i (i)}
         {@const no = startLine + i}
@@ -96,8 +96,8 @@
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    border: 1px solid var(--xp-list-border);
-    background: var(--xp-code-bg);
+    border: 1px solid var(--w7-list-border);
+    background: var(--w7-code-bg);
     color: #000;
   }
   .bar {
@@ -107,24 +107,24 @@
     justify-content: space-between;
     gap: 8px;
     padding: 4px 6px;
-    background: var(--xp-face);
-    border-bottom: 1px solid var(--xp-border-light);
+    background: var(--w7-face);
+    border-bottom: 1px solid var(--w7-border-light);
   }
   .scroll {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    background: var(--xp-code-bg);
+    background: var(--w7-code-bg);
   }
   .scroll:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -2px;
   }
   .lines {
     min-width: 100%;
     width: max-content;
     padding: 3px 0;
-    font: var(--xp-font-mono);
+    font: var(--w7-font-mono);
     font-size: 12px;
   }
   .lines.wrap {
@@ -135,7 +135,7 @@
     min-height: 17px;
   }
   .row.hl {
-    background: var(--xp-code-highlight);
+    background: var(--w7-code-highlight);
   }
   .no {
     position: sticky;
@@ -145,13 +145,13 @@
     width: var(--digits);
     padding: 0 10px 0 8px;
     text-align: right;
-    color: var(--xp-code-gutter);
-    background: var(--xp-code-gutter-bg);
+    color: var(--w7-code-gutter);
+    background: var(--w7-code-gutter-bg);
     border-right: 1px solid #e0e0e0;
     user-select: none;
   }
   .row.hl .no {
-    background: var(--xp-code-highlight);
+    background: var(--w7-code-highlight);
   }
   .code {
     flex: 1;

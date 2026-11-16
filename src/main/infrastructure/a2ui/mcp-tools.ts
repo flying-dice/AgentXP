@@ -15,7 +15,7 @@ export function createA2uiMcpServer(forwarder: A2uiForwarder, validator: A2uiMes
 
   server.registerTool(
     'a2ui_catalog',
-    { description: 'Describe the AgentXP WinForms component catalog and how to draw UI surfaces. Call this before a2ui_render.' },
+    { description: 'Describe the Agent7 WinForms component catalog and how to draw UI surfaces. Call this before a2ui_render.' },
     () => text(buildCatalogReply())
   )
 

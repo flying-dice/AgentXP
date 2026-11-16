@@ -46,8 +46,8 @@
   .menu {
     width: 260px;
     padding: 2px;
-    background: var(--xp-menu-face);
-    border: 1px solid var(--xp-menu-border);
-    box-shadow: var(--xp-shadow-popup);
+    background: var(--w7-menu-face);
+    border: 1px solid var(--w7-menu-border);
+    box-shadow: var(--w7-shadow-popup);
   }
 </style>

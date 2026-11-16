@@ -114,7 +114,7 @@
   aria-multiselectable={selectionMode !== 'One'}
   aria-disabled={disabled}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
-  class="xp-listbox xp-scroll {className}"
+  class="xp-listbox w7-scroll {className}"
   class:disabled
   class:focused
   style="width:{dim(width)};height:{dim(height)}"
@@ -148,17 +148,17 @@
     display: block;
     box-sizing: border-box;
     padding: 1px 0;
-    background: var(--xp-window);
-    border: 1px solid var(--xp-list-border);
-    font: var(--xp-font);
-    color: var(--xp-text);
+    background: var(--w7-window);
+    border: 1px solid var(--w7-list-border);
+    font: var(--w7-font);
+    color: var(--w7-text);
     outline: none;
     overflow-x: hidden;
   }
   .xp-listbox.disabled {
-    background: var(--xp-face);
-    color: var(--xp-text-disabled);
-    border-color: var(--xp-border-disabled);
+    background: var(--w7-face);
+    color: var(--w7-text-disabled);
+    border-color: var(--w7-border-disabled);
   }
   .item {
     display: flex;
@@ -175,18 +175,18 @@
     text-overflow: ellipsis;
   }
   .item.off {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   /* Selected, list not focused: classic inactive grey highlight. */
   .item.selected {
     background: #d9d9d9;
   }
   .focused .item.selected {
-    background: var(--xp-list-select-face);
-    color: var(--xp-list-select-text);
+    background: var(--w7-list-select-face);
+    color: var(--w7-list-select-text);
   }
   .item.active {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -1px;
   }
   .focused .item.selected.active {

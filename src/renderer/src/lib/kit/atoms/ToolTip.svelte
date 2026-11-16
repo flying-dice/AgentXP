@@ -107,7 +107,7 @@
     background: linear-gradient(#fff, #e4e5f0);
     box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.25);
     color: #575757;
-    font: var(--xp-font);
+    font: var(--w7-font);
     pointer-events: none;
     white-space: pre-wrap;
   }

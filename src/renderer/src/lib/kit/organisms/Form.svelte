@@ -92,7 +92,7 @@
   class:inactive={!active}
   class:maximized
   class:dialog
-  data-xp-form
+  data-w7-form
   role={role ?? (dialog ? 'dialog' : 'group')}
   aria-modal={ariaModal}
   aria-labelledby={frameless ? undefined : titleId}
@@ -141,19 +141,19 @@
     flex-direction: column;
     box-sizing: border-box;
     padding: 0 7px 7px;
-    border: 1px solid var(--xp-frame-border);
+    border: 1px solid var(--w7-frame-border);
     border-radius: 8px 8px 0 0;
-    background: var(--xp-frame-active);
-    box-shadow: var(--xp-frame-shadow);
-    font: var(--xp-font);
-    color: var(--xp-text);
+    background: var(--w7-frame-active);
+    box-shadow: var(--w7-frame-shadow);
+    font: var(--w7-font);
+    color: var(--w7-text);
     min-width: 0;
     min-height: 0;
   }
   .xp-form.inactive {
-    border-color: var(--xp-frame-inactive-border);
-    background: var(--xp-frame-inactive);
-    box-shadow: var(--xp-frame-shadow-inactive);
+    border-color: var(--w7-frame-inactive-border);
+    background: var(--w7-frame-inactive);
+    box-shadow: var(--w7-frame-shadow-inactive);
   }
   .xp-form.maximized {
     position: absolute;
@@ -182,11 +182,11 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--xp-face);
-    border: 1px solid var(--xp-client-border);
+    background: var(--w7-face);
+    border: 1px solid var(--w7-client-border);
   }
   .client.window {
-    background: var(--xp-window);
+    background: var(--w7-window);
   }
   .xp-form.frameless .client {
     border: 0;

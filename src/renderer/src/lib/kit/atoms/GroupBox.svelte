@@ -19,17 +19,17 @@
     margin: 0;
     padding: 6px 9px 9px;
     min-width: 0;
-    border: 1px solid var(--xp-group-border);
+    border: 1px solid var(--w7-group-border);
     border-radius: 3px;
     box-shadow: inset 1px 1px 0 #fff, 1px 1px 0 #fff;
-    font: var(--xp-font);
-    color: var(--xp-text);
+    font: var(--w7-font);
+    color: var(--w7-text);
   }
   legend {
     padding: 0 3px;
     margin-left: 6px;
   }
   .disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

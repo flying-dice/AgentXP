@@ -16,14 +16,14 @@ const app = await electron.launch({
   executablePath: require('electron'),
   args: [join(root, 'out/main/index.js'), '--no-sandbox'],
   cwd: root,
-  env: { ...process.env, AGENTXP_USER_DATA: userData }
+  env: { ...process.env, AGENT7_USER_DATA: userData }
 })
 try {
   const page = await app.firstWindow()
-  await page.waitForFunction(() => Boolean(window.agentxp))
+  await page.waitForFunction(() => Boolean(window.agent7))
   const result = await page.evaluate(
     async ({ workspace, fixture }) => {
-      const api = window.agentxp
+      const api = window.agent7
       const folder = await api.folders.add(workspace)
       const agent = await api.agents.create({
         name: 'Fake agent',

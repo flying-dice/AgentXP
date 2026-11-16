@@ -49,7 +49,7 @@ export class SessionAgentStore {
   private readonly agent: IpcAgent
   private readonly subscription: { unsubscribe(): void }
 
-  constructor(sessionId: number, api: AguiApi = window.agentxp.agui) {
+  constructor(sessionId: number, api: AguiApi = window.agent7.agui) {
     this.sessionId = sessionId
     this.agent = new IpcAgent(api, { threadId: String(sessionId) })
     const subscriber: AgentSubscriber = {

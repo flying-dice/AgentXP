@@ -20,7 +20,7 @@
     padding: 3px 8px 3px 5px;
     border: 1px solid #c9b46a;
     background: linear-gradient(#fffbe8, #f6edc4);
-    color: var(--xp-text);
-    font: var(--xp-font);
+    color: var(--w7-text);
+    font: var(--w7-font);
   }
 </style>

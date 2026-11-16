@@ -9,9 +9,9 @@ body,
 }
 
 body {
-  font: var(--xp-font);
-  color: var(--xp-text);
-  background: var(--xp-face);
+  font: var(--w7-font);
+  color: var(--w7-text);
+  background: var(--w7-face);
   user-select: none;
   cursor: default;
 }

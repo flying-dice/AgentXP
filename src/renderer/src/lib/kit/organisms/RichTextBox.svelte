@@ -54,13 +54,13 @@
 <div class="xp-richtextbox {className}" class:disabled style:height>
   {#if showMarkdown}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div class="scroll xp-scroll" tabindex="0" role="region" aria-label={label}>
+    <div class="scroll w7-scroll" tabindex="0" role="region" aria-label={label}>
       <MarkdownView source={value} {onlink} />
     </div>
   {:else}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
-      class="scroll xp-scroll edit"
+      class="scroll w7-scroll edit"
       bind:this={editor}
       contenteditable={readOnly || disabled ? 'false' : 'plaintext-only'}
       role="textbox"
@@ -84,19 +84,19 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--xp-window);
-    border: 1px solid var(--xp-input-border);
-    border-top-color: var(--xp-input-border-top);
-    font: var(--xp-font);
+    background: var(--w7-window);
+    border: 1px solid var(--w7-input-border);
+    border-top-color: var(--w7-input-border-top);
+    font: var(--w7-font);
   }
   .xp-richtextbox:focus-within {
     border-color: #569de5;
     border-top-color: #569de5;
   }
   .xp-richtextbox.disabled {
-    background: var(--xp-face);
-    border-color: var(--xp-border-disabled);
-    color: var(--xp-text-disabled);
+    background: var(--w7-face);
+    border-color: var(--w7-border-disabled);
+    color: var(--w7-text-disabled);
   }
   .scroll {
     flex: 1;
@@ -113,6 +113,6 @@
   }
   .edit:empty::before {
     content: attr(data-placeholder);
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

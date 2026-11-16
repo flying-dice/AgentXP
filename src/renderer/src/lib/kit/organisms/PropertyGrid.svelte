@@ -125,7 +125,7 @@
     <ToolStripButton glyph={catGlyph} title="Categorized" checked={categorized} onclick={() => (sort = 'categorized')} />
     <ToolStripButton glyph={azGlyph} title="Alphabetical" checked={!categorized} onclick={() => (sort = 'alphabetical')} />
   </ToolStrip>
-  <div class="grid xp-scroll" role="treegrid" tabindex="0" aria-label={ariaLabel} aria-activedescendant={active ? domId(active.id) : undefined} bind:this={body} {onkeydown}>
+  <div class="grid w7-scroll" role="treegrid" tabindex="0" aria-label={ariaLabel} aria-activedescendant={active ? domId(active.id) : undefined} bind:this={body} {onkeydown}>
     <div class="content">
       {#each entries as entry (entry.id)}
         {#if entry.kind === 'category'}
@@ -193,18 +193,18 @@
     width: 100%;
     height: 100%;
     min-height: 0;
-    background: var(--xp-face);
-    border: 1px solid var(--xp-list-border);
+    background: var(--w7-face);
+    border: 1px solid var(--w7-list-border);
   }
   .xp-propgrid :global(.pgtools) {
     height: 30px;
-    border-bottom-color: var(--xp-border-light);
+    border-bottom-color: var(--w7-border-light);
   }
   .grid {
     flex: 1;
     min-height: 0;
-    background: var(--xp-window);
-    border-top: 1px solid var(--xp-border-light);
+    background: var(--w7-window);
+    border-top: 1px solid var(--w7-border-light);
     outline: none;
   }
   .content {
@@ -217,13 +217,13 @@
     gap: 3px;
     height: 21px;
     padding-left: 3px;
-    background: var(--xp-face);
+    background: var(--w7-face);
     border-bottom: 1px solid #ededed;
     font-weight: 700;
     cursor: default;
   }
   .cat.selected {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -2px;
   }
   .box {
@@ -253,16 +253,16 @@
     height: 54px;
     padding: 4px 6px;
     overflow: hidden;
-    background: var(--xp-face);
-    border-top: 1px solid var(--xp-border-light);
+    background: var(--w7-face);
+    border-top: 1px solid var(--w7-border-light);
   }
   .dtitle {
     font-weight: 700;
   }
   .dtext {
-    color: var(--xp-text);
+    color: var(--w7-text);
   }
   .xp-propgrid :global(.pgr.selected .editor) {
-    background: var(--xp-window);
+    background: var(--w7-window);
   }
 </style>

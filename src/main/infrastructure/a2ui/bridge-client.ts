@@ -25,7 +25,7 @@ export class SocketForwarder implements A2uiForwarder {
       const socket = connect(this.socketPath)
       const splitter = new LineSplitter()
       socket.setEncoding('utf8')
-      socket.setTimeout(this.timeoutMs, () => fail('timed out waiting for AgentXP'))
+      socket.setTimeout(this.timeoutMs, () => fail('timed out waiting for Agent7'))
       socket.on('connect', () => socket.write(JSON.stringify(request) + '\n'))
       socket.on('data', (chunk: string) =>
         splitter.push(chunk, (line) => {
@@ -34,11 +34,11 @@ export class SocketForwarder implements A2uiForwarder {
             socket.end()
             resolve(res)
           } catch {
-            fail('invalid response from AgentXP')
+            fail('invalid response from Agent7')
           }
         })
       )
-      socket.on('error', (e) => fail(`cannot reach AgentXP: ${e.message}`))
+      socket.on('error', (e) => fail(`cannot reach Agent7: ${e.message}`))
     })
   }
 }

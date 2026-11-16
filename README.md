@@ -1,4 +1,4 @@
-# AgentXP
+# Agent7
 
 A Windows 7 era desktop harness for coding agents speaking the
 [Agent Client Protocol](https://agentclientprotocol.com).

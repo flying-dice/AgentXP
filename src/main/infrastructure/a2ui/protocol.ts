@@ -13,6 +13,6 @@ export interface BridgeResponse {
 }
 
 
-export const ENV_SOCKET = 'AGENTXP_A2UI_SOCKET'
-export const ENV_SESSION_KEY = 'AGENTXP_SESSION_KEY'
-export const MCP_SERVER_NAME = 'agentxp-a2ui'
+export const ENV_SOCKET = 'AGENT7_A2UI_SOCKET'
+export const ENV_SESSION_KEY = 'AGENT7_SESSION_KEY'
+export const MCP_SERVER_NAME = 'agent7-a2ui'

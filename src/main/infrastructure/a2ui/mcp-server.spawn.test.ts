@@ -27,7 +27,7 @@ describe.skipIf(!existsSync(script))('built a2ui-mcp.js', () => {
         new StdioClientTransport({
           command: process.execPath,
           args: [script],
-          env: { ...(process.env as Record<string, string>), AGENTXP_A2UI_SOCKET: bridge.socketPath, AGENTXP_SESSION_KEY: 'k1' }
+          env: { ...(process.env as Record<string, string>), AGENT7_A2UI_SOCKET: bridge.socketPath, AGENT7_SESSION_KEY: 'k1' }
         })
       )
       await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ deleteSurface: { surfaceId: 'x' } }] } })

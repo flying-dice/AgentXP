@@ -18,7 +18,7 @@
 
 <div
   class="xp-panel {borderStyle} {className}"
-  class:xp-scroll={autoScroll}
+  class:w7-scroll={autoScroll}
   class:clip={!autoScroll}
   {style}
 >
@@ -28,15 +28,15 @@
 <style>
   .xp-panel {
     position: relative;
-    background: var(--xp-face);
-    font: var(--xp-font);
-    color: var(--xp-text);
+    background: var(--w7-face);
+    font: var(--w7-font);
+    color: var(--w7-text);
   }
   .clip {
     overflow: hidden;
   }
   .FixedSingle {
-    border: 1px solid var(--xp-panel-border);
+    border: 1px solid var(--w7-panel-border);
   }
   .Fixed3D {
     border: 2px solid;

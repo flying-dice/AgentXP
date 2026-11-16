@@ -41,11 +41,11 @@
     min-width: 75px;
     height: 23px;
     padding: 0 10px;
-    border: 1px solid var(--xp-border);
+    border: 1px solid var(--w7-border);
     border-radius: 3px;
-    background: var(--xp-btn-face);
+    background: var(--w7-btn-face);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
-    color: var(--xp-text);
+    color: var(--w7-text);
     font: inherit;
     cursor: default;
     display: inline-flex;
@@ -55,31 +55,31 @@
     white-space: nowrap;
   }
   .xp-btn:hover:not(:disabled) {
-    border-color: var(--xp-btn-hover-border);
-    background: var(--xp-btn-hover-face);
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
   }
   .xp-btn:active:not(:disabled) {
-    border-color: var(--xp-btn-active-border);
-    background: var(--xp-btn-active-face);
+    border-color: var(--w7-btn-active-border);
+    background: var(--w7-btn-active-face);
   }
   .xp-btn.def {
-    border-color: var(--xp-btn-default-border);
+    border-color: var(--w7-btn-default-border);
     box-shadow:
       inset 0 0 0 1px #bfe3ff,
       0 0 3px rgba(51, 153, 255, 0.7);
   }
   .xp-btn.def:hover:not(:disabled) {
-    border-color: var(--xp-btn-hover-border);
+    border-color: var(--w7-btn-hover-border);
   }
   .xp-btn:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
     outline-offset: -4px;
   }
   .xp-btn:disabled {
-    border-color: var(--xp-border-disabled);
+    border-color: var(--w7-border-disabled);
     background: #f4f4f4;
     box-shadow: none;
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .xp-btn:disabled :global(.xp-icon) {
     opacity: 0.45;
@@ -88,16 +88,16 @@
   /* FlatStyle.Flat */
   .xp-btn.flat {
     border-radius: 0;
-    border-color: var(--xp-border);
-    background: var(--xp-face);
+    border-color: var(--w7-border);
+    background: var(--w7-face);
     box-shadow: none;
   }
   .xp-btn.flat:hover:not(:disabled) {
-    border-color: var(--xp-border);
+    border-color: var(--w7-border);
     background: #e5e5e5;
   }
   .xp-btn.flat:active:not(:disabled) {
-    border-color: var(--xp-border);
+    border-color: var(--w7-border);
     background: #cdcdcd;
   }
   .xp-btn.flat.def {
@@ -105,7 +105,7 @@
     box-shadow: inset 0 0 0 1px #000;
   }
   .xp-btn.flat:disabled {
-    background: var(--xp-face);
-    border-color: var(--xp-border-disabled);
+    background: var(--w7-face);
+    border-color: var(--w7-border-disabled);
   }
 </style>

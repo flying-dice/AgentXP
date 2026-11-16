@@ -101,9 +101,9 @@
     align-items: stretch;
     height: 21px;
     width: 120px;
-    border: 1px solid var(--xp-input-border);
-    border-top-color: var(--xp-input-border-top);
-    background: var(--xp-window);
+    border: 1px solid var(--w7-input-border);
+    border-top-color: var(--w7-input-border-top);
+    background: var(--w7-window);
   }
   .xp-updown:hover:not(.disabled) {
     border-color: #3d7bad;
@@ -112,7 +112,7 @@
     border-color: #569de5;
   }
   .xp-updown.disabled {
-    border-color: var(--xp-border-disabled);
+    border-color: var(--w7-border-disabled);
     background: #f4f4f4;
   }
   input {
@@ -123,10 +123,10 @@
     outline: none;
     background: transparent;
     font: inherit;
-    color: var(--xp-text);
+    color: var(--w7-text);
     user-select: text;
   }
   input:disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

@@ -48,11 +48,11 @@
   .xp-textbox {
     height: 21px;
     padding: 2px 3px;
-    border: 1px solid var(--xp-input-border);
-    border-top-color: var(--xp-input-border-top);
+    border: 1px solid var(--w7-input-border);
+    border-top-color: var(--w7-input-border-top);
     border-radius: 0;
-    background: var(--xp-window);
-    color: var(--xp-text);
+    background: var(--w7-window);
+    color: var(--w7-text);
     font: inherit;
     outline: none;
     user-select: text;
@@ -67,12 +67,12 @@
     border-top-color: #569de5;
   }
   .xp-textbox:disabled {
-    border-color: var(--xp-border-disabled);
+    border-color: var(--w7-border-disabled);
     background: #f4f4f4;
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .xp-textbox:read-only:not(:disabled) {
-    background: var(--xp-face);
+    background: var(--w7-face);
   }
   .xp-textbox::placeholder {
     color: #8a8a8a;

@@ -47,7 +47,7 @@
 
 <style>
   .xp-link {
-    color: var(--xp-link);
+    color: var(--w7-link);
     text-decoration: underline;
     cursor: pointer;
   }
@@ -61,11 +61,11 @@
     color: #800080;
   }
   .xp-link.disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
     cursor: default;
     text-decoration: none;
   }
   .xp-link:focus-visible {
-    outline: var(--xp-focus-outline);
+    outline: var(--w7-focus-outline);
   }
 </style>

@@ -237,6 +237,6 @@
   }
   .xp-trackbar.disabled polygon {
     fill: #f4f4f4;
-    stroke: var(--xp-border-disabled);
+    stroke: var(--w7-border-disabled);
   }
 </style>

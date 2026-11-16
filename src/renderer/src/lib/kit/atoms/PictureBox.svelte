@@ -70,7 +70,7 @@
     height: 100%;
   }
   .FixedSingle {
-    border: 1px solid var(--xp-panel-border);
+    border: 1px solid var(--w7-panel-border);
   }
   .Fixed3D {
     border: 2px solid;

@@ -1,6 +1,6 @@
 /**
  * The typed contract between renderer and main. The preload script exposes
- * an object implementing `AgentXpApi` as `window.agentxp`. Every invoke
+ * an object implementing `Agent7Api` as `window.agent7`. Every invoke
  * method maps 1:1 to an `ipcMain.handle` channel named after the key path
  * (e.g. `sessions.create`); every event maps to a `webContents.send` channel.
  */
@@ -50,7 +50,7 @@ export interface AguiApi {
   onEvent(runId: string, listener: (event: BaseEvent) => void): () => void
 }
 
-export interface AgentXpApi {
+export interface Agent7Api {
   agents: {
     list(): Promise<AgentDto[]>
     create(input: AgentInput): Promise<AgentDto>
@@ -96,7 +96,7 @@ export interface AgentXpApi {
     openPath(path: string): Promise<void>
   }
   agui: AguiApi
-  on<K extends keyof AgentXpEvents>(event: K, listener: (payload: AgentXpEvents[K]) => void): () => void
+  on<K extends keyof Agent7Events>(event: K, listener: (payload: Agent7Events[K]) => void): () => void
 }
 
 /**
@@ -104,11 +104,11 @@ export interface AgentXpApi {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface AgentXpEvents {
+export interface Agent7Events {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]
   'status.message': { text: string }
 }
 
-export type AgentXpEventName = keyof AgentXpEvents
+export type Agent7EventName = keyof Agent7Events

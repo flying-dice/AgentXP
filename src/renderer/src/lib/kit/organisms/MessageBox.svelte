@@ -65,7 +65,7 @@
     gap: 14px;
     padding: 20px 22px 20px 18px;
     min-height: 62px;
-    background: var(--xp-window);
+    background: var(--w7-window);
   }
   .text {
     margin: 0;

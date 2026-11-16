@@ -248,7 +248,7 @@
     align-items: stretch;
     height: 21px;
     width: 160px;
-    color: var(--xp-text);
+    color: var(--w7-text);
   }
   .field {
     flex: 1;
@@ -286,12 +286,12 @@
   }
   .face:hover,
   .open .face {
-    border-color: var(--xp-btn-hover-border);
-    background: var(--xp-btn-hover-face);
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
   }
   .open .face {
-    border-color: var(--xp-btn-active-border);
-    background: var(--xp-btn-active-face);
+    border-color: var(--w7-btn-active-border);
+    background: var(--w7-btn-active-face);
   }
   .xp-combo:not(.open) .face:focus-visible .label {
     background: #3399ff;
@@ -300,9 +300,9 @@
 
   /* DropDown: textbox + arrow button */
   .editable {
-    border: 1px solid var(--xp-input-border);
-    border-top-color: var(--xp-input-border-top);
-    background: var(--xp-window);
+    border: 1px solid var(--w7-input-border);
+    border-top-color: var(--w7-input-border-top);
+    background: var(--w7-window);
   }
   .editable:hover:not(.disabled) {
     border-color: #3d7bad;
@@ -333,14 +333,14 @@
   }
   .editable button.arrow:hover:not(:disabled),
   .editable.open button.arrow {
-    background: var(--xp-btn-hover-face);
+    background: var(--w7-btn-hover-face);
   }
 
   .disabled .face,
   .disabled.editable {
-    border-color: var(--xp-border-disabled);
+    border-color: var(--w7-border-disabled);
     background: #f4f4f4;
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .disabled .arrow {
     color: #b0b0b0;
@@ -353,7 +353,7 @@
     padding: 0;
     background: #fff;
     border: 1px solid #646464;
-    box-shadow: var(--xp-shadow-popup);
+    box-shadow: var(--w7-shadow-popup);
   }
   .option {
     height: 17px;
@@ -367,10 +367,10 @@
     color: #fff;
   }
   .option.off {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .option.off.hot {
     background: transparent;
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
 </style>

@@ -35,11 +35,11 @@
 <style>
   .xp-label {
     display: inline-block;
-    color: var(--xp-text);
+    color: var(--w7-text);
     cursor: default;
   }
   .xp-label.disabled {
-    color: var(--xp-text-disabled);
+    color: var(--w7-text-disabled);
   }
   .xp-label.ellipsis {
     max-width: 100%;
