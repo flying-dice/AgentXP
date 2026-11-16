@@ -330,6 +330,98 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Success check: answer names the missing Git repository (from the screen text).
 - Min 4. Budget 12 / 16.
 
+### J25 Review the agent's changes in Code Review
+
+**T25.1 - The blocking comment**
+- Scenario: "The assistant checked the changes in the project and left remarks. Tell me which remark is the most serious one, in which file it is and on which line."
+- Start state: Code Review open on a Git project (`review-notes`) with two reviewer comments (one Blocker on notes.txt line 4, one Minor on line 1); `review` script; a chat is open behind it.
+- Success check: the window is still open and the answer names notes.txt and line 4 (answer check).
+- Min 3 (open file, read comment list, read). Budget 9 / 12.
+
+**T25.2 - The verdict**
+- Scenario: "Tell me whether the assistant accepted the changes or wants more work, and how many remarks it left."
+- Start state: same as T25.1.
+- Success check: the answer says that changes are requested (not approved) and that there are 2 remarks.
+- Min 2. Budget 6 / 8.
+
+### J26 Send review comments to a chat, and comment yourself
+
+**T26.1 - Pass the remarks on**
+- Scenario: "You agree with all the remarks. Give them to the assistant in the conversation that is already open, so that it fixes them."
+- Start state: same as T25.1.
+- Success check: the open chat received a message with the remarks (notes.txt:4) and the assistant answered; no remark is still marked open.
+- Min 4 (Send all, pick the chat, Send, look). Budget 12 / 16.
+
+**T26.2 - Your own remark**
+- Scenario: "Leave a remark 'rename this' on the second line of notes.txt. Do not send it to the assistant yet."
+- Start state: same as T25.1.
+- Success check: a user comment 'rename this' exists on notes.txt line 2 in the open state; the chat did not get it.
+- Min 5 (open file, hover the line, click the plus, type, Submit). Budget 15 / 20.
+
+### J27 Ask the chat pane about what you are looking at
+
+**T27.1 - Explain these lines**
+- Scenario: "You are reading the open file and do not understand the first two lines. Ask the assistant to explain them without opening a separate conversation window."
+- Start state: Code window with index.ts open, pane collapsed; `aside` script.
+- Success check: the Code window's pane has a question and an answer; no Chat window was opened.
+- Min 3 (select lines, right-click, Explain this). Budget 9 / 12.
+
+**T27.2 - More room for the file**
+- Scenario: "The side panel next to the file takes too much room. Make the file use the whole window."
+- Start state: Code window with the chat pane open.
+- Success check: the pane is hidden and the window still offers a way to bring it back.
+- Min 1. Budget 3 / 4.
+
+### J28 Let the agent use a web app in the Browser
+
+**T28.1 - The assistant reads a web page**
+- Scenario: "Ask the assistant: 'Use the chat app at http://127.0.0.1:4174/'. While it works, watch the web page. Then tell me how you could see that the assistant was using the page, and what it did there."
+- Start state: Browser and an idle chat open; `browser-agent` script (the local team chat page, no network).
+- Success check: the assistant finished (DONE), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
+- Min 3. Budget 9 / 12.
+
+**T28.2 - Take back the page**
+- Scenario: "The assistant is busy in the web page and you want to use the page yourself right now. Make the assistant leave it alone."
+- Start state: `browser-slow` script running for about a minute; the Browser shows the activity bar.
+- Success check: the desktop is in user control (the agent no longer acts on its own).
+- Min 1. Budget 3 / 4.
+
+### J29 Browse with tabs
+
+**T29.1 - Two pages side by side**
+- Scenario: "Keep the page you see now. Open a second page at http://127.0.0.1:4173/second so that both stay open, then go back to the first page."
+- Start state: Browser open on the test page (port 4173).
+- Success check: two tabs exist and the first one is active.
+- Min 5 (new tab, click address, type, Enter, click first tab). Budget 15 / 20.
+
+### J30 Menus, right-click and About
+
+**T30.1 - Open a file from the list**
+- Scenario: "You want to read the README of login-app in a plain text editor. Open it from the file list, without using the Start menu."
+- Start state: Explorer open; login-app plugged in.
+- Success check: a Notepad window shows README.md.
+- Min 4 (open the drive, open the folder if needed, right-click README, Open with Notepad). Budget 12 / 16.
+
+**T30.2 - Which version?**
+- Scenario: "Find out which version of Notepad you are using."
+- Start state: Notepad open.
+- Success check: the answer gives the version that the About dialog shows (researcher check).
+- Min 2 (Help menu, About). Budget 6 / 8.
+
+### J31 Help from inside an app
+
+**T31.1 - How do I save?**
+- Scenario: "You do not know how to save a file in Notepad. Use the help of the program to find out."
+- Start state: Notepad open, nothing else.
+- Success check: Help and Support is open on the Notepad topic.
+- Min 2. Budget 6 / 8.
+
+**T31.2 - Why can I not type here?**
+- Scenario: "You clicked into the Terminal window and typing does nothing. Find out why, using the help of the program."
+- Start state: Terminal open.
+- Success check: Help and Support is open on the Terminal topic and the answer says that the Terminal only shows what the assistant runs.
+- Min 2. Budget 6 / 8.
+
 ## Coverage table
 
 | Journey | Tasks |
@@ -358,6 +450,13 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 | J22 | T22.1, T22.2 |
 | J23 | T23.1, T23.2 |
 | J24 | T24.1, T24.2 |
+| J25 | T25.1, T25.2 |
+| J26 | T26.1, T26.2 |
+| J27 | T27.1, T27.2 |
+| J28 | T28.1, T28.2 |
+| J29 | T29.1 |
+| J30 | T30.1, T30.2 |
+| J31 | T31.1, T31.2 |
 
 ## Result table (filled during the sprint)
 

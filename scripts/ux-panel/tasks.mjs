@@ -47,10 +47,24 @@ export const TASKS = {
   'T23.1': { preset: 'crashed-agent' },
   'T23.2': { preset: 'chat-open', options: { script: 'flaky' } },
   'T24.1': { preset: 'project-desktop', options: { git: true, modifyGit: true, open: ['code'] } },
-  'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } }
+  'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } },
+  'T25.1': { preset: 'review-ready' },
+  'T25.2': { preset: 'review-ready' },
+  'T26.1': { preset: 'review-ready' },
+  'T26.2': { preset: 'review-ready' },
+  'T27.1': { preset: 'aside-code' },
+  'T27.2': { preset: 'aside-code', options: { paneOpen: true } },
+  'T28.1': { preset: 'web-app-ready' },
+  'T28.2': { preset: 'web-app-busy' },
+  'T29.1': { preset: 'project-desktop', options: { open: ['browser'] } },
+  'T30.1': { preset: 'project-desktop', options: { open: ['explorer'] } },
+  'T30.2': { preset: 'project-desktop', options: { open: ['notepad'] } },
+  'T31.1': { preset: 'project-desktop', options: { open: ['notepad'] } },
+  'T31.2': { preset: 'project-desktop', options: { open: ['terminal'] } }
 }
 
 /** Short notes the facilitator must hand to the panelist when a start state needs a spoken detail. */
 export const TASK_NOTES = {
+  'T28.1': 'The team chat web page is at http://127.0.0.1:4174/ (local, no network). The scenario already contains the address.',
   'T19.1': 'The test page is at http://127.0.0.1:4173/ (no real network). Tell the panelist to use that address where the task says example.com.'
 }

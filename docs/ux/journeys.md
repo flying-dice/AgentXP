@@ -2,6 +2,8 @@
 
 Status: discovery. Personas are in `personas.md`, scoring in `rubric.md`, the process in `process.md`.
 
+J25 to J31 cover the features added after this plan: Code Review, the chat pane, the Browser with web apps, the standard menu bars with right-click menus and About, and in-app Help. They were written against the built app and need no planned feature.
+
 Planned features are included where they change a journey: A2UI surface targets (inline, sidebar, window) and the new Code app (Code::Blocks-style layout, git status, change gutter). Steps that depend on them are marked **[planned]**. Re-verify those steps against the built app before scoring.
 
 ## How to read a journey
@@ -40,6 +42,13 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J22 | First-time help and discoverability | P4 |
 | J23 | Recover from errors | P4, P2 |
 | J24 | Read code, git status and the gutter [planned] | P1, P2, P3 |
+| J25 | Review the agent's changes in Code Review | P2, P1 |
+| J26 | Send review comments to a chat, and comment yourself | P2, P1 |
+| J27 | Ask the chat pane about what you are looking at | P1, P4 |
+| J28 | Let the agent use a web app in the Browser | P1, P2 |
+| J29 | Browse with tabs and recover from a bad page | P1, P4 |
+| J30 | Use menus, right-click and About in any app | P4, P3 |
+| J31 | Get help from inside an app (Help menu and F1) | P4 |
 
 ---
 
@@ -706,3 +715,201 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **Success measure.** P2 reviews all changes of a turn in Code in one pass. P1 finds the changed line from the gutter at once.
 - **E2E coverage.** `chat.e2e.ts` (Code lists the edited file), `apps.e2e.ts` (opens Code). The new layout, git status and gutter have none yet.
 - **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T24.1, T24.2 in `tasks.md`.
+
+## J25 - Review the agent's changes in Code Review
+
+- **Personas.** P2, P1.
+- **Trigger.** The agent changed files in a Git project and the user wants a second opinion before accepting them.
+- **Goal.** See every changed line, read what the reviewer agent says about it, and know the verdict.
+- **Preconditions.** A Git project plugged in with changed and new files. A connected desktop. The reviewer agent is the default agent (script `review`).
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Start | **Start -> Code Review** (or **Review changes** in Code) | A Code Review window opens: a file outline on the left, a banner with the base (HEAD) and the reviewer working | That a reviewer started by itself, and against what (HEAD) |
+| 2 | Code Review, outline | Reads the file list | Changed files with status (modified, new) and counts of added and removed lines | Which files changed and how much |
+| 3 | Code Review | Opens a file | WinDiff-style diff: removed lines red, added lines yellow, a margin bar, comment threads inline | Colors are explained by words (Added, Removed), not by color only |
+| 4 | Code Review | **F7** or **Next change** | The selection steps to the next change | The keyboard path and the position in the file |
+| 5 | Code Review | Reads the verdict and the comment list | Verdict (Changes requested), comment count, severity of each comment (Blocker, Minor) | Who wrote each comment and how serious it is |
+
+- **Decision points.** Outline or expanded view. Inline or split layout. Which file to open first. Trust the reviewer or read the diff.
+- **Failure and edge branches.**
+  - Not a Git repository, or no changes: the outline says so in plain words and offers a next step.
+  - The reviewer agent is slow or fails: the banner shows working, then an error with a cause and Refresh.
+  - A file is binary or too large: the diff says it is not shown, with the reason.
+  - The base ref is wrong (a typo): the error names the ref.
+  - The reviewer comments on a line that is gone: the comment appears under "orphans" and not silently.
+  - The agent edits files while the user reads: the diff refreshes or says it is out of date.
+  - A review of a drive that is ejected (J12).
+  - The reviewer is the same agent that wrote the change: the user cannot tell that it is a second opinion (trust).
+- **Success measure.** P2 names the blocking comment and its line in under 1 minute. P1 finds the verdict without help.
+- **E2E coverage.** `code-review.e2e.ts` (outline, threads, verdict, margin, F7, split). Missing: errors, ejected drive, binary files, keyboard-only.
+- **Docs and panel.** Manual topic `manuals/code-review.md`. Panel tasks: T25.1, T25.2 in `tasks.md`.
+
+## J26 - Send review comments to a chat, and comment yourself
+
+- **Personas.** P2, P1.
+- **Trigger.** The user agrees with the reviewer and wants the work fixed, or wants to add a remark of their own.
+- **Goal.** Get the open comments to a chat in one pass, and leave an own comment that the chat gets later.
+- **Preconditions.** A review with open comments (J25). At least one chat on the desktop.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Code Review | Opens the comment list (**View > Comments**) | A list of comments with state (Open) and **Send to chat** per comment and **Send all** | How many comments are open |
+| 2 | Code Review | **Send all open comments** | The Send to chat dialog lists the chats and **New chat** | Which chat gets it; the default is the safe one |
+| 3 | Send dialog | Picks a chat, **Send** | The chat shows the comments as the user's message and the agent answers; comments change to Sent | The chat window got the text and the comments say Sent |
+| 4 | Code Review diff | Clicks the **+** in the gutter of a line | A comment box opens on that line | Which line it belongs to; Cancel and Submit |
+| 5 | Comment box | Types and submits | The comment appears as a thread by You, state Open | It is not sent yet; Send to chat later |
+| 6 | Thread | **Reply**, **Resolve**, **Delete** | State changes; Resolve hides it from Send all | What Resolve means for sending |
+
+- **Decision points.** Which chat. New chat or an existing one. Send one or all. Resolve before sending.
+- **Failure and edge branches.**
+  - No chat open: the dialog offers New chat and says why.
+  - The chat is busy with a turn: the message queues or the dialog says so.
+  - Send twice: sent comments are not sent again; the dialog says how many go out.
+  - An empty comment: Submit is disabled with a reason.
+  - Delete a comment: asks first or can be undone.
+  - A very long comment or a file name: wraps, does not break the layout.
+  - The chat agent is not the reviewer and has no `review_*` tools: the prompt still reads well.
+- **Success measure.** P2 sends all open comments in 3 actions. P1 leaves an own comment on a given line without help.
+- **E2E coverage.** `code-review.e2e.ts` (Send all to a chat, comments become sent). Missing: own comments, reply, resolve, delete, New chat, busy chat.
+- **Docs and panel.** Manual topic `manuals/code-review.md`. Panel tasks: T26.1, T26.2 in `tasks.md`.
+
+## J27 - Ask the chat pane about what you are looking at
+
+- **Personas.** P1, P4.
+- **Trigger.** The user reads a file, a page or a log and has a question about it.
+- **Goal.** Ask the assistant a short question about the open thing without leaving the window and without cluttering the chat list.
+- **Preconditions.** An app window with a chat pane (Code, Notepad, Explorer, Browser and others; not Chat, Code Review or an agent window). A connected desktop with an agent.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | App window | Selects text and **right-clicks** | Context menu with **Explain this** and **Ask chat...** | The items are about the selection |
+| 2 | Context menu | **Explain this** | The pane opens on the right, the question is sent with the selection and the open file | The answer appears in the same window |
+| 3 | App window | **View > Chat pane** or **Ctrl+Shift+C** | The pane opens or closes | The shortcut is shown in the menu |
+| 4 | Pane | Reads the blank pane | Text says the conversation ends when the window closes; suggestion chips | What the pane is for, and that it is short-lived |
+| 5 | Pane | **New conversation** | The conversation is deleted and the pane is blank again | That the old text is gone |
+| 6 | Pane | **Hide the chat panel** | The pane collapses to a slim button on the window edge | How to bring it back |
+
+- **Decision points.** Pane or full Chat window (**Open in Chat window**). Use a chip or type.
+- **Failure and edge branches.**
+  - No agent connected or the agent fails to start: the pane shows the cause, not a blank.
+  - The user closes the window: the conversation is deleted, and the pane or the About text says so before.
+  - A very long selection: truncated with a note, or the limit is stated.
+  - The pane is narrow: width can be changed by mouse and by key.
+  - A permission request arises from the pane: where does it show (UAC dialog names the window)?
+  - Two windows have two panes: the user mixes them up (title of the pane).
+  - The agent in the pane acts on files: the user cannot tell it from the main chat.
+- **Success measure.** P1 gets an explanation of a selection in 3 actions. P4 finds the way to hide and show the pane.
+- **E2E coverage.** `aside.e2e.ts`, `context-menus.e2e.ts`. Missing: errors, narrow pane, keyboard resize, permission from the pane.
+- **Docs and panel.** Manual topics `manuals/embedded-chat.md` and the app's own manual. Panel tasks: T27.1, T27.2 in `tasks.md`.
+
+## J28 - Let the agent use a web app in the Browser
+
+- **Personas.** P1, P2.
+- **Trigger.** The user wants the agent to work in a web page (read a team chat, fill a form).
+- **Goal.** Hand a web page to the agent, see what it does, and take back control at once when needed.
+- **Preconditions.** A Browser window open (tools follow apps, J10). Browser permission Allow or Ask. A local web app, no network.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Chat | Asks the agent to use the web page at an address | The agent navigates the Browser and reads the page | The Browser window changes by itself |
+| 2 | Browser | Watches | A ring around the page and an **activity bar** ("Agent is using this page") with **Take control** | That the agent is acting, and where |
+| 3 | Browser | Reads the tab strip and address | Address and tab title follow the agent | Which page and which tab |
+| 4 | Browser | **Take control** | The agent stops acting on the page; the bar goes away; the next agent action asks | The bar says who is in control now |
+| 5 | Chat | Reads the end of the turn | The agent says what it read and did | What it posted, matching the page |
+
+- **Decision points.** Let it run, or take control. Browser permission Ask or Allow.
+- **Failure and edge branches.**
+  - The Browser window is closed: the agent says it has no browser, and the user knows what to open.
+  - The page loads slowly or never: the Browser shows loading, then an error; the agent reports it.
+  - The page is signed in: the agent shares the user's cookies (the UI must say so, J19).
+  - The agent types into a message box or presses Send in a real web app: it should ask first (trust).
+  - Page text tries to steer the agent (prompt injection): the user sees the address in requests.
+  - The user types in the page while the agent acts: conflict.
+  - Take control during a click: the click finishes or aborts cleanly.
+- **Success measure.** P1 can say what the agent did in the page. P2 takes control in 1 action in under 5 seconds.
+- **E2E coverage.** `browser-agent.e2e.ts` (read, switch channel, type, tabs, activity bar). Missing: take control, closed Browser, slow page, Ask policy.
+- **Docs and panel.** Manual topic `manuals/browser.md`. Panel tasks: T28.1, T28.2 in `tasks.md`.
+
+## J29 - Browse with tabs and recover from a bad page
+
+- **Personas.** P1, P4.
+- **Trigger.** The user wants two pages side by side, or a page does not load.
+- **Goal.** Open, switch and close tabs, and know what to do when a page fails.
+- **Preconditions.** Browser open on a page.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Browser | **New Tab** (+ or **Ctrl+T**) | A new tab opens and is active; the address box has focus | A blank tab is clear about what it is |
+| 2 | Browser | Types an address, **Enter** | The page loads; the tab shows its title | Loading and the title |
+| 3 | Browser | Clicks the other tab | The first page is back | Which tab is active (not by color only) |
+| 4 | Browser | Closes a tab (x or **Ctrl+W**) | The tab closes; the neighbor is active | No loss of the other page |
+| 5 | Browser | Opens an address that fails | An error page: what happened, why, Refresh | Plain words and a next step |
+
+- **Decision points.** Search words or an address. Close the last tab.
+- **Failure and edge branches.**
+  - No network: error page with Refresh (see also T19.2).
+  - Many tabs: the strip scrolls or shrinks tabs; titles truncate with a tooltip.
+  - Close the last tab: the window shows an empty state, not a crash.
+  - A link that opens a new window: becomes a tab or is blocked with a note.
+  - Back and Forward per tab.
+  - Keyboard: Tab order through the strip, Ctrl+Tab.
+- **Success measure.** P1 has two pages open and switches in 5 actions. P4 names the cause of a failed page.
+- **E2E coverage.** `browser-agent.e2e.ts` (the user opens and closes tabs). Missing: errors, shortcuts, last tab, keyboard.
+- **Docs and panel.** Manual topic `manuals/browser.md`. Panel tasks: T29.1 in `tasks.md`.
+
+## J30 - Use menus, right-click and About in any app
+
+- **Personas.** P4, P3.
+- **Trigger.** The user looks for a command, or wants to know what an app is.
+- **Goal.** Find any command in the same place in every app, and use the same keys.
+- **Preconditions.** Any app window open.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Any app | Reads the menu bar | **File, Edit, View, Help** (the same order everywhere), access keys underlined on Alt | The same four menus in every app |
+| 2 | Any app | Opens a menu with the mouse or **Alt+letter** | Items with accelerators; unavailable items are disabled but visible | Shortcuts are shown next to the items |
+| 3 | List, file or text | **Right-click** (or Shift+F10, Menu key) | A context menu for what is under the pointer | Items fit the thing (a file, a selection) |
+| 4 | Context menu | Picks an item (for example **Open with Notepad**) | The command runs in the right app | The result is visible at once |
+| 5 | Any app | **Help > About** | A dialog with name, icon, version and description | The version; OK closes it and focus returns |
+
+- **Decision points.** Menu bar or right-click or shortcut.
+- **Failure and edge branches.**
+  - An app without a menu bar (see the manuals audit): the user looks in vain.
+  - A context menu on empty space: shows a sensible menu or none, not an error.
+  - A menu command that does nothing or is always disabled.
+  - Esc closes the menu and returns focus; Left and Right move between menus.
+  - A right-click in the Browser page or a webview.
+  - Context menu near the window edge: it must stay on screen.
+  - Different words for one command in different apps (Open in Chat window, Open with Notepad, Open in Notepad).
+- **Success measure.** P4 opens a file from Explorer in Notepad by right-click in 3 actions and finds the version of an app in 3.
+- **E2E coverage.** `context-menus.e2e.ts`, `apps.e2e.ts` (menu shortcuts). Missing: keyboard-only menus, edge placement, consistency check across all apps.
+- **Docs and panel.** Manual topics for each app used. Panel tasks: T30.1, T30.2 in `tasks.md`.
+
+## J31 - Get help from inside an app (Help menu and F1)
+
+- **Personas.** P4.
+- **Trigger.** The user does not know how something works in the app that is open.
+- **Goal.** Reach the right topic of the right app in two actions, offline.
+- **Preconditions.** An app window is focused.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Any app | **F1** or **Help > App Help** | Help and Support opens on the topic of the focused app | The topic title names the app |
+| 2 | Help and Support | Reads the part list and the procedure | Steps in plain words | The answer to the question |
+| 3 | Help and Support | Types in the search box | The topic list filters; no result says so | A way back to the index (Home) |
+| 4 | Another app | **F1** again | The same Help window moves to the other topic | No second Help window |
+| 5 | Help and Support | **Back** and **Forward** | Topic history | The user can return |
+
+- **Decision points.** F1 or the menu or Start. Search or browse.
+- **Failure and edge branches.**
+  - F1 with a dialog open or with no window focused: opens the index, never nothing.
+  - An app whose manual lacks the control the user asks about.
+  - Search with no result.
+  - Help text names a control that is not there (stale manual).
+  - Help window covers the app so that the user cannot follow the steps: placement.
+  - Help topic is not kept after restart.
+  - Help contains jargon.
+- **Success measure.** P4 finds the answer to an app question in under 30 seconds with F1 or the Help menu.
+- **E2E coverage.** `help.e2e.ts` (F1, search, Start). Missing: F1 in dialogs and the Launcher, Back and Forward, accuracy of procedures.
+- **Docs and panel.** Manual topic `manuals/help.md` and the manuals of all apps. Panel tasks: T31.1, T31.2 in `tasks.md`.

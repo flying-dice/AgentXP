@@ -1,0 +1,469 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "browser-slow",
+  "description": "A slow Browser job for T28.2: opens the page given in the prompt (\"... chat app at <url>\"), then reads it again every 1.8 seconds for about a minute, so that the Browser activity bar (it stays 2.5 seconds after each tool call) is always on screen and the user can take control. Ends with the message SLOW DONE.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "slow",
+      "match": {
+        "regex": "chat app at (http\\S+)"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Opening the page.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_navigate",
+          "arguments": {
+            "url": "{{match.1}}"
+          },
+          "saveAs": "nav",
+          "label": "open the page"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r1",
+          "label": "read 1"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r2",
+          "label": "read 2"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r3",
+          "label": "read 3"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r4",
+          "label": "read 4"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r5",
+          "label": "read 5"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r6",
+          "label": "read 6"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r7",
+          "label": "read 7"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r8",
+          "label": "read 8"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r9",
+          "label": "read 9"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r10",
+          "label": "read 10"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r11",
+          "label": "read 11"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r12",
+          "label": "read 12"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r13",
+          "label": "read 13"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r14",
+          "label": "read 14"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r15",
+          "label": "read 15"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r16",
+          "label": "read 16"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r17",
+          "label": "read 17"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r18",
+          "label": "read 18"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r19",
+          "label": "read 19"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r20",
+          "label": "read 20"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r21",
+          "label": "read 21"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r22",
+          "label": "read 22"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r23",
+          "label": "read 23"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r24",
+          "label": "read 24"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r25",
+          "label": "read 25"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r26",
+          "label": "read 26"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r27",
+          "label": "read 27"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r28",
+          "label": "read 28"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r29",
+          "label": "read 29"
+        },
+        {
+          "type": "wait",
+          "ms": 1800
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "r30",
+          "label": "read 30"
+        },
+        {
+          "type": "message",
+          "text": "SLOW DONE"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Tell me the address of the chat app."
+        }
+      ]
+    }
+  ]
+}
