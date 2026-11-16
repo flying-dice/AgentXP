@@ -6,7 +6,7 @@ export const defaultTitle = (projects) => DESKTOP_TITLES[projects?.[0]] ?? 'My p
 
 export const ALL_ALLOW = { 'fs.read': 'allow', 'fs.write': 'allow', notepad: 'allow', code: 'allow', terminal: 'allow', browser: 'allow', paint: 'allow', wordpad: 'allow', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'allow' }
 /** Tools follow apps: the apps a script needs open on the desktop, unless the task names its own `open` list. */
-export const SCRIPT_APPS = { demo: ['code'], 'fix-redirect': ['code'], 'two-edits': ['code'], 'five-edits': ['code'], keyboard: ['code'], 'run-tests': ['code', 'terminal'], 'eject-victim': ['explorer'], errors: [], stepping: [], a2ui: [], flaky: [], 'long-turn': [] }
+export const SCRIPT_APPS = { demo: ['code'], 'fix-redirect': ['code'], 'two-edits': ['code'], 'five-edits': ['code'], keyboard: ['code'], 'run-tests': ['code', 'terminal'], 'eject-victim': ['explorer'], errors: [], 'crash-recovery': [], stepping: [], a2ui: [], flaky: [], 'long-turn': [] }
 /** Scripted Agent as the default agent (H-16): every preset that has no desktop of its own still gets it. */
 export const useDefaultAgent = (ctx) => ctx.useScript('demo')
 export const PROMPT_FIX = 'Fix the login redirect bug so that deep links survive sign-in'

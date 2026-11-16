@@ -1,5 +1,6 @@
 // Start states with chats: open chat, pending requests, running turns, changes, recycled changes.
 import { lastProgress } from '../checks/util.mjs'
+import { resolveScript } from '../lib/context.mjs'
 import { ALL_ALLOW, PROMPT_FIX, chatWithPendingRequest, projectDesktop } from './base.mjs'
 
 const idleChat = async (ctx, options, extra = {}) => {
@@ -64,8 +65,10 @@ export const presets = {
     await presets['agent-running'](ctx)
     const { desktopId, sessionId } = ctx.state
     const page = await ctx.desktopPage(desktopId)
-    await page.evaluate((id) => window.agent7.desktop.setPaused(id, true), desktopId)
-    await page.evaluate((id) => window.agent7.sessions.cancel(id), sessionId).catch(() => undefined)
+    // H-35: press Pause all agents on the top bar (the UI path), so the renderer records which chats it stopped (stoppedByPause)
+    // and Resume shows the continue note; no API call that bypasses the renderer.
+    await page.getByTestId('topbar-pause').click()
+    await ctx.waitFor(async () => (await ctx.desktopState(desktopId))?.paused === true, 'the desktop paused')
     await ctx.waitIdle(sessionId)
     await (await ctx.agents.get(ctx.state.agentId).control()).setMode('auto')
     ctx.state.outcomesAtStart = (await ctx.runOutcomes(desktopId, sessionId)).length
@@ -93,17 +96,35 @@ export const presets = {
     ctx.state.redirectAgentText = redirect.currentText
     await ctx.eval((id) => window.agent7.sessions.revertChange(id), redirect.id)
     await ctx.waitFor(async () => (await ctx.recycled(ctx.state.desktopId)).length === 1, 'one recycled change')
+    // H-34: the revert happened after the windows opened, so the open Changes list is stale ("Changes (2)"). Reload the
+    // desktop window and check that the list shows the revert (note revertShownInList in state.json).
+    const page = await ctx.desktopPage(ctx.state.desktopId)
+    await page.reload()
+    await page.getByTestId('taskbar').waitFor()
+    ctx.state.revertShownInList = (await ctx.recycled(ctx.state.desktopId)).length === 1
     ctx.saveState()
   },
 
-  /** Crash: a turn is stuck in the `errors` script ("slow"), then the agent process is killed. */
+  /**
+   * Crash: the first turn hangs ("Working on it..." in the `crash-recovery` script), then the agent process is killed. The agent
+   * is then pointed at `crash-recovered`, so the retry after the restart ends in under 5 s with "Done. The slow job is finished." (H-31).
+   */
   async 'crashed-agent'(ctx) {
-    const { desktop } = await idleChat(ctx, { script: 'errors' })
+    const { desktop, agent } = await idleChat(ctx, { script: 'crash-recovery' })
     await ctx.sendPrompt(desktop.id, ctx.state.sessionId, 'please do the slow job')
     const proc = await ctx.waitFor(async () => (await ctx.processes()).find((p) => p.pid), 'the agent process')
     await ctx.sleep(1500)
     process.kill(proc.pid, 'SIGKILL')
     await ctx.sleep(1500)
+    const retryScript = resolveScript('crash-recovered')
+    await ctx.eval(
+      async ({ id, retryScript }) => {
+        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? retryScript : a))
+        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+      },
+      { id: agent.id, retryScript }
+    )
     ctx.state.crashedPid = proc.pid
     ctx.saveState()
   },
@@ -140,7 +161,13 @@ export const presets = {
     const drive = (await ctx.drives(desktop.id)).find((d) => d.kind === 'removable')
     ctx.state.ejectedFolderId = drive.folderId
     ctx.state.ejectedLetter = drive.letter
-    await ctx.eval(({ id, letter }) => window.agent7.drives.eject(id, letter), { id: desktop.id, letter: drive.letter })
+    // H-35: eject through the taskbar's Safely Remove Hardware menu and answer Yes to the warning (the UI path), so the
+    // renderer's "Recently removed" list and the balloon are filled like for a user.
+    const page = await ctx.desktopPage(desktop.id)
+    await page.getByTestId('usb-tray').click()
+    await page.getByTestId(`usb-eject-${drive.letter.toLowerCase()}`).click()
+    await page.getByTestId('dialog-button-yes').click()
+    await ctx.waitFor(async () => !(await ctx.drives(desktop.id)).some((d) => d.letter === drive.letter), 'the drive ejected')
     await control.setMode('auto')
     await ctx.waitIdle(ctx.state.sessionId)
     ctx.state.keepEjected = Boolean(options.keepEjected)

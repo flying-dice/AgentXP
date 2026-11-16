@@ -19,13 +19,13 @@ for (const id of ids) {
   if (started.status !== 0) {
     broken++
     console.log(`${id}\tSTART FAILED\t${started.stderr.trim().split('\n')[0]}`)
-    run('stop')
+    run('stop', '--no-check')
     continue
   }
   const checked = run('check')
   const info = JSON.parse(readFileSync(join(out, 'session.json'), 'utf8'))
   console.log(`${id}\t${info.preset}\t${checked.stdout.split('\n')[0]}`)
-  run('stop')
+  run('stop', '--no-check')
 }
 console.log(broken ? `${broken} start state(s) failed` : 'all start states came up')
 process.exitCode = broken ? 1 : 0

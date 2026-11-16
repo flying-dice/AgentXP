@@ -136,11 +136,12 @@ await safe('Code Review (outline, comments)', async () => {
   void win
 })
 await safe('UAC dialog', async () => {
-  const frame = page.getByTestId('window-chat').filter({ has: page.locator(`[data-testid="chat-app"][data-session-id="${chat.sessionId}"]`) })
-  await frame.getByTestId('chat-composer-input').fill('Fix the login redirect bug so that deep links survive sign-in', { force: true })
-  await frame.getByTestId('chat-send').click({ force: true })
-  await ctx.waitPending(chat.sessionId)
-  await page.getByTestId('uac-dialog').waitFor({ timeout: 8000 })
+  // H-45: a fresh chat on the fix-redirect script raises a write request (Write files = Ask); wait for the dialog itself.
+  await ctx.setPolicy({ 'fs.write': 'ask' })
+  const pending = await ctx.newChat(desktop.id)
+  await ctx.sendPrompt(desktop.id, pending.sessionId, 'Fix the login redirect bug so that deep links survive sign-in')
+  await ctx.waitPending(pending.sessionId)
+  await page.getByTestId('uac-dialog').waitFor({ state: 'visible', timeout: 20_000 })
   await sleep(500)
   await scan(page, 'UAC dialog')
   await page.keyboard.press('Escape')

@@ -171,6 +171,8 @@ Real users are the best test. We cannot recruit them for this release, so we use
 3. Repeat until the task passes. A fix that only helps a panelist who saw the old UI is not a fix.
 4. Never change a task scenario to make it pass. Change a scenario only if it was unclear, with the UX lead's note and a re-run at all levels.
 
+**Carried rows (H-41).** A row carried from an earlier round is valid evidence only when neither the start state (preset, fixtures, scripted-agent script), nor the checker, nor the journey code changed since it was run. Otherwise it is stale and must be rerun, and it comes first in the rerun plan.
+
 **Panel rounds.** Round 1 in phase 1 (baseline: all tasks, all three levels). Fix rounds re-run only failed tasks and tasks of changed journeys. The final round before the release gate runs all tasks at all levels on the packaged build, with fresh panelists. Because model users vary between runs, a task needs a pass in the final round, and a task that passes in one run and fails in another counts as failed.
 
 **Limits.** Model users are not people. They read screens well and sometimes too patiently, and they can miss motion and sound. The panel finds findability, wording and flow problems. It does not replace the accessibility audit, the keyboard pass, or the performance pass. If the budget allows, run the novice tasks with two or three human testers at the end and add the sessions to the evidence.

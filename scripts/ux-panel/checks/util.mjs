@@ -42,6 +42,13 @@ export const projectRoot = (ctx, i = 0) => ctx.state.projectPaths?.[i] ?? ctx.fi
 export const userMessages = (entries) => entries.filter((e) => e.kind === 'message' && e.role === 'user')
 export const agentMessages = (entries) => entries.filter((e) => e.kind === 'message' && e.role === 'agent')
 export const textOf = (entry) => (entry.blocks ?? []).map((b) => b.text ?? '').join('')
+/**
+ * What the user typed (H-23): only the `text` blocks. The desktop adds a `resource` block (`agent7://desktop/state`, a JSON
+ * dump of the desktop) to every prompt; `textOf` folds it in, so it must not be used to test what a user sent.
+ */
+export const userText = (entry) => (entry.blocks ?? []).filter((b) => (b.kind ?? 'text') === 'text').map((b) => b.text ?? '').join('')
+/** The text of the resource blocks of a message (the desktop state and any attached selection). */
+export const resourceText = (entry) => (entry.blocks ?? []).filter((b) => b.kind === 'resource').map((b) => `${b.uri ?? ''} ${b.text ?? ''}`).join('\n')
 
 export const windowsOf = (state, app) => (state?.windows ?? []).filter((w) => w.app === app)
 

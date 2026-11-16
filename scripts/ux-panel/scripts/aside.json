@@ -1,0 +1,79 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "aside",
+  "description": "Panel copy of agents/scripted-agent/scripts/aside.json (H-38). Same rules, plus: any question about lines, code or what the file does gets an answer about lines 1 and 2 of index.ts; the fallback no longer echoes the question. The panel resolves scripts in scripts/ux-panel/scripts first, so e2e/aside.e2e.ts keeps using the original.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "explain",
+      "match": {
+        "contains": "explain this",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"appContext\"",
+          "message": "the prompt carries no appContext"
+        },
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"selection\"",
+          "message": "the appContext has no selection"
+        },
+        {
+          "type": "extract",
+          "from": "desktop",
+          "regex": "\"openFile\":\"[^\"]*?([A-Za-z0-9_-]+\\.[a-z]+)\"",
+          "saveAs": "file"
+        },
+        {
+          "type": "message",
+          "text": "Short answer: {{file}} exports a small constant and a function that returns it."
+        }
+      ]
+    },
+    {
+      "id": "summarise",
+      "match": {
+        "contains": "summarise",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"appContext\"",
+          "message": "the prompt carries no appContext"
+        },
+        {
+          "type": "message",
+          "text": "Short answer: a short summary of the page in view."
+        }
+      ]
+    },
+    {
+      "id": "explain-lines",
+      "match": {
+        "regex": "explain|line|what (does|do|is)|mean|code"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Short answer: lines 1 and 2 of index.ts. Line 1 sets answer to the number 42. Line 2 sets question to the text \"what is it?\". They are two constants that the function below uses."
+        }
+      ]
+    }
+  ],
+  "fallback": [
+    {
+      "type": "message",
+      "text": "Short answer: ask me about the lines of the open file and I will explain them."
+    }
+  ]
+}

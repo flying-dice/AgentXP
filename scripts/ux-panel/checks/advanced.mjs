@@ -1,5 +1,5 @@
 // J18, J21, J23, J24.
-import { agentMessages, all, fail, pass, textOf, userMessages, windowsOf, withAnswer } from './util.mjs'
+import { agentMessages, all, countWords, fail, pass, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
 
 const A2UI = async (ctx) => {
   const events = await ctx.protocol(ctx.state.desktopId, { source: 'acp', sessionId: ctx.state.sessionId })
@@ -22,7 +22,7 @@ export const checks = {
     const sessions = await ctx.sessions(ctx.state.desktopId)
     for (const s of sessions) {
       const entries = await ctx.transcript(s.id)
-      const hello = userMessages(entries).some((m) => /^\s*hello\s*$/i.test(textOf(m)))
+      const hello = userMessages(entries).some((m) => /^\s*hello\s*$/i.test(userText(m)))
       const allowed = entries.some((e) => e.kind === 'tool_call' && e.permission?.outcome === 'selected' && String(e.permission.selectedOptionId).startsWith('allow'))
       if (hello && allowed) return pass('"hello" was sent and the request was answered Allow (the mouse was disabled by the driver)')
     }
@@ -46,7 +46,7 @@ export const checks = {
     const session = (await ctx.sessions()).find((s) => s.id === ctx.state.sessionId)
     const first = ctx.state.firstMessage
     const replied = agentMessages(entries).map((m) => /^\s*Got your message: ([\s\S]*?)\s*$/.exec(textOf(m))?.[1]).filter((t) => t !== undefined)
-    const users = userMessages(entries).map((m) => textOf(m).trim())
+    const users = userMessages(entries).map((m) => userText(m).trim())
     // exact text: the reply echoes the message without a "You" prefix and equals the message that failed to send
     const exact = replied.some((t) => (first ? t === first : users.includes(t)))
     return all([
@@ -56,7 +56,7 @@ export const checks = {
   },
 
   async 'T24.1'(ctx, { answer }) {
-    return withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts', '3'], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams) [planned task]' })
+    return withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts', countWords(3)], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams) [planned task]' })
   },
 
   async 'T24.2'(ctx, { answer }) {

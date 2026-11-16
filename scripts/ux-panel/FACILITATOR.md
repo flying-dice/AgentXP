@@ -45,8 +45,15 @@ allowed sentence is "Continue when you are ready"; a task that needed it is reco
 
 ```
 # 3. Check: state-based verdict from the app (PASS / FAIL / MANUAL) + step count against the budget.
-node scripts/ux-panel/session.mjs check --out $S --answer "<the panelist's answer to the task question, if any>"
+node scripts/ux-panel/session.mjs check --out $S --answer "<the text after 'Answer:' in the panelist's final report>" --seq <SEQ>
 ```
+
+- The final report of the panelist contains an `Answer:` line when the scenario asks a question. Pass it with `--answer`; `check`
+  prints a warning when the scenario asks a question and `--answer` is missing (H-29, otherwise the task ends in MANUAL).
+- `--seq <n>` (the panelist's SEQ) is optional. A PASS at the budget limit, or with SEQ below 5, prints
+  `weak pass: ...` and sets `weak: true` in check.json (H-46).
+- Compare the SEQ with the frustrations list: a SEQ that differs by 3 or more from what the report says (for example SEQ 2 after a
+  two-step pass) is rating noise; flag it in the record and report the measured values (H-36).
 
 - `PASS` / `FAIL` is decided from app state (database through the app API, files on disk, desktop state), never from
   what the panelist says. Exceeding the step budget turns the verdict into FAIL (printed). A PASS within +25 percent of
@@ -57,6 +64,8 @@ node scripts/ux-panel/session.mjs check --out $S --answer "<the panelist's answe
 
 ```
 # 4. Archive and shut down (log.jsonl, shots/, state.json, check.json, summary.json stay in $S).
+#    `stop` refuses without a check.json (a session lost to an outage must not look finished); `--no-check` archives anyway.
+#    When the session is already gone it prints "no running session" with a restart hint and keeps the folder (H-30).
 node scripts/ux-panel/session.mjs stop --out $S
 mkdir -p $R && cp -r $S $R/<task>-<level>-session
 
@@ -100,6 +109,14 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 ## Notes
 
 - Mouse-less task T21.1: the driver refuses `click/move/drag/scroll` for that session.
+- Fixtures (H-32): every session starts the app with a sandbox home (`HOME` and `USERPROFILE` = `<tmp>/home`) and creates the
+  projects under `<tmp>/home/Documents` (`login-app`, `docs-site`, `notes-folder`, ...), so the in-app Browse For Folder
+  dialog lists them under Home and Documents (also with recent folders or typed paths, which only add other routes). `stop` removes the whole
+  sandbox. The path is in `session.json` (`home`, `fixtures`); never give it to a panelist.
+- Presets that change the desktop act through the UI (H-35): `eject-mid-job` uses the taskbar's Safely Remove Hardware menu and
+  answers Yes; `paused-desktop` presses Pause all agents on the top bar. `recycled-change` reloads the desktop window after the revert (H-34).
+- `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
+- T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".
 - Folder pickers: the start states stub the native folder dialog (answers docs-site; login-app in launcher states). The stub
   only answers folder pickers and cancels file pickers (Attach). The in-app Browse For Folder dialog is not stubbed.
 - Planned tasks (T08.2, T24.1, T24.2) have start states and checkers; run them only after the feature is merged.

@@ -13,12 +13,13 @@ const { _electron: electron } = require('playwright')
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-export async function launchApp({ userData }) {
+/** `home` is a sandbox home (HOME and USERPROFILE), so the in-app Browse For Folder dialog shows the fixtures under Home and Documents (H-32). */
+export async function launchApp({ userData, home }) {
   const app = await electron.launch({
     executablePath: require('electron'),
     args: [join(repoRoot, 'out/main/index.js'), '--no-sandbox'],
     cwd: repoRoot,
-    env: { ...process.env, AGENT7_USER_DATA: userData }
+    env: { ...process.env, AGENT7_USER_DATA: userData, ...(home ? { HOME: home, USERPROFILE: home } : {}) }
   })
   app.context().setDefaultTimeout(20_000)
   return app
