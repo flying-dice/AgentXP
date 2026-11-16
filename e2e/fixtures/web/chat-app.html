@@ -127,7 +127,6 @@
         current = name
         start = Math.max(0, channels[name].length - WINDOW)
         $('channel-title').textContent = '#' + name
-        $('composer').setAttribute('aria-label', 'Message #' + name)
         $('search-status').textContent = ''
         renderChannels()
         renderWindow(true)

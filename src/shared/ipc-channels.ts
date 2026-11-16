@@ -82,6 +82,8 @@ const INVOKE_METHODS = {
     setUserInControl: true,
     newChat: true,
     openReview: true,
+    openAside: true,
+    closeAside: true,
     policy: true,
     setPolicy: true,
     attachBrowser: true,

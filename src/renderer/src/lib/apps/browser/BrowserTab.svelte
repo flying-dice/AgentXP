@@ -6,7 +6,7 @@
   import { BLANK, hostOf } from './address'
   import PlaceholderPage from './PlaceholderPage.svelte'
   import type { BrowserTabState } from './tabs'
-  import type { WebviewElement } from './webview'
+  import type { PageContext, WebviewElement } from './webview'
 
   interface Props {
     /** The address the tab opens with. */
@@ -17,9 +17,11 @@
     onpatch: (patch: Partial<BrowserTabState>) => void
     /** The guest page is ready; `webContentsId` is what main drives (0 outside Electron). */
     onready: (webContentsId: number) => void
+    /** Right-click inside the guest page (which swallows it): where, and what was under the pointer. */
+    oncontext?: (info: PageContext) => void
   }
 
-  let { initialUrl, electron, active, testId, onpatch, onready }: Props = $props()
+  let { initialUrl, electron, active, testId, onpatch, onready, oncontext }: Props = $props()
 
   // The webview opens with this address once; later changes go through navigate() (a reactive src would reload the page).
   // svelte-ignore state_referenced_locally
@@ -114,7 +116,14 @@
       url = next
       report()
     }
+    const onContext = (event: Event): void => {
+      const params = (event as Event & { params?: { x: number; y: number; linkURL?: string; selectionText?: string } }).params
+      if (!params) return
+      const box = el.getBoundingClientRect()
+      oncontext?.({ x: box.left + params.x, y: box.top + params.y, linkURL: params.linkURL ?? '', selectionText: params.selectionText ?? '' })
+    }
     const handlers: [string, (event: Event) => void][] = [
+      ['context-menu', onContext],
       ['did-start-loading', () => ((loading = true), report())],
       ['did-stop-loading', () => ((loading = false), report())],
       ['page-title-updated', (event) => report({ title: (event as Event & { title?: string }).title ?? '' })],

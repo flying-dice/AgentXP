@@ -224,7 +224,7 @@
           "tool": "browser_read",
           "arguments": {
             "mode": "text",
-            "limit": 20
+            "limit": 100
           },
           "saveAs": "text",
           "label": "read as text"

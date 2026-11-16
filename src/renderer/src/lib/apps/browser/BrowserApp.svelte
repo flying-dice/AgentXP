@@ -16,6 +16,7 @@
   import { ViewSync } from '../viewSync'
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
+  import type { PageContext } from './webview'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -193,17 +194,18 @@
   const help = new AppHelp(host, 'browser')
   const ctx = new ContextMenu()
 
-  const askAboutPage = (): void => void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title })
+  const askAboutPage = (selection?: string): void =>
+    void host.askChat({ app: 'browser', windowId: win.id, kind: 'ask', url: active.url, title: active.title, ...(selection ? { text: selection } : {}) })
 
-  /** Back, Forward, Reload, Copy link (the page address), Ask chat about this page. */
-  const contextItems = (): MenuItemDef[] => [
+  /** Back, Forward, Reload, Copy link (the page address, or the link under the pointer), Ask chat about this page or selection. */
+  const contextItems = (page?: PageContext): MenuItemDef[] => [
     { id: 'browser-ctx-back', testid: 'browser-ctx-back', label: '&Back', icon: 'chevron-left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
     { id: 'browser-ctx-forward', testid: 'browser-ctx-forward', label: '&Forward', icon: 'chevron-right', disabled: !active.canForward, action: () => pages[activeId]?.step(1) },
     { id: 'browser-ctx-reload', testid: 'browser-ctx-reload', label: '&Reload', icon: 'refresh', shortcut: 'F5', action: () => pages[activeId]?.reload() },
     { separator: true },
-    { id: 'browser-ctx-copy-link', testid: 'browser-ctx-copy-link', label: 'Copy &link', icon: 'copy', disabled: active.url === BLANK, action: () => copyText(active.url) },
+    { id: 'browser-ctx-copy-link', testid: 'browser-ctx-copy-link', label: 'Copy &link', icon: 'copy', disabled: !page?.linkURL && active.url === BLANK, action: () => copyText(page?.linkURL || active.url) },
     { separator: true },
-    { id: 'browser-ctx-ask', testid: 'browser-ctx-ask', label: 'Ask &chat about this page...', icon: 'session', disabled: active.url === BLANK, action: askAboutPage }
+    { id: 'browser-ctx-ask', testid: 'browser-ctx-ask', label: page?.selectionText ? 'Ask &chat about this...' : 'Ask &chat about this page...', icon: 'session', disabled: active.url === BLANK, action: () => askAboutPage(page?.selectionText) }
   ]
 
   const menus = $derived<MenuDef[]>(
@@ -282,6 +284,7 @@
         testId="browser-page-{tab.id}"
         onpatch={(change) => patch(tab.id, change)}
         onready={(wc) => void ready(tab.id, wc)}
+        oncontext={(info) => ctx.showAt(info.x, info.y, contextItems(info))}
       />
     {/each}
     {#if activity}

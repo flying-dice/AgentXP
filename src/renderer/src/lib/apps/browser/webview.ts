@@ -10,3 +10,11 @@ export interface WebviewElement extends HTMLElement {
   stop(): void
   getWebContentsId(): number
 }
+
+/** What a right-click inside the guest page reports (viewport coordinates of the app). */
+export interface PageContext {
+  x: number
+  y: number
+  linkURL: string
+  selectionText: string
+}

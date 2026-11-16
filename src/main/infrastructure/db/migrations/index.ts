@@ -5,6 +5,7 @@ import { sql as virtualFs } from './004_virtual_fs'
 import { sql as surfaceWindows } from './005_surface_windows'
 import { sql as helpApp } from './006_help_app'
 import { sql as codeReview } from './007_code_review'
+import { sql as asideWindows } from './008_aside_windows'
 
 export interface Migration {
   /** Strictly increasing; stored in `PRAGMA user_version`. */
@@ -25,5 +26,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 4, name: 'virtual_fs', sql: virtualFs, rebuildsTables: true },
   { version: 5, name: 'surface_windows', sql: surfaceWindows },
   { version: 6, name: 'help_app', sql: helpApp },
-  { version: 7, name: 'code_review', sql: codeReview }
+  { version: 7, name: 'code_review', sql: codeReview },
+  { version: 8, name: 'aside_windows', sql: asideWindows }
 ]

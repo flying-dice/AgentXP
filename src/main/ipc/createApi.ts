@@ -83,6 +83,8 @@ export function createApi(s: ApiServices): InvokeApi {
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
       newChat: (desktopId, agentId, cwd) => s.desktops.newChat(desktopId, agentId, cwd),
       openReview: (desktopId, root, baseRef, agentId) => s.desktops.openReview(desktopId, root, baseRef, agentId),
+      openAside: (desktopId, windowId, agentId) => s.desktops.openAside(desktopId, windowId, agentId),
+      closeAside: (windowId) => s.desktops.closeAside(windowId),
       policy: async () => s.desktops.policy(),
       setPolicy: async (policy) => s.desktops.setPolicy(policy),
       attachBrowser: perWindow('desktop.attachBrowser'),

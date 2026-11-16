@@ -2,7 +2,7 @@
  * Pure helpers shared by main (`DesktopService`) and the renderer's fake desktop:
  * default window bounds, the initial view of a new window and window titles.
  */
-import { AGENT_HOME, vpathName } from './vfs'
+import { AGENT_HOME, parseVPath, vpathName, type VPath } from './vfs'
 import { APP_DISPLAY_NAMES, APP_KINDS, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
 
 /** Window title of a surface that has no `theme.title`. */
@@ -172,3 +172,19 @@ export function windowTitle(view: AppView): string {
   }
 }
 
+
+/** The file or folder a window shows, when its view has one (Terminal: its working directory). */
+export function viewPath(view: AppView): VPath | null {
+  if ('path' in view && typeof view.path === 'string' && view.path) return view.path
+  if (view.app === 'code') return view.activePath
+  if (view.app === 'code-review') return view.root
+  if (view.app === 'terminal') return view.cwd
+  return null
+}
+
+/** Where the aside of a window works: the root of the plugged-in drive its view is on, else the agent's home. */
+export function asideCwd(view: AppView, home: VPath = AGENT_HOME): VPath {
+  const source = viewPath(view)
+  const parsed = source ? parseVPath(source) : null
+  return parsed && parsed.drive !== 'C' ? `${parsed.drive}:\\` : home
+}

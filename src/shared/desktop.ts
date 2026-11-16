@@ -58,6 +58,10 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'help'
 ]
 
+/** Windows that have no chat pane: Chat is the chat, Code Review has its reviewer panel, a surface is the agent's own UI. */
+export const ASIDE_EXCLUDED_APPS: readonly AppKind[] = ['chat', 'code-review', 'surface']
+export const supportsAside = (app: AppKind): boolean => !ASIDE_EXCLUDED_APPS.includes(app)
+
 export type WindowState = 'normal' | 'minimized' | 'maximized'
 export type OpenedBy = 'user' | 'agent'
 
@@ -118,6 +122,8 @@ export interface AppWindowState {
   openedBy: OpenedBy
   /** The agent opened or touched this window behind the chat the user is working in: its taskbar button flashes until it is focused. Absent when false. */
   attention?: boolean
+  /** The window's chat pane session (role `aside`), once the first message created it. Absent before. */
+  asideSessionId?: Id
   view: AppView
 }
 
@@ -334,6 +340,14 @@ export interface DesktopApi {
    * creates the review session (role `review`, `cwd` = `root`), opens its Code Review window and asks the agent for a review.
    */
   openReview(desktopId: Id, root: VPath, baseRef?: string, agentId?: Id): Promise<AppWindowState>
+  /**
+   * The chat pane of an app window (not Chat, Code Review or a surface): returns the id of the window's `aside` session,
+   * creating it on the first call (cwd = the window's drive, else the agent's home). The session lives and dies with the
+   * window: closing the window deletes it.
+   */
+  openAside(desktopId: Id, windowId: Id, agentId?: Id): Promise<Id>
+  /** "New conversation": deletes the window's aside session (its transcript goes too); the next `openAside` starts a fresh one. */
+  closeAside(windowId: Id): Promise<void>
   policy(): Promise<ToolPolicyDto>
   setPolicy(policy: ToolPolicyDto): Promise<void>
   /**
