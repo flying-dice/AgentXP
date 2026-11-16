@@ -52,6 +52,7 @@ export const TASKS = {
   'T24.2': { preset: 'project-desktop', options: { projects: ['plain'], open: ['code'] } },
   'T25.1': { preset: 'review-ready' },
   'T25.2': { preset: 'review-ready' },
+  'T25.3': { preset: 'review-chat' },
   'T26.1': { preset: 'review-ready' },
   'T26.2': { preset: 'review-ready' },
   'T27.1': { preset: 'aside-code' },

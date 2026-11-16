@@ -36,6 +36,16 @@ export function scrollReport(dy, before, after, max) {
   return `Scrolled ${dy}: the content moved ${Math.abs(Math.round(moved))} px ${moved > 0 ? 'down' : 'up'} (${where}).`
 }
 
+/** H-118: a line break in typed text presses Enter. Says so once per line break (in a chat, Enter sends the message), or null when there is none. */
+export function enterNote(text) {
+  const breaks = String(text).split('\n').length - 1
+  if (breaks === 0) return null
+  return `Enter pressed ${breaks} time${breaks === 1 ? '' : 's'}: each line break in the text presses Enter (in a chat that sends the message; type the lines one after the other, with key for Enter, if you meant a new line).`
+}
+
+/** H-112: the text of a browser tooltip (the `title` of the element under the pointer or of its parents). Screenshots do not show browser tooltips, so `move` prints it. Null when there is none. */
+export const tooltipNote = (title) => (title && String(title).trim() ? `Tooltip (the browser's own tooltip is not in the screenshot): "${String(title).trim().replace(/\s+/g, ' ').slice(0, 160)}"` : null)
+
 const isNumberToken = (t) => /^-?\d+(\.\d+)?$/.test(t)
 
 /**

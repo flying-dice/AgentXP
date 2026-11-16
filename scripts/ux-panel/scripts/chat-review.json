@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "chat-review",
+  "description": "H-115 (T25.3): a chat that is asked to review the changes of its project. It calls review_open, review_list_changes, review_read_diff, review_add_comment twice and review_submit through its own session, so the remarks appear in the Code Review window with the chat as the reviewer (UX-193). Its messages never list the remarks as text. Any other prompt gets the neutral reply Okay.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "fallback": [
+    {
+      "type": "message",
+      "text": "Okay."
+    }
+  ],
+  "rules": [
+    {
+      "id": "review",
+      "match": {
+        "regex": "review|remark|comment|check the changes",
+        "ignoreCase": true
+      },
+      "steps": [
+        { "type": "message", "text": "Looking at the changes.\n" },
+        { "type": "mcpCall", "server": "agent7", "tool": "review_open", "saveAs": "opened", "arguments": {} },
+        { "type": "expect", "from": "opened.isError", "equals": "false" },
+        { "type": "mcpCall", "server": "agent7", "tool": "review_list_changes", "saveAs": "list", "arguments": {} },
+        { "type": "expect", "from": "list.isError", "equals": "false" },
+        { "type": "mcpCall", "server": "agent7", "tool": "review_read_diff", "saveAs": "diff", "arguments": { "path": "notes.txt" } },
+        { "type": "expect", "from": "diff.isError", "equals": "false" },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_add_comment",
+          "saveAs": "first",
+          "arguments": { "path": "notes.txt", "line": 1, "severity": "minor", "body": "A stray zero line was added at the top. Is it needed?" }
+        },
+        { "type": "expect", "from": "first.isError", "equals": "false" },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_add_comment",
+          "saveAs": "second",
+          "arguments": { "path": "notes.txt", "line": 4, "severity": "blocker", "body": "THREE is shouted in capitals; this breaks the naming of the other lines." }
+        },
+        { "type": "expect", "from": "second.isError", "equals": "false" },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "review_submit",
+          "saveAs": "verdict",
+          "arguments": { "verdict": "request_changes", "body": "Two remarks, one of them a blocker." }
+        },
+        { "type": "expect", "from": "verdict.isError", "equals": "false" },
+        { "type": "message", "text": "I left 2 remarks in the review window and asked for changes." }
+      ]
+    }
+  ]
+}

@@ -35,6 +35,24 @@ export const staleTabNotes = (tabs) => (tabs.some((t) => !t.url || !t.label) ? [
 /** H-23/H-38: the question sent from the pane names the file, a line, the selected text, or carries the desktop's selection. */
 export const namesSelection = (message) => /index\.ts|lines?\s*\d|first (two|2)|export const (answer|question)/i.test(userText(message)) || (/"selection"/.test(resourceText(message)) && /index\.ts/.test(resourceText(message)))
 
+/** H-115: a chat message that lists the remarks as text (file and line, or the remark itself) instead of leaving them with the tools. */
+export const listsRemarksAsText = (message) => /notes\.txt\s*(?::|\(|,)?\s*(?:line\s*)?\d|THREE is shouted|stray zero line/i.test(textOf(message))
+
+/**
+ * H-115 (T25.3, the re-test of UX-193): the chat left two remarks in the review as the agent, the verdict is set, the chat
+ * wrote no list of remarks and the chat window was brought to the front after review_submit.
+ */
+export function chatReviewChecks({ review, entries, desktop, chatWindowId }) {
+  const comments = review?.comments ?? []
+  return [
+    [comments.length === 2, `the review has ${comments.length} remark(s) (want 2)`],
+    [comments.length > 0 && comments.every((c) => c.author === 'agent'), 'every remark was left by the agent (the chat), none by the user'],
+    [Boolean(review?.summary?.verdict), `the verdict is set (${review?.summary?.verdict ?? 'none'})`],
+    [!agentMessages(entries).some(listsRemarksAsText), 'no chat message lists the remarks as text'],
+    [chatWindowId != null && desktop?.focusedWindowId === chatWindowId, `the chat window is the focused window after the review (focused ${desktop?.focusedWindowId ?? 'none'}, chat ${chatWindowId ?? 'not recorded'})`]
+  ]
+}
+
 const reviewState = (ctx) => ctx.eval((id) => window.agent7.review.state(id), ctx.state.reviewSessionId)
 const desktopPage = (ctx) => ctx.desktopPage(ctx.state.desktopId)
 
@@ -52,6 +70,11 @@ export const checks = {
   async 'T25.2'(ctx, { answer }) {
     const state = all([[await reviewOpen(ctx), 'the Code Review window is still open']])
     return withAnswer(state, answer, { keywords: [countWords(2), ['change', 'not approved', 'not happy']], expect: 'the verdict is "Changes requested" and there are 2 comments' })
+  },
+
+  async 'T25.3'(ctx, { answer }) {
+    const state = all(chatReviewChecks({ review: await reviewState(ctx), entries: await ctx.transcript(ctx.state.sessionId), desktop: await ctx.desktopState(ctx.state.desktopId), chatWindowId: ctx.state.chatWindowId }))
+    return withAnswer(state, answer, { keywords: [countWords(2), ['chat', 'conversation', 'assistant window']], expect: 'the answer says the chat left 2 remarks and that the chat window came to the front afterwards' })
   },
 
   async 'T26.1'(ctx) {

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "a2ui",
-  "description": "Draws a small WinForms form through the agent7 MCP tool a2ui_render and checks the tool accepted it. The prompt picks where it goes: 'window' (its own desktop window), 'sidebar' (beside the chat) or anything else (inline in the chat). A prompt containing 'update' changes the data model of the window surface and reports what the tool said (e.g. that the user closed it). The Send button's action comes back as a prompt and is answered by the first rule. Panel copy: the reply to the form is plain language (no internal ids).",
+  "description": "Draws a small WinForms form through the agent7 MCP tool a2ui_render and checks the tool accepted it. The prompt picks where it goes: 'window' (its own desktop window), 'sidebar' (beside the chat) or anything else (inline in the chat). A prompt containing 'update' changes the data model of the window surface and reports what the tool said (e.g. that the user closed it). The \"Send name\" button's action comes back as a prompt and is answered by the first rule. Panel copy: the reply to the form is plain language (no internal ids).",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -89,7 +89,7 @@
                     {
                       "id": "send",
                       "component": "Button",
-                      "text": "Send",
+                      "text": "Send name",
                       "isDefault": true,
                       "action": {
                         "event": {
@@ -198,7 +198,7 @@
                     {
                       "id": "send",
                       "component": "Button",
-                      "text": "Send",
+                      "text": "Send name",
                       "isDefault": true,
                       "action": {
                         "event": {
@@ -336,7 +336,7 @@
                     {
                       "id": "send",
                       "component": "Button",
-                      "text": "Send",
+                      "text": "Send name",
                       "isDefault": true,
                       "action": {
                         "event": {

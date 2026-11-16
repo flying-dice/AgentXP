@@ -2,8 +2,8 @@
 // Facilitator tool. NOT for panelists.
 //   node scripts/ux-panel/session.mjs start --task T01.1 --level novice --out <dir>   (novice | intermediate | expert)
 //   node scripts/ux-panel/session.mjs task  --task T01.1 [--level novice]
-//   node scripts/ux-panel/session.mjs check --out <dir> [--task T01.1] [--answer "<panelist answer>" | --no-answer]
-//   node scripts/ux-panel/session.mjs stop  --out <dir> [--record <record.md>]   (reads "- SEQ: n" from the record)
+//   node scripts/ux-panel/session.mjs check --out <dir> [--task T01.1] [--answer "<panelist answer>" | --no-answer] [--facilitator]   (H-119: without --facilitator a result other than PASS prints no reason)
+//   node scripts/ux-panel/session.mjs stop  --out <dir> --record <record.md> [--rerun "<why>"] [--finished-by-facilitator]   (reads "- SEQ: n" from the record, fills Time, Steps and Build; --no-record only without a record; H-109 to H-111)
 //   node scripts/ux-panel/session.mjs seq   --out <dir> --record <record.md> [--seq-confirmed]   (copies the record's SEQ into a stopped session's check.json)
 //   node scripts/ux-panel/session.mjs seq   --records <records dir> --sessions <sessions dir>     (the same for every <name>.md with a <name>/check.json)
 //   node scripts/ux-panel/session.mjs brief --task T01.1 --level novice [--round r6] [--out <dir>]   (H-80: the complete prompt of ONE fresh panelist agent for ONE task: start, act, check, record, stop)
@@ -12,19 +12,19 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { createServer } from 'node:net'
 import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from './lib/args.mjs'
 import { countSteps, readLog, stepsToPassFromLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
 import { buildBrief } from './lib/brief.mjs'
 import { buildLine, commitProblem, readBuild, siblingCommits, withBuildLine } from './lib/build.mjs'
-import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, contextProblem, effectiveSteps, loadTasks, normalizeLevel, parsePrevious, recordAnswerProblem, scenarioText, startDecision, stepsToPassOf, syncSeq, withStepsLine } from './lib/tasktext.mjs'
+import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, checkLines, contextProblem, effectiveSteps, loadTasks, minutesFromLog, normalizeLevel, parsePrevious, recordAnswerProblem, recordPlaceholderProblem, rerunProblem, scenarioText, startDecision, stepsToPassOf, stopRecordProblem, syncSeq, withRunFlags, withStepsLine, withTimeLine } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool', 'steps-to-pass': 'string', rerun: 'string', 'finished-by-facilitator': 'bool', 'confirm-build-change': 'bool' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool', 'steps-to-pass': 'string', rerun: 'string', 'finished-by-facilitator': 'bool', 'confirm-build-change': 'bool', 'no-record': 'bool' })
 // H-86: one id for the second crash (T23.1b); the old name is only accepted here.
 if (flags.task) flags.task = canonicalTaskId(flags.task)
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
@@ -159,7 +159,7 @@ async function check() {
   const steps = countSteps(entries)
   const level = normalizeLevel(flags.level ?? info.level)
   const budget = t ? budgetFor(t, level) : null
-  const lines = [`${result.status}: ${result.reason}`, ...result.notes.map((n) => `  note: ${n}`), `steps: ${steps}${budget ? ` of budget ${budget}` : ''}`]
+  const lines = checkLines({ result, steps, budget, facilitator: Boolean(flags.facilitator) }) // H-119: the reason stays in check.json
   const previousFile = join(outDir(), 'check.json')
   const earlier = existsSync(previousFile) ? JSON.parse(readFileSync(previousFile, 'utf8')) : null
   const earlierRuns = earlier?.runs ?? (earlier ? [{ checkerStatus: earlier.checkerStatus, steps: earlier.steps }] : [])
@@ -222,6 +222,15 @@ async function stop() {
   } else if (!existsSync(join(out, 'check.json')) && !flags['no-check']) {
     throw new Error(`no check.json in ${out}: run \`check\` first (or pass --no-check to archive without a verdict)`)
   }
+  // H-111: the rating is read from the record, so a stop without --record would leave check.json.seq null.
+  const noRecord = stopRecordProblem({ hasCheck: existsSync(join(out, 'check.json')), record: flags.record, noRecord: flags['no-record'], noCheck: flags['no-check'] })
+  if (noRecord) throw new Error(noRecord)
+  // H-110: a lost first run kept as <record name>-session-lost makes this session a rerun.
+  if (flags.record) {
+    const lost = join(dirname(resolve(flags.record)), `${basename(resolve(flags.record)).replace(/\.md$/, '')}-session-lost`)
+    const refusedRerun = rerunProblem({ lostRunExists: existsSync(lost), rerun: flags.rerun, check: existsSync(join(out, 'check.json')) ? JSON.parse(readFileSync(join(out, 'check.json'), 'utf8')) : null })
+    if (refusedRerun) throw new Error(refusedRerun)
+  }
   // H-82: an answer task whose last check had no answer is not a final verdict (MANUAL); ask for the answer or confirm that there was none.
   if (!flags['no-check'] && existsSync(join(out, 'check.json'))) {
     const last = JSON.parse(readFileSync(join(out, 'check.json'), 'utf8'))
@@ -251,10 +260,21 @@ async function stop() {
     if (withBuild !== text) writeFileSync(resolve(flags.record), withBuild)
     console.log(`build: ${buildLine(info.build)}${info.build?.packaged ? '' : ' (this session does not count for the release gate)'}`)
   }
+  // H-109: Time is measured from the log (first to last command), never left to the panelist; a record with a placeholder is refused.
+  if (flags.record && existsSync(resolve(flags.record))) {
+    const text = readFileSync(resolve(flags.record), 'utf8')
+    const minutes = minutesFromLog(readLog(join(out, 'log.jsonl')))
+    const timed = withTimeLine(text, minutes)
+    if (timed !== text) {
+      writeFileSync(resolve(flags.record), timed)
+      console.log(`Time: ${minutes} min (from the log) written to the Result line of ${flags.record}`)
+    }
+    const placeholder = recordPlaceholderProblem(timed)
+    if (placeholder) throw new Error(`${placeholder} (${flags.record})`)
+  }
   if (existsSync(join(out, 'check.json')) && (flags.rerun || flags['finished-by-facilitator'])) {
     const file = join(out, 'check.json')
-    const last = JSON.parse(readFileSync(file, 'utf8'))
-    writeFileSync(file, JSON.stringify({ ...last, ...(flags.rerun ? { rerun: { reason: flags.rerun } } : {}), ...(flags['finished-by-facilitator'] ? { finishedByFacilitator: true } : {}) }, null, 2))
+    writeFileSync(file, JSON.stringify(withRunFlags(JSON.parse(readFileSync(file, 'utf8')), { rerun: flags.rerun, finishedByFacilitator: flags['finished-by-facilitator'] }), null, 2))
   }
   // H-53/H-72: the rating comes from the record (`- SEQ: n`), never from a command line option; the scale guard refuses a record whose rating contradicts its text.
   if (flags.record) {

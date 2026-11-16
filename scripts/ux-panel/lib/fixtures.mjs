@@ -1,6 +1,7 @@
 // Sample projects on disk (the facilitator creates them; the panelist only sees folder names).
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
 export const REDIRECT_BUG = `// BUG: the "next" address is dropped, so deep links are lost after sign-in.
@@ -29,6 +30,24 @@ export function login(user: string, password: string, url: string): string | nul
   return afterLogin(url)
 }
 `
+
+/**
+ * H-104: the folder that holds a session's sandbox (`<parent>/a7ux-XXXX/home/Documents/docs-site`). The folder field of the app shows this
+ * host path, and "/tmp/a7ux-..." read as a wrong, technical path to panelists. The parent is `UX_SANDBOX_ROOT`, else a folder under the user's
+ * home (`~/.ux-panel`), else the system temp folder when neither can be created.
+ */
+export function sandboxParent({ env = process.env, home = homedir(), tmp = tmpdir(), mkdir = (dir) => mkdirSync(dir, { recursive: true }) } = {}) {
+  for (const candidate of [env.UX_SANDBOX_ROOT, home ? join(home, '.ux-panel') : null]) {
+    if (!candidate) continue
+    try {
+      mkdir(candidate)
+      return candidate
+    } catch {
+      // not writable: try the next one
+    }
+  }
+  return tmp
+}
 
 const put = (root, files) => {
   for (const [rel, text] of Object.entries(files)) {
