@@ -78,6 +78,9 @@ These rules come from SimpleEnglish. They apply to all prose in the documentatio
 | app | program, application (a program that opens as a window on a desktop) |
 | tool | function, capability, skill (what an agent can use on a desktop) |
 | project | repository, repo (a folder that you plug in to a desktop) |
+| project (it appears as a drive) | project folder, workspace folder (say "it appears as a drive" once, in the New desktop dialog box only) |
+| Your files (C:) | private C: drive, private disk, local disk (the C: drive of a desktop) |
+| Demo assistant | scripted demo, scripted agent (the practice agent that gives fixed sample answers) |
 | agent | bot, AI, assistant, model |
 | window | screen, view (for an Agent7 window) |
 | pane | panel, sidebar, section (for a part of a window) |

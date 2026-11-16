@@ -32,6 +32,8 @@ Click **Start -> System Tools -> Task Manager**, or click **Start -> Task Manage
 
 ### The Chats Tab
 
+The window opens on the **Chats** tab. It opens on the **Processes** tab when a chat has a problem or a chat is still working, because that is where you stop the agent program.
+
 The tab lists the chats with the columns **Chat**, **Agent**, **Status**, and **Context**. A chat that waits for your next message reads **Idle (the agent program is still running)**. The tokens of each chat are on the **Performance** tab. **End Task** stops the turn of the selected chat. The button works only while the chat is busy.
 
 ### The Processes Tab

@@ -66,6 +66,7 @@ describe('LauncherService', () => {
     const { id } = await launcher.create({ title: 'd', folderIds: [] })
     launcher.connect(id)
     expect(host.connectedIds()).toEqual([id])
+    expect(host.launcherMinimized).toBe(1) // the desktop ends up in front of the launcher
     expect(launcher.list()[0]).toMatchObject({ id, connected: true })
     await launcher.disconnect(id)
     expect(captured).toEqual([id])

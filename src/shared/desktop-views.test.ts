@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeNewWindow, placeWindow, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -212,5 +212,25 @@ describe('Code Review window title (UX-109)', () => {
   it('names the drive or the folder without a project name', () => {
     expect(windowTitle(view)).toBe('Review - E:\\')
     expect(windowTitle({ ...view, root: 'E:\\src\\app' })).toBe('Review - app')
+  })
+})
+
+describe('placeChatBesideBrowser (UX-120)', () => {
+  it('puts the chat in the free half and narrows a wide Browser to its own half', () => {
+    const { chat: c, browser } = placeChatBesideBrowser(DEFAULT_BOUNDS.browser)
+    expect(browser).not.toBeNull()
+    expect(overlap(c, browser!)).toBe(false)
+    expect(inside(c) && inside(browser!)).toBe(true)
+    expect(c.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
+  })
+
+  it('leaves a Browser that already leaves room as it is, and mirrors for a Browser on the right', () => {
+    const small = { x: 20, y: 80, width: 500, height: 400 }
+    const left = placeChatBesideBrowser(small)
+    expect(left.browser).toBeNull()
+    expect(overlap(left.chat, small)).toBe(false)
+    const right = placeChatBesideBrowser({ x: 700, y: 80, width: 560, height: 400 })
+    expect(right.chat.x).toBe(0)
+    expect(overlap(right.chat, { x: 700, y: 80, width: 560, height: 400 })).toBe(false)
   })
 })

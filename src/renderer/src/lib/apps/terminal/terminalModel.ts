@@ -51,7 +51,7 @@ export function lastLines(output: string, count = 20): string[] {
 /** The cmd.exe prompt of a working directory: `E:\\src>`. */
 export const promptFor = (cwd: VPath): string => `${cwd}>`
 
-export const BANNER = 'Agent7 shell  (C:\\ is private to this desktop; projects appear as drives)'
+export const BANNER = 'Agent7 shell  (C:\\ holds your files on this desktop; projects appear as drives)'
 
 /** The console text of one terminal: banner, prompt with the command, its output and the exit status. */
 export function renderTerminal(entry: TerminalEntry | null, cwd: VPath = AGENT_HOME): string {

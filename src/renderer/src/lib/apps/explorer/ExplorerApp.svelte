@@ -196,7 +196,7 @@
 
   const columns: ListColumn[] = [
     { key: 'name', header: 'Name', width: 190 },
-    { key: 'type', header: 'Type', width: 130 },
+    { key: 'type', header: 'Type', width: 180 },
     { key: 'status', header: 'Agent status' }
   ]
   const rows = $derived<ListRow[]>(

@@ -17,7 +17,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeNewWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeChatBesideBrowser, placeNewWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, parseVPath, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
@@ -177,10 +177,13 @@ export class DesktopService implements DesktopStates {
     }
     // New windows start below the top bar and beside the focused window (`placeNewWindow`).
     const parent = focused && focused.windowState === 'normal' ? { app: focused.app, bounds: focused.bounds } : null
+    // A chat started from the Browser opens in the half the Browser does not use (UX-120); the Browser is narrowed to its half.
+    const beside = input.app === 'chat' && focused?.app === 'browser' && focused.windowState === 'normal' ? placeChatBesideBrowser(focused.bounds) : null
+    if (beside?.browser) this.deps.windows.setBounds(focused!.id, beside.browser)
     const record = this.deps.windows.create({
       desktopId,
       app: input.app,
-      bounds: placeNewWindow(input.app, this.deps.windows.list(desktopId).length, parent, undefined, sizeOf(input.app, size)),
+      bounds: beside?.chat ?? placeNewWindow(input.app, this.deps.windows.list(desktopId).length, parent, undefined, sizeOf(input.app, size)),
       windowState: 'normal',
       openedBy,
       ...this.subtypeOf(input)

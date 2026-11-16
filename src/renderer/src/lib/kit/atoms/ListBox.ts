@@ -6,6 +6,8 @@ export interface ListBoxItem<T = string> {
   disabled?: boolean
   /** `data-testid` of the rendered option. */
   testid?: string
+  /** Tooltip of the option (the full text when the label is shortened). */
+  title?: string
 }
 
 export interface ClickModifiers {

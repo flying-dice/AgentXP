@@ -15,7 +15,7 @@
     <Icon name="agent7" size={48} />
     <div>
       <h2>Open a desktop to get started</h2>
-      <p>A desktop is a small Windows 7 machine for one project. It has its own private C: drive for files made on this desktop, and your projects plug in as USB drives that you can safely remove. Pick or create one in Agent7 Desktops.</p>
+      <p>A desktop is a small Windows 7 machine for one project. It has its own place for your files (C:), and your projects plug in as USB drives that you can safely remove. Pick or create one in Agent7 Desktops.</p>
     </div>
   </div>
   {#snippet buttons()}

@@ -104,7 +104,7 @@ export function driveItems(drive: { kind: 'system' | 'removable' }, a: DriveActi
 
 /** The text of the Properties box of a drive. */
 export function driveProperties(drive: { label: string; letter: string; kind: 'system' | 'removable'; pluggedAt: string | null }): string {
-  const lines = [`${drive.label} (${drive.letter}:)`, '', `Type: ${drive.kind === 'removable' ? 'Project folder (plugged in)' : 'Local Disk'}`, `Drive letter: ${drive.letter}:`]
+  const lines = [`${drive.label} (${drive.letter}:)`, '', `Type: ${drive.kind === 'removable' ? 'Project' : 'Local Disk'}`, `Drive letter: ${drive.letter}:`]
   if (drive.pluggedAt) lines.push(`Plugged in: ${new Date(drive.pluggedAt).toLocaleString()}`)
   if (drive.kind === 'removable') lines.push('', 'Eject removes the drive from this desktop. The folder and its files stay on your disk.')
   return lines.join('\n')

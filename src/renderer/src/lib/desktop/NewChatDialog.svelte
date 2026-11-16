@@ -23,7 +23,7 @@
         letter: d.letter,
         cwd: d.kind === 'system' ? AGENT_HOME : driveRoot(d.letter),
         title: driveTitle(d),
-        sub: d.kind === 'system' ? 'Private to this desktop. The agent starts in its home folder.' : 'Project folder (plugged in). The agent starts in the root of the drive.',
+        sub: d.kind === 'system' ? 'Your files (C:). The agent starts in its home folder.' : 'Project. The agent starts in the root of the drive.',
         icon: d.kind === 'removable' ? ('usb' as const) : ('drive' as const)
       }))
   )

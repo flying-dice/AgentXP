@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assistantStatus, describeLoadFailure, failureHint, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
+import { agentBarText, assistantStatus, describeLoadFailure, failureHint, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
 
 describe('load failures', () => {
   it('names the cause in plain words and keeps the technical text', () => {
@@ -69,5 +69,13 @@ describe('zoom', () => {
     expect(stepZoom(5, 1)).toBe(5)
     expect(stepZoom(0.25, -1)).toBe(0.25)
     expect(zoomText(1.1)).toBe('110%')
+  })
+})
+
+describe('agentBarText (UX-128)', () => {
+  it('says what the agent does, that it read the page, or that the user has control', () => {
+    expect(agentBarText({ userInControl: false, readDone: false, activity: 'Reading the page' })).toBe('Agent is using this page: Reading the page')
+    expect(agentBarText({ userInControl: false, readDone: true, activity: 'Reading the page' })).toBe('The agent read this page.')
+    expect(agentBarText({ userInControl: true, readDone: true, activity: null })).toContain('You have control of this page')
   })
 })

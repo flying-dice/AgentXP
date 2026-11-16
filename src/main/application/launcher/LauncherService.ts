@@ -122,6 +122,7 @@ export class LauncherService {
     this.deps.desktops.setOpen(id, true)
     this.deps.desktops.touch(id)
     this.deps.host.open(id)
+    this.deps.host.minimizeLauncher()
     this.publishChanged()
   }
 

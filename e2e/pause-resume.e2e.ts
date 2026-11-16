@@ -57,4 +57,15 @@ describe('pause, resume and taking control (stepping agent)', () => {
     await see.gone(ctx.desktopPage.getByTestId('topbar-give-back'))
     await see.text(ctx.desktop.status, 'Idle')
   })
+
+  it('closing a chat while the agent works says that the agent keeps working (UX-136)', async () => {
+    const chat = ctx.desktop.chat()
+    await control.setMode('manual')
+    await chat.send('step through once more')
+    await control.waitForPause()
+    await see.attribute(chat.transcript, 'data-running', 'true')
+    await ctx.desktop.closeWindow('chat')
+    await see.text(ctx.desktop.balloonText, 'The agent keeps working. Open it again from the Task Manager.')
+    await control.setMode('auto')
+  })
 })

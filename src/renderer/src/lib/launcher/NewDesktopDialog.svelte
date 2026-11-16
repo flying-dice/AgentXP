@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** "New desktop": a name, the project folders the agent can use (plugged in as drives), and the agent. */
+  /** "New desktop": a name, the projects the agent can use (each appears as a drive), and the agent. */
   import type { AgentDto, FolderDto, Id } from '@shared/models'
   import type { NewDesktopInput } from '@shared/vfs'
   import Button from '../kit/atoms/Button.svelte'
@@ -9,8 +9,12 @@
   import DialogButtons from '../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../kit/molecules/DialogButtons'
   import Dialog from '../kit/organisms/Dialog.svelte'
+  import { shortenMiddle } from '../apps/shared/fileName'
   import DesktopNameField from './DesktopNameField.svelte'
   import { validateDesktopName } from './launcherModel'
+
+  /** Longest folder path shown in the list; a longer one is cut in the middle (the tooltip has all of it). */
+  const PATH_MAX = 44
 
   interface Props {
     folders: FolderDto[]
@@ -39,7 +43,7 @@
   const error = $derived(validateDesktopName(name, existingNames))
   /** The first project folder the user chose (the name suggestion uses it). */
   const firstProject = $derived(all.find((f) => f.id === checked[0])?.name)
-  const items = $derived(all.map((f) => ({ value: f.id, label: `${f.name}   ${f.path}`, testid: 'new-desktop-project' })))
+  const items = $derived(all.map((f) => ({ value: f.id, label: `${f.name}   ${shortenMiddle(f.path, PATH_MAX)}`, title: f.path, testid: 'new-desktop-project' })))
 
   async function browse(): Promise<void> {
     const picked = await onbrowse?.()
@@ -62,7 +66,7 @@
       <p class="opens" data-testid="new-desktop-opens-note">Agent7 opens the new desktop when you click Create.</p>
     </div>
     <div class="field">
-      <Label text="Project folders the agent can use (they appear as drives):" />
+      <Label text="Projects the agent can use (each project appears as a drive):" />
       <div class="projects">
         <CheckedListBox testid="new-desktop-projects" {items} bind:checked width="100%" height={112} label="Projects" />
         <Button data-testid="new-desktop-browse" onclick={() => void browse()}>Browse...</Button>

@@ -68,7 +68,7 @@ Right-click the bare desktop to see the menu of the desktop. The menu has **New 
 
 ### The Windows
 
-Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it.
+Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from the Task Manager.** A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
 
 If the agent opened a window, the label **opened by agent** appears at its edge. The taskbar button of a window that the agent opened behind your chat flashes until you select it.
 

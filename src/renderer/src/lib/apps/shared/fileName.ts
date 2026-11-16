@@ -7,3 +7,14 @@ export function isValidFileName(name: string): boolean {
 }
 
 export const INVALID_FILE_NAME_TEXT = 'The file name is not valid.'
+
+/**
+ * Cuts a long text in the middle, so the start and the end stay (a path keeps its drive and its last folder):
+ * `shortenMiddle('/home/anna/projects/web/login-app', 20)` gives `/home/an...gin-app`.
+ */
+export function shortenMiddle(text: string, max: number): string {
+  if (text.length <= max || max < 5) return text
+  const keep = max - 3
+  const tail = Math.ceil(keep / 2)
+  return `${text.slice(0, keep - tail)}...${text.slice(text.length - tail)}`
+}

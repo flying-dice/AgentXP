@@ -38,6 +38,11 @@ export function processRows(processes: readonly AgentProcessDto[], currentDeskto
   }))
 }
 
+/** The tab Task Manager opens on (UX-130): Processes when a chat has a problem or is still working (the user is there to stop the program), else Chats. */
+export function initialTab(sessions: readonly Pick<SessionDto, 'status' | 'problem'>[]): 'chats' | 'processes' {
+  return sessions.some((s) => s.problem || s.status === 'error' || s.status === 'working') ? 'processes' : 'chats'
+}
+
 export interface ChatRow {
   id: string
   title: string

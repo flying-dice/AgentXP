@@ -53,7 +53,7 @@ The list shows the files of the folder. It has the columns **Name**, **Type**, a
 
 ### The Computer Window
 
-The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the private C: drive (files made on this desktop). The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject (remove from this desktop)**, and **Properties**.
+The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has **Your files (C:)**, the files made on this desktop. The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project**. The tile of C: says **Your files (C:)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject (remove from this desktop)**, and **Properties**.
 
 The group **Recently removed** shows the last five projects that you ejected from this desktop. The newest one is selected when you open the group. If nothing was removed yet, the dimmed button says so in its tooltip. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
 
@@ -170,7 +170,7 @@ To remove a project from the desktop, select it in **Computer** and click **Ejec
 
 - **A message says that Windows cannot find the path.** Fix the spelling of the path. Make sure that the drive is plugged in.
 - **The window went back to Computer.** Someone ejected the drive that you looked at.
-- **Eject (remove from this desktop) is dimmed.** Select a project. The private C: drive cannot be ejected.
+- **Eject (remove from this desktop) is dimmed.** Select a project. **Your files (C:)** cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
 
 ## 7 - Need Help?
