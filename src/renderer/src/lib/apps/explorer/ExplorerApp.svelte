@@ -1,8 +1,10 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
+  import type { Id } from '@shared/models'
   import { normaliseVPath, vpathParent, type DriveDto, type VfsEntryDto, type VPath } from '@shared/vfs'
   import type { AppProps } from '../types'
+  import ToolTip from '../../kit/atoms/ToolTip.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
@@ -19,7 +21,7 @@
   import { AppHelp } from '../shared/AppHelp.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import { copyText } from '../shared/contextItems'
-  import { backgroundItems, defaultOpener, entryItems, propertiesText } from './explorerContext'
+  import { backgroundItems, defaultOpener, driveItems, driveProperties, entryItems, projectCountText, propertiesText } from './explorerContext'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { errorText } from '../shared/listing'
@@ -258,12 +260,22 @@
     expanded = new Set(expanded)
   }
 
-  async function plugIn(): Promise<void> {
-    try {
-      await host.api.drives.plugIn(desktopId)
-    } catch (error) {
-      await showMessageBox({ text: errorText(error), caption: 'Explorer', buttons: 'OK', icon: 'error' })
-    }
+  /** A recently removed project the user selected in Computer (the toolbar's Plug in again acts on it). */
+  let removedSelected = $state<Id | null>(null)
+
+  /** Computer with the project's drive selected, after it was plugged in (or found plugged in already). */
+  function showDrive(drive: DriveDto | null): void {
+    if (!drive) return
+    removedSelected = null
+    go('')
+    onSelectDrive(driveRoot(drive.letter))
+  }
+
+  const plugIn = async (): Promise<void> => showDrive(await host.plugInProject())
+
+  async function plugInAgain(folderId: Id | null = removedSelected): Promise<void> {
+    if (folderId === null) return
+    showDrive(await host.plugInAgain(folderId))
   }
 
   // svelte-ignore state_referenced_locally
@@ -295,14 +307,27 @@
   const backgroundMenu = (): MenuItemDef[] =>
     backgroundItems({ refresh, up: () => go(upPath(path)), inFolder: path !== '', startChat: () => path !== '' && void host.startChat(path), askChat: () => path !== '' && askAbout(path) })
 
-  const driveMenuItems = (drive: DriveDto): MenuItemDef[] => [
-    { id: 'explorer-drive-open', label: '&Open', action: () => go(driveRoot(drive.letter)) },
-    { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: () => void host.startChat(driveRoot(drive.letter)) },
-    { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask chat a&bout this...', icon: 'session', action: () => askAbout(driveRoot(drive.letter)) },
-    { id: 'explorer-ctx-drive-copy-path', testid: 'explorer-ctx-drive-copy-path', label: 'Copy as &path', icon: 'copy', action: () => copyText(driveRoot(drive.letter)) },
-    { separator: true },
-    { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: drive.kind !== 'removable', action: () => void host.ejectDrive(drive.letter) }
-  ]
+  const driveMenuItems = (drive: DriveDto): MenuItemDef[] =>
+    driveItems(drive, {
+      open: () => go(driveRoot(drive.letter)),
+      startChat: () => void host.startChat(driveRoot(drive.letter)),
+      askChat: () => askAbout(driveRoot(drive.letter)),
+      copyPath: () => copyText(driveRoot(drive.letter)),
+      eject: () => void host.ejectDrive(drive.letter),
+      properties: () => void showMessageBox({ text: driveProperties(drive), caption: `${driveTitle(drive)} Properties`, buttons: 'OK', icon: 'information' })
+    })
+
+  const removedMenuItems = (folderId: Id): MenuItemDef[] => [{ id: 'explorer-removed-plug-in-again', testid: 'explorer-ctx-plug-in-again', label: 'Plug in &again', icon: 'usb', action: () => void plugInAgain(folderId) }]
+
+  function removedMenu(project: { folderId: Id }, event: MouseEvent): void {
+    ctx.show(event, removedMenuItems(project.folderId))
+  }
+
+  /** Right-click on a drive of the navigation pane. */
+  function navMenu(node: TreeNodeData, event: MouseEvent): void {
+    const drive = node.id.startsWith(DIR) ? drives.find((d) => treeIdOf(driveRoot(d.letter)) === node.id) : undefined
+    if (drive) ctx.show(event, driveMenuItems(drive))
+  }
 
   function folderMenu(row: ListRow, event: MouseEvent): void {
     const entry = entries.find((e) => e.path === row.id)
@@ -315,6 +340,7 @@
 
   /** What the Menu key opens: the menu of the selected file, folder or drive, else the background menu. */
   function keyMenu(): MenuItemDef[] {
+    if (path === '' && removedSelected !== null) return removedMenuItems(removedSelected)
     if (selectedDrive) return driveMenuItems(selectedDrive)
     return selectedEntry ? entryMenu(selectedEntry) : backgroundMenu()
   }
@@ -326,6 +352,7 @@
         items: [
           { id: 'open', testid: 'explorer-menu-open', label: '&Open', disabled: !selectedEntry && !selectedDrive, action: () => (selectedEntry ? openEntry(selectedEntry) : selectedDrive && go(driveRoot(selectedDrive.letter))) },
           { id: 'plug', testid: 'explorer-menu-plug-in', label: '&Plug in a project...', action: () => void plugIn() },
+          { id: 'plug-again', testid: 'explorer-menu-plug-in-again', label: 'Plug in a&gain', disabled: path !== '' || removedSelected === null, action: () => void plugInAgain() },
           { id: 'eject', testid: 'explorer-menu-eject', label: '&Eject', disabled: selectedDrive?.kind !== 'removable', action: () => selectedDrive && void host.ejectDrive(selectedDrive.letter) },
           { id: 'props', testid: 'explorer-menu-properties', label: 'P&roperties', disabled: !selectedEntry, action: () => selectedEntry && void showProperties(selectedEntry) },
           ...closeItems('explorer', () => void host.closeWindow(win.id))
@@ -363,11 +390,18 @@
   }
 
   function onSelectDrive(root: VPath): void {
+    removedSelected = null
     selected = [root]
     report()
   }
 
-  const itemsText = $derived(path === '' ? `${drives.length} item${drives.length === 1 ? '' : 's'}` : `${entries.length} item${entries.length === 1 ? '' : 's'}`)
+  function onSelectRemoved(folderId: Id): void {
+    removedSelected = folderId
+    selected = []
+    report()
+  }
+
+  const itemsText = $derived(path === '' ? projectCountText(drives.filter((d) => d.kind === 'removable').length) : `${entries.length} item${entries.length === 1 ? '' : 's'}`)
   const selectionText = $derived(
     selectedDrive
       ? `${driveTitle(selectedDrive)}  -  ${selectedDrive.kind === 'removable' ? 'USB drive' : 'Local Disk'}`
@@ -388,20 +422,29 @@
   </div>
   {#if path === ''}
     <div class="commands" role="toolbar" aria-label="Commands">
-      <ToolStripButton data-testid="explorer-plug-in" icon="plus" text="Plug in a project..." title="Plug in a project as a USB drive" onclick={() => void plugIn()} />
-      <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
-      <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject" title="Safely Remove Hardware" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
+      <ToolTip text="Plug in a project folder as a drive so that the agent can see its files.">
+        <ToolStripButton data-testid="explorer-plug-in" icon="plus" text="Plug in a project..." onclick={() => void plugIn()} />
+      </ToolTip>
+      <ToolTip text="Plug the selected removed project in again, without choosing its folder.">
+        <ToolStripButton data-testid="explorer-plug-in-again" icon="usb" text="Plug in again" disabled={removedSelected === null} onclick={() => void plugInAgain()} />
+      </ToolTip>
+      <ToolTip text="Open the selected drive.">
+        <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
+      </ToolTip>
+      <ToolTip text="Safely remove the selected project from this desktop. The folder stays on your disk.">
+        <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
+      </ToolTip>
     </div>
   {/if}
   <div class="split">
     <SplitContainer splitterDistance={190} panel1MinSize={110} panel2MinSize={200} fixedPanel="panel1">
       {#snippet panel1()}
-        <TreeView testid="explorer-nav" class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} />
+        <TreeView testid="explorer-nav" class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} oncontextmenu={navMenu} />
       {/snippet}
       {#snippet panel2()}
         <div class="list">
           {#if path === ''}
-            <ComputerView {drives} selected={selected[0] ?? null} onselect={onSelectDrive} onactivate={(d) => go(driveRoot(d.letter))} oncontextmenu={driveMenu} />
+            <ComputerView {drives} selected={selected[0] ?? null} onselect={onSelectDrive} onactivate={(d) => go(driveRoot(d.letter))} oncontextmenu={driveMenu} removed={host.recentlyRemoved} {removedSelected} onselectremoved={onSelectRemoved} onplugagain={(id) => void plugInAgain(id)} onremovedcontextmenu={removedMenu} />
           {:else}
             <ListView testid="explorer-list" rowTestid="explorer-item" {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} oncontextmenu={folderMenu} />
           {/if}

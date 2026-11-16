@@ -8,9 +8,13 @@ export interface BrowserTabState {
   loading: boolean
   canBack: boolean
   canForward: boolean
+  /** The page did not load (the error page is showing). */
+  failed: boolean
+  /** Page zoom as a factor (1 = 100%). */
+  zoom: number
 }
 
-export const newTabState = (id: number, url: string = BLANK): BrowserTabState => ({ id, url, title: '', loading: false, canBack: false, canForward: false })
+export const newTabState = (id: number, url: string = BLANK): BrowserTabState => ({ id, url, title: '', loading: false, canBack: false, canForward: false, failed: false, zoom: 1 })
 
 /** What the tab strip shows for a tab. */
 export const tabLabel = (tab: Pick<BrowserTabState, 'url' | 'title'>): string => tab.title || (tab.url === BLANK || !tab.url ? 'New Tab' : hostOf(tab.url))

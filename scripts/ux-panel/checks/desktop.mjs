@@ -1,6 +1,6 @@
 // J10, J12-J15, J19, J20: tools follow apps, drives, disconnect, many desktops, browser, investigate.
-import { LOGIN_ORIGINAL, REDIRECT_BUG } from '../lib/fixtures.mjs'
-import { all, fail, manual, pass, projectRoot, readText, windowsOf, withAnswer } from './util.mjs'
+import { LOGIN_ORIGINAL, REDIRECT_BUG, TEST_PAGE_URL } from '../lib/fixtures.mjs'
+import { all, fail, lastProgress, manual, pass, projectRoot, readText, windowsOf, withAnswer } from './util.mjs'
 
 const loginAppIntact = (ctx) => readText(ctx.fixtures.loginApp, 'src/auth/redirect.ts') === REDIRECT_BUG && readText(ctx.fixtures.loginApp, 'src/auth/login.ts') === LOGIN_ORIGINAL
 
@@ -8,14 +8,13 @@ export const checks = {
   async 'T10.1'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
-    return withAnswer(
-      all([
-        [windowsOf(state, 'terminal').length === 0, 'no Terminal window is open'],
-        [!state.tools.includes('terminal'), 'the terminal tool group is off (no Terminal chip)']
-      ]),
-      answer,
-      { keywords: [['chip', 'top bar', 'tools']], expect: 'the panelist names the chip list in the top bar as the proof' }
-    )
+    const denied = (await ctx.policy()).groups.terminal === 'deny'
+    const closed = windowsOf(state, 'terminal').length === 0 && !state.tools.includes('terminal')
+    const stateResult = denied ? pass('Terminal policy is Deny (Permissions route)') : closed ? pass('no Terminal window is open and the terminal tool is off (closing route)') : fail('Terminal is still usable: a Terminal window is open or its tool is on, and the policy is not Deny')
+    return withAnswer(stateResult, answer, {
+      keywords: [['chip', 'top bar', 'tools', 'workspace bar', 'agent can use', 'closed', 'deny', 'denied']],
+      expect: 'the panelist names the chip list (Workspace bar / Agent can use), the closed Terminal or the Deny policy as the proof'
+    })
   },
 
   async 'T10.2'(ctx, { answer }) {
@@ -42,18 +41,22 @@ export const checks = {
 
   async 'T12.2'(ctx, { answer }) {
     const drives = await ctx.drives(ctx.state.desktopId)
-    return withAnswer(all([[drives.some((d) => d.kind === 'removable' && d.folderId === ctx.state.ejectedFolderId), 'login-app is plugged in again']]), answer, { keywords: [['drive', 'eject', 'removed', 'not plugged', 'unplug']], expect: 'the answer names the missing drive as the cause' })
+    return withAnswer(all([[drives.some((d) => d.kind === 'removable' && d.folderId === ctx.state.ejectedFolderId), 'login-app is plugged in again']]), answer, { keywords: [['drive was removed', 'drive is missing', 'drive was ejected', 'ejected', 'unplugged', 'not plugged in', 'removed the drive', 'was removed', 'is not plugged']], expect: 'the answer names the missing drive as the cause' })
   },
 
   async 'T13.1'(ctx) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     const entries = await ctx.transcript(ctx.state.sessionId)
+    const progress = lastProgress(entries)
+    const toolCalls = entries.filter((e) => e.kind === 'tool_call').length
+    const runState = (await ctx.launcherList()).find((d) => d.id === ctx.state.desktopId)?.runState ?? 'unknown'
+    const chatOpen = windowsOf(state, 'chat').some((w) => w.view.sessionId === ctx.state.sessionId)
     return all(
       [
         [Boolean(state), 'the desktop is connected again'],
-        [entries.length > (ctx.state.messagesAtStart ?? 0), `the chat shows new progress (${entries.length} rows, ${ctx.state.messagesAtStart} at the start)`]
+        [progress > (ctx.state.progressAtStart ?? 0) || toolCalls > (ctx.state.toolCallsAtStart ?? 0), `the chat shows new progress (last "N of 30" is ${progress}, was ${ctx.state.progressAtStart ?? 0} at the start; ${toolCalls} tool calls, was ${ctx.state.toolCallsAtStart ?? 0})`]
       ],
-      ['researcher: the session log should show the window was closed and later reopened from the launcher']
+      [`run state at reconnect: ${runState}`, `chat window ${chatOpen ? 'is open' : 'is not open'}`, 'researcher: the session log should show the chat window or the desktop was closed (disconnect) and later reopened from the launcher']
     )
   },
 
@@ -70,7 +73,8 @@ export const checks = {
   async 'T14.1'(ctx, { answer }) {
     const list = await ctx.launcherList()
     const row = list.find((d) => d.id === ctx.state.pendingDesktopId)
-    return withAnswer(all([[row?.connected === true, 'the desktop with the pending request is connected']]), answer, { keywords: [ctx.state.errorDesktopTitle], expect: `the answer names the desktop with the error: "${ctx.state.errorDesktopTitle}"` })
+    void answer // the scenario does not ask for the error desktop, so the answer is not checked
+    return all([[row?.connected === true, 'the desktop with the pending request is connected']], ['researcher: record whether the waiting row was preselected when the launcher opened'])
   },
 
   async 'T14.2'(ctx) {
@@ -90,7 +94,7 @@ export const checks = {
         [loginAppIntact(ctx), 'the project folder remains']
       ]),
       answer,
-      { keywords: ['chat'], expect: 'chats and C: files are lost, the project folder stays' }
+      { keywords: [['chat'], ['c:', 'drive', 'notes', 'logs'], ['stay', 'kept', 'remain', 'ejected', 'not deleted']], expect: 'chats and C: files are lost, the project folder stays' }
     )
   },
 
@@ -98,20 +102,21 @@ export const checks = {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
     const browser = windowsOf(state, 'browser')[0]
+    const host = new URL(ctx.state.testPageUrl ?? TEST_PAGE_URL).host
     return withAnswer(
       all([
-        [Boolean(browser) && String(browser.view.url).includes('127.0.0.1:4173'), `a Browser window shows the page (${browser?.view.url ?? 'none'})`],
+        [Boolean(browser) && String(browser.view.url).includes(host), `a Browser window shows the page (${browser?.view.url ?? 'none'}; want ${host})`],
         [state.tools.includes('browser'), 'the Browser chip is on']
       ]),
       answer,
-      { keywords: [['assistant', 'agent', 'can see', 'chip']], expect: 'the panelist said the assistant can now see the page' }
+      { keywords: [['assistant can', 'agent can', 'can now see', 'can see the page', 'can read the page', 'assistant sees', 'agent sees', 'browser chip', 'chip is on']], expect: 'the panelist said the assistant can now see the page' }
     )
   },
 
   async 'T19.2'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
-    return withAnswer(all([[windowsOf(state, 'browser').length > 0, 'the Browser window is open']]), answer, { keywords: [['connect', 'network', 'unreachable', 'refused', 'internet']], expect: 'the panelist names the connection problem and retried via Refresh or a new address (check the session log)' })
+    return withAnswer(all([[windowsOf(state, 'browser').length > 0, 'the Browser window is open']]), answer, { keywords: [["could not connect", "couldn't connect", "can't connect", 'cannot connect', 'not connect', 'unreachable', 'refused', 'no network', 'no internet', 'not load', 'refresh']], expect: 'the panelist names the connection problem and retried via Refresh or a new address (check the session log)' })
   },
 
   async 'T20.1'(ctx, { answer }) {

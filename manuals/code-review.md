@@ -26,7 +26,7 @@ This manual describes the Code Review window. Code Review shows the changes of a
 
 Use Code Review to check a change before you keep it. The window compares the files of a project with a base, for example the last commit. A reviewer agent reads the changes and leaves comments on the lines, like the reviewer of a merge request. You can answer the comments, resolve them, and send them to a chat that fixes the code.
 
-Each Code Review window has its own review session with an agent. The session ends when you close the window.
+Each Code Review window has its own review chat with an agent. The chat ends when you close the window.
 
 ## 2 - Open It
 
@@ -40,7 +40,7 @@ Each of these first opens the **Code Review** box. It asks what to review:
 2. In **Compare against**, choose what to compare with: **Uncommitted changes (HEAD)**, the last commit, or type a branch, tag or commit.
 3. Click **Review**.
 
-When the window opens, Agent7 sends the first message to the reviewer by itself.
+The window opens without starting anything. The reviewer only works when you click **Ask the reviewer**, and it can read your files but never change them.
 
 ## 3 - The Window
 
@@ -157,6 +157,22 @@ The status bar shows the folder, the number of files, the number of open comment
 | Status: files | The number of changed files. | `review-status-files` |
 | Status: comments | The number of open comments. | `review-status-comments` |
 | Status: reviewer | What the reviewer does. | `review-status-agent` |
+| All changes | Shows every changed file on one page. | `review-all` |
+| All changes: file | A file in the one-page view. | `review-all-file` |
+| All changes: file heading | The name of a file in the one-page view. | `review-all-head` |
+| Ask the reviewer | Asks the reviewer for a review of the changes. Nothing starts until you click it. | `review-ask-agent` |
+| Comments banner | Says how many comments are open. | `review-banner-comments` |
+| Compared with | Says what the changes are compared with. | `review-base-hint` |
+| Diff columns | The old and new text side by side. | `review-columns` |
+| Comment sent | Marks a comment that was sent. | `review-comment-sent` |
+| Comments list | The comments of the review. | `review-comments-wrap` |
+| View: all changes | Shows every changed file on one page. | `review-menu-all` |
+| Review: ask the reviewer | Asks the reviewer for a review. | `review-menu-ask-agent` |
+| Next file | Goes to the next changed file. | `review-next-file` |
+| Reviewer | The area of the reviewer. | `review-reviewer-wrap` |
+| Status: change | Which change you are on, such as Change 3 of 7. | `review-status-change` |
+| Totals | The number of added and removed lines. | `review-totals` |
+| View: all changes (button) | Switches to the one-page view. | `review-view-all` |
 
 ## 5 - Common Tasks
 

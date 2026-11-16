@@ -61,7 +61,7 @@
   --w7-console-bg: #0c0c0c;
   --w7-console-fg: #cccccc;
 
-  --w7-accent-claude: #c15f3c;
+  --w7-accent-claude: #b0502f;
   --w7-link: #0066cc;
 }
 
@@ -127,7 +127,7 @@
 /* Version control (Code app git status): file tree letters, gutter marks, overview ruler. */
 :root {
   --w7-git-modified: #1f5fb4;
-  --w7-git-added: #2c8a2c;
+  --w7-git-added: #237a23;
   --w7-git-deleted: #c0302a;
   --w7-git-renamed: #7a4bb0;
   --w7-git-gutter-added: #4caf50;

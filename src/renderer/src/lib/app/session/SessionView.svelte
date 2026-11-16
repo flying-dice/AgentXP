@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { effectiveStatus, isStarting } from '../sessionStatus'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
+  import { describeProblem, sendStateOf, type ProblemActionId, type SendState } from './chatProblem'
   import PermissionDialog from './PermissionDialog.svelte'
   import { permissionMetadata } from './permissionOptions'
   import SessionHeader from './SessionHeader.svelte'
@@ -12,6 +14,8 @@
     store: SessionStoreLike
     session: SessionDto
     folder: FolderDto | null
+    /** Where the chat works as a person says it ("login-app (E:)"); the header shows it, its tooltip the full path. */
+    folderText?: string
     agent: AgentDto | null
     /** The file open in the editor, offered by "Include open file". */
     openFilePath?: string | null
@@ -31,12 +35,25 @@
     onprefilled?: (id: number) => void
     /** A short composer (the chat pane). */
     dense?: boolean
+    /** The desktop is paused: a banner above the message box says so. */
+    paused?: boolean
+    /** Resume left a note for this chat: "Resumed. The step that was stopped stays stopped." with a Continue button. */
+    resumed?: boolean
+    oncontinue?: () => void
+    /** The desktop's "Ask before every action" state, shown (and switched) in the Mode menu. */
+    askFirst?: boolean
+    onaskfirst?: (on: boolean) => void
+    /** "Details..." of the error row: the technical text, for the host to show with the log. */
+    ondetails?: (detail: string | null) => void
+    /** "Show in Event Viewer" of the error row. */
+    onshowevents?: () => void
   }
 
   let {
     store,
     session,
     folder,
+    folderText,
     agent,
     openFilePath = null,
     setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
@@ -47,7 +64,14 @@
     suggestions = [],
     prefill = null,
     onprefilled,
-    dense = false
+    dense = false,
+    paused = false,
+    resumed = false,
+    oncontinue,
+    askFirst = false,
+    onaskfirst,
+    ondetails,
+    onshowevents
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -58,10 +82,34 @@
   const request = $derived(store.pendingInterrupt)
   const permission = $derived(request ? permissionMetadata(request.metadata) : null)
   const waitingToolCallId = $derived(request?.toolCallId ?? null)
+  const starting = $derived(isStarting(effectiveStatus(info.status, session.status)))
+
+  // ---- what went wrong: the error row, the state of the failed message -------------------------------------
+  const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend }))
+  const sendStates = $derived.by((): ReadonlyMap<string, SendState> => {
+    const failed = store.failedSend
+    return failed ? new Map([[failed.messageId, sendStateOf(failed.messageId, failed, !!session.problem)]]) : new Map()
+  })
+
+  function onproblem(id: ProblemActionId): void {
+    if (id === 'send-again') void store.resend({ restart: !!session.problem })
+    else if (id === 'restart-send') void store.resend({ restart: true })
+    else if (id === 'restart') void store.reconnect()
+    else if (id === 'details') ondetails?.(problem?.detail ?? null)
+    else onshowevents?.()
+  }
+
+  /** "Edit" on a message that was not sent: the text goes back into the message box. */
+  let edit = $state<{ id: number; text: string } | null>(null)
+  let editSeq = 0
+  async function editFailed(): Promise<void> {
+    const failed = await store.takeBack()
+    if (failed) edit = { id: --editSeq, text: failed.text }
+  }
 </script>
 
 <section class="session-view" aria-label={title}>
-  {#if !compact}<SessionHeader {title} path={folder?.path} />{/if}
+  {#if !compact}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
   <Transcript
     messages={store.messages}
     agentState={store.state}
@@ -70,8 +118,14 @@
     {agentName}
     folderName={folder?.name ?? ''}
     running={store.running}
-    error={store.error}
+    {problem}
+    {onproblem}
+    {sendStates}
+    onresend={() => onproblem('send-again')}
+    onedit={() => void editFailed()}
+    stopped={store.stoppedByUser}
     {waitingToolCallId}
+    deniedToolCalls={store.deniedToolCalls}
     onaction={(event) => void store.sendA2uiAction(event)}
     {surfaceControls}
   />
@@ -82,16 +136,28 @@
       {/each}
     </div>
   {/if}
+  {#if paused}
+    <div class="paused" role="status" data-testid="chat-paused-banner">This desktop is paused. Click Resume agents on the bar.</div>
+  {/if}
+  {#if resumed && !paused}
+    <div class="paused resumed" role="status" data-testid="chat-resume-note">
+      <span>Resumed. The step that was stopped stays stopped. Send a message to continue.</span>
+      <button type="button" class="chip" data-testid="chat-resume-continue" onclick={() => oncontinue?.()}>Continue</button>
+    </div>
+  {/if}
   <Composer
     {agentName}
-    {prefill}
-    {onprefilled}
+    prefill={edit ?? prefill}
+    onprefilled={(id) => (id < 0 ? undefined : onprefilled?.(id))}
     {dense}
+    {starting}
+    {askFirst}
+    {onaskfirst}
     running={store.running}
     {modes}
     {modeId}
     {openFilePath}
-    onsend={(text, files) => void store.send(text, files)}
+    onsend={(text, files) => store.send(text, files)}
     oncancel={() => void store.cancel()}
     onmode={(id) => void setMode(session.id, id)}
     {pickFiles}
@@ -126,6 +192,19 @@
     font: inherit;
     font-size: 11px;
     cursor: pointer;
+  }
+  .paused {
+    flex: none;
+    margin-top: 4px;
+    padding: 3px 8px;
+    border: 1px solid #e0c97a;
+    background: #fffbe6;
+    color: #4a3b00;
+  }
+  .resumed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .chip:hover {
     border-color: var(--w7-btn-hover-border);

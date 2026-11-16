@@ -23,13 +23,14 @@
 <div class="surface-row" class:inline={!model.hasOpenClose} data-testid="chat-surface-row" data-surface-id={model.surfaceId} data-state={model.state} data-target={model.target}>
   {#if model.hasOpenClose}
     <Icon name={model.icon} />
-    <span class="title" data-testid="chat-surface-title" title={model.title}>{model.title}</span>
-    <span class="state" data-testid="chat-surface-state">{model.stateLabel}</span>
+    <span class="label" title={model.stateText}>
+      <span class="title" data-testid="chat-surface-title">{model.title}</span><span class="state" data-testid="chat-surface-state">: {model.stateLabel}</span>
+    </span>
   {:else}
     <span class="grow"></span>
   {/if}
   {#if model.hasOpenClose}
-    <Button data-testid="chat-surface-open" disabled={!model.canOpen} onclick={() => onopen?.()}>Open</Button>
+    <Button data-testid="chat-surface-open" disabled={!model.canOpen} onclick={() => onopen?.()}>{model.openLabel}</Button>
     <Button data-testid="chat-surface-close" disabled={!model.canClose} onclick={() => onclose?.()}>Close</Button>
   {/if}
   <Button data-testid="chat-surface-delete" onclick={() => ondelete?.()}>Delete</Button>
@@ -56,20 +57,28 @@
   .grow {
     flex: 1;
   }
-  .title {
+  .label {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    white-space: nowrap;
+  }
+  .title {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
     font-weight: 600;
   }
   .state {
-    min-width: 44px;
+    flex: none;
     color: var(--w7-text-muted);
   }
+  .surface-row {
+    flex-wrap: wrap;
+  }
   .surface-row :global(.w7-btn) {
-    min-width: 0;
+    flex: none;
+    min-width: 56px;
     padding: 0 10px;
   }
 </style>

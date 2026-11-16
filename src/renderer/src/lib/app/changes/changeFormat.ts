@@ -4,7 +4,28 @@ const KIND: Record<FileChangeKind, string> = { added: 'Added', modified: 'Modifi
 
 export const changeKindLabel = (kind: FileChangeKind): string => KIND[kind]
 
-export const linesLabel = (change: Pick<FileChangeDto, 'additions' | 'deletions'>): string => `+${change.additions} -${change.deletions}`
+/** "+4 / -1": the lines column, "+ added / - removed". */
+export const linesLabel = (change: Pick<FileChangeDto, 'additions' | 'deletions'>): string => `+${change.additions} / -${change.deletions}`
+
+/** "5 files, +12 -3": the total over a list of changes. */
+export function changesSummary(changes: readonly Pick<FileChangeDto, 'additions' | 'deletions'>[]): string {
+  const added = changes.reduce((n, c) => n + c.additions, 0)
+  const removed = changes.reduce((n, c) => n + c.deletions, 0)
+  return `${changes.length} ${changes.length === 1 ? 'file' : 'files'}, +${added} -${removed}`
+}
+
+/** `redirect.ts` and `src\auth` for `src\auth\redirect.ts` (either separator): the bold name and the grey folder beside it. */
+export function splitChangePath(path: string): { name: string; dir: string } {
+  const at = Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/'))
+  return at < 0 ? { name: path, dir: '' } : { name: path.slice(at + 1), dir: path.slice(0, at) }
+}
+
+/** The question before a revert. It says where the file goes, so nobody needs to look for it (UX-40). */
+export const revertConfirmText = (path: string): string =>
+  `Revert the changes to ${path}?\n\nThe file goes back to how it was before the agent edited it. You can get it back from the Recycle Bin.`
+
+/** What a reverted row says in place of its change kind. */
+export const REVERTED_LABEL = 'Reverted (in the Recycle Bin)'
 
 /** Joins a folder path and a relative change path with the separator the folder path uses. */
 export function absolutePath(folderPath: string, relative: string): string {

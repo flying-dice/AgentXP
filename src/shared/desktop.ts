@@ -151,7 +151,10 @@ export interface DesktopState {
   /** Enabled tool groups, derived from the open windows with `enabledToolGroups`. */
   tools: ToolGroup[]
   paused: boolean
+  /** "Ask before every action": the agent must ask before every action, whatever the permissions say. */
   userInControl: boolean
+  /** The Control Center permissions, so the top bar can show what is on, asks or off. Absent in older fixtures. */
+  policy?: ToolPolicyDto
   /** The desktop's sticky notes (the agent sees them in `desktop_state`). */
   notes: StickyNoteDto[]
   /** Every A2UI surface of the desktop's chats and where it is shown. */
@@ -229,7 +232,7 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   code: 'Code',
   terminal: 'Terminal',
   browser: 'Browser',
-  'control-centre': 'Control Centre',
+  'control-centre': 'Control Center',
   'agent-manager': 'Task Manager',
   paint: 'Agent Paint',
   wordpad: 'WordPad',
@@ -260,7 +263,7 @@ export function closedAppMessage(group: Exclude<ToolGroup, 'shell'>): string {
 
 export type PolicyDecision = 'allow' | 'ask' | 'deny'
 
-/** Control Centre permission policy. `openApps` governs desktop_open_app. */
+/** Control Center permission policy. `openApps` governs desktop_open_app. */
 export interface ToolPolicyDto {
   groups: Record<Exclude<ToolGroup, 'shell'>, PolicyDecision>
   openApps: PolicyDecision
@@ -367,6 +370,10 @@ export interface AgentProcessDto {
   agentName: string
   desktopId: Id
   pid: number | null
+  /** Memory of the program in bytes; null when it cannot be read. */
+  memoryBytes: number | null
+  /** Percent of one CPU core; null when it cannot be read. */
+  cpuPercent: number | null
   sessionIds: Id[]
 }
 
@@ -466,6 +473,11 @@ export interface DesktopExtrasApi {
   snip: {
     /** Captures the desktop window (or a region of it, in CSS px) as a PNG data URL. */
     capture(desktopId: Id, region?: Bounds): Promise<string>
+    /**
+     * Saves a snip (a PNG data URL) as a picture on the desktop's C: drive, in Pictures\Snips, and returns where:
+     * `path` on the desktop, `filePath` on this computer (what a chat attaches).
+     */
+    save(desktopId: Id, dataUrl: string): Promise<{ path: VPath; filePath: string }>
   }
 }
 

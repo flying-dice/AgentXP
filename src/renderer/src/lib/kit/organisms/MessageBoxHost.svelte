@@ -24,6 +24,7 @@
       buttons={box.options.buttons}
       icon={box.options.icon}
       defaultButton={box.options.defaultButton}
+      actions={box.options.actions}
       onresult={(result) => service.settle(box.id, result)}
     />
   {/key}

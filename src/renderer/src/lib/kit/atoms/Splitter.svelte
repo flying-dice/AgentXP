@@ -7,6 +7,12 @@
     disabled?: boolean
     /** Reports the size delta in px along the resize axis. */
     onresize?: (delta: number) => void
+    /** The size of the pane this bar sizes, in px, and its limits: they are announced as `aria-valuenow/min/max`. */
+    value?: number
+    min?: number
+    max?: number
+    /** Accessible name. */
+    label?: string
     class?: string
   }
   let {
@@ -14,6 +20,10 @@
     step = 10,
     disabled = false,
     onresize,
+    value,
+    min = 0,
+    max,
+    label = 'Resize panes',
     class: className = ''
   }: Props = $props()
 
@@ -57,6 +67,10 @@
   role="separator"
   tabindex={disabled ? -1 : 0}
   aria-orientation={orientation}
+  aria-label={label}
+  aria-valuenow={value === undefined ? undefined : Math.round(value)}
+  aria-valuemin={value === undefined ? undefined : Math.round(min)}
+  aria-valuemax={value === undefined ? undefined : Math.round(Math.max(max ?? value, value))}
   aria-disabled={disabled}
   class="w7-splitter {orientation} {className}"
   class:dragging
@@ -68,26 +82,54 @@
 ></div>
 
 <style>
+  /*
+   * The bar is drawn 4 px wide (`::before`), but the element is 24 px across (WCAG 2.5.8) and reaches over the edges of
+   * the panes beside it through a negative margin.
+   */
   .w7-splitter {
     flex: none;
-    background: var(--w7-face);
+    position: relative;
+    z-index: 1;
+    background: transparent;
     touch-action: none;
   }
+  .w7-splitter::before {
+    content: '';
+    position: absolute;
+    background: var(--w7-face);
+  }
   .vertical {
-    width: 4px;
+    width: 24px;
+    margin: 0 -10px;
     cursor: col-resize;
   }
+  .vertical::before {
+    top: 0;
+    bottom: 0;
+    left: 10px;
+    width: 4px;
+  }
   .horizontal {
-    height: 4px;
+    height: 24px;
+    margin: -10px 0;
     cursor: row-resize;
   }
-  .w7-splitter:hover,
-  .dragging {
+  .horizontal::before {
+    left: 0;
+    right: 0;
+    top: 10px;
+    height: 4px;
+  }
+  .w7-splitter:hover::before,
+  .dragging::before {
     background: #bcc7d8;
   }
   .w7-splitter:focus-visible {
+    outline: none;
+  }
+  .w7-splitter:focus-visible::before {
     outline: var(--w7-focus-outline);
-    outline-offset: -1px;
+    outline-offset: 0;
   }
   .w7-splitter[aria-disabled='true'] {
     cursor: default;

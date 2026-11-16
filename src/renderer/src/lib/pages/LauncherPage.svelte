@@ -14,11 +14,14 @@
   import Form from '../kit/organisms/Form.svelte'
   import { showMessageBox } from '../kit/organisms/messageBox'
   import { formatDateTime } from '../apps/shared/dates'
+  import { chooseFolder } from '../apps/shared/chooseFolder'
   import { errorText } from '../apps/shared/listing'
+  import { parseMnemonic } from '../kit/molecules/MenuItem'
   import DesktopRow from '../launcher/DesktopRow.svelte'
+  import LauncherHelpDialog from '../launcher/LauncherHelpDialog.svelte'
   import NewDesktopDialog from '../launcher/NewDesktopDialog.svelte'
   import RenameDesktopDialog from '../launcher/RenameDesktopDialog.svelte'
-  import { DELETE_WARNING, drivesLine, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
+  import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
 
   interface Props {
     /** The backend; defaults to `window.agent7`. */
@@ -43,6 +46,9 @@
   let options = $state(showOptions)
   // svelte-ignore state_referenced_locally
   let dialogOpen = $state<'new' | 'rename' | null>(dialog)
+  let helpOpen = $state(false)
+  /** Desktops that Connect was pressed for and whose window is not up yet. */
+  let opening = $state<number[]>([])
   let folders = $state.raw<FolderDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
 
@@ -51,7 +57,8 @@
 
   function apply(next: DesktopSummaryDto[]): void {
     desktops = next
-    if (selected === null || !next.some((d) => d.id === selected)) selected = sortDesktops(next)[0]?.id ?? null
+    // Nothing selected yet (or the selected desktop is gone): a desktop that waits for approval, else the most recent one.
+    if (selected === null || !next.some((d) => d.id === selected)) selected = initialSelection(next)
   }
 
   onMount(() => {
@@ -85,11 +92,16 @@
   }
 
   async function connect(): Promise<void> {
-    if (!current) return
+    const target = current
+    if (!target) return
+    // A connected desktop is only brought to the front ("Show desktop").
+    if (!target.connected) opening = [...opening, target.id]
     try {
-      await api.launcher.connect(current.id)
+      await api.launcher.connect(target.id)
     } catch (error) {
       await fail(error)
+    } finally {
+      opening = opening.filter((id) => id !== target.id)
     }
   }
 
@@ -140,7 +152,35 @@
     }
   }
 
-  const browse = async (): Promise<FolderDto | null> => api.folders.pick()
+  async function browse(): Promise<FolderDto | null> {
+    try {
+      return await chooseFolder(api, 'desktop')
+    } catch (error) {
+      await fail(error)
+      return null
+    }
+  }
+
+  const COMMANDS = {
+    new: () => (dialogOpen = 'new'),
+    connect: () => void connect(),
+    rename: () => current && (dialogOpen = 'rename'),
+    delete: () => void remove()
+  } as const
+
+  /** F1 opens Help; Alt+N, Alt+C, Alt+R and Alt+D press the buttons. */
+  function onWindowKeydown(event: KeyboardEvent): void {
+    if (event.key === 'F1') {
+      event.preventDefault()
+      helpOpen = true
+      return
+    }
+    if (dialogOpen || helpOpen || !event.altKey || event.ctrlKey || event.metaKey) return
+    const command = accessKeyCommand(event.key)
+    if (!command || ((command === 'rename' || command === 'delete' || command === 'connect') && !current)) return
+    event.preventDefault()
+    COMMANDS[command]()
+  }
 
   function onKeydown(event: KeyboardEvent): void {
     if (dialogOpen) return
@@ -162,7 +202,12 @@
 </script>
 
 <!-- The browser's own context menu never shows. -->
-<svelte:window oncontextmenu={(e) => e.preventDefault()} />
+<svelte:window oncontextmenu={(e) => e.preventDefault()} onkeydown={onWindowKeydown} />
+
+{#snippet access(label: string)}
+  {@const parts = parseMnemonic(label)}
+  {parts.before}{#if parts.key}<u>{parts.key}</u>{/if}{parts.after}
+{/snippet}
 
 <div class="page">
   <Form testid="launcher-window" title="Agent7 Desktop Connection" iconName="agent7" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
@@ -177,12 +222,13 @@
         <span class="mark" aria-hidden="true"><Icon name="agent7" size={44} /></span>
       </header>
       <div class="body">
-        <p class="lead">Choose a desktop and click Connect. Closing a desktop window only disconnects; its agents keep running.</p>
-        <div class="list w7-scroll" role="listbox" data-testid="launcher-list" aria-label="Desktops" tabindex="0">
+        <p class="lead">Closing a desktop window only disconnects it. Its agents keep running.</p>
+        <!-- A listbox needs option children: with no desktops the list is plain. -->
+        <div class="list w7-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
           {#each sorted as desktop (desktop.id)}
-            <DesktopRow {desktop} {now} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
+            <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
           {:else}
-            <p class="empty" data-testid="launcher-empty">{loaded ? "No desktops yet. Click New... to create one." : 'Loading...'}</p>
+            <p class="empty" data-testid="launcher-empty">{loaded ? 'No desktops yet. A desktop is a workspace where an agent works on your projects. Click New... to create one.' : 'Loading...'}</p>
           {/each}
         </div>
         {#if options}
@@ -214,12 +260,15 @@
           <span class="arrow" aria-hidden="true">{options ? '▴' : '▾'}</span> {options ? 'Hide Options' : 'Show Options'}
         </Button>
         <span class="spring"></span>
-        <Button data-testid="launcher-new" onclick={() => (dialogOpen = 'new')}>New...</Button>
-        <Button data-testid="launcher-rename" disabled={!current} onclick={() => (dialogOpen = 'rename')}>Rename...</Button>
-        <Button data-testid="launcher-delete" disabled={!current} onclick={() => void remove()}>Delete...</Button>
-        <Button data-testid="launcher-connect" isDefault disabled={!current} onclick={() => void connect()}>Connect</Button>
+        <Button data-testid="launcher-new" aria-keyshortcuts="Alt+N" onclick={COMMANDS.new}>{@render access('&New...')}</Button>
+        <Button data-testid="launcher-rename" aria-keyshortcuts="Alt+R" disabled={!current} onclick={() => COMMANDS.rename()}>{@render access('&Rename...')}</Button>
+        <Button data-testid="launcher-delete" aria-keyshortcuts="Alt+D" disabled={!current} onclick={COMMANDS.delete}>{@render access('&Delete...')}</Button>
+        <Button data-testid="launcher-connect" aria-keyshortcuts="Alt+C" isDefault disabled={!current} onclick={COMMANDS.connect}>{@render access(connectLabel(current?.connected ?? false))}</Button>
       </footer>
     </div>
+    {#if helpOpen}
+      <LauncherHelpDialog onclose={() => (helpOpen = false)} />
+    {/if}
     {#if dialogOpen === 'new'}
       <NewDesktopDialog {folders} {agents} existingNames={desktops.map((d) => d.title)} onbrowse={browse} oncreate={(i) => void create(i)} oncancel={() => (dialogOpen = null)} />
     {:else if dialogOpen === 'rename' && current}

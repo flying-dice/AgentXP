@@ -316,8 +316,8 @@ async function main() {
     await pause(400)
     await shot('computer', computer)
 
-    // ---- Control Centre: permissions -----------------------------------------------------------------------------------
-    console.log('control centre')
+    // ---- Control Center: permissions -----------------------------------------------------------------------------------
+    console.log('control center')
     await page.getByTestId('taskbar-start').click()
     await page.getByTestId('start-menu-place-control-centre').click()
     const cc = page.getByTestId('window-control-centre')

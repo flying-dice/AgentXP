@@ -96,6 +96,15 @@ export class SqliteTranscriptRepository implements TranscriptRepository {
     return row ? this.requireToolCall(row.entry_id) : null
   }
 
+  removeLastUserMessage(sessionId: Id): boolean {
+    return transaction(this.db, () => {
+      const last = this.selectLast.get(sessionId)
+      if (last?.kind !== 'message' || last.role !== 'user') return false
+      this.entries.delete(last.id)
+      return true
+    })
+  }
+
   clear(sessionId: Id): void {
     this.entries.deleteAll(sessionId)
   }

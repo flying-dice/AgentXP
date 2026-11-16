@@ -60,6 +60,8 @@ export interface GitApi {
   headText(desktopId: Id, path: VPath): Promise<string | null>
   /** Rewrites the working file with the HEAD lines in place of that change (a user write, not recorded as an agent change). */
   revertHunk(desktopId: Id, path: VPath, hunkIndex: number): Promise<void>
+  /** Starts tracking the folder `root` with git (`git init`); a no-op when it is already in a repository. */
+  init(desktopId: Id, root: VPath): Promise<void>
 }
 
 export interface GitEvents {

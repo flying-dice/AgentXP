@@ -14,6 +14,7 @@ import { createMemoryWindowHost, type DesktopWindowHost } from './application/de
 import { LauncherService, type ApprovalNotifier } from './application/launcher/LauncherService'
 import { ThumbnailService, type ThumbnailCapturer } from './application/launcher/ThumbnailService'
 import { SessionFiles } from './application/SessionFiles'
+import { ToolCallDiffs } from './application/vfs/ToolCallDiffs'
 import { ToolPaths } from './application/tools/ToolPaths'
 import { DriveService } from './application/vfs/DriveService'
 import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
@@ -29,6 +30,7 @@ import { CompositeA2uiSink } from './application/CompositeA2uiSink'
 import { ToolCallPaths } from './application/vfs/ToolCallPaths'
 import { SessionEventBus } from './application/SessionEventBus'
 import { AgentService } from './application/AgentService'
+import { NodeCommandLocator } from './infrastructure/process/NodeCommandLocator'
 import { ChangeReverter } from './application/ChangeReverter'
 import { FileChangeRecorder } from './application/FileChangeRecorder'
 import { FanOutEventPublisher } from './application/FanOutEventPublisher'
@@ -38,6 +40,7 @@ import type {
   A2uiMcpConfigFactory,
   AgentConnector,
   EventPublisher,
+  DirectoryBrowser,
   FilePicker,
   FolderPicker,
   ScreenCapturer,
@@ -45,6 +48,7 @@ import type {
   TextFileSaver
 } from './application/ports'
 import { ProcessService } from './application/ProcessService'
+import { OsProcessUsage } from './infrastructure/process/osProcessUsage'
 import { createBrowserTools } from './application/tools/browserTools'
 import { createEventsTools } from './application/tools/eventsTools'
 import { createNotesTools } from './application/tools/notesTools'
@@ -62,6 +66,7 @@ import { createTerminalTools } from './application/tools/terminalTools'
 import { SessionBroadcaster } from './application/SessionBroadcaster'
 import { SessionEventProjector } from './application/SessionEventProjector'
 import { SessionQueryService } from './application/SessionQueryService'
+import { ProblemAwareSessions, SessionProblems } from './application/SessionProblems'
 import { SessionRuntime } from './application/SessionRuntime'
 import { SessionService } from './application/SessionService'
 import { ShellService } from './application/ShellService'
@@ -87,6 +92,7 @@ import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
 import { FileThumbnailStore } from './infrastructure/fs/FileThumbnailStore'
+import { NodeDirectoryBrowser } from './infrastructure/fs/NodeDirectoryBrowser'
 import { NodeFolderBrowser } from './infrastructure/fs/NodeFolderBrowser'
 import { NodeHostFiles } from './infrastructure/fs/NodeHostFiles'
 import { NodeWorkspaceFileSystem } from './infrastructure/fs/NodeWorkspaceFileSystem'
@@ -96,7 +102,12 @@ import type { InvokeApi } from '../shared/ipc-channels'
 export interface ComposeOptions {
   db: Database
   publisher: EventPublisher
+  /** The native folder dialog; only used when `nativePicker` is set (the app shows its own Browse For Folder dialog). */
   picker: FolderPicker
+  /** Lists folders for the in-app Browse For Folder dialog; defaults to the real disk. */
+  directories?: DirectoryBrowser
+  /** `AGENT7_NATIVE_PICKER=1`: the renderer asks the native dialog instead of the in-app one. */
+  nativePicker?: boolean
   saver: TextFileSaver
   opener: PathOpener
   /** Native multi-file picker for attachments; defaults to "nothing picked". */
@@ -162,10 +173,12 @@ export function composeApp(options: ComposeOptions): AppServices {
   const { db } = options
   // Services publish through this; the renderer-facing events go on to `options.publisher`, the rest feed the AG-UI backend.
   const publisher = new FanOutEventPublisher(options.publisher)
+  const problems = new SessionProblems()
   const repos = {
     agents: new SqliteAgentRepository(db),
     folders: new SqliteFolderRepository(db),
-    sessions: new SqliteSessionRepository(db),
+    // Every reader of a session row sees what is wrong with its agent program (could not start, stopped).
+    sessions: new ProblemAwareSessions(new SqliteSessionRepository(db), problems),
     transcripts: new SqliteTranscriptRepository(db),
     tasks: new SqliteTaskRepository(db),
     changes: new SqliteFileChangeRepository(db),
@@ -198,7 +211,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
   const sessionFiles = new SessionFiles({ vfs, host: hostFiles, sessions: repos.sessions, recorder: changeRecorder })
   const callPaths = new ToolCallPaths(vfs, (sessionId) => repos.sessions.get(sessionId)?.desktopId)
-  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster, (sessionId, toolCall) => callPaths.patch(sessionId, toolCall))
+  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster, (sessionId, toolCall) => callPaths.patch(sessionId, toolCall), new ToolCallDiffs(vfs, (sessionId) => repos.sessions.get(sessionId)?.desktopId))
   const pool = new AgentConnectionPool()
   const eventBus = new SessionEventBus((sessionId, event) => callPaths.event(sessionId, event))
   const projector = new SessionEventProjector(repos.sessions, repos.transcripts, repos.tasks, publisher, broadcaster)
@@ -235,6 +248,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     files: sessionFiles,
     terminals: terminalRecorder,
     broadcaster,
+    problems,
     a2uiMcpConfig,
     toolGate: (sessionId) => gateway.forSession(sessionId),
     protocolTap: (sessionId) => eventLog.acpTap(sessionId)
@@ -254,6 +268,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     runtime,
     broadcaster,
     events: publisher,
+    problems,
     desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
   })
   const desktops = new DesktopService({
@@ -366,7 +381,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const agui = new AguiRunCoordinator({ queries, sessions, a2ui, broker, events: eventBus, appEvents: publisher })
 
   const api = createApi({
-    agents: new AgentService(repos.agents),
+    agents: new AgentService(repos.agents, new NodeCommandLocator()),
     folders: folderService,
     sessions,
     queries,
@@ -380,9 +395,11 @@ export function composeApp(options: ComposeOptions): AppServices {
     reviews,
     drives,
     launcher,
-    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
+    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage()),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
+    directories: options.directories ?? new NodeDirectoryBrowser(),
+    nativePicker: options.nativePicker ?? false,
     appRequests,
     notes,
     eventLog,

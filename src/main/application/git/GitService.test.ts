@@ -39,6 +39,21 @@ describe('not a repository', () => {
     expect(await service.status(id, 'Q:\\')).toBeNull()
   })
 
+  it('init starts tracking the folder and tells the Code window', async () => {
+    expect(await service.status(id, 'E:\\')).toBeNull()
+    await service.init(id, 'E:\\')
+    expect(await service.status(id, 'E:\\')).toMatchObject({ entries: [] })
+    await service.init(id, 'E:\\') // already tracked: nothing happens
+    await new Promise((r) => setTimeout(r, 30))
+    expect(events.payloads('git.changed').length).toBeGreaterThan(0)
+  })
+
+  it('init says so when git is missing or the drive is gone', async () => {
+    const missing = new GitService({ vfs: f.vfs, cli: new ExecGitCli({ command: 'git-does-not-exist' }), events, codeDesktops: () => [], pollMs: 0 })
+    await expect(missing.init(id, 'E:\\')).rejects.toThrow('Git is not installed')
+    await expect(service.init(id, 'Q:\\')).rejects.toThrow('not available')
+  })
+
   it('degrades when git is missing', async () => {
     const missing = new GitService({ vfs: f.vfs, cli: new ExecGitCli({ command: 'git-does-not-exist' }), events, codeDesktops: () => [], pollMs: 0 })
     expect(await missing.status(id, 'E:\\')).toBeNull()

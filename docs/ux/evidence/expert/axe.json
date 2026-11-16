@@ -1,0 +1,632 @@
+{
+  "axe": "4.14.0",
+  "tags": "wcag2a wcag2aa wcag21a wcag21aa wcag22aa",
+  "states": [
+    {
+      "state": "launcher (empty)",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".list",
+              "html": "<div class=\"list w7-scroll svelte-1b786b8\" role=\"listbox\" data-testid=\"launcher-list\" aria-label=\"Desktops\" tabindex=\"0\"><p class=\"empty svelte-1b786b8\" data-te",
+              "why": "Required ARIA children role not present: group, option"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "launcher: New desktop dialog",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".list",
+              "html": "<div class=\"list w7-scroll svelte-1b786b8\" role=\"listbox\" data-testid=\"launcher-list\" aria-label=\"Desktops\" tabindex=\"0\"><p class=\"empty svelte-1b786b8\" data-te",
+              "why": "Required ARIA children role not present: group, option"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "launcher (one desktop)",
+      "violations": []
+    },
+    {
+      "state": "desktop (empty)",
+      "violations": []
+    },
+    {
+      "state": "app: explorer",
+      "violations": [
+        {
+          "rule": "aria-required-attr",
+          "impact": "critical",
+          "help": "Required ARIA attributes must be provided",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".w7-splitter",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"vertical\" aria-disabled=\"false\" class=\"w7-splitter vertical  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: notepad",
+      "violations": [
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": "button[data-testid=\"menubar-file\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" aria-haspopup=\"menu\" class=\"mb svelte-19sfvto\" data-testid=\"menubar-file\" tabindex=\"0\" aria-expanded=\"false\"><span class=\"",
+              "why": "Target has insufficient size (37.9px by 22px, should be at least 24px by 24px)"
+            },
+            {
+              "target": ".edge",
+              "html": "<button type=\"button\" class=\"edge svelte-1sne072\" data-testid=\"chat-pane-toggle\" aria-label=\"Show the chat pane\" title=\"Show the chat pane (Ctrl+Shift+C)\">",
+              "why": "Target has insufficient size (12px by 339px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: wordpad",
+      "violations": [
+        {
+          "rule": "label-content-name-mismatch",
+          "impact": "serious",
+          "help": "Elements must have their visible text as part of their accessible name",
+          "nodes": 3,
+          "sample": [
+            {
+              "target": "button[aria-label=\"Heading 1\"]",
+              "html": "<button class=\"tb  svelte-1djmoxz\" type=\"button\" disabled=\"\" aria-label=\"Heading 1\" title=\"Heading 1\"><!----> <span class=\"label\">H1</span><!----></button>",
+              "why": "Text inside the element is not included in the accessible name"
+            },
+            {
+              "target": "button[aria-label=\"Heading 2\"]",
+              "html": "<button class=\"tb  svelte-1djmoxz\" type=\"button\" disabled=\"\" aria-label=\"Heading 2\" title=\"Heading 2\"><!----> <span class=\"label\">H2</span><!----></button>",
+              "why": "Text inside the element is not included in the accessible name"
+            },
+            {
+              "target": "button[aria-label=\"Numbered list\"]",
+              "html": "<button class=\"tb  svelte-1djmoxz\" type=\"button\" disabled=\"\" aria-label=\"Numbered list\" title=\"Numbered list\"><!----> <span class=\"label\">1. List</span><!----><",
+              "why": "Text inside the element is not included in the accessible name"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: code",
+      "violations": [
+        {
+          "rule": "aria-required-attr",
+          "impact": "critical",
+          "help": "Required ARIA attributes must be provided",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": ".w7-splitter.svelte-1nf31f9.vertical",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"vertical\" aria-disabled=\"false\" class=\"w7-splitter vertical  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            },
+            {
+              "target": "div[aria-orientation=\"horizontal\"]",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"horizontal\" aria-disabled=\"false\" class=\"w7-splitter horizontal  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            }
+          ]
+        },
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".untracked > .text.svelte-1dti5kz",
+              "html": "<span class=\"text svelte-1dti5kz\">fresh.txt</span>",
+              "why": "Element has insufficient color contrast of 4.39 (foreground color: #2c8a2c, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: terminal",
+      "violations": []
+    },
+    {
+      "state": "app: browser",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".tabrow",
+              "html": "<div class=\"tabrow svelte-12i1c6d\" data-testid=\"browser-tabs\" role=\"tablist\" aria-label=\"Tabs\">",
+              "why": "Element has children which are not allowed: button[aria-label]"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".tabclose",
+              "html": "<button class=\"tabclose svelte-12i1c6d\" aria-label=\"Close tab\" title=\"Close tab\" data-testid=\"browser-tab-close-1\">",
+              "why": "Target has insufficient size (16px by 16px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: paint",
+      "violations": [
+        {
+          "rule": "scrollable-region-focusable",
+          "impact": "serious",
+          "help": "Scrollable region must have keyboard access",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".workspace",
+              "html": "<div class=\"workspace w7-scroll svelte-eo0q19\">",
+              "why": "Element should have focusable content"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 24,
+          "sample": [
+            {
+              "target": "button[data-testid=\"paint-size-1\"]",
+              "html": "<button type=\"button\" class=\"size svelte-eo0q19\" data-testid=\"paint-size-1\" aria-label=\"Size 1\" aria-pressed=\"false\"><span class=\"svelte-eo0q19\" style=\"height: ",
+              "why": "Target has insufficient size (62px by 17px, should be at least 24px by 24px)"
+            },
+            {
+              "target": "button[data-testid=\"paint-size-2\"]",
+              "html": "<button type=\"button\" class=\"size svelte-eo0q19 on\" data-testid=\"paint-size-2\" aria-label=\"Size 2\" aria-pressed=\"true\"><span class=\"svelte-eo0q19\" style=\"height",
+              "why": "Target has insufficient size (62px by 17px, should be at least 24px by 24px)"
+            },
+            {
+              "target": "button[data-testid=\"paint-size-4\"]",
+              "html": "<button type=\"button\" class=\"size svelte-eo0q19\" data-testid=\"paint-size-4\" aria-label=\"Size 4\" aria-pressed=\"false\"><span class=\"svelte-eo0q19\" style=\"height: ",
+              "why": "Target has insufficient size (62px by 17px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: sticky-notes",
+      "violations": [
+        {
+          "rule": "aria-prohibited-attr",
+          "impact": "serious",
+          "help": "Elements must only use permitted ARIA attributes",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".notes",
+              "html": "<div class=\"notes svelte-52yrmm\" data-testid=\"sticky-notes-layer\" aria-label=\"Sticky notes\"></div>",
+              "why": "aria-label attribute cannot be used on \"div\" elements with no valid role attribute."
+            }
+          ]
+        },
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".list",
+              "html": "<div class=\"list w7-scroll svelte-1pofuaa\" role=\"list\" aria-label=\"Notes\"><p class=\"empty svelte-1pofuaa\">There are no notes. Choose New note to stick one on th",
+              "why": "Required ARIA child role not present: listitem"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: event-viewer",
+      "violations": [
+        {
+          "rule": "aria-required-attr",
+          "impact": "critical",
+          "help": "Required ARIA attributes must be provided",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": ".w7-splitter.vertical.svelte-1nf31f9",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"vertical\" aria-disabled=\"false\" class=\"w7-splitter vertical  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            },
+            {
+              "target": "div[aria-orientation=\"horizontal\"]",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"horizontal\" aria-disabled=\"false\" class=\"w7-splitter horizontal  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: snipping-tool",
+      "violations": []
+    },
+    {
+      "state": "app: recycle-bin",
+      "violations": [
+        {
+          "rule": "aria-required-attr",
+          "impact": "critical",
+          "help": "Required ARIA attributes must be provided",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".w7-splitter",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"horizontal\" aria-disabled=\"false\" class=\"w7-splitter horizontal  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "app: agent-manager",
+      "violations": []
+    },
+    {
+      "state": "app: control-centre",
+      "violations": []
+    },
+    {
+      "state": "app: help",
+      "violations": []
+    },
+    {
+      "state": "app: chat",
+      "violations": [
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Start menu",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".w7-start",
+              "html": "<div class=\"w7-start svelte-1gfgo68\" data-testid=\"start-menu\" role=\"menu\" tabindex=\"-1\" aria-label=\"Start menu\">",
+              "why": "Element has children which are not allowed: ul, input[aria-label], button, button[aria-haspopup]"
+            }
+          ]
+        },
+        {
+          "rule": "aria-required-parent",
+          "impact": "critical",
+          "help": "Certain ARIA roles must be contained by particular parents",
+          "nodes": 17,
+          "sample": [
+            {
+              "target": "button[data-testid=\"start-menu-item-chat\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" class=\"entry svelte-1gfgo68\" data-testid=\"start-menu-item-chat\">",
+              "why": "Required ARIA parents role not present: menu, menubar, group"
+            },
+            {
+              "target": "button[data-testid=\"start-menu-item-explorer\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" class=\"entry svelte-1gfgo68\" data-testid=\"start-menu-item-explorer\">",
+              "why": "Required ARIA parents role not present: menu, menubar, group"
+            },
+            {
+              "target": "button[data-testid=\"start-menu-item-code\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" class=\"entry svelte-1gfgo68\" data-testid=\"start-menu-item-code\">",
+              "why": "Required ARIA parents role not present: menu, menubar, group"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": "button[data-testid=\"start-menu-disconnect-arrow\"]",
+              "html": "<button type=\"button\" class=\"power-btn arrow svelte-1gfgo68\" data-testid=\"start-menu-disconnect-arrow\" aria-haspopup=\"menu\" aria-label=\"Disconnect options\" aria",
+              "why": "Target has insufficient size (22px by 24px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Action Center flyout",
+      "violations": [
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Notepad About dialog",
+      "violations": [
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": "div[aria-label=\"Notepad menu\"] > .mb[data-testid=\"menubar-help\"][role=\"menuitem\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" aria-haspopup=\"menu\" class=\"mb svelte-19sfvto\" data-testid=\"menubar-help\" tabindex=\"0\" aria-expanded=\"false\"><span class=\"",
+              "why": "Target has insufficient size (44.2px by 22px, should be at least 24px by 24px)"
+            },
+            {
+              "target": ".edge",
+              "html": "<button type=\"button\" class=\"edge svelte-1sne072\" data-testid=\"chat-pane-toggle\" aria-label=\"Show the chat pane\" title=\"Show the chat pane (Ctrl+Shift+C)\">",
+              "why": "Target has insufficient size (12px by 339px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Notepad context menu",
+      "violations": [
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": "div[aria-label=\"Notepad menu\"] > .mb[data-testid=\"menubar-file\"][aria-haspopup=\"menu\"]",
+              "html": "<button type=\"button\" role=\"menuitem\" aria-haspopup=\"menu\" class=\"mb svelte-19sfvto\" data-testid=\"menubar-file\" tabindex=\"0\" aria-expanded=\"false\"><span class=\"",
+              "why": "Target has insufficient size (37.9px by 22px, should be at least 24px by 24px)"
+            },
+            {
+              "target": ".edge",
+              "html": "<button type=\"button\" class=\"edge svelte-1sne072\" data-testid=\"chat-pane-toggle\" aria-label=\"Show the chat pane\" title=\"Show the chat pane (Ctrl+Shift+C)\">",
+              "why": "Target has insufficient size (12px by 339px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Code with chat pane open",
+      "violations": [
+        {
+          "rule": "aria-required-attr",
+          "impact": "critical",
+          "help": "Required ARIA attributes must be provided",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": ".w7-splitter.svelte-1nf31f9.vertical",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"vertical\" aria-disabled=\"false\" class=\"w7-splitter vertical  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            },
+            {
+              "target": ".w7-splitter.horizontal.svelte-1nf31f9",
+              "html": "<div role=\"separator\" tabindex=\"0\" aria-orientation=\"horizontal\" aria-disabled=\"false\" class=\"w7-splitter horizontal  svelte-1nf31f9\"></div>",
+              "why": "Required ARIA attribute not present: aria-valuenow"
+            }
+          ]
+        },
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": "div[aria-label=\"Open files\"]",
+              "html": "<div class=\"tabs svelte-1vy2ro9\" role=\"tablist\" aria-label=\"Open files\">",
+              "why": "Element has children which are not allowed: button[aria-label]"
+            }
+          ]
+        },
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": ".untracked > .text.svelte-1dti5kz",
+              "html": "<span class=\"text svelte-1dti5kz\">fresh.txt</span>",
+              "why": "Element has insufficient color contrast of 4.39 (foreground color: #2c8a2c, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        },
+        {
+          "rule": "scrollable-region-focusable",
+          "impact": "serious",
+          "help": "Scrollable region must have keyboard access",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".diff",
+              "html": "<div class=\"diff svelte-1tuq24g\" data-testid=\"changes-diff\"><div class=\"hint svelte-1tuq24g\">Select a changed file to view its diff.</div><!----></div>",
+              "why": "Element should have focusable content"
+            }
+          ]
+        },
+        {
+          "rule": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 2,
+          "sample": [
+            {
+              "target": "button[aria-label=\"Close Logs & others\"]",
+              "html": "<button class=\"x svelte-1do3yie\" type=\"button\" title=\"Close\" aria-label=\"Close Logs &amp; others\">×</button>",
+              "why": "Target has insufficient size (15px by 15px, should be at least 24px by 24px)"
+            },
+            {
+              "target": ".resizer",
+              "html": "<div class=\"resizer svelte-12gtag1\" data-testid=\"embedded-chat-resizer\" role=\"slider\" aria-orientation=\"horizontal\" aria-label=\"Chat panel width\" tabindex=\"0\" a",
+              "why": "Target has insufficient size (5px by 519px, should be at least 24px by 24px)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Code Review (outline)",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": "div[data-testid=\"review-row\"]",
+              "html": "<div data-testid=\"review-row\" role=\"row\" data-row=\"0\" class=\"row add svelte-1v2hqd9\" data-kind=\"add\">",
+              "why": "Element has children which are not allowed: button[aria-label]"
+            }
+          ]
+        },
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "Code Review (diff)",
+      "violations": [
+        {
+          "rule": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": "div[data-testid=\"review-row\"]",
+              "html": "<div data-testid=\"review-row\" role=\"row\" data-row=\"0\" class=\"row add svelte-1v2hqd9\" data-kind=\"add\">",
+              "why": "Element has children which are not allowed: button[aria-label]"
+            }
+          ]
+        },
+        {
+          "rule": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "sample": [
+            {
+              "target": ".who",
+              "html": "<div class=\"who svelte-nruitt\">",
+              "why": "Element has insufficient color contrast of 4.22 (foreground color: #c15f3c, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "UAC dialog",
+      "error": "locator.waitFor: Timeout 8000ms exceeded."
+    }
+  ]
+}

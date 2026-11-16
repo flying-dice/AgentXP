@@ -3,9 +3,10 @@
   import type { SessionModeDto } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
-  import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import ToolStripDropDownButton from '../../kit/molecules/ToolStripDropDownButton.svelte'
   import AttachmentChip from './AttachmentChip.svelte'
+  import { modeButtonText, modeMenuItems } from './modeMenu'
 
   interface Props {
     agentName: string
@@ -14,8 +15,11 @@
     modeId?: string | null
     /** The file open in the editor; "Include open file" attaches it. */
     openFilePath?: string | null
-    /** Called with the text and the absolute paths of the attachments. */
-    onsend?: (text: string, attachments: string[]) => void
+    /**
+     * Called with the text and the absolute paths of the attachments. The box is cleared at once; when the call
+     * resolves false (the message did not go through) the draft comes back, unless the user already typed something new.
+     */
+    onsend?: (text: string, attachments: string[]) => void | Promise<boolean | void>
     oncancel?: () => void
     onmode?: (modeId: string) => void
     /** Native file picker; resolves to absolute paths (empty when cancelled). */
@@ -28,6 +32,11 @@
     onprefilled?: (id: number) => void
     /** A short box for short exchanges (the chat pane of an app window). */
     dense?: boolean
+    /** The agent is still starting: typing is fine, a sent message waits for it. */
+    starting?: boolean
+    /** The desktop's "Ask before every action" state; the Mode menu has an entry for it when `onaskfirst` is given. */
+    askFirst?: boolean
+    onaskfirst?: (on: boolean) => void
   }
 
   let {
@@ -42,7 +51,10 @@
     pickFiles,
     prefill = null,
     onprefilled,
-    dense = false
+    dense = false,
+    starting = false,
+    askFirst = false,
+    onaskfirst
   }: Props = $props()
 
   let draft = $state('')
@@ -66,15 +78,29 @@
   })
 
   const canSend = $derived(!running && (draft.trim() !== '' || attached.length > 0))
-  const modeItems = $derived(modes.map((m) => ({ value: m.id, label: m.name })))
+  /** Why Send is off, as the tooltip of the button (null when it is on). */
+  const sendReason = $derived(
+    canSend ? null : running ? 'The agent is working. Wait for the reply, or click Stop.' : 'Type a message first.'
+  )
+  const modeItems = $derived(
+    modeMenuItems({ modes, modeId, onmode: (id) => onmode?.(id), askFirst, ...(onaskfirst ? { onaskfirst } : {}) })
+  )
 
   function send(): void {
     if (!canSend) return
     const files = includeFile && openFilePath && !attached.includes(openFilePath) ? [...attached, openFilePath] : attached
-    onsend?.(draft, [...files])
+    const text = draft
+    const kept = [...attached]
+    const result = onsend?.(text, [...files])
     draft = ''
     attached = []
     input?.focus()
+    // A send that did not go through gives the draft back (the user may have started something new meanwhile).
+    void Promise.resolve(result).then((sent) => {
+      if (sent !== false || draft !== '') return
+      draft = text
+      attached = kept
+    })
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -83,16 +109,34 @@
     send()
   }
 
+  let root = $state<HTMLElement | null>(null)
+
+  /** Alt+M anywhere in the window puts the caret in the message box. */
+  $effect(() => {
+    const scope = root?.closest<HTMLElement>('[data-window-id]') ?? root?.parentElement
+    if (!scope) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.key.toLowerCase() !== 'm') return
+      event.preventDefault()
+      input?.focus()
+    }
+    scope.addEventListener('keydown', onKey)
+    return () => scope.removeEventListener('keydown', onKey)
+  })
+
   async function attach(): Promise<void> {
     const paths = (await pickFiles?.()) ?? []
     attached = [...attached, ...paths.filter((p) => !attached.includes(p))]
   }
 </script>
 
-<div class="composer" class:dense data-testid="chat-composer">
-  <label class="prompt" for="composer-input">
-    Message to {agentName} <span class="hint">(Enter to send, Shift+Enter for a new line)</span>
+<div class="composer" class:dense data-testid="chat-composer" bind:this={root}>
+  <label class="prompt" for="composer-input" title="Message to {agentName}">
+    <span class="mnemonic"><u>M</u>essage:</span> <span class="hint">(Enter to send, Shift+Enter for a new line)</span>
   </label>
+  {#if starting}
+    <div class="starting" role="status" data-testid="chat-starting">Starting the agent... Your message will be sent when the agent is ready.</div>
+  {/if}
   {#if attached.length > 0}
     <div class="chips" aria-label="Attachments">
       {#each attached as path (path)}
@@ -102,22 +146,16 @@
   {/if}
   <TextBox id="composer-input" data-testid="chat-composer-input" class="input" multiline bind:ref={input} bind:value={draft} onkeydown={onKeydown} />
   <div class="bar">
-    {#if modeItems.length > 0}
-      <label for="composer-mode">Mode:</label>
-      <ComboBox
-        items={modeItems}
-        value={modeId ?? ''}
-        style="width: 170px"
-        aria-label="Mode"
-        testid="chat-mode"
-        onchange={(id) => onmode?.(id)}
-      />
+    {#if modes.length > 0 || onaskfirst}
+      <ToolStripDropDownButton text={modeButtonText(modes, modeId)} items={modeItems} testid="chat-mode" title="Mode: what the agent may do" />
     {/if}
-    <CheckBox label="Include open file" bind:checked={includeFile} disabled={!openFilePath} class="include" />
+    <span class="include" title={openFilePath ? 'Adds the file that is open in Code to your message.' : 'No file is open'}>
+      <CheckBox label="Include open file" bind:checked={includeFile} disabled={!openFilePath} testid="chat-include-file" />
+    </span>
     <span class="spacer"></span>
     <Button data-testid="chat-attach" onclick={attach}>Attach…</Button>
-    <Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button>
-    <Button data-testid="chat-send" isDefault disabled={!canSend} onclick={send}>Send</Button>
+    <span title="Stops this reply. You can send another message."><Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button></span>
+    <span title={sendReason ?? (starting ? 'Your message will be sent when the agent is ready.' : 'Send the message (Enter)')}><Button data-testid="chat-send" isDefault disabled={!canSend} onclick={send}>Send</Button></span>
   </div>
 </div>
 
@@ -171,8 +209,15 @@
     gap: 6px 10px;
     margin-top: 6px;
   }
-  .bar :global(.include) {
-    max-width: 78px;
+  .include {
+    white-space: nowrap;
+  }
+  .starting {
+    margin-bottom: 4px;
+    padding: 2px 6px;
+    color: #1e3287;
+    background: #eef4fc;
+    border: 1px solid #b8cbe6;
   }
   .spacer {
     flex: 1;

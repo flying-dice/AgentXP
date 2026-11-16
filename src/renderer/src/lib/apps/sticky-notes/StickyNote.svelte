@@ -76,6 +76,7 @@
   ])
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <article
   class="note"
   data-testid={isPlan ? 'notes-plan' : 'notes-sticky'}

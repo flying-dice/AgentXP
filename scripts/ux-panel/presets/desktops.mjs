@@ -6,6 +6,7 @@ export const presets = {
   async 'three-desktops'(ctx, options) {
     const agent = await ctx.useScript('demo')
     const rich = Boolean(options.rich)
+    await ctx.answerFolderPicker(ctx.fixtures.docsSite)
     const ideas = await ctx.createDesktop({ title: 'Try new ideas', projects: rich ? [ctx.fixtures.loginApp] : [], connect: rich, agentId: agent.id })
     if (rich) {
       const chat = await ctx.newChat(ideas.id)
@@ -16,8 +17,8 @@ export const presets = {
       await ctx.waitFor(async () => !(await ctx.desktopState(ideas.id)), 'the desktop window closed')
       ctx.state.sessionId = chat.sessionId
     }
-    await ctx.createDesktop({ title: 'Fix login redirect', projects: [ctx.fixtures.docsSite], connect: false, agentId: agent.id })
-    await ctx.createDesktop({ title: 'Docs site', projects: [], connect: false, agentId: agent.id })
+    await ctx.createDesktop({ title: 'Fix login redirect', projects: [ctx.fixtures.loginApp], connect: false, agentId: agent.id })
+    await ctx.createDesktop({ title: 'Docs site', projects: [ctx.fixtures.docsSite], connect: false, agentId: agent.id })
     Object.assign(ctx.state, { desktopId: ideas.id, desktopTitle: 'Try new ideas', projectPaths: rich ? [ctx.fixtures.loginApp] : [] })
     ctx.saveState()
   },
@@ -47,9 +48,10 @@ export const presets = {
       await window.agent7.agents.setDefault(a.id)
       return a.id
     })
-    const d = await ctx.createDesktop({ title: 'Workspace', projects: [ctx.fixtures.loginApp], agentId: bad })
+    const d = await ctx.createDesktop({ title: 'Fix login redirect', projects: [ctx.fixtures.loginApp], agentId: bad })
     const attempt = await ctx.eval(({ id, bad }) => window.agent7.desktop.newChat(id, bad).then(() => 'chat opened', (e) => String(e?.message ?? e)), { id: d.id, bad }).catch((e) => String(e))
-    Object.assign(ctx.state, { desktopId: d.id, badAgentId: bad, attempt })
+    await ctx.answerFolderPicker(ctx.fixtures.docsSite)
+    Object.assign(ctx.state, { desktopId: d.id, badAgentId: bad, attempt, appPid: ctx.app.process().pid })
     ctx.saveState()
     return `new chat attempt: ${attempt}`
   }

@@ -1,0 +1,381 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "a2ui",
+  "description": "Draws a small WinForms form through the agent7 MCP tool a2ui_render and checks the tool accepted it. The prompt picks where it goes: 'window' (its own desktop window), 'sidebar' (beside the chat) or anything else (inline in the chat). A prompt containing 'update' changes the data model of the window surface and reports what the tool said (e.g. that the user closed it). The Send button's action comes back as a prompt and is answered by the first rule. Panel copy: the reply to the form is plain language (no internal ids).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "action",
+      "match": {
+        "regex": "triggered the action \"(?<action>[^\"]+)\" on component \"(?<component>[^\"]+)\" of surface \"(?<surface>[^\"]+)\"[\\s\\S]*\"dataModel\":\\s*\\{\\s*\"name\":\\s*\"(?<who>[^\"]*)\""
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Thanks {{match.who}}, I received your answer."
+        }
+      ]
+    },
+    {
+      "id": "window",
+      "match": {
+        "contains": "window",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Opening a window.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "saveAs": "render",
+          "arguments": {
+            "target": "window",
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "board",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Board",
+                    "width": 520,
+                    "height": 300
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "board",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "name-label",
+                        "name",
+                        "subscribe",
+                        "send"
+                      ]
+                    },
+                    {
+                      "id": "name-label",
+                      "component": "Label",
+                      "text": "Your name:"
+                    },
+                    {
+                      "id": "name",
+                      "component": "TextBox",
+                      "value": {
+                        "path": "/name"
+                      },
+                      "placeholder": "Ann"
+                    },
+                    {
+                      "id": "subscribe",
+                      "component": "CheckBox",
+                      "text": "Subscribe",
+                      "checked": {
+                        "path": "/subscribe"
+                      }
+                    },
+                    {
+                      "id": "send",
+                      "component": "Button",
+                      "text": "Send",
+                      "isDefault": true,
+                      "action": {
+                        "event": {
+                          "name": "send",
+                          "context": {
+                            "name": {
+                              "path": "/name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "board",
+                  "value": {
+                    "name": "",
+                    "subscribe": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "expect",
+          "from": "render",
+          "contains": "ok",
+          "message": "a2ui_render did not answer ok: {{render}}"
+        },
+        {
+          "type": "message",
+          "text": "The window is open. Tool said: {{render}}"
+        }
+      ]
+    },
+    {
+      "id": "sidebar",
+      "match": {
+        "contains": "sidebar",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Opening a sidebar.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "saveAs": "render",
+          "arguments": {
+            "target": "sidebar",
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "notes",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Notes"
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "notes",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "name-label",
+                        "name",
+                        "subscribe",
+                        "send"
+                      ]
+                    },
+                    {
+                      "id": "name-label",
+                      "component": "Label",
+                      "text": "Your name:"
+                    },
+                    {
+                      "id": "name",
+                      "component": "TextBox",
+                      "value": {
+                        "path": "/name"
+                      },
+                      "placeholder": "Ann"
+                    },
+                    {
+                      "id": "subscribe",
+                      "component": "CheckBox",
+                      "text": "Subscribe",
+                      "checked": {
+                        "path": "/subscribe"
+                      }
+                    },
+                    {
+                      "id": "send",
+                      "component": "Button",
+                      "text": "Send",
+                      "isDefault": true,
+                      "action": {
+                        "event": {
+                          "name": "send",
+                          "context": {
+                            "name": {
+                              "path": "/name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "notes",
+                  "value": {
+                    "name": "",
+                    "subscribe": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "expect",
+          "from": "render",
+          "contains": "ok",
+          "message": "a2ui_render did not answer ok: {{render}}"
+        },
+        {
+          "type": "message",
+          "text": "The sidebar is open. Tool said: {{render}}"
+        }
+      ]
+    },
+    {
+      "id": "update",
+      "match": {
+        "contains": "update",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "saveAs": "update",
+          "arguments": {
+            "messages": [
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "board",
+                  "path": "/name",
+                  "value": "Updated by the agent"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "message",
+          "text": "Update result: {{update}}"
+        }
+      ]
+    },
+    {
+      "id": "form",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Drawing a form.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "saveAs": "render",
+          "arguments": {
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "contact",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Contact"
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "contact",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "name-label",
+                        "name",
+                        "subscribe",
+                        "send"
+                      ]
+                    },
+                    {
+                      "id": "name-label",
+                      "component": "Label",
+                      "text": "Your name:"
+                    },
+                    {
+                      "id": "name",
+                      "component": "TextBox",
+                      "value": {
+                        "path": "/name"
+                      },
+                      "placeholder": "Ann"
+                    },
+                    {
+                      "id": "subscribe",
+                      "component": "CheckBox",
+                      "text": "Subscribe",
+                      "checked": {
+                        "path": "/subscribe"
+                      }
+                    },
+                    {
+                      "id": "send",
+                      "component": "Button",
+                      "text": "Send",
+                      "isDefault": true,
+                      "action": {
+                        "event": {
+                          "name": "send",
+                          "context": {
+                            "name": {
+                              "path": "/name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "contact",
+                  "value": {
+                    "name": "",
+                    "subscribe": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "expect",
+          "from": "render",
+          "equals": "ok",
+          "message": "a2ui_render did not answer ok: {{render}}"
+        },
+        {
+          "type": "message",
+          "text": "The form is on screen."
+        }
+      ]
+    }
+  ]
+}

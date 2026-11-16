@@ -8,11 +8,13 @@
 
   interface Props {
     drives: DriveDto[]
+    /** The drive letter chosen first: the project of the last chat. Without one the first plugged-in project, else C:. */
+    preselect?: string | null
     onstart?: (cwd: VPath) => void
     oncancel?: () => void
   }
 
-  let { drives, onstart, oncancel }: Props = $props()
+  let { drives, preselect = null, onstart, oncancel }: Props = $props()
 
   const options = $derived(
     [...drives]
@@ -26,7 +28,9 @@
       }))
   )
   let chosen = $state<string | null>(null)
-  const current = $derived(options.find((o) => o.letter === chosen) ?? options[0] ?? null)
+  const current = $derived(
+    options.find((o) => o.letter === chosen) ?? options.find((o) => o.letter === preselect) ?? options.find((o) => o.icon === 'usb') ?? options[0] ?? null
+  )
 </script>
 
 <Dialog testid="new-chat-dialog" title="New chat" iconName="session" width="420px" contained bodyColor="window" onclose={() => oncancel?.()}>
@@ -42,7 +46,7 @@
             aria-checked={current?.letter === option.letter}
             class:on={current?.letter === option.letter}
             data-testid="new-chat-drive-{option.letter.toLowerCase()}"
-            data-autofocus={option === options[0] ? '' : undefined}
+            data-autofocus={current?.letter === option.letter ? '' : undefined}
             onclick={() => (chosen = option.letter)}
             ondblclick={() => onstart?.(option.cwd)}
           >

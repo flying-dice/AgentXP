@@ -19,7 +19,7 @@
   ]
   const places: StartItem[] = [
     { id: 'workspace', title: 'Workspace' },
-    { id: 'control-centre', title: 'Control Centre' },
+    { id: 'control-centre', title: 'Control Center' },
     { id: 'agent-manager', title: 'Agent Manager' },
     { id: 'new-desktop', title: 'New desktop…' }
   ]

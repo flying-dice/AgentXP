@@ -11,6 +11,12 @@ export const MAX_EVENTS = 2000
 
 export type Source = ProtocolEventDto['source']
 export const SOURCE_LABEL: Record<Source, string> = { acp: 'ACP', 'ag-ui': 'AG-UI', mcp: 'MCP' }
+/** What each log is, for the tooltip of its name (the names ACP, AG-UI and MCP mean nothing to most people). */
+export const SOURCE_HINT: Record<Source, string> = {
+  acp: 'ACP: how Agent7 talks to the agent',
+  'ag-ui': 'AG-UI: how the agent shows its answer in the chat',
+  mcp: 'MCP: how the agent uses the tools of the desktop'
+}
 export const LEVEL_LABEL: Record<EventLevel, string> = { info: 'Information', warning: 'Warning', error: 'Error' }
 export const LEVEL_ICON: Record<EventLevel, IconName> = { info: 'info', warning: 'warning', error: 'error' }
 
@@ -61,7 +67,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
           text: 'Agent7 Logs',
           icon: 'folder',
           expanded: true,
-          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), text: SOURCE_LABEL[s], icon: 'file-text' as const }))
+          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
         },
         {
           id: 'chats',

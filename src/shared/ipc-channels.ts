@@ -47,7 +47,7 @@ export const isRendererEvent = (name: string): name is Agent7EventName => name i
 
 /** Every invoke method, as `true` flags. The type forces this list to match `Agent7Api` exactly. */
 const INVOKE_METHODS = {
-  agents: { list: true, create: true, update: true, remove: true, setDefault: true },
+  agents: { list: true, create: true, update: true, remove: true, setDefault: true, check: true },
   folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true, writeFile: true },
   sessions: {
     list: true,
@@ -67,6 +67,8 @@ const INVOKE_METHODS = {
     respondPermission: true,
     revertChange: true,
     clearTranscript: true,
+    retry: true,
+    restartAgent: true,
     exportTranscript: true
   },
   desktop: {
@@ -90,18 +92,19 @@ const INVOKE_METHODS = {
     respondAppRequest: true
   },
   vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
-  git: { status: true, lineChanges: true, headText: true, revertHunk: true },
+  git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },
   review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },
   drives: { list: true, plugIn: true, eject: true },
   launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true },
   notes: { list: true, add: true, update: true, remove: true },
   events: { query: true, clear: true },
   recycle: { list: true, restore: true, remove: true, empty: true },
-  snip: { capture: true },
+  snip: { capture: true, save: true },
   processes: { list: true, end: true },
   app: { version: true },
   a2ui: { dispatch: true, deleteSurface: true, moveSurface: true, setSidebarHidden: true },
   shell: { openPath: true },
+  fs: { browse: true, makeFolder: true, nativePicker: true },
   dialogs: { pickFiles: true }
 } as const satisfies { [G in keyof InvokeApi]: { [M in keyof InvokeApi[G]]: true } }
 

@@ -78,6 +78,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: empty | File menu: empties the Recycle Bin. | `recycle-bin-menu-empty` |
 | Menu: close | Closes the window. Alt+F4. | `recycle-bin-menu-close` |
 | Menu: refresh | View menu: reads the list again. F5. | `recycle-bin-menu-refresh` |
+| Status: restored | Says what was restored and where it went. | `recycle-bin-status-notice` |
 | Context menu: restore | Restores the item. | `recycle-bin-ctx-restore` |
 | Context menu: restore all | Restores all items. | `recycle-bin-ctx-restore-all` |
 | Context menu: empty | Empties the Recycle Bin. | `recycle-bin-ctx-empty` |
@@ -106,7 +107,7 @@ To delete all items for good, follow the steps below:
 
 - **The Recycle Bin is empty.** You have not reverted a change yet. Use **Revert** in **[Chat](chat.md)** or **[Code](code.md)**.
 - **Restore this item is dimmed.** Select an item first.
-- **The agent cannot list the items.** Open this app and make sure that Recycle Bin is **Allow** or **Ask** in **[Control Centre](control-centre.md)**.
+- **The agent cannot list the items.** Open this app and make sure that Recycle Bin is **Allow** or **Ask** in **[Control Center](control-centre.md)**.
 
 ## 7 - Need Help?
 

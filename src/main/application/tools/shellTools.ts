@@ -15,7 +15,7 @@ export interface ShellToolsDeps {
 
 const describe = (w: AppWindowState): string => `${APP_DISPLAY_NAMES[w.app]} window ${w.id} ("${w.title}")`
 
-/** desktop_*: always available. Opening apps follows the Control Centre policy "Agent may open apps". */
+/** desktop_*: always available. Opening apps follows the Control Center policy "Agent may open apps". */
 export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): ToolHandlers<'desktop_state' | 'drives_list' | 'desktop_open_app' | 'desktop_close_app' | 'desktop_focus_app'> {
   /** The windows a close/focus call means; only apps the agent may handle. */
   const targets = (desktopId: number, args: { window?: number; app?: AppKind }): AppWindowState[] => {
@@ -47,9 +47,9 @@ export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): Tool
     desktop_open_app: async (args, context) => {
       const { desktopId, sessionId } = context
       const decision = desktops.policy().openApps
-      if (decision === 'deny') return errorResult('Opening apps is blocked by the permission policy in Control Centre.')
+      if (decision === 'deny') return errorResult('Opening apps is blocked by the permission policy in Control Center.')
       if (decision === 'ask') {
-        const allowed = await ask(sessionId, `Open the ${APP_DISPLAY_NAMES[args.app]} app`, 'Agent may open apps is set to Ask in Control Centre')
+        const allowed = await ask(sessionId, `Open the ${APP_DISPLAY_NAMES[args.app]} app`, 'Agent may open apps is set to Ask in Control Center')
         if (!allowed) return errorResult(`The user declined to open the ${APP_DISPLAY_NAMES[args.app]} app.`)
       }
       return attempt(() => {

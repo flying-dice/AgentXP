@@ -73,7 +73,11 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
     /** The next folder pickers (New desktop > Browse, Plug in a project) answer with these paths, in order (the last one repeats). */
     async answerFolderPicker(...paths) {
       await app.evaluate(({ dialog }, list) => {
-        dialog.showOpenDialog = async () => {
+        // Only folder pickers get a folder path; a file picker (Attach) is cancelled. When the in-app Browse For Folder
+        // dialog replaces the native one this stub is simply never called.
+        dialog.showOpenDialog = async (...args) => {
+          const options = args.find((a) => a && typeof a === 'object' && 'properties' in a) ?? {}
+          if (!(options.properties ?? []).includes('openDirectory')) return { canceled: true, filePaths: [] }
           const picks = globalThis.__uxPicks ?? list
           const path = picks.length > 1 ? picks.shift() : picks[0]
           globalThis.__uxPicks = picks

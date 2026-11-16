@@ -3,6 +3,7 @@
   import { onMount } from 'svelte'
   import type { DesktopSummaryDto } from '@shared/vfs'
   import { createFakeApi } from '../app/fakeApi'
+  import FolderBrowserHost from '../kit/organisms/FolderBrowserHost.svelte'
   import MessageBoxHost from '../kit/organisms/MessageBoxHost.svelte'
   import LauncherPage from './LauncherPage.svelte'
 
@@ -37,6 +38,7 @@
 <div class="stage" bind:this={root} style:width="{width}px" style:height="{height}px">
   <LauncherPage {api} {now} {showOptions} {dialog} {selectedId} />
   <MessageBoxHost contained />
+  <FolderBrowserHost contained />
 </div>
 
 <style>

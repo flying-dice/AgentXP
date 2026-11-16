@@ -6,9 +6,10 @@
 import type { Component } from 'svelte'
 import type { Agent7Api } from '@shared/ipc'
 import type { Id } from '@shared/models'
-import type { DriveLetter, VPath } from '@shared/vfs'
+import type { DriveDto, DriveLetter, VPath } from '@shared/vfs'
 import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
+import type { RemovedProject } from '../desktop/projectDrives'
 
 /** What the shell gives every app. Implemented by lib/desktop/DesktopController. */
 export interface DesktopHost {
@@ -26,6 +27,12 @@ export interface DesktopHost {
   updateView(windowId: Id, view: AppView): void
   /** Safely Remove: warns when chats work on the drive, ejects it and shows the balloon. */
   ejectDrive(letter: DriveLetter): Promise<void>
+  /** Plug in a project: the Browse For Folder dialog, then the drive, a balloon, or a message when it is plugged in already or fails. Resolves the drive, or null. */
+  plugInProject(): Promise<DriveDto | null>
+  /** Plugs a recently removed project in again, without the dialog. */
+  plugInAgain(folderId: Id): Promise<DriveDto | null>
+  /** Projects ejected from this desktop, newest first (at most three). */
+  readonly recentlyRemoved: readonly RemovedProject[]
   /** Starts a chat whose agent works in `cwd` (a VPath on C: or a plugged-in drive) and opens its Chat window. */
   startChat(cwd: VPath): Promise<void>
   /**
@@ -44,6 +51,12 @@ export interface DesktopHost {
   toggleChatPane(windowId: Id): void
   /** True while the window's chat pane is open (for the checkmark of View > Chat pane). */
   chatPaneOpen(windowId: Id): boolean
+  /** "Send to chat" with a file: the window's chat pane (or a new chat) gets the text with the file attached. */
+  sendFileToChat(windowId: Id, filePath: string, text: string): Promise<void>
+  /** True while the chat has a "Resumed" note waiting (Resume agents stopped a step of it); the chat shows it with a Continue button. */
+  hasResumeNote(sessionId: Id): boolean
+  /** The Continue button of that note: asks the chat's agent to carry on and clears the note. */
+  continueChat(sessionId: Id): Promise<void>
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

@@ -56,7 +56,7 @@ Each WordPad window has a chat pane at its right edge. The pane starts closed, a
 | WordPad window | The root of the window. | `wordpad-app` |
 | Read | Shows the formatted document. | `wordpad-mode-read` |
 | Edit | Shows the markdown source. | `wordpad-mode-edit` |
-| B, I, H1, H2, List, 1. List, Code, Link | Add markdown marks in edit mode. | none |
+| B, I, H1 (Heading 1), H2 (Heading 2), List, 1. List, Code, Link | Add markdown marks in edit mode. | none |
 | Document | The formatted page. | `wordpad-reader` |
 | Document source | The text box of the source. | `wordpad-source` |
 
@@ -92,7 +92,6 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: select all | Selects all text. Ctrl+A. | `wordpad-ctx-select-all` |
 | Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `wordpad-ctx-explain` |
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `wordpad-ctx-ask` |
-| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `wordpad-ctx-send` |
 | Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `wordpad-ctx-open-chat` |
 
 ### Keys

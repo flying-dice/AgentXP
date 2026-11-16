@@ -1,14 +1,5 @@
 // J16, J17, J22: permissions, agents, help.
-import { all, fail, manual, pass, withAnswer } from './util.mjs'
-
-/** Text of a window that looks like Help and Support (any app window), or null. */
-async function helpText(ctx) {
-  for (const page of ctx.windows()) {
-    const text = await page.evaluate(() => document.body.innerText).catch(() => '')
-    if (/help and support/i.test(text)) return text
-  }
-  return null
-}
+import { all, fail, helpInfo, manual, pass, withAnswer } from './util.mjs'
 
 export const checks = {
   async 'T16.1'(ctx) {
@@ -20,8 +11,9 @@ export const checks = {
   },
 
   async 'T16.2'(ctx, { answer }) {
-    const base = pass('nothing to verify in the app state')
-    return withAnswer(base, answer, { keywords: [['no', 'not', 'still']], expect: "no: turning off Code does not stop Notepad from writing files (both provide Write files). The answer must come from the screen or the manual (check the log: Control Centre or Help opened)" })
+    // Free text: always MANUAL (a keyword such as "no" would match almost any answer).
+    void ctx
+    return manual("nothing to verify in the app state; researcher must verify the panelist's answer" + (answer ? ` ("${answer}")` : '') + ': no, turning off Code does not stop Notepad from writing files (both provide Write files). The answer must come from the screen or the manual (check the log: Control Center or Help opened)')
   },
 
   async 'T17.1'(ctx) {
@@ -34,20 +26,27 @@ export const checks = {
   },
 
   async 'T17.2'(ctx, { answer }) {
-    return withAnswer(pass('the app is still the same process (not restarted)'), answer, { keywords: [['not-a-real-command', 'not found', 'command']], expect: 'the answer names the wrong command or "not found" and points to the Agents page; the panelist did not restart the app' })
+    const pid = ctx.app?.process?.()?.pid ?? null
+    const same = ctx.state.appPid == null || pid === ctx.state.appPid
+    const state = all([[same, `the app is still the same process (pid ${pid}, was ${ctx.state.appPid ?? 'not recorded'})`]])
+    return withAnswer(state, answer, {
+      keywords: [['not-a-real-command', 'not found'], ['agents page', 'agents', 'agent manager', 'settings']],
+      expect: 'the answer names the wrong command ("not-a-real-command" or "not found") and points to the Agents page; the panelist did not restart the app'
+    })
   },
 
   async 'T22.1'(ctx, { answer }) {
-    const text = await helpText(ctx)
-    if (!text) return fail('Help and Support is not open (no window shows it)')
-    return withAnswer(all([[/explorer/i.test(text), 'a help topic about Explorer is open']]), answer, { keywords: [['plug', 'project', 'folder', 'drive']], expect: 'the panelist states what Plug in a project does' })
+    const help = await helpInfo(ctx)
+    if (!help) return fail('no Help window is open (neither "Help and Support" nor "Chat Help"; no window with app help)')
+    return withAnswer(all([[help.topic === 'explorer' || /explorer/i.test(help.text), `a help topic about Explorer is open (topic ${help.topic ?? '?'})`]]), answer, { keywords: [['plug', 'project', 'folder', 'drive']], expect: 'the panelist states what Plug in a project does' })
   },
 
   async 'T22.2'(ctx, { answer }) {
-    const text = await helpText(ctx)
-    if (!text) return fail('Help and Support is not open (no window shows it)')
-    return withAnswer(all([[/recycle bin|changes/i.test(text), 'the topic about the Changes pane or Recycle Bin is open']]), answer, { keywords: [['revert', 'undo'], ['changes', 'recycle']], expect: 'the answer lists the steps correctly (Tasks and changes > Changes > select > Revert; Recycle Bin to restore)' })
+    const help = await helpInfo(ctx)
+    if (!help) return fail('no Help window is open (neither "Help and Support" nor "Chat Help"; no window with app help)')
+    const ok = ['recycle-bin', 'chat'].includes(help.topic) || /recycle bin|changes/i.test(help.text)
+    return withAnswer(all([[ok, `the topic about the Changes pane or Recycle Bin is open (topic ${help.topic ?? '?'})`]]), answer, { keywords: [['revert', 'undo'], ['changes', 'recycle']], expect: 'the answer lists the steps correctly (Tasks and changes > Changes > select > Revert; Recycle Bin to restore)' })
   }
 }
 
-void manual
+void pass

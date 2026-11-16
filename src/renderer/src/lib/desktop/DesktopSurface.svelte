@@ -8,6 +8,8 @@
     id: string
     label: string
     icon: IconName
+    /** Tooltip: what the icon opens. */
+    title?: string
   }
 
   interface Props {
@@ -66,6 +68,7 @@
   bind:this={root}
   role="group"
   aria-label="Desktop"
+  data-region="icons"
   onpointerdown={(e) => {
     if (e.target === root) {
       onselect?.(null)
@@ -76,7 +79,7 @@
   onkeydown={onKeydown}
 >
   {#each icons as icon (icon.id)}
-    <DesktopIcon testid="desktop-icon-{icon.id}" label={icon.label} icon={icon.icon} selected={selected === icon.id} onselect={() => onselect?.(icon.id)} onopen={() => onopen?.(icon.id)} oncontextmenu={() => {}} />
+    <DesktopIcon testid="desktop-icon-{icon.id}" label={icon.label} title={icon.title} icon={icon.icon} selected={selected === icon.id} onselect={() => onselect?.(icon.id)} onopen={() => onopen?.(icon.id)} oncontextmenu={() => {}} />
   {/each}
 </div>
 <ContextMenuStrip items={menu} bind:open={menuOpen} x={menuX} y={menuY} label="Desktop" />

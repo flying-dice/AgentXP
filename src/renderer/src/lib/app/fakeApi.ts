@@ -2,6 +2,7 @@
 import { EventType, type BaseEvent, type Message, type RunAgentInput } from '@ag-ui/core'
 import { createFakeDesktop } from './fakeDesktop'
 import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
+import { createFakeFs } from './fakeFs'
 import { createFakeVfs } from './fakeVfs'
 import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
@@ -200,7 +201,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
         return agents.find((a) => a.id === id)!
       },
       remove: async (id) => void (agents = agents.filter((a) => a.id !== id)),
-      setDefault: async (id) => void (agents = agents.map((a) => ({ ...a, isDefault: a.id === id })))
+      setDefault: async (id) => void (agents = agents.map((a) => ({ ...a, isDefault: a.id === id }))),
+      check: async (command) => ['node', 'npx', 'python', 'claude'].includes(command.trim())
     },
     folders: {
       list: async () => folders,
@@ -233,7 +235,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       list: async (desktopId) => (desktopId === undefined ? sessions : sessions.filter((s) => s.desktopId === desktopId)),
       get: async (id) => sessions.find((s) => s.id === id) ?? session(id, 1, 'Fake session'),
       create: async (desktopId, agentId, cwd) => {
-        const created = session(nextId++, desktopId, 'New session', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
+        const created = session(nextId++, desktopId, 'New chat', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
         sessions = [...sessions, created]
         return created
       },
@@ -257,6 +259,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       respondPermission: async () => {},
       revertChange: async () => {},
       clearTranscript: async () => {},
+      retry: async () => false,
+      restartAgent: async () => {},
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
     },
     desktop: (desktopApi = createFakeDesktop({
@@ -274,10 +278,11 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     recycle: extras.recycle,
     snip: extras.snip,
     processes: {
-      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
+      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, memoryBytes: 47_300_000, cpuPercent: 1.2, sessionIds: sessions.map((s) => s.id) }],
       end: async () => {}
     },
     a2ui: { dispatch: async () => {}, deleteSurface: async () => {}, moveSurface: async () => {}, setSidebarHidden: async () => {} },
+    fs: createFakeFs(),
     dialogs: { pickFiles: async () => [] },
     shell: { openPath: async () => {} },
     app: { version: async () => '0.1.0' },

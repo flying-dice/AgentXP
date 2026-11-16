@@ -34,8 +34,8 @@
     flex: none;
     display: flex;
     align-items: center;
-    height: 19px;
-    padding: 0 2px 0 6px;
+    height: 24px;
+    padding: 0 0 0 6px;
     background: linear-gradient(#f4f7fb, #d5dfee);
     border-bottom: 1px solid #aab7cb;
   }
@@ -45,15 +45,15 @@
     color: #1e395b;
   }
   .x {
-    width: 15px;
-    height: 15px;
+    width: 24px;
+    height: 24px;
     padding: 0;
-    line-height: 13px;
+    line-height: 22px;
     border: 1px solid transparent;
     border-radius: 2px;
     background: transparent;
     color: #444;
-    font-size: 13px;
+    font-size: 15px;
     cursor: default;
   }
   .x:hover {

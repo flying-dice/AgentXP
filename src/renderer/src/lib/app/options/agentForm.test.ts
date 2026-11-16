@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatEnv, inputFromForm, parseArgs, parseEnv, validateAgentForm } from './agentForm'
+import { checkMessage, commandLine, emptyAgentForm, formatEnv, formFromAgent, inputFromForm, parseArgs, parseEnv, validateAgentForm } from './agentForm'
 
 describe('agentForm', () => {
   it('parses one argument per line', () => {
@@ -12,8 +12,24 @@ describe('agentForm', () => {
   })
 
   it('validates and builds the input', () => {
-    expect(validateAgentForm({ name: '', command: 'x', args: '', env: '', defaultModeId: '' })).toMatch(/name/)
-    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad', defaultModeId: '' })).toMatch(/KEY=VALUE/)
-    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1', defaultModeId: ' acceptEdits ' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' }, defaultModeId: 'acceptEdits' })
+    expect(validateAgentForm({ ...emptyAgentForm(), command: '' })).toMatch(/program/)
+    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad', makeDefault: false, defaultModeId: '' })).toMatch(/KEY=VALUE/)
+    expect(validateAgentForm({ ...emptyAgentForm(), command: 'node' })).toBeNull()
+    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1', makeDefault: false, defaultModeId: ' acceptEdits ' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' }, defaultModeId: 'acceptEdits' })
+  })
+
+  it('names an agent after its command line when no name is typed', () => {
+    expect(inputFromForm({ name: ' ', command: 'node', args: 'my-agent.js\n\n--x', env: '', makeDefault: true, defaultModeId: '' }).name).toBe('node my-agent.js --x')
+    expect(commandLine({ command: ' node ', args: '' })).toBe('node')
+  })
+
+  it('starts as the default agent in Add and keeps the flag of an existing agent in Edit', () => {
+    expect(emptyAgentForm().makeDefault).toBe(true)
+    expect(formFromAgent({ id: 1, name: 'a', command: 'c', args: ['x'], env: {}, isDefault: false, defaultModeId: null }).makeDefault).toBe(false)
+  })
+
+  it('words the result of Test', () => {
+    expect(checkMessage(' node ', true)).toBe("Found 'node'.")
+    expect(checkMessage('node', false)).toBe("Could not find 'node'.")
   })
 })

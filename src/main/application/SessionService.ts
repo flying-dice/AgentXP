@@ -10,13 +10,17 @@ import type { SessionRepository } from '../domain/repositories/session-repositor
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
 import type { AgentConnectionPool } from './AgentConnectionPool'
 import { desktopBlock } from './desktop/desktopBlock'
+import { isConnectionLoss, stoppedUnexpectedly } from './agentProblems'
 import { AppError, required } from './errors'
 import type { EventPublisher, StopReason } from './ports'
 import type { SessionBroadcaster } from './SessionBroadcaster'
+import type { SessionProblems } from './SessionProblems'
 import type { SessionRuntime } from './SessionRuntime'
 import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
 
-export const DEFAULT_SESSION_TITLE = 'New session'
+export const DEFAULT_SESSION_TITLE = 'New chat'
+/** The title chats got before they were called "New chat"; such a chat is still untitled. */
+const LEGACY_DEFAULT_TITLE = 'New session'
 const TITLE_MAX_LENGTH = 40
 
 export interface SessionServiceDeps {
@@ -31,6 +35,8 @@ export interface SessionServiceDeps {
   runtime: SessionRuntime
   broadcaster: SessionBroadcaster
   events: EventPublisher
+  /** Where problems of the agent program are kept for the UI (see `SessionProblems`). */
+  problems?: SessionProblems
   /** The desktop state of a chat as JSON, for the prompt's desktop resource block. */
   desktopContext?: { contextOfSession(sessionId: Id): string | null }
 }
@@ -63,8 +69,18 @@ export class SessionService {
   /**
    * Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. `role` is
    * `review` for the reviewer of a Code Review window and `aside` for an embedded chat panel (default `chat`).
+   *
+   * With `options.background` the agent starts after this returns (the row is `connecting`): a Chat window can open and
+   * take typing at once, and an agent that fails to start leaves the chat in place with its problem (`SessionDto.problem`)
+   * instead of removing it. Without it the agent is up (or the call throws and the row is gone) when this returns.
    */
-  async create(desktopId: Id, agentId?: Id, cwd: VPath = AGENT_HOME, role: SessionRole = 'chat'): Promise<SessionDto> {
+  async create(
+    desktopId: Id,
+    agentId?: Id,
+    cwd: VPath = AGENT_HOME,
+    role: SessionRole = 'chat',
+    options: { background?: boolean } = {}
+  ): Promise<SessionDto> {
     const { sessions, runtime, events } = this.deps
     const agent = required(agentId === undefined ? this.deps.agents.getDefault() : this.deps.agents.get(agentId), 'Agent')
     const workingDirectory = normaliseVPath(cwd)
@@ -73,6 +89,11 @@ export class SessionService {
     if (folder?.kind !== 'directory') throw new AppError(`The working directory ${workingDirectory} does not exist.`)
     const title = role === 'review' ? `Review of ${vpathName(workingDirectory)}` : DEFAULT_SESSION_TITLE
     const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title, role })
+    if (options.background) {
+      this.deps.broadcaster.setStatus(session.id, 'connecting')
+      void runtime.ensureConnected(session.id).catch(() => {}) // the failure is the session's problem, shown in its window
+      return required(sessions.get(session.id), 'Session')
+    }
     try {
       await runtime.ensureConnected(session.id)
     } catch (error) {
@@ -123,6 +144,25 @@ export class SessionService {
     await this.runTurn(sessionId, [{ kind: 'text', text }])
   }
 
+  /**
+   * Takes back the message of a send that never got an answer (the connection dropped before the agent replied), so
+   * that sending it again does not leave it in the transcript twice. False when the last entry is not such a message.
+   */
+  retry(id: Id): boolean {
+    this.requireSession(id)
+    return this.deps.transcripts.removeLastUserMessage(id)
+  }
+
+  /** Ends the agent program of a chat (if it runs) and starts a fresh one: "Reconnect" and "Restart". */
+  async restartAgent(id: Id): Promise<void> {
+    const { pool, problems, broadcaster, runtime } = this.deps
+    this.requireSession(id)
+    await pool.dispose(id)
+    problems?.clear(id)
+    broadcaster.setStatus(id, 'closed')
+    await runtime.ensureConnected(id).catch(() => {}) // a failed start is the session's problem again
+  }
+
   async cancel(id: Id): Promise<void> {
     const live = this.deps.pool.get(this.requireSession(id).id)
     await live?.connection.cancel(live.acpSessionId)
@@ -166,7 +206,7 @@ export class SessionService {
 
   private autoTitle(session: SessionDto, text: string): void {
     const title = titleFromPrompt(text)
-    if (session.title !== DEFAULT_SESSION_TITLE || !title) return
+    if ((session.title !== DEFAULT_SESSION_TITLE && session.title !== LEGACY_DEFAULT_TITLE) || !title) return
     this.deps.sessions.rename(session.id, title)
   }
 
@@ -180,6 +220,7 @@ export class SessionService {
       broadcaster.setStatus(sessionId, 'idle')
       return stopReason
     } catch (error) {
+      if (isConnectionLoss(error)) this.deps.problems?.set(sessionId, stoppedUnexpectedly(error))
       broadcaster.setStatus(sessionId, 'error')
       throw error
     }

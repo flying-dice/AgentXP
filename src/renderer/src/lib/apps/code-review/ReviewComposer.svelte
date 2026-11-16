@@ -41,6 +41,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="composer" data-testid="review-compose" role="group" aria-label="Write a comment" {onkeydown}>
   {#if label}<div class="where">{label}</div>{/if}
   <TextBox multiline rows={3} bind:value={body} bind:ref={box} placeholder="Leave a comment (Ctrl+Enter to post)" aria-label="Comment" data-testid="review-compose-input" />

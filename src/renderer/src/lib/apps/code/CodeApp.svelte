@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
   import type { FileChangeDto } from '@shared/models'
-  import { GIT_STATE_INFO, formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
+  import { formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
   import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
@@ -15,7 +15,7 @@
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
-  import { askChatItems } from '../shared/contextItems'
+  import { askChatItems, copyText } from '../shared/contextItems'
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
@@ -37,8 +37,11 @@
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
   import { closeTab, openTab, reconcileTabs, sameRange, scrollTopForLine, visibleRange } from './codeModel'
+  import { treeMenu, type TreeMenuTarget } from './codeContext'
   import DockPane from './DockPane.svelte'
-  import { anchorLine, changeAtLine, indexGitStatus, marksOf, stepChange } from './gitModel'
+  import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
+  import { revertConfirmText } from '../../app/changes/changeFormat'
+  import type { FileTreeTarget } from '../../app/files/fileTree'
 
   let { window: win, host, focused = false }: AppProps<'code'> = $props()
 
@@ -55,7 +58,7 @@
   let visible = $state.raw<[number, number] | null>(null)
   let selection = $state.raw<{ startLine: number; endLine: number } | null>(null)
   let selectedChangeId = $state<number | null>(null)
-  /** Docked panes (View menu): Management on the left, Logs & others at the bottom. */
+  /** Docked panes (View menu): Management on the left, Changes and Git at the bottom. */
   let showManagement = $state(true)
   let showLogs = $state(true)
   let showRuler = $state(true)
@@ -335,7 +338,7 @@
 
   async function revert(change: FileChangeDto): Promise<void> {
     const answer = await showMessageBox({
-      text: `Revert the changes to ${change.path}?\n\nThe file goes back to how it was before the agent edited it.`,
+      text: revertConfirmText(change.path),
       caption: 'Code',
       buttons: 'YesNo',
       icon: 'warning'
@@ -416,6 +419,77 @@
     host.chooseReview(active)
   }
 
+  /** The project root of a path: its drive. */
+  const rootOf = (path: string): string => {
+    const drive = parseVPath(path)?.drive
+    return drive ? driveRoot(drive) : (roots[0]?.path ?? host.state.home)
+  }
+
+  /** Show changes: Code Review on the file against HEAD. Read only; the window starts no agent. */
+  async function showChanges(path: string): Promise<void> {
+    const root = rootOf(path)
+    try {
+      const opened = await host.api.desktop.openReview(desktopId, root)
+      const selectedPath = relativeToRoot(root, path)
+      if (opened.view.app === 'code-review' && selectedPath) host.updateView(opened.id, { ...opened.view, selectedPath })
+    } catch (error) {
+      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  async function plugIn(): Promise<void> {
+    try {
+      await host.api.drives.plugIn(desktopId)
+    } catch (error) {
+      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  /** The project to eject: the one of the open file, else the first plugged-in project. */
+  const ejectable = $derived.by(() => {
+    const drive = (active ? parseVPath(active)?.drive : undefined) ?? roots.map((r) => parseVPath(r.path)?.drive).find(Boolean)
+    return drive && host.state.drives.some((d) => d.letter === drive && d.kind === 'removable') ? drive : null
+  })
+
+  async function initGit(): Promise<void> {
+    const root = activeRoot()
+    try {
+      await host.api.git.init(desktopId, root)
+      await refreshGit()
+    } catch (error) {
+      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
+    }
+  }
+  /** The project of the open file, else the first project. */
+  const activeRoot = (): string => (active ? rootOf(active) : (roots[0]?.path ?? host.state.home))
+
+  // ---- the project tree: context menus ---------------------------------------------------------
+  let tree = $state<{ expand(path: string): void } | null>(null)
+
+  function treeContext(event: MouseEvent, target: FileTreeTarget | null): void {
+    const kind: TreeMenuTarget = target ? target.kind : 'empty'
+    const path = target?.path ?? ''
+    const letter = path ? parseVPath(path)?.drive : undefined
+    const canEject = letter !== undefined && host.state.drives.some((d) => d.letter === letter && d.kind === 'removable')
+    ctx.show(
+      event,
+      treeMenu(
+        kind,
+        {
+          open: () => (kind === 'file' ? show(path) : tree?.expand(path)),
+          startChat: () => void host.startChat(path),
+          openInExplorer: () => void host.openApp({ app: 'explorer', path }),
+          openWithNotepad: () => void host.openApp({ app: 'notepad', path }),
+          copyPath: () => copyText(path),
+          askAboutFile: () => void host.askChat({ app: 'code', windowId: win.id, kind: 'ask', path }),
+          eject: () => letter && void host.ejectDrive(letter),
+          plugIn: () => void plugIn()
+        },
+        { canEject }
+      )
+    )
+  }
+
   // svelte-ignore state_referenced_locally
   const help = new AppHelp(host, 'code')
   const ctx = new ContextMenu()
@@ -475,6 +549,9 @@
       items: [
         { id: 'code-open', label: '&Open...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
         { separator: true },
+        { id: 'code-plug-in', testid: 'code-menu-plug-in', label: '&Plug in a project...', icon: 'plus', action: () => void plugIn() },
+        { id: 'code-eject', testid: 'code-menu-eject', label: 'E&ject project...', icon: 'usb', disabled: ejectable === null, action: () => ejectable && void host.ejectDrive(ejectable) },
+        { separator: true },
         { id: 'code-close-file', label: '&Close file', disabled: active === null, action: () => active && close(active) },
         { id: 'code-close-all', label: 'Close &all files', disabled: tabs.length === 0, action: () => [...tabs].forEach(close) },
         ...closeItems('code', () => void host.closeWindow(win.id))
@@ -493,7 +570,7 @@
       label: '&View',
       items: [
         { id: 'code-view-management', label: '&Management', checked: showManagement, action: () => (showManagement = !showManagement) },
-        { id: 'code-view-logs', label: '&Logs & others', checked: showLogs, action: () => (showLogs = !showLogs) },
+        { id: 'code-view-logs', label: '&Changes and Git', checked: showLogs, action: () => (showLogs = !showLogs) },
         { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) },
         { separator: true },
         help.paneItem(win.id)
@@ -509,8 +586,8 @@
     {
       label: '&Tools',
       items: [
-        { id: 'code-refresh', label: '&Refresh git status', icon: 'refresh', action: () => void refreshGit() },
-        { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: reviewChanges }
+        { id: 'code-refresh', label: '&Refresh Git status', icon: 'refresh', action: () => void refreshGit() },
+        { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: () => void reviewChanges() }
       ]
     },
     help.menu()
@@ -518,12 +595,12 @@
 
   const mgmtTabs = [
     { id: 'projects', title: 'Projects', testid: 'code-mgmt-tab-projects' },
-    { id: 'files', title: 'Files', testid: 'code-mgmt-tab-files' },
-    { id: 'changes', title: 'Changes', testid: 'code-mgmt-tab-changes' }
+    { id: 'files', title: 'Files', testid: 'code-mgmt-tab-files' }
   ]
+  // One place to review changes: the Changes tab is the same pane the chat window shows (UX-40).
   const logTabs = $derived([
-    { id: 'changes', title: changes.length > 0 ? `Agent changes (${changes.length})` : 'Agent changes', testid: 'code-logs-tab-changes' },
-    { id: 'git', title: gitEntries.length > 0 ? `Git (${gitEntries.length})` : 'Git', testid: 'code-logs-tab-git' }
+    { id: 'changes', title: changes.length > 0 ? `Changes (${changes.length})` : 'Changes', tooltip: 'The files an agent changed', testid: 'code-logs-tab-changes' },
+    { id: 'git', title: gitTabTitle(gitEntries.length), tooltip: gitTabTooltip(gitEntries.length), testid: 'code-logs-tab-git' }
   ])
 
   const stateOf = (path: string): string => {
@@ -544,7 +621,7 @@
         icon: 'file-code',
         attrs: { 'data-path': path, 'data-git-status': state ?? 'none' },
         name: vpathName(path),
-        status: state ? GIT_STATE_INFO[state].text : changedPaths.includes(path) ? 'Agent changed' : ''
+        status: state ? GIT_STATE_WORD[state] : changedPaths.includes(path) ? 'Agent changed' : ''
       })
     }
     return rows
@@ -552,11 +629,6 @@
   const fileColumns: ListColumn[] = [
     { key: 'name', header: 'File' },
     { key: 'status', header: 'State', width: 84 }
-  ]
-  const changeRows = $derived<ListRow[]>(changes.map((c) => ({ id: String(c.id), testid: 'code-mgmt-change', icon: 'file-code', name: vpathName(c.path), kind: c.kind })))
-  const changeColumns: ListColumn[] = [
-    { key: 'name', header: 'File' },
-    { key: 'kind', header: 'Change', width: 62 }
   ]
   const gitRows = $derived<ListRow[]>(
     gitEntries.map((e) => {
@@ -566,22 +638,28 @@
         testid: 'code-git-entry',
         icon: 'file-code',
         attrs: { 'data-path': e.path, 'data-git-status': state },
-        status: `${e.index}${e.worktree}`.replaceAll(' ', '\u00b7'),
-        text: GIT_STATE_INFO[state].text,
+        text: GIT_STATE_WORD[state],
         file: e.path
       }
     })
   )
   const gitColumns: ListColumn[] = [
-    { key: 'status', header: 'XY', width: 36 },
     { key: 'text', header: 'Status', width: 90 },
     { key: 'file', header: 'File' }
   ]
+
+  /** Git list: double-click and the menu show the change (Code Review against the last commit) or open the file. */
+  const gitRowMenu = (row: ListRow, event: MouseEvent): void =>
+    ctx.show(event, [
+      { id: 'code-git-ctx-show', testid: 'code-git-ctx-show', label: '&Show changes', icon: 'changes', action: () => void showChanges(row.id) },
+      { id: 'code-git-ctx-open', testid: 'code-git-ctx-open', label: '&Open file', icon: 'file-code', disabled: gitRows.find((r) => r.id === row.id)?.text === GIT_STATE_WORD.deleted, action: () => show(row.id) }
+    ])
   const eol = $derived(text === null ? '' : text.includes('\r\n') ? 'CRLF' : 'LF')
 
   const highlightLines = $derived(revealed ? Array.from({ length: Math.min(80, revealed[1] - revealed[0] + 1) }, (_, i) => revealed![0] + i) : [])
   const language = $derived(active ? languageFromPath(active) : 'text')
-  const lineLabel = $derived(visible ? `Lines ${visible[0]}-${visible[1]} of ${totalLines}` : '')
+  /** "Line 1 of 6": short enough that the status bar never cuts it. */
+  const lineLabel = $derived(active && text !== null ? `Line ${caret.line} of ${totalLines}` : '')
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -590,22 +668,16 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Code" />
   <AppAbout {help} />
   <ToolStrip aria-label="Code toolbar" class="cb-tools">
-    <ToolStripButton data-testid="code-new" icon="new" title="New file (the agent creates files)" disabled />
     <ToolStripButton data-testid="code-open" icon="open-folder" title="Open file (Ctrl+O)" onclick={() => (openDialog = true)} />
-    <ToolStripButton data-testid="code-save" icon="save" title="Save (files are edited by the agent)" disabled />
-    <ToolStripButton data-testid="code-save-all" icon="library" title="Save all" disabled />
-    <Separator orientation="vertical" />
-    <ToolStripButton data-testid="code-undo" icon="undo" title="Undo" disabled />
-    <ToolStripButton data-testid="code-redo" icon="redo" title="Redo" disabled />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-prev-change" icon="chevron-up" title="Previous change (Shift+Alt+F5)" aria-label="Previous change" disabled={lineChanges.length === 0} onclick={() => step(-1)} />
     <ToolStripButton data-testid="code-next-change" icon="chevron-down" title="Next change (Alt+F5)" aria-label="Next change" disabled={lineChanges.length === 0} onclick={() => step(1)} />
     <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title="Revert hunk" aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-refresh" icon="refresh" title="Refresh git status" aria-label="Refresh git status" onclick={() => void refreshGit()} />
-    <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Open Code Review for this project" onclick={reviewChanges} />
+    <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Look at the changes of this project. Nothing starts until you ask the agent to review." onclick={() => void reviewChanges()} />
     <ToolStripButton text="Management" icon="folder" bind:checked={showManagement} checkOnClick data-testid="code-management-toggle" title="Show or hide the Management pane" />
-    <ToolStripButton text={changes.length > 0 ? `Logs (${changes.length})` : 'Logs'} icon="changes" bind:checked={showLogs} checkOnClick data-testid="code-changes-toggle" title="Show or hide the Logs & others pane" />
+    <ToolStripButton text={changes.length > 0 ? `Changes and Git (${changes.length})` : 'Changes and Git'} icon="changes" bind:checked={showLogs} checkOnClick data-testid="code-changes-toggle" title="Show or hide the Changes and Git pane" />
     {#snippet trailing()}
       {#if editing}
         <span class="editing" data-testid="code-editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
@@ -618,9 +690,9 @@
         <TabControl tabs={mgmtTabs} bind:selected={mgmtTab} aria-label="Management">
           {#snippet panel(tab)}
             {#if tab.id === 'projects'}
-              <div class="tree">
+              <div class="tree" data-testid="code-tree" role="presentation" oncontextmenu={(e) => treeContext(e, null)}>
                 {#key rootsKey}
-                  <FileTree {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} />
+                  <FileTree bind:this={tree} {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} oncontextmenu={(target, e) => treeContext(e, target)} />
                 {/key}
               </div>
             {:else if tab.id === 'files'}
@@ -633,23 +705,6 @@
                 selected={active ? [active] : []}
                 onactivate={(row) => show(row.id)}
                 onselect={(ids) => ids[0] && show(ids[0])}
-              />
-            {:else}
-              <ListView
-                columns={changeColumns}
-                rows={changeRows}
-                testid="code-mgmt-changes"
-                emptyText="The agent has not changed any files."
-                aria-label="Agent changes"
-                selected={selectedChangeId === null ? [] : [String(selectedChangeId)]}
-                onselect={(ids) => {
-                  selectedChangeId = ids[0] ? Number(ids[0]) : null
-                  report()
-                }}
-                onactivate={(row) => {
-                  const c = changes.find((x) => String(x.id) === row.id)
-                  if (c) show(c.path)
-                }}
               />
             {/if}
           {/snippet}
@@ -677,10 +732,11 @@
     {/snippet}
     {#snippet editor()}
       <div class="editor">
-        <div class="tabs" role="tablist" aria-label="Open files">
+        <!-- The close buttons sit beside the names, so the strip is a group of buttons, not a tab list. -->
+        <div class="tabs" role="group" aria-label="Open files">
           {#each tabs as tab (tab)}
             <div class="tab" class:on={tab === active} role="presentation" data-testid="code-tab" data-path={tab} data-git-status={stateOf(tab)}>
-              <button class="name" data-testid="code-tab-name" role="tab" aria-selected={tab === active} title={tab} onclick={() => show(tab)}>
+              <button class="name" data-testid="code-tab-name" aria-current={tab === active ? 'true' : undefined} title={tab} onclick={() => show(tab)}>
                 <Icon name="file-code" />{vpathName(tab)}{#if changedPaths.includes(tab) || stateOf(tab) !== 'none'}<span class="mod" title="Modified">&#9679;</span>{/if}
               </button>
               <button class="x" data-testid="code-tab-close" aria-label="Close {vpathName(tab)}" onclick={() => close(tab)}>&times;</button>
@@ -713,21 +769,22 @@
       </div>
     {/snippet}
     {#snippet logs()}
-      <DockPane title="Logs &amp; others" testid="code-logs" onclose={() => (showLogs = false)}>
-        <TabControl tabs={logTabs} bind:selected={logsTab} aria-label="Logs and others">
+      <DockPane title="Changes and Git" testid="code-logs" onclose={() => (showLogs = false)}>
+        <TabControl tabs={logTabs} bind:selected={logsTab} aria-label="Changes and Git">
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <div class="changes" data-testid="code-changes">
-                <ChangesPane {changes} bind:selectedId={selectedChangeId} onrevert={(c) => void revert(c)} onopeneditor={(c) => show(c.path)} />
+                <ChangesPane {changes} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
               </div>
             {:else}
               <div class="gitpane" data-testid="code-git-pane">
                 <div class="gitline" data-testid="code-git-summary">
                   {#if activeStatus}
                     <Icon name="session" /> On branch <b>{activeStatus.branch}</b>{#if activeStatus.ahead || activeStatus.behind}&nbsp;({activeStatus.ahead} ahead, {activeStatus.behind} behind){/if}
-                    &mdash; {gitEntries.length === 0 ? 'working tree clean' : `${gitEntries.length} changed ${gitEntries.length === 1 ? 'file' : 'files'}`}
+                    &mdash; {gitEntries.length === 0 ? 'no changes since the last commit' : `${gitEntries.length} changed ${gitEntries.length === 1 ? 'file' : 'files'}`}
                   {:else}
-                    Not a git repository.
+                    <span data-testid="code-git-not-repo">{NOT_A_GIT_REPOSITORY}</span>
+                    <Button data-testid="code-git-init" onclick={() => void initGit()}>Initialize Git here</Button>
                   {/if}
                 </div>
                 <ListView
@@ -736,7 +793,8 @@
                   testid="code-git-list"
                   emptyText={activeStatus ? 'Nothing to commit.' : ''}
                   aria-label="Git status"
-                  onactivate={(row) => show(row.id)}
+                  onactivate={(row) => void showChanges(row.id)}
+                  oncontextmenu={gitRowMenu}
                 />
               </div>
             {/if}
@@ -797,7 +855,11 @@
     background: var(--w7-face);
   }
   .code :global(.cb-tools) {
-    height: 30px;
+    height: auto;
+    min-height: 30px;
+    flex-wrap: wrap;
+    padding-top: 2px;
+    padding-bottom: 2px;
   }
   .code :global(.cb-tools .tb) {
     height: 24px;
@@ -840,7 +902,7 @@
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 24px;
+    height: 28px;
     padding: 0 4px;
     background: linear-gradient(#e9eff8, #d7e1f0);
     border: 1px solid var(--w7-list-border);
@@ -850,7 +912,7 @@
   .tab {
     display: flex;
     align-items: center;
-    height: 21px;
+    height: 25px;
     padding: 0 2px 0 4px;
     background: linear-gradient(#f4f7fb, #dbe4f1);
     border: 1px solid #98a8c0;
@@ -858,7 +920,7 @@
     border-radius: 3px 3px 0 0;
   }
   .tab.on {
-    height: 23px;
+    height: 27px;
     background: var(--w7-window);
     border-top: 2px solid var(--w7-tab-accent);
   }
@@ -874,7 +936,8 @@
     cursor: default;
   }
   .x {
-    width: 16px;
+    width: 24px;
+    height: 24px;
     justify-content: center;
     color: #555;
     font-size: 14px;
@@ -939,6 +1002,7 @@
   .gitline {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px;
     padding: 3px 6px;

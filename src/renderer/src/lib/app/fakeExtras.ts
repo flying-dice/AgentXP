@@ -3,6 +3,7 @@
  * (the DesktopExtrasApi groups of the fake backend).
  */
 import type { Id } from '@shared/models'
+import type { VPath } from '@shared/vfs'
 import type { DesktopExtrasApi, DesktopExtrasEvents, ProtocolEventDto, ProtocolEventQuery, RecycledChangeDto, StickyNoteDto } from '@shared/desktop'
 
 type Emit = <K extends keyof DesktopExtrasEvents>(event: K, payload: DesktopExtrasEvents[K]) => void
@@ -94,7 +95,10 @@ export function createFakeExtras(emit: Emit): DesktopExtrasApi & { pushEvent(eve
         emit('recycle.changed', { desktopId: 1 })
       }
     },
-    snip: { capture: async (_id, region) => sampleSnip(region?.width ?? 240, region?.height ?? 140) },
+    snip: {
+      capture: async (_id, region) => sampleSnip(region?.width ?? 240, region?.height ?? 140),
+      save: async (_id, _dataUrl) => ({ path: 'C:\\Pictures\\Snips\\Snip-1.png' as VPath, filePath: '/fake/C/Pictures/Snips/Snip-1.png' })
+    },
     pushEvent: (event) => {
       const full: ProtocolEventDto = { ...event, id: Math.max(0, ...events.map((e) => e.id)) + 1, at: new Date().toISOString() }
       events = [...events, full]

@@ -37,7 +37,12 @@ describe('Code Review', () => {
     await see.count(review.files, 2)
     await see.attribute(review.file('notes.txt'), 'data-status', 'modified')
     await see.attribute(review.file('fresh.txt'), 'data-status', 'untracked')
-    // The first prompt went out by itself: the agent calls review_add_comment twice, then review_submit.
+    // Opening the window starts nothing: there are no comments until the user asks the reviewer.
+    await review.openFile('notes.txt')
+    await see.count(review.threads, 0)
+    await review.showOutline()
+    // The agent calls review_add_comment twice, then review_submit.
+    await review.askAgent.click()
     await review.openFile('notes.txt')
     await see.count(review.threads, 2)
     await see.attribute(review.verdict, 'data-verdict', 'request_changes')

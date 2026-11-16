@@ -32,7 +32,8 @@
     tray?: Snippet
     startOpen?: boolean
     onstart?: () => void
-    onitemclick?: (item: TaskbarItem) => void
+    /** Click on a button; `keyboard` is true for Enter or Space (the window comes forward, it is never minimized). */
+    onitemclick?: (item: TaskbarItem, via: { keyboard: boolean }) => void
     /** Right click, Menu key or Shift+F10 on a button; `x`/`y` are viewport coordinates. */
     onitemcontext?: (item: TaskbarItem, at: { x: number; y: number }) => void
     class?: string
@@ -66,7 +67,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="w7-taskbar {className}" data-testid="taskbar" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
-  <div class="strip" bind:this={strip}>
+  <div class="strip" bind:this={strip} data-region="taskbar">
     <button type="button" class="orb" data-testid="taskbar-start" class:open={startOpen} aria-label="Start" aria-haspopup="menu" aria-expanded={startOpen} onclick={() => onstart?.()}>
       <span class="orb-gloss"></span>
       <Icon name="agent7" size={22} />
@@ -85,7 +86,7 @@
         aria-label={item.title}
         aria-pressed={item.running ? !!item.active : undefined}
         title={item.title}
-        onclick={() => onitemclick?.(item)}
+        onclick={(e) => onitemclick?.(item, { keyboard: e.detail === 0 })}
         oncontextmenu={(e) => {
           e.preventDefault()
           onitemcontext?.(item, { x: e.clientX, y: e.clientY })
@@ -101,7 +102,7 @@
       </button>
     {/each}
   </div>
-  <div class="tray" data-testid="taskbar-tray">
+  <div class="tray" data-testid="taskbar-tray" data-region="tray">
     {@render tray?.()}
     <span class="clock" data-testid="taskbar-clock" role="timer" aria-label="{time} {date}">{time}<br />{date}</span>
   </div>
@@ -226,10 +227,12 @@
   .task:active {
     background: linear-gradient(rgba(120, 160, 205, 0.6), rgba(150, 190, 235, 0.45));
   }
+  /* A dotted ring in black on white, so it shows (3:1) on the light glass and on the dark one. */
   .orb:focus-visible,
   .task:focus-visible {
-    outline: 1px dotted #fff;
+    outline: 1px dotted #000;
     outline-offset: -3px;
+    box-shadow: 0 0 0 1px #fff, inset 0 0 0 2px rgba(255, 255, 255, 0.9);
   }
   .tray {
     flex: none;

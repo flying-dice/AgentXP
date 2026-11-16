@@ -53,6 +53,17 @@ export interface AvailableCommandDto {
  */
 export type SessionRole = 'chat' | 'review' | 'aside'
 
+/**
+ * What is wrong with a chat's agent program right now. It is not stored: it describes the live process and is
+ * cleared by the next successful start. `message` is plain words for the user; `detail` is the technical text
+ * ("Details...").
+ */
+export interface SessionProblemDto {
+  kind: 'start-failed' | 'agent-stopped' | 'agent-ended'
+  message: string
+  detail: string
+}
+
 export interface SessionDto {
   id: Id
   agentId: Id
@@ -72,6 +83,8 @@ export interface SessionDto {
   commands: AvailableCommandDto[]
   contextUsed: number
   contextSize: number
+  /** The agent program could not start or stopped (not stored; absent when all is well). */
+  problem?: SessionProblemDto | null
   createdAt: IsoDate
   updatedAt: IsoDate
 }
@@ -199,4 +212,25 @@ export interface FileNodeDto {
   name: string
   path: string
   isDirectory: boolean
+}
+
+/** One folder in the "Browse For Folder" tree. `hasChildren` says whether it has sub-folders (shows the expand arrow). */
+export interface BrowseEntryDto {
+  name: string
+  /** Absolute path on the user's disk. */
+  path: string
+  hasChildren: boolean
+}
+
+/** A shortcut at the top of the "Browse For Folder" tree (Home, Documents, Desktop). */
+export interface BrowsePlaceDto {
+  name: string
+  path: string
+}
+
+/** The sub-folders of one folder; `path` '' lists the drives (or `/`) and also returns the shortcuts. */
+export interface BrowseListingDto {
+  path: string
+  entries: BrowseEntryDto[]
+  places: BrowsePlaceDto[]
 }

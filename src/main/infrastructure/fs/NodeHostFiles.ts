@@ -34,6 +34,12 @@ export class NodeHostFiles implements HostFiles {
     await writeFile(target, text, 'utf8')
   }
 
+  async writeBytes(root: string, relativePath: string, bytes: Uint8Array): Promise<void> {
+    const target = await resolveInsideRoot(resolve(root), relativePath)
+    await mkdir(dirname(target), { recursive: true })
+    await writeFile(target, bytes)
+  }
+
   async remove(root: string, relativePath: string): Promise<void> {
     await rm(await resolveInsideRoot(resolve(root), relativePath), { force: true })
   }

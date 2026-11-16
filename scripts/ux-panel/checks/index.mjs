@@ -5,8 +5,9 @@ import { checks as chat } from './chat.mjs'
 import { checks as desktop } from './desktop.mjs'
 import { checks as launch } from './launch.mjs'
 import { checks as settings } from './settings.mjs'
+import { checks as features } from './features.mjs'
 
-export const CHECKS = { ...launch, ...chat, ...changes, ...desktop, ...settings, ...advanced }
+export const CHECKS = { ...launch, ...chat, ...changes, ...desktop, ...settings, ...advanced, ...features }
 // Variants of one task share the checker of the base task.
 const baseId = (id) => id.replace(/-(inline|sidebar|window)$/, '')
 

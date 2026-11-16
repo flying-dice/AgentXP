@@ -20,7 +20,10 @@ export interface EntryActions {
   askChat: () => void
 }
 
-/** Open, Open with Code / Notepad (files), Copy path, Properties, Start chat here, Ask chat about this. */
+/**
+ * Open, Open with Notepad / Code (files), Copy as path, Start a chat here, Ask chat about this, Properties.
+ * Explorer only views files, so there are no editing verbs (Cut, Copy, Paste, Delete, Rename).
+ */
 export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] {
   const file = target.kind === 'file'
   return [
@@ -30,8 +33,8 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
       : { id: 'explorer-folder-open', label: '&Open', icon: 'open-folder', action: a.open },
     ...(file
       ? [
-          { id: 'explorer-ctx-open-code', testid: 'explorer-ctx-open-code', label: 'Open with &Code', icon: 'file-code', action: () => a.openWith('code') } as MenuItemDef,
-          { id: 'explorer-ctx-open-notepad', testid: 'explorer-ctx-open-notepad', label: 'Open with &Notepad', icon: 'file-text', action: () => a.openWith('notepad') } as MenuItemDef
+          { id: 'explorer-ctx-open-notepad', testid: 'explorer-ctx-open-notepad', label: 'Open with &Notepad', icon: 'file-text', action: () => a.openWith('notepad') } as MenuItemDef,
+          { id: 'explorer-ctx-open-code', testid: 'explorer-ctx-open-code', label: 'Open with &Code', icon: 'file-code', action: () => a.openWith('code') } as MenuItemDef
         ]
       : []),
     { separator: true },
@@ -76,3 +79,36 @@ export function propertiesText(entry: { name: string; path: VPath; kind: 'file' 
 
 /** The app Open picks for a file: Notepad for text, Code for the rest. */
 export const defaultOpener = (path: VPath): 'code' | 'notepad' => (opensInNotepad(path) ? 'notepad' : 'code')
+
+export interface DriveActions {
+  open: () => void
+  startChat: () => void
+  askChat: () => void
+  copyPath: () => void
+  eject: () => void
+  properties: () => void
+}
+
+/** What a drive offers (Computer and the navigation pane): Open, Start a chat here, Ask chat, Copy path, Eject, Properties. */
+export function driveItems(drive: { kind: 'system' | 'removable' }, a: DriveActions): MenuItemDef[] {
+  return [
+    { id: 'explorer-drive-open', label: '&Open', icon: 'open-folder', action: a.open },
+    { id: 'explorer-drive-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat },
+    { id: 'explorer-ctx-drive-ask', testid: 'explorer-ctx-drive-ask', label: 'Ask chat a&bout this...', icon: 'session', action: a.askChat },
+    { id: 'explorer-ctx-drive-copy-path', testid: 'explorer-ctx-drive-copy-path', label: 'Copy as &path', icon: 'copy', action: a.copyPath },
+    { separator: true },
+    { id: 'explorer-drive-eject', label: '&Eject', icon: 'usb', disabled: drive.kind !== 'removable', action: a.eject },
+    { id: 'explorer-ctx-drive-properties', testid: 'explorer-ctx-drive-properties', label: 'P&roperties', icon: 'properties', action: a.properties }
+  ]
+}
+
+/** The text of the Properties box of a drive. */
+export function driveProperties(drive: { label: string; letter: string; kind: 'system' | 'removable'; pluggedAt: string | null }): string {
+  const lines = [`${drive.label} (${drive.letter}:)`, '', `Type: ${drive.kind === 'removable' ? 'Project folder (plugged in)' : 'Local Disk'}`, `Drive letter: ${drive.letter}:`]
+  if (drive.pluggedAt) lines.push(`Plugged in: ${new Date(drive.pluggedAt).toLocaleString()}`)
+  if (drive.kind === 'removable') lines.push('', 'Eject removes the drive from this desktop. The folder and its files stay on your disk.')
+  return lines.join('\n')
+}
+
+/** Status bar text of Computer: how many projects are plugged in. */
+export const projectCountText = (projects: number): string => (projects === 0 ? 'No projects plugged in' : `${projects} project${projects === 1 ? '' : 's'} plugged in`)

@@ -3,7 +3,7 @@ import type { SessionStoreLike } from '../app/session/SessionStoreLike'
 import { approvalFromInterrupt, type PendingApproval } from './approval'
 
 /** The part of a session store the desktop shell needs (`SessionAgentStore` and the story fake both fit). */
-export type InboxStore = Pick<SessionStoreLike, 'state' | 'pendingInterrupt' | 'running' | 'resolveInterrupt'>
+export type InboxStore = Pick<SessionStoreLike, 'state' | 'pendingInterrupt' | 'running' | 'resolveInterrupt' | 'send'>
 
 /**
  * The chats of one desktop and their pending permission requests, for the Action Center.

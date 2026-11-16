@@ -1,7 +1,7 @@
 <script lang="ts">
   /** The outline view (WinDiff): one row per changed file with its status, line counts and open comments. */
   import type { ReviewChangeDto } from '@shared/review'
-  import { STATUS_LABEL, STATUS_LETTER } from './reviewModel'
+  import { STATUS_LABEL, changeTotals } from './reviewModel'
 
   interface Props {
     changes: readonly ReviewChangeDto[]
@@ -31,11 +31,12 @@
   }
 </script>
 
-<div class="outline" data-testid="review-outline" role="listbox" aria-label="Changed files">
-  <div class="head" role="presentation">
+<div class="outline" data-testid="review-outline">
+  <div class="head" aria-hidden="true">
     <span class="st">Status</span><span class="file">File</span><span class="num">Added</span><span class="num">Removed</span><span class="cm">Comments</span>
   </div>
-  <div class="list w7-scroll">
+  {#if changes.length > 0}
+  <div class="list w7-scroll" role="listbox" aria-label="Changed files">
     {#each changes as change (change.path)}
       {@const open = openComments.get(change.path) ?? 0}
       <div
@@ -51,16 +52,18 @@
         ondblclick={() => onopen(change.path)}
         onkeydown={(event) => onkeydown(event, change.path)}
       >
-        <span class="st {change.status}" title={STATUS_LABEL[change.status]}>{STATUS_LETTER[change.status]}</span>
+        <span class="st {change.status}">{STATUS_LABEL[change.status]}</span>
         <span class="file" title={change.oldPath ? `${change.oldPath} -> ${change.path}` : change.path}>{change.path}{change.oldPath ? ` (was ${change.oldPath})` : ''}</span>
         <span class="num add" data-testid="review-file-added">{change.binary ? '' : `+${change.additions}`}</span>
         <span class="num del" data-testid="review-file-removed">{change.binary ? 'binary' : `-${change.deletions}`}</span>
         <span class="cm" data-testid="review-file-comments">{open > 0 ? open : ''}</span>
       </div>
-    {:else}
-      <div class="empty" data-testid="review-outline-empty">{loading ? 'Looking for changes...' : 'No changes against the base. Nothing to review.'}</div>
     {/each}
   </div>
+    <div class="totals" data-testid="review-totals">{changeTotals(changes)}</div>
+  {:else}
+    <div class="empty" data-testid="review-outline-empty">{loading ? 'Looking for changes...' : 'No changes against the base. Nothing to review.'}</div>
+  {/if}
 </div>
 
 <style>
@@ -75,7 +78,7 @@
   .head,
   .item {
     display: grid;
-    grid-template-columns: 56px 1fr 64px 64px 72px;
+    grid-template-columns: 84px 1fr 64px 64px 72px;
     align-items: center;
     gap: 6px;
     padding: 0 8px;
@@ -119,6 +122,7 @@
   }
   .st {
     font-weight: bold;
+    white-space: nowrap;
   }
   .st.added,
   .st.untracked {
@@ -130,6 +134,13 @@
   .st.modified,
   .st.renamed {
     color: #1e4f9c;
+  }
+  .totals {
+    flex: none;
+    padding: 2px 8px;
+    border-top: 1px solid var(--w7-panel-border);
+    background: linear-gradient(#fff, #e8eef6);
+    color: var(--w7-text-muted);
   }
   .empty {
     padding: 12px;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { expandsByDefault, toolArgument, toolLabel } from './toolSummary'
+import { earlierStepRowIds, expandsByDefault, plainToolResult, toolArgument, toolLabel } from './toolSummary'
 
 describe('toolLabel', () => {
   it('names tools by kind', () => {
@@ -45,4 +45,34 @@ describe('toolArgument', () => {
 it('expands execute cards by default only', () => {
   expect(expandsByDefault('execute')).toBe(true)
   expect(expandsByDefault('read')).toBe(false)
+})
+
+describe('plainToolResult', () => {
+  it('turns a raw error flag into a sentence', () => {
+    expect(plainToolResult('Error: true. Result: no such file')).toBe('The tool reported an error: no such file')
+    expect(plainToolResult('Error: true')).toBe('The tool reported an error.')
+  })
+
+  it('leaves other results alone', () => {
+    expect(plainToolResult('Lines 1-3 of 3')).toBe('Lines 1-3 of 3')
+  })
+})
+
+describe('earlierStepRowIds', () => {
+  const rows = [
+    { id: 'a', kind: 'tool' },
+    { id: 'b', kind: 'tool' },
+    { id: 'c', kind: 'tool' },
+    { id: 'd', kind: 'agent' },
+    { id: 'e', kind: 'tool' }
+  ]
+
+  it('marks the cards right before a denied card', () => {
+    expect([...earlierStepRowIds(rows, (id) => id === 'c')].sort()).toEqual(['a', 'b'])
+  })
+
+  it('stops at a row that is not a tool card and marks nothing without a denied card', () => {
+    expect([...earlierStepRowIds(rows, (id) => id === 'e')]).toEqual([])
+    expect(earlierStepRowIds(rows, () => false).size).toBe(0)
+  })
 })

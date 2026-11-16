@@ -22,7 +22,7 @@ export const ABOUT: Record<AppKind, { icon: IconName; description: string }> = {
   paint: { icon: 'paint', description: 'Draw, and watch the agent draw.' },
   wordpad: { icon: 'wordpad', description: 'Read and write markdown documents.' },
   'sticky-notes': { icon: 'sticky', description: 'Notes on the desktop, shared with the agent.' },
-  'event-viewer': { icon: 'eventlog', description: 'ACP, AG-UI and MCP messages as they happen.' },
+  'event-viewer': { icon: 'eventlog', description: 'What the agent and the desktop send each other, as it happens.' },
   'snipping-tool': { icon: 'scissors', description: 'Capture part of the screen.' },
   'recycle-bin': { icon: 'recycle', description: 'Changes you reverted, ready to restore.' },
   help: { icon: 'help', description: 'Manuals for every app and window.' },

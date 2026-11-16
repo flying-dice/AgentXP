@@ -12,6 +12,23 @@ function setup() {
   return { f, repo: new SqliteTranscriptRepository(f.db) }
 }
 
+describe('SqliteTranscriptRepository.removeLastUserMessage', () => {
+  it('removes the last user message with its blocks and leaves earlier ones', () => {
+    const { f, repo } = setup()
+    const first = repo.appendMessage(f.sessionId, 'user', [text('one')])
+    repo.appendMessage(f.sessionId, 'user', [text('two')])
+    expect(repo.removeLastUserMessage(f.sessionId)).toBe(true)
+    expect(repo.list(f.sessionId).map((e) => e.id)).toEqual([first.id])
+    expect(count(f.db, 'content_blocks')).toBe(1)
+  })
+  it('does nothing when there is no user message', () => {
+    const { f, repo } = setup()
+    repo.appendMessage(f.sessionId, 'agent', [text('hi')])
+    expect(repo.removeLastUserMessage(f.sessionId)).toBe(false)
+    expect(repo.list(f.sessionId)).toHaveLength(1)
+  })
+})
+
 describe('SqliteTranscriptRepository messages', () => {
   it('appends messages with increasing seq and returns DTOs', () => {
     const { f, repo } = setup()

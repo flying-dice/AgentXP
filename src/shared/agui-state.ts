@@ -100,9 +100,11 @@ export interface StopNoticeActivity {
   reason: string
 }
 
-/** The notice text for an ACP stop reason (`cancelled` and `end_turn` need none). */
+/** The notice text for an ACP stop reason. `cancelled` is the user's own Stop (the chat shows it, main sends no notice). */
 export function stopNoticeText(reason: string): string {
   switch (reason) {
+    case 'cancelled':
+      return 'You stopped this reply. The agent is waiting for your next message. To stop all agents until you say so, click Pause all agents in the bar.'
     case 'max_tokens':
       return 'The agent stopped: it reached its output limit.'
     case 'max_turn_requests':

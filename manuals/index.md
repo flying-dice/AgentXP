@@ -1,6 +1,6 @@
 # Agent7 Help and Support
 
-This is the home page of the manuals of Agent7. Each app has its own manual. Each manual lists every button, input, and menu item of the app, with the test id that the end-to-end specs use to find it.
+This is the home page of the manuals of Agent7. Each app has its own manual. Each manual lists every button, input, and menu item of the app and says what it does. Start with the topic that fits your question, or type a word in the search box.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ This chapter explains the parts of a manual. Each manual has the same chapters, 
 - **What It Is For** – Tells you what the app does and who uses it.
 - **Open It** – Lists the ways to start the app.
 - **The Window** – Names each part of the window, from top to bottom.
-- **Controls Reference** – Lists each button, input, menu item, and key. Each row gives the name on the screen, the action, and the `data-testid`.
+- **Controls Reference** – Lists each button, input, menu item, and key. Each row gives the name on the screen and what it does.
 - **Common Tasks** – Gives numbered steps for the jobs that you do most.
 - **Troubleshooting** – Lists problems and their fixes.
 
@@ -30,7 +30,6 @@ This chapter explains the parts of a manual. Each manual has the same chapters, 
 - **Desktop** – A virtual Windows 7 computer for one or more projects.
 - **Drive** – A place for files on a desktop, for example C: or a USB drive.
 - **Agent** – A program that writes and changes code for you.
-- **Test id** – The `data-testid` value of a control. A test finds the control with this value.
 
 ### Get Help in the App
 
@@ -74,7 +73,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 
 ### System
 
-- **[Control Centre](control-centre.md)** – Agents, permissions, and appearance.
+- **[Control Center](control-centre.md)** – Agents, permissions, and appearance.
 - **[Help and Support](help.md)** – This app.
 
 ## 4 - Need Help?

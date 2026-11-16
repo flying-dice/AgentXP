@@ -1,18 +1,23 @@
-import type { AgentDto, Id, SessionDto } from '@shared/models'
+import type { AgentDto, Id, SessionDto, SessionStatus } from '@shared/models'
 import type { AgentSessionEvent } from '../domain/agent/AgentSessionEvent'
 import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSink'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
 import type { SessionRepository } from '../domain/repositories/session-repository'
+import { startFailure, stoppedUnexpectedly } from './agentProblems'
 import type { AgentConnectionPool, LiveSession } from './AgentConnectionPool'
 import { AppError, required } from './errors'
 import type { A2uiMcpConfigFactory, AcpSessionState, AgentConnector, LiveAgentConnection, OpenedAcpSession, ProtocolTap } from './ports'
 import type { ToolGate } from '../domain/agent/ToolGate'
 import type { PermissionBroker } from './PermissionBroker'
 import type { SessionBroadcaster } from './SessionBroadcaster'
+import type { SessionProblems } from './SessionProblems'
 import type { SessionEventBus } from './SessionEventBus'
 import type { TerminalRecorder } from './TerminalRecorder'
 import type { SessionFiles } from './SessionFiles'
 import type { VirtualFileSystem } from './vfs/VirtualFileSystem'
+import { NOT_ALLOWED_IN_REVIEW, readOnlyGate, readOnlyPrompter } from './review/reviewReadOnly'
+
+const isBusy = (status: SessionStatus | undefined): boolean => status === 'working' || status === 'awaiting_permission'
 
 /** Drops events while closed: `session/load` replays history we already persisted. */
 class MutableSink implements AgentSessionEventSink {
@@ -34,6 +39,8 @@ export interface RuntimeDeps {
   files: SessionFiles
   terminals: TerminalRecorder
   broadcaster: SessionBroadcaster
+  /** Where a failed start or a dropped connection is recorded for the UI (plain words for the user). */
+  problems?: SessionProblems
   a2uiMcpConfig: A2uiMcpConfigFactory
   /** Gate for the client-side fs and terminal requests of a session. */
   toolGate(sessionId: Id): ToolGate
@@ -69,25 +76,41 @@ export class SessionRuntime {
       const cwd = await this.deps.vfs.realPath(this.desktopOf(session), session.cwd)
       const connection = await this.openConnection(agent, cwd, sessionId, sink)
       const live = await this.openSession(connection, session, cwd, sink, agent.defaultModeId)
+      if (!sessions.get(sessionId)) {
+        // The chat was deleted while its agent was starting (it starts in the background): nobody wants this agent.
+        await connection.dispose()
+        throw new AppError('The chat was removed.')
+      }
       pool.add(sessionId, live)
+      this.deps.problems?.clear(sessionId)
       broadcaster.setStatus(sessionId, 'idle')
       void connection.closed.then(() => this.onClosed(sessionId, connection))
       return live
     } catch (error) {
-      broadcaster.setStatus(sessionId, 'error')
+      if (sessions.get(sessionId)) {
+        this.deps.problems?.set(sessionId, startFailure(error, agent))
+        broadcaster.setStatus(sessionId, 'error')
+      }
       throw error
     }
   }
 
   private openConnection(agent: AgentDto, cwd: string, sessionId: Id, sink: AgentSessionEventSink): Promise<LiveAgentConnection> {
     const { broker, files, terminals } = this.deps
+    // The reviewer of a Code Review window only reads: writes are refused, not asked (UX-37).
+    const review = this.deps.sessions.get(sessionId)?.role === 'review'
+    const gate = this.deps.toolGate(sessionId)
     return this.deps.connector.open({
       agent,
       cwd,
       handlers: {
         sink,
-        permissions: broker.forSession(sessionId),
-        gate: this.deps.toolGate(sessionId),
+        permissions: review
+          ? readOnlyPrompter(broker.forSession(sessionId), (request) =>
+              sink.emit(request.sessionKey, { type: 'tool_call_updated', toolCallId: request.toolCallId, patch: { status: 'failed', rawOutput: NOT_ALLOWED_IN_REVIEW } })
+            )
+          : broker.forSession(sessionId),
+        gate: review ? readOnlyGate(gate) : gate,
         tap: this.deps.protocolTap?.(sessionId),
         files: files.forSession(sessionId),
         onTerminalActivity: (activity) => terminals.record(sessionId, activity)
@@ -149,7 +172,11 @@ export class SessionRuntime {
     sessions.setCurrentModel(sessionId, state.currentModelId)
   }
 
+  /** An idle agent that goes away reconnects on the next message; one that goes away mid-turn is a problem to report. */
   private onClosed(sessionId: Id, connection: LiveAgentConnection): void {
-    if (this.deps.pool.forget(sessionId, connection)) this.deps.broadcaster.setStatus(sessionId, 'closed')
+    if (!this.deps.pool.forget(sessionId, connection)) return
+    const busy = isBusy(this.deps.sessions.get(sessionId)?.status)
+    if (busy) this.deps.problems?.set(sessionId, stoppedUnexpectedly(new Error('ACP connection closed')))
+    this.deps.broadcaster.setStatus(sessionId, busy ? 'error' : 'closed')
   }
 }

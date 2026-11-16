@@ -4,7 +4,7 @@
   import type { VfsEntryDto, VPath } from '@shared/vfs'
   import type { TreeGitStates } from '../files/fileTree'
   import TreeView from '../../kit/organisms/TreeView.svelte'
-  import { buildFileTree, dirNodeId, dirOfNode, fileOfNode, type TreeRoot } from '../files/fileTree'
+  import { buildFileTree, dirNodeId, dirOfNode, fileOfNode, type FileTreeTarget, type TreeRoot } from '../files/fileTree'
 
   interface Props {
     /** The root nodes: the plugged-in project drives. */
@@ -17,10 +17,12 @@
     git?: TreeGitStates
     /** Double click or Enter on a file. */
     onopen?: (path: VPath) => void
+    /** Right click (or the Menu key) on a row: a project root, a folder or a file. */
+    oncontextmenu?: (target: FileTreeTarget, event: MouseEvent) => void
     onerror?: (error: unknown) => void
   }
 
-  let { roots, readDir, changedPaths = [], git, onopen, onerror }: Props = $props()
+  let { roots, readDir, changedPaths = [], git, onopen, oncontextmenu, onerror }: Props = $props()
 
   const listings = new SvelteMap<VPath, VfsEntryDto[]>()
   const requested = new Set<VPath>()
@@ -29,6 +31,11 @@
   let selected = $state<string | null>(null)
 
   const nodes = $derived(buildFileTree(roots, listings, changedPaths, git))
+
+  /** Expands a folder or a project so its rows show (the context menu's Open). */
+  export function expand(path: VPath): void {
+    expanded = new Set([...expanded, dirNodeId(path)])
+  }
 
   // Load the listing of every expanded directory that has none yet.
   $effect(() => {
@@ -56,6 +63,13 @@
   {nodes}
   bind:selected
   bind:expanded
+  oncontextmenu={(node, event) => {
+    const file = fileOfNode(node.id)
+    const dir = dirOfNode(node.id)
+    const path = file ?? dir
+    if (path === null) return
+    oncontextmenu?.({ kind: file !== null ? 'file' : roots.some((r) => r.path === dir) ? 'project' : 'folder', path }, event)
+  }}
   onactivate={(node) => {
     const file = fileOfNode(node.id)
     if (file !== null) onopen?.(file)

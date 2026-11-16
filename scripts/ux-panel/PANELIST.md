@@ -48,6 +48,14 @@ The facilitator tells you a **step budget** (actions only; `shot`, `windows`, `f
 and a time limit of 10 minutes. Count your actions. When the budget is used up, or you decide you cannot continue,
 **stop** and report that you failed. Giving up is allowed and is a result, not a mistake.
 
+## Finish the whole scenario
+
+A task is done only when **everything** the scenario asks for is done, not after the first plausible step. Read the
+scenario again before you stop and check each part: every action it names (for example press the button, close the
+window, pause) and every question it asks (answer it in your report). Look at the screen after your last action to confirm
+the result. Do not stop after one look or after two steps because it seems enough. Any hint that came with the scenario
+(an address, a name) is part of the scenario. Stop early only when the budget is used up or you decide you cannot go on.
+
 ## Think aloud
 
 Before each action write one sentence: what you see, what you expect, what you will do. Keep these notes: they are your

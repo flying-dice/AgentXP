@@ -3,18 +3,39 @@ import type { DesktopSummaryDto } from '@shared/vfs'
 
 export type StateTone = 'running' | 'approval' | 'idle' | 'error'
 
-/** The state text of a row: Running, Needs your approval (n), Idle or Error. */
+/** The state text of a row: Working, Needs your approval (n), The agent could not start, or Idle. */
 export function stateLabel(d: Pick<DesktopSummaryDto, 'runState' | 'pendingApprovals'>): string {
   switch (d.runState) {
     case 'working':
-      return 'Running'
+      return 'Working'
     case 'awaiting_approval':
       return d.pendingApprovals > 0 ? `Needs your approval (${d.pendingApprovals})` : 'Needs your approval'
     case 'error':
-      return 'Error'
+      return 'The agent could not start'
     case 'idle':
       return 'Idle'
   }
+}
+
+/** Tooltip of the error state: where to change the agent. */
+export const ERROR_HINT = 'Open the desktop, then Control Center > Agents, to change the command.'
+
+/** What a row shows for the state: an icon for the two states that need the user, the words, and a tooltip. */
+export function rowStatus(d: Pick<DesktopSummaryDto, 'runState' | 'pendingApprovals'>): { label: string; tone: StateTone; icon: 'shield' | 'error' | null; strong: boolean; hint: string } {
+  const tone = stateTone(d)
+  return {
+    label: stateLabel(d),
+    tone,
+    icon: tone === 'approval' ? 'shield' : tone === 'error' ? 'error' : null,
+    strong: tone === 'approval' || tone === 'error',
+    hint: tone === 'error' ? ERROR_HINT : ''
+  }
+}
+
+/** The row to select when the launcher opens: a desktop that waits for approval, else the most recent one. */
+export function initialSelection<T extends Pick<DesktopSummaryDto, 'id' | 'runState' | 'lastUsedAt' | 'title'>>(list: readonly T[]): number | null {
+  const sorted = sortDesktops(list)
+  return (sorted.find((d) => d.runState === 'awaiting_approval') ?? sorted[0])?.id ?? null
 }
 
 export const stateTone = (d: Pick<DesktopSummaryDto, 'runState'>): StateTone =>
@@ -52,9 +73,45 @@ export function validateDesktopName(name: string, existing: readonly string[]): 
   const trimmed = name.trim()
   if (trimmed === '') return 'Type a name for the desktop.'
   if (trimmed.length > 60) return 'The name can have at most 60 characters.'
-  if (existing.some((n) => n.trim().toLowerCase() === trimmed.toLowerCase())) return `A desktop named '${trimmed}' already exists.`
+  if (isTaken(trimmed, existing)) return `A desktop named '${trimmed}' already exists. Each desktop needs its own name so that you can tell them apart.`
   return null
 }
 
+const isTaken = (name: string, existing: readonly string[]): boolean => existing.some((n) => n.trim().toLowerCase() === name.trim().toLowerCase())
+
+/** `Fix login redirect (2)`, then `(3)`, ...: the first name based on `name` that no desktop uses. */
+export function suggestDesktopName(name: string, existing: readonly string[]): string {
+  const base = name.trim().replace(/\s*\(\d+\)$/, '')
+  for (let n = 2; ; n++) {
+    const candidate = `${base} (${n})`
+    if (!isTaken(candidate, existing)) return candidate
+  }
+}
+
+/** The name is taken: the suggestion to offer, else null. */
+export const nameSuggestion = (name: string, existing: readonly string[]): string | null => (name.trim() !== '' && isTaken(name, existing) ? suggestDesktopName(name, existing) : null)
+
 /** The warning shown before a desktop is deleted. */
-export const DELETE_WARNING = 'Deleting this desktop removes its C: drive, chats, notes and logs. Plugged-in projects are only ejected.'
+export const DELETE_WARNING =
+  'Deleting this desktop removes its C: drive, chats, notes and logs. Plugged-in projects are removed from this desktop; the folders and files stay on your disk.'
+
+export type LauncherCommand = 'new' | 'connect' | 'rename' | 'delete'
+
+/** The access keys of the launcher buttons: Alt+N, Alt+C, Alt+R, Alt+D (the letters underlined on the buttons). */
+export function accessKeyCommand(key: string): LauncherCommand | null {
+  switch (key.toLowerCase()) {
+    case 'n':
+      return 'new'
+    case 'c':
+      return 'connect'
+    case 'r':
+      return 'rename'
+    case 'd':
+      return 'delete'
+    default:
+      return null
+  }
+}
+
+/** Caption of the Connect button: a connected desktop is brought forward, not opened again. */
+export const connectLabel = (connected: boolean): string => (connected ? 'Show desktop' : '&Connect')

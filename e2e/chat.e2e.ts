@@ -39,6 +39,11 @@ describe('chat turn with the fake agent', () => {
     await ctx.desktop.openActionCenter()
     await see.count(ctx.desktop.approvals, 1)
     await see.text(ctx.desktop.approvals, 'Write output')
+    // Two lines per request: what it wants to do, and which chat asked. The flag and the taskbar button say it waits.
+    await see.text(ctx.desktopPage.getByTestId('action-center-approval-chat'), "In chat '")
+    await see.attribute(ctx.desktop.actionCenterFlag, 'title', '1 request is waiting for you.')
+    // The taskbar buttons are icon-only (Aero): the caption is the tooltip.
+    await see.attribute(ctx.desktop.taskbarItem('chat'), 'title', /^Waiting: /)
   })
 
   it('allowing the request completes the tool call (status done)', async () => {
@@ -68,6 +73,11 @@ describe('chat turn with the fake agent', () => {
     await see.count(ctx.desktop.approvals, 1)
     await ctx.desktopPage.getByTestId('action-center-review').click()
     await see.visible(ctx.desktop.uac)
+    // Plain words, the reason on its own line, no sideways scroll, and the first focus on the refusal.
+    await see.text(ctx.desktopPage.getByTestId('uac-question'), 'Allow the agent to')
+    await see.text(ctx.desktopPage.getByTestId('uac-reason'), 'Reason: ')
+    expect(await ctx.desktop.uac.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+    await see.eventually(async () => expect(await ctx.desktopPage.getByTestId('uac-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
     await ctx.desktop.uacAllow.click()
     await see.gone(ctx.desktop.uac)
     await see.gone(chat.permissionDialog)

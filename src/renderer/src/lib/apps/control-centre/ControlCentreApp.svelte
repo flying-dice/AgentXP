@@ -12,7 +12,6 @@
   import { AppHelp } from '../shared/AppHelp.svelte'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
-  import { ViewSync } from '../viewSync'
   import AboutPage from './AboutPage.svelte'
   import AgentsPage from './AgentsPage.svelte'
   import AppearancePage from './AppearancePage.svelte'
@@ -29,19 +28,22 @@
 
   // svelte-ignore state_referenced_locally
   let page = $state<ControlCentrePage>(win.view.page)
-  const sync = new ViewSync<{ page: ControlCentrePage }>((v) => v.page)
+  // The page last seen in the window's view. A state that still carries the old page (the report of a click is
+  // debounced) must not flip the page back; only a view that changes from outside (the agent, a top bar chip) does.
   // svelte-ignore state_referenced_locally
-  sync.isExternal({ page })
+  let seenInView = win.view.page
 
   function choose(next: ControlCentrePage): void {
     page = next
-    if (sync.mark({ page })) host.updateView(win.id, { app: 'control-centre', page })
+    host.updateView(win.id, { app: 'control-centre', page })
   }
 
   // The agent or the shell opens another page.
   $effect(() => {
     const incoming = win.view.page
-    if (sync.isExternal({ page: incoming })) untrack(() => (page = incoming))
+    if (incoming === seenInView) return
+    seenInView = incoming
+    untrack(() => (page = incoming))
   })
 
   // svelte-ignore state_referenced_locally
@@ -67,10 +69,10 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="cc" data-testid="control-centre-app" oncontextmenu={(e) => ctx.show(e, pageItems('control-centre-ctx'))} onkeydown={(e) => ctx.key(e, () => pageItems('control-centre-ctx'))}>
-  <MenuStrip {menus} aria-label="Control Centre menu" />
+  <MenuStrip {menus} aria-label="Control Center menu" />
   <div class="row">
-  <nav class="tasks" aria-label="Control Centre">
-    <div class="caption">Control Centre Home</div>
+  <nav class="tasks" aria-label="Control Center">
+    <div class="caption">Control Center Home</div>
     <ul>
       {#each pages as p (p.id)}
         <li>
@@ -96,7 +98,7 @@
     </div>
   </main>
   </div>
-  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Control Centre" />
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Control Center" />
   <AppAbout {help} />
 </div>
 

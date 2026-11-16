@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { backgroundItems, defaultOpener, entryItems, propertiesText, type EntryActions } from './explorerContext'
+import { backgroundItems, defaultOpener, driveItems, driveProperties, entryItems, projectCountText, propertiesText, type EntryActions } from './explorerContext'
 
 const actions = (): EntryActions => ({ open: vi.fn(), openWith: vi.fn(), copyPath: vi.fn(), properties: vi.fn(), startChat: vi.fn(), askChat: vi.fn() })
 const ids = (items: { testid?: string }[]): (string | undefined)[] => items.filter((i) => i.testid).map((i) => i.testid)
 
 describe('entryItems', () => {
-  it('a file offers Open, Open with Code and Notepad, Copy path, Start chat, Ask chat and Properties', () => {
+  it('a file offers Open, Open with Notepad and Code, Copy path, Start chat, Ask chat and Properties', () => {
     const items = entryItems({ path: 'E:\\a.ts', kind: 'file' }, actions())
-    expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-code', 'explorer-ctx-open-notepad', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
+    expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-notepad', 'explorer-ctx-open-code', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
   })
 
   it('a folder has no Open with and keeps the ids of its Open and Start a chat here items', () => {
@@ -49,5 +49,31 @@ describe('propertiesText and defaultOpener', () => {
   it('opens text in Notepad and code in Code', () => {
     expect(defaultOpener('E:\\a.md')).toBe('notepad')
     expect(defaultOpener('E:\\a.ts')).toBe('code')
+  })
+})
+
+describe('driveItems', () => {
+  const noop = () => {}
+  const actions = { open: noop, startChat: noop, askChat: noop, copyPath: noop, eject: noop, properties: noop }
+
+  it('a project drive offers Open, Start a chat here, Eject and Properties', () => {
+    const items = driveItems({ kind: 'removable' }, actions)
+    expect(items.map((i) => i.id)).toEqual(expect.arrayContaining(['explorer-drive-open', 'explorer-drive-chat', 'explorer-drive-eject', 'explorer-ctx-drive-properties']))
+    expect(items.find((i) => i.id === 'explorer-drive-eject')?.label).toBe('&Eject')
+    expect(items.find((i) => i.id === 'explorer-drive-eject')?.disabled).toBe(false)
+  })
+
+  it('the system disk cannot be ejected', () => {
+    expect(driveItems({ kind: 'system' }, actions).find((i) => i.id === 'explorer-drive-eject')?.disabled).toBe(true)
+  })
+
+  it('describes a project drive and counts projects', () => {
+    const text = driveProperties({ label: 'login-app', letter: 'E', kind: 'removable', pluggedAt: null })
+    expect(text).toContain('login-app (E:)')
+    expect(text).toContain('Type: Project folder (plugged in)')
+    expect(text).toContain('The folder and its files stay on your disk.')
+    expect(projectCountText(0)).toBe('No projects plugged in')
+    expect(projectCountText(1)).toBe('1 project plugged in')
+    expect(projectCountText(2)).toBe('2 projects plugged in')
   })
 })

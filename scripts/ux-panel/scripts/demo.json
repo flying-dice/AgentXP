@@ -1,0 +1,97 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "demo",
+  "description": "Panel demo: stays on task. Greets, reads the README of the project (a read request when the user is in control), summarises it, and writes nothing. No file is edited, no command is run.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0",
+    "modes": [
+      {
+        "id": "default",
+        "name": "Default"
+      },
+      {
+        "id": "plan",
+        "name": "Plan",
+        "description": "Plan only"
+      }
+    ],
+    "models": [
+      {
+        "id": "scripted-1",
+        "name": "Scripted 1"
+      },
+      {
+        "id": "scripted-2",
+        "name": "Scripted 2"
+      }
+    ]
+  },
+  "defaults": {
+    "stepMode": "auto",
+    "delayMs": 0
+  },
+  "rules": [
+    {
+      "id": "greeting",
+      "match": {
+        "regex": "^(hi|hello|hey)\\b",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Hello! Tell me what you would like me to do in this project."
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Let me take a look at the project first.\n",
+          "label": "acknowledge"
+        },
+        {
+          "type": "thought",
+          "text": "Reading the README to understand the project."
+        },
+        {
+          "type": "plan",
+          "label": "plan",
+          "entries": [
+            {
+              "content": "Read README.md",
+              "status": "in_progress",
+              "priority": "high"
+            },
+            {
+              "content": "Summarise it",
+              "status": "pending",
+              "priority": "medium"
+            }
+          ]
+        },
+        {
+          "type": "readFile",
+          "path": "{{cwd}}/README.md",
+          "saveAs": "readme",
+          "label": "read README"
+        },
+        {
+          "type": "message",
+          "text": "I read README.md. I did not change any files or run any commands. Tell me what you would like me to do next."
+        },
+        {
+          "type": "usage",
+          "used": 1200,
+          "size": 200000
+        }
+      ]
+    }
+  ]
+}

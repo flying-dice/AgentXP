@@ -82,6 +82,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `paint-menu-chat-pane` |
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | Starts a new picture. Ctrl+N. | `paint-menu-new` |
+| Menu: open | Shows a picture from your computer. Ctrl+O. | `paint-menu-open` |
+| Menu: save as PNG | Saves the picture as a PNG file. Ctrl+S. | `paint-menu-save-png` |
+| Picture chooser | The hidden box that picks the picture for Open. | `paint-open-input` |
 | Menu: close | Closes the window. Alt+F4. | `paint-menu-close` |
 | Menu: undo | Undoes the last stroke. Ctrl+Z. | `paint-menu-undo` |
 | Menu: copy | Copies the picture to the clipboard. | `paint-menu-copy` |

@@ -29,21 +29,42 @@ export function taskbarAction(w: AppWindowState, focusedId: Id | null): TaskbarA
   return w.id === focusedId ? 'minimize' : 'focus'
 }
 
-/** One button per window, in the order the windows were opened (not z-order), so the bar does not jump on focus. */
+/** The caption of a taskbar button: a chat that waits for an answer starts with "Waiting: ". */
+export function taskbarTitle(w: AppWindowState, waitingChats: ReadonlySet<Id>): string {
+  return w.view.app === 'chat' && waitingChats.has(w.view.sessionId) ? `Waiting: ${w.title}` : w.title
+}
+
+/**
+ * One button per window, in the order the windows were opened (not z-order), so the bar does not jump on focus.
+ * `waitingChats` are the sessions that wait for an approval.
+ */
 export function taskbarItems(
   windows: readonly AppWindowState[],
   focusedId: Id | null,
-  icons: Partial<Record<AppKind, TaskbarItem['icon']>>
+  icons: Partial<Record<AppKind, TaskbarItem['icon']>>,
+  waitingChats: ReadonlySet<Id> = new Set()
 ): TaskbarItem[] {
   return [...windows]
     .sort((a, b) => a.id - b.id)
     .map((w) => ({
       id: String(w.id),
-      title: w.title,
+      title: taskbarTitle(w, waitingChats),
       testid: `taskbar-item-${w.app}`,
       icon: icons[w.app],
       running: true,
       active: w.id === focusedId && w.windowState !== 'minimized',
       flashing: w.attention === true && w.id !== focusedId
     }))
+}
+
+/**
+ * Alt+Tab: the window to switch to. Windows are ordered by recent use (the front one first); `direction` 1 goes to the
+ * next older window, -1 to the oldest. Minimised windows take part (switching restores them).
+ */
+export function cycleTarget(windows: readonly AppWindowState[], focusedId: Id | null, direction: 1 | -1): Id | null {
+  const recent = [...windows].reverse()
+  if (recent.length === 0) return null
+  const at = recent.findIndex((w) => w.id === focusedId)
+  if (at < 0) return recent[0].id
+  return recent[(at + direction + recent.length) % recent.length].id
 }

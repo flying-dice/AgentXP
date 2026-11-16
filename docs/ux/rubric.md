@@ -132,7 +132,7 @@ Question: is every word right, plain and consistent?
 | 7 | Plain English. One term per thing in most places. Some dialog text is long or passive. |
 | 10 | All text follows `docs/DOCUMENTATION_STYLE.md` (SimpleEnglish: imperative steps of 20 words or fewer, active voice, modals can/will/must only, no contractions, no semicolons or em dashes, the vocabulary table, American spelling) and the Windows 7 UX text guidelines (verb on the button, title bar names the window, error says what happened, why and what to do, no blame, no "please", no exclamation marks, sentence case for messages, title case for commands and window titles). Terms identical in UI, README, tooltips and tests. No lorem, no debug text. |
 
-Known conflicts to check first: "Control Centre" and "Action Center" (spelling), "may" in the Permissions text, "Task Manager" versus the `agent-manager` kind, "Workspace" versus "project", "session" versus "chat".
+Known conflicts to check first: "Control Center" and "Action Center" (spelling), "may" in the Permissions text, "Task Manager" versus the `agent-manager` kind, "Workspace" versus "project", "session" versus "chat".
 
 Evidence: copy audit table (string, location, rule, fix).
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
-import { recentToolCalls, toolChips, workingText, type ChatActivityInput } from './activity'
+import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
+import { noToolsOpen, recentToolCalls, toolChips, workingText, type ChatActivityInput } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -32,7 +33,24 @@ describe('recentToolCalls', () => {
 })
 
 describe('toolChips', () => {
-  it('hides the shell group', () => {
-    expect(toolChips(['shell', 'fs.read', 'terminal']).map((c) => c.label)).toEqual(['Read files', 'Terminal'])
+  const policy = (over: Partial<ToolPolicyDto['groups']>): ToolPolicyDto => ({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, ...over } })
+
+  it('always shows the three headline chips and hides the shell group', () => {
+    expect(toolChips([]).map((c) => c.label)).toEqual(['Read files (off)', 'Run commands (off)', 'Browser (off)'])
+    expect(toolChips(['shell']).map((c) => c.group)).toEqual(['fs.read', 'terminal', 'browser'])
+    expect(noToolsOpen(['shell'])).toBe(true)
+    expect(noToolsOpen(['shell', 'code'])).toBe(false)
+  })
+  it('says (asks) for Ask and (off) for Deny or a closed app', () => {
+    const chips = toolChips(['shell', 'fs.read', 'terminal', 'browser'], policy({ terminal: 'ask', browser: 'deny' }))
+    expect(chips.map((c) => [c.label, c.state])).toEqual([['Read files', 'on'], ['Run commands (asks)', 'asks'], ['Browser (off)', 'off']])
+  })
+  it('adds the other open apps after the headline chips', () => {
+    const chips = toolChips(['shell', 'fs.read', 'fs.write', 'code', 'notepad'], policy({}))
+    expect(chips.map((c) => c.label)).toEqual(['Read files', 'Run commands (off)', 'Browser (off)', 'Write files (asks)', 'Code', 'Notepad'])
+  })
+  it('reads (asks) on everything that is on while Ask before every action is on', () => {
+    const chips = toolChips(['fs.read', 'code'], policy({}), true)
+    expect(chips.map((c) => c.label)).toEqual(['Read files (asks)', 'Run commands (off)', 'Browser (off)', 'Code (asks)'])
   })
 })

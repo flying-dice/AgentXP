@@ -8,9 +8,9 @@ The agent does not live in one window. It lives on a **desktop**, a small virtua
 
 - A **desktop** is one Electron `BrowserWindow`. It belongs to one folder (the workspace, shown as drive `W:`) and one default agent. You can have several desktops open at once, each in its own OS window.
 - A **chat** is one ACP session. A desktop holds many chats. Each chat is shown by a **Chat app** window. Closing the window hides the chat; it stays in **Start -> Recent chats**.
-- An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Centre, Agent Manager. Apps are windows inside the desktop window (our own Aero Basic chrome, draggable, resizable, minimise to the taskbar).
+- An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Center, Agent Manager. Apps are windows inside the desktop window (our own Aero Basic chrome, draggable, resizable, minimise to the taskbar).
 - **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`.
-- **System level** settings (agents, permission policy, connectors, about) live in **Control Centre**, a desktop app, not in a per-chat dialog.
+- **System level** settings (agents, permission policy, connectors, about) live in **Control Center**, a desktop app, not in a per-chat dialog.
 
 ## 2. Vocabulary in code
 
@@ -34,7 +34,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Code | `code` | yes | ACP `fs/read_text_file`, `fs/write_text_file`; MCP `code_open`, `code_reveal`, `code_show_diff` | open tabs, active file, visible line range, selection, changes list selection |
 | Terminal | `terminal` | no | ACP `terminal/*`; MCP `terminal_run`, `terminal_read` | cwd, running command, last 20 lines |
 | Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_find`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload` | url, page title, loading |
-| Control Centre | `control-centre` | yes | none (system UI) | open page |
+| Control Center | `control-centre` | yes | none (system UI) | open page |
 | Task Manager | `agent-manager` | yes | none | none |
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
@@ -49,7 +49,7 @@ Default policy: Ask for `wordpad` and `recycle` (and `fs.write`, `terminal` as b
 
 Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, `desktop_focus_app`, and the A2UI tools `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws where `target` says, see section 10).
 
-`desktop_open_app` is governed by the Control Centre policy **Agent may open apps**: Always (default), Ask (permission dialog), Never.
+`desktop_open_app` is governed by the Control Center policy **Agent may open apps**: Always (default), Ask (permission dialog), Never.
 
 ### How gating works
 
@@ -102,12 +102,12 @@ Flow:
 
 Built from kit organisms, matching the mockup:
 
-- **Desktop surface** - wallpaper, icons (Workspace W:, Chats, Control Centre, Recycle Bin = reverted changes, Code), double click opens.
+- **Desktop surface** - wallpaper, icons (Workspace W:, Chats, Control Center, Recycle Bin = reverted changes, Code), double click opens.
 - **Window manager** - z-order, focus, drag by title bar, resize by edges, minimise/maximise/restore, snap to top = maximise. Window chrome is the kit `Form` with `TitleBar`.
 - **Top bar** (mockup's agent strip) - "Agent7 desktop · Working: <task>" plus **Pause** (cancels running turns, blocks new tool calls until resumed) and **Take control** (every tool call needs permission while on).
 - **Taskbar** - Start orb (Agent7 mark), one button per window, tray with clock and Action Center flag.
-- **Start menu** - apps, Recent chats, New chat, New desktop, Control Centre, search box.
-- **Action Center** (tray popup) - pending permission requests from every chat on the desktop, newest first, each with **Review** -> UAC style dialog (dimmed desktop, shield, reason text such as "Writing files is set to Ask in Control Centre").
+- **Start menu** - apps, Recent chats, New chat, New desktop, Control Center, search box.
+- **Action Center** (tray popup) - pending permission requests from every chat on the desktop, newest first, each with **Review** -> UAC style dialog (dimmed desktop, shield, reason text such as "Writing files is set to Ask in Control Center").
 - **Gadgets** (right column, can be hidden) - context meter per active chat, activity feed (last tool calls), session clock.
 
 ## 7. Apps (renderer)
@@ -126,7 +126,7 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
   - **Input**: `DOM.scrollIntoViewIfNeeded` + `DOM.getBoxModel`, then trusted `Input.dispatchMouseEvent` at the box centre; `Input.dispatchKeyEvent` for `browser_press` (chords such as `Control+K`); `browser_type` focuses the node, selects all and calls `Input.insertText`, so contenteditable and React inputs work; the wheel (`mouseWheel`) scrolls pages and containers. Only `<select>` choice and the password-focus check use a page script.
   - **Safety**: password values are never returned and typing into a password field is refused; only http(s) navigation; the webview lockdown is unchanged; actions check `paused` and `userInControl` between steps (the tool gate already refuses or asks first).
   - `capturePage` PNG is still returned as MCP image content.
-- **Control Centre** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
+- **Control Center** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
 - **Agent Manager** - running agent processes, chats per process, status, context use, **End process**.
 
 ### Code Review and the embedded chat
@@ -144,7 +144,7 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 
 Every app has in-app Help and a context menu.
 
-**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `<App> Help`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
+**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `Agent7 Help and Support: Using <App>`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
 
 **Context menus.** Right-click, the Menu key and Shift+F10 open a kit `ContextMenuStrip` in every app, on rows and items first and on the window background otherwise. The renderer cancels the browser's own `contextmenu` event on the desktop and the launcher. The taskbar button has its own menu: Restore, Minimize, Close window.
 
@@ -330,7 +330,7 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 | Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
 | Paint | `canvas` (width, height), `tool`, `color` |
 | Sticky Notes | `note` (the selected note) or `notes` |
-| Help, Control Centre, Snipping Tool | `topic`, `page`, `hasSnip` |
+| Help, Control Center, Snipping Tool | `topic`, `page`, `hasSnip` |
 
 **Compact UX.** The pane uses a dense composer and suggestion chips from `suggestionsFor(app, context)` ("Explain this", "Summarise this page", "What changed in this file?"). Before the first message the pane shows a composer without a session: `EmbeddedChat.onstart` creates the aside, then the message is sent to it.
 

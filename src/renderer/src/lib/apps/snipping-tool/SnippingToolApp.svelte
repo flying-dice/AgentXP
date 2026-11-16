@@ -95,8 +95,22 @@
     }
   }
 
+  /**
+   * "Send to chat": the chat composer takes files, not picture data, so the snip is saved as a PNG on C: (C:\Users\Agent\Pictures\Snips)
+   * and attached as a file. The chat pane of this window opens and gets it with a short note.
+   */
+  async function sendToChat(): Promise<void> {
+    if (!image) return
+    try {
+      const saved = await host.api.snip.save(host.state.desktopId, image)
+      await host.sendFileToChat(win.id, saved.filePath, `Here is a snip I took. It is saved as ${saved.path}. Please look at it; I will tell you what I need next.`)
+      status = `Sent to chat. The picture is saved as ${saved.path}.`
+    } catch {
+      status = 'The snip could not be sent to chat.'
+    }
+  }
+
   const newItems = $derived<MenuItemDef[]>([
-    { label: 'Free-form Snip', disabled: true },
     { label: '&Rectangular Snip', action: () => void snip('rect') },
     { label: '&Window Snip', action: () => void snip('window') },
     { label: '&Full-screen Snip', action: () => void snip('full') }
@@ -120,7 +134,7 @@
           ...closeItems('snipping-tool', () => void host.closeWindow(win.id))
         ]
       },
-      { label: '&Edit', items: [{ id: 'copy', testid: 'snipping-tool-menu-copy', label: '&Copy', shortcut: 'Ctrl+C', disabled: !image, action: () => void copy() }] },
+      { label: '&Edit', items: [{ id: 'send-chat', testid: 'snipping-tool-menu-send-chat', label: 'Send to &chat (saves a picture)', disabled: !image, action: () => void sendToChat() }, { id: 'copy', testid: 'snipping-tool-menu-copy', label: '&Copy', shortcut: 'Ctrl+C', disabled: !image, action: () => void copy() }] },
       {
         label: '&Tools',
         items: [
@@ -136,6 +150,7 @@
   /** The buttons of the toolbar: New Snip, Copy, Options. */
   const contextItems = (): MenuItemDef[] => [
     { id: 'snipping-tool-ctx-copy', testid: 'snipping-tool-ctx-copy', label: '&Copy', icon: 'copy', disabled: !image, action: () => void copy() },
+    { id: 'snipping-tool-ctx-send-chat', testid: 'snipping-tool-ctx-send-chat', label: 'Send to &chat (saves a picture)', icon: 'agent', disabled: !image, action: () => void sendToChat() },
     { separator: true },
     { id: 'snipping-tool-ctx-new', testid: 'snipping-tool-ctx-new', label: '&New Snip', icon: 'scissors', disabled: busy, action: () => void snip('rect') },
     { id: 'snipping-tool-ctx-options', testid: 'snipping-tool-ctx-options', label: '&Options...', icon: 'options', action: () => (options = true) }
@@ -153,6 +168,7 @@
     <ToolStripButton icon="close" text="Cancel" disabled={!busy} onclick={cancel} />
     <ToolStripButton icon="options" text="Options" onclick={() => (options = true)} />
     {#snippet trailing()}
+      <ToolStripButton data-testid="snipping-tool-send-chat" icon="agent" text="Send to chat" title="Saves the snip as a picture in Pictures\Snips in the Agent folder on C: and sends it to the chat" disabled={!image} onclick={() => void sendToChat()} />
       <ToolStripButton icon="copy" text="Copy" disabled={!image} onclick={() => void copy()} />
     {/snippet}
   </ToolStrip>
@@ -174,7 +190,7 @@
       <div class="opts">
         <span>Delay before the capture:</span>
         <ComboBox aria-label="Delay" items={delays} value={String(delay)} onchange={(v) => (delay = Number(v))} />
-        <p class="note">Send to chat is not available yet: use Copy and paste the snip into a chat.</p>
+        <p class="note">Send to chat saves the snip as a picture in C:\Users\Agent\Pictures\Snips and attaches it to the chat.</p>
       </div>
       {#snippet buttons()}
         <DialogButtons buttons={['ok']} onresult={() => (options = false)} />

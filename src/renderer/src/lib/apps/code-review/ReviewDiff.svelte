@@ -16,6 +16,8 @@
     comments: readonly ReviewCommentDto[]
     reviewer?: string
     selectedRow?: number | null
+    /** The diff takes the height of its rows instead of scrolling inside (the "All changes" page scrolls as a whole). */
+    flow?: boolean
     onselectrow?: (row: number) => void
     oncomment: (input: { path: string; side: ReviewSide; line: number; body: string; severity: ReviewSeverity }) => void
     onresolve: (comment: ReviewCommentDto, resolved: boolean) => void
@@ -24,7 +26,7 @@
     onsend: (comment: ReviewCommentDto) => void
   }
 
-  let { file, view, layout, comments, reviewer, selectedRow = null, onselectrow, oncomment, onresolve, onreply, ondelete, onsend }: Props = $props()
+  let { file, view, layout, comments, reviewer, selectedRow = null, flow = false, onselectrow, oncomment, onresolve, onreply, ondelete, onsend }: Props = $props()
 
   let scroller = $state<HTMLElement | null>(null)
   let composing = $state<{ row: number; side: ReviewSide; line: number } | null>(null)
@@ -93,7 +95,7 @@
   {/each}
 {/snippet}
 
-<div class="diff" data-testid="review-diff" data-path={file.path} data-layout={layout}>
+<div class="diff" class:flow data-testid="review-diff" data-path={file.path} data-layout={layout}>
   <div class="margin" data-testid="review-margin" role="presentation" onclick={clickMargin}>
     {#each view.blocks as block, i (i)}
       <button
@@ -114,7 +116,15 @@
     <div class="viewport" style="top:{viewport.top * 100}%;height:{viewport.height * 100}%"></div>
   </div>
 
-  <div class="rows w7-scroll" bind:this={scroller} {onscroll} role="table" aria-label="Diff of {file.path}">
+  <div class="body">
+  {#if layout === 'unified' && rowCount > 0}
+    <div class="cols" data-testid="review-columns" aria-hidden="true"><span class="no">Old</span><span class="no">New</span><span class="mark"></span><span class="text">Text</span></div>
+  {:else if layout === 'split' && rowCount > 0}
+    <div class="cols split" data-testid="review-columns" aria-hidden="true"><span class="half"><span class="no">Old</span><span class="text">Before the change</span></span><span class="half"><span class="no">New</span><span class="text">After the change</span></span></div>
+  {/if}
+  <!-- A scrolling region is reachable by keyboard (tabindex) and has a name. -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div class="rows w7-scroll" bind:this={scroller} {onscroll} role="region" tabindex={flow ? -1 : 0} aria-label="Diff of {file.path}">
     {#if file.binary}
       <div class="note">Binary file: there is no text diff.</div>
     {:else if file.tooLarge}
@@ -123,7 +133,7 @@
       <div class="note">The file is empty.</div>
     {:else if layout === 'unified'}
       {#each view.lines as line, i (i)}
-        <div class="row {line.kind}" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={line.kind} role="row">
+        <div class="row {line.kind}" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={line.kind}>
           <!-- One number column: the new line number, or the old one on a removed line (it has no new number). -->
           <button
             type="button"
@@ -136,20 +146,20 @@
             onclick={() => (line.kind === 'del' ? startComment(i, 'old', line.oldNo) : startComment(i, 'new', line.newNo))}>{(line.kind === 'del' ? line.oldNo : line.newNo) ?? ''}</button
           >
           <span class="mark">{line.kind === 'add' ? '+' : line.kind === 'del' ? '-' : ' '}</span>
-          <span class="text" role="cell" tabindex="-1" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{line.text}</span>
+          <span class="text" role="presentation" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{line.text}</span>
         </div>
         {@render composer(i)}
       {/each}
     {:else}
       {#each view.split as row, i (i)}
-        <div class="row split" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={row.left && row.right ? (row.left.kind === 'context' ? 'context' : 'both') : row.left ? 'del' : 'add'} role="row">
+        <div class="row split" class:selected={selectedRow === i} data-testid="review-row" data-row={i} data-kind={row.left && row.right ? (row.left.kind === 'context' ? 'context' : 'both') : row.left ? 'del' : 'add'}>
           <div class="half {row.left && row.left.kind !== 'context' ? 'del' : ''} {row.left ? '' : 'blank'}">
             <button type="button" class="no" data-testid="review-gutter-add" data-side="old" data-line={row.left?.oldNo} disabled={!row.left} aria-label="Comment on old line {row.left?.oldNo}" onclick={() => startComment(i, 'old', row.left?.oldNo)}>{row.left?.oldNo ?? ''}</button>
-            <span class="text" role="cell" tabindex="-1" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.left?.text ?? ''}</span>
+            <span class="text" role="presentation" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.left?.text ?? ''}</span>
           </div>
           <div class="half {row.right && row.right.kind !== 'context' ? 'add' : ''} {row.right ? '' : 'blank'}">
             <button type="button" class="no" data-testid="review-gutter-add" data-side="new" data-line={row.right?.newNo} disabled={!row.right} aria-label="Comment on line {row.right?.newNo}" onclick={() => startComment(i, 'new', row.right?.newNo)}>{row.right?.newNo ?? ''}</button>
-            <span class="text" role="cell" tabindex="-1" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.right?.text ?? ''}</span>
+            <span class="text" role="presentation" onclick={() => onselectrow?.(i)} onkeydown={() => {}}>{row.right?.text ?? ''}</span>
           </div>
         </div>
         {@render composer(i)}
@@ -163,6 +173,7 @@
         {/each}
       </div>
     {/if}
+  </div>
   </div>
 </div>
 
@@ -208,11 +219,45 @@
     border-top: 1px solid rgba(40, 80, 140, 0.45);
     border-bottom: 1px solid rgba(40, 80, 140, 0.45);
   }
+  .body {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .cols {
+    flex: none;
+    display: flex;
+    background: linear-gradient(#fff, #e8eef6);
+    border-bottom: 1px solid var(--w7-panel-border);
+    color: var(--w7-text-muted);
+    line-height: 17px;
+  }
+  .cols .no {
+    background: transparent;
+    color: inherit;
+    text-align: right;
+    padding: 0 6px 0 0;
+  }
+  .cols.split .half {
+    display: flex;
+  }
+  .cols.split .text {
+    padding-left: 8px;
+  }
   .rows {
     flex: 1;
     min-width: 0;
     overflow: auto;
     font: var(--w7-font-mono);
+  }
+  .flow {
+    flex: none;
+  }
+  .flow .rows {
+    flex: none;
+    overflow: visible;
   }
   .row {
     display: flex;

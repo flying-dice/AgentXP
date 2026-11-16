@@ -9,6 +9,7 @@ export interface WebviewElement extends HTMLElement {
   reload(): void
   stop(): void
   getWebContentsId(): number
+  setZoomFactor(factor: number): void
 }
 
 /** What a right-click inside the guest page reports (viewport coordinates of the app). */

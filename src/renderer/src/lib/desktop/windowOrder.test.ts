@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AppKind, AppWindowState, WindowState } from '@shared/desktop'
-import { nextFocus, raise, taskbarAction, taskbarItems, visibleWindows } from './windowOrder'
+import { cycleTarget, nextFocus, raise, taskbarAction, taskbarItems, visibleWindows } from './windowOrder'
 
 const win = (id: number, app: AppKind = 'explorer', windowState: WindowState = 'normal'): AppWindowState => ({
   id,
@@ -29,6 +29,12 @@ describe('z-order', () => {
 })
 
 describe('taskbar', () => {
+  it('puts "Waiting: " before the title of a chat that waits for an answer', () => {
+    const chat = (id: number, sessionId: number): AppWindowState => ({ ...win(id, 'chat'), view: { app: 'chat', sessionId, title: 'hello' } })
+    const items = taskbarItems([chat(1, 10), chat(2, 11), win(3)], 1, {}, new Set([11]))
+    expect(items.map((i) => i.title)).toEqual(['Window 1', 'Waiting: Window 2', 'Window 3'])
+  })
+
   it('flashes the button of a window that wants attention until it has focus', () => {
     const flagged = { ...win(2), attention: true }
     expect(taskbarItems([win(1), flagged], 1, {}).find((i) => i.id === '2')?.flashing).toBe(true)
@@ -49,5 +55,21 @@ describe('taskbar', () => {
   })
   it('a focused but minimised window is not active', () => {
     expect(taskbarItems([win(1, 'explorer', 'minimized')], 1, {})[0].active).toBe(false)
+  })
+})
+
+describe('cycleTarget (Alt+Tab)', () => {
+  const ws = [win(1), win(2, 'explorer', 'minimized'), win(3)]
+  it('goes to the next window in recent order, around', () => {
+    expect(cycleTarget(ws, 3, 1)).toBe(2)
+    expect(cycleTarget(ws, 2, 1)).toBe(1)
+    expect(cycleTarget(ws, 1, 1)).toBe(3)
+  })
+  it('Alt+Shift+Tab goes the other way', () => {
+    expect(cycleTarget(ws, 3, -1)).toBe(1)
+  })
+  it('takes the front window when none has focus, and nothing when there are none', () => {
+    expect(cycleTarget(ws, null, 1)).toBe(3)
+    expect(cycleTarget([], null, 1)).toBeNull()
   })
 })

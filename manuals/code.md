@@ -173,8 +173,22 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: goto file | Opens the Open dialog box to go to another file. Ctrl+O. | `code-ctx-goto-file` |
 | Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `code-ctx-explain` |
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
-| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `code-ctx-send` |
 | Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `code-ctx-open-chat` |
+| Tree menu: open | Opens the file, or opens the folder. | `code-ctx-open` |
+| Tree menu: start a chat | Starts a chat on this project or folder. | `code-ctx-start-chat` |
+| Tree menu: open in Explorer | Shows the folder in Explorer. | `code-ctx-open-explorer` |
+| Tree menu: open with Notepad | Opens the file in Notepad. | `code-ctx-open-notepad` |
+| Tree menu: copy as path | Copies the path of the file or folder. | `code-ctx-copy-path` |
+| Tree menu: ask chat | Asks the chat about this file. | `code-ctx-ask-file` |
+| Tree menu: eject | Takes the project off the desktop. Its folder stays on your disk. | `code-ctx-eject` |
+| Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
+| Project tree | The folders and files of the project. | `code-tree` |
+| Menu: eject | Takes the open project off the desktop. | `code-menu-eject` |
+| Menu: plug in | Plugs in a project. | `code-menu-plug-in` |
+| Git: start | Starts Git in this folder, so changes can be tracked. | `code-git-init` |
+| Git: not a repository | Says this folder does not use Git yet. | `code-git-not-repo` |
+| Git menu: open | Opens the file of the row. | `code-git-ctx-open` |
+| Git menu: show changes | Shows what changed in the file. | `code-git-ctx-show` |
 
 ### Keys
 

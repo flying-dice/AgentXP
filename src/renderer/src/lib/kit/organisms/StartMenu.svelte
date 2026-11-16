@@ -65,12 +65,12 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="w7-start" data-testid="start-menu" role="menu" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
+<div class="w7-start" data-testid="start-menu" role="group" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
   <div class="tile" aria-hidden="true"><Icon name="agent7" size={40} /></div>
   <div class="left">
-    <ul class="programs">
+    <ul class="programs" role="menu" aria-label="Programs">
       {#each shownPrograms as item (item.id)}
-        <li>
+        <li role="none">
           <button type="button" role="menuitem" class="entry" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
             {#if item.icon}<Icon name={item.icon} size={32} />{/if}
             <span class="text"><span class="title">{item.title}</span></span>
@@ -84,17 +84,17 @@
       </button>
     {/if}
     {#if shownGroups.length > 0 && (allOpen || searching)}
-      <ul class="groups">
+      <ul class="groups" role="menu" aria-label="Program folders">
         {#each shownGroups as group (group.id)}
           {@const open = searching || openGroups[group.id]}
-          <li>
+          <li role="none">
             <button type="button" role="menuitem" class="entry small" data-testid="start-menu-group-{group.id}" aria-expanded={open} onclick={() => (openGroups[group.id] = !open)}>
               <Icon name="folder" size={16} /><span class="title">{group.title}</span><span class="caret" class:open aria-hidden="true">▸</span>
             </button>
             {#if open}
-              <ul class="sub">
+              <ul class="sub" role="menu" aria-label={group.title}>
                 {#each group.items as item (item.id)}
-                  <li>
+                  <li role="none">
                     <button type="button" role="menuitem" class="entry small" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
                       {#if item.icon}<Icon name={item.icon} size={16} />{/if}<span class="title">{item.title}</span>
                     </button>
@@ -108,9 +108,9 @@
     {/if}
     {#if shownRecent.length > 0}
       <div class="heading">Recent chats</div>
-      <ul class="recent">
+      <ul class="recent" role="menu" aria-label="Recent chats">
         {#each shownRecent as item (item.id)}
-          <li>
+          <li role="none">
             <button type="button" role="menuitem" class="entry small" data-testid="start-menu-recent" data-session-id={item.id} onclick={() => onrecent?.(item.id)}>
               <Icon name="session" size={16} /><span class="title">{item.title}</span>
             </button>
@@ -125,9 +125,9 @@
     </div>
   </div>
   <div class="right">
-    <ul>
+    <ul role="menu" aria-label="Places">
       {#each places as item (item.id)}
-        <li><button type="button" role="menuitem" class="place" data-testid="start-menu-place-{item.id}" onclick={() => onplace?.(item.id)}>{item.title}</button></li>
+        <li role="none"><button type="button" role="menuitem" class="place" data-testid="start-menu-place-{item.id}" onclick={() => onplace?.(item.id)}>{item.title}</button></li>
       {/each}
     </ul>
     <div class="power">
@@ -146,9 +146,9 @@
         >
         {#if shutdownOpen}
           <ul class="shutdown-menu" role="menu" data-testid="start-menu-disconnect-menu">
-            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-disconnect" onclick={() => pick(ondisconnect)}>Disconnect</button></li>
-            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-switch" onclick={() => pick(onswitch)}>Switch desktop…</button></li>
-            <li><button type="button" role="menuitem" data-testid="start-menu-shutdown-delete" onclick={() => pick(ondelete)}>Delete desktop…</button></li>
+            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-disconnect" onclick={() => pick(ondisconnect)}>Disconnect</button></li>
+            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-switch" onclick={() => pick(onswitch)}>Switch desktop…</button></li>
+            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-delete" onclick={() => pick(ondelete)}>Delete desktop…</button></li>
           </ul>
         {/if}
       </div>
@@ -393,7 +393,7 @@
     border-radius: 3px 0 0 3px;
   }
   .power-btn.arrow {
-    width: 22px;
+    width: 24px;
     padding: 0;
     justify-content: center;
     border-left-color: rgba(255, 255, 255, 0.5);

@@ -8,7 +8,7 @@
     showTaskbar?: boolean
     startOpen?: boolean
     onstart?: () => void
-    onitemclick?: (item: TaskbarItem) => void
+    onitemclick?: (item: TaskbarItem, via: { keyboard: boolean }) => void
     onitemcontext?: (item: TaskbarItem, at: { x: number; y: number }) => void
     /** Windows: position them absolutely inside this area. */
     children?: Snippet

@@ -92,6 +92,7 @@ export class DesktopWindowManager implements DesktopWindowHost {
   private reveal(window: BrowserWindow): void {
     if (window.isMinimized()) window.restore()
     window.show()
+    window.moveTop()
     window.focus()
   }
 

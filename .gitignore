@@ -8,3 +8,4 @@ storybook-static
 *.sqlite-*
 *.tsbuildinfo
 .scratch/
+.claude/worktrees/

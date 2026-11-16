@@ -19,7 +19,7 @@ export const checks = {
     ])
   },
 
-  async 'T02.2'(ctx) {
+  async 'T02.2'(ctx, { answer }) {
     const list = await ctx.launcherList()
     const titles = list.map((x) => x.title)
     const second = list.find((x) => x.id !== ctx.state.desktopId)
@@ -29,8 +29,8 @@ export const checks = {
         [new Set(titles).size === 2, 'the names differ'],
         [Boolean(second?.drives.some((x) => x.label === 'docs-site')), 'the second desktop has docs-site plugged in']
       ]),
-      undefined,
-      { expect: 'the panelist states why the first name was refused (the name is already used)' }
+      answer,
+      { keywords: [['already', 'exists', 'used', 'same', 'different', 'unique']], expect: 'the panelist states why the first name was refused (the name is already used)' }
     )
   },
 

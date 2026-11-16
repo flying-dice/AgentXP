@@ -1,5 +1,7 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
-import type { FilePicker, ScreenCapturer } from '../application/ports'
+import type { VPath } from '../../shared/vfs'
+import { parseImageDataUrl } from '../application/tools/dataUrl'
+import type { DirectoryBrowser, FilePicker, ScreenCapturer } from '../application/ports'
 import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
 import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
@@ -39,6 +41,8 @@ export interface ApiServices {
   launcher: LauncherService
   processes: ProcessService
   files: FilePicker
+  directories: DirectoryBrowser
+  nativePicker: boolean
   appRequests: AppRequestBroker
   notes: StickyNoteService
   eventLog: ProtocolEventLog
@@ -58,7 +62,8 @@ export function createApi(s: ApiServices): InvokeApi {
       create: async (input) => s.agents.create(input),
       update: async (id, input) => s.agents.update(id, input),
       remove: async (id) => s.agents.remove(id),
-      setDefault: async (id) => s.agents.setDefault(id)
+      setDefault: async (id) => s.agents.setDefault(id),
+      check: async (command) => s.agents.check(command)
     },
     folders: {
       list: async () => s.folders.list(),
@@ -81,7 +86,16 @@ export function createApi(s: ApiServices): InvokeApi {
       updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
       setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
-      newChat: (desktopId, agentId, cwd) => s.desktops.newChat(desktopId, agentId, cwd),
+      newChat: async (desktopId, agentId, cwd) => {
+        try {
+          const opened = await s.desktops.newChat(desktopId, agentId, cwd)
+          s.launcher.clearStartFailure(desktopId)
+          return opened
+        } catch (error) {
+          s.launcher.recordStartFailure(desktopId, error instanceof Error ? error.message : String(error))
+          throw error
+        }
+      },
       openReview: (desktopId, root, baseRef, agentId) => s.desktops.openReview(desktopId, root, baseRef, agentId),
       openAside: (desktopId, windowId, agentId) => s.desktops.openAside(desktopId, windowId, agentId),
       closeAside: (windowId) => s.desktops.closeAside(windowId),
@@ -103,7 +117,8 @@ export function createApi(s: ApiServices): InvokeApi {
       status: (desktopId, root) => s.git.status(desktopId, root),
       lineChanges: (desktopId, path) => s.git.lineChanges(desktopId, path),
       headText: (desktopId, path) => s.git.headText(desktopId, path),
-      revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex)
+      revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex),
+      init: (desktopId, root) => s.git.init(desktopId, root)
     },
     review: {
       changes: (desktopId, root, baseRef) => s.reviews.changes(desktopId, root, baseRef),
@@ -144,7 +159,16 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: async (id) => s.recycle.remove(id),
       empty: async (desktopId) => s.recycle.empty(desktopId)
     },
-    snip: { capture: (desktopId, region) => s.screen.capture(desktopId, region) },
+    snip: {
+      capture: (desktopId, region) => s.screen.capture(desktopId, region),
+      save: async (desktopId, dataUrl) => {
+        const { data } = parseImageDataUrl(dataUrl)
+        const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
+        const path = `C:\\Users\\Agent\\Pictures\\Snips\\Snip-${stamp}.png` as VPath
+        const filePath = await s.vfs.writeBytes(desktopId, path, Buffer.from(data, 'base64'))
+        return { path, filePath }
+      }
+    },
     processes: { list: async () => s.processes.list(), end: (agentId, desktopId) => s.processes.end(agentId, desktopId) },
     app: {
       version: async () => s.appVersion
@@ -167,6 +191,8 @@ export function createApi(s: ApiServices): InvokeApi {
       respondPermission: async (requestId, optionId) => s.broker.respond(requestId, optionId),
       revertChange: (changeId) => s.reverter.revert(changeId),
       clearTranscript: async (id) => s.sessions.clearTranscript(id),
+      retry: async (id) => s.sessions.retry(id),
+      restartAgent: (id) => s.sessions.restartAgent(id),
       exportTranscript: (id) => s.exporter.export(id)
     },
     a2ui: {
@@ -176,6 +202,11 @@ export function createApi(s: ApiServices): InvokeApi {
       setSidebarHidden: async (sessionId, surfaceId, hidden) => s.a2ui.setSidebarHidden(sessionId, surfaceId, hidden)
     },
     shell: { openPath: (path) => s.shell.openPath(path) },
+    fs: {
+      browse: (path) => s.directories.browse(path),
+      makeFolder: (parent, name) => s.directories.makeFolder(parent, name),
+      nativePicker: async () => s.nativePicker
+    },
     dialogs: { pickFiles: () => s.files.pickFiles() }
   }
 }

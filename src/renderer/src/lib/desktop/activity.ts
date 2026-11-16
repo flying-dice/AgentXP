@@ -1,7 +1,7 @@
 /** Pure summaries of what the agent is doing, from the chats of a desktop. */
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
-import type { ToolGroup } from '@shared/desktop'
+import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
 
 export interface ChatActivityInput {
   sessionId: number
@@ -25,6 +25,7 @@ export function workingText(chats: readonly ChatActivityInput[]): string | null 
     }
   }
   const first = busy[busy.length - 1]
+  if (first.status === 'connecting') return 'Starting the agent...'
   return first.status === 'awaiting_permission' ? 'Waiting for approval' : first.title || 'Thinking'
 }
 
@@ -64,6 +65,41 @@ const CHIP_LABELS: Record<Exclude<ToolGroup, 'shell'>, string> = {
   review: 'Code review'
 }
 
-/** Chips for the top bar: the tool groups the agent can use right now (the always-on shell group is left out). */
-export const toolChips = (tools: readonly ToolGroup[]): { group: ToolGroup; label: string }[] =>
-  tools.filter((g): g is Exclude<ToolGroup, 'shell'> => g !== 'shell').map((group) => ({ group, label: CHIP_LABELS[group] }))
+/** The three chips the bar always shows, so "run commands: off" can be read without guessing. */
+const HEADLINE: { group: Exclude<ToolGroup, 'shell'>; label: string }[] = [
+  { group: 'fs.read', label: 'Read files' },
+  { group: 'terminal', label: 'Run commands' },
+  { group: 'browser', label: 'Browser' }
+]
+
+/** `on`: the agent just uses it; `asks`: it must ask first; `off`: not available (denied, or its app is closed). */
+export type ChipState = 'on' | 'asks' | 'off'
+
+export interface ToolChip {
+  group: Exclude<ToolGroup, 'shell'>
+  /** The chip text: the name and, when not plainly on, " (asks)" or " (off)". */
+  label: string
+  state: ChipState
+}
+
+const SUFFIX: Record<ChipState, string> = { on: '', asks: ' (asks)', off: ' (off)' }
+
+/**
+ * Chips for the top bar. Read files, Run commands and Browser are always there; the other tool groups appear while
+ * their app is open (`tools` is what the open apps give the agent). With `askFirst` ("Ask before every action") every
+ * chip that is not off reads "(asks)".
+ */
+export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | null = null, askFirst = false): ToolChip[] {
+  const open = new Set(tools)
+  const chip = (group: Exclude<ToolGroup, 'shell'>, name: string): ToolChip => {
+    const decision = policy?.groups[group] ?? 'allow'
+    const state: ChipState = decision === 'deny' || !open.has(group) ? 'off' : askFirst || decision === 'ask' ? 'asks' : 'on'
+    return { group, label: `${name}${SUFFIX[state]}`, state }
+  }
+  const headline = new Set<ToolGroup>(HEADLINE.map((h) => h.group))
+  const others = tools.filter((g): g is Exclude<ToolGroup, 'shell'> => g !== 'shell' && !headline.has(g))
+  return [...HEADLINE.map((h) => chip(h.group, h.label)), ...others.map((g) => chip(g, CHIP_LABELS[g]))]
+}
+
+/** True when no app gives the agent a tool (the bar then adds "open an app"). */
+export const noToolsOpen = (tools: readonly ToolGroup[]): boolean => tools.every((g) => g === 'shell')

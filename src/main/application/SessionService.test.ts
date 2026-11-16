@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { allowAllTools } from '../domain/agent/ToolGate'
 import { AgentConnectionPool } from './AgentConnectionPool'
 import { FileChangeRecorder } from './FileChangeRecorder'
@@ -7,6 +7,7 @@ import { PermissionBroker } from './PermissionBroker'
 import { SessionBroadcaster } from './SessionBroadcaster'
 import { SessionEventBus } from './SessionEventBus'
 import { SessionEventProjector } from './SessionEventProjector'
+import { SessionProblems } from './SessionProblems'
 import { SessionRuntime } from './SessionRuntime'
 import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt, type SessionServiceDeps } from './SessionService'
 import { TerminalRecorder } from './TerminalRecorder'
@@ -18,6 +19,7 @@ let connector: FakeConnector
 let pool: AgentConnectionPool
 let service: SessionService
 let serviceDeps: SessionServiceDeps
+let problems: SessionProblems
 
 beforeEach(async () => {
   f = await createVfsFixture()
@@ -28,7 +30,9 @@ beforeEach(async () => {
   const bus = new SessionEventBus()
   const projector = new SessionEventProjector(repos.sessions, repos.transcripts, repos.tasks, publisher, broadcaster)
   bus.subscribe((id, e) => projector.apply(id, e))
+  problems = new SessionProblems()
   const runtime = new SessionRuntime({
+    problems,
     connector,
     pool,
     sessions: repos.sessions,
@@ -52,6 +56,7 @@ beforeEach(async () => {
     pool,
     runtime,
     broadcaster,
+    problems,
     events: publisher
   }
   service = new SessionService(serviceDeps)
@@ -250,6 +255,40 @@ describe('SessionService other commands', () => {
     service.clearTranscript(f.sessionId)
     expect(f.repos.transcripts.list(f.sessionId)).toHaveLength(0)
     expect(f.publisher.payloads('transcript.cleared')).toEqual([{ sessionId: f.sessionId }])
+  })
+})
+
+describe('SessionService: starting in the background and problems', () => {
+  it('returns at once with status connecting when the agent starts in the background, then becomes idle', async () => {
+    const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
+    expect(session.status).toBe('connecting')
+    await vi.waitFor(() => expect(status(session.id)).toBe('idle'))
+  })
+
+  it('records a start failure as a problem in plain words and sets the error status', async () => {
+    connector.openError = new Error('spawn not-a-real-command ENOENT')
+    const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
+    await vi.waitFor(() => expect(status(session.id)).toBe('error'))
+    expect(problems.get(session.id)).toMatchObject({ kind: 'start-failed', detail: 'spawn not-a-real-command ENOENT' })
+    expect(problems.get(session.id)?.message).toMatch(/could not start/)
+  })
+
+  it('Restart ends the program, clears the problem and starts a new one', async () => {
+    connector.openError = new Error('boom')
+    const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
+    await vi.waitFor(() => expect(problems.get(session.id)).not.toBeNull())
+    connector.openError = null
+    await service.restartAgent(session.id)
+    expect(problems.get(session.id)).toBeNull()
+    expect(status(session.id)).toBe('idle')
+  })
+
+  it('retry removes the last user message so that sending again does not duplicate it', async () => {
+    const session = await service.create(f.desktop.id)
+    f.repos.transcripts.appendMessage(session.id, 'user', [{ kind: 'text', text: 'hello' }])
+    expect(service.retry(session.id)).toBe(true)
+    expect(f.repos.transcripts.list(session.id)).toHaveLength(0)
+    expect(service.retry(session.id)).toBe(false)
   })
 })
 

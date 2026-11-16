@@ -100,7 +100,8 @@ The context menus of the apps have a group of chat items.
 | Edge toggle | The thin strip at the right edge. Click it to open the pane. | `chat-pane-toggle` |
 | Open or close | Hides the pane. In Code Review it shows or hides the panel. | `embedded-chat-toggle` |
 | Title | The name of the chat. | `embedded-chat-title` |
-| Status | The state of the agent. | `embedded-chat-status` |
+| Status | The state of the agent: Ready, Connecting..., Connected, Working..., Disconnected. | `embedded-chat-status` |
+| Reconnect | Starts the agent again after a failure. | `embedded-chat-reconnect` |
 | New conversation | Deletes the chat and shows an empty pane. | `embedded-chat-new` |
 | Suggestions | The row of suggestion buttons. | `embedded-chat-suggestions` |
 | Suggestion | One suggestion button. The attribute `data-suggestion` names it. | `embedded-chat-suggestion` |

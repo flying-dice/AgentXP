@@ -28,7 +28,7 @@ describe('scripted agent: paths and clearing the transcript', () => {
 
   it('Chat > Clear transcript empties the window, tool cards included', async () => {
     const chat = ctx.desktop.chat()
-    await chat.frame.getByTestId('menubar-chat').click()
+    await chat.frame.getByTestId('menubar-file').click()
     await ctx.desktopPage.getByTestId('chat-menu-clear').click()
     await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
     await see.count(chat.toolCalls, 0)

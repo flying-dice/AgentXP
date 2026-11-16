@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** Control Centre > Appearance: placeholder settings. The gadget switch drives the desktop's gadget column when a desktop page is around. */
+  /** Control Center > Appearance: placeholder settings. The gadget switch drives the desktop's gadget column when a desktop page is around. */
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
   import GroupBox from '../../kit/atoms/GroupBox.svelte'
   import { getDesktopContext } from '../../desktop/context'
@@ -24,7 +24,7 @@
 <GroupBox text="Desktop gadgets">
   <div class="body">
     <CheckBox label="Show gadgets on the desktop" {checked} onchange={toggle} />
-    <p class="hint">Gadgets show the context meter, the session clock and what the agent did last, in a column at the right of the desktop.</p>
+    <p class="hint">Gadgets show the context meter, the desktop clock and what the agent did last, in a column at the right of the desktop.</p>
   </div>
 </GroupBox>
 <GroupBox text="Theme">

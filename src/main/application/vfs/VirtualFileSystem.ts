@@ -170,6 +170,14 @@ export class VirtualFileSystem {
     await this.deps.host.writeText(mount.root, relativePath, text)
   }
 
+  /** Writes a binary file (a snip) and returns its real path on this computer. Not recorded as an agent change. */
+  async writeBytes(desktopId: Id, path: VPath, bytes: Uint8Array): Promise<string> {
+    const { mount, relativePath } = this.locate(desktopId, path)
+    if (relativePath === '') throw new AppError('A drive root is not a file.')
+    await this.deps.host.writeBytes(mount.root, relativePath, bytes)
+    return this.deps.host.resolveInside(mount.root, relativePath)
+  }
+
   async stat(desktopId: Id, path: VPath): Promise<VfsEntryDto | null> {
     const { mount, relativePath } = this.locate(desktopId, path)
     if (relativePath === '') return this.entry(this.vpathOf(mount, ''), { name: `${mount.letter}:`, isDirectory: true, size: null, modifiedAt: null })

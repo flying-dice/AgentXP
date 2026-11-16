@@ -20,7 +20,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
   it('shows the connection bar with the desktop title and a tooltip that says the agents keep running', async () => {
     await see.visible(bar('connbar'))
     await see.text(bar('connbar-title'), 'Shell desktop')
-    expect(await bar('connbar-close').getAttribute('title')).toContain('agents keep running')
+    expect(await bar('connbar-close').getAttribute('title')).toContain('Agents keep running')
     await see.attribute(bar('connbar'), 'data-pinned', 'true')
   })
 
@@ -54,7 +54,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
     await bar('new-chat-start').click()
     await see.gone(bar('new-chat-dialog'))
     await ctx.desktop.window('chat', 0).waitFor()
-    await see.text(ctx.desktop.window('chat', 0).getByTestId('chat-cwd'), 'E:\\')
+    await see.text(ctx.desktop.window('chat', 0).getByTestId('chat-cwd'), '(E:)')
   })
 
   it('New chat on a drive offers C: with the home of the agent', async () => {
@@ -63,7 +63,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
     await bar('new-chat-drive-c').click()
     await bar('new-chat-start').click()
     await ctx.desktop.window('chat', 1).waitFor()
-    await see.text(ctx.desktop.window('chat', 1).getByTestId('chat-cwd'), 'C:\\Users\\Agent')
+    await see.text(ctx.desktop.window('chat', 1).getByTestId('chat-cwd'), 'Agent (C:)')
   })
 
   it('Explorer: "Start a chat here" on a drive and on a folder', async () => {
@@ -71,7 +71,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
     await explorer.drive('e').click({ button: 'right' })
     await ctx.desktopPage.getByTestId('menu-item-explorer-drive-chat').click()
     await ctx.desktop.window('chat', 2).waitFor()
-    await see.text(ctx.desktop.window('chat', 2).getByTestId('chat-cwd'), 'E:\\')
+    await see.text(ctx.desktop.window('chat', 2).getByTestId('chat-cwd'), '(E:)')
 
     await ctx.desktop.focusWindow('explorer')
     await explorer.openDrive('e')
@@ -79,7 +79,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
     await explorer.item('src').click({ button: 'right' })
     await ctx.desktopPage.getByTestId('menu-item-explorer-folder-chat').click()
     await ctx.desktop.window('chat', 3).waitFor()
-    await see.text(ctx.desktop.window('chat', 3).getByTestId('chat-cwd'), 'E:\\src')
+    await see.text(ctx.desktop.window('chat', 3).getByTestId('chat-cwd'), 'src (E:)')
   })
 
   it('Start menu: the Disconnect arrow lists Disconnect, Switch desktop and Delete desktop', async () => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FolderBrowserHost from './lib/kit/organisms/FolderBrowserHost.svelte'
   import MessageBoxHost from './lib/kit/organisms/MessageBoxHost.svelte'
   import DesktopPage from './lib/pages/DesktopPage.svelte'
   import LauncherPage from './lib/pages/LauncherPage.svelte'
@@ -13,3 +14,4 @@
   <DesktopPage />
 {/if}
 <MessageBoxHost />
+<FolderBrowserHost />

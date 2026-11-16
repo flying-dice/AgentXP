@@ -1,17 +1,20 @@
 // Start states without a running turn: first launch, desktops, projects, open apps.
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { projectDesktop } from './base.mjs'
+import { projectDesktop, useDefaultAgent } from './base.mjs'
 
 export const presets = {
   /** First launch: fresh user-data folder, the launcher is open and lists nothing. */
   async empty(ctx) {
     await ctx.launcher()
+    await useDefaultAgent(ctx)
+    await ctx.answerFolderPicker(ctx.fixtures.loginApp)
   },
 
   /** No desktops; the folder picker (New... > Browse) answers with login-app. */
-  async 'empty-folder-picker'(ctx) {
+  async 'empty-folder-picker'(ctx, options = {}) {
     await ctx.launcher()
+    if (!options.noAgent) await useDefaultAgent(ctx)
     await ctx.answerFolderPicker(ctx.fixtures.loginApp)
   },
 
@@ -29,8 +32,7 @@ export const presets = {
    * policy, allowAll, open (apps), browserUrl, picker (next folder-picker answer), git, modifyGit, agentFile.
    */
   async 'project-desktop'(ctx, options) {
-    const { desktop } = await projectDesktop(ctx, { title: options.title ?? 'Workspace', ...options })
-    if (options.picker) await ctx.answerFolderPicker(ctx.fixtures[options.picker])
+    const { desktop } = await projectDesktop(ctx, { ...options })
     if (options.agentFile) writeFileSync(join(ctx.fixtures.loginApp, 'my-agent.js'), "console.log('my agent')\n")
     return `desktop ${desktop.id}`
   },

@@ -1,0 +1,56 @@
+/** What the Browser says about a page: the load error, the status bar text and the zoom. Pure, so the words are tested. */
+import { BLANK } from './address'
+
+/** A page that did not load: the address, the plain cause and the technical text (Chromium's error name). */
+export interface LoadFailure {
+  url: string
+  cause: string
+  technical: string
+}
+
+/** The address without its scheme, as the error page names it ('127.0.0.1:9'). */
+export const shortAddress = (url: string): string => url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+
+const CAUSES: [RegExp, string][] = [
+  [/NAME_NOT_RESOLVED|NAME_RESOLUTION|DNS/i, 'The name of the website was not found.'],
+  [/INTERNET_DISCONNECTED|NETWORK_CHANGED|NETWORK_IO|ADDRESS_UNREACHABLE/i, 'The computer is not connected to the internet.'],
+  [/TIMED_OUT/i, 'The website took too long to answer.'],
+  [/CERT|SSL|SECURE/i, 'The security certificate of the website is not valid.']
+]
+
+/** Turns the failure Chromium reports (`ERR_CONNECTION_REFUSED`...) into a failure for the error page. */
+export function describeLoadFailure(url: string, errorDescription: string): LoadFailure {
+  const cause = CAUSES.find(([pattern]) => pattern.test(errorDescription))?.[1] ?? 'The website did not answer.'
+  return { url, cause, technical: errorDescription }
+}
+
+/** Chromium reports `ERR_ABORTED` (-3) when a load is replaced or stopped on purpose: that is not an error to show. */
+export const isShownFailure = (errorCode: number, isMainFrame: boolean): boolean => isMainFrame && errorCode !== -3
+
+/** The reasons the error page lists, the same for every failure. */
+export const FAILURE_HINTS = ['Make sure the address is right.', 'Check that your computer is online.'] as const
+
+export interface PageStatusInput {
+  url: string
+  loading: boolean
+  failed: boolean
+}
+
+/** The left cell of the status bar. */
+export function pageStatus({ url, loading, failed }: PageStatusInput): string {
+  if (failed) return 'Could not load the page'
+  if (loading) return 'Connecting...'
+  return url === BLANK ? 'Ready' : 'Done'
+}
+
+export const MIN_ZOOM = 0.25
+export const MAX_ZOOM = 5
+
+/** The next zoom factor: ten points per step, 0 resets to 100 percent. */
+export function stepZoom(zoom: number, direction: -1 | 0 | 1): number {
+  if (direction === 0) return 1
+  const next = Math.round((zoom + direction * 0.1) * 100) / 100
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next))
+}
+
+export const zoomText = (zoom: number): string => `${Math.round(zoom * 100)}%`

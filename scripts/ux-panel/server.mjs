@@ -9,13 +9,13 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { normalizeKey, parseArgs } from './lib/args.mjs'
 import { launchApp, makeContext, sleep } from './lib/context.mjs'
-import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_PORT } from './lib/fixtures.mjs'
+import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
 import { createLog } from './lib/log.mjs'
 import { serve } from './lib/rpc.mjs'
 import { runCheck } from './checks/index.mjs'
 import { runPreset } from './presets/index.mjs'
 
-const { flags } = parseArgs(process.argv.slice(2), { session: 'string', task: 'string', level: 'string', socket: 'string', admin: 'string', 'no-preset': 'bool' })
+const { flags } = parseArgs(process.argv.slice(2), { session: 'string', task: 'string', level: 'string', socket: 'string', admin: 'string', 'no-preset': 'bool', port: 'string' })
 const sessionDir = resolve(flags.session ?? '.')
 mkdirSync(join(sessionDir, 'shots'), { recursive: true })
 const tmp = mkdtempSync(join(tmpdir(), 'a7ux-'))
@@ -41,11 +41,16 @@ const web = createServer((req, res) => {
   res.setHeader('content-type', 'text/html')
   res.end(TEST_PAGE_HTML)
 })
-web.on('error', () => undefined) // another session already serves the fixture page
-web.listen(TEST_PAGE_PORT, '127.0.0.1')
+// Each session serves its own copy of the fixture page on its own port (--port, TEST_PAGE_PORT, default 4173; 0 = any free
+// port), so parallel sessions never share one page and the page does not vanish when another session stops.
+const wantedPort = Number(flags.port ?? process.env.TEST_PAGE_PORT ?? TEST_PAGE_PORT)
+const pagePort = await new Promise((resolvePort, reject) => {
+  web.once('error', reject)
+  web.listen(wantedPort, '127.0.0.1', () => resolvePort(web.address().port))
+})
 
 const app = await launchApp({ userData })
-const state = { task: flags.task ?? null, level: flags.level ?? null, sockDir: tmp, noMouse: false, startedAt: new Date().toISOString() }
+const state = { task: flags.task ?? null, level: flags.level ?? null, sockDir: tmp, testPagePort: pagePort, testPageUrl: testPageUrl(pagePort), noMouse: false, startedAt: new Date().toISOString() }
 const ctx = makeContext({ app, userData, sessionDir, fixtures, state })
 
 // ---------------------------------------------------------------- window tracking
@@ -245,7 +250,7 @@ process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
 const sessionFile = join(sessionDir, 'session.json')
-const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, tmp, userData, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
+const writeSession = (extra) => writeFileSync(sessionFile, JSON.stringify({ task: flags.task ?? null, level: flags.level ?? null, socket: socketPath, admin: adminPath, pid: process.pid, tmp, userData, testPageUrl: state.testPageUrl, fixtures: { loginApp: fixtures.loginApp, docsSite: fixtures.docsSite, plain: fixtures.plain }, ...extra }, null, 2))
 writeSession({ ready: false })
 
 try {

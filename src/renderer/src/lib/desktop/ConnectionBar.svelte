@@ -40,10 +40,10 @@
   </button>
   <span class="name"><strong data-testid="connbar-title" title={title}>{title}</strong>{@render children?.()}</span>
   <span class="buttons">
-    <button type="button" class="cb" data-testid="connbar-minimize" aria-label="Minimize" title="Minimize" onclick={() => onminimize?.()}>
+    <button type="button" class="cb" data-testid="connbar-minimize" aria-label="Minimize the desktop" title="Minimize the desktop" onclick={() => onminimize?.()}>
       <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8" /></svg>
     </button>
-    <button type="button" class="cb" data-testid="connbar-maximize" aria-label={maximized ? 'Restore Down' : 'Maximize'} title={maximized ? 'Restore Down' : 'Maximize'} onclick={() => onmaximize?.()}>
+    <button type="button" class="cb" data-testid="connbar-maximize" aria-label={maximized ? 'Restore the desktop' : 'Maximize the desktop'} title={maximized ? 'Restore the desktop' : 'Maximize the desktop'} onclick={() => onmaximize?.()}>
       {#if maximized}
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
           <g fill="none" stroke="#3a4f6e" stroke-width="1.4"><rect x="3.2" y="1" width="5.8" height="5" /><rect x="1" y="3.6" width="5.8" height="5.4" fill="#c3d4ea" /></g>
@@ -60,7 +60,7 @@
       class="cb close"
       data-testid="connbar-close"
       aria-label="Disconnect"
-      title="Disconnect: closes this window. The agents keep running; connect again from the launcher."
+      title="Disconnect. Agents keep running."
       onclick={() => ondisconnect?.()}
     >
       <svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true">

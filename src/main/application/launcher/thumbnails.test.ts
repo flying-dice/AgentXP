@@ -30,6 +30,8 @@ describe('deriveRunState', () => {
     expect(deriveRunState(['working', 'error'], 0)).toBe('working')
     expect(deriveRunState(['connecting'], 0)).toBe('working')
     expect(deriveRunState(['error', 'idle'], 0)).toBe('error')
+    expect(deriveRunState([], 0, true)).toBe('error')
+    expect(deriveRunState(['working'], 0, true)).toBe('working')
     expect(deriveRunState(['working'], 1)).toBe('awaiting_approval')
     expect(deriveRunState(['awaiting_permission'], 0)).toBe('awaiting_approval')
   })

@@ -81,8 +81,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T06.1 - Allow after reading**
 - Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts."
 - Start state: `demo` script; Write files = Ask.
-- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist opened the details first (the session log shows it) or said what lines changed.
-- Min 2 (Show details, Allow). Budget 6 / 8.
+- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist names the changed lines (the diff is inline; opening the details is optional).
+- Min 1 (Allow). Budget 3 / 4.
 
 **T06.2 - Deny**
 - Scenario: "The assistant asks to run a command. You do not know it. Say no, and make sure that the assistant does not run it."
@@ -94,7 +94,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You want the assistant to fix a failing test in your project, but it must never run commands without asking you first. Set things up that way, then ask it to run the tests."
 - Start state: Terminal policy = Allow; `demo` script with a terminal step.
 - Success check: Terminal policy = Ask (or Deny) in the saved policy, and a request appeared for the command (the permission broker log shows it).
-- Min 6 (Start, Control Centre, Permissions, change Terminal, Apply, then chat). Budget 18 / 24.
+- Min 6 (Start, Control Center, Permissions, change Terminal, Apply, then chat). Budget 18 / 24.
 
 ### J07 Approve from the Action Center
 
@@ -131,14 +131,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T10.1 - Take away the command line**
 - Scenario: "You want to be sure that, right now, the assistant cannot run commands. Make that true, and show me how you can tell."
 - Start state: Terminal window open on the desktop.
-- Success check: no Terminal window open; the top bar has no Terminal chip; the panelist names the chip list as the proof (answer check).
-- Min 1 (close Terminal). Budget 4 / 5.
+- Success check: the assistant cannot run commands: either no Terminal window is open and the Workspace bar ("Agent can use") has no Terminal chip, or the Terminal permission is Deny; the panelist names the chip list, the closed Terminal or the Deny policy as the proof (answer check).
+- Min 1 (close Terminal; the Permissions route is longer). Budget 8 / 10.
 
 **T10.2 - What can it touch?**
 - Scenario: "Without asking the assistant, tell me which of these it can do now: read files, run commands, browse the web."
 - Start state: Explorer and Browser open, Terminal closed.
 - Success check: the answer is exactly: read files yes, run commands no, browse yes (researcher check).
-- Min 1 (look). Budget 3 / 4.
+- Min 0 (look only, the answer takes no action). Budget 3 / 4.
 
 ### J11 Pause and take control
 
@@ -151,8 +151,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T11.2 - Approve every step**
 - Scenario: "For the next job you want to approve every single thing the assistant does, even reading."
 - Start state: all permissions Allow; chat open.
-- Success check: `userInControl` is true and the next read call raised a request.
-- Min 1 + prompt (3). Budget 9 / 12.
+- Success check: `userInControl` is true, or every permission group is Ask. A prompt and a raised request are an optional extra (the scenario does not ask for them).
+- Min 1 (take control or set every group to Ask). Budget 9 / 12.
 
 **T11.3 - Carry on after a pause**
 - Scenario: "You paused the assistant a minute ago. Now let it finish the job."
@@ -179,7 +179,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T13.1 - Leave it running**
 - Scenario: "You need to leave your desk for a while, and the assistant should keep working. Close this window without stopping it. Later, come back and see where it is."
 - Start state: `stepping` script (auto mode, long), turn running.
-- Success check: window closed and the agent kept running (the run state is working in the launcher); then reconnected with the chat showing new progress.
+- Success check: the chat window was closed or the desktop disconnected and the agent kept running (the run state is recorded at reconnect); then reconnected with the chat showing new progress (a higher "N of 30" than at the start, or more tool calls).
 - Min 3. Budget 9 / 12.
 
 **T13.2 - You were called back**
@@ -193,7 +193,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T14.1 - Which one needs me?**
 - Scenario: "You have four workspaces running. Find the one that is waiting for you and open it."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected; the panelist names the error desktop (answer check).
+- Success check: the desktop with the pending request is connected. The error desktop is not asked for (the launcher cannot show an error until UX-06); the researcher records whether the waiting row was preselected.
 - Min 2. Budget 6 / 8.
 
 **T14.2 - Rename**
@@ -220,7 +220,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T16.2 - Know what a setting covers**
 - Scenario: "Find out whether turning off 'Code' would also stop the assistant from writing files with Notepad."
-- Start state: Control Centre closed.
+- Start state: Control Center closed.
 - Success check: the answer matches the documented behavior (researcher check; the answer must come from the screen or the manual).
 - Min 4. Budget 12 / 16.
 
@@ -228,7 +228,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T17.1 - Use a different assistant**
 - Scenario: "A colleague gave you an assistant program. Its start command is `node` with the argument `my-agent.js`. Add it, and use it for new workspaces from now on."
-- Start state: Control Centre closed; the file exists.
+- Start state: Control Center closed; the file exists.
 - Success check: a new agent row with that command and args exists and is the default.
 - Min 8. Budget 24 / 32.
 
@@ -255,8 +255,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J19 Browse
 
 **T19.1 - Look at a web page**
-- Scenario: "Open a web page at example.com on this desktop, and let the assistant read it too."
-- Start state: no Browser window; a local test page served by the harness at a fixed address (use that address; no real network).
+- Scenario: "Open the web page at {TEST_PAGE_URL} on this desktop, and let the assistant read it too."
+- Start state: no Browser window; `browser-agent` script; a local test page served by the harness at its own port per session (the facilitator substitutes the address for `{TEST_PAGE_URL}`, default http://127.0.0.1:4173/; no real network).
 - Success check: Browser window open at the page; the Browser chip shown; the panelist said the assistant can now see it (answer check).
 - Min 4. Budget 12 / 16.
 
@@ -294,7 +294,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You are in the Explorer window and do not know what the button called 'Plug in a project' does. Find out without leaving the program."
 - Start state: Explorer open.
 - Success check: a help topic for Explorer is open, and the panelist's answer states what the button does (answer check).
-- Min 1 (F1) + read. Budget 6 / 8.
+- Min 2 (F1 + read). Budget 6 / 8.
 
 **T22.2 - Find a topic by search**
 - Scenario: "Find out how to undo a change that the assistant made."
@@ -319,9 +319,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J24 Code, git status and the gutter [planned]
 
 **T24.1 - What changed in git**
-- Scenario: "Open the project's code. Tell me which files have changes that are not saved in version control yet, and which line of redirect.ts is new."
+- Scenario: "Open the project's code. Tell me which files have changes that are not saved in version control yet, and which lines of redirect.ts are new."
 - Start state: the Git project with two modified files and one new file; new Code app.
-- Success check: the answer names the three files and the correct line (researcher check).
+- Success check: the answer names the three files (redirect.ts, login.ts, session.ts) and the new lines of redirect.ts (the diff shows lines 1, 3 and 4; keyword 3 is checked; researcher check).
 - Min 5. Budget 15 / 20.
 
 **T24.2 - Not a Git project**
@@ -329,6 +329,98 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Start state: plain folder plugged in.
 - Success check: answer names the missing Git repository (from the screen text).
 - Min 4. Budget 12 / 16.
+
+### J25 Review the agent's changes in Code Review
+
+**T25.1 - The blocking comment**
+- Scenario: "The assistant checked the changes in the project and left remarks. Tell me which remark is the most serious one, in which file it is and on which line."
+- Start state: Code Review open on a Git project (`review-notes`) with two reviewer comments (one Blocker on notes.txt line 4, one Minor on line 1); `review` script; a chat is open behind it.
+- Success check: the window is still open and the answer names notes.txt and line 4 (answer check).
+- Min 3 (open file, read comment list, read). Budget 9 / 12.
+
+**T25.2 - The verdict**
+- Scenario: "Tell me whether the assistant accepted the changes or wants more work, and how many remarks it left."
+- Start state: same as T25.1.
+- Success check: the answer says that changes are requested (not approved) and that there are 2 remarks.
+- Min 2. Budget 6 / 8.
+
+### J26 Send review comments to a chat, and comment yourself
+
+**T26.1 - Pass the remarks on**
+- Scenario: "You agree with all the remarks. Give them to the assistant in the conversation that is already open, so that it fixes them."
+- Start state: same as T25.1.
+- Success check: the open chat received a message with the remarks (notes.txt:4) and the assistant answered; no remark is still marked open.
+- Min 4 (Send all, pick the chat, Send, look). Budget 12 / 16.
+
+**T26.2 - Your own remark**
+- Scenario: "Leave a remark 'rename this' on the second line of notes.txt. Do not send it to the assistant yet."
+- Start state: same as T25.1.
+- Success check: a user comment 'rename this' exists on notes.txt line 2 in the open state; the chat did not get it.
+- Min 5 (open file, hover the line, click the plus, type, Submit). Budget 15 / 20.
+
+### J27 Ask the chat pane about what you are looking at
+
+**T27.1 - Explain these lines**
+- Scenario: "You are reading the open file and do not understand the first two lines. Ask the assistant to explain them without opening a separate conversation window."
+- Start state: Code window with index.ts open, pane collapsed; `aside` script.
+- Success check: the Code window's pane has a question and an answer; no Chat window was opened.
+- Min 3 (select lines, right-click, Explain this). Budget 9 / 12.
+
+**T27.2 - More room for the file**
+- Scenario: "The side panel next to the file takes too much room. Make the file use the whole window."
+- Start state: Code window with the chat pane open.
+- Success check: the pane is hidden and the window still offers a way to bring it back.
+- Min 1. Budget 3 / 4.
+
+### J28 Let the agent use a web app in the Browser
+
+**T28.1 - The assistant reads a web page**
+- Scenario: "Ask the assistant: 'Use the chat app at http://127.0.0.1:4174/'. While it works, watch the web page. Then tell me how you could see that the assistant was using the page, and what it did there."
+- Start state: Browser and an idle chat open; `browser-agent` script (the local team chat page, no network).
+- Success check: the assistant finished (DONE), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
+- Min 3. Budget 9 / 12.
+
+**T28.2 - Take back the page**
+- Scenario: "The assistant is busy in the web page and you want to use the page yourself right now. Make the assistant leave it alone."
+- Start state: `browser-slow` script running for about a minute; the Browser shows the activity bar.
+- Success check: the desktop is in user control (the agent no longer acts on its own).
+- Min 1. Budget 3 / 4.
+
+### J29 Browse with tabs
+
+**T29.1 - Two pages side by side**
+- Scenario: "Keep the page you see now. Open a second page at http://127.0.0.1:4173/second so that both stay open, then go back to the first page."
+- Start state: Browser open on the test page (port 4173).
+- Success check: two tabs exist and the first one is active.
+- Min 5 (new tab, click address, type, Enter, click first tab). Budget 15 / 20.
+
+### J30 Menus, right-click and About
+
+**T30.1 - Open a file from the list**
+- Scenario: "You want to read the README of login-app in a plain text editor. Open it from the file list, without using the Start menu."
+- Start state: Explorer open; login-app plugged in.
+- Success check: a Notepad window shows README.md.
+- Min 4 (open the drive, open the folder if needed, right-click README, Open with Notepad). Budget 12 / 16.
+
+**T30.2 - Which version?**
+- Scenario: "Find out which version of Notepad you are using."
+- Start state: Notepad open.
+- Success check: the answer gives the version that the About dialog shows (researcher check).
+- Min 2 (Help menu, About). Budget 6 / 8.
+
+### J31 Help from inside an app
+
+**T31.1 - How do I save?**
+- Scenario: "You do not know how to save a file in Notepad. Use the help of the program to find out."
+- Start state: Notepad open, nothing else.
+- Success check: Help and Support is open on the Notepad topic.
+- Min 2. Budget 6 / 8.
+
+**T31.2 - Why can I not type here?**
+- Scenario: "You clicked into the Terminal window and typing does nothing. Find out why, using the help of the program."
+- Start state: Terminal open.
+- Success check: Help and Support is open on the Terminal topic and the answer says that the Terminal only shows what the assistant runs.
+- Min 2. Budget 6 / 8.
 
 ## Coverage table
 
@@ -358,6 +450,13 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 | J22 | T22.1, T22.2 |
 | J23 | T23.1, T23.2 |
 | J24 | T24.1, T24.2 |
+| J25 | T25.1, T25.2 |
+| J26 | T26.1, T26.2 |
+| J27 | T27.1, T27.2 |
+| J28 | T28.1, T28.2 |
+| J29 | T29.1 |
+| J30 | T30.1, T30.2 |
+| J31 | T31.1, T31.2 |
 
 ## Result table (filled during the sprint)
 

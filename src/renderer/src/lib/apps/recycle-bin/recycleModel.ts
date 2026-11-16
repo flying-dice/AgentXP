@@ -5,6 +5,13 @@ import type { ListRow } from '../../kit/organisms/ListView'
 import { vpathName, vpathParent } from '@shared/vfs'
 import { formatDateTime } from '../shared/dates'
 
+/** The status line after Restore: `Restored 'redirect.ts' to E:\src\auth.` (UX-49); several items are counted. */
+export function restoredMessage(restored: readonly Pick<RecycledChangeDto, 'path'>[]): string {
+  if (restored.length === 0) return ''
+  if (restored.length > 1) return `Restored ${restored.length} items.`
+  return `Restored '${vpathName(restored[0].path)}' to ${vpathParent(restored[0].path)}.`
+}
+
 export function recycleRows(items: readonly RecycledChangeDto[], sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): ListRow[] {
   return [...items]
     .sort((a, b) => b.revertedAt.localeCompare(a.revertedAt))

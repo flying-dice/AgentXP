@@ -22,8 +22,8 @@ describe('surfaceRowModel', () => {
   })
 
   it('a sidebar surface is Closed when its tab is hidden', () => {
-    expect(surfaceRowModel(surface('sidebar', false), false)).toMatchObject({ state: 'open', canOpen: false, canClose: true })
-    expect(surfaceRowModel(surface('sidebar', true), false)).toMatchObject({ state: 'closed', canOpen: true, canClose: false })
+    expect(surfaceRowModel(surface('sidebar', false), false)).toMatchObject({ state: 'open', canOpen: true, openLabel: 'Show', canClose: true })
+    expect(surfaceRowModel(surface('sidebar', true), false)).toMatchObject({ state: 'closed', canOpen: true, openLabel: 'Open', stateText: expect.stringMatching(/: Closed$/), canClose: false })
   })
 
   it('an inline surface is always open and has no Open/Close', () => {

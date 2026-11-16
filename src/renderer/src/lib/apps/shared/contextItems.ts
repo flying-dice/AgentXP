@@ -7,24 +7,53 @@ import type { MenuItemDef } from '../../kit/molecules/MenuItem'
 import type { EditOps } from '../../kit/molecules/standardMenu'
 
 export interface AskChatItemsOptions {
-  /** Explain this and Send selection need text. */
+  /** Explain this needs text. */
   hasSelection: boolean
   /** Builds and sends the request of the picked kind (usually `host.askChat({ app, windowId, kind, ... })`). */
   ask: (kind: AskChatRequest['kind']) => void
-  /** Send selection to chat: "Send output to chat" in Terminal. */
-  sendLabel?: string
 }
 
-/** Separator, Explain this, Ask chat..., Send selection to chat, Open in Chat window (a full chat instead of the chat pane). */
-export function askChatItems(app: string, { hasSelection, ask, sendLabel = 'Send &selection to chat' }: AskChatItemsOptions): MenuItemDef[] {
+/** The words of the chat items, the same in every app (F-019). */
+export const CHAT_ITEM_LABELS = {
+  explain: '&Explain this',
+  ask: 'Ask &chat about this...',
+  askFile: 'Ask &chat about this file...',
+  openWindow: 'Open in Chat &window',
+  startHere: 'Start a &chat here'
+} as const
+
+/**
+ * The chat group of a selection menu: separator, Explain this, "Ask chat about this..." (both use the chat pane) and
+ * "Open in Chat window" (a full chat instead of the pane). The same three items, in the same words, in every app.
+ */
+export function askChatItems(app: string, { hasSelection, ask }: AskChatItemsOptions): MenuItemDef[] {
   return [
     { separator: true },
-    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: '&Explain this', icon: 'session', disabled: !hasSelection, action: () => ask('explain') },
-    { id: `${app}-ctx-ask`, testid: `${app}-ctx-ask`, label: 'Ask &chat...', icon: 'session', action: () => ask('ask') },
-    { id: `${app}-ctx-send`, testid: `${app}-ctx-send`, label: sendLabel, icon: 'session', disabled: !hasSelection, action: () => ask('send') },
-    { id: `${app}-ctx-open-chat`, testid: `${app}-ctx-open-chat`, label: 'Open in Chat &window', icon: 'session', disabled: !hasSelection, action: () => ask('window') }
+    { id: `${app}-ctx-explain`, testid: `${app}-ctx-explain`, label: CHAT_ITEM_LABELS.explain, icon: 'session', disabled: !hasSelection, action: () => ask('explain') },
+    { id: `${app}-ctx-ask`, testid: `${app}-ctx-ask`, label: CHAT_ITEM_LABELS.ask, icon: 'session', action: () => ask('ask') },
+    { id: `${app}-ctx-open-chat`, testid: `${app}-ctx-open-chat`, label: CHAT_ITEM_LABELS.openWindow, icon: 'session', disabled: !hasSelection, action: () => ask('window') }
   ]
 }
+
+/** "Ask chat about this file...": opens the chat pane with a draft about a file (a tree row, a list item). */
+export const askAboutFileItem = (app: string, action: () => void, disabled = false): MenuItemDef => ({
+  id: `${app}-ctx-ask`,
+  testid: `${app}-ctx-ask`,
+  label: CHAT_ITEM_LABELS.askFile,
+  icon: 'session',
+  disabled,
+  action
+})
+
+/** "Start a chat here": a full chat in a Chat window that works in the folder or drive under the pointer. */
+export const startChatHereItem = (app: string, action: () => void, disabled = false): MenuItemDef => ({
+  id: `${app}-ctx-start-chat`,
+  testid: `${app}-ctx-start-chat`,
+  label: CHAT_ITEM_LABELS.startHere,
+  icon: 'session',
+  disabled,
+  action
+})
 
 /** The 1-based line range a selection covers (a selection that ends right after a newline stops on the line before). */
 export function selectionLines(text: string, start: number, end: number): { startLine: number; endLine: number } {

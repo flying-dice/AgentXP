@@ -46,6 +46,8 @@ const DEFAULT_TITLE = 'New Desktop'
  */
 export class LauncherService {
   private lastPublished = ''
+  /** The last failure to start an agent, per desktop; cleared by the next start that works. */
+  private readonly startFailures = new Map<Id, string>()
 
   constructor(private readonly deps: LauncherDeps) {}
 
@@ -77,6 +79,16 @@ export class LauncherService {
     }
     this.publishChanged()
     return required(this.list().find((d) => d.id === record.id), 'Desktop')
+  }
+
+  /** An agent of the desktop could not be started: its row shows the error until a start works. */
+  recordStartFailure(id: Id, reason: string): void {
+    this.startFailures.set(id, reason)
+    this.publishChanged()
+  }
+
+  clearStartFailure(id: Id): void {
+    if (this.startFailures.delete(id)) this.publishChanged()
   }
 
   /** Opens (or focuses) the desktop's OS window. */
@@ -111,6 +123,7 @@ export class LauncherService {
     this.deps.host.close(id)
     for (const session of this.deps.sessions.listByDesktop(id)) await this.deps.chats.remove(session.id)
     this.deps.desktopService.forget(id)
+    this.startFailures.delete(id)
     this.deps.clearLog(id)
     this.deps.desktops.remove(id) // drives, windows, notes and recycled changes cascade; the real folders are untouched
     await this.deps.vfs.deleteDesktopFolder(id) // C: and the thumbnail
@@ -160,7 +173,8 @@ export class LauncherService {
       id: d.id,
       title: d.title,
       connected,
-      runState: deriveRunState(sessions.map((s) => s.status), pendingApprovals),
+      runState: deriveRunState(sessions.map((s) => s.status), pendingApprovals, this.startFailures.has(d.id)),
+      lastError: this.startFailures.get(d.id) ?? null,
       pendingApprovals,
       chatCount: sessions.filter((s) => s.role === 'chat').length,
       drives: this.deps.drives.list(d.id),

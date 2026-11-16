@@ -8,7 +8,7 @@
     component: ActionCenter,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
     args: {
-      approvals: [{ key: '1:7', title: 'Install a new package', detail: 'npm install zod@3.23.8' }],
+      approvals: [{ key: '1:7', title: 'Run a command', detail: "In chat 'Fix login redirect bug' (started 10:42)" }],
       messages: [
         { id: 1, text: 'Context is at 39%. The agent compacts automatically at 80%.' },
         { id: 2, text: 'Opened C:\\Users\\jonathan\\source\\claude-code-win' }
@@ -17,14 +17,17 @@
       onopencontrolcentre: fn(),
       onclose: fn()
     },
-    argTypes: { onreview: { action: 'review' }, onopencontrolcentre: { action: 'open control centre' }, onclose: { action: 'close' } }
+    argTypes: { onreview: { action: 'review' }, onopencontrolcentre: { action: 'open control center' }, onclose: { action: 'close' } }
   })
 </script>
 
 <Story name="WithApproval">
   {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
 </Story>
-<Story name="Two" args={{ approvals: [{ key: 'a', title: 'Edit src/auth/redirect.ts', detail: 'Fix login redirect bug' }, { key: 'b', title: 'Run npm test', detail: 'Add parser unit tests' }] }}>
+<Story name="Two" args={{ approvals: [{ key: 'a', title: 'Change src/auth/redirect.ts', detail: "In chat 'Fix login redirect bug' (started 10:42)" }, { key: 'b', title: 'Run a command', detail: "In chat 'Add parser unit tests' (started 11:05)" }] }}>
+  {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
+</Story>
+<Story name="AfterResume" args={{ approvals: [], messages: [{ id: 1, text: "In chat 'Fix login redirect bug': Resumed. The step that was stopped stays stopped. Send a message to continue.", continueId: 1 }] }}>
   {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
 </Story>
 <Story name="Empty" args={{ approvals: [], messages: [] }}>

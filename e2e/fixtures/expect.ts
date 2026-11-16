@@ -19,7 +19,12 @@ export const see = {
       if (typeof expected === 'string') expect(text).toContain(expected)
       else expect(text).toMatch(expected)
     }),
-  attribute: (locator: Locator, name: string, expected: string): Promise<void> => retry(async () => expect(await locator.first().getAttribute(name)).toBe(expected)),
+  attribute: (locator: Locator, name: string, expected: string | RegExp): Promise<void> =>
+    retry(async () => {
+      const value = await locator.first().getAttribute(name)
+      if (typeof expected === 'string') expect(value).toBe(expected)
+      else expect(value).toMatch(expected)
+    }),
   enabled: (locator: Locator): Promise<void> => retry(async () => expect(await locator.first().isEnabled()).toBe(true)),
   /** Runs any async check until it stops throwing. */
   eventually: retry
