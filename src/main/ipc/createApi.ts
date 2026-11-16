@@ -1,5 +1,7 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
 import type { FilePicker } from '../application/ports'
+import type { DesktopService } from '../application/desktop/DesktopService'
+import type { ProcessService } from '../application/ProcessService'
 import type { A2uiService } from '../application/A2uiService'
 import type { AgentService } from '../application/AgentService'
 import type { ChangeReverter } from '../application/ChangeReverter'
@@ -20,13 +22,14 @@ export interface ApiServices {
   exporter: TranscriptExporter
   a2ui: A2uiService
   shell: ShellService
+  desktops: DesktopService
+  processes: ProcessService
   files: FilePicker
   appVersion: string
 }
 
-const notYet = (): never => {
-  throw new Error('Not implemented yet')
-}
+/** Calls that depend on the calling window are answered per window (see `registerDesktopHandlers`). */
+const perWindow = (channel: string) => (): Promise<never> => Promise.reject(new Error(`${channel} is answered per window`))
 
 /** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
 export function createApi(s: ApiServices): InvokeApi {
@@ -47,20 +50,34 @@ export function createApi(s: ApiServices): InvokeApi {
       readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath),
       gitBranch: (folderId) => s.folders.gitBranch(folderId)
     },
-    // TODO(desktop backend): replace with DesktopService.
     desktop: {
-      list: notYet, current: notYet, create: notYet, open: notYet, rename: notYet, remove: notYet,
-      openWindow: notYet, closeWindow: notYet, focusWindow: notYet, setBounds: notYet, setWindowState: notYet,
-      updateView: notYet, setPaused: notYet, setUserInControl: notYet, newChat: notYet, policy: notYet, setPolicy: notYet
+      list: async () => s.desktops.list(),
+      current: perWindow('desktop.current'),
+      create: (folderId) => s.desktops.create(folderId),
+      open: async (id) => s.desktops.open(id),
+      rename: async (id, title) => s.desktops.rename(id, title),
+      remove: (id) => s.desktops.remove(id),
+      openWindow: async (input) => s.desktops.openWindow(input),
+      closeWindow: async (windowId) => s.desktops.closeWindow(windowId),
+      focusWindow: async (windowId) => s.desktops.focusWindow(windowId),
+      setBounds: async (windowId, bounds) => s.desktops.setBounds(windowId, bounds),
+      setWindowState: async (windowId, state) => s.desktops.setWindowState(windowId, state),
+      updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
+      setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
+      setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
+      newChat: (desktopId, agentId) => s.desktops.newChat(desktopId, agentId),
+      policy: async () => s.desktops.policy(),
+      setPolicy: async (policy) => s.desktops.setPolicy(policy),
+      attachBrowser: perWindow('desktop.attachBrowser')
     },
-    processes: { list: notYet, end: notYet },
+    processes: { list: async () => s.processes.list(), end: (agentId, desktopId) => s.processes.end(agentId, desktopId) },
     app: {
       version: async () => s.appVersion
     },
     sessions: {
       list: async (folderId) => s.queries.list(folderId),
       get: async (id) => s.queries.get(id),
-      create: (folderId, agentId) => s.sessions.create(folderId, agentId),
+      create: (folderId, agentId) => s.sessions.create(folderId, agentId, s.desktops.desktopForFolder(folderId).id),
       rename: async (id, title) => s.sessions.rename(id, title),
       remove: (id) => s.sessions.remove(id),
       transcript: async (id) => s.queries.transcript(id),

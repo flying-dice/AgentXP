@@ -1,6 +1,9 @@
 import type { Database } from './infrastructure/db/sql'
 import { A2uiService } from './application/A2uiService'
 import { AguiRunCoordinator } from './application/agui/AguiRunCoordinator'
+import { DesktopService } from './application/desktop/DesktopService'
+import { noWindowHost, type DesktopWindowHost } from './application/desktop/ports'
+import { ToolGateway } from './application/desktop/ToolGateway'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
 import { SessionEventBus } from './application/SessionEventBus'
@@ -19,6 +22,15 @@ import type {
   PathOpener,
   TextFileSaver
 } from './application/ports'
+import { ProcessService } from './application/ProcessService'
+import { createBrowserTools } from './application/tools/browserTools'
+import { createCodeTools } from './application/tools/codeTools'
+import { DesktopToolService } from './application/tools/DesktopToolService'
+import { createFsTools } from './application/tools/fsTools'
+import { createNotepadTools } from './application/tools/notepadTools'
+import type { CommandRunner } from './application/tools/ports'
+import { createShellTools } from './application/tools/shellTools'
+import { createTerminalTools } from './application/tools/terminalTools'
 import { SessionBroadcaster } from './application/SessionBroadcaster'
 import { SessionEventProjector } from './application/SessionEventProjector'
 import { SessionQueryService } from './application/SessionQueryService'
@@ -30,6 +42,11 @@ import { TranscriptExporter } from './application/TranscriptExporter'
 import { WorkspaceFiles } from './application/WorkspaceFiles'
 import { A2uiBridgeServer, buildA2uiMcpServerConfig } from './infrastructure/a2ui/bridge-server'
 import { AcpAgentConnector } from './infrastructure/acp/AcpAgentConnector'
+import { ElectronBrowserDriver } from './infrastructure/browser/ElectronBrowserDriver'
+import { ShellCommandRunner } from './infrastructure/process/ShellCommandRunner'
+import { SqliteAppWindowRepository } from './infrastructure/db/sqlite-app-window-repository'
+import { SqliteDesktopRepository } from './infrastructure/db/sqlite-desktop-repository'
+import { SqliteToolPolicyRepository } from './infrastructure/db/sqlite-tool-policy-repository'
 import { SqliteA2uiSurfaceRepository } from './infrastructure/db/sqlite-a2ui-surface-repository'
 import { SqliteAgentRepository } from './infrastructure/db/sqlite-agent-repository'
 import { SqliteFileChangeRepository } from './infrastructure/db/sqlite-file-change-repository'
@@ -58,6 +75,10 @@ export interface ComposeOptions {
   a2uiMcp: { electronPath: string; scriptPath: string }
   /** Defaults to spawning real ACP agent processes. */
   connector?: AgentConnector
+  /** The OS windows of desktops; defaults to none (tests). */
+  windows?: DesktopWindowHost
+  /** Runs `terminal_run`; defaults to the platform shell. */
+  commandRunner?: CommandRunner
 }
 
 export interface AppServices {
@@ -70,6 +91,10 @@ export interface AppServices {
   a2uiSink: CompositeA2uiSink
   broker: PermissionBroker
   a2ui: A2uiService
+  /** Desktops, their windows and the tools that follow the apps. */
+  desktops: DesktopService
+  /** The Browser app's pages; main attaches each `<webview>` here (`desktop.attachBrowser`). */
+  browsers: ElectronBrowserDriver
   /** Starts the A2UI bridge and cleans up state left by a previous run. */
   start(): Promise<void>
   /** Disposes agent connections (and their terminals) and the bridge. Does not close the database. */
@@ -90,7 +115,10 @@ export function composeApp(options: ComposeOptions): AppServices {
     changes: new SqliteFileChangeRepository(db),
     terminals: new SqliteTerminalRepository(db),
     permissions: new SqlitePermissionRepository(db),
-    surfaces: new SqliteA2uiSurfaceRepository(db)
+    surfaces: new SqliteA2uiSurfaceRepository(db),
+    desktops: new SqliteDesktopRepository(db),
+    windows: new SqliteAppWindowRepository(db),
+    toolPolicies: new SqliteToolPolicyRepository(db)
   }
   const fileSystem = new NodeWorkspaceFileSystem()
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
@@ -104,10 +132,12 @@ export function composeApp(options: ComposeOptions): AppServices {
   let a2uiBridge: A2uiBridgeServer | null = null
   const a2uiMcpConfig: A2uiMcpConfigFactory = (sessionId) => {
     if (!a2uiBridge) throw new Error('The A2UI bridge is not running')
+    const desktopId = repos.sessions.get(sessionId)?.desktopId
     const config = buildA2uiMcpServerConfig({
       ...options.a2uiMcp,
       socketPath: a2uiBridge.socketPath,
-      sessionKey: String(sessionId)
+      sessionKey: String(sessionId),
+      desktopId: desktopId === null || desktopId === undefined ? undefined : String(desktopId)
     })
     return {
       kind: 'stdio',
@@ -129,7 +159,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     workspaceFiles: new WorkspaceFiles(fileSystem, changeRecorder),
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
-    a2uiMcpConfig
+    a2uiMcpConfig,
+    toolGate: (sessionId) => gateway.forSession(sessionId)
   })
   const sessions = new SessionService({
     sessions: repos.sessions,
@@ -141,11 +172,40 @@ export function composeApp(options: ComposeOptions): AppServices {
     pool,
     runtime,
     broadcaster,
+    events: publisher,
+    desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
+  })
+  const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher)
+  const desktops = new DesktopService({
+    desktops: repos.desktops,
+    windows: repos.windows,
+    policies: repos.toolPolicies,
+    folders: repos.folders,
+    agents: repos.agents,
+    sessions: repos.sessions,
+    chats: sessions,
+    pickFolder: () => folderService.pick(),
+    host: options.windows ?? noWindowHost,
     events: publisher
   })
+  const gateway = new ToolGateway({ desktops, broker, events: eventBus })
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
   const a2uiSink = new CompositeA2uiSink(a2ui)
-  a2uiBridge = new A2uiBridgeServer(a2uiSink)
+  const folderBrowser = new NodeFolderBrowser()
+  const browsers = new ElectronBrowserDriver()
+  const desktopTools = new DesktopToolService({
+    states: desktops,
+    gate: gateway,
+    handlers: {
+      ...createShellTools({ desktops, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
+      ...createFsTools({ desktops, browser: folderBrowser }),
+      ...createNotepadTools({ desktops, browser: folderBrowser }),
+      ...createCodeTools({ desktops, changes: repos.changes }),
+      ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner() }),
+      ...createBrowserTools({ desktops, driver: browsers })
+    }
+  })
+  a2uiBridge = new A2uiBridgeServer(a2uiSink, undefined, undefined, desktopTools)
 
   const queries = new SessionQueryService(
     repos.sessions,
@@ -153,25 +213,34 @@ export function composeApp(options: ComposeOptions): AppServices {
     repos.tasks,
     repos.changes,
     repos.terminals,
-    repos.surfaces
+    repos.surfaces,
+    desktops
   )
   const agui = new AguiRunCoordinator({ queries, sessions, a2ui, broker, events: eventBus, appEvents: publisher })
 
   const api = createApi({
     agents: new AgentService(repos.agents),
-    folders: new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher),
+    folders: folderService,
     sessions,
     queries,
     broker,
     reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder),
     exporter: new TranscriptExporter(repos.sessions, repos.transcripts, options.saver),
     a2ui,
+    desktops,
+    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
     appVersion: options.appVersion ?? '0.0.0'
   })
 
   const bridge = a2uiBridge
+  // Desktop changes: the MCP children refresh their tool lists; chat titles follow session renames.
+  publisher.subscribe((message) => {
+    if (message.name === 'desktop.changed') bridge.publishTools(message.payload.desktopId, message.payload.tools)
+    else if (message.name === 'session.changed') desktops.onSessionChanged(message.payload)
+    else if (message.name === 'session.removed') desktops.onSessionRemoved()
+  })
   return {
     api,
     sessions,
@@ -180,6 +249,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     a2uiSink,
     broker,
     a2ui,
+    desktops,
+    browsers,
     start: async () => {
       sessions.recoverAfterRestart()
       await bridge.start()

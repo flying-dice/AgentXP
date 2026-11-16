@@ -78,7 +78,8 @@ const INVOKE_METHODS = {
     setUserInControl: true,
     newChat: true,
     policy: true,
-    setPolicy: true
+    setPolicy: true,
+    attachBrowser: true
   },
   processes: { list: true, end: true },
   app: { version: true },

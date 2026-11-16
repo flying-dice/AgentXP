@@ -11,6 +11,7 @@ export interface NewSession {
   folderId: Id
   agentId: Id
   title: string
+  desktopId?: Id | null
 }
 
 export interface SessionRepository {
@@ -18,6 +19,8 @@ export interface SessionRepository {
   list(folderId?: Id): SessionDto[]
   get(id: Id): SessionDto | null
   getByAcpSessionId(agentId: Id, acpSessionId: string): SessionDto | null
+  /** Chats of a desktop, newest activity first. */
+  listByDesktop(desktopId: Id): SessionDto[]
   create(input: NewSession): SessionDto
   rename(id: Id, title: string): void
   setStatus(id: Id, status: SessionStatus): void

@@ -1,5 +1,6 @@
 import type { JsonPatchOperation } from '@ag-ui/core'
 import type { AguiSessionInfo, AguiSessionState, AguiTerminalState, AguiToolCallState } from '@shared/agui-state'
+import type { DesktopState } from '@shared/desktop'
 import type { FileChangeDto, SessionDto, TaskDto, TerminalDto } from '@shared/models'
 import type { ToolCallCreatedEvent, ToolCallPatch } from '../../domain/agent/AgentSessionEvent'
 import { diffJson } from './jsonDiff'
@@ -84,6 +85,10 @@ export class SessionStateModel {
 
   setSession(dto: SessionDto): void {
     this.state = { ...this.state, session: sessionInfoOf(dto) }
+  }
+
+  setDesktop(desktop: DesktopState): void {
+    this.state = { ...this.state, desktop }
   }
 
   setTasks(tasks: TaskDto[]): void {

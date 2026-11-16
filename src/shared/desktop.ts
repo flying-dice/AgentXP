@@ -204,6 +204,11 @@ export interface DesktopApi {
   newChat(desktopId: Id, agentId?: Id): Promise<AppWindowState>
   policy(): Promise<ToolPolicyDto>
   setPolicy(policy: ToolPolicyDto): Promise<void>
+  /**
+   * Tells main which guest `webContents` (`webview.getWebContentsId()`) renders the Browser window
+   * `windowId`, so `browser_*` tools can drive it. Call again after every re-attach.
+   */
+  attachBrowser(windowId: Id, webContentsId: number): Promise<void>
 }
 
 export interface AgentProcessDto {

@@ -26,6 +26,10 @@ class AcpLiveConnection implements LiveAgentConnection {
     readonly canLoadSession: boolean
   ) {}
 
+  get pid(): number | null {
+    return this.proc.pid ?? null
+  }
+
   get closed(): Promise<void> {
     return Promise.race([this.connection.closed, this.proc.exited.then(() => undefined)])
   }
@@ -71,6 +75,7 @@ export class AcpAgentConnector implements AgentConnector {
       sink: handlers.sink,
       permissions: handlers.permissions,
       files: handlers.files,
+      gate: handlers.gate,
       terminals
     })
     const live = (canLoadSession: boolean): AcpLiveConnection =>

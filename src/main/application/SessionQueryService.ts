@@ -1,4 +1,5 @@
 import type { A2uiSurfaceDto } from '@shared/a2ui'
+import type { DesktopState } from '@shared/desktop'
 import type { FileChangeDto, Id, SessionDto, TaskDto, TerminalDto, TranscriptEntryDto } from '@shared/models'
 import type { A2uiSurfaceRepository } from '../domain/repositories/a2ui-surface-repository'
 import type { FileChangeRepository } from '../domain/repositories/file-change-repository'
@@ -6,6 +7,7 @@ import type { SessionRepository } from '../domain/repositories/session-repositor
 import type { TaskRepository } from '../domain/repositories/task-repository'
 import type { TerminalRepository } from '../domain/repositories/terminal-repository'
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
+import type { DesktopStates } from './desktop/ports'
 import { required } from './errors'
 
 /** Read side of sessions: lists and per-session collections. */
@@ -16,7 +18,8 @@ export class SessionQueryService {
     private readonly tasks: TaskRepository,
     private readonly changes: FileChangeRepository,
     private readonly terminals: TerminalRepository,
-    private readonly surfaces: A2uiSurfaceRepository
+    private readonly surfaces: A2uiSurfaceRepository,
+    private readonly desktops?: Pick<DesktopStates, 'stateOfSession'>
   ) {}
 
   list(folderId?: Id): SessionDto[] {
@@ -45,5 +48,9 @@ export class SessionQueryService {
 
   surfacesOf(id: Id): A2uiSurfaceDto[] {
     return this.surfaces.list(this.get(id).id)
+  }
+
+  desktopOf(id: Id): DesktopState | null {
+    return this.desktops?.stateOfSession(this.get(id).id) ?? null
   }
 }

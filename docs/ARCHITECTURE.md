@@ -124,6 +124,39 @@ In the renderer, `SurfaceController` feeds the messages to web_core's `MessagePr
 `registry.ts` maps each catalog component to a Svelte component built from the kit. User actions go
 back to the agent through an AG-UI run (`forwardedProps.a2uiAction`).
 
+## Desktop
+
+Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool group table, `enabledToolGroups`,
+`DesktopApi`), `src/shared/desktop-views.ts` (default bounds, initial views, window titles).
+
+- **State.** `DesktopService` (application/desktop) is the source of truth. Windows are persisted
+  (`app_windows` + `chat_windows` / `path_windows` / `browser_windows`, migration 002); focus and the transient view live in
+  memory. Every change recomputes `DesktopState` and publishes `desktop.changed` unless it equals the last one published.
+  Three things listen: (a) `ElectronEventPublisher` sends it to the owning desktop's window only (chat events go the same way
+  via `SessionDto.desktopId`), (b) `AguiRunCoordinator` turns it into STATE_DELTA on `/desktop` for the chats of that desktop
+  (`buildSessionState` fills `desktop`), (c) the bridge pushes `toolsChanged` when `tools` changed.
+- **Windows.** One `BrowserWindow` per open desktop (`ipc/DesktopWindowManager`, URL `?desktop=<id>`, `webviewTag` on). The
+  manager is the `DesktopWindowHost` port: `open` focuses or creates a window, reusing the blank first-run window. Closing an
+  OS window sets `is_open = 0` (not when the app quits). `desktop.current` and `desktop.attachBrowser` need the calling window
+  and are registered per sender (`ipc/registerDesktopHandlers`); every other call goes through `createApi`.
+- **Tools follow apps.** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
+  (`agent7`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
+  every `tools/list`, forwards other calls to the app and sends `notifications/tools/list_changed` when the bridge pushes
+  `toolsChanged` (the child holds a subscription socket per desktop). Handlers are one module per group
+  (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`); `DesktopToolService` validates the
+  arguments, applies the gate and runs them. Tools that change what a window shows go through `DesktopService.updateView`.
+- **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, app closed, policy deny, then ask (policy ask or
+  "take control"). `ToolGateway` applies it to both channels: MCP tools (closed app = MCP error result with
+  `closedAppMessage`) and the ACP client methods (`AcpAgentConnection` calls the `ToolGate` port for `fs/*` and `terminal/*`
+  and answers refusals with a JSON-RPC error). "Ask" shows an Agent7 permission request through `PermissionBroker`; an allow
+  the agent's own prompt just obtained covers the next gated call of that session (60 s, once), so users are not asked twice.
+- **Prompt context.** The AG-UI client sends the desktop as `RunAgentInput.context` (`agent7.desktop`);
+  `SessionService.promptTurn` puts it (or, if absent, the current state) before the user's text as an ACP `resource` block
+  (`agent7://desktop/state`). The block is stored but left out of the AG-UI messages and the Markdown export.
+- **Browser.** The Browser app renders a `<webview partition="persist:agent7-browser">` and reports its
+  `getWebContentsId()` with `desktop.attachBrowser(windowId, id)`; main checks the guest belongs to the caller and hands it to
+  `ElectronBrowserDriver` (navigate, read with numbered refs, screenshot, click, type, back).
+
 ## Window
 
 The main window is frameless (`frame: false`). The kit's `TitleBar` and `CaptionButtons` draw the

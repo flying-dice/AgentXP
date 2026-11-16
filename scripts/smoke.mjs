@@ -32,6 +32,11 @@ try {
         env: {}
       })
       const session = await api.sessions.create(folder.id, agent.id)
+      // The fake agent writes a file and runs a command: tools follow apps, so open Code and Terminal first.
+      await api.desktop.openWindow({ desktopId: session.desktopId, app: 'code' })
+      await api.desktop.openWindow({ desktopId: session.desktopId, app: 'terminal' })
+      const policy = await api.desktop.policy()
+      await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, terminal: 'allow' } })
       const turn = api.sessions.prompt({ sessionId: session.id, text: 'Write the output file', attachments: [] })
       const answer = async () => {
         for (let i = 0; i < 200; i++) {
@@ -45,6 +50,7 @@ try {
       await answer()
       await turn
       return {
+        firstRun: { current: await api.desktop.current(), desktops: await api.desktop.list() },
         session: await api.sessions.get(session.id),
         transcript: await api.sessions.transcript(session.id),
         tasks: await api.sessions.tasks(session.id),
@@ -55,6 +61,15 @@ try {
     { workspace, fixture }
   )
   console.log(JSON.stringify(result, null, 2))
+
+  // First run -> create a desktop: the blank window becomes that desktop's window (`?desktop=<id>`).
+  const created = page.evaluate((folderId) => window.agent7.desktop.create(folderId), result.session.folderId).catch(() => null)
+  await page.waitForURL(/[?&]desktop=\d+/, { timeout: 15_000 })
+  await page.waitForFunction(() => Boolean(window.agent7))
+  const state = await page.evaluate(() => window.agent7.desktop.current())
+  await created
+  console.log('desktop window:', JSON.stringify({ windows: app.windows().length, url: page.url().split('?')[1], tools: state?.tools, folder: state?.folder.path }))
+  if (app.windows().length !== 1 || !state || state.folder.path !== workspace) throw new Error('desktop.create did not open the desktop in the first-run window')
 } finally {
   await app.close()
   await rm(userData, { recursive: true, force: true })

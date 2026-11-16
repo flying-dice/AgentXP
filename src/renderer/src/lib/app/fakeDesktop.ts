@@ -4,69 +4,19 @@
  */
 import type { Id } from '@shared/models'
 import {
-  APP_DISPLAY_NAMES,
   DEFAULT_TOOL_POLICY,
   SINGLETON_APPS,
   enabledToolGroups,
-  type AppKind,
-  type AppView,
   type AppWindowState,
-  type Bounds,
   type DesktopApi,
   type DesktopDto,
   type DesktopState,
   type OpenWindowInput,
   type ToolPolicyDto
 } from '@shared/desktop'
+import { cascadedBounds, initialView, windowTitle } from '@shared/desktop-views'
 
-const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
-  chat: { x: 40, y: 40, width: 640, height: 520 },
-  explorer: { x: 120, y: 80, width: 620, height: 420 },
-  notepad: { x: 200, y: 120, width: 520, height: 380 },
-  code: { x: 80, y: 60, width: 820, height: 560 },
-  terminal: { x: 160, y: 300, width: 640, height: 300 },
-  browser: { x: 100, y: 50, width: 860, height: 600 },
-  'control-centre': { x: 180, y: 90, width: 640, height: 460 },
-  'agent-manager': { x: 220, y: 110, width: 560, height: 400 }
-}
-
-export function initialView(input: OpenWindowInput, title = 'Chat'): AppView {
-  switch (input.app) {
-    case 'chat':
-      return { app: 'chat', sessionId: input.sessionId ?? 0, title }
-    case 'explorer':
-      return { app: 'explorer', path: input.path ?? '', selected: [] }
-    case 'notepad':
-      return { app: 'notepad', path: input.path ?? null, dirty: false, caretLine: 1 }
-    case 'code':
-      return { app: 'code', tabs: input.path ? [input.path] : [], activePath: input.path ?? null, visibleLines: null, selection: null, selectedChangeId: null }
-    case 'terminal':
-      return { app: 'terminal', terminalId: null, cwd: '', runningCommand: null, lastLines: [] }
-    case 'browser':
-      return { app: 'browser', url: input.url ?? 'about:blank', title: '', loading: false }
-    case 'control-centre':
-      return { app: 'control-centre', page: 'agents' }
-    case 'agent-manager':
-      return { app: 'agent-manager' }
-  }
-}
-
-export function windowTitle(view: AppView): string {
-  switch (view.app) {
-    case 'chat':
-      return view.title
-    case 'explorer':
-      return view.path ? `W:\\${view.path.replaceAll('/', '\\')}` : 'Workspace (W:)'
-    case 'notepad':
-      return `${view.path?.split('/').pop() ?? 'Untitled'} - Notepad`
-    case 'code':
-      return view.activePath ? `${view.activePath.split('/').pop()} - Code` : 'Code'
-    case 'browser':
-      return view.title ? `${view.title} - Browser` : 'Browser'
-    default:
-      return APP_DISPLAY_NAMES[view.app]
-  }
-}
+export { initialView, windowTitle }
 
 export interface FakeDesktopOptions {
   folder?: DesktopState['folder']
@@ -121,13 +71,11 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
         return existing
       }
       const view = initialView(input)
-      const offset = (state.windows.length % 6) * 24
-      const b = DEFAULT_BOUNDS[input.app]
       const w: AppWindowState = {
         id: nextId++,
         app: input.app,
         title: windowTitle(view),
-        bounds: { ...b, x: b.x + offset, y: b.y + offset },
+        bounds: cascadedBounds(input.app, state.windows.length),
         windowState: 'normal',
         openedBy: 'user',
         view
@@ -174,7 +122,8 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): DesktopApi 
     },
     newChat: async () => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
     policy: async () => structuredClone(policy),
-    setPolicy: async (p) => void (policy = structuredClone(p))
+    setPolicy: async (p) => void (policy = structuredClone(p)),
+    attachBrowser: async () => {}
   }
   for (const app of options.windows ?? []) void api.openWindow({ desktopId: desktop.id, app })
   return api

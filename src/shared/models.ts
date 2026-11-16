@@ -47,6 +47,8 @@ export interface SessionDto {
   id: Id
   folderId: Id
   agentId: Id
+  /** The desktop this chat lives on; null/absent for chats from before desktops. */
+  desktopId?: Id | null
   title: string
   status: SessionStatus
   acpSessionId: string | null

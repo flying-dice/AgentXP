@@ -48,7 +48,13 @@ async function createSession(): Promise<SessionDto> {
     args: ['--experimental-strip-types', '--no-warnings', fixture],
     env: {}
   })
-  return app.api.sessions.create(folder.id, agent.id)
+  const session = await app.api.sessions.create(folder.id, agent.id)
+  // The fake agent writes a file and runs a command: those need the apps that provide them.
+  const desktopId = session.desktopId!
+  app.api.desktop.openWindow({ desktopId, app: 'code' })
+  app.api.desktop.openWindow({ desktopId, app: 'terminal' })
+  app.api.desktop.setPolicy({ ...(await app.api.desktop.policy()), groups: { ...(await app.api.desktop.policy()).groups, terminal: 'allow' } })
+  return session
 }
 
 const outcomeOf = (events: Event[]): { type: string } | undefined =>

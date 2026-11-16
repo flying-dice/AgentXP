@@ -157,6 +157,8 @@ export class AguiThread {
     switch (message.name) {
       case 'session.changed':
         return this.updateState(() => this.model.setSession(message.payload))
+      case 'desktop.changed':
+        return this.updateState(() => this.model.setDesktop(message.payload))
       case 'tasks.changed':
         return this.updateState(() => this.model.setTasks(message.payload.tasks))
       case 'changes.changed':

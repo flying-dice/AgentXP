@@ -4,8 +4,8 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { A2UI_CATALOG_ID, type A2uiServerMessage } from '@shared/a2ui'
 import type { A2uiMessageSink, A2uiSinkResult } from '../../domain/a2ui/ports'
 import { A2uiBridgeServer, buildA2uiMcpServerConfig, defaultSocketPath } from './bridge-server'
-import { SocketForwarder } from './bridge-client'
-import { createA2uiMcpServer } from './mcp-tools'
+import { SocketBridgeClient } from './bridge-client'
+import { createAgent7McpServer } from './mcp-tools'
 
 class FakeSink implements A2uiMessageSink {
   calls: { sessionKey: string; messages: A2uiServerMessage[] }[] = []
@@ -27,7 +27,7 @@ describe('A2UI MCP <-> bridge', () => {
     sink = new FakeSink()
     bridge = new A2uiBridgeServer(sink, defaultSocketPath(process.pid + Math.floor(Math.random() * 1e6)))
     await bridge.start()
-    const server = createA2uiMcpServer(new SocketForwarder(bridge.socketPath, 'sess-1'))
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, 'sess-1'))
     const [a, b] = InMemoryTransport.createLinkedPair()
     client = new Client({ name: 't', version: '0' })
     await Promise.all([server.connect(a), client.connect(b)])
@@ -91,7 +91,7 @@ describe('A2UI MCP <-> bridge', () => {
   it('also validates on the app side of the bridge', async () => {
     // A client that skips the MCP-side validation (e.g. an older MCP server build) is still checked by the bridge.
     const lenient = { validate: (m: unknown) => ({ ok: true as const, messages: m as A2uiServerMessage[] }) }
-    const server = createA2uiMcpServer(new SocketForwarder(bridge.socketPath, 'sess-1'), lenient as never)
+    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, 'sess-1'), lenient as never)
     const [a, b] = InMemoryTransport.createLinkedPair()
     const other = new Client({ name: 't2', version: '0' })
     await Promise.all([server.connect(a), other.connect(b)])
@@ -112,14 +112,15 @@ describe('A2UI MCP <-> bridge', () => {
 
 describe('buildA2uiMcpServerConfig', () => {
   it('builds the ACP stdio shape', () => {
-    expect(buildA2uiMcpServerConfig({ electronPath: '/e', scriptPath: '/s.js', socketPath: '/sock', sessionKey: 'k' })).toEqual({
-      name: 'agent7-a2ui',
+    expect(buildA2uiMcpServerConfig({ electronPath: '/e', scriptPath: '/s.js', socketPath: '/sock', sessionKey: 'k', desktopId: '3' })).toEqual({
+      name: 'agent7',
       command: '/e',
       args: ['/s.js'],
       env: [
         { name: 'ELECTRON_RUN_AS_NODE', value: '1' },
         { name: 'AGENT7_A2UI_SOCKET', value: '/sock' },
-        { name: 'AGENT7_SESSION_KEY', value: 'k' }
+        { name: 'AGENT7_SESSION_KEY', value: 'k' },
+        { name: 'AGENT7_DESKTOP_ID', value: '3' }
       ]
     })
   })

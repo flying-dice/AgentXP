@@ -16,6 +16,7 @@ import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSin
 import type { FileAccess, FileAccessProvider } from '../domain/agent/FileAccess'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import type { PermissionPrompter } from '../domain/agent/PermissionPrompter'
+import type { ToolGate } from '../domain/agent/ToolGate'
 
 /**
  * Events that stay inside the main process. The AG-UI backend translates them into the AG-UI
@@ -89,6 +90,8 @@ export interface ConnectionHandlers {
   sink: AgentSessionEventSink
   permissions: PermissionPrompter
   files: FileAccessProvider
+  /** Gates the client-side fs and terminal requests of this session. */
+  gate: ToolGate
   onTerminalActivity(activity: TerminalActivity): void
 }
 
@@ -114,6 +117,8 @@ export type StopReason = 'end_turn' | 'max_tokens' | 'max_turn_requests' | 'refu
 /** One live agent (process + protocol connection) serving exactly one session. */
 export interface LiveAgentConnection {
   readonly canLoadSession: boolean
+  /** The agent process id, when known. */
+  readonly pid?: number | null
   /** Resolves when the agent went away (crash or dispose). */
   readonly closed: Promise<void>
   newSession(cwd: string, mcpServers: McpServerConfig[]): Promise<OpenedAcpSession>

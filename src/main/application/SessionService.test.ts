@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { allowAllTools } from '../domain/agent/ToolGate'
 import { AgentConnectionPool } from './AgentConnectionPool'
 import { FileChangeRecorder } from './FileChangeRecorder'
 import { PermissionBroker } from './PermissionBroker'
@@ -6,7 +7,7 @@ import { SessionBroadcaster } from './SessionBroadcaster'
 import { SessionEventBus } from './SessionEventBus'
 import { SessionEventProjector } from './SessionEventProjector'
 import { SessionRuntime } from './SessionRuntime'
-import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt } from './SessionService'
+import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt, type SessionServiceDeps } from './SessionService'
 import { TerminalRecorder } from './TerminalRecorder'
 import { WorkspaceFiles } from './WorkspaceFiles'
 import { createAppFixture, FakeConnector } from './test-helpers'
@@ -16,6 +17,7 @@ let f: ReturnType<typeof createAppFixture>
 let connector: FakeConnector
 let pool: AgentConnectionPool
 let service: SessionService
+let serviceDeps: SessionServiceDeps
 
 beforeEach(() => {
   f = createAppFixture()
@@ -37,9 +39,10 @@ beforeEach(() => {
     workspaceFiles: new WorkspaceFiles(new NodeWorkspaceFileSystem(), new FileChangeRecorder(repos.changes, publisher)),
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
+    toolGate: () => allowAllTools,
     a2uiMcpConfig: (id) => ({ kind: 'stdio', name: 'a2ui', command: 'electron', args: ['a2ui-mcp.js'], env: { KEY: String(id) } })
   })
-  service = new SessionService({
+  serviceDeps = {
     sessions: repos.sessions,
     agents: repos.agents,
     folders: repos.folders,
@@ -50,7 +53,8 @@ beforeEach(() => {
     runtime,
     broadcaster,
     events: publisher
-  })
+  }
+  service = new SessionService(serviceDeps)
 })
 
 const status = (id: number): string | undefined => f.repos.sessions.get(id)?.status
@@ -127,6 +131,37 @@ describe('SessionService.prompt', () => {
     await service.sendHidden(session.id, 'action')
     expect(f.repos.transcripts.list(session.id)).toHaveLength(0)
     expect(connector.connections[0]!.prompts).toHaveLength(1)
+  })
+})
+
+describe('SessionService.prompt desktop context', () => {
+  const json = '{"desktopId":1}'
+  const resource = { kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json', text: json }
+
+  it('puts the client\'s desktop state before the user\'s text and stores it with the message', async () => {
+    const session = await service.create(f.folderId)
+    await service.promptTurn({ sessionId: session.id, text: 'hello', attachments: [], desktopContext: json })
+    expect(connector.connections[0]!.prompts[0]).toEqual([resource, { kind: 'text', text: 'hello' }])
+    expect(f.repos.transcripts.list(session.id)[0]).toMatchObject({ role: 'user', blocks: [resource, { kind: 'text', text: 'hello' }] })
+  })
+
+  it('adds the current desktop state itself when the client sent none (main is the truth)', async () => {
+    service = new SessionService({ ...serviceDeps, desktopContext: { contextOfSession: () => json } })
+    const session = await service.create(f.folderId)
+    await service.prompt({ sessionId: session.id, text: 'hello', attachments: [] })
+    expect(connector.connections[0]!.prompts[0]).toEqual([resource, { kind: 'text', text: 'hello' }])
+  })
+
+  it('sends only the text for a chat without a desktop', async () => {
+    service = new SessionService({ ...serviceDeps, desktopContext: { contextOfSession: () => null } })
+    const session = await service.create(f.folderId)
+    await service.prompt({ sessionId: session.id, text: 'hello', attachments: [] })
+    expect(connector.connections[0]!.prompts[0]).toEqual([{ kind: 'text', text: 'hello' }])
+  })
+
+  it('does not count the desktop block as something to send alone', async () => {
+    const session = await service.create(f.folderId)
+    await expect(service.promptTurn({ sessionId: session.id, text: '  ', attachments: [], desktopContext: json })).rejects.toThrow('Nothing to send')
   })
 })
 

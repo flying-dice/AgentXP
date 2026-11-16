@@ -16,6 +16,7 @@ import type { AgentSessionEventSink } from '../../domain/agent/AgentSessionEvent
 import type { FileAccessProvider } from '../../domain/agent/FileAccess'
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import type { PermissionDecision, PermissionPrompter } from '../../domain/agent/PermissionPrompter'
+import { ToolRefusedError, allowAllTools, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
 import { toAcpContentBlock } from './contentMapping'
 import { mapSessionUpdate, toToolCallPatch } from './mapSessionUpdate'
 import { extractSessionState, type SessionState } from './sessionState'
@@ -52,6 +53,8 @@ export interface AcpAgentConnectionDeps {
   permissions: PermissionPrompter
   files: FileAccessProvider
   terminals: TerminalManager
+  /** Refuses fs/terminal requests whose app is closed or that policy forbids. Default: allow all. */
+  gate?: ToolGate
   clientName?: string
   clientVersion?: string
 }
@@ -69,6 +72,8 @@ export class AgentAuthRequiredError extends Error {
 }
 
 const AUTH_REQUIRED_CODE = -32000
+/** JSON-RPC server-error code for a request the desktop refuses (closed app, policy, pause). */
+const TOOL_REFUSED_CODE = -32010
 
 const toMcpServer = (config: McpServerConfig): McpServer =>
   config.kind === 'stdio'
@@ -201,22 +206,35 @@ export class AcpAgentConnection {
 
   private buildApp(): ReturnType<typeof client> {
     const { files, terminals } = this.deps
+    const gate = this.deps.gate ?? allowAllTools
+    /** Runs `run` after the gate agreed. */
+    const gated = <T>(
+      sessionId: string,
+      group: GatedToolGroup,
+      title: string,
+      run: () => Promise<T>,
+      askUser = true
+    ): Promise<T> =>
+      guard(async () => {
+        await gate.check(sessionId, { group, title, askUser })
+        return run()
+      })
     return client({ name: 'agent7' })
       .onNotification(methods.client.session.update, ({ params }) => this.handleUpdate(params))
       .onRequest(methods.client.session.requestPermission, ({ params }) => this.handlePermission(params))
       .onRequest(methods.client.fs.readTextFile, ({ params }) =>
-        guard(async () => ({
+        gated(params.sessionId, 'fs.read', `Read ${params.path}`, async () => ({
           content: await files.forSession(params.sessionId).readTextFile(params.path, params.line ?? undefined, params.limit ?? undefined)
         }))
       )
       .onRequest(methods.client.fs.writeTextFile, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'fs.write', `Write ${params.path}`, async () => {
           await files.forSession(params.sessionId).writeTextFile(params.path, params.content)
           return {}
         })
       )
       .onRequest(methods.client.terminal.create, ({ params }) =>
-        guard(async () => ({
+        gated(params.sessionId, 'terminal', `Run ${[params.command, ...(params.args ?? [])].join(' ')}`, async () => ({
           terminalId: terminals.create(params.sessionId, {
             command: params.command,
             args: params.args,
@@ -227,22 +245,22 @@ export class AcpAgentConnection {
         }))
       )
       .onRequest(methods.client.terminal.output, ({ params }) =>
-        guard(async () => terminals.output(params.terminalId))
+        gated(params.sessionId, 'terminal', 'Read terminal output', async () => terminals.output(params.terminalId), false)
       )
       .onRequest(methods.client.terminal.waitForExit, ({ params }) =>
-        guard(() => terminals.waitForExit(params.terminalId))
+        gated(params.sessionId, 'terminal', 'Wait for terminal', () => terminals.waitForExit(params.terminalId), false)
       )
       .onRequest(methods.client.terminal.kill, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'terminal', 'Kill terminal', async () => {
           await terminals.kill(params.terminalId)
           return {}
-        })
+        }, false)
       )
       .onRequest(methods.client.terminal.release, ({ params }) =>
-        guard(async () => {
+        gated(params.sessionId, 'terminal', 'Release terminal', async () => {
           await terminals.release(params.terminalId)
           return {}
-        })
+        }, false)
       )
   }
 
@@ -294,6 +312,7 @@ async function guard<T>(run: () => Promise<T>): Promise<T> {
     return await run()
   } catch (error) {
     if (error instanceof RequestError) throw error
+    if (error instanceof ToolRefusedError) throw new RequestError(TOOL_REFUSED_CODE, error.message)
     if (isNodeError(error) && error.code === 'ENOENT') throw RequestError.resourceNotFound(error.path)
     throw RequestError.internalError(undefined, error instanceof Error ? error.message : String(error))
   }

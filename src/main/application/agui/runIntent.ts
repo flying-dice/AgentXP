@@ -1,5 +1,6 @@
 import { contentToText, type ContentPart, type Message, type ResumeEntry, type RunAgentInput } from '@ag-ui/core'
 import type { A2uiClientEvent } from '@shared/a2ui'
+import { DESKTOP_CONTEXT_DESCRIPTION } from '@shared/desktop'
 import { AppError } from '../errors'
 import { fileUrlToPath } from './fileUrl'
 
@@ -7,7 +8,7 @@ import { fileUrlToPath } from './fileUrl'
 export type RunIntent =
   | { kind: 'resume'; entries: ResumeEntry[] }
   | { kind: 'a2ui'; event: A2uiClientEvent }
-  | { kind: 'prompt'; messageId: string; text: string; attachments: string[] }
+  | { kind: 'prompt'; messageId: string; text: string; attachments: string[]; desktopContext: string | null }
   | { kind: 'connect' }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
@@ -30,9 +31,21 @@ function attachmentsOf(parts: ContentPart[]): string[] {
   })
 }
 
-function promptOf(message: Extract<Message, { role: 'user' }>): RunIntent {
+/** The desktop state the client sent along (`context` entry `agent7.desktop`), as JSON text. */
+function desktopContextOf(input: RunAgentInput): string | null {
+  const entry = input.context?.find((c) => c.description === DESKTOP_CONTEXT_DESCRIPTION)
+  return entry?.value ? entry.value : null
+}
+
+function promptOf(message: Extract<Message, { role: 'user' }>, input: RunAgentInput): RunIntent {
   const parts = typeof message.content === 'string' ? [] : message.content
-  return { kind: 'prompt', messageId: message.id, text: contentToText(message.content), attachments: attachmentsOf(parts) }
+  return {
+    kind: 'prompt',
+    messageId: message.id,
+    text: contentToText(message.content),
+    attachments: attachmentsOf(parts),
+    desktopContext: desktopContextOf(input)
+  }
 }
 
 /**
@@ -44,6 +57,6 @@ export function classifyRun(input: RunAgentInput, handledMessageIds: ReadonlySet
   const action = a2uiActionOf(input.forwardedProps)
   if (action) return { kind: 'a2ui', event: action }
   const last = input.messages.at(-1)
-  if (last?.role === 'user' && !handledMessageIds.has(last.id)) return promptOf(last)
+  if (last?.role === 'user' && !handledMessageIds.has(last.id)) return promptOf(last, input)
   return { kind: 'connect' }
 }

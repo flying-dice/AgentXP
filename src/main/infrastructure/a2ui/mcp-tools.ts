@@ -1,50 +1,91 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { A2UI_VERSION } from '@shared/a2ui/messages'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
-import type { A2uiForwarder } from './bridge-client'
+import { specsForGroups } from '../../application/tools/catalog'
+import type { BridgeClient } from './bridge-client'
 import { buildCatalogReply } from './mcp-instructions'
 import { MCP_SERVER_NAME } from './protocol'
 
 const text = (t: string, isError = false): CallToolResult => ({ content: [{ type: 'text', text: t }], ...(isError ? { isError } : {}) })
 
-/** Builds the MCP server (transport-agnostic) exposing the A2UI tools. */
-export function createA2uiMcpServer(forwarder: A2uiForwarder, validator: A2uiMessageValidator = new A2uiMessageValidator()): McpServer {
-  const server = new McpServer({ name: MCP_SERVER_NAME, version: '0.1.0' })
+const jsonSchemaOf = (input: z.ZodType): Tool['inputSchema'] => {
+  const { $schema: _schema, ...schema } = z.toJSONSchema(input, { target: 'draft-7', io: 'input' })
+  return schema as Tool['inputSchema']
+}
 
-  server.registerTool(
-    'a2ui_catalog',
-    { description: 'Describe the Agent7 WinForms component catalog and how to draw UI surfaces. Call this before a2ui_render.' },
-    () => text(buildCatalogReply())
-  )
+const A2UI_TOOLS: Tool[] = [
+  {
+    name: 'a2ui_catalog',
+    description: 'Describe the Agent7 WinForms component catalog and how to draw UI surfaces. Call this before a2ui_render.',
+    inputSchema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'a2ui_render',
+    description: 'Create/update UI surfaces shown inline in the chat. Takes A2UI v0.9 server messages (see a2ui_catalog).',
+    inputSchema: jsonSchemaOf(
+      z.object({
+        messages: z
+          .array(z.record(z.string(), z.unknown()))
+          .min(1)
+          .describe('A2UI server messages: createSurface | updateComponents | updateDataModel | deleteSurface')
+      })
+    )
+  },
+  {
+    name: 'a2ui_delete_surface',
+    description: 'Remove a UI surface from the chat.',
+    inputSchema: jsonSchemaOf(z.object({ surfaceId: z.string().min(1).describe('Id of the surface to delete') }))
+  }
+]
+
+const renderArgs = z.object({ messages: z.array(z.record(z.string(), z.unknown())).min(1) })
+const deleteArgs = z.object({ surfaceId: z.string().min(1) })
+
+/**
+ * The MCP server of one chat (transport-agnostic). Besides the A2UI tools it serves the desktop tools:
+ * `tools/list` asks the app which groups the open apps enable, calls are run by the app, and the app's
+ * `toolsChanged` push becomes `notifications/tools/list_changed`.
+ */
+export function createAgent7McpServer(client: BridgeClient, validator: A2uiMessageValidator = new A2uiMessageValidator()): Server {
+  const server = new Server({ name: MCP_SERVER_NAME, version: '0.2.0' }, { capabilities: { tools: { listChanged: true } } })
 
   const rejected = (errors: string[]): CallToolResult => text(`Rejected. Fix and resend:\n${errors.join('\n')}`, true)
-
   /** Validates with web_core first so the agent gets errors without a round trip to the app. */
   const send = async (messages: unknown[]): Promise<CallToolResult> => {
     const validated = validator.validate(messages)
     if (!validated.ok) return rejected(validated.errors)
-    const res = await forwarder.forward(validated.messages)
+    const res = await client.forward(validated.messages)
     return res.ok ? text('ok') : rejected(res.errors ?? ['unknown error'])
   }
 
-  server.registerTool(
-    'a2ui_render',
-    {
-      description: 'Create/update UI surfaces shown inline in the chat. Takes A2UI v0.9 server messages (see a2ui_catalog).',
-      inputSchema: {
-        messages: z.array(z.record(z.string(), z.unknown())).min(1).describe('A2UI server messages: createSurface | updateComponents | updateDataModel | deleteSurface')
+  const desktopTools = async (): Promise<Tool[]> =>
+    specsForGroups(await client.tools()).map((spec) => ({ name: spec.name, description: spec.description, inputSchema: jsonSchemaOf(spec.input) }))
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [...A2UI_TOOLS, ...(await desktopTools())] }))
+
+  server.setRequestHandler(CallToolRequestSchema, async ({ params }): Promise<CallToolResult> => {
+    switch (params.name) {
+      case 'a2ui_catalog':
+        return text(buildCatalogReply())
+      case 'a2ui_render': {
+        const args = renderArgs.safeParse(params.arguments)
+        return args.success ? send(args.data.messages) : text(`Invalid arguments: ${args.error.message}`, true)
       }
-    },
-    ({ messages }) => send(messages)
-  )
+      case 'a2ui_delete_surface': {
+        const args = deleteArgs.safeParse(params.arguments)
+        return args.success ? send([{ version: A2UI_VERSION, deleteSurface: { surfaceId: args.data.surfaceId } }]) : text(`Invalid arguments: ${args.error.message}`, true)
+      }
+      default:
+{
+        const result = await client.call(params.name, params.arguments ?? {})
+        return { content: result.content, ...(result.isError ? { isError: true } : {}) }
+      }
+    }
+  })
 
-  server.registerTool(
-    'a2ui_delete_surface',
-    { description: 'Remove a UI surface from the chat.', inputSchema: { surfaceId: z.string().min(1).describe('Id of the surface to delete') } },
-    ({ surfaceId }) => send([{ version: A2UI_VERSION, deleteSurface: { surfaceId } }])
-  )
-
+  client.onToolsChanged(() => void server.sendToolListChanged().catch(() => {}))
+  server.onclose = () => client.close()
   return server
 }

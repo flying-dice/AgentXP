@@ -55,7 +55,13 @@ async function createSession(): Promise<SessionDto> {
     args: ['--experimental-strip-types', '--no-warnings', fixture],
     env: {}
   })
-  return app.api.sessions.create(folder.id, agent.id)
+  const session = await app.api.sessions.create(folder.id, agent.id)
+  // The fake agent writes a file and runs a command: those need the apps that provide them.
+  const desktopId = session.desktopId!
+  app.api.desktop.openWindow({ desktopId, app: 'code' })
+  app.api.desktop.openWindow({ desktopId, app: 'terminal' })
+  app.api.desktop.setPolicy({ ...(await app.api.desktop.policy()), groups: { ...(await app.api.desktop.policy()).groups, terminal: 'allow' } })
+  return session
 }
 
 describe('app composition with the fake ACP agent', () => {
@@ -77,7 +83,11 @@ describe('app composition with the fake ACP agent', () => {
 
     const transcript = await app.api.sessions.transcript(session.id)
     expect(transcript.map((e) => e.kind)).toEqual(['message', 'message', 'tool_call'])
-    expect(transcript[0]).toMatchObject({ role: 'user', blocks: [{ kind: 'text', text: 'Write the output file' }] })
+    // The prompt carries the desktop state first (stored, but not shown as the user's text).
+    expect(transcript[0]).toMatchObject({
+      role: 'user',
+      blocks: [{ kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json' }, { kind: 'text', text: 'Write the output file' }]
+    })
     expect(transcript[1]).toMatchObject({ role: 'agent', blocks: [{ kind: 'text', text: 'Working on it' }] })
     expect(transcript[2]).toMatchObject({
       toolCallId: 'tc-1',
@@ -141,4 +151,30 @@ describe('app composition with the fake ACP agent', () => {
     await expect(app.api.folders.readFile(folder.id, '../outside.txt')).rejects.toThrow('outside the workspace')
     await expect(app.api.folders.readDir(folder.id, '..')).rejects.toThrow('outside the workspace')
   })
+
+  it('desktops: a chat lives on a desktop, its window follows the chat, and desktop events carry the derived tools', async () => {
+    const folder = await app.api.folders.add(workspace)
+    const agent = await app.api.agents.create({ name: 'Fake agent', command: 'node', args: ['--experimental-strip-types', '--no-warnings', fixture], env: {} })
+    const desktop = (await app.api.desktop.create(folder.id))!
+    expect(desktop).toMatchObject({ folderId: folder.id, isOpen: true })
+
+    const chat = await app.api.desktop.newChat(desktop.id, agent.id)
+    const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
+    expect(await app.api.sessions.get(sessionId)).toMatchObject({ desktopId: desktop.id, status: 'idle' })
+
+    await app.api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
+    const changed = publisher.payloads('desktop.changed')
+    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: ['shell', 'terminal'], folder: { path: workspace } })
+    expect(changed.at(-1)?.windows.map((w) => w.app)).toEqual(['chat', 'terminal'])
+
+    // Running agents show up in the Agent Manager, and ending the process closes the chat.
+    expect(await app.api.processes.list()).toMatchObject([{ agentId: agent.id, desktopId: desktop.id, sessionIds: [sessionId] }])
+    await app.api.processes.end(agent.id, desktop.id)
+    expect((await app.api.sessions.get(sessionId)).status).toBe('closed')
+
+    // Deleting the chat removes its window.
+    await app.api.sessions.remove(sessionId)
+    expect(publisher.payloads('desktop.changed').at(-1)?.windows.map((w) => w.app)).toEqual(['terminal'])
+    expect((await app.api.desktop.list()).map((d) => d.id)).toEqual([desktop.id])
+  }, 30_000)
 })
