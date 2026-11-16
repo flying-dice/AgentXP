@@ -103,7 +103,7 @@ function within(b: Bounds, area: { width: number; height: number }, minY: number
 /**
  * Bounds of a new window. Without a window to avoid this is the cascade (`cascadedBounds`). With one
  * (the focused chat: the user is typing in it) the window is tiled where it does not cover it, in this order:
- * to the right, below, to the left, above at full size, then squeezed into the room to the right or below.
+ * to the right, below, to the left, above at full size, then squeezed into the room to the right, below or to the left.
  * When there is no room at all it falls back to the cascade (overlap cannot be avoided). Always inside `area`.
  */
 export function placeWindow(
@@ -133,6 +133,9 @@ export function placeWindow(
   if (roomRight >= tileMinWidth(app)) return { x: rightX, y: top, width: roomRight, height }
   const roomBelow = area.height - belowY
   if (roomBelow >= MIN_TILE.height) return { x: left, y: belowY, width, height: roomBelow }
+  // The window sits at the right edge (a chat does): squeeze into the room to its left (UX-181).
+  const roomLeft = avoid.x - PLACEMENT_GAP
+  if (roomLeft >= tileMinWidth(app)) return { x: 0, y: top, width: roomLeft, height }
   return base
 }
 
@@ -311,6 +314,9 @@ export const reviewWindowTitle = (projectName: string): string => `Review - ${pr
 /** The title of the window of an agent's form: the same name as its chat row (UX-135). */
 export const surfaceWindowTitle = (title: string): string => title
 
+/** The window the Chats icon opens (UX-180): it carries the icon's name and the name of the program. */
+export const CHATS_WINDOW_TITLE = 'Chats - Task Manager'
+
 /**
  * The title of a window. `projectName` is the name of the project a Code Review window shows (the label of its drive,
  * which only the desktop knows); without it the folder name stands in.
@@ -335,6 +341,8 @@ export function windowTitle(view: AppView, projectName?: string): string {
       return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
     case 'help':
       return helpWindowTitle(view.topic)
+    case 'agent-manager':
+      return view.tab === 'chats' ? CHATS_WINDOW_TITLE : APP_DISPLAY_NAMES[view.app]
     case 'code-review':
       return reviewWindowTitle(projectName ?? (view.root.length <= 3 ? view.root : vpathName(view.root)))
     default:

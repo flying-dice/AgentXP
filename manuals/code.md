@@ -17,6 +17,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
   - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
+- Save a file
 - 6 - Troubleshooting
 - 7 - Need Help?
 
@@ -196,7 +197,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
 | Tree menu: open | Opens the file, or opens the folder. | `code-ctx-open` |
 | New chat here | Above the tree: starts a chat in the selected project or folder. | `code-tree-new-chat` |
-| Plug in a folder | Above the tree: adds a folder from your computer as a project. | `code-tree-plug-in` |
+| Plug in a folder | Above the tree: adds a folder from your computer as a project. The tooltip says "Give the agent a folder of your computer to work on". The tree shows the new project and selects it. | `code-tree-plug-in` |
 | Remove from desktop | Above the tree: takes the selected project off the desktop. Its folder stays on your disk. | `code-tree-remove` |
 | Tree menu: new chat here | Starts a chat on this project or folder. | `code-ctx-start-chat` |
 | Tree menu: open in Explorer | Shows the folder in Explorer. | `code-ctx-open-explorer` |
@@ -258,6 +259,14 @@ To see what changed in a file that Git lists, follow the steps below:
 1. Click the **Git** tab at the bottom.
 2. Click the file. Its changes show in the pane below the list. Point to the row to see which lines changed.
 3. To review the file with comments, double-click it, or select it and press Enter. Code Review opens on that file.
+
+### Save a file
+
+Code does not save files. You cannot type in the editor, and the agent writes the files. To change a file yourself, follow the steps below:
+
+1. Right-click the file in the tree and click **Open with Notepad**.
+2. Change the text.
+3. Press Ctrl+S.
 
 ## 6 - Troubleshooting
 

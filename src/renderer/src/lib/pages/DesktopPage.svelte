@@ -159,7 +159,7 @@
 
   const balloonAction = $derived.by(() => {
     const action = desktop.balloon?.action
-    return action ? { label: action.label, onclick: () => { action.run(); desktop.dismissBalloon() } } : undefined
+    return action ? { label: action.label, onclick: () => void desktop.runBalloonAction() } : undefined
   })
 
   const approvals = $derived(desktop.inbox.pending)
@@ -372,7 +372,7 @@
     {/if}
     {#if desktop.balloon}
       <div class="balloon">
-        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} action={balloonAction} onclose={() => desktop.dismissBalloon()} />
+        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} action={balloonAction} onclose={() => desktop.dismissBalloon()} onhold={(held) => desktop.holdBalloon(held)} />
       </div>
     {/if}
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />

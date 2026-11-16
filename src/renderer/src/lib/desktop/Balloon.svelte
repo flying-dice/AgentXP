@@ -8,16 +8,18 @@
     text: string
     icon?: IconName
     onclose?: () => void
+    /** The pointer entered (true) or left (false) the balloon: it stays while the pointer is on it. */
+    onhold?: (held: boolean) => void
     /** A button under the text (for example "Open Task Manager"). */
     action?: { label: string; onclick: () => void }
     /** Distance of the tail from the right edge of the balloon, in px. */
     tail?: number
   }
 
-  let { title, text, icon = 'info', onclose, action, tail = 44 }: Props = $props()
+  let { title, text, icon = 'info', onclose, onhold, action, tail = 44 }: Props = $props()
 </script>
 
-<div class="balloon" data-testid="balloon" role="status" style:--tail="{tail}px">
+<div class="balloon" data-testid="balloon" role="status" style:--tail="{tail}px" onpointerenter={() => onhold?.(true)} onpointerleave={() => onhold?.(false)}>
   <div class="head">
     <Icon name={icon} size={16} />
     <b data-testid="balloon-title">{title}</b>

@@ -16,6 +16,12 @@ describe('entryItems', () => {
     expect(items.map((i) => i.id)).toEqual(expect.arrayContaining(['explorer-folder-open', 'explorer-folder-chat']))
   })
 
+  it('Open says which program it uses for the file (UX-192)', () => {
+    const label = (path: string): unknown => entryItems({ path, kind: 'file' }, actions()).find((i) => i.testid === 'explorer-ctx-open')?.label
+    expect(label('E:\\notes.md')).toBe('&Open (default: Notepad)')
+    expect(label('E:\\a.ts')).toBe('&Open (default: Code)')
+  })
+
   it('runs the matching action', () => {
     const a = actions()
     const items = entryItems({ path: 'E:\\a.ts', kind: 'file' }, a)

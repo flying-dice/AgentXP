@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, placeBesideOpener, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -107,5 +107,33 @@ describe('helpBounds (UX-165)', () => {
     expect(helpBounds({ width: 720, height: 500 }, 68)).toMatchObject({ width: 680 })
     expect(helpBounds({ width: 660, height: 500 }, 68).width).toBe(640)
     expect(helpBounds({ width: 600, height: 500 }, 68).width).toBe(600)
+  })
+})
+
+describe('placeBesideOpener (UX-181)', () => {
+  const area = { width: 1280, height: 730 }
+  const chat = { x: 100, y: 72, width: 520, height: 600 }
+  const inside = (b: { x: number; y: number; width: number; height: number }): boolean => b.x >= 0 && b.y >= 72 && b.x + b.width <= area.width && b.y + b.height <= area.height
+  const covers = (a: typeof chat, b: typeof chat): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+  it('leaves a window that is clear of its opener where it is', () => {
+    const opened = { x: 700, y: 100, width: 500, height: 400 }
+    expect(placeBesideOpener('explorer', opened, chat, area, 68, 2)).toEqual(opened)
+  })
+  it('moves a window that covers its opener to the right of it', () => {
+    const b = placeBesideOpener('explorer', { x: 150, y: 100, width: 600, height: 400 }, chat, area, 68, 2)
+    expect(covers(b, chat)).toBe(false)
+    expect(b.x).toBeGreaterThanOrEqual(chat.x + chat.width)
+    expect(inside(b)).toBe(true)
+  })
+  it('goes below the opener when there is no room beside it', () => {
+    const wide = { x: 100, y: 72, width: 1100, height: 300 }
+    const b = placeBesideOpener('code', { x: 150, y: 100, width: 900, height: 330 }, wide, area, 68, 2)
+    expect(covers(b, wide)).toBe(false)
+    expect(inside(b)).toBe(true)
+  })
+  it('pulls a window that runs to the bottom of the screen inside the work area', () => {
+    const b = placeBesideOpener('chat', { x: 700, y: 400, width: 500, height: 600 }, null, area, 68, 2)
+    expect(inside(b)).toBe(true)
   })
 })

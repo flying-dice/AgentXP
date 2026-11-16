@@ -16,8 +16,11 @@ export function chapterOf(headings: readonly { tag: string; id: string }[], id: 
   return null
 }
 
-/** The heading that sits closest to the top third of a scrolling box (px from its top): how far to scroll to put it there. */
-export const scrollTopFor = (headingTop: number, boxHeight: number): number => Math.max(0, Math.round(headingTop - Math.min(boxHeight / 3, 120)))
+/** Space above a heading that a jump scrolls to, in px: the text above it is out of sight, not cut in half (UX-183). */
+export const HEADING_GAP = 8
+
+/** How far to scroll a box so that a heading (px from the top of its content) has `HEADING_GAP` above it. */
+export const scrollTopFor = (headingTop: number): number => Math.max(0, Math.round(headingTop - HEADING_GAP))
 
 /** Which chapter lines of the contents hide their sections: every line that has some, except the open chapter. */
 export const collapsedLines = (lines: readonly { id: string | null; hasSections: boolean }[], open: string | null): boolean[] =>

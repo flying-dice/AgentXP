@@ -8,7 +8,7 @@ describe('helpMenu', () => {
     const menu = helpMenu({ app: 'notepad', name: 'Notepad', onhelp, onabout })
     expect(menu.label).toBe('&Help')
     expect(menu.items.map((i) => i.testid ?? (i.separator ? '-' : ''))).toEqual(['notepad-menu-help', '-', 'notepad-menu-about'])
-    expect(menu.items[0]).toMatchObject({ label: '&View Help', shortcut: 'F1' })
+    expect(menu.items[0]).toMatchObject({ label: '&View Help (F1)' })
     expect(menu.items[2].label).toBe('&About Notepad')
     menu.items[0].action?.()
     menu.items[2].action?.()

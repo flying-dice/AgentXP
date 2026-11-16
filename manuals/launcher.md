@@ -24,7 +24,7 @@ This manual describes the Agent7 Desktop Connection window. The window lists you
 
 A desktop is a long-lived virtual computer for one or more projects. Desktop Connection is the first window that you see when you start Agent7. Use it to pick the desktop that you work on.
 
-Closing a desktop window only disconnects it. Its agents keep running.
+Closing a desktop window only disconnects it. Its agents keep running. To end them, connect to the desktop and open **Task Manager** (**Start -> Task Manager**). On the **Chats** tab select a chat and click **End Task**. On the **Processes** tab select the agent program and click **End process**.
 
 **Desktop (also called a workspace)** – A workspace where an agent works on your projects. Each desktop has its own place for your files (C:), its own chats, and the projects that you plug in as drives.
 
@@ -117,6 +117,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | Name error (rename) | Shows why the name is not valid. | `rename-desktop-error` |
 | Use a free name (rename) | Fills in the suggested name (Rename desktop dialog box). | `rename-desktop-use-suggestion` |
 | Opening | Shows on the row of a desktop that is opening. | `launcher-desktop-opening` |
+| Task Manager link | In the first line of the window. Opens the Help and Support box, which says how to end the agents of a desktop. | `launcher-task-manager-link` |
 | Help and Support (launcher) | The box that F1 opens. | `launcher-help` |
 | Help text | The manual in that box. | `launcher-help-article` |
 | Browse For Folder | The dialog box that chooses a folder. | `folder-browser-dialog` |

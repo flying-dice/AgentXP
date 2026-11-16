@@ -58,4 +58,29 @@ describe('window placement below the top bar', () => {
     const win = await box(await ctx.desktop.openApp('notepad'))
     expect(win.x).toBeGreaterThanOrEqual(icons.x + icons.width)
   })
+
+  const covers = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean =>
+    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+  it('Event Viewer and Computer open beside the chat they came from, and the Send button of the chat stays visible (UX-181)', async () => {
+    await ctx.desktop.openApp('chat')
+    const chat = ctx.desktop.window('chat')
+    await see.visible(chat.getByTestId('chat-send'))
+    await ctx.desktop.openApp('event-viewer')
+    const viewer = ctx.desktop.window('event-viewer')
+    await see.visible(viewer)
+    await see.eventually(async () => expect(covers(await box(viewer), await box(chat))).toBe(false))
+    await ctx.desktop.focusWindow('chat')
+    const computer = await ctx.desktop.openComputer()
+    await see.eventually(async () => expect(covers(await box(computer.frame), await box(chat))).toBe(false))
+    const viewport = await ctx.desktopPage.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }))
+    const send = await box(chat.getByTestId('chat-send'))
+    expect(send.y + send.height).toBeLessThanOrEqual(viewport.height)
+    for (const win of [viewer, computer.frame]) {
+      const b = await box(win)
+      expect(b.x).toBeGreaterThanOrEqual(0)
+      expect(b.x + b.width).toBeLessThanOrEqual(viewport.width + 1)
+      expect(b.y + b.height).toBeLessThanOrEqual(viewport.height + 1)
+    }
+  })
 })

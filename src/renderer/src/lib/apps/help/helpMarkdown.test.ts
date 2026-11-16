@@ -73,7 +73,7 @@ describe('what the reader sees of a manual (UX-45)', () => {
     expect(text).toContain('  - [The Window](#the-window)')
     expect(text).toContain('- 9 - Missing')
     const html = renderHelpMarkdown(source)
-    expect(html).toContain('<a href="#1-what-it-is-for" data-anchor="1-what-it-is-for">')
+    expect(html).toContain('<a href="#1-what-it-is-for" data-anchor="1-what-it-is-for" data-testid="help-contents-link">')
     expect(html).toContain('<h2 id="1-what-it-is-for">')
   })
 })
