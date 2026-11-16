@@ -86,6 +86,8 @@ describe('A2uiMessageValidator.validateAgainst', () => {
     sessionId: 1,
     title: 'T',
     catalogId: A2UI_CATALOG_ID,
+    target: 'inline',
+    hidden: false,
     components: [{ id: 'root', component: 'Label', text: 'hi' }],
     dataModel: { a: 1 }
   }

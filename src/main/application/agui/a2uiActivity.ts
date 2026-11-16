@@ -7,6 +7,8 @@ import type { AguiEvent } from './AgentEventTranslator'
 /** The content of a surface's activity message: the replayable A2UI messages (see `a2uiSurfaceToMessages`). */
 export const a2uiSurfaceContent = (surface: A2uiSurfaceDto): A2uiSurfaceActivity => ({
   surfaceId: surface.surfaceId,
+  target: surface.target,
+  hidden: surface.hidden,
   messages: a2uiSurfaceToMessages(surface)
 })
 

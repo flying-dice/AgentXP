@@ -5,6 +5,9 @@
 import { AGENT_HOME, vpathName } from './vfs'
 import { APP_DISPLAY_NAMES, type AppKind, type AppView, type Bounds, type OpenWindowInput } from './desktop'
 
+/** Window title of a surface that has no `theme.title`. */
+export const SURFACE_FALLBACK_TITLE = 'Agent window'
+
 export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   chat: { x: 40, y: 40, width: 640, height: 520 },
   explorer: { x: 120, y: 80, width: 620, height: 420 },
@@ -19,14 +22,15 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'sticky-notes': { x: 600, y: 60, width: 360, height: 420 },
   'event-viewer': { x: 130, y: 90, width: 860, height: 520 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
-  'recycle-bin': { x: 240, y: 120, width: 600, height: 400 }
+  'recycle-bin': { x: 240, y: 120, width: 600, height: 400 },
+  surface: { x: 260, y: 100, width: 480, height: 360 }
 }
 
 /** Default bounds of a new window, cascaded by the number of windows already open. */
-export function cascadedBounds(app: AppKind, openCount: number): Bounds {
+export function cascadedBounds(app: AppKind, openCount: number, size?: { width: number; height: number }): Bounds {
   const offset = (openCount % 6) * 24
   const b = DEFAULT_BOUNDS[app]
-  return { ...b, x: b.x + offset, y: b.y + offset }
+  return { ...b, ...(size ?? {}), x: b.x + offset, y: b.y + offset }
 }
 
 /**
@@ -62,9 +66,10 @@ export function placeWindow(
   app: AppKind,
   openCount: number,
   avoid: Bounds | null,
-  area: { width: number; height: number } = DESKTOP_AREA
+  area: { width: number; height: number } = DESKTOP_AREA,
+  size?: { width: number; height: number }
 ): Bounds {
-  const base = within(cascadedBounds(app, openCount), area)
+  const base = within(cascadedBounds(app, openCount, size), area)
   if (!avoid || !overlaps(base, avoid)) return base
   const { width, height } = base
   const top = clamp(avoid.y, 0, area.height - height)
@@ -86,7 +91,7 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -124,12 +129,15 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'snipping-tool', lastSnipId: null }
     case 'recycle-bin':
       return { app: 'recycle-bin', selectedId: null }
+    case 'surface':
+      return { app: 'surface', surfaceId: input.surfaceId ?? '', sessionId: input.sessionId ?? 0, title: SURFACE_FALLBACK_TITLE }
   }
 }
 
 export function windowTitle(view: AppView): string {
   switch (view.app) {
     case 'chat':
+    case 'surface':
       return view.title
     case 'explorer':
       return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'

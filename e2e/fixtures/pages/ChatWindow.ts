@@ -31,6 +31,25 @@ export class ChatWindow {
     return this.frame.getByTestId('a2ui-surface')
   }
 
+  /** The chat rows of A2UI surfaces (every target; inline ones carry only Delete and Move to). */
+  get surfaceRows(): Locator {
+    return this.frame.getByTestId('chat-surface-row')
+  }
+
+  /** The row of the sidebar or window surface with this title. */
+  surfaceRow(title: string): Locator {
+    return this.surfaceRows.filter({ hasText: title })
+  }
+
+  /** The sidebar beside the transcript (A2UI surfaces with target sidebar) and its tabs. */
+  get sidebar(): Locator {
+    return this.frame.getByTestId('chat-sidebar')
+  }
+
+  get sidebarTabs(): Locator {
+    return this.frame.getByTestId('chat-sidebar-tab')
+  }
+
   get transcript(): Locator {
     return this.frame.getByTestId('chat-transcript')
   }

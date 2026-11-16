@@ -43,6 +43,8 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
   - The Event Viewer
   - Adding an Agent
 - 10 - Windows That the Agent Draws
+  - Three Places for a Form
+  - The Row in the Chat
 - 11 - Who Needs a Mouse?
 - 12 - For Developers
   - Commands
@@ -448,6 +450,7 @@ The desktop has these apps:
 - **Chat** – Shows one chat with an agent. You write your messages here and follow the work of the agent.
 - **Explorer** – Shows the files on the drives. It shows what the agent did to each file.
 - **Code** – Shows code with colors, lists the changes of the agent, and lets you revert them.
+- **Git in Code** – Shows the git status of a project in the file tree: **M** is a changed file, **A** is an added file, **D** is a deleted file, **U** is a new file, and **!** is a conflict. A folder with a changed file below it has a dot. The status bar shows the branch name and how many commits you are ahead (↑) or behind (↓). A colored bar next to a line number shows a line that is new (green) or changed (blue). A red triangle shows deleted lines. To see the old lines, click the bar. Then click **Revert hunk** to bring the old lines back. To go to the next change, press **Alt+F5**.
 - **Terminal** – Shows the commands that the agent runs. You can watch it, and you cannot type in it.
 - **Notepad** – Lets you read and edit plain text files.
 - **WordPad** – Lets you read and write documents in Markdown.
@@ -483,13 +486,43 @@ To use an agent for new desktops, select it and click **Set as Default**.
 
 ## 10 - Windows That the Agent Draws
 
-The agent can draw its own windows in a chat, for example a form, a table of test results, or a code review. Agent7 gives the agent Windows 7 controls for this. The agent uses A2UI, a format for user interfaces that agents send.
+The agent can draw its own forms, for example a form, a table of test results, or a code review. Agent7 gives the agent Windows 7 controls for this. The agent uses A2UI, a format for user interfaces that agents send. The agent picks where each form appears: in the chat, in a side pane of the chat, or in its own window on the desktop.
 
-![A Chat window with a Deployment form that the agent drew](docs/images/a2ui-form.png)
+![A Chat window and a Deployment form that the agent drew in its own window](docs/images/a2ui-form.png)
 
-You use these windows like any other form. Select an item, type text, or click a button. When you click a button, Agent7 sends your answer to the agent. The agent then continues its turn.
+You use these forms like any other form. Select an item, type text, or click a button. When you click a button, Agent7 sends your answer to the chat that the form belongs to. The agent then continues its work. If the agent is still working on a turn, Agent7 ignores the click. Click the button again when the agent is done.
 
-The agent can draw these windows at any time. It does not need an open app for this.
+The agent can draw a form at any time. It does not need an open app for this.
+
+### Three Places for a Form
+
+- **In the chat** – Shows a short form inside the conversation, between the messages. The agent uses this for a quick question or a small answer.
+- **In the side pane** – Shows a form in a pane on the right side of the Chat window. The pane stays when the conversation goes on. The agent uses this for a list of steps or a status that you look at while you chat. Several forms become tabs of the pane.
+- **In its own window** – Shows a form as a window on the desktop, with its own title bar and a taskbar button. The agent uses this for a larger tool that you keep open, for example a dashboard or an editor. The window opens beside the Chat window. It does not take the keyboard from the chat in which you type, and its taskbar button flashes until you click it.
+
+### The Row in the Chat
+
+Each form that is in the side pane or in its own window has a row in the Chat window. A form in the chat has a small toolbar with only **Delete** and **Move to**.
+
+![A Chat window with a side pane that holds the release checklist](docs/images/a2ui-sidebar.png)
+
+- **Title and state** – Shows the title of the form and **Open** or **Closed**.
+- **Open** – Shows the form again. For a window, **Open** also brings the window to the front.
+- **Close** – Hides the form. For a window, **Close** does the same as the close button of the window.
+- **Delete** – Removes the form for good, after you click **Yes**. The agent must draw it again to get it back.
+- **Move to** – Moves the form to **Inline**, **Sidebar**, or **Window**.
+
+To close and open a form, follow the steps below:
+
+1. Click the close button in the title bar of the window, or click the **X** on the tab in the side pane. The form disappears.
+2. Find the row of the form in the Chat window. The state is **Closed**.
+3. Click **Open**. The form appears again and shows the same data.
+
+**Note:** A closed form still exists. If the agent changes it, Agent7 keeps the change and does not open the form again. The agent learns that you closed it. If the agent draws a new form, a new window opens.
+
+**Tip:** Click **Move to** and select **Window** to turn a form from the chat into a window. Click **Move to** and select **Inline** to put it back.
+
+Agent7 saves your forms. After you restart Agent7 or connect to the desktop again, the windows are there, and the rows show the right state.
 
 ## 11 - Who Needs a Mouse?
 
@@ -547,7 +580,7 @@ Agent7 has three parts that talk to each other:
 
 - **Main process** – Starts agents with ACP, stores data in SQLite, and serves the files and terminals of each agent. It owns the desktops, the drives, and the permissions.
 - **AG-UI stream** – Sends each turn to the window as AG-UI events over Electron IPC. AG-UI is a protocol for agent user interfaces.
-- **Window** – Shows the desktop with the Windows 7 controls, and draws A2UI windows with the official A2UI engine.
+- **Window** – Shows the desktop with the Windows 7 controls, and draws A2UI forms (in the chat, in the side pane, or in a `surface` window) with the official A2UI engine. The agent chooses with the `target` argument of `a2ui_render`: `inline`, `sidebar`, or `window`.
 
 The main process gives the agent an MCP server named `agent7`. The server lists only the tools of the open apps and tells the agent when the list changes. Agent7 serves the file and terminal requests of ACP in the same way. It allows only the paths on `C:` and on the USB drives.
 

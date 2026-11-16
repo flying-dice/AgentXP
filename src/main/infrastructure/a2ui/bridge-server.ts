@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { rmSync } from 'node:fs'
 import type { ToolGroup } from '@shared/desktop'
 import type { Id } from '@shared/models'
+import { normaliseSurfaceTarget } from '@shared/a2ui'
 import { A2uiMessageValidator } from '@shared/a2ui/validation'
 import type { DesktopToolHost, ToolResult } from '../../application/tools/types'
 import type { A2uiMessageSink } from '../../domain/a2ui/ports'
@@ -139,12 +140,15 @@ export class A2uiBridgeServer {
     }
   }
 
-  private async a2ui(id: string, { sessionKey, messages }: Record<string, unknown>): Promise<BridgeResponse> {
+  private async a2ui(id: string, { sessionKey, messages, target }: Record<string, unknown>): Promise<BridgeResponse> {
     if (typeof sessionKey !== 'string' || !sessionKey) return { id, ok: false, errors: ['missing sessionKey'] }
+    const place = target === undefined ? undefined : normaliseSurfaceTarget(target)
+    if (place === null) return { id, ok: false, errors: [`unknown target "${String(target)}": use inline, sidebar or window`] }
     const validated = this.validator.validate(messages)
     if (!validated.ok) return { id, ok: false, errors: validated.errors }
-    const result = await this.sink.apply(sessionKey, validated.messages)
-    return result.ok ? { id, ok: true } : { id, ok: false, errors: result.errors }
+    const result = await this.sink.apply(sessionKey, validated.messages, place ? { target: place } : undefined)
+    if (!result.ok) return { id, ok: false, errors: result.errors }
+    return result.notes?.length ? { id, ok: true, notes: result.notes } : { id, ok: true }
   }
 
   private listTools(id: string, { desktopId }: Record<string, unknown>): BridgeResponse {

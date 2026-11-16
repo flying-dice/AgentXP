@@ -59,7 +59,8 @@ const emptyState = (): DesktopState => ({
   tools: ['shell'],
   paused: false,
   userInControl: false,
-  notes: []
+  notes: [],
+  surfaces: []
 })
 
 /**

@@ -3,6 +3,7 @@ import type { FilePicker, ScreenCapturer } from '../application/ports'
 import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
 import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
+import type { GitService } from '../application/git/GitService'
 import type { DriveService } from '../application/vfs/DriveService'
 import type { LauncherService } from '../application/launcher/LauncherService'
 import type { RecycleService } from '../application/RecycleService'
@@ -31,6 +32,7 @@ export interface ApiServices {
   shell: ShellService
   desktops: DesktopService
   vfs: VirtualFileSystem
+  git: GitService
   drives: DriveService
   launcher: LauncherService
   processes: ProcessService
@@ -86,8 +88,17 @@ export function createApi(s: ApiServices): InvokeApi {
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),
       readFile: (desktopId, path) => s.vfs.readFile(desktopId, path),
-      writeFile: (desktopId, path, text) => s.vfs.writeFile(desktopId, path, text),
+      writeFile: async (desktopId, path, text) => {
+        await s.vfs.writeFile(desktopId, path, text)
+        s.git.touched(desktopId, path)
+      },
       stat: (desktopId, path) => s.vfs.stat(desktopId, path)
+    },
+    git: {
+      status: (desktopId, root) => s.git.status(desktopId, root),
+      lineChanges: (desktopId, path) => s.git.lineChanges(desktopId, path),
+      headText: (desktopId, path) => s.git.headText(desktopId, path),
+      revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex)
     },
     drives: {
       list: async (desktopId) => s.drives.list(desktopId),
@@ -144,7 +155,12 @@ export function createApi(s: ApiServices): InvokeApi {
       clearTranscript: async (id) => s.sessions.clearTranscript(id),
       exportTranscript: (id) => s.exporter.export(id)
     },
-    a2ui: { dispatch: (event) => s.a2ui.dispatch(event) },
+    a2ui: {
+      dispatch: (event) => s.a2ui.dispatch(event),
+      deleteSurface: async (sessionId, surfaceId) => s.a2ui.deleteSurface(sessionId, surfaceId),
+      moveSurface: async (sessionId, surfaceId, target) => s.a2ui.moveSurface(sessionId, surfaceId, target),
+      setSidebarHidden: async (sessionId, surfaceId, hidden) => s.a2ui.setSidebarHidden(sessionId, surfaceId, hidden)
+    },
     shell: { openPath: (path) => s.shell.openPath(path) },
     dialogs: { pickFiles: () => s.files.pickFiles() }
   }

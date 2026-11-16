@@ -31,6 +31,102 @@
       ]
     },
     {
+      "id": "checklist",
+      "match": {
+        "contains": "checklist",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I put the release checklist beside this chat. It stays there while we work.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "a2ui_render",
+          "arguments": {
+            "target": "sidebar",
+            "messages": [
+              {
+                "version": "v0.9",
+                "createSurface": {
+                  "surfaceId": "checklist",
+                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "theme": {
+                    "title": "Release checklist"
+                  }
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateComponents": {
+                  "surfaceId": "checklist",
+                  "components": [
+                    {
+                      "id": "root",
+                      "component": "Panel",
+                      "children": [
+                        "c1",
+                        "c2",
+                        "c3",
+                        "prog"
+                      ]
+                    },
+                    {
+                      "id": "c1",
+                      "component": "CheckBox",
+                      "text": "Tests are green",
+                      "checked": {
+                        "path": "/c1"
+                      }
+                    },
+                    {
+                      "id": "c2",
+                      "component": "CheckBox",
+                      "text": "Changelog updated",
+                      "checked": {
+                        "path": "/c2"
+                      }
+                    },
+                    {
+                      "id": "c3",
+                      "component": "CheckBox",
+                      "text": "Version bumped",
+                      "checked": {
+                        "path": "/c3"
+                      }
+                    },
+                    {
+                      "id": "prog",
+                      "component": "ProgressBar",
+                      "value": 1,
+                      "max": 3
+                    }
+                  ]
+                }
+              },
+              {
+                "version": "v0.9",
+                "updateDataModel": {
+                  "surfaceId": "checklist",
+                  "value": {
+                    "c1": true,
+                    "c2": false,
+                    "c3": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "message",
+          "text": "Tick the items as we go."
+        }
+      ]
+    },
+    {
       "id": "form",
       "match": {
         "contains": "form",
@@ -39,13 +135,14 @@
       "steps": [
         {
           "type": "message",
-          "text": "I drew the deployment form below. Make your choices and click Deploy.\n"
+          "text": "I opened the deployment form in its own window. Make your choices and click Deploy.\n"
         },
         {
           "type": "mcpCall",
           "server": "agent7",
           "tool": "a2ui_render",
           "arguments": {
+            "target": "window",
             "messages": [
               {
                 "version": "v0.9",
@@ -197,7 +294,7 @@
         {
           "type": "expect",
           "from": "render",
-          "equals": "ok"
+          "contains": "ok"
         }
       ]
     },

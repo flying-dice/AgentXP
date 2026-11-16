@@ -8,7 +8,7 @@
  * UI needs beyond that (kind, status, locations, diffs, terminals) travels in
  * the shared state below.
  */
-import type { A2uiServerMessage } from './a2ui'
+import type { A2uiServerMessage, A2uiSurfaceTarget } from './a2ui'
 import type {
   AvailableCommandDto,
   FileChangeDto,
@@ -84,6 +84,10 @@ export const a2uiActivityMessageId = (surfaceId: string): string => `a2ui:${surf
  */
 export interface A2uiSurfaceActivity {
   surfaceId: string
+  /** Where the surface is shown; absent means `inline`. */
+  target?: A2uiSurfaceTarget
+  /** Sidebar surfaces: the user closed its tab. */
+  hidden?: boolean
   messages: A2uiServerMessage[]
   deleted?: boolean
 }

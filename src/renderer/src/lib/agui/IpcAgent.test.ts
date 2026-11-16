@@ -205,6 +205,6 @@ describe('surfacesOf', () => {
       activity('other', { surfaceId: 's3', messages: [] }, 'something-else')
     ])
     expect([...surfaces.keys()]).toEqual(['s1'])
-    expect(surfaces.get('s1')).toEqual({ messageId: 'a2ui:s1', surfaceId: 's1', messages: [{ version: 'v0.9' }] })
+    expect(surfaces.get('s1')).toEqual({ messageId: 'a2ui:s1', surfaceId: 's1', target: 'inline', hidden: false, messages: [{ version: 'v0.9' }] })
   })
 })

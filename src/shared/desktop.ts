@@ -5,6 +5,7 @@
  *
  * Pure types, constants and pure functions only.
  */
+import type { A2uiSurfaceTarget } from './a2ui'
 import type { Id, IsoDate } from './models'
 import type { DriveDto, VPath } from './vfs'
 
@@ -22,7 +23,8 @@ export const APP_KINDS = [
   'sticky-notes',
   'event-viewer',
   'snipping-tool',
-  'recycle-bin'
+  'recycle-bin',
+  'surface'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
@@ -87,6 +89,8 @@ export type AppView =
   | { app: 'event-viewer'; sessionId: Id | null; level: EventLevel | 'all'; selectedEventId: number | null }
   | { app: 'snipping-tool'; lastSnipId: string | null }
   | { app: 'recycle-bin'; selectedId: Id | null }
+  /** An A2UI surface the agent drew with `a2ui_render` (target `window`), one window per surface. */
+  | { app: 'surface'; surfaceId: string; sessionId: Id; title: string }
 
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
@@ -134,6 +138,17 @@ export interface DesktopState {
   userInControl: boolean
   /** The desktop's sticky notes (the agent sees them in `desktop_state`). */
   notes: StickyNoteDto[]
+  /** Every A2UI surface of the desktop's chats and where it is shown. */
+  surfaces: SurfaceStateDto[]
+}
+
+/** Where one A2UI surface is: inline in its chat, in the chat's sidebar or in its own window; `closed` = the user closed the tab or window (it still updates). */
+export interface SurfaceStateDto {
+  sessionId: Id
+  surfaceId: string
+  title: string
+  target: A2uiSurfaceTarget
+  state: 'open' | 'closed'
 }
 
 // ---------------------------------------------------------------- tools
@@ -202,7 +217,8 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   'sticky-notes': 'Sticky Notes',
   'event-viewer': 'Event Viewer',
   'snipping-tool': 'Snipping Tool',
-  'recycle-bin': 'Recycle Bin'
+  'recycle-bin': 'Recycle Bin',
+  surface: 'Agent window'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -244,10 +260,12 @@ export const DESKTOP_RESOURCE_URI = 'agent7://desktop/state'
 export interface OpenWindowInput {
   desktopId: Id
   app: AppKind
-  /** Initial view hints: a VPath for explorer/notepad/code/wordpad/paint, a url for browser, a session for chat. */
+  /** Initial view hints: a VPath for explorer/notepad/code/wordpad/paint, a url for browser, a session for chat, a session and surface id for surface. */
   path?: VPath
   url?: string
   sessionId?: Id
+  /** The A2UI surface of a `surface` window (with `sessionId`: the chat that owns it). */
+  surfaceId?: string
 }
 
 /** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */

@@ -19,6 +19,8 @@ describe('SqliteA2uiSurfaceRepository', () => {
       sessionId: f.sessionId,
       title: 'Form',
       catalogId: base.catalogId,
+      target: 'inline',
+      hidden: false,
       components: [],
       dataModel: {}
     })

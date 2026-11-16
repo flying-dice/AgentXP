@@ -1,5 +1,5 @@
 import { prepare, transaction, type Database, type Statement } from './sql'
-import type { A2uiComponent, A2uiSurfaceDto } from '@shared/a2ui'
+import type { A2uiComponent, A2uiSurfaceDto, A2uiSurfaceTarget } from '@shared/a2ui'
 import type { Id } from '@shared/models'
 import { setAtPointer } from '../../domain/json-pointer'
 import type { A2uiSurfaceRepository, NewSurface } from '../../domain/repositories/a2ui-surface-repository'
@@ -12,6 +12,8 @@ interface SurfaceRow {
   title: string | null
   catalog_id: string
   data_model: string
+  target: A2uiSurfaceTarget
+  hidden: number
 }
 
 interface ComponentRow {
@@ -27,7 +29,7 @@ interface ComponentParams {
   props: string
 }
 
-const COLUMNS = 'id, session_id, surface_id, title, catalog_id, data_model'
+const COLUMNS = 'id, session_id, surface_id, title, catalog_id, data_model, target, hidden'
 
 /** Component props are catalog-defined and schemaless, hence JSON text (see migration notes). */
 function splitComponent(c: A2uiComponent): { component: string; props: string } {
@@ -44,7 +46,9 @@ export class SqliteA2uiSurfaceRepository implements A2uiSurfaceRepository {
   private readonly selectOne: Statement<[Id, string], SurfaceRow>
   private readonly selectBySession: Statement<[Id], SurfaceRow>
   private readonly selectComponents: Statement<[Id], ComponentRow>
-  private readonly insertSurface: Statement<[Id, Id, string, string | null, string]>
+  private readonly insertSurface: Statement<[Id, Id, string, string | null, string, string]>
+  private readonly updateTarget: Statement<[string, Id]>
+  private readonly updateHidden: Statement<[number, Id]>
   private readonly updateSurface: Statement<[string | null, string, Id]>
   private readonly updateModel: Statement<[string, Id]>
   private readonly upsertComponent: Statement<ComponentParams>
@@ -61,8 +65,10 @@ export class SqliteA2uiSurfaceRepository implements A2uiSurfaceRepository {
       'SELECT component_id, component, props FROM a2ui_components WHERE surface_id = ? ORDER BY position'
     )
     this.insertSurface = prepare(db, 
-      'INSERT INTO a2ui_surfaces (entry_id, session_id, surface_id, title, catalog_id) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO a2ui_surfaces (entry_id, session_id, surface_id, title, catalog_id, target) VALUES (?, ?, ?, ?, ?, ?)'
     )
+    this.updateTarget = prepare(db, 'UPDATE a2ui_surfaces SET target = ?, hidden = 0 WHERE id = ?')
+    this.updateHidden = prepare(db, 'UPDATE a2ui_surfaces SET hidden = ? WHERE id = ?')
     this.updateSurface = prepare(db, 'UPDATE a2ui_surfaces SET title = ?, catalog_id = ? WHERE id = ?')
     this.updateModel = prepare(db, 'UPDATE a2ui_surfaces SET data_model = ? WHERE id = ?')
     this.upsertComponent = prepare(db, 
@@ -83,7 +89,7 @@ export class SqliteA2uiSurfaceRepository implements A2uiSurfaceRepository {
         return
       }
       const entryId = this.entries.allocate(sessionId, 'a2ui')
-      this.insertSurface.run(entryId, sessionId, input.surfaceId, input.title, input.catalogId)
+      this.insertSurface.run(entryId, sessionId, input.surfaceId, input.title, input.catalogId, input.target ?? 'inline')
     })
     return this.require(sessionId, input.surfaceId)
   }
@@ -118,6 +124,20 @@ export class SqliteA2uiSurfaceRepository implements A2uiSurfaceRepository {
     })
   }
 
+  setTarget(sessionId: Id, surfaceId: string, target: A2uiSurfaceTarget): A2uiSurfaceDto | null {
+    const row = this.selectOne.get(sessionId, surfaceId)
+    if (!row) return null
+    this.updateTarget.run(target, row.id)
+    return this.get(sessionId, surfaceId)
+  }
+
+  setHidden(sessionId: Id, surfaceId: string, hidden: boolean): A2uiSurfaceDto | null {
+    const row = this.selectOne.get(sessionId, surfaceId)
+    if (!row) return null
+    this.updateHidden.run(hidden ? 1 : 0, row.id)
+    return this.get(sessionId, surfaceId)
+  }
+
   delete(sessionId: Id, surfaceId: string): boolean {
     return transaction(this.db, () => {
       const row = this.selectOne.get(sessionId, surfaceId)
@@ -140,6 +160,8 @@ export class SqliteA2uiSurfaceRepository implements A2uiSurfaceRepository {
       sessionId: row.session_id,
       title: row.title,
       catalogId: row.catalog_id,
+      target: row.target,
+      hidden: row.hidden === 1,
       components: this.selectComponents.all(row.id).map(joinComponent),
       dataModel: JSON.parse(row.data_model) as unknown
     }

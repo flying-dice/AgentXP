@@ -12,9 +12,10 @@
     disabled?: boolean
     onselect?: (item: MenuItemDef) => void
     title?: string
+    testid?: string
   }
 
-  let { icon, text, items, disabled = false, onselect, title }: Props = $props()
+  let { icon, text, items, disabled = false, onselect, title, testid }: Props = $props()
 
   let open = $state(false)
   let button = $state<HTMLButtonElement | null>(null)
@@ -55,6 +56,7 @@
     {text}
     {disabled}
     {title}
+    data-testid={testid}
     expanded={open}
     aria-haspopup="menu"
     aria-expanded={open}

@@ -40,6 +40,7 @@ beforeEach(async () => {
     agents: f.repos.agents,
     sessions: f.repos.sessions,
     notes: new SqliteStickyNoteRepository(f.db),
+    surfaces: f.repos.surfaces,
     chats,
     drives: f.drives,
     events: f.publisher

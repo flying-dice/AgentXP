@@ -2,6 +2,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf'
   import CodeViewer from './CodeViewer.svelte'
   import { sampleTs } from './stories.samples'
+  import type { GutterMark } from './CodeViewer'
 
   const { Story } = defineMeta({
     title: 'Organisms/CodeViewer',
@@ -14,7 +15,11 @@
       toolbar: { control: 'boolean' },
       startLine: { control: 'number' },
       highlightLines: { control: 'object' },
-      maxHeight: { control: 'text' }
+      maxHeight: { control: 'text' },
+      gutterMarks: { control: 'object' },
+      ruler: { control: 'boolean' },
+      peekMark: { control: 'number' },
+      onmarkclick: { action: 'markclick' }
     }
   })
 
@@ -38,6 +43,15 @@ namespace Demo
         public void Hello() => Console.WriteLine("Hello, " + Name);
     }
 }`
+
+  /** Version control marks of `sampleTs`: new import (added), a modified line, a block added, one line deleted. */
+  const marks: GutterMark[] = [
+    { kind: 'added', line: 1, end: 1, index: 0 },
+    { kind: 'modified', line: 8, end: 8, index: 1 },
+    { kind: 'added', line: 11, end: 13, index: 2 },
+    { kind: 'deleted', line: 15, end: 15, index: 3 }
+  ]
+
 </script>
 
 <Story name="Default">
@@ -73,5 +87,25 @@ namespace Demo
 <Story name="PlainText" args={{ code: 'No language given.\nRendered as plain text.', language: 'text', toolbar: false }}>
   {#snippet template(args)}
     <div style="width:360px;height:80px"><CodeViewer {...args} /></div>
+  {/snippet}
+</Story>
+
+<Story name="GutterMarks" args={{ gutterMarks: marks, toolbar: false }}>
+  {#snippet template(args)}
+    <div style="width:640px;height:300px"><CodeViewer {...args} /></div>
+  {/snippet}
+</Story>
+
+<Story name="HunkPeek" args={{ gutterMarks: marks, peekMark: 1, toolbar: false }}>
+  {#snippet template(args)}
+    <div style="width:640px;height:300px">
+      <CodeViewer {...args}>
+        {#snippet peek(mark)}
+          <div style="padding:4px 6px;font-weight:700">Modified line {mark.line}</div>
+          <div style="background:var(--w7-git-old-bg);padding:0 8px;font:var(--w7-font-mono)">- const target = returnUrl || '/'</div>
+          <div style="background:var(--w7-git-new-bg);padding:0 8px;font:var(--w7-font-mono)">+ const target = returnUrl ?? '/home'</div>
+        {/snippet}
+      </CodeViewer>
+    </div>
   {/snippet}
 </Story>

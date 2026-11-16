@@ -7,7 +7,7 @@ import type { ToolResult } from '../../application/tools/types'
  */
 export type BridgeRequest =
   /** Draw A2UI surfaces in the chat. A request without `type` is this one (the original protocol). */
-  | { type?: 'a2ui'; id: string; sessionKey: string; messages: unknown[] }
+  | { type?: 'a2ui'; id: string; sessionKey: string; messages: unknown[]; /** inline (default), sidebar or window; `chat` = inline */ target?: string }
   /** Which tool groups the open apps of the desktop enable. */
   | { type: 'tools'; id: string; desktopId: string }
   /** Run a desktop tool. */
@@ -22,6 +22,8 @@ export interface BridgeResponse {
   id: string
   ok: boolean
   errors?: string[]
+  /** Where the surfaces ended up (for the agent); with `ok`. */
+  notes?: string[]
   groups?: ToolGroup[]
   result?: ToolResult
 }

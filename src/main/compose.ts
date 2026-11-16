@@ -17,6 +17,9 @@ import { SessionFiles } from './application/SessionFiles'
 import { ToolPaths } from './application/tools/ToolPaths'
 import { DriveService } from './application/vfs/DriveService'
 import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
+import { GitService } from './application/git/GitService'
+import type { GitCli } from './application/git/ports'
+import { ExecGitCli } from './infrastructure/git/ExecGitCli'
 import { ToolGateway } from './application/desktop/ToolGateway'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
@@ -115,6 +118,10 @@ export interface ComposeOptions {
   commandRunner?: CommandRunner
   /** Captures the desktop window for `snip.capture` / `screen_capture`; defaults to refusing (tests). */
   screen?: ScreenCapturer
+  /** Runs the `git` CLI for the Code app's git awareness; defaults to the real `git`. */
+  git?: GitCli
+  /** Poll interval of `git.changed` while a Code window is open (ms); default 5000, 0 disables. */
+  gitPollMs?: number
 }
 
 export interface AppServices {
@@ -175,6 +182,13 @@ export function composeApp(options: ComposeOptions): AppServices {
   const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const drives = new DriveService({ drives: repos.drives, folders: repos.folders, desktops: repos.desktops, pickFolder: () => folderService.pick() })
   const vfs = new VirtualFileSystem({ host: hostFiles, folders: repos.folders, drives, desktopsDir })
+  const git = new GitService({
+    vfs,
+    cli: options.git ?? new ExecGitCli(),
+    events: publisher,
+    codeDesktops: () => windowHost.connectedIds().filter((id) => desktops.windowsOf(id, 'code').length > 0),
+    pollMs: options.gitPollMs
+  })
   const broadcaster = new SessionBroadcaster(repos.sessions, publisher)
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
   const sessionFiles = new SessionFiles({ vfs, host: hostFiles, sessions: repos.sessions, recorder: changeRecorder })
@@ -244,6 +258,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     agents: repos.agents,
     sessions: repos.sessions,
     notes: repos.notes,
+    surfaces: repos.surfaces,
     chats: sessions,
     drives,
     events: publisher
@@ -281,6 +296,15 @@ export function composeApp(options: ComposeOptions): AppServices {
   })
   const gateway = new ToolGateway({ desktops, broker, events: eventBus })
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
+  a2ui.attachWindows({
+    open: (sessionId, surfaceId, by, size) => desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null,
+    close: (sessionId, surfaceId) => void desktops.closeSurfaceWindow(sessionId, surfaceId),
+    isOpen: (sessionId, surfaceId) => desktops.hasSurfaceWindow(sessionId, surfaceId),
+    refresh: (sessionId) => {
+      const desktopId = repos.sessions.get(sessionId)?.desktopId
+      if (desktopId != null) desktops.refresh(desktopId)
+    }
+  })
   const a2uiSink = new CompositeA2uiSink(a2ui)
   const toolPaths = new ToolPaths(vfs, repos.sessions)
   const browsers = new ElectronBrowserDriver()
@@ -345,6 +369,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     a2ui,
     desktops,
     vfs,
+    git,
     drives,
     launcher,
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
@@ -361,10 +386,15 @@ export function composeApp(options: ComposeOptions): AppServices {
   const bridge = a2uiBridge
   // Desktop changes: the MCP children refresh their tool lists; chat titles follow session renames.
   publisher.subscribe((message) => {
-    if (message.name === 'desktop.changed') bridge.publishTools(message.payload.desktopId, message.payload.tools)
+    if (message.name === 'changes.changed') {
+      const desktopId = repos.sessions.get(message.payload.sessionId)?.desktopId
+      if (desktopId != null) git.touchedDesktop(desktopId)
+    } else if (message.name === 'desktop.changed') bridge.publishTools(message.payload.desktopId, message.payload.tools)
     else if (message.name === 'session.changed') {
       desktops.onSessionChanged(message.payload)
       launcher.publishChanged()
+    } else if (message.name === 'surface.removed') {
+      desktops.onSessionRemoved() // clearing a transcript deletes surfaces and (by trigger) their windows
     } else if (message.name === 'session.removed') {
       desktops.onSessionRemoved()
       launcher.publishChanged()
@@ -392,9 +422,11 @@ export function composeApp(options: ComposeOptions): AppServices {
       launcher.resetConnections()
       await bridge.start()
       thumbnails.start()
+      git.start()
     },
     shutdown: async () => {
       thumbnails.stop()
+      git.stop()
       agui.dispose()
       appRequests.dispose()
       eventLog.dispose()

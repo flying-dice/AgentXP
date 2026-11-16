@@ -17,15 +17,20 @@ interface WindowRow {
   session_id: number | null
   path: string | null
   url: string | null
+  surface_id: string | null
+  surface_session_id: number | null
 }
 
 const SELECT = `
 SELECT w.id, w.desktop_id, w.kind, w.x, w.y, w.width, w.height, w.window_state, w.z_order, w.opened_by,
-       c.session_id AS session_id, p.path AS path, b.url AS url
+       c.session_id AS session_id, p.path AS path, b.url AS url,
+       sf.surface_id AS surface_id, sf.session_id AS surface_session_id
 FROM app_windows w
 LEFT JOIN chat_windows c ON c.window_id = w.id
 LEFT JOIN path_windows p ON p.window_id = w.id
-LEFT JOIN browser_windows b ON b.window_id = w.id`
+LEFT JOIN browser_windows b ON b.window_id = w.id
+LEFT JOIN surface_windows sw ON sw.window_id = w.id
+LEFT JOIN a2ui_surfaces sf ON sf.id = sw.surface_id`
 
 const toRecord = (row: WindowRow): AppWindowRecord => ({
   id: row.id,
@@ -37,7 +42,8 @@ const toRecord = (row: WindowRow): AppWindowRecord => ({
   openedBy: row.opened_by,
   sessionId: row.session_id,
   path: row.path,
-  url: row.url
+  url: row.url,
+  surface: row.surface_id !== null && row.surface_session_id !== null ? { sessionId: row.surface_session_id, surfaceId: row.surface_id } : null
 })
 
 export class SqliteAppWindowRepository implements AppWindowRepository {
@@ -45,7 +51,9 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
   private readonly selectById: Statement<[Id], WindowRow>
   private readonly selectChat: Statement<[Id], WindowRow>
   private readonly insertWindow: Statement<[Id, string, number, number, number, number, string, string, Id]>
+  private readonly selectSurface: Statement<[Id, string], WindowRow>
   private readonly insertChat: Statement<[Id, Id]>
+  private readonly insertSurfaceWindow: Statement<[Id, Id, string]>
   private readonly upsertPath: Statement<[Id, string]>
   private readonly upsertUrl: Statement<[Id, string]>
   private readonly deletePath: Statement<[Id]>
@@ -59,6 +67,11 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
     this.selectByDesktop = prepare(db, `${SELECT} WHERE w.desktop_id = ? ORDER BY w.z_order, w.id`)
     this.selectById = prepare(db, `${SELECT} WHERE w.id = ?`)
     this.selectChat = prepare(db, `${SELECT} WHERE c.session_id = ?`)
+    this.selectSurface = prepare(db, `${SELECT} WHERE sf.session_id = ? AND sf.surface_id = ?`)
+    this.insertSurfaceWindow = prepare(
+      db,
+      'INSERT INTO surface_windows (window_id, surface_id) SELECT ?, id FROM a2ui_surfaces WHERE session_id = ? AND surface_id = ?'
+    )
     this.nextZ = prepare(db, 'SELECT COALESCE(MAX(z_order), 0) + 1 AS z FROM app_windows WHERE desktop_id = ?')
     this.insertWindow = prepare(
       db,
@@ -98,6 +111,11 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
     return row ? toRecord(row) : null
   }
 
+  findSurfaceWindow(sessionId: Id, surfaceId: string): AppWindowRecord | null {
+    const row = this.selectSurface.get(sessionId, surfaceId)
+    return row ? toRecord(row) : null
+  }
+
   create(input: NewAppWindow): AppWindowRecord {
     return transaction(this.db, () => {
       const z = this.nextZ.get(input.desktopId)?.z ?? 1
@@ -106,6 +124,10 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
         this.insertWindow.run(input.desktopId, input.app, x, y, width, height, input.windowState, input.openedBy, z).lastInsertRowid
       )
       if (input.sessionId !== undefined) this.insertChat.run(id, input.sessionId)
+      if (input.surface) {
+        const { sessionId, surfaceId } = input.surface
+        if (this.insertSurfaceWindow.run(id, sessionId, surfaceId).changes === 0) throw new Error(`Surface ${surfaceId} does not exist`)
+      }
       if (input.path != null) this.upsertPath.run(id, input.path)
       if (input.url !== undefined) this.upsertUrl.run(id, input.url)
       const record = this.get(id)

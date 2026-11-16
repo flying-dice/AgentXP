@@ -16,6 +16,18 @@ export interface TreeNodeData {
   badge?: string
   /** `data-testid` of the node's row. */
   testid?: string
+  /** Tooltip of the row. */
+  title?: string
+  /** Extra `data-*` attributes of the row (`{ 'data-path': ... }`). */
+  attrs?: Record<string, string>
+  /** Colours the label and badge (version control states). */
+  tone?: 'modified' | 'added' | 'deleted' | 'renamed' | 'untracked' | 'conflict'
+  /** Strike the label through (deleted). */
+  strike?: boolean
+  /** A small dot after the label: something below this node changed. */
+  dot?: boolean
+  /** A small pencil after the label: the agent changed this. */
+  marker?: boolean
 }
 
 export interface FlatNode {

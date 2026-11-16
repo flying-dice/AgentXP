@@ -2,6 +2,7 @@
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import type { VfsEntryDto, VPath } from '@shared/vfs'
+  import type { TreeGitStates } from '../files/fileTree'
   import TreeView from '../../kit/organisms/TreeView.svelte'
   import { buildFileTree, dirNodeId, dirOfNode, fileOfNode, type TreeRoot } from '../files/fileTree'
 
@@ -10,14 +11,16 @@
     roots: TreeRoot[]
     /** Lists one directory (a VPath). */
     readDir: (path: VPath) => Promise<VfsEntryDto[]>
-    /** VPaths of files the agent changed; they get an "M" badge. */
+    /** VPaths of files the agent changed; they get a pencil marker. */
     changedPaths?: VPath[]
+    /** Git status of files and folders (letters, colours, dots). */
+    git?: TreeGitStates
     /** Double click or Enter on a file. */
     onopen?: (path: VPath) => void
     onerror?: (error: unknown) => void
   }
 
-  let { roots, readDir, changedPaths = [], onopen, onerror }: Props = $props()
+  let { roots, readDir, changedPaths = [], git, onopen, onerror }: Props = $props()
 
   const listings = new SvelteMap<VPath, VfsEntryDto[]>()
   const requested = new Set<VPath>()
@@ -25,7 +28,7 @@
   let expanded = $state(new Set<string>(roots.map((r) => dirNodeId(r.path))))
   let selected = $state<string | null>(null)
 
-  const nodes = $derived(buildFileTree(roots, listings, changedPaths))
+  const nodes = $derived(buildFileTree(roots, listings, changedPaths, git))
 
   // Load the listing of every expanded directory that has none yet.
   $effect(() => {

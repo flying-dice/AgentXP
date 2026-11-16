@@ -504,7 +504,8 @@ const desktopState = (desktopId: number, tools: DesktopState['tools']): DesktopS
   tools,
   paused: false,
   userInControl: false,
-  notes: []
+  notes: [],
+  surfaces: []
 })
 
 describe('AguiRunCoordinator: desktop', () => {

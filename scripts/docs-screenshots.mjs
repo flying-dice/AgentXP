@@ -251,11 +251,43 @@ async function main() {
       const last = s.windows.filter((w) => w.app === 'chat').at(-1)
       await window.agent7.sessions.rename(last.view.sessionId, 'Deploy the fix')
     })
-    await place('chat', { x: 300, y: 70, width: 520, height: 600 }, 1)
+    await place('chat', { x: 20, y: 70, width: 520, height: 600 }, 1)
     await say(chat2, 'Show me a form for the deployment')
-    await chat2.getByTestId('a2ui-surface').waitFor({ timeout: 60_000 })
+    const surfaceWindow = page.getByTestId('window-surface')
+    await surfaceWindow.getByTestId('a2ui-surface').waitFor({ timeout: 60_000 })
+    await chat2.getByTestId('chat-surface-row').waitFor()
+    await place('surface', { x: 560, y: 70, width: 480, height: 420 })
     await pause(1200)
-    await shot('a2ui-form', chat2)
+    // The form in its own window next to the chat, with the chat row (Open / Close / Delete) visible.
+    const chatBox = await chat2.boundingBox()
+    const formBox = await surfaceWindow.boundingBox()
+    const x0 = Math.floor(Math.min(chatBox.x, formBox.x)) - 8
+    const y0 = Math.floor(Math.min(chatBox.y, formBox.y)) - 8
+    await pageClip('a2ui-form', page, {
+      x: Math.max(0, x0),
+      y: Math.max(0, y0),
+      width: Math.ceil(Math.max(chatBox.x + chatBox.width, formBox.x + formBox.width)) + 8 - Math.max(0, x0),
+      height: Math.ceil(Math.max(chatBox.y + chatBox.height, formBox.y + formBox.height)) + 8 - Math.max(0, y0)
+    })
+    await api(async () => {
+      const s = await window.agent7.desktop.current()
+      await window.agent7.desktop.closeWindow(s.windows.find((w) => w.app === 'surface').id)
+    })
+
+    // ---- the same chat with a sidebar: the chat's extended surface ---------------------------------------------------
+    console.log('a2ui sidebar')
+    await place('chat', { x: 20, y: 70, width: 860, height: 600 }, 1)
+    await say(chat2, 'Add the release checklist')
+    await chat2.getByTestId('chat-sidebar').getByTestId('a2ui-surface').waitFor({ timeout: 60_000 })
+    await chat2.getByTestId('chat-transcript').and(page.locator('[data-running="false"]')).waitFor({ timeout: 60_000 })
+    await pause(800)
+    await shot('a2ui-sidebar', chat2)
+    await api(async () => {
+      const s = await window.agent7.desktop.current()
+      const last = s.windows.filter((w) => w.app === 'chat').at(-1)
+      await window.agent7.a2ui.setSidebarHidden(last.view.sessionId, 'checklist', true)
+    })
+    await place('chat', { x: 300, y: 70, width: 520, height: 600 }, 1)
 
     // ---- Agent Paint --------------------------------------------------------------------------------------------------
     console.log('paint')

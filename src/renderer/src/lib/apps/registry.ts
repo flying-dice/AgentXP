@@ -13,6 +13,7 @@ import RecycleBinApp from './recycle-bin/RecycleBinApp.svelte'
 import SnippingToolApp from './snipping-tool/SnippingToolApp.svelte'
 import StickyNotesApp from './sticky-notes/StickyNotesApp.svelte'
 import WordPadApp from './wordpad/WordPadApp.svelte'
+import SurfaceApp from './surface/SurfaceApp.svelte'
 import TerminalApp from './terminal/TerminalApp.svelte'
 import type { AppDefinition } from './types'
 
@@ -30,5 +31,6 @@ export const appRegistry: Record<AppKind, AppDefinition> = {
   'sticky-notes': { kind: 'sticky-notes', title: 'Sticky Notes', icon: 'sticky', description: 'Notes on the desktop, shared with the agent', component: StickyNotesApp },
   'event-viewer': { kind: 'event-viewer', title: 'Event Viewer', icon: 'eventlog', description: 'ACP, AG-UI and MCP messages as they happen', component: EventViewerApp },
   'snipping-tool': { kind: 'snipping-tool', title: 'Snipping Tool', icon: 'scissors', description: 'Capture part of the screen', component: SnippingToolApp },
-  'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp }
+  'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp },
+  surface: { kind: 'surface', title: 'Agent window', icon: 'computer', description: 'A window the agent drew with A2UI', component: SurfaceApp }
 }

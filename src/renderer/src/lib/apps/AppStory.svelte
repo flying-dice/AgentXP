@@ -4,6 +4,7 @@
    * host. `agentButtons` adds a strip that plays the agent changing the window's view.
    */
   import type { Snippet } from 'svelte'
+  import type { Message } from '@ag-ui/core'
   import type { AppKind, AppView } from '@shared/desktop'
   import type { AguiSessionState } from '@shared/agui-state'
   import { onMount } from 'svelte'
@@ -26,6 +27,8 @@
     setup?: (host: StoryHost) => void
     /** Shared AG-UI state of every chat (default: the sample session). */
     aguiState?: () => AguiSessionState
+    /** AG-UI messages every chat of the story shows (default: the sample transcript). */
+    aguiMessages?: () => Message[]
     /** Buttons that send an app request to the window (what the agent's tools do). */
     requests?: { label: string; method: string; params?: unknown }[]
     /** App requests sent once after the window mounted (a ready-made picture, for screenshots). */
@@ -33,11 +36,11 @@
     extra?: Snippet<[StoryHost]>
   }
 
-  let { app, view, width = 760, height = 500, active = true, agent = [], requests = [], run = [], setup, aguiState, extra }: Props = $props()
+  let { app, view, width = 760, height = 500, active = true, agent = [], requests = [], run = [], setup, aguiState, aguiMessages, extra }: Props = $props()
 
   // One host per mount: the props are deliberately read once.
   // svelte-ignore state_referenced_locally
-  const host = new StoryHost({ state: aguiState })
+  const host = new StoryHost({ state: aguiState, messages: aguiMessages })
   // svelte-ignore state_referenced_locally
   setup?.(host)
   // svelte-ignore state_referenced_locally

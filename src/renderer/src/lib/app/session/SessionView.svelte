@@ -5,6 +5,7 @@
   import { permissionMetadata } from './permissionOptions'
   import SessionHeader from './SessionHeader.svelte'
   import type { SessionStoreLike } from './SessionStoreLike'
+  import type { SurfaceControls } from './surfaceRow'
   import Transcript from './Transcript.svelte'
 
   interface Props {
@@ -19,6 +20,8 @@
     pickFiles?: () => Promise<string[]>
     /** Show permission requests inside this view (a desktop window) instead of over the whole viewport. */
     contained?: boolean
+    /** Open, close, delete and move for the surface rows (the Chat app). */
+    surfaceControls?: SurfaceControls
   }
 
   let {
@@ -29,7 +32,8 @@
     openFilePath = null,
     setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
     pickFiles = () => window.agent7.dialogs.pickFiles(),
-    contained = false
+    contained = false,
+    surfaceControls
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -55,6 +59,7 @@
     error={store.error}
     {waitingToolCallId}
     onaction={(event) => void store.sendA2uiAction(event)}
+    {surfaceControls}
   />
   <Composer
     {agentName}

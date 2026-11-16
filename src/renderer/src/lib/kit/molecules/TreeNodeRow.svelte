@@ -20,6 +20,17 @@
     bold?: boolean
     /** Suffix after the label. */
     badge?: string
+    /** Tooltip. */
+    title?: string
+    /** Extra `data-*` attributes. */
+    attrs?: Record<string, string>
+    /** Version control colour of label and badge. */
+    tone?: 'modified' | 'added' | 'deleted' | 'renamed' | 'untracked' | 'conflict'
+    strike?: boolean
+    /** Dot: something below changed. */
+    dot?: boolean
+    /** Pencil: changed by the agent. */
+    marker?: boolean
     /** Dotted connector lines (ShowLines): per-ancestor "line continues" flags and last-sibling flag. */
     lines?: { ancestors: boolean[]; last: boolean }
     id?: string
@@ -44,6 +55,12 @@
     loading = false,
     bold = false,
     badge,
+    title,
+    attrs,
+    tone,
+    strike = false,
+    dot = false,
+    marker = false,
     lines,
     id,
     testid,
@@ -69,6 +86,7 @@
   aria-selected={selected}
   aria-disabled={disabled || undefined}
   aria-busy={loading || undefined}
+  {...attrs}
 >
   {#if lines}
     {#each { length: level } as _, k (k)}
@@ -90,9 +108,11 @@
     <span class="tarrow none"></span>
   {/if}
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <span class="tlabel" class:selected class:focused class:disabled class:bold {onclick} {ondblclick} {oncontextmenu}>
+  <span class="tlabel {tone ?? ''}" class:selected class:focused class:disabled class:bold class:strike {title} {onclick} {ondblclick} {oncontextmenu}>
     {#if icon}<Icon name={icon} />{/if}
     <span class="text">{text}</span>
+    {#if dot}<span class="dot" aria-hidden="true"></span>{/if}
+    {#if marker}<Icon name="edit" size={11} class="agent" title="Changed by the agent" />{/if}
     {#if badge}<span class="badge">{badge}</span>{/if}
   </span>
 </div>
@@ -180,4 +200,26 @@
     color: #8a4b00;
     font-weight: 700;
   }
+  .tlabel.strike .text {
+    text-decoration: line-through;
+  }
+  .dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .tlabel :global(.agent) {
+    flex: none;
+    opacity: 0.85;
+  }
+  /* Version control tones: TortoiseGit-in-Win7 palette. */
+  .tlabel.modified { color: var(--w7-git-modified); }
+  .tlabel.added { color: var(--w7-git-added); }
+  .tlabel.deleted { color: var(--w7-git-deleted); }
+  .tlabel.renamed { color: var(--w7-git-renamed); }
+  .tlabel.untracked { color: var(--w7-git-added); }
+  .tlabel.conflict { color: var(--w7-git-deleted); }
+  .tlabel.modified .badge, .tlabel.added .badge, .tlabel.deleted .badge, .tlabel.renamed .badge, .tlabel.untracked .badge, .tlabel.conflict .badge { color: inherit; }
 </style>

@@ -33,7 +33,7 @@ function legacyDatabase() {
 describe('migration 004 on a database with desktops, chats and changes', () => {
   it('moves each desktop folder into drive E: and drops folder_id', () => {
     const { db } = legacyDatabase()
-    expect(migrate(db)).toBe(4)
+    expect(migrate(db)).toBe(MIGRATIONS.length)
     expect(db.prepare('SELECT desktop_id, letter, folder_id FROM desktop_drives ORDER BY desktop_id').all()).toEqual([
       { desktop_id: 1, letter: 'E', folder_id: 1 },
       { desktop_id: 2, letter: 'E', folder_id: 2 }
@@ -100,7 +100,7 @@ describe('migration 004 on a database with desktops, chats and changes', () => {
   it('migrates an empty database and enforces the drive letter check', () => {
     const db = openRaw(':memory:')
     db.exec('PRAGMA foreign_keys = ON')
-    expect(migrate(db)).toBe(4)
+    expect(migrate(db)).toBe(MIGRATIONS.length)
     db.exec("INSERT INTO desktops (title) VALUES ('d'); INSERT INTO folders (path, name) VALUES ('/x', 'x')")
     expect(() => db.exec("INSERT INTO desktop_drives (desktop_id, letter, folder_id) VALUES (1, 'C', 1)")).toThrow()
     db.exec("INSERT INTO desktop_drives (desktop_id, letter, folder_id) VALUES (1, 'E', 1)")
