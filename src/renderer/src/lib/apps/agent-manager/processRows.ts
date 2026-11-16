@@ -44,6 +44,12 @@ export function initialTab(sessions: readonly Pick<SessionDto, 'status' | 'probl
   return sessions.some((s) => s.problem || s.status === 'error' || s.status === 'working') ? 'processes' : 'chats'
 }
 
+/** The selection of the Chats list (UX-180): the kept row when it is still there, else the first row, so Open chat is on from the start. Nothing when the list is empty. */
+export function chatSelection(rows: readonly { id: string }[], selected: readonly string[]): string[] {
+  if (rows.length === 0) return []
+  return rows.some((r) => r.id === selected[0]) ? [...selected] : [rows[0].id]
+}
+
 export interface ChatRow {
   id: string
   title: string

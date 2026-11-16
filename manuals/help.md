@@ -67,15 +67,16 @@ Each Help and Support window has a chat pane at its right edge. The pane starts 
 | No sections match | Shows when the search finds nothing. | `help-no-results` |
 | Article | Shows the manual. | `help-article` |
 | Link | A link to another topic. | `help-link` |
-| Section heading | The heading Help scrolled to, near the top of the window. | `help-target` |
+| Contents link | A line of the Table of Contents. Click it to go to that section. | `help-contents-link` |
+| Section heading | The heading Help scrolled to. It has a little space above it, so no text above it is cut. | `help-target` |
 | Contents chapter (open) | A chapter of the Table of Contents that lists its sections. Only the current chapter does. | `help-toc-open` |
 | Contents chapter (closed) | A chapter of the Table of Contents shown as one line. | `help-toc-collapsed` |
 | Missing topic | Shows when the topic does not exist. | `help-missing` |
-| Status | Shows the title, or the number of matching sections. | `help-status` |
+| Status | Shows the title of the open topic, or the number of matching sections. | `help-status` |
 
 ### Menu Bar and Context Menu
 
-Every window has a menu bar with **Help** as the last menu. **Help -> View Help** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
+Every window has a menu bar with **Help** as the last menu. **Help -> View Help (F1)** opens the Help window for this app, titled with the name of the app. Press F1 to do the same. **Help -> About** opens a small box about the app. Right-click in the window, press the Menu key, or press Shift+F10 to open the context menu. Use the arrow keys to move, Enter to pick, and Esc to close.
 
 | Name | What it does | data-testid |
 |---|---|---|
@@ -98,7 +99,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: home | Shows the home topic. | `help-ctx-home` |
 | Contents | Shows the list of topics. | `help-contents` |
 | Search result text | A short piece of text around the match. | `help-snippet` |
-| Status: topic | The title of the open topic. | `help-status-topic` |
+| Status: section | The section that Help scrolled to. It is empty until you jump to a section. | `help-status-topic` |
 
 ### Keys
 

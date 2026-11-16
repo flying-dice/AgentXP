@@ -19,7 +19,7 @@ describe('projectDrives', () => {
   it('words the balloons', () => {
     expect(pluggedBalloonText('login-app (E:)')).toBe('Project plugged in: login-app (E:) is ready to use.')
     expect(EJECT_BALLOON_TITLE).toBe('Project removed')
-    expect(ejectBalloonText('login-app', 'E')).toBe("'login-app' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.")
+    expect(ejectBalloonText('login-app', 'E')).toBe("'login-app' (E:) was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.")
     expect(ejectBalloonText('x')).toContain("'x' was removed")
     expect(projectQuoted('login-app', 'E')).toBe("'login-app' (E:)")
     expect(removeProjectText('login-app')).toBe("Remove 'login-app' from this desktop? The agent can no longer use it. The folder and its files stay where they are.")

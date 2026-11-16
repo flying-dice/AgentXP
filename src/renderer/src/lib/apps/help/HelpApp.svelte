@@ -38,6 +38,8 @@
   let pendingSection = $state<string | null>(opening.section || null)
   let searchBox = $state<HTMLInputElement | HTMLTextAreaElement | null>(null)
   let flashTimer: ReturnType<typeof setTimeout> | undefined
+  /** The heading the last jump went to: the right half of the status bar names it (the left half names the topic). */
+  let sectionName = $state('')
 
   const sync = new ViewSync<{ topic: string }>((v) => v.topic)
   const topic = $derived(history.current)
@@ -72,10 +74,11 @@
     if (!heading) return
     heading.classList.add('target')
     heading.setAttribute('data-testid', 'help-target')
-    // The contents shrink to this chapter first, so the heading lands where it will stay; then it goes to the top third (UX-132).
+    // The contents shrink to this chapter first, so the heading lands where it will stay; then it goes 8 px below the top (UX-132, UX-183).
     collapseContents(article, id)
     const top = heading.getBoundingClientRect().top - article.getBoundingClientRect().top + article.scrollTop
-    article.scrollTop = scrollTopFor(top, article.clientHeight)
+    article.scrollTop = scrollTopFor(top)
+    sectionName = heading.textContent?.trim() ?? ''
     flashMatch(heading)
   }
 
@@ -116,6 +119,7 @@
     void tick().then(() => {
       if (!article) return
       article.scrollTop = 0
+      sectionName = ''
       collapseContents(article, null)
       if (section) goToSection(section)
       const mark = searching ? article.querySelector('mark') : null
@@ -251,7 +255,7 @@
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel testid="help-status" text={searching ? `${hits.length} ${hits.length === 1 ? 'section matches' : 'sections match'}` : (current?.title ?? '')} spring />
-    <StatusStripLabel testid="help-status-topic" text={current?.title ?? ''} borders={['left']} width={190} />
+    <StatusStripLabel testid="help-status-topic" text={sectionName} borders={['left']} width={190} />
   </StatusStrip>
 </div>
 

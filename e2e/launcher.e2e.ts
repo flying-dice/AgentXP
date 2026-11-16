@@ -44,7 +44,12 @@ describe('launcher', () => {
     // A desktop without a project says what to do next and names Computer (UX-164).
     await see.text(desktopPage.getByTestId('balloon-text'), 'Plug in a project to let the agent work on it: open Computer, then Plug in a project.')
     await desktopPage.getByTestId('balloon-action').click()
+    // The button really opens Computer (UX-179): in front, on the taskbar, with Plug in a project... in it, and the balloon is gone.
     await see.visible(desktopPage.getByTestId('window-explorer'))
+    await see.visible(desktopPage.getByTestId('taskbar-item-explorer'))
+    await see.visible(desktopPage.getByTestId('explorer-plug-in'))
+    await see.gone(desktopPage.getByTestId('balloon'))
+    expect(await desktopPage.getByTestId('window-explorer').getAttribute('data-focused')).toBe('true')
   })
 
   it('connects: Show desktop brings the open window forward and the row shows Connected', async () => {

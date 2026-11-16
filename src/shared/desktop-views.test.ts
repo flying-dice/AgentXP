@@ -52,6 +52,14 @@ describe('placeWindow', () => {
     expect(b.x + b.width).toBeLessThanOrEqual(right.x)
   })
 
+  it('squeezes a wide window into the room left of a chat at the right edge (UX-181)', () => {
+    const chat: Bounds = { x: 816, y: 100, width: 464, height: 560 }
+    const b = placeWindow('event-viewer', 0, chat)
+    expect(overlap(b, chat)).toBe(false)
+    expect(inside(b)).toBe(true)
+    expect(b.width).toBeGreaterThanOrEqual(720)
+  })
+
   it('falls back to the cascade (inside the desktop) when the chat covers everything', () => {
     const full: Bounds = { x: 0, y: 0, width: area.width, height: area.height }
     const b = placeWindow('notepad', 0, full)
@@ -93,6 +101,12 @@ describe('helpWindowTitle', () => {
 
   it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
     for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Agent7 Help and Support')
+  })
+
+  it('names the Chats window after its icon (UX-180)', () => {
+    expect(windowTitle({ app: 'agent-manager', tab: 'chats' })).toBe('Chats - Task Manager')
+    expect(windowTitle({ app: 'agent-manager', tab: 'processes' })).toBe('Task Manager')
+    expect(windowTitle({ app: 'agent-manager' })).toBe('Task Manager')
   })
 
   it('is what windowTitle gives a help view', () => {

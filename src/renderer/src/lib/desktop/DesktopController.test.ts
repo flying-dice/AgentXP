@@ -5,7 +5,7 @@ import { folderBrowsers } from '../kit/organisms/folderBrowser'
 import { messageBoxes } from '../kit/organisms/messageBox'
 import { emptyAguiState } from '@shared/agui-state'
 import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE } from '../app/session/resumeNote'
-import { DesktopController, NOTICE_MS, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
+import { BALLOON_LEAVE_MS, BALLOON_LONG_MS, BALLOON_MS, DesktopController, NOTICE_MS, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
 
 async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
   const api = createFakeApi()
@@ -222,7 +222,7 @@ describe('DesktopController', () => {
       await pending
       expect(controller.state.drives.map((d) => d.letter)).toEqual(['C'])
       expect(controller.balloon?.title).toBe('Project removed')
-      expect(controller.balloon?.text).toBe("'claude-code-win' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.")
+      expect(controller.balloon?.text).toBe("'claude-code-win' (E:) was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.")
       expect(controller.recentlyRemoved.map((r) => r.label)).toEqual(['claude-code-win'])
       controller.dismissBalloon()
       expect(controller.balloon).toBeNull()
@@ -260,9 +260,19 @@ describe('DesktopController projects and shell feedback', () => {
     expect(controller.balloon?.text).toBe(`Project plugged in: login-app (${drive?.letter}:) is ready to use.`)
   })
 
-  it('Plug in a project opens Explorer on the drive and no AutoPlay; the tray route keeps AutoPlay', async () => {
+  it('Plug in a project opens no window and no AutoPlay (UX-181); the tray route keeps AutoPlay', async () => {
     const { controller } = await started()
-    const pending = controller.plugInProject()
+    const windows = controller.state.windows.length
+    const first = controller.plugInProject()
+    await answerBrowser('C:\\Users\\jonathan\\source\\docs-site')
+    await first
+    expect(controller.state.windows).toHaveLength(windows)
+    expect(controller.autoPlay).toBeNull()
+  })
+
+  it('Plug in a project can open Explorer on the drive when asked to', async () => {
+    const { controller } = await started()
+    const pending = controller.plugInProject({ explorer: true })
     await answerBrowser('C:\\Users\\jonathan\\source\\login-app')
     const drive = await pending
     expect(controller.autoPlay).toBeNull()
@@ -381,6 +391,60 @@ describe('DesktopController projects and shell feedback', () => {
     controller.dismissBalloon()
     expect(controller.showProjectHint(storage)).toBe(false)
     expect(controller.balloon).toBeNull()
+  })
+
+  it('the project balloon button opens Computer in front with a taskbar button, then the balloon goes (UX-179)', async () => {
+    const { controller } = await started()
+    const storage = { getItem: () => null, setItem: () => {} }
+    if (controller.state.drives.some((d) => d.kind === 'removable')) return
+    expect(controller.showProjectHint(storage)).toBe(true)
+    await controller.runBalloonAction()
+    const explorer = controller.state.windows.filter((w) => w.app === 'explorer')
+    expect(explorer).toHaveLength(1)
+    expect(explorer[0].view).toMatchObject({ app: 'explorer', path: '' })
+    expect(controller.state.focusedWindowId).toBe(explorer[0].id)
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('the project balloon stays until it is closed or Computer is opened (UX-179)', async () => {
+    vi.useFakeTimers()
+    const { controller } = await started()
+    const storage = { getItem: () => null, setItem: () => {} }
+    if (controller.state.drives.some((d) => d.kind === 'removable')) return
+    controller.showProjectHint(storage)
+    vi.advanceTimersByTime(BALLOON_MS * 10)
+    expect(controller.balloon).not.toBeNull()
+    await controller.openApp({ app: 'explorer', path: '' })
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('a balloon stays while the pointer is on it and for a moment after (UX-180)', async () => {
+    vi.useFakeTimers()
+    const { controller } = await started()
+    controller.showBalloon({ title: 't', text: 'x', icon: 'info', stayMs: BALLOON_LONG_MS })
+    controller.holdBalloon(true)
+    vi.advanceTimersByTime(BALLOON_LONG_MS * 4)
+    expect(controller.balloon).not.toBeNull()
+    controller.holdBalloon(false)
+    vi.advanceTimersByTime(BALLOON_LEAVE_MS + 1)
+    expect(controller.balloon).toBeNull()
+    controller.showBalloon({ title: 't', text: 'x', icon: 'info', stayMs: BALLOON_LONG_MS })
+    vi.advanceTimersByTime(BALLOON_LONG_MS - 1)
+    expect(controller.balloon).not.toBeNull()
+    vi.advanceTimersByTime(2)
+    expect(controller.balloon).toBeNull()
+  })
+
+  it('a window opened from a chat lies beside it and inside the work area (UX-181)', async () => {
+    const { controller } = await started()
+    controller.workArea = () => ({ width: 1280, height: 730 })
+    const first = await controller.newChat()
+    const second = await controller.openApp({ app: 'event-viewer' })
+    const a = controller.boundsOf(controller.windowById(first.id)!)
+    const b = controller.boundsOf(controller.windowById(second.id)!)
+    expect(a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height).toBe(false)
+    expect(b.x + b.width).toBeLessThanOrEqual(1280)
+    expect(b.y + b.height).toBeLessThanOrEqual(730)
   })
 
   it('Alt+Tab cycles through the windows', async () => {

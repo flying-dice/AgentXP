@@ -90,7 +90,11 @@ describe('pause, resume and taking control (stepping agent)', () => {
     const manager = ctx.desktop.window('agent-manager')
     await see.visible(manager.getByTestId('agent-manager-open-chat'))
     await see.count(manager.getByTestId('chat-pane-toggle'), 0)
-    await manager.getByTestId('agent-manager-chat').first().click()
+    // The window carries the icon's name, selects its first chat and says how to open one (UX-180).
+    await see.text(manager.getByTestId('window-title'), 'Chats - Task Manager')
+    await see.text(manager.getByTestId('agent-manager-hint'), 'Double-click a chat to open it.')
+    await see.attribute(manager.getByTestId('agent-manager-chat').first(), 'aria-selected', 'true')
+    expect(await manager.getByTestId('agent-manager-open-chat').isDisabled()).toBe(false)
     await manager.getByTestId('agent-manager-open-chat').click()
     await see.visible(ctx.desktop.chat().frame)
     await ctx.desktop.closeWindow('agent-manager')

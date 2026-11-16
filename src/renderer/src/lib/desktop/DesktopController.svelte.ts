@@ -3,6 +3,7 @@ import type { FolderDto, Id, SessionDto } from '@shared/models'
 import {
   DESKTOP_CONTEXT_DESCRIPTION,
   windowHasAside,
+  type AppKind,
   type AppView,
   type AppWindowState,
   type AskChatRequest,
@@ -34,7 +35,7 @@ import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { helpBounds, type BarRect } from './geometry'
+import { helpBounds, placeBesideOpener, type BarRect } from './geometry'
 import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
 import { ICON_HINT, PROJECT_HINT, takeIconHint, takeProjectHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
@@ -55,11 +56,19 @@ export interface Balloon {
   title: string
   text: string
   icon: 'usb-safe' | 'info'
-  /** A button under the text; clicking it runs `run` and hides the balloon. */
-  action?: { label: string; run: () => void }
+  /** A button under the text; clicking it runs `run`, waits for it, and then hides the balloon. */
+  action?: { label: string; run: () => void | Promise<unknown> }
+  /** How long it stays when the pointer is not on it, in ms (`BALLOON_MS` when absent). `null`: until the user closes it or uses its button. */
+  stayMs?: number | null
+  /** The balloon is dismissed when this app is opened by any route (its message is done then). */
+  closesWith?: AppKind
 }
 
 export const BALLOON_MS = 9000
+/** A balloon that closes a chat's window or tells a first-time user what to do next stays long enough to read (UX-179, UX-180). */
+export const BALLOON_LONG_MS = 15000
+/** After the pointer leaves a balloon that it held, the balloon stays this long. */
+export const BALLOON_LEAVE_MS = 2000
 
 export interface ShellMessage {
   id: number
@@ -369,17 +378,43 @@ export class DesktopController implements DesktopHost {
 
   async openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState> {
     this.startOpen = false
+    if (this.balloon?.closesWith === input.app) this.dismissBalloon()
     const existing = this.existingWindowFor(input)
     if (existing) {
       await this.raiseWindow(existing.id)
       return this.windowById(existing.id) ?? existing
     }
-    const opened = await this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
     if (input.app === 'help') {
+      const opened = await this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
       this.dismissBalloon() // the welcome balloon would cover the Help window's footer (UX-148)
       return this.placeHelp(opened)
     }
-    return opened
+    return this.openBesideOpener(() => this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId }))
+  }
+
+  /**
+   * Runs a call that opens a window (an app, a new chat). A window that is new lies whole inside the work area and, when it was
+   * opened from a chat, beside that chat and not over it (UX-181). The Review window keeps its own placement (against the right edge).
+   */
+  private async openBesideOpener(open: () => Promise<AppWindowState>): Promise<AppWindowState> {
+    const known = new Set(this.state.windows.map((w) => w.id))
+    const opener = this.windowById(this.state.focusedWindowId ?? -1)
+    const opened = await open()
+    return known.has(opened.id) || opened.app === 'code-review' ? opened : this.placeBesideOpener(opened, opener)
+  }
+
+  private async placeBesideOpener(win: AppWindowState, opener: AppWindowState | undefined): Promise<AppWindowState> {
+    const area = this.workArea?.()
+    if (!area || area.width <= 0 || area.height <= 0) return win
+    const barHeight = this.barRect?.height ?? 0
+    // Beside the chat the user is typing in; from another window a new one cascades from it (main places it), so its title bar stays in reach.
+    const from = opener?.app === 'chat' && opener.windowState === 'normal' && opener.id !== win.id ? this.boundsOf(opener) : null
+    const bounds = placeBesideOpener(win.app, this.boundsOf(win), from, area, barHeight, this.state.windows.length)
+    const b = this.boundsOf(win)
+    if (bounds.x === b.x && bounds.y === b.y && bounds.width === b.width && bounds.height === b.height) return win
+    this.patch(win.id, { bounds })
+    await this.api.desktop.setBounds(win.id, bounds)
+    return { ...win, bounds }
   }
 
   /** The size of the area windows live in (the window layer sets it); null until the layer is shown. */
@@ -413,7 +448,7 @@ export class DesktopController implements DesktopHost {
     const notice = closeChatBalloon(view, closing?.status, closing?.title)
     if (notice) {
       const { action, ...text } = notice
-      this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openTaskManager('chats', closing?.id) } })
+      this.showBalloon({ ...text, icon: 'info', stayMs: BALLOON_LONG_MS, action: { label: action, run: () => this.openTaskManager('chats', closing?.id) } })
     }
     if (this.current) {
       const windows = this.current.windows.filter((w) => w.id !== windowId)
@@ -623,7 +658,7 @@ export class DesktopController implements DesktopHost {
 
   async newChat(): Promise<AppWindowState> {
     this.startOpen = false
-    return this.api.desktop.newChat(this.state.desktopId)
+    return this.openBesideOpener(() => this.api.desktop.newChat(this.state.desktopId))
   }
 
   /** A new chat on `cwd`; `draft` (the message that failed in another chat) waits in its message box (UX-175). */
@@ -814,7 +849,7 @@ export class DesktopController implements DesktopHost {
     const projects = this.state.drives.filter((d) => d.kind === 'removable')
     const drive = projects.find((d) => d.letter === this.lastChatDrive) ?? projects[0]
     if (drive) await this.newChatIn(`${drive.letter}:\\`)
-    else await this.api.desktop.newChat(this.state.desktopId)
+    else await this.newChat()
   }
 
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
@@ -822,7 +857,7 @@ export class DesktopController implements DesktopHost {
     this.startOpen = false
     const letter = /^([A-Za-z]):/.exec(cwd)?.[1]?.toUpperCase()
     if (letter && letter !== 'C') this.lastChatDrive = letter
-    return this.api.desktop.newChat(this.state.desktopId, undefined, cwd)
+    return this.openBesideOpener(() => this.api.desktop.newChat(this.state.desktopId, undefined, cwd))
   }
 
   /** Disconnect: closes this desktop's window. The agents and their turns keep running; reconnect from the launcher. */
@@ -887,8 +922,11 @@ export class DesktopController implements DesktopHost {
     this.showBalloon({ title: EJECT_BALLOON_TITLE, text: ejectBalloonText(drive.label, letter), icon: 'usb-safe' })
   }
 
-  /** Plug in a project: the Browse For Folder dialog, then the drive. Resolves the drive (also when it was plugged in already), or null when cancelled or it failed. */
-  async plugInProject(): Promise<DriveDto | null> {
+  /**
+   * Plug in a project: the Browse For Folder dialog, then the drive. Resolves the drive (also when it was plugged in already), or null when
+   * cancelled or it failed. No window opens (UX-181): the window the user plugged in from (Computer, Code) shows and selects the new project.
+   */
+  async plugInProject(options: { explorer?: boolean } = {}): Promise<DriveDto | null> {
     this.startOpen = false
     let folder: FolderDto | null
     try {
@@ -897,7 +935,7 @@ export class DesktopController implements DesktopHost {
       await this.plugInFailed('the folder', error)
       return null
     }
-    return folder ? this.plugInFolder(folder, { explorer: true }) : null
+    return folder ? this.plugInFolder(folder, { explorer: options.explorer }) : null
   }
 
   /**
@@ -953,8 +991,27 @@ export class DesktopController implements DesktopHost {
 
   showBalloon(balloon: Balloon): void {
     this.balloon = balloon
+    this.armBalloon(balloon.stayMs === undefined ? BALLOON_MS : balloon.stayMs)
+  }
+
+  private armBalloon(ms: number | null): void {
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
-    this.balloonTimer = setTimeout(() => (this.balloon = null), BALLOON_MS)
+    this.balloonTimer = ms === null ? null : setTimeout(() => (this.balloon = null), ms)
+  }
+
+  /** The pointer is on the balloon (it stays) or left it (it goes after `BALLOON_LEAVE_MS`, unless it is a balloon that stays until closed). */
+  holdBalloon(held: boolean): void {
+    if (!this.balloon) return
+    if (held) this.armBalloon(null)
+    else this.armBalloon(this.balloon.stayMs === null ? null : BALLOON_LEAVE_MS)
+  }
+
+  /** The balloon's button: runs the action, waits until it is done (the window is open), then hides the balloon. A failure leaves the balloon. */
+  async runBalloonAction(): Promise<void> {
+    const balloon = this.balloon
+    if (!balloon?.action) return
+    await balloon.action.run()
+    if (this.balloon === balloon) this.dismissBalloon()
   }
 
   dismissBalloon(): void {
@@ -1002,7 +1059,7 @@ export class DesktopController implements DesktopHost {
   showProjectHint(storage: Pick<Storage, 'getItem' | 'setItem'> | null = localStore()): boolean {
     if (this.needsDesktop || this.state.drives.some((d) => d.kind === 'removable') || !takeProjectHint(storage, this.state.desktopId)) return false
     const { action, ...text } = PROJECT_HINT
-    this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openApp({ app: 'explorer', path: '' }) } })
+    this.showBalloon({ ...text, icon: 'info', stayMs: null, closesWith: 'explorer', action: { label: action, run: () => this.openApp({ app: 'explorer', path: '' }) } })
     return true
   }
 

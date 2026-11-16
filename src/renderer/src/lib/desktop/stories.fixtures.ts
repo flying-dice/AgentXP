@@ -101,7 +101,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   if (options.agentOpened && controller.current) controller.current = markAgentOpened(controller.current)
   if (options.snip) void controller.pickSnipRegion(options.snip)
   if (options.usbMenu) controller.usbMenuOpen = true
-  if (options.balloon) controller.showBalloon({ title: 'Project removed', text: "'dotfiles' (F:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back.", icon: 'usb-safe' })
+  if (options.balloon) controller.showBalloon({ title: 'Project removed', text: "'dotfiles' (F:) was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.", icon: 'usb-safe' })
   if (options.autoPlay) await api.drives.plugIn(1, 2)
   if (options.eject) void controller.ejectDrive('E')
   if (options.draw) {

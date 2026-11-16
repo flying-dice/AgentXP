@@ -47,6 +47,12 @@
     expanded = new Set([...expanded, dirNodeId(path)])
   }
 
+  /** Selects a project, folder or file row and shows it (a project that was just plugged in). */
+  export function select(path: VPath): void {
+    expand(path)
+    selected = dirNodeId(path)
+  }
+
   // Load the listing of every expanded directory that has none yet.
   $effect(() => {
     for (const id of expanded) {

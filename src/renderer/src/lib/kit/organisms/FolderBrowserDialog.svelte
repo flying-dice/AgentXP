@@ -27,6 +27,7 @@
     FOLDER_BROWSER_INSTRUCTIONS,
     NEW_FOLDER_NAME,
     rootNodes,
+    startFolderIds,
     type FolderBrowserPurpose,
     type FolderBrowserSource
   } from './FolderBrowserDialog'
@@ -73,18 +74,11 @@
         nodes = rootNodes(listing, paths)
         // The tree opens its seeded nodes only at mount; this one arrives later, so open it here.
         if (nodes.some((n) => n.id === RECENT_ID)) expanded = new Set([...expanded, RECENT_ID])
-        else openStartFolder(listing.places.map((p) => p.path))
+        else expanded = new Set([...expanded, ...startFolderIds(listing.places)])
       },
       (error: unknown) => (problem = message(error))
     )
   })
-
-  /** With no recent projects the tree opens at Documents, or Home when there is no Documents folder. */
-  function openStartFolder(placePaths: string[]): void {
-    const start = placePaths.find((p) => /[\\/]Documents$/.test(p)) ?? placePaths[0]
-    const id = start === undefined ? undefined : nodes.find((n) => paths.get(n.id) === start)?.id
-    if (id) expanded = new Set([...expanded, id])
-  }
 
   // A name typed instead of a path is looked up 400 ms after the last key.
   $effect(() => {

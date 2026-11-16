@@ -4,6 +4,7 @@
   import Button from '../atoms/Button.svelte'
   import Icon from '../atoms/Icon.svelte'
   import type { IconName } from '../atoms/icons'
+  import { aboutLine } from './aboutText'
   import Dialog from './Dialog.svelte'
 
   interface Props {
@@ -28,7 +29,7 @@
     <Icon name={icon} size={32} />
     <div class="text">
       <div class="name">{name}</div>
-      <div>{name}, part of Agent7{version ? ` version ${version}` : ''}</div>
+      <div data-testid="{testid}-line">{aboutLine(name, version)}</div>
       {#if description}<p>{description}</p>{/if}
     </div>
   </div>

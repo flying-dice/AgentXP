@@ -20,6 +20,9 @@ export interface EntryActions {
   askChat: () => void
 }
 
+/** "Open (default: Notepad)": the item says which program Open uses for this file, next to Open with Notepad and Open with Code (UX-192). */
+export const openLabel = (path: VPath): string => `&Open (default: ${defaultOpener(path) === 'notepad' ? 'Notepad' : 'Code'})`
+
 /**
  * Open, Open with Notepad / Code (files), Copy as path, Start a chat here, Ask the agent about this, Properties.
  * Explorer only views files, so there are no editing verbs (Cut, Copy, Paste, Delete, Rename).
@@ -29,7 +32,7 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
   return [
     // A folder keeps the ids `explorer-folder-open` and `explorer-folder-chat` (test ids `menu-item-<id>`) that specs use.
     file
-      ? { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: '&Open', icon: 'file-text', action: a.open }
+      ? { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: openLabel(target.path), icon: 'file-text', action: a.open }
       : { id: 'explorer-folder-open', label: '&Open', icon: 'open-folder', action: a.open },
     ...(file
       ? [

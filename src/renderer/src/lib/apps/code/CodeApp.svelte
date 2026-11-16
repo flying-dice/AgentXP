@@ -565,7 +565,8 @@
 
   async function plugIn(): Promise<void> {
     try {
-      await host.plugInProject()
+      const drive = await host.plugInProject()
+      if (drive) tree?.select(driveRoot(drive.letter)) // the tree shows the new project and selects it (UX-181)
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
     }
@@ -601,7 +602,7 @@
   const activeRoot = (): string => (active ? rootOf(active) : (roots[0]?.path ?? host.state.home))
 
   // ---- the project tree: context menus ---------------------------------------------------------
-  let tree = $state<{ expand(path: string): void } | null>(null)
+  let tree = $state<{ expand(path: string): void; select(path: string): void } | null>(null)
   /** The row selected in the tree: the buttons above the tree act on it. */
   let treeTarget = $state<FileTreeTarget | null>(null)
   const treeBar = $derived.by(() => {
@@ -879,7 +880,7 @@
             {#if tab.id === 'projects'}
               <ToolStrip aria-label="Project tools" class="tree-tools">
                 <ToolStripButton data-testid="code-tree-new-chat" icon="session" text="New chat here" title="Start a chat that works in the selected project or folder" onclick={newChatHere} />
-                <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Plug in a folder from your computer as a project" onclick={() => void plugIn()} />
+                <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Give the agent a folder of your computer to work on" onclick={() => void plugIn()} />
                 <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project first: click a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
               </ToolStrip>
               {#if !hasProject}
