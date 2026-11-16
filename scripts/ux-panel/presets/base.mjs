@@ -20,12 +20,12 @@ export const projectPaths = (ctx, keys) => keys.map((k) => (k === 'loginAppGit' 
  * A scripted agent as the default agent, plus a desktop with projects plugged in and (optionally) connected.
  * Records ids in ctx.state for the checks.
  */
-export async function projectDesktop(ctx, { title, script = 'demo', stepMode, projects = ['loginApp'], connect = true, policy, allowAll, open = SCRIPT_APPS[script] ?? [], browserUrl, git, modifyGit, picker } = {}) {
+export async function projectDesktop(ctx, { title, script = 'demo', stepMode, projects = ['loginApp'], connect = true, policy, allowAll, open = SCRIPT_APPS[script] ?? [], browserUrl, git, modifyGit, picker, agentName } = {}) {
   title = title ?? defaultTitle(projects)
   const keys = git ? projects.map((k) => (k === 'loginApp' ? 'loginAppGit' : k)) : projects
   const paths = projectPaths(ctx, keys)
   if (modifyGit) await modifyGitProject(ctx, paths[0])
-  const agent = script ? await ctx.useScript(script, { stepMode }) : null
+  const agent = script ? await ctx.useScript(script, { stepMode, name: agentName }) : null
   if (allowAll) await ctx.setPolicy(ALL_ALLOW)
   if (policy) await ctx.setPolicy(policy)
   const desktop = await ctx.createDesktop({ title, projects: paths, connect, agentId: agent?.id })

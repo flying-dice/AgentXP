@@ -710,7 +710,7 @@ describe('H-53 the rating comes from the record, H-59 answer tasks need --answer
     expect(answerProblem(tasks['T07.1'], {})).toBe(null)
   })
   it('every task whose checker reads the answer has an Answer: line in tasks.md, and the other tasks have none', () => {
-    const withChecker = ['T02.2', 'T05.1', 'T06.1', 'T08.2', 'T10.1', 'T10.2', 'T12.2', 'T14.1', 'T15.1', 'T16.2', 'T17.2', 'T18.1', 'T19.1', 'T19.2', 'T20.1', 'T22.1', 'T22.2', 'T24.1', 'T24.2', 'T25.1', 'T25.2', 'T28.1', 'T30.2', 'T31.1', 'T31.2']
+    const withChecker = ['T02.2', 'T05.1', 'T06.1', 'T08.2', 'T10.1', 'T10.2', 'T12.2', 'T14.1', 'T15.1', 'T16.2', 'T17.2', 'T18.1', 'T19.1', 'T19.2', 'T20.1', 'T22.1', 'T22.2', 'T24.1', 'T24.2', 'T25.1', 'T25.2', 'T25.3', 'T28.1', 'T30.2', 'T31.1', 'T31.2']
     const tasks = loadTasks()
     for (const id of withChecker) expect(asksQuestion(tasks[id]), id).toBe(true)
     const rest = Object.keys(tasks).filter((id) => !withChecker.includes(id))
@@ -1459,7 +1459,7 @@ describe('H-101 to H-105 round 7 harness', () => {
     expect(source('PANELIST.md')).toContain('Open every screenshot that a command lists')
   })
   it('H-104 and H-97: /tmp paths are test paths in the briefing; bad-default-agent adds a working helper agent', () => {
-    expect(source('PANELIST.md')).toContain('start with `/tmp` are test paths')
+    expect(source('PANELIST.md')).toContain('are test paths of this study')
     expect(source('presets/desktops.mjs')).toContain("name: 'Helper assistant'")
     expect(source('presets/desktops.mjs')).toContain('makeDefault: false')
   })

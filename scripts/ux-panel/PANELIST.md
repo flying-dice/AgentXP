@@ -21,10 +21,10 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 | `windows` / `switch <n>` | list the program windows, look at another one |
 | `shot` | take a screenshot (also prints the words that are on screen) |
 | `click <x> <y>` (`--double`, `--right`) | click at a pixel position of the screenshot |
-| `move <x> <y>` | hover. A tooltip needs a moment: the screenshot is taken 1.2 seconds after the move. If you expect a tooltip and do not see it, wait with `wait 1000` and look again with `shot` |
+| `move <x> <y>` | hover. A tooltip needs a moment: the screenshot is taken 1.2 seconds after the move. If you expect a tooltip and do not see it, wait with `wait 1000` and look again with `shot`. The browser's own small tooltips (a `title`) are not in a screenshot; when the element has one, the output prints a line `Tooltip ...` with its text (H-112) |
 | `drag <x1> <y1> <x2> <y2>` | drag with the mouse |
 | `scroll <x> <y> <dy>` | scroll with the mouse wheel at that position. `dy` is in pixels, positive = down: **100 is one wheel notch, 200 to 300 moves about a page**. A `dy` under 20 barely moves anything (the output warns). The output says how far the content moved |
-| `type "<text>"` | type text where the keyboard focus is |
+| `type "<text>"` | type text where the keyboard focus is. **A line break in the text presses Enter**, which sends a chat message; the output says `Enter pressed N times` for it (H-118). Type one line per command if you do not want that |
 | `key <combo>` | `Enter`, `Escape`, `Tab`, `Shift+Tab`, `Control+N`, `Alt+F4`, `F1`, ... |
 | `wait <ms>` | wait up to 10000 ms |
 | `find "<text>"` | where does this text appear on the screen? (like asking a screen reader) |
@@ -34,8 +34,8 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 `switch` to look at it. Press **F1** if you want help from the program itself, like a person would.
 
 The output under each screenshot says which window it shows ("Window shown: desktop ..."). After a click that opens a window, that
-window is the one you see. Folder paths that start with `/tmp` are test paths of this study (the program runs in a sandbox): they
-are not wording of the program, so do not report them as a problem.
+window is the one you see. Folder paths such as `.../.ux-panel/a7ux-.../home/Documents/...` or `/tmp/a7ux-...` are test paths of this study (the program runs in a sandbox): they
+are not wording of the program, so do not report them as a problem (H-104). When you quote text that is cut off ("Ask t..."), name the window or place where you saw it, because several windows can show similar text (H-116).
 
 ## What you must not do
 

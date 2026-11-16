@@ -140,7 +140,7 @@ Record template:
 ```
 # <task> <title> - <level>
 - Build: <packaged|unpackaged build, version, commit; `stop` adds it>
-- Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
+- Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <stop fills it in>
 - Context: fresh panelist, previous tasks: none
 - Answer: <the text after 'Answer:' in the final report; tasks without a question: not asked>
 - SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
@@ -190,7 +190,7 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 - `ux scroll <x> <y> <dy>` takes raw pixels (H-78): 100 is one wheel notch, 200 to 300 about a page. The output says how far the content moved and warns under 20. Every action prints "Step N" (H-81), counted like the budget; the budget stays secret.
 - `ux move` waits 1.2 s before its screenshot (H-52, H-103), because tooltips appear after 500 ms. After a `click`, the server waits up to 1.5 s for a window that the click opens and prints "Window shown: ..." under every shot (H-102).
 - H-101: for T01.1 and T02.1 the server runs the check after every action and marks the log line on which it first held (`checkHeld`); `check` takes `stepsToPass` from it unless `--steps-to-pass` is given.
-- H-104: the project folders of a session are under `/tmp/a7ux-.../home/Documents`; the panelist briefing says that `/tmp` paths are test paths.
+- H-104: a session's sandbox is `<parent>/a7ux-XXXX/home/Documents`. The parent is `UX_SANDBOX_ROOT`, else `~/.ux-panel`, else the system temp folder, so the folder field no longer shows `/tmp/...` where the home folder is writable. The app shows the host path, so it still reads as a test path (`a7ux-...`); the panelist briefing says that such paths are test paths. A real Windows-style path needs a product change (a virtual home) and is not done here.
 - T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1b` is the second failure ("It stopped again", plain Restart) as its own task.
 - `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
 - T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".
@@ -200,3 +200,37 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 - Prompts of start states are typed in the chat window like a user does; screenshots start from the window that is open
   after setup (launcher or desktop).
 - T22.1/T22.2: the Help window is found by its app (`help`) and its topic, under either title ("Help and Support" or "Chat Help").
+
+## Records, reruns and the verdict (round 8 process fixes)
+
+- H-109, Time: `stop --record` measures `Time: <n> min` from the log (first to last command) and writes it into the Result line, over whatever
+  the panelist wrote. It then refuses a record that still has a template placeholder (`<stop fills it in>`, `<min>`, `<n>`, `<budget>`,
+  `<reason from check>`, ...): fill it in and run `stop` again.
+- H-111, rating: `stop` refuses without `--record <record.md>` when the session has a `check.json`, because `check.json.seq` is read from the
+  record's `- SEQ:` line. Pass `--no-record` only for a session without a record.
+- H-110, flags: `stop --rerun "<why the first run was lost>"` and `stop --finished-by-facilitator` set `check.json.rerun` and
+  `check.json.finishedByFacilitator` and write the reason into `check.json.notes`. Keep a lost first run as
+  `docs/ux/panel/<round>/<task>-<level>-session-lost` (beside the record): when that folder exists, `stop` refuses without `--rerun`.
+- H-119, `check` output: a result other than PASS prints no reason and no notes (so a panelist cannot read which words an answer needs). The reason is in
+  `check.json`; `check --facilitator` prints it. Run `check` once per panelist, and run it yourself (not the panelist) for the final gate.
+- H-113, protocol: the panelist reads nothing of the session folder, before or after the verdict. For the final gate run the panelist in
+  a folder that holds only the screenshots it needs, and run `check` and `stop` yourself; the log cannot show file reads, so the rule
+  is in the brief (`session.mjs brief` says it) and in the checking of the records (a record that quotes `check.json` is a slip: flag it).
+- H-112, H-118: `ux move` prints the browser's own tooltip (`title`) under the pointer as a `Tooltip` line, because browser tooltips are not in
+  the shots. `ux type` prints `Enter pressed N times` when the text has line breaks.
+- H-107: the `bad-default-agent` start state (T17.2) removes the built-in Claude Code row (it starts with `npx` and cannot run here), so every row that
+  is left either fails for the stated reason or answers.
+- H-117: the a2ui form button is "Send name" and the speaker is "Helper" (the chat's own button is "Send").
+- H-115: T25.3 "The chat reviews" (preset `review-chat`, script `chat-review`) is the round 9 re-test of UX-193: a chat does the review through
+  `review_open`, the review tools and `review_submit` from any chat, and the verdict is handed back to it. Run it at both levels with T25.1, T25.2, T26.1, T26.2.
+
+### Rerun after a usage limit (H-114)
+
+When a panelist or a session is lost to a usage limit (or an outage) before `stop`:
+
+1. Keep the lost run: copy its session folder (and its record, if any) to `docs/ux/panel/<round>/<task>-<level>-session-lost` before anything else.
+   Never reuse its folder or its panelist.
+2. Start the task again in a new `--out` folder with a FRESH panelist (`session.mjs brief`, no `--previous`; one panelist per task, H-69).
+3. Run it as usual. At the end run `stop --out <S> --record <record> --rerun "<why: usage limit, panelist stopped at step N>"`. The reason goes into
+   `check.json.rerun` and `check.json.notes`. If you wrote or finished the record yourself, add `--finished-by-facilitator`.
+4. State the rerun and its reason in the synthesis (a rerun task is counted once, with the new run; the lost run is evidence of the limit, not of the program).
