@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GitLineChange } from '@shared/git'
-import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, countsByPath, gitLinesLabel, rowReviewPath, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
+import { gitRowTooltip, changedLineNumbers, GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, countsByPath, gitLinesLabel, rowReviewPath, anchorLine, changeAtLine, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, stepChange } from './gitModel'
 
 const changes: GitLineChange[] = [
   { kind: 'added', start: 2, end: 3, oldLines: [] },
@@ -77,5 +77,26 @@ describe('Git rows (UX-78)', () => {
     const rows = [{ id: 'E:\\src\\login.ts' }, { id: 'E:\\src\\redirect.ts' }]
     expect(rowReviewPath(rows, 'E:\\src\\redirect.ts')).toBe('E:\\src\\redirect.ts')
     expect(rowReviewPath(rows, 'E:\\gone.ts')).toBeNull()
+  })
+})
+
+describe('gitRowTooltip', () => {
+  it('names the lines that changed, as the hunks give them', () => {
+    const hunks: GitLineChange[] = [
+      { kind: 'modified', start: 1, end: 1, oldLines: ['a'] },
+      { kind: 'modified', start: 3, end: 4, oldLines: ['b', 'c'] }
+    ]
+    expect(changedLineNumbers(hunks)).toEqual([1, 3, 4])
+    expect(gitRowTooltip('redirect.ts', hunks)).toBe('redirect.ts: lines 1, 3 and 4 changed')
+  })
+  it('says line for one line and counts a deletion at the line it was cut from', () => {
+    expect(gitRowTooltip('a.ts', [{ kind: 'added', start: 7, end: 7 }])).toBe('a.ts: line 7 changed')
+    expect(changedLineNumbers([{ kind: 'deleted', start: 0, end: 0 }])).toEqual([1])
+    expect(gitRowTooltip('a.ts', [{ kind: 'modified', start: 2, end: 3 }])).toBe('a.ts: lines 2 and 3 changed')
+  })
+  it('uses ranges when the list is long, and is empty without hunks', () => {
+    expect(gitRowTooltip('big.ts', [{ kind: 'added', start: 1, end: 40 }, { kind: 'modified', start: 50, end: 50 }])).toBe('big.ts: lines 1-40 and 50 changed')
+    expect(gitRowTooltip('a.ts', undefined)).toBe('')
+    expect(gitRowTooltip('a.ts', [])).toBe('')
   })
 })

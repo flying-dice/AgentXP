@@ -121,7 +121,7 @@ export function placeWindow(
   return base
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -164,7 +164,7 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
     case 'help':
       return { app: 'help', topic: input.topic ?? 'index' }
     case 'code-review':
-      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: null, sessionId: input.sessionId ?? 0 }
+      return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: input.selectedPath ?? null, sessionId: input.sessionId ?? 0 }
   }
 }
 
@@ -178,10 +178,17 @@ export function helpWindowTitle(topic: string): string {
   return kind && kind !== 'help' ? `${HELP_PROGRAM_NAME}: Using ${APP_DISPLAY_NAMES[kind]}` : HELP_PROGRAM_NAME
 }
 
+/** "Review - review-notes": the Code Review window is named after the project, like the chats of that project. */
+export const reviewWindowTitle = (projectName: string): string => `Review - ${projectName}`
+
 /** The title of the window of an agent's form: "<title> - from the agent". */
 export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
 
-export function windowTitle(view: AppView): string {
+/**
+ * The title of a window. `projectName` is the name of the project a Code Review window shows (the label of its drive,
+ * which only the desktop knows); without it the folder name stands in.
+ */
+export function windowTitle(view: AppView, projectName?: string): string {
   switch (view.app) {
     case 'chat':
       return view.title
@@ -202,7 +209,7 @@ export function windowTitle(view: AppView): string {
     case 'help':
       return helpWindowTitle(view.topic)
     case 'code-review':
-      return `${view.root.length <= 3 ? view.root : vpathName(view.root)} - Code Review`
+      return reviewWindowTitle(projectName ?? (view.root.length <= 3 ? view.root : vpathName(view.root)))
     default:
       return APP_DISPLAY_NAMES[view.app]
   }

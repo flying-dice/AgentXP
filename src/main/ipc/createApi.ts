@@ -97,7 +97,7 @@ export function createApi(s: ApiServices): InvokeApi {
           throw error
         }
       },
-      openReview: (desktopId, root, baseRef, agentId) => s.desktops.openReview(desktopId, root, baseRef, agentId),
+      openReview: (desktopId, root, baseRef, agentId, selectedPath) => s.desktops.openReview(desktopId, root, baseRef, agentId, selectedPath),
       openAside: (desktopId, windowId, agentId) => s.desktops.openAside(desktopId, windowId, agentId),
       closeAside: (windowId) => s.desktops.closeAside(windowId),
       policy: async () => s.desktops.policy(),

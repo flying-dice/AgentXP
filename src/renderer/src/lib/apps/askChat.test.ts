@@ -69,6 +69,10 @@ describe('askChatDraft', () => {
     expect(draft).not.toContain('My question follows')
   })
 
+  it('puts a ready question after the subject', () => {
+    expect(askChatDraft({ app: 'browser', windowId: 2, kind: 'ask', url: 'https://example.com/', title: 'Example', question: 'What does this page say?' })).toBe('I have a question about the page "Example" at https://example.com/.\n\nWhat does this page say?')
+  })
+
   it('names the page when there is no selection', () => {
     expect(askChatDraft({ app: 'browser', windowId: 2, kind: 'ask', url: 'https://example.com/', title: 'Example' })).toBe('I have a question about the page "Example" at https://example.com/.\n\n')
   })

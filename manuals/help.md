@@ -25,7 +25,7 @@ Use Help and Support to learn an app. Each app has a manual. A manual lists ever
 
 ## 2 - Open It
 
-- Press F1. Help opens on the topic of the window that has focus. If no window has focus, it opens **[Keyboard](keyboard.md)**. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
+- Press F1. Help opens on the manual of the window that has focus, at its section **Common Tasks**, which answers "how do I...". If no window has focus, it opens **[Keyboard](keyboard.md)**. The window takes the keyboard focus and opens in front of any dialog box. Press Esc to close it.
 - Click **Start -> Help and Support**.
 - Click the **Help** menu of an app that has a menu, for example Notepad, Chat, Code, WordPad, or Agent Paint.
 
@@ -37,7 +37,7 @@ The toolbar is at the top. It has **Back**, **Forward**, **Home**, and the **Sea
 
 ### The Topic List
 
-The list is at the left. It shows each topic. When you type in **Search Help**, the title changes to **Search results** and the list keeps only the topics that contain all your words. The topic of the window you came from is first. Each result shows the section and a line of text. Click a result, or select it and press Enter, to scroll to that section. The matched line is highlighted for 2 seconds.
+The list is at the left. It shows each topic. When you type in **Search Help**, the title changes to **Search results** and the list shows the sections that contain all your words. Each result shows the title of the section, the manual it belongs to, and a line of text. A section that has your words in its title comes before a section that has them only in its text. Among the others, the manual of the window you came from is first. Click a result, or select it and press Enter, to scroll to that section. The matched line is highlighted for 2 seconds.
 
 ### The Article
 
@@ -45,7 +45,7 @@ The article is at the right. A link to another manual opens that manual in the s
 
 ### The Status Bar
 
-The status bar shows the title of the topic. During a search, it shows how many topics match.
+The status bar shows the title of the topic. During a search, it shows how many sections match.
 
 ### The Chat Pane
 
@@ -59,14 +59,16 @@ Each Help and Support window has a chat pane at its right edge. The pane starts 
 | Back | Goes to the last topic. | `help-back` |
 | Forward | Goes to the next topic. | `help-forward` |
 | Home | Opens the home page. | `help-home` |
-| Search Help | Filters the topic list while you type. | `help-search` |
+| Search Help | Lists the matching sections while you type. | `help-search` |
 | Help topics | The list of topics. | `help-topics` |
-| Topic | One topic of the list. | `help-topic` |
-| No topics match | Shows when the search finds nothing. | `help-no-results` |
+| Topic | One topic of the list. It shows while the search box is empty. | `help-topic` |
+| Search result | One section that matches the search: its title, its manual and a line of text. Click it to open that section. | `help-result` |
+| Search result manual | The manual that the result belongs to. | `help-result-topic` |
+| No sections match | Shows when the search finds nothing. | `help-no-results` |
 | Article | Shows the manual. | `help-article` |
 | Link | A link to another topic. | `help-link` |
 | Missing topic | Shows when the topic does not exist. | `help-missing` |
-| Status | Shows the title or the number of matches. | `help-status` |
+| Status | Shows the title, or the number of matching sections. | `help-status` |
 
 ### Menu Bar and Context Menu
 
@@ -99,15 +101,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 | Name | What it does | data-testid |
 |---|---|---|
-| F1 | Opens the manual of the focused window. | none |
+| F1 | Opens the manual of the focused window at its Common Tasks section. | none |
 
 ## 5 - Common Tasks
 
 To find a topic, follow the steps below:
 
 1. Click the **Search Help** box.
-2. Type a word, for example `save`. The list keeps the matching topics.
-3. Click a topic.
+2. Type a word, for example `undo`. The list shows the matching sections, the best match first.
+3. Click a section. The manual opens at that section.
 
 To clear a search, delete the text in **Search Help**.
 
@@ -115,7 +117,7 @@ To go back to a topic that you read, click **Back**.
 
 ## 6 - Troubleshooting
 
-- **No topics match your search.** Type fewer words, or a different word.
+- **No sections match your search.** Type fewer words, or a different word.
 - **Back is dimmed.** You have not opened another topic yet.
 - **A link does not open.** Only links to other manuals open. A web address shows as text.
 

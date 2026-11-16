@@ -20,6 +20,10 @@ describe('Help and Support', () => {
     await see.visible(help.getByTestId('help-app'))
     await see.attribute(help.getByTestId('help-article'), 'data-topic', 'notepad')
     await see.text(help.getByTestId('help-article'), 'Using Notepad')
+    // F1 lands on the section of the app's help anchor (Common Tasks), not on the top of the manual (UX-110).
+    await see.eventually(async () => {
+      expect(await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThan(0)
+    })
   })
 
   it('F1 on another window moves the same Help window to its topic', async () => {
@@ -37,9 +41,10 @@ describe('Help and Support', () => {
     await see.visible(topics.first())
     const all = await topics.count()
     await help.getByTestId('help-search').fill('Ctrl+S')
-    await see.eventually(async () => expect(await topics.count()).toBeLessThan(all))
-    await help.getByTestId('help-search').fill('zzzzqqqq')
+    await see.visible(help.getByTestId('help-result').first())
     await see.count(topics, 0)
+    await help.getByTestId('help-search').fill('zzzzqqqq')
+    await see.count(help.getByTestId('help-result'), 0)
     await see.visible(help.getByTestId('help-no-results'))
     await help.getByTestId('help-search').fill('')
     await see.eventually(async () => expect(await topics.count()).toBe(all))
@@ -58,7 +63,7 @@ describe('Help and Support', () => {
   it('a search result opens its section by one click (UX-80)', async () => {
     const help = ctx.desktop.window('help')
     await help.getByTestId('help-search').fill('Restore this item')
-    const result = help.getByTestId('help-topic').filter({ hasText: 'Using Chat' }).first()
+    const result = help.getByTestId('help-result').filter({ hasText: 'Using Chat' }).first()
     await see.visible(result)
     await result.click()
     await see.attribute(help.getByTestId('help-article'), 'data-topic', 'chat')
@@ -66,6 +71,18 @@ describe('Help and Support', () => {
       const scrolled = await help.getByTestId('help-article').evaluate((el) => (el as HTMLElement).scrollTop)
       expect(scrolled).toBeGreaterThan(0)
     })
+    await help.getByTestId('help-search').fill('')
+  })
+
+  it('"undo" lists the Revert section first, with its title and its manual (UX-110)', async () => {
+    const help = ctx.desktop.window('help')
+    await help.getByTestId('help-search').fill('undo')
+    const first = help.getByTestId('help-result').first()
+    await see.visible(first)
+    await see.text(first, 'Undo a Change of the Agent (Revert)')
+    await see.text(first.getByTestId('help-result-topic'), 'Using Chat')
+    await first.click()
+    await see.attribute(help.getByTestId('help-article'), 'data-topic', 'chat')
     await help.getByTestId('help-search').fill('')
   })
 

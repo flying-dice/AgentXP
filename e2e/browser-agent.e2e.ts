@@ -54,10 +54,16 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The bar stays after the last step (and no element number shows in it); the status bar says the agent can see the page.
+    // The bar stays after the last step (and no element number shows in it); the status bar says that the agent read the page.
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-    await see.text(browser.getByTestId('browser-assistant-status'), 'Agent: can see this page')
+    await see.text(browser.getByTestId('browser-assistant-status'), 'The agent read this page')
+
+    // "Ask about this page" opens the chat pane with the question ready and does not send it.
+    const aside = ctx.desktop.aside('browser')
+    await browser.getByTestId('browser-ask-page').click()
+    await see.eventually(async () => expect(await aside.composer.inputValue()).toContain('What does this page say?'))
+    await see.count(aside.userMessages, 0)
 
     // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
     await browser.getByTestId('browser-agent-takeover').click()

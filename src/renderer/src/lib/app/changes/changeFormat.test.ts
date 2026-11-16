@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REVERTED_KIND, REVERTED_LABEL, splitFileName, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
+import { REVERTED_KIND, REVERTED_LABEL, splitFileName, splitForMiddleEllipsis, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
 
 describe('changeFormat', () => {
   it('labels kinds and line counts', () => {
@@ -39,5 +39,20 @@ describe('file names in the list (UX-79)', () => {
     expect(splitFileName('a.test.ts')).toEqual({ stem: 'a.test', ext: '.ts' })
     expect(splitFileName('.gitignore')).toEqual({ stem: '.gitignore', ext: '' })
     expect(splitFileName('Makefile')).toEqual({ stem: 'Makefile', ext: '' })
+  })
+})
+
+describe('cutting a name in the middle (UX-111)', () => {
+  it('keeps the end of the stem and the extension together', () => {
+    expect(splitForMiddleEllipsis('redirect-handler.ts')).toEqual({ head: 'redirect-h', tail: 'andler.ts' })
+    expect(splitForMiddleEllipsis('a.test.ts')).toEqual({ head: '', tail: 'a.test.ts' })
+    expect(splitForMiddleEllipsis('Makefile')).toEqual({ head: 'Ma', tail: 'kefile' })
+    expect(splitForMiddleEllipsis('.gitignore')).toEqual({ head: '.git', tail: 'ignore' })
+  })
+  it('always gives back the whole name when the parts are joined', () => {
+    for (const name of ['redirect.ts', 'x', 'README.md', 'archive.tar.gz']) {
+      const { head, tail } = splitForMiddleEllipsis(name)
+      expect(head + tail).toBe(name)
+    }
   })
 })

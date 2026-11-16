@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clickLabel, findLabel, selectLabel, tabsLabel, typeLabel } from './browserLabels'
+import { clickLabel, findLabel, selectLabel, tabsLabel, typeLabel, WAIT_LABEL, waitDetail } from './browserLabels'
 
 describe('browser activity labels', () => {
   it('names the clicked element and never shows a ref', () => {
@@ -31,5 +31,14 @@ describe('browser activity labels', () => {
     expect(findLabel({ role: 'button' })).toBe('Looking for a button on the page')
     expect(tabsLabel('switch', 2)).toBe('Switching to tab 2')
     expect(tabsLabel('list')).toBe('Looking at the tabs')
+  })
+})
+
+describe('wait words', () => {
+  it('keeps page text out of the bar and puts it in the detail', () => {
+    expect(WAIT_LABEL).toBe('Waiting for the page to change')
+    expect(waitDetail('Reacted (1)', undefined)).toBe('Waiting for the text "Reacted (1)" to show on the page.')
+    expect(waitDetail(undefined, 4)).toBe('Waiting for an item on the page to show.')
+    expect(waitDetail(undefined, undefined)).toBeUndefined()
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { closeTab, openTab, reconcileTabs, sameRange, scrollTopForLine, visibleRange } from './codeModel'
+import { ALL_PANES, NO_PANES, closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout } from './codeModel'
 
 describe('tabs', () => {
   it('opens a tab once and activates it', () => {
@@ -42,5 +42,40 @@ describe('visible lines', () => {
     expect(sameRange([1, 2], [1, 3])).toBe(false)
     expect(sameRange(null, null)).toBe(true)
     expect(sameRange(null, [1, 1])).toBe(false)
+  })
+})
+
+describe('focus on the file', () => {
+  it('closes every pane and remembers the ones that were open', () => {
+    const open = { management: true, logs: false, chat: true }
+    const focused = toggleFocus(open, null)
+    expect(focused).toEqual({ panes: NO_PANES, remembered: open })
+    expect(isFocused(focused.panes)).toBe(true)
+  })
+
+  it('brings back what was open, or every pane when nothing is remembered', () => {
+    const open = { management: true, logs: false, chat: true }
+    expect(toggleFocus(NO_PANES, open)).toEqual({ panes: open, remembered: null })
+    expect(toggleFocus(NO_PANES, null).panes).toEqual(ALL_PANES)
+    expect(toggleFocus(NO_PANES, NO_PANES).panes).toEqual(ALL_PANES)
+  })
+
+  it('is a toggle: twice gives the same panes', () => {
+    const open = { management: false, logs: true, chat: false }
+    const once = toggleFocus(open, null)
+    expect(toggleFocus(once.panes, once.remembered).panes).toEqual(open)
+  })
+
+  it('remembers the layout per window and ignores junk', () => {
+    const data = new Map<string, string>()
+    const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) }
+    const key = focusKey(1, 4)
+    expect(readLayout(storage, key)).toEqual({ management: true, logs: true, restore: null })
+    writeLayout(storage, key, { management: false, logs: false, restore: { management: true, logs: true, chat: true } })
+    expect(readLayout(storage, key)).toEqual({ management: false, logs: false, restore: { management: true, logs: true, chat: true } })
+    expect(readLayout(storage, focusKey(1, 5)).management).toBe(true)
+    data.set(key, '{nope')
+    expect(readLayout(storage, key).management).toBe(true)
+    expect(readLayout(null, key).logs).toBe(true)
   })
 })

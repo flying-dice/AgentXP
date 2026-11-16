@@ -8,7 +8,7 @@
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
-  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, linesLabel, splitChangePath, splitFileName } from '../changes/changeFormat'
+  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
 
   interface Props {
     changes: FileChangeDto[]
@@ -23,11 +23,11 @@
 
   let { changes, selectedId = $bindable(null), onrevert, onopeneditor, onopenrecyclebin }: Props = $props()
 
-  // The file column takes what the others leave and shrinks first, so the counts column is always on screen (UX-79).
+  // The file column takes what the others leave and shrinks first, so the counts column is always on screen (UX-79, UX-111).
   const columns: ListColumn[] = [
-    { key: 'file', header: 'File' },
-    { key: 'kind', header: 'Change', width: 84 },
-    { key: 'lines', header: 'Lines', width: 84, align: 'right' }
+    { key: 'file', header: 'File', minWidth: 60 },
+    { key: 'kind', header: 'Change', width: 72 },
+    { key: 'lines', header: 'Lines', width: 82, align: 'right' }
   ]
 
   /** Reverted changes stay in the list, grey, so nobody wonders where the file went. A change that vanishes from the list was reverted, here or anywhere else (UX-79). */
@@ -86,9 +86,9 @@
       {#snippet cell(row, col)}
         {#if col.key === 'file'}
           {@const parts = splitChangePath(String(row.file))}
-          {@const name = splitFileName(parts.name)}
+          {@const name = splitForMiddleEllipsis(parts.name)}
           <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : String(row.file)} data-testid="changes-file">
-            <b class="name"><span class="stem" style:max-width="calc(100% - {name.ext.length}ch)">{name.stem}</span><span class="ext">{name.ext}</span></b>
+            <b class="name"><span class="head">{name.head}</span><span class="tail">{name.tail}</span></b>
             {#if row.reverted}<span class="dir" data-testid="changes-reverted-text">{REVERTED_LABEL}</span>{:else if parts.dir}<span class="dir">{parts.dir}</span>{/if}
           </span>
         {:else if col.key === 'kind'}
@@ -125,6 +125,7 @@
 </div>
 
 <style>
+  /* A short pane scrolls instead of squeezing the list: the list always shows eight rows. */
   .changes {
     flex: 1;
     min-height: 0;
@@ -132,14 +133,16 @@
     flex-direction: column;
     gap: 6px;
     padding: 6px;
+    overflow: auto;
   }
   .summary {
     flex: none;
     color: var(--w7-text-muted);
   }
+  /* Eight rows of 20 px, the header row and the border. */
   .list {
     flex: none;
-    height: 124px;
+    height: 190px;
     display: flex;
     flex-direction: column;
   }
@@ -155,19 +158,22 @@
     overflow: hidden;
     white-space: nowrap;
   }
-  /* The folder shrinks first; then the stem of the name is cut, never the extension. */
+  /* The folder shrinks first; then the middle of the name is cut with an ellipsis, never its end or its extension. */
   .name {
     flex: 0 1 auto;
-    display: block;
+    display: flex;
     min-width: 40px;
     overflow: hidden;
     white-space: nowrap;
   }
-  .stem {
-    display: inline-block;
-    vertical-align: bottom;
+  .head {
+    flex: 0 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .tail {
+    flex: none;
   }
   .dir {
     flex: 0 100 auto;

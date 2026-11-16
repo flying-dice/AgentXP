@@ -8,6 +8,7 @@ import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
 import { chatPaneItem, helpMenu } from '../../kit/molecules/standardMenu'
 import type { IconName } from '../../kit/atoms/icons'
 import type { DesktopHost } from '../types'
+import { topicForApp } from '../help/helpModel'
 
 /** The icon and the line of each app's About box. */
 export const ABOUT: Record<AppKind, { icon: IconName; description: string }> = {
@@ -53,8 +54,8 @@ export class AppHelp {
     return ABOUT[this.kind].description
   }
 
-  /** View Help (F1): the Help window on this app's topic. */
-  open = (): void => void this.host.openApp({ app: 'help', topic: this.kind })
+  /** View Help (F1): the Help window on this app's topic, at the section of its help anchor (Common Tasks). */
+  open = (): void => void this.host.openApp({ app: 'help', topic: topicForApp(this.kind) })
 
   /** The Help window on this app's topic, scrolled to one of its sections (`troubleshooting`): the error page's Help link. */
   openSection = (section: string): void => void this.host.openApp({ app: 'help', topic: `${this.kind}#${section}` })

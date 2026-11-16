@@ -74,7 +74,7 @@ export function askChatPrompt(request: AskChatRequest): string {
 export function askChatDraft(request: AskChatRequest): string {
   const parts = [`${LEAD.ask} ${subjectOf(request)}.`]
   if (request.text?.trim()) parts.push(fenced(request.text, request.path ? (FENCE_LANGUAGES[extensionOf(request.path)] ?? '') : ''))
-  return `${parts.join('\n\n')}\n\n`
+  return `${parts.join('\n\n')}\n\n${request.question ?? ''}`
 }
 
 export { viewPath }

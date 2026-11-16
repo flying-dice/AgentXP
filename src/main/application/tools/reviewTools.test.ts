@@ -231,7 +231,7 @@ describe('the review window owns its session', () => {
     const state = desktops.state(desktopId)
     const window = state.windows.find((w) => w.app === 'code-review')!
     expect(window.view).toEqual({ app: 'code-review', root: 'E:\\', baseRef: 'HEAD', selectedPath: null, sessionId: reviewId })
-    expect(window.title).toContain('Code Review')
+    expect(window.title).toMatch(/^Review - /)
     expect(f.repos.sessions.get(reviewId)).toMatchObject({ role: 'review', cwd: 'E:\\', desktopId })
     expect(state.tools).toEqual(expect.arrayContaining(['review', 'fs.read']))
   })
@@ -248,6 +248,12 @@ describe('the review window owns its session', () => {
     await desktops.openReview(desktopId, 'E:\\', 'main')
     expect(desktops.state(desktopId).windows.filter((w) => w.app === 'code-review')).toHaveLength(2)
     expect(f.repos.sessions.listByDesktop(desktopId).filter((s) => s.role === 'chat').map((s) => s.id)).toEqual([chatId])
+  })
+
+  it('opens on the file that was asked for, so the first view already shows it', async () => {
+    const opened = await desktops.openReview(desktopId, 'E:\\', 'HEAD', undefined, 'src/redirect.ts')
+    expect(opened.view).toMatchObject({ app: 'code-review', selectedPath: 'src/redirect.ts' })
+    expect(desktops.state(desktopId).windows.find((w) => w.id === opened.id)!.view).toMatchObject({ selectedPath: 'src/redirect.ts' })
   })
 
   it('refuses a bad ref and a window without a review session', async () => {

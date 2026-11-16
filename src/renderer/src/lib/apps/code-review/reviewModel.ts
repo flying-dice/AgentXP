@@ -1,5 +1,6 @@
 /** Pure model of the Code Review app: rows, where comments hang, which comments a "send to chat" passes on. */
 import type { DiffLine, SplitRow } from '@shared/diff'
+import { parseVPath } from '@shared/vfs'
 import { changeRegions, fullDiffLines, fullSplitRows, marginBlocks, splitKinds, unifiedKinds, type ChangeRegion, type MarginBlock, type RowKind } from '@shared/windiff'
 import {
   VERDICT_LABELS,
@@ -142,10 +143,20 @@ export function changeTotals(changes: readonly ReviewChangeDto[]): string {
   return `${changes.length} ${changes.length === 1 ? 'file' : 'files'}, +${added} -${removed}`
 }
 
-/** A chat in the Send dialog is named by its first words ("Fix the login..."); a chat without words yet is "Chat 3". */
-export function chatLabel(chat: { id: number; title?: string | null }): string {
+/** The name of the project a path is in: the label of its drive ("review-notes" for `E:\\src`); null when the drive is unknown. */
+export function projectNameOf(path: string, drives: readonly { letter: string; label: string }[]): string | null {
+  const drive = parseVPath(path)?.drive
+  return drives.find((d) => d.letter === drive)?.label || null
+}
+
+/**
+ * A chat in the Send dialog has the name of its window: its title ("Fix the login..."); a chat without words yet is
+ * "New chat (review-notes)", with the project it works in.
+ */
+export function chatLabel(chat: { title?: string | null }, projectName: string | null = null): string {
   const title = chat.title?.trim() ?? ''
-  return title && title !== 'New session' && title !== 'New chat' ? title : `Chat ${chat.id}`
+  if (title && title !== 'New session' && title !== 'New chat') return title
+  return projectName ? `New chat (${projectName})` : 'New chat'
 }
 
 const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
@@ -167,4 +178,4 @@ export const filesStatusLabel = (total: number, shown: number): string =>
 export const SEVERITY_HELP = 'Minor is the usual choice for a suggestion. Use Blocker only when the change must not be accepted as it is.'
 
 /** The tooltip of the "+" in the gutter. */
-export const addCommentTitle = (line: number | undefined): string => (line === undefined ? 'There is no line to comment on here' : `Add a comment on line ${line}`)
+export const addCommentTitle = (line: number | undefined): string => (line === undefined ? 'There is no line to comment on here' : 'Add a comment on this line')

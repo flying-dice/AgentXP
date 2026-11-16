@@ -117,6 +117,11 @@
     return running && id === lastId ? null : (browserWork(rows)?.detail ?? null)
   }
 
+  /** The counts per kind of a finished Browser-only group, for the tooltip of its line. */
+  function tooltipOf(id: string, rows: readonly WorkRow[]): string | null {
+    return running && id === lastId ? null : (browserWork(rows)?.tooltip ?? null)
+  }
+
   let scroller: HTMLDivElement | undefined = $state()
   let pinned = true
   /** Content grew while the user had scrolled up: the pill above the message box offers the way to the end. */
@@ -246,6 +251,7 @@
         <ActivityGroup
           summary={summaryOf(item.id, item.rows)}
           detail={detailOf(item.id, item.rows)}
+          tooltip={tooltipOf(item.id, item.rows)}
           live={running && item.id === lastId}
           bind:open={() => isOpen(item.id, item.rows), (value) => (overrides[item.id] = value)}
         >

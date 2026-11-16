@@ -65,3 +65,13 @@ export function tabsLabel(action: string, tab?: number): string {
   if (action === 'close') return 'Closing a tab'
   return 'Looking at the tabs'
 }
+
+/** The bar while the agent waits: what it waits for is page text, so the words stay general (the wanted text is `waitDetail`). */
+export const WAIT_LABEL = 'Waiting for the page to change'
+
+/** The tooltip and the details of a wait: what it waits for, or nothing when it only waits for the page to settle. */
+export function waitDetail(text: string | undefined, ref: number | undefined): string | undefined {
+  if (text !== undefined) return `Waiting for the text "${tidy(text)}" to show on the page.`
+  if (ref !== undefined) return 'Waiting for an item on the page to show.'
+  return undefined
+}

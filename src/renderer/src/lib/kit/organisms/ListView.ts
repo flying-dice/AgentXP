@@ -11,6 +11,8 @@ export interface ListColumn {
   align?: 'left' | 'right' | 'center'
   /** Default true. */
   sortable?: boolean
+  /** px; the narrowest a flexible column (no `width`) counts for when the list decides to scroll sideways. Default 80. */
+  minWidth?: number
 }
 
 export interface ListRow {

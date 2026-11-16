@@ -42,13 +42,13 @@ The menu bar has the menus **File**, **Edit**, **View**, **Search**, **Tools**, 
 
 ### The Toolbar
 
-The toolbar has the buttons for files, for changes, and for the panes. Some buttons are always dimmed because the agent writes the files.
+The toolbar has the buttons for files, for changes, for the panes, and for the chat. **Ask about selection** opens the chat pane with a question about the lines that you selected in the file. At the right end, **Focus on the file** gives the file the whole window. Some buttons are always dimmed because the agent writes the files.
 
 ### The Management Pane
 
 The pane is at the left. It has three tabs.
 
-- **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file.
+- **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
 - **Changes** – Lists each change of the agent.
 
@@ -65,11 +65,11 @@ The peek shows the old lines and the new lines of a block. **Revert hunk** write
 The pane is at the bottom. It has two tabs.
 
 - **Agent changes** – The same list as the chat, with **Revert** and **Open in editor**.
-- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Double-click a file, or select it and press Enter, to see its changes in Code Review. If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
+- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Double-click a file, or select it and press Enter, to see its changes in Code Review. The review opens on that file. Point to a row to read which lines of the file changed, for example "redirect.ts: lines 1, 3 and 4 changed". If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
 
 ### Focus on the File
 
-The file uses all the room that the open panes leave. Choose **View -> Focus on the file** (Ctrl+Shift+F) to close every pane in one step, so the file fills the whole window. Choose **View -> Show all panels** to bring them back. Ctrl+Shift+F does the same as the two menu items.
+The file uses all the room that the open panes leave. Click **Focus on the file** at the right end of the toolbar, or press F11, to close the chat pane, the Management pane, and the Changes and Git pane in one step, so the file fills the whole window. The button then reads **Show panes**. Click it, or press F11 again, to bring back the panes that were open. The same two actions are in the **View** menu as **Focus on the file** and **Show all panels**. Ctrl+Shift+F works like F11. The window remembers its panes.
 
 ### The Status Bar
 
@@ -96,8 +96,9 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Management | Shows or hides the left pane. | `menu-item-code-view-management` |
 | Logs and others | Shows or hides the bottom pane. | `menu-item-code-view-logs` |
 | Overview ruler | Shows or hides the ruler at the right. | `menu-item-code-view-ruler` |
-| Focus on the file | Closes every pane, so the file fills the window. Ctrl+Shift+F. | `code-menu-focus` |
-| Show all panels | Opens the panes again. | `code-menu-show-all` |
+| Focus on the file | Closes every pane, so the file fills the window. F11. | `code-menu-focus` |
+| Show all panels | Opens all the panes. | `code-menu-show-all` |
+| New chat here (menu) | File menu: starts a chat in the selected project or folder of the tree, or in the project of the open file. | `code-menu-new-chat-here` |
 | Search menu | Opens the Search menu. | `menubar-search` |
 | Next change | Goes to the next block. Alt+F5. | `menu-item-code-next-change` |
 | Previous change | Goes to the last block. Shift+Alt+F5. | `menu-item-code-prev-change` |
@@ -115,6 +116,8 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Previous change | Goes to the last block. | `code-prev-change` |
 | Next change | Goes to the next block. | `code-next-change` |
 | Revert hunk (toolbar) | Reverts the open block or the block under the caret. | `code-toolbar-revert-hunk` |
+| Ask about selection | Opens the chat pane with a question about the selected lines. It is dimmed until you select lines. | `code-ask-selection` |
+| Focus on the file | At the right end of the toolbar: hides the chat, Management, and Changes and Git panes. Then it reads **Show panes**, and a click brings them back. F11. | `code-focus-toggle` |
 | Refresh git status | Reads the git status again. | `code-refresh` |
 | Management (button) | Shows or hides the left pane. | `code-management-toggle` |
 | Review changes (menu) | Opens the Code Review box, where you choose what to review. | `code-menu-review` |
@@ -183,15 +186,17 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
 | Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `code-ctx-open-chat` |
 | Tree menu: open | Opens the file, or opens the folder. | `code-ctx-open` |
-| Tree menu: start a chat | Starts a chat on this project or folder. | `code-ctx-start-chat` |
+| New chat here | Above the tree: starts a chat in the selected project or folder. | `code-tree-new-chat` |
+| Remove from desktop | Above the tree: takes the selected project off the desktop. Its folder stays on your disk. | `code-tree-remove` |
+| Tree menu: new chat here | Starts a chat on this project or folder. | `code-ctx-start-chat` |
 | Tree menu: open in Explorer | Shows the folder in Explorer. | `code-ctx-open-explorer` |
 | Tree menu: open with Notepad | Opens the file in Notepad. | `code-ctx-open-notepad` |
 | Tree menu: copy as path | Copies the path of the file or folder. | `code-ctx-copy-path` |
 | Tree menu: ask chat | Asks the chat about this file. | `code-ctx-ask-file` |
-| Tree menu: eject | Takes the project off the desktop (the entry reads "Eject (remove from this desktop)"). Its folder stays on your disk. | `code-ctx-eject` |
+| Tree menu: remove from desktop | Takes the project off the desktop. Its folder stays on your disk. | `code-ctx-eject` |
 | Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
 | Project tree | The folders and files of the project. | `code-tree` |
-| Menu: eject | Takes the open project off the desktop. | `code-menu-eject` |
+| Menu: remove project | File menu: takes the open project off the desktop. | `code-menu-eject` |
 | Menu: plug in | Plugs in a project. | `code-menu-plug-in` |
 | Turn on Git here | Asks first, then turns on Git in this folder, so changes can be tracked. | `code-git-init` |
 | Git: not tracked | Explains that this folder is not tracked with Git and what turning it on does. | `code-git-not-repo` |
@@ -207,8 +212,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Ctrl+O | Opens a file. | none |
 | Alt+F5 | Goes to the next change. | none |
 | Shift+Alt+F5 | Goes to the last change. | none |
-| Ctrl+Shift+F | Focus on the file, or show all panes again. | none |
+| Ctrl+Shift+F | The same as F11. | none |
 | Esc | Closes the peek. | none |
+| F11 | Focus on the file, or show the panes again. | none |
 | F1 | Opens this manual. | none |
 
 ## 5 - Common Tasks
@@ -229,19 +235,23 @@ To revert a whole file, select the change in the **Agent changes** tab and click
 
 To go from block to block, press Alt+F5.
 
-To make the file use the whole window, choose **View -> Focus on the file** or press Ctrl+Shift+F. To get the panes back, choose **View -> Show all panels**.
+To make the file use the whole window, click **Focus on the file** at the right end of the toolbar, or press F11. To get the panes back, click **Show panes**, or press F11 again.
+
+To start a chat in a project or folder, select it in the tree and click **New chat here**.
+
+To ask about some lines, select them in the file and click **Ask about selection**.
 
 To see what changed in a file that Git lists, follow the steps below:
 
 1. Click the **Git** tab at the bottom.
-2. Double-click the file, or select it and press Enter. Code Review opens on that file.
+2. Double-click the file, or select it and press Enter. Code Review opens on that file. Point to the row first to see which lines changed.
 
 ## 6 - Troubleshooting
 
 - **The editor is empty.** The window says to open a file from the tree. Click **Open file**.
 - **The tree is empty.** Plug in a project in **[Explorer](explorer.md)**. Without a project, the tree shows the home folder of the agent.
 - **The Git tab says that the folder is not tracked with Git.** The project has no .git folder. Click **Turn on Git here** if you want change marks.
-- **The file is in a narrow column.** Choose **View -> Focus on the file**.
+- **The file is in a narrow column.** Click **Focus on the file** in the toolbar, or press F11.
 - **Revert hunk is dimmed.** Move the caret to a changed block, or open its peek.
 - **I cannot type.** Code is read-only. Ask the agent to edit the file.
 

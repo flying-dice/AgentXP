@@ -42,3 +42,17 @@ export function absolutePath(folderPath: string, relative: string): string {
   const clean = relative.replace(/^[\\/]+/, '').replaceAll(sep === '\\' ? '/' : '\\', sep)
   return `${folderPath.replace(/[\\/]+$/, '')}${sep}${clean}`
 }
+
+/** How many characters of the stem stay beside the extension when a long name is cut in the middle. */
+export const NAME_TAIL = 6
+
+/**
+ * A file name in two parts so that a long one is cut in the middle: `head` may end in an ellipsis, `tail` (the last
+ * characters of the stem and the extension) never does. `redirect-handler.ts` gives `redirect-h` and `andler.ts`, so
+ * the reader still sees the end of the name and its type when the middle is cut.
+ */
+export function splitForMiddleEllipsis(name: string): { head: string; tail: string } {
+  const { stem, ext } = splitFileName(name)
+  const keep = Math.min(stem.length, NAME_TAIL)
+  return { head: stem.slice(0, stem.length - keep), tail: `${stem.slice(stem.length - keep)}${ext}` }
+}
