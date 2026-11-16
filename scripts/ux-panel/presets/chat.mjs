@@ -118,8 +118,9 @@ export const presets = {
    * is then pointed at `crash-recovered`, so the retry after the restart ends in under 5 s with "Done. The slow job is finished." (H-31).
    * H-58: the start state records whether the red box offers "Restart and send again" (state.firstCrashOffersRestartSend; the option
    * `strict` throws when it does not). The option `twice` is the second-failure task (T23.1-twice): "It stopped again", plain Restart.
-   * Known product defect (R4 note): one SIGKILL mid-turn is counted as two failures (SessionRuntime.onClosed and SessionService.runTurn
-   * both record it), so the box already says "It stopped again" on the first crash; the T23.1 checker prints a note while this holds.
+   * H-65: the second failure needs UX-123 (the failure count is reset when a turn completes, not when the agent starts). With it, a
+   * crash of the restarted agent before its turn completes is failure 2: the box says "It stopped again", offers Restart and "Start
+   * a new chat" (state.secondFailureOffersNewChat). Without it the box never says so and the preset throws on that line (SETUP FAIL).
    */
   async 'crashed-agent'(ctx, options = {}) {
     const { desktop, agent } = await idleChat(ctx, { script: 'crash-recovery' })
@@ -167,6 +168,7 @@ export const presets = {
         await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
       }, { id: agent.id, script: retryScript })
       ctx.state.secondFailure = /stopped again/i.test(await errorText())
+      ctx.state.secondFailureOffersNewChat = await page.getByTestId('chat-error-new-chat').isVisible().catch(() => false)
       if (!ctx.state.secondFailure) throw new Error('the second-failure start state did not show "It stopped again"')
     }
     ctx.saveState()

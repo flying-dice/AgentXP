@@ -1,3 +1,4 @@
+import { baseTaskId as baseId } from '../lib/tasktext.mjs'
 import { TASKS } from '../tasks.mjs'
 import { checks as advanced } from './advanced.mjs'
 import { checks as changes } from './changes.mjs'
@@ -9,7 +10,6 @@ import { checks as features } from './features.mjs'
 
 export const CHECKS = { ...launch, ...chat, ...changes, ...desktop, ...settings, ...advanced, ...features }
 // Variants of one task share the checker of the base task.
-const baseId = (id) => id.replace(/-(inline|sidebar|window|twice)$/, '')
 
 /** Runs the checker of a task: { status: 'PASS'|'FAIL'|'MANUAL', reason, notes }. */
 export async function runCheck(ctx, taskId, options = {}) {

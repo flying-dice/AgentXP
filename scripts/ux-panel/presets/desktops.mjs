@@ -41,6 +41,11 @@ export const presets = {
     // launcher does not read "Idle" for it for the first 30 s (the check ran at mount, before the row existed).
     await ctx.eval(() => window.agent7.launcher.checkAgents())
     await ctx.waitFor(async () => Boolean((await ctx.launcherList()).find((d) => d.id === broken.id)?.agentProblem), 'the agent problem on the Docs site row')
+    // H-73: the launcher preselects the row that waits for approval, which answers the task for the panelist. Select the
+    // "Scratch pad" row (an idle one) so that the panelist has to read the rows to find the waiting desktop.
+    const launcher = await ctx.launcher()
+    await launcher.locator('[data-testid="launcher-desktop-row"]', { hasText: 'Scratch pad' }).click()
+    ctx.state.preselectedTitle = 'Scratch pad'
     Object.assign(ctx.state, { pendingDesktopId: desktop.id, errorDesktopId: broken.id, errorDesktopTitle: 'Docs site' })
     ctx.saveState()
   },

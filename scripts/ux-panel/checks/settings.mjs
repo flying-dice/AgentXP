@@ -5,6 +5,10 @@ import { all, fail, helpInfo, manual, pass, withAnswer } from './util.mjs'
 export const TOOLTIP_MEANING = /project folder|\bdrive\b|see (its|the|your) files|folder as a drive/i
 const TOOLTIP_MEANING_TEXT = '"project folder", "drive" or "see its files"'
 
+/** H-68: T16.2 answer words. */
+export const T162_NO = /\b(no|not|nope|doesn'?t|does not|won'?t|will not)\b/i
+export const T162_WHY = /write files|separate|both|notepad|each app|other app/i
+
 export const checks = {
   async 'T16.1'(ctx) {
     const policy = await ctx.policy()
@@ -15,9 +19,13 @@ export const checks = {
   },
 
   async 'T16.2'(ctx, { answer }) {
-    // Free text: always MANUAL (a keyword such as "no" would match almost any answer).
+    // H-68: the right answer is "no" (turning off Code does not stop Notepad: both provide Write files). The answer must say no
+    // and name the reason (Write files, separate or both providers). The state is not part of the verdict.
     void ctx
-    return manual("nothing to verify in the app state; researcher must verify the panelist's answer" + (answer ? ` ("${answer}")` : '') + ': no, turning off Code does not stop Notepad from writing files (both provide Write files). The answer must come from the screen or the manual (check the log: Control Center or Help opened)')
+    if (!answer) return manual('no answer given; the right answer is no: turning off Code does not stop Notepad from writing files (both provide Write files). Check the log: Control Center or Help opened')
+    return T162_NO.test(answer) && T162_WHY.test(answer)
+      ? pass('the answer says no and gives the reason (Write files / separate)')
+      : fail('the answer must say no and why: Notepad also provides Write files (words: no/not/does not stop, and Write files, separate, both or Notepad)')
   },
 
   async 'T17.1'(ctx) {

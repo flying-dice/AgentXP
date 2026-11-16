@@ -118,7 +118,7 @@ export const checks = {
     const page = await desktopPage(ctx)
     const address = await page.getByTestId('browser-address').inputValue().catch(() => '')
     const state = all([
-      [agentMessages(entries).some((m) => /DONE/.test(textOf(m))), 'the assistant finished the web app job (DONE)'],
+      [agentMessages(entries).some((m) => /found it in #general/.test(textOf(m))), 'the assistant finished the web app job (its last reply says it found the message in #general; H-71)'],
       [/:4174/.test(address), `the Browser shows the web app (${address || 'no address'})`]
     ])
     return withAnswer(state, answer, { keywords: [['agent', 'assistant'], ['page', 'browser', 'bar']], expect: 'the panelist saw the Browser say the agent is using the page (activity bar and ring) and can say what was posted' })

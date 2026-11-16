@@ -4,11 +4,13 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { normalizeKey, parseArgs, parseCommand } from './lib/args.mjs'
 import { countSteps, createLog, readLog, summarize } from './lib/log.mjs'
-import { answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq } from './lib/tasktext.mjs'
+import { answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq, answerTooShort, seqProblem, startDecision, syncSeq } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
+import { barChipConflicts } from './checks/chat.mjs'
+import { T162_NO, T162_WHY } from './checks/settings.mjs'
 import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, userText } from './checks/util.mjs'
 import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
-import { LOGIN_ORIGINAL, REDIRECT_BUG } from './lib/fixtures.mjs'
+import { LOGIN_ORIGINAL, REDIRECT_BUG, REDIRECT_FIXED } from './lib/fixtures.mjs'
 import { TASKS } from './tasks.mjs'
 
 describe('ux argument parsing', () => {
@@ -315,8 +317,8 @@ describe('H-18 T17.2', () => {
 })
 
 describe('H-19 phrase patterns', () => {
-  it('T16.2 stays MANUAL', async () => {
-    expect((await run('T16.2', fakeCtx(), 'no')).status).toBe('MANUAL')
+  it('T16.2 without an answer is MANUAL (H-68 decides it with an answer)', async () => {
+    expect((await run('T16.2', fakeCtx())).status).toBe('MANUAL')
   })
   it('T19.2 rejects near-empty answers', async () => {
     const d = { windows: [win('browser')] }
@@ -668,7 +670,7 @@ describe('H-53 the rating comes from the record, H-59 answer tasks need --answer
     const src = source('session.mjs')
     expect(src).not.toContain("seq: 'string'")
     expect(src).toContain("record: 'string'")
-    expect(src).toContain('seqFromRecord')
+    expect(src).toContain('syncSeq')
     expect(source('FACILITATOR.md')).not.toContain('--seq <SEQ>')
   })
   it('answerProblem refuses an answer task without --answer or --no-answer', () => {
@@ -737,7 +739,8 @@ describe('H-57 H-58 H-63 presets', () => {
     expect(src).toContain('options.twice')
     expect(TASKS['T23.1']).toEqual({ preset: 'crashed-agent' })
     expect(TASKS['T23.1-twice']).toMatchObject({ preset: 'crashed-agent', options: { twice: true } })
-    expect(baseTaskId('T23.1-twice')).toBe('T23.1')
+    expect(baseTaskId('T23.1-twice')).toBe('T23.1b')
+    expect(CHECKS['T23.1b']).toBeTypeOf('function')
     expect(CHECKS['T23.1']).toBeTypeOf('function')
   })
   it('T23.1 prints a note when the start state was not the first crash', async () => {
@@ -806,5 +809,196 @@ describe('H-64 T27.2 does not say side panel', () => {
     const t = loadTasks()['T27.2']
     expect(t.scenario).toBe('The file has too little room. Make the file use the whole window. Nothing else should share the window with the file.')
     expect(t.scenario).not.toMatch(/side panel/i)
+  })
+})
+
+describe('H-65 T23.1b, the second failure', () => {
+  it('tasks.md has T23.1b and the preset asserts "It stopped again", no stale comment', () => {
+    const t = loadTasks()['T23.1b']
+    expect(t.title).toBe('It crashed again')
+    expect(t.min).toBe(3)
+    expect(t.budgetNovice).toBe(12)
+    const src = source('presets/chat.mjs')
+    expect(src).not.toContain('one SIGKILL mid-turn is counted as two failures')
+    expect(src).toContain('UX-123')
+    expect(src).toContain('secondFailureOffersNewChat')
+  })
+  const sessions = [{ id: 's1', status: 'idle' }, { id: 's2', status: 'idle' }]
+  const mk = (state, outcomes) => {
+    const ctx = fakeCtx({ state, sessions, entries: [msg('user', 'a'), msg('agent', 'b')] })
+    ctx.runOutcomes = async (_d, id) => outcomes[id] ?? []
+    return ctx
+  }
+  it('passes when a turn finished after the second failure, in this chat or in a new one', async () => {
+    expect((await run('T23.1b', mk({ secondFailure: true, secondFailureOffersNewChat: true }, { s1: ['cancelled', 'success'] }))).status).toBe('PASS')
+    expect((await run('T23.1b', mk({ secondFailure: true, secondFailureOffersNewChat: true }, { s2: ['success'] }))).status).toBe('PASS')
+  })
+  it('fails without a finished turn or when the start state never reached the second failure', async () => {
+    expect((await run('T23.1b', mk({ secondFailure: true }, { s1: ['cancelled'] }))).status).toBe('FAIL')
+    expect((await run('T23.1b', mk({}, { s1: ['success'] }))).status).toBe('FAIL')
+  })
+  it('notes a box that does not offer Start a new chat (UX-123 not shipped)', async () => {
+    const result = await run('T23.1b', mk({ secondFailure: true, secondFailureOffersNewChat: false }, { s1: ['success'] }))
+    expect(result.notes.join(' ')).toContain('did not offer "Start a new chat"')
+  })
+})
+
+describe('H-66 start is idempotent and a failed start frees the folder', () => {
+  it('decides by the existing session file', () => {
+    const base = { task: 'T01.1', level: 'novice' }
+    expect(startDecision(null, { ...base, alive: false })).toBe('fresh')
+    expect(startDecision({ ...base, ready: true, pid: 1 }, { ...base, alive: true })).toBe('reuse')
+    expect(startDecision({ ...base, ready: false, error: 'boom' }, { ...base, alive: true })).toBe('replace')
+    expect(startDecision({ ...base, ready: true }, { ...base, alive: false })).toBe('replace')
+    expect(startDecision({ ...base, ready: true }, { task: 'T02.1', level: 'novice', alive: true })).toBe('busy')
+    expect(startDecision({ ...base, ready: true }, { ...base, level: 'intermediate', alive: true })).toBe('busy')
+  })
+  it('session.mjs keeps server.log and the failed session file', () => {
+    const src = source('session.mjs')
+    expect(src).toContain('session.failed-')
+    expect(src).not.toContain('already holds a session; use a new folder')
+  })
+})
+
+describe('H-67 every check run is kept; short answers are refused', () => {
+  it('answerTooShort refuses placeholders', () => {
+    expect(answerTooShort('x')).toContain('fewer than 5 words')
+    expect(answerTooShort('line 1 changed')).toContain('fewer than 5 words')
+    expect(answerTooShort('lines 1, 3 and 4 change')).toBeNull()
+    expect(answerTooShort(undefined)).toBeNull()
+  })
+  it('check appends to runs', () => {
+    const src = source('session.mjs')
+    expect(src).toContain('runs')
+    expect(src).toContain('answerTooShort')
+  })
+})
+
+describe('H-68 T16.2 keyword check', () => {
+  it('needs no and the reason', async () => {
+    expect((await run('T16.2', fakeCtx(), 'No, Notepad also provides Write files so it can still write')).status).toBe('PASS')
+    expect((await run('T16.2', fakeCtx(), 'It does not stop it because they are separate settings')).status).toBe('PASS')
+    expect((await run('T16.2', fakeCtx(), 'Yes it stops writing files with Notepad too')).status).toBe('FAIL')
+    expect((await run('T16.2', fakeCtx(), 'No idea about that')).status).toBe('FAIL')
+    expect(T162_NO.test('no')).toBe(true)
+    expect(T162_WHY.test('both provide it')).toBe(true)
+  })
+})
+
+describe('H-69 fresh panelists', () => {
+  it('the briefing and the guide demand one fresh panelist per task; T21.1 has Min 4 and budget 12 / 16', () => {
+    expect(source('FACILITATOR.md')).toContain('ONE FRESH PANELIST PER TASK')
+    expect(source('PANELIST.md')).toContain('fresh panelist')
+    const t = loadTasks()['T21.1']
+    expect([t.min, t.budgetExpert, t.budgetNovice]).toEqual([4, 12, 16])
+  })
+})
+
+describe('H-70 T11.2 banner against chips', () => {
+  it('flags a chip that contradicts the Ask banner', () => {
+    const banner = 'You are in control. Browser and all other tools are set to Ask until you resume.'
+    expect(barChipConflicts(banner, ['Read files: Ask', 'Run commands: Off', 'Browser: Off'])).toEqual(['Run commands: Off', 'Browser: Off'])
+    expect(barChipConflicts(banner, ['Read files: Ask', 'Write files: Ask'])).toEqual([])
+    expect(barChipConflicts('Idle', ['Browser: Off'])).toEqual([])
+  })
+  it('prints the take over line and no groups line', async () => {
+    const ctx = fakeCtx({ desktop: { userInControl: true }, policy: { groups: { 'fs.read': 'allow' } } })
+    const result = await run('T11.2', ctx)
+    expect(result.status).toBe('PASS')
+    expect(result.reason).toBe('take over: userInControl true')
+    expect(result.reason).not.toContain('permission groups')
+  })
+  it('reads the banner and chips from the page and notes a conflict', async () => {
+    const page = {
+      getByTestId: (id) =>
+        id === 'topbar-status'
+          ? { first: () => ({ textContent: async () => 'You are in control. All other tools are set to Ask until you resume.' }) }
+          : { locator: () => ({ allTextContents: async () => ['Read files: Ask', 'Browser: Off'] }) }
+    }
+    const result = await run('T11.2', fakeCtx({ desktop: { userInControl: true }, page }))
+    expect(result.status).toBe('PASS')
+    expect(result.notes.join(' ')).toContain('banner against chips')
+    expect(result.notes.join(' ')).toContain('"Browser: Off"')
+  })
+})
+
+describe('H-71 the Browser script ends in plain words', () => {
+  it('browser-agent.json has no raw DONE snapshot and the T28.1 checker looks for the plain sentence', () => {
+    const text = source('scripts/browser-agent.json')
+    expect(text).not.toContain('DONE {{mine}}')
+    expect(text).toContain('I sent the message and found it in #general.')
+    expect(source('checks/features.mjs')).toContain('found it in #general')
+  })
+})
+
+describe('H-72 the SEQ scale guard and the sync from the record', () => {
+  const rec = (seq, sentence, stuck = 'a dead end at the menu') => `# T12.1 - novice\n- Result: PASS\n- SEQ: ${seq} - ${sentence}\n- Errors (wrong clicks): ${stuck}\n`
+  it('rejects a low SEQ for an easy task and a high SEQ for an impossible one', () => {
+    expect(seqProblem(2, rec(2, 'It was very easy, I found it at once'))).toContain('contradicts')
+    expect(seqProblem(1, rec(1, 'Fine', 'none'))).toContain('no stuck points')
+    expect(seqProblem(6, rec(6, 'It was very difficult and I nearly gave up'))).toContain('contradicts')
+  })
+  it('accepts consistent ratings, including "not easy" at a low SEQ and mixed sentences', () => {
+    expect(seqProblem(6, rec(6, 'Easy, the button was where I looked', 'none'))).toBeNull()
+    expect(seqProblem(2, rec(2, 'It was not easy, I could not find the setting'))).toBeNull()
+    expect(seqProblem(5, rec(5, 'The shortcuts worked, but finding them is hard without prior knowledge'))).toBeNull()
+    expect(seqProblem(4, rec(4, 'Easy but slow', 'none'))).toBeNull()
+  })
+  it('syncSeq copies a good rating, recomputes weak, refuses a bad one unless confirmed, and rejects 0, 8 and none', () => {
+    const check = { status: 'PASS', steps: 3, budget: 9, weak: false, seq: 2 }
+    expect(syncSeq(check, rec(6, 'Easy to do', 'none')).check).toMatchObject({ seq: 6, weak: false })
+    expect(syncSeq(check, rec(4, 'Okay')).check).toMatchObject({ seq: 4, weak: true })
+    expect(syncSeq(check, rec(2, 'Very easy', 'none')).problem).toContain('contradicts')
+    expect(syncSeq(check, rec(2, 'Very easy', 'none'), { confirmed: true })).toMatchObject({ problem: null, check: { seq: 2 } })
+    expect(syncSeq(check, rec(8, 'x')).problem).toContain('1 to 7')
+    expect(syncSeq(check, rec(0, 'x')).problem).toContain('1 to 7')
+    expect(syncSeq(check, '# no rating').problem).toContain('no "- SEQ')
+  })
+  it('the 19 R4 rows: the reversed value (8 minus the record) is replaced by the record', () => {
+    for (const [file, record] of [[2, 6], [1, 7], [3, 5]]) {
+      const out = syncSeq({ status: 'PASS', steps: 3, budget: 12, seq: file, weak: file < 5 }, rec(record, 'Easy', 'none'))
+      expect(out.check.seq).toBe(record)
+      expect(out.check.weak).toBe(record < 5)
+    }
+  })
+  it('the templates state the scale beside the field', () => {
+    expect(source('PANELIST.md')).toContain('1 = very difficult, 7 = very easy')
+    expect(source('FACILITATOR.md')).toContain('(1 = very difficult, 7 = very easy; a high number means EASY)')
+    expect(source('session.mjs')).not.toContain("'--seq'")
+  })
+})
+
+describe('H-73 T14.1 starts with another row selected', () => {
+  it('the preset selects Scratch pad and tasks.md says so', () => {
+    expect(source('presets/desktops.mjs')).toContain("hasText: 'Scratch pad'")
+    expect(loadTasks()['T14.1']).toBeTruthy()
+    expect(readFileSync(join(hereDir, '../../docs/ux/tasks.md'), 'utf8')).toContain('H-73')
+  })
+})
+
+describe('H-74 T06.1 needs lines 1, 3 and 4', () => {
+  const ctxFor = () => {
+    const root = mkdtempSync(join(tmpdir(), 'ux-t061-'))
+    mkdirSync(join(root, 'src/auth'), { recursive: true })
+    writeFileSync(join(root, 'src/auth/redirect.ts'), REDIRECT_FIXED)
+    const ctx = fakeCtx({ entries: [{ kind: 'tool_call', permission: { outcome: 'selected', selectedOptionId: 'allow' } }] })
+    ctx.fixtures = { loginApp: root }
+    return ctx
+  }
+  it('a partial answer fails; full line lists and +3/-3 pass', async () => {
+    const ctx = ctxFor()
+    const partial = await run('T06.1', ctx, 'line 1 changed but I could not read the rest')
+    expect(partial.status).toBe('FAIL')
+    expect(partial.reason).toContain('3, 4')
+    expect((await run('T06.1', ctx, 'lines 1, 3 and 4 of redirect.ts change')).status).toBe('PASS')
+    expect((await run('T06.1', ctx, 'it adds +3 and removes -3 lines')).status).toBe('PASS')
+    expect((await run('T06.1', ctx)).status).toBe('MANUAL')
+  })
+})
+
+describe('H-75 timing claims name a shot', () => {
+  it('PANELIST.md asks for the shot number of every timing claim', () => {
+    expect(source('PANELIST.md')).toContain('names the')
+    expect(source('PANELIST.md')).toContain('Timing claims (H-75)')
   })
 })
