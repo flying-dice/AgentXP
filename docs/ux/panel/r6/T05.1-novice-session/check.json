@@ -1,0 +1,30 @@
+{
+  "task": "T05.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the prompt is in the chat; the assistant answered; the turn ended; answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 12,
+  "answer": "Done. I changed src/auth/redirect.ts so that the address after sign-in is kept. The work is finished.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:53:18.970Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:53:18.970Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the prompt is in the chat; the assistant answered; the turn ended; answer ok",
+      "steps": 4,
+      "answer": "Done. I changed src/auth/redirect.ts so that the address after sign-in is kept. The work is finished.",
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T04.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-goXiMM/ux.sock",
+  "admin": "/tmp/a7ux-goXiMM/admin.sock",
+  "pid": 30587,
+  "tmp": "/tmp/a7ux-goXiMM",
+  "userData": "/tmp/a7ux-goXiMM/user-data",
+  "testPageUrl": "http://127.0.0.1:39417/",
+  "home": "/tmp/a7ux-goXiMM/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-goXiMM/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-goXiMM/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-goXiMM/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "closed-chat",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

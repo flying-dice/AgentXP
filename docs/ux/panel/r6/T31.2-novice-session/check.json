@@ -1,0 +1,30 @@
+{
+  "task": "T31.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "checkerStatus": "PASS",
+  "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+  "notes": [],
+  "steps": 5,
+  "budget": 8,
+  "answer": "The window is read-only by design. The agent runs the commands. Ask the agent in Chat to run the command for you",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:49:17.088Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:49:17.088Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+      "steps": 5,
+      "answer": "The window is read-only by design. The agent runs the commands. Ask the agent in Chat to run the command for you",
+      "noAnswer": false
+    }
+  ]
+}

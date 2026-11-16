@@ -1,0 +1,22 @@
+{
+  "task": "T02.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-qyxveo/ux.sock",
+  "admin": "/tmp/a7ux-qyxveo/admin.sock",
+  "pid": 27415,
+  "tmp": "/tmp/a7ux-qyxveo",
+  "userData": "/tmp/a7ux-qyxveo/user-data",
+  "testPageUrl": "http://127.0.0.1:42681/",
+  "home": "/tmp/a7ux-qyxveo/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-qyxveo/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-qyxveo/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-qyxveo/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "one-named-desktop",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "task": "T04.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "a chat window is open with the login-app drive as its working folder; the agent is connected (ready)",
+  "notes": [],
+  "steps": 2,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:52:36.806Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:52:36.806Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a chat window is open with the login-app drive as its working folder; the agent is connected (ready)",
+      "steps": 2,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

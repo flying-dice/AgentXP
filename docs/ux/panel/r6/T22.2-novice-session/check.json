@@ -1,0 +1,30 @@
+{
+  "task": "T22.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 4,
+  "checkerStatus": "PASS",
+  "reason": "the topic about the Changes pane or Recycle Bin is open (topic chat); answer ok",
+  "notes": [],
+  "steps": 12,
+  "budget": 16,
+  "answer": "Click Changes, select the file, click Revert, then click Yes.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:48:22.427Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:48:22.427Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the topic about the Changes pane or Recycle Bin is open (topic chat); answer ok",
+      "steps": 12,
+      "answer": "Click Changes, select the file, click Revert, then click Yes.",
+      "noAnswer": false
+    }
+  ]
+}

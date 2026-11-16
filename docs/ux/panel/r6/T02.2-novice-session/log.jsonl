@@ -1,0 +1,11 @@
+{"ts":"2026-11-16T18:50:27.435Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/001.png","window":"Agent7 Desktop Connection","ok":true,"ms":491}
+{"ts":"2026-11-16T18:50:30.870Z","cmd":"click","args":[971,766],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/002.png","window":"Agent7 Desktop Connection","ok":true,"ms":737}
+{"ts":"2026-11-16T18:50:35.480Z","cmd":"type","args":["Fix login redirect"],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/003.png","window":"Agent7 Desktop Connection","ok":true,"ms":994}
+{"ts":"2026-11-16T18:50:40.127Z","cmd":"click","args":[808,417],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/004.png","window":"Agent7 Desktop Connection","ok":true,"ms":754}
+{"ts":"2026-11-16T18:50:43.759Z","cmd":"click","args":[475,308],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/005.png","window":"Agent7 Desktop Connection","ok":true,"ms":772}
+{"ts":"2026-11-16T18:50:47.007Z","cmd":"click","args":[488,352],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/006.png","window":"Agent7 Desktop Connection","ok":true,"ms":751}
+{"ts":"2026-11-16T18:50:50.238Z","cmd":"click","args":[562,374],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/007.png","window":"Agent7 Desktop Connection","ok":true,"ms":708}
+{"ts":"2026-11-16T18:50:54.346Z","cmd":"click","args":[698,585],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/008.png","window":"Agent7 Desktop Connection","ok":true,"ms":747}
+{"ts":"2026-11-16T18:50:57.935Z","cmd":"click","args":[530,347],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/009.png","window":"Agent7 Desktop Connection","ok":true,"ms":744}
+{"ts":"2026-11-16T18:51:01.251Z","cmd":"click","args":[729,573],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/010.png","window":"Agent7 Desktop Connection","ok":true,"ms":611}
+{"ts":"2026-11-16T18:51:05.530Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T02.2-novice/shots/011.png","window":"Fix login redirect - docs-site - Agent7","ok":true,"ms":762}
