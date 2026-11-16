@@ -38,7 +38,7 @@
 
   const all = $derived([...folders, ...shown.filter((f) => !folders.some((x) => x.id === f.id))])
   const error = $derived(validateDesktopName(name, existingNames))
-  const items = $derived(all.map((f) => ({ value: f.id, label: `${f.name}   ${f.path}` })))
+  const items = $derived(all.map((f) => ({ value: f.id, label: `${f.name}   ${f.path}`, testid: 'new-desktop-project' })))
 
   async function browse(): Promise<void> {
     const picked = await onbrowse?.()
@@ -51,27 +51,27 @@
     if (r === 'cancel') return oncancel?.()
     touched = true
     if (error) return
-    oncreate?.({ title: name.trim(), folderIds: checked, agentId: agentId ? Number(agentId) : undefined })
+    oncreate?.({ title: name.trim(), folderIds: $state.snapshot(checked), agentId: agentId ? Number(agentId) : undefined })
   }
 </script>
 
-<Dialog title="New desktop" iconName="computer" width="440px" contained onclose={oncancel}>
+<Dialog testid="new-desktop-dialog" title="New desktop" iconName="computer" width="440px" contained onclose={oncancel}>
   <div class="form">
     <div class="field">
       <Label text="Desktop name:" for="nd-name" />
-      <TextBox id="nd-name" bind:value={name} data-autofocus onfocus={(e) => (e.currentTarget as HTMLInputElement).select()} />
-      <span class="error" role="alert">{touched && error ? error : ''}</span>
+      <TextBox id="nd-name" data-testid="new-desktop-name" bind:value={name} data-autofocus onfocus={(e) => (e.currentTarget as HTMLInputElement).select()} />
+      <span class="error" data-testid="new-desktop-error" role="alert">{touched && error ? error : ''}</span>
     </div>
     <div class="field">
       <Label text="Projects to plug in as USB drives:" />
       <div class="projects">
-        <CheckedListBox {items} bind:checked width="100%" height={112} label="Projects" />
-        <Button onclick={() => void browse()}>Browse...</Button>
+        <CheckedListBox testid="new-desktop-projects" {items} bind:checked width="100%" height={112} label="Projects" />
+        <Button data-testid="new-desktop-browse" onclick={() => void browse()}>Browse...</Button>
       </div>
     </div>
     <div class="field inline">
       <Label text="Agent:" for="nd-agent" />
-      <ComboBox items={agents.map((a) => ({ value: String(a.id), label: a.name }))} bind:value={agentId} dropDownStyle="DropDownList" aria-label="Agent" />
+      <ComboBox items={agents.map((a) => ({ value: String(a.id), label: a.name }))} bind:value={agentId} dropDownStyle="DropDownList" aria-label="Agent" testid="new-desktop-agent" />
     </div>
   </div>
   {#snippet buttons()}

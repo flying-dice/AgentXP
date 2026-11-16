@@ -28,11 +28,11 @@
   }
 </script>
 
-<Dialog title="Rename desktop" iconName="edit" width="340px" contained onclose={oncancel}>
+<Dialog testid="rename-desktop-dialog" title="Rename desktop" iconName="edit" width="340px" contained onclose={oncancel}>
   <div class="form">
     <Label text="New name:" for="rn-name" />
-    <TextBox id="rn-name" bind:value={name} data-autofocus onfocus={(e) => (e.currentTarget as HTMLInputElement).select()} />
-    <span class="error" role="alert">{touched && error ? error : ''}</span>
+    <TextBox id="rn-name" data-testid="rename-desktop-name" bind:value={name} data-autofocus onfocus={(e) => (e.currentTarget as HTMLInputElement).select()} />
+    <span class="error" data-testid="rename-desktop-error" role="alert">{touched && error ? error : ''}</span>
   </div>
   {#snippet buttons()}
     <DialogButtons buttons={['ok', 'cancel']} onresult={result} />

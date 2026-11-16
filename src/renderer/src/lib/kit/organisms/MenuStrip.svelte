@@ -123,6 +123,7 @@
     <button
       type="button"
       class="mb"
+      data-testid="menubar-{(parts.before + parts.key + parts.after).toLowerCase().replace(/\s+/g, '-')}"
       class:open={openIndex === i}
       role="menuitem"
       tabindex={focusIndex === i ? 0 : -1}

@@ -162,7 +162,7 @@
 </script>
 
 <div class="page">
-  <Form title="Agent7 Desktop Connection" iconName="agent7" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
+  <Form testid="launcher-window" title="Agent7 Desktop Connection" iconName="agent7" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div class="rdc" role="presentation" onkeydown={onKeydown}>
       <header class="banner">
@@ -175,11 +175,11 @@
       </header>
       <div class="body">
         <p class="lead">Choose a desktop and click Connect. Closing a desktop window only disconnects; its agents keep running.</p>
-        <div class="list w7-scroll" role="listbox" aria-label="Desktops" tabindex="0">
+        <div class="list w7-scroll" role="listbox" data-testid="launcher-list" aria-label="Desktops" tabindex="0">
           {#each sorted as desktop (desktop.id)}
             <DesktopRow {desktop} {now} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
           {:else}
-            <p class="empty">{loaded ? "No desktops yet. Click New... to create one." : 'Loading...'}</p>
+            <p class="empty" data-testid="launcher-empty">{loaded ? "No desktops yet. Click New... to create one." : 'Loading...'}</p>
           {/each}
         </div>
         {#if options}
@@ -198,7 +198,7 @@
                 <dt>Last used</dt><dd>{lastUsedText(current.lastUsedAt, now)}</dd>
               </dl>
               <div class="more">
-                <Button disabled={!current.connected} onclick={() => void disconnect()}>Disconnect</Button>
+                <Button data-testid="launcher-disconnect" disabled={!current.connected} onclick={() => void disconnect()}>Disconnect</Button>
               </div>
             {:else}
               <p class="empty">Select a desktop to see its details.</p>
@@ -207,14 +207,14 @@
         {/if}
       </div>
       <footer class="bar">
-        <Button onclick={() => (options = !options)} aria-expanded={options}>
+        <Button data-testid="launcher-options" onclick={() => (options = !options)} aria-expanded={options}>
           <span class="arrow" aria-hidden="true">{options ? '▴' : '▾'}</span> {options ? 'Hide Options' : 'Show Options'}
         </Button>
         <span class="spring"></span>
-        <Button onclick={() => (dialogOpen = 'new')}>New...</Button>
-        <Button disabled={!current} onclick={() => (dialogOpen = 'rename')}>Rename...</Button>
-        <Button disabled={!current} onclick={() => void remove()}>Delete...</Button>
-        <Button isDefault disabled={!current} onclick={() => void connect()}>Connect</Button>
+        <Button data-testid="launcher-new" onclick={() => (dialogOpen = 'new')}>New...</Button>
+        <Button data-testid="launcher-rename" disabled={!current} onclick={() => (dialogOpen = 'rename')}>Rename...</Button>
+        <Button data-testid="launcher-delete" disabled={!current} onclick={() => void remove()}>Delete...</Button>
+        <Button data-testid="launcher-connect" isDefault disabled={!current} onclick={() => void connect()}>Connect</Button>
       </footer>
     </div>
     {#if dialogOpen === 'new'}

@@ -48,6 +48,7 @@
 
 <TreeView
   class="file-tree"
+  testid="file-tree"
   aria-label="Files"
   {nodes}
   bind:selected

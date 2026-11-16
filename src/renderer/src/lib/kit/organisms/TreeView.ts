@@ -14,6 +14,8 @@ export interface TreeNodeData {
   bold?: boolean
   /** Small coloured suffix after the label (e.g. a modified marker). */
   badge?: string
+  /** `data-testid` of the node's row. */
+  testid?: string
 }
 
 export interface FlatNode {

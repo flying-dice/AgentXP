@@ -4,6 +4,8 @@
 
   interface Props {
     label: string
+    /** `data-testid` of the icon button. */
+    testid?: string
     icon: IconName
     selected?: boolean
     onselect?: () => void
@@ -12,11 +14,12 @@
     oncontextmenu?: (event: MouseEvent) => void
   }
 
-  let { label, icon, selected = false, onselect, onopen, oncontextmenu }: Props = $props()
+  let { label, icon, testid = 'desktop-icon', selected = false, onselect, onopen, oncontextmenu }: Props = $props()
 </script>
 
 <button
   type="button"
+  data-testid={testid}
   class="w7-desktop-icon"
   class:selected
   data-desktop-icon

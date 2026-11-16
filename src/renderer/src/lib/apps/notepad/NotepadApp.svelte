@@ -165,10 +165,11 @@
   }
 </script>
 
-<div class="notepad">
+<div class="notepad" data-testid="notepad-app">
   <MenuStrip {menus} aria-label="Notepad menu" />
   <textarea
     class="pad w7-scroll"
+    data-testid="notepad-text"
     bind:this={area}
     bind:value={text}
     class:wrap
@@ -185,7 +186,7 @@
     {onkeydown}
   ></textarea>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={message || (dirty ? 'Modified' : '')} spring />
+    <StatusStripLabel testid="notepad-status" text={message || (dirty ? 'Modified' : '')} spring />
     <StatusStripLabel text="Ln {caret.line}, Col {caret.col}" borders={['left']} width={120} />
   </StatusStrip>
   {#if picking}

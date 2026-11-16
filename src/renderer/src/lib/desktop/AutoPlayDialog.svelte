@@ -22,7 +22,7 @@
   ]
 </script>
 
-<Dialog title="AutoPlay" iconName="usb" width="400px" contained bodyColor="window" onclose={() => onchoose?.('none')}>
+<Dialog testid="autoplay-dialog" title="AutoPlay" iconName="usb" width="400px" contained bodyColor="window" onclose={() => onchoose?.('none')}>
   <div class="autoplay">
     <div class="drive">
       <Icon name="usb" size={32} />
@@ -32,7 +32,7 @@
     <ul>
       {#each options as option (option.id)}
         <li>
-          <button type="button" class="option" data-autofocus={option.id === 'open' ? '' : undefined} onclick={() => onchoose?.(option.id)}>
+          <button type="button" class="option" data-testid={option.id === 'open' ? 'autoplay-open-folder' : option.id === 'chat' ? 'autoplay-start-chat' : 'autoplay-no-action'} data-autofocus={option.id === 'open' ? '' : undefined} onclick={() => onchoose?.(option.id)}>
             <Icon name={option.icon} size={option.id === 'none' ? 16 : 32} />
             <span class="text"><span class="title">{option.title}</span>{#if option.sub}<span class="sub">{option.sub}</span>{/if}</span>
           </button>

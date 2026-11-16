@@ -70,7 +70,7 @@
   })
 </script>
 
-<div class="terminal">
+<div class="terminal" data-testid="terminal-app">
   <div class="head">
     <span class="title">Agent7 shell - cmd.exe</span>
     <span class="spring"></span>
@@ -78,6 +78,7 @@
       <span>Terminal:</span>
       <ComboBox
         aria-label="Terminal"
+        testid="terminal-picker"
         items={entries.map((e) => ({ value: e.key, label: terminalLabel(e, true) }))}
         value={current?.key ?? ''}
         onchange={(key) => (chosen = key)}
@@ -85,12 +86,12 @@
       />
     {/if}
   </div>
-  <div class="screen">
+  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false}>
     <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" />
   </div>
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text="Read-only: the agent is the only user of this shell. You can watch, not type." spring />
-    <StatusStripLabel text={current ? (current.running ? 'Running' : `Exit code ${current.exitCode}`) : 'No terminals'} borders={['left']} width={110} />
+    <StatusStripLabel testid="terminal-status" text={current ? (current.running ? 'Running' : `Exit code ${current.exitCode}`) : 'No terminals'} borders={['left']} width={110} />
   </StatusStrip>
 </div>
 

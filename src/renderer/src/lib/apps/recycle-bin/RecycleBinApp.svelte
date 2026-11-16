@@ -102,17 +102,17 @@
   ]
 </script>
 
-<div class="rb">
+<div class="rb" data-testid="recycle-bin-app">
   <ToolStrip aria-label="Recycle Bin">
-    <ToolStripButton icon="undo" text="Restore this item" disabled={!current} onclick={() => current && void restore(current)} />
-    <ToolStripButton icon="redo" text="Restore all items" disabled={items.length === 0} onclick={() => void restoreAll()} />
-    <ToolStripButton icon="delete" text="Empty the Recycle Bin" disabled={items.length === 0} onclick={() => void empty()} />
+    <ToolStripButton data-testid="recycle-bin-restore" icon="undo" text="Restore this item" disabled={!current} onclick={() => current && void restore(current)} />
+    <ToolStripButton data-testid="recycle-bin-restore-all" icon="redo" text="Restore all items" disabled={items.length === 0} onclick={() => void restoreAll()} />
+    <ToolStripButton data-testid="recycle-bin-empty" icon="delete" text="Empty the Recycle Bin" disabled={items.length === 0} onclick={() => void empty()} />
   </ToolStrip>
   <div class="body">
     <SplitContainer orientation="horizontal" splitterDistance={170} panel1MinSize={80} panel2MinSize={90} fixedPanel="panel2">
       {#snippet panel1()}
         <div class="list">
-          <ListView {columns} {rows} bind:selected aria-label="Reverted changes" emptyText={error ?? 'The Recycle Bin is empty.'} />
+          <ListView testid="recycle-bin-list" rowTestid="recycle-bin-item" {columns} {rows} bind:selected aria-label="Reverted changes" emptyText={error ?? 'The Recycle Bin is empty.'} />
         </div>
       {/snippet}
       {#snippet panel2()}

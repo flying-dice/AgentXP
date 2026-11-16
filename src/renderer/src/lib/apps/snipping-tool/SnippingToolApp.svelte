@@ -97,9 +97,9 @@
   const delays = [0, 1, 3, 5].map((s) => ({ value: String(s), label: s === 0 ? 'No delay' : `${s} second${s === 1 ? '' : 's'}` }))
 </script>
 
-<div class="sn">
+<div class="sn" data-testid="snipping-tool-app">
   <ToolStrip aria-label="Snipping Tool">
-    <ToolStripButton icon="scissors" text="New" disabled={busy} onclick={() => void snip('rect')} />
+    <ToolStripButton data-testid="snipping-tool-new" icon="scissors" text="New" disabled={busy} onclick={() => void snip('rect')} />
     <ToolStripDropDownButton text="▾" title="Snip type" items={newItems} disabled={busy} />
     <ToolStripButton icon="close" text="Cancel" disabled={!busy} onclick={cancel} />
     <ToolStripButton icon="options" text="Options" onclick={() => (options = true)} />

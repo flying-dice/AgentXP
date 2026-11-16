@@ -25,6 +25,10 @@
     onselect?: (cell: CellRef) => void
     class?: string
     'aria-label'?: string
+    /** `data-testid` of the grid. */
+    testid?: string
+    /** `data-testid` of the data rows. */
+    rowTestid?: string
   }
 
   let {
@@ -35,7 +39,9 @@
     oncellchange,
     onselect,
     class: className = '',
-    'aria-label': ariaLabel = 'Data grid'
+    'aria-label': ariaLabel = 'Data grid',
+    testid,
+    rowTestid
   }: Props = $props()
 
   const uid = $props.id()
@@ -187,6 +193,7 @@
 <div
   bind:this={root}
   class="w7-grid w7-scroll {className}"
+  data-testid={testid}
   role="grid"
   tabindex="0"
   aria-label={ariaLabel}
@@ -210,7 +217,7 @@
       {/each}
     </div>
     {#each rows as row, r (r)}
-      <div class="row" role="row" aria-rowindex={r + 2}>
+      <div class="row" role="row" aria-rowindex={r + 2} data-testid={rowTestid}>
         {#if rowHeaders}
           <span class="rh" class:cur={r === current.row} role="rowheader" style:width="{ROW_HEADER}px">
             {#if r === current.row}

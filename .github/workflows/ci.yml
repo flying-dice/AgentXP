@@ -17,5 +17,10 @@ jobs:
       - run: npm run typecheck
       # scripts/test.mjs runs vitest under ELECTRON_RUN_AS_NODE, which needs no display.
       - run: npm test
+      # Selector rule only: e2e specs may locate elements with getByTestId and nothing else.
+      - run: node scripts/check-e2e-selectors.mjs
       - run: npx electron-vite build
       - run: npm run build-storybook
+      # Full Playwright e2e on the built app, headless under xvfb (Electron needs a display).
+      - run: sudo apt-get update && sudo apt-get install -y xvfb
+      - run: A7_E2E_SKIP_BUILD=1 npm run test:e2e

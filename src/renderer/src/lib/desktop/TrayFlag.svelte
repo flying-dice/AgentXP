@@ -13,6 +13,8 @@
   bind:this={element}
   type="button"
   class="flag"
+  data-testid="action-center-flag"
+  data-count={count}
   class:open
   aria-label={count > 0 ? `Action Center: ${count} waiting` : 'Action Center'}
   aria-haspopup="dialog"

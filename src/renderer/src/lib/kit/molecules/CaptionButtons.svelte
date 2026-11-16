@@ -40,12 +40,13 @@
 
 <div class="w7-caption {className}" class:inactive={!active} role="group" aria-label="Window controls">
   {#if minimizeBox || maximizeBox}
-    <button type="button" class="cb min" aria-label="Minimize" title="Minimize" disabled={!minimizeBox} onclick={() => onminimize?.()}>
+    <button type="button" class="cb min" data-testid="window-minimize" aria-label="Minimize" title="Minimize" disabled={!minimizeBox} onclick={() => onminimize?.()}>
       <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8" /></svg>
     </button>
     <button
       type="button"
       class="cb max"
+      data-testid="window-maximize"
       aria-label={maximized ? 'Restore Down' : 'Maximize'}
       title={maximized ? 'Restore Down' : 'Maximize'}
       disabled={!maximizeBox}
@@ -65,7 +66,7 @@
     </button>
   {/if}
   {#if closeBox}
-    <button type="button" class="cb close" aria-label="Close" title="Close" disabled={!closeEnabled} onclick={() => onclose?.()}>
+    <button type="button" class="cb close" data-testid="window-close" aria-label="Close" title="Close" disabled={!closeEnabled} onclick={() => onclose?.()}>
       <svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true">
         <g stroke="#5a1710" stroke-width="3.4" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5" /><line x1="10" y1="1.5" x2="2" y2="8.5" /></g>
         <g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5" /><line x1="10" y1="1.5" x2="2" y2="8.5" /></g>

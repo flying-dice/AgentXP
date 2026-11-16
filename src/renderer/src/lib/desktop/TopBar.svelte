@@ -21,17 +21,17 @@
   const state = $derived(paused ? 'paused' : working ? 'working' : 'idle')
 </script>
 
-<div class="w7-topbar" role="region" aria-label="Agent strip">
+<div class="w7-topbar" data-testid="topbar" data-state={state} role="region" aria-label="Agent strip">
   <div class="row">
     <span class="dot {state}" aria-hidden="true"></span>
     <span class="who"><strong>Agent7</strong> · {title}</span>
-    <span class="status" title={status}>{status}</span>
-    <Button onclick={() => onpause?.()}>{paused ? 'Resume' : 'Pause'}</Button>
-    <Button onclick={() => ontakecontrol?.()} aria-pressed={userInControl}>{userInControl ? 'Release' : 'Take control'}</Button>
+    <span class="status" data-testid="topbar-status" title={status}>{status}</span>
+    <Button data-testid="topbar-pause" onclick={() => onpause?.()}>{paused ? 'Resume' : 'Pause'}</Button>
+    <Button data-testid="topbar-take-control" onclick={() => ontakecontrol?.()} aria-pressed={userInControl}>{userInControl ? 'Release' : 'Take control'}</Button>
   </div>
-  <div class="chips" aria-label="Tools the agent can use now">
+  <div class="chips" data-testid="topbar-tool-chips" aria-label="Tools the agent can use now">
     <span class="lead">Agent can use</span>
-    {#each chips as chip (chip.group)}<span class="chip">{chip.label}</span>{:else}<span class="none">nothing yet (open an app)</span>{/each}
+    {#each chips as chip (chip.group)}<span class="chip" data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}">{chip.label}</span>{:else}<span class="none" data-testid="topbar-tool-chips-none">nothing yet (open an app)</span>{/each}
   </div>
 </div>
 

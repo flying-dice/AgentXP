@@ -14,6 +14,8 @@
     maxDropDownItems?: number
     class?: string
     style?: string
+    /** `data-testid` of the control. */
+    testid?: string
     onchange?: (value: string) => void
     'aria-label'?: string
   }
@@ -27,6 +29,7 @@
     maxDropDownItems = 8,
     class: className = '',
     style,
+    testid,
     onchange,
     'aria-label': ariaLabel
   }: Props = $props()
@@ -161,6 +164,7 @@
 
 <div
   bind:this={root}
+  data-testid={testid}
   class="w7-combo {className}"
   class:open
   class:disabled

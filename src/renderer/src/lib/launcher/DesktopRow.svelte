@@ -19,6 +19,7 @@
 
 <div
   class="row"
+  data-testid="launcher-desktop-row"
   class:selected
   role="option"
   tabindex="-1"
@@ -37,10 +38,10 @@
   </div>
   <div class="text">
     <div class="title">
-      <span class="name">{desktop.title}</span>
-      {#if desktop.connected}<span class="chip">Connected</span>{/if}
+      <span class="name" data-testid="launcher-desktop-name">{desktop.title}</span>
+      {#if desktop.connected}<span class="chip" data-testid="launcher-desktop-connected">Connected</span>{/if}
     </div>
-    <div class="state {tone}"><i class="dot" aria-hidden="true"></i>{stateLabel(desktop)}</div>
+    <div class="state {tone}" data-testid="launcher-desktop-state"><i class="dot" aria-hidden="true"></i>{stateLabel(desktop)}</div>
     <div class="meta">{drivesLine(desktop.drives)}</div>
     <div class="meta">Last used {lastUsedText(desktop.lastUsedAt, now)}</div>
   </div>

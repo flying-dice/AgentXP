@@ -39,7 +39,7 @@
   }
 </script>
 
-<Dialog title={agentName} width="560px" iconName="shield" {contained} bodyColor="window" onclose={() => onanswer?.(null)} role="alertdialog">
+<Dialog testid="permission-dialog" title={agentName} width="560px" iconName="shield" {contained} bodyColor="window" onclose={() => onanswer?.(null)} role="alertdialog">
   <div class="body">
     <MessageIcon kind="shield" size={40} />
     <div class="main">
@@ -58,12 +58,14 @@
   <div class="links">
     <CommandLink
       kind="allow"
+      testid="permission-option-{optionFor(options, 'allow', remember && rememberable)?.optionId ?? 'allow'}"
       title={captionFor(options, 'allow', remember && rememberable)}
       description="{agentName} goes ahead, then keeps working."
       onclick={() => decide('allow')}
     />
     <CommandLink
       kind="deny"
+      testid="permission-option-{optionFor(options, 'deny', remember && rememberable)?.optionId ?? 'deny'}"
       title={captionFor(options, 'deny', remember && rememberable)}
       description="Nothing changes. You can tell {agentName} what to do instead."
       onclick={() => decide('deny')}
@@ -71,7 +73,7 @@
   </div>
   {#snippet buttons()}
     {#if rememberable}
-      <CheckBox bind:checked={remember} label="Don't ask again for this kind of action" />
+      <CheckBox testid="permission-remember" bind:checked={remember} label="Don't ask again for this kind of action" />
     {/if}
   {/snippet}
 </Dialog>

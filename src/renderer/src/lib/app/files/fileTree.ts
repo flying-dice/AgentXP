@@ -21,10 +21,10 @@ export function buildFileTree(
   const nodesOf = (dir: VPath): TreeNodeData[] | undefined =>
     listings.get(dir)?.map((entry) =>
       entry.kind === 'directory'
-        ? { id: dirNodeId(entry.path), text: entry.name, icon: 'folder' as const, hasChildren: true, children: nodesOf(entry.path) }
-        : { id: fileNodeId(entry.path), text: entry.name, icon: 'file' as const, badge: changed.has(entry.path) ? 'M' : undefined }
+        ? { id: dirNodeId(entry.path), testid: 'file-tree-folder', text: entry.name, icon: 'folder' as const, hasChildren: true, children: nodesOf(entry.path) }
+        : { id: fileNodeId(entry.path), testid: 'file-tree-file', text: entry.name, icon: 'file' as const, badge: changed.has(entry.path) ? 'M' : undefined }
     )
-  return roots.map((root) => ({ id: dirNodeId(root.path), text: root.name, icon: 'folder' as const, hasChildren: true, children: nodesOf(root.path) }))
+  return roots.map((root) => ({ id: dirNodeId(root.path), testid: 'file-tree-root', text: root.name, icon: 'folder' as const, hasChildren: true, children: nodesOf(root.path) }))
 }
 
 /** The directory of an expandable node id, or null for other ids. */

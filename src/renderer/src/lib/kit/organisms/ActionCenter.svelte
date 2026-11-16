@@ -30,6 +30,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="w7-action-center"
+  data-testid="action-center"
   role="dialog"
   tabindex="-1"
   aria-label="Action Center"
@@ -45,7 +46,7 @@
   <section>
     <h4>{approvals.length > 0 ? `Waiting for your approval (${approvals.length})` : 'Nothing is waiting for your approval'}</h4>
     {#each approvals as a (a.key)}
-      <div class="row">
+      <div class="row" data-testid="action-center-approval">
         <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M10 1.5 17 4v5.5c0 4.4-2.9 7.6-7 9-4.1-1.4-7-4.600-7-9V4z" fill="#f2c230" stroke="#9a6e00" />
           <path d="M10 5.5v5M10 12.5v1.6" stroke="#5a3d00" stroke-width="1.8" />
@@ -54,19 +55,19 @@
           <div class="title">{a.title}</div>
           {#if a.detail}<div class="detail">{a.detail}</div>{/if}
         </div>
-        <Button onclick={() => onreview?.(a.key)}>Review</Button>
+        <Button data-testid="action-center-review" onclick={() => onreview?.(a.key)}>Review</Button>
       </div>
     {/each}
   </section>
   <section>
     <h4>Messages</h4>
     {#each messages as m (m.id)}
-      <p>{m.text}</p>
+      <p data-testid="action-center-message">{m.text}</p>
     {:else}
       <p class="quiet">No new messages.</p>
     {/each}
   </section>
-  <div class="foot"><button type="button" class="link" onclick={() => onopencontrolcentre?.()}>Open Control Centre</button></div>
+  <div class="foot"><button type="button" class="link" data-testid="action-center-open-control-centre" onclick={() => onopencontrolcentre?.()}>Open Control Centre</button></div>
 </div>
 
 <style>

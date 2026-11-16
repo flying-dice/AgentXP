@@ -141,18 +141,19 @@
     listings
       .get(dir)
       ?.filter((e) => e.kind === 'directory')
-      .map((e) => ({ id: treeIdOf(e.path), text: e.name, icon: 'folder' as const, hasChildren: true, children: dirNodes(e.path) }))
+      .map((e) => ({ id: treeIdOf(e.path), testid: 'explorer-tree-folder', text: e.name, icon: 'folder' as const, hasChildren: true, children: dirNodes(e.path) }))
 
   const nodes = $derived<TreeNodeData[]>([
-    { id: 'grp:fav', text: 'Favorites', icon: 'star', children: favs.map((p) => ({ id: `fav:${p.id}`, text: p.label, icon: 'folder' as const })) },
-    { id: 'grp:lib', text: 'Libraries', icon: 'library', children: libs.map((p) => ({ id: `lib:${p.id}`, text: p.label, icon: 'library' as const })) },
+    { id: 'grp:fav', testid: 'explorer-tree-favorites', text: 'Favorites', icon: 'star', children: favs.map((p) => ({ id: `fav:${p.id}`, testid: 'explorer-tree-favorite', text: p.label, icon: 'folder' as const })) },
+    { id: 'grp:lib', text: 'Libraries', icon: 'library', children: libs.map((p) => ({ id: `lib:${p.id}`, testid: 'explorer-tree-library', text: p.label, icon: 'library' as const })) },
     {
       id: 'root:computer',
+      testid: 'explorer-tree-computer',
       text: 'Computer',
       icon: 'computer',
       children: [...driveGroups(drives).hardDisks, ...driveGroups(drives).removable].map((d) => {
         const root = driveRoot(d.letter)
-        return { id: treeIdOf(root), text: driveTitle(d), icon: d.kind === 'removable' ? ('usb' as const) : ('drive' as const), hasChildren: true, children: dirNodes(root) }
+        return { id: treeIdOf(root), testid: `explorer-tree-drive-${d.letter.toLowerCase()}`, text: driveTitle(d), icon: d.kind === 'removable' ? ('usb' as const) : ('drive' as const), hasChildren: true, children: dirNodes(root) }
       })
     }
   ])
@@ -255,9 +256,9 @@
   let menuY = $state(0)
   let menuDrive = $state.raw<DriveDto | null>(null)
   const menuItems = $derived<MenuItemDef[]>([
-    { label: '&Open', action: () => menuDrive && go(driveRoot(menuDrive.letter)) },
+    { id: 'explorer-drive-open', label: '&Open', action: () => menuDrive && go(driveRoot(menuDrive.letter)) },
     { separator: true },
-    { label: 'E&ject', icon: 'usb', disabled: menuDrive?.kind !== 'removable', action: () => menuDrive && void host.ejectDrive(menuDrive.letter) }
+    { id: 'explorer-drive-eject', label: 'E&ject', icon: 'usb', disabled: menuDrive?.kind !== 'removable', action: () => menuDrive && void host.ejectDrive(menuDrive.letter) }
   ])
 
   function driveMenu(drive: DriveDto, event: MouseEvent): void {
@@ -282,40 +283,40 @@
   )
 </script>
 
-<div class="explorer">
+<div class="explorer" data-testid="explorer-app" data-path={path}>
   <div class="nav">
-    <ToolStripButton icon="chevron-left" title="Back" aria-label="Back" disabled={history.length === 0} onclick={back} />
-    <ToolStripButton icon="chevron-up" title="Up one level" aria-label="Up" disabled={path === ''} onclick={() => go(upPath(path))} />
+    <ToolStripButton data-testid="explorer-back" icon="chevron-left" title="Back" aria-label="Back" disabled={history.length === 0} onclick={back} />
+    <ToolStripButton data-testid="explorer-up" icon="chevron-up" title="Up one level" aria-label="Up" disabled={path === ''} onclick={() => go(upPath(path))} />
     <AddressBar {path} {drives} onnavigate={(p) => go(p)} onsubmit={(text) => void submitAddress(text)} />
-    <ToolStripButton icon="refresh" title="Refresh" aria-label="Refresh" onclick={refresh} />
+    <ToolStripButton data-testid="explorer-refresh" icon="refresh" title="Refresh" aria-label="Refresh" onclick={refresh} />
   </div>
   {#if path === ''}
     <div class="commands" role="toolbar" aria-label="Commands">
-      <ToolStripButton icon="plus" text="Plug in a project..." title="Plug in a project as a USB drive" onclick={() => void plugIn()} />
-      <ToolStripButton icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
-      <ToolStripButton icon="usb" text="Eject" title="Safely Remove Hardware" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
+      <ToolStripButton data-testid="explorer-plug-in" icon="plus" text="Plug in a project..." title="Plug in a project as a USB drive" onclick={() => void plugIn()} />
+      <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
+      <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject" title="Safely Remove Hardware" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
     </div>
   {/if}
   <div class="split">
     <SplitContainer splitterDistance={190} panel1MinSize={110} panel2MinSize={200} fixedPanel="panel1">
       {#snippet panel1()}
-        <TreeView class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} />
+        <TreeView testid="explorer-nav" class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} />
       {/snippet}
       {#snippet panel2()}
         <div class="list">
           {#if path === ''}
             <ComputerView {drives} selected={selected[0] ?? null} onselect={onSelectDrive} onactivate={(d) => go(driveRoot(d.letter))} oncontextmenu={driveMenu} />
           {:else}
-            <ListView {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} />
+            <ListView testid="explorer-list" rowTestid="explorer-item" {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} />
           {/if}
         </div>
       {/snippet}
     </SplitContainer>
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={itemsText} spring />
+    <StatusStripLabel testid="explorer-item-count" text={itemsText} spring />
     {#if selected.length > 0}
-      <StatusStripLabel text={selectionText} borders={['left']} />
+      <StatusStripLabel testid="explorer-selection" text={selectionText} borders={['left']} />
     {/if}
   </StatusStrip>
   <ContextMenuStrip items={menuItems} bind:open={menuOpen} x={menuX} y={menuY} label="Drive" />

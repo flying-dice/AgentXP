@@ -48,9 +48,9 @@
   )
 </script>
 
-<div class="sn">
+<div class="sn" data-testid="sticky-notes-app">
   <ToolStrip aria-label="Sticky Notes">
-    <ToolStripButton icon="plus" text="New note" onclick={() => void addNote()} />
+    <ToolStripButton data-testid="sticky-notes-new" icon="plus" text="New note" onclick={() => void addNote()} />
     <ToolStripDropDownButton text="Color" items={colorItems} />
     <ToolStripDropDownButton icon="tasks" text="Plan note" items={planItems} />
   </ToolStrip>

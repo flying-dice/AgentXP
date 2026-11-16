@@ -39,13 +39,13 @@
   const current = $derived(pages.find((p) => p.id === page) ?? pages[0])
 </script>
 
-<div class="cc">
+<div class="cc" data-testid="control-centre-app">
   <nav class="tasks" aria-label="Control Centre">
     <div class="caption">Control Centre Home</div>
     <ul>
       {#each pages as p (p.id)}
         <li>
-          <button class="task" class:on={p.id === page} aria-current={p.id === page ? 'page' : undefined} onclick={() => choose(p.id)}>
+          <button class="task" data-testid="control-centre-page-{p.id}" class:on={p.id === page} aria-current={p.id === page ? 'page' : undefined} onclick={() => choose(p.id)}>
             <Icon name={p.icon} />{p.title}
           </button>
         </li>
@@ -53,7 +53,7 @@
     </ul>
   </nav>
   <main class="content">
-    <h1>{current.heading}</h1>
+    <h1 data-testid="control-centre-heading">{current.heading}</h1>
     <div class="page">
       {#if page === 'agents'}
         <AgentsPage {host} />

@@ -19,7 +19,7 @@
   let { drives, open = $bindable(false), oneject, element = $bindable(null) }: Props = $props()
 
   const usb = $derived(sortDrives(drives).filter((d) => d.kind === 'removable'))
-  const items = $derived<MenuItemDef[]>(usb.map((d) => ({ label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
+  const items = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
   let x = $state(0)
   let y = $state(0)
 
@@ -39,6 +39,7 @@
     bind:this={element}
     type="button"
     class="usb"
+    data-testid="usb-tray"
     class:open
     aria-label="Safely Remove Hardware and Eject Media"
     aria-haspopup="menu"

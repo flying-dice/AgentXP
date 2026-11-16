@@ -32,9 +32,10 @@
   const hasDetails = $derived(!!diff || !!argument)
 </script>
 
-<div class="dim" role="presentation">
+<div class="dim" role="presentation" data-testid="uac-dim">
   <div
     class="uac"
+    data-testid="uac-dialog"
     role="alertdialog"
     aria-modal="true"
     aria-labelledby="uac-q"
@@ -52,11 +53,11 @@
       <h2 id="uac-q">{approvalQuestion(approval.title)}</h2>
     </div>
     <div class="body">
-      <div class="tool">{approval.title}</div>
+      <div class="tool" data-testid="uac-tool">{approval.title}</div>
       <div class="from">Requested by the agent in <em>{approval.chatTitle}</em></div>
       <div class="reason">{reason}</div>
       {#if hasDetails}
-        <button type="button" class="expander" aria-expanded={details} onclick={() => (details = !details)}>
+        <button type="button" class="expander" data-testid="uac-details" aria-expanded={details} onclick={() => (details = !details)}>
           <Icon name={details ? 'chevron-up' : 'chevron-down'} size={12} />{details ? 'Hide details' : 'Show details'}
         </button>
         {#if details}
@@ -72,12 +73,12 @@
     </div>
     <div class="bar">
       {#each ordered as option, i (option.optionId)}
-        <Button isDefault={i === 0} data-autofocus={i === 0 ? '' : undefined} onclick={() => onanswer?.(option.optionId)}>{option.name}</Button>
+        <Button data-testid={i === 0 && option.kind.startsWith('allow') ? 'uac-allow' : `uac-option-${option.optionId}`} isDefault={i === 0} data-autofocus={i === 0 ? '' : undefined} onclick={() => onanswer?.(option.optionId)}>{option.name}</Button>
       {/each}
       {#if ordered.length === 0}
-        <Button onclick={() => onanswer?.(null)}>Cancel the action</Button>
+        <Button data-testid="uac-cancel-action" onclick={() => onanswer?.(null)}>Cancel the action</Button>
       {/if}
-      <Button onclick={() => onclose?.()}>Not now</Button>
+      <Button data-testid="uac-not-now" onclick={() => onclose?.()}>Not now</Button>
     </div>
   </div>
 </div>

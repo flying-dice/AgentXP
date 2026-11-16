@@ -4,6 +4,8 @@ export interface ListBoxItem<T = string> {
   value: T
   label: string
   disabled?: boolean
+  /** `data-testid` of the rendered option. */
+  testid?: string
 }
 
 export interface ClickModifiers {

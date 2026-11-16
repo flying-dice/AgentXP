@@ -4,12 +4,13 @@
     title: string
     description: string
     onclick?: () => void
+    testid?: string
   }
 
-  let { kind, title, description, onclick }: Props = $props()
+  let { kind, title, description, onclick, testid }: Props = $props()
 </script>
 
-<button class="command-link" type="button" {onclick}>
+<button class="command-link" type="button" data-testid={testid} data-decision={kind} {onclick}>
   <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
     {#if kind === 'allow'}
       <circle cx="10" cy="10" r="9" fill="#3fae3f" stroke="#237a23" />

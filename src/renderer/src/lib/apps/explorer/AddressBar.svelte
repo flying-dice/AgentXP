@@ -44,7 +44,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="address" class:editing role="group" aria-label="Address" onkeydown={onKeydown}>
+<div class="address" data-testid="explorer-address" data-path={path} class:editing role="group" aria-label="Address" onkeydown={onKeydown}>
   <Icon name={icon} />
   {#if editing}
     <form
@@ -58,6 +58,7 @@
       <input
         bind:this={input}
         class="field"
+        data-testid="explorer-address-field"
         bind:value={draft}
         aria-label="Address"
         spellcheck="false"
@@ -75,7 +76,7 @@
     <div class="trail" role="presentation" onclick={(event) => event.target === event.currentTarget && void edit()}>
       {#each crumbs as crumb, i (crumb.path || 'computer')}
         {#if i > 0}<span class="sep" aria-hidden="true">&#9656;</span>{/if}
-        <button type="button" class="crumb" aria-current={i === crumbs.length - 1 ? 'location' : undefined} onclick={() => onnavigate?.(crumb.path)}>{crumb.label}</button>
+        <button type="button" class="crumb" data-testid="explorer-crumb" aria-current={i === crumbs.length - 1 ? 'location' : undefined} onclick={() => onnavigate?.(crumb.path)}>{crumb.label}</button>
       {/each}
     </div>
   {/if}

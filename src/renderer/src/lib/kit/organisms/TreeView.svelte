@@ -20,6 +20,8 @@
     oncontextmenu?: (node: TreeNodeData, event: MouseEvent) => void
     class?: string
     'aria-label'?: string
+    /** `data-testid` of the tree. */
+    testid?: string
   }
 
   let {
@@ -32,7 +34,8 @@
     onactivate,
     oncontextmenu,
     class: className = '',
-    'aria-label': ariaLabel = 'Tree'
+    'aria-label': ariaLabel = 'Tree',
+    testid
   }: Props = $props()
 
   const uid = $props.id()
@@ -164,6 +167,7 @@
 <div
   bind:this={root}
   class="w7-tree w7-scroll {className}"
+  data-testid={testid}
   role="tree"
   tabindex="0"
   aria-label={ariaLabel}
@@ -175,6 +179,7 @@
   {#each rows as row (row.node.id)}
     <TreeNodeRow
       id={domId(row.node.id)}
+      testid={row.node.testid}
       text={row.node.text}
       icon={row.node.icon}
       level={row.level}

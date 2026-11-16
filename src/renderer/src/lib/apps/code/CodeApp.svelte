@@ -243,12 +243,12 @@
   const lineLabel = $derived(visible ? `Lines ${visible[0]}-${visible[1]} of ${totalLines}` : '')
 </script>
 
-<div class="code">
+<div class="code" data-testid="code-app">
   <div class="bar">
-    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={showChanges} checkOnClick />
+    <ToolStripButton icon="changes" text={changes.length > 0 ? `Changes (${changes.length})` : 'Changes'} bind:checked={showChanges} checkOnClick data-testid="code-changes-toggle" />
     <span class="spring"></span>
     {#if editing}
-      <span class="editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
+      <span class="editing" data-testid="code-editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
     {/if}
   </div>
   <div class="work">
@@ -265,17 +265,17 @@
           <div class="editor">
             <div class="tabs" role="tablist" aria-label="Open files">
               {#each tabs as tab (tab)}
-                <div class="tab" class:on={tab === active} role="presentation">
-                  <button class="name" role="tab" aria-selected={tab === active} title={tab} onclick={() => show(tab)}>
+                <div class="tab" class:on={tab === active} role="presentation" data-testid="code-tab" data-path={tab}>
+                  <button class="name" data-testid="code-tab-name" role="tab" aria-selected={tab === active} title={tab} onclick={() => show(tab)}>
                     <Icon name="file-code" />{vpathName(tab)}{#if changedPaths.includes(tab)}<span class="mod" title="Changed by the agent">*</span>{/if}
                   </button>
-                  <button class="x" aria-label="Close {vpathName(tab)}" onclick={() => close(tab)}>&times;</button>
+                  <button class="x" data-testid="code-tab-close" aria-label="Close {vpathName(tab)}" onclick={() => close(tab)}>&times;</button>
                 </div>
               {/each}
             </div>
-            <div class="view" bind:this={host_el}>
+            <div class="view" data-testid="code-editor" data-path={active} bind:this={host_el}>
               {#if active === null}
-                <div class="hint">Open a file from the tree to view it here.</div>
+                <div class="hint" data-testid="code-hint">Open a file from the tree to view it here.</div>
               {:else if files[active]?.error}
                 <div class="hint">{files[active].error}</div>
               {:else if text === null}
@@ -292,7 +292,7 @@
           <SplitContainer orientation="horizontal" splitterDistance={250} panel1MinSize={120} panel2MinSize={140} fixedPanel="panel2">
             {#snippet panel1()}{@render editor()}{/snippet}
             {#snippet panel2()}
-              <div class="changes">
+              <div class="changes" data-testid="code-changes">
                 <ChangesPane
                   {changes}
                   bind:selectedId={selectedChangeId}

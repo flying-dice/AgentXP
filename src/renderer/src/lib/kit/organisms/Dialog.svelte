@@ -22,6 +22,8 @@
     onclose?: () => void
     role?: 'dialog' | 'alertdialog'
     class?: string
+    /** `data-testid` of the dialog frame. */
+    testid?: string
   }
 
   let {
@@ -37,7 +39,8 @@
     buttons,
     onclose,
     role = 'dialog',
-    class: className = ''
+    class: className = '',
+    testid
   }: Props = $props()
 
   const onKeydown = (event: KeyboardEvent): void => {
@@ -67,6 +70,7 @@
         sizeGrip={false}
         {closable}
         {onclose}
+        {testid}
         class="w7-dialog {className}"
       >
         <div class="content">{@render children?.()}</div>

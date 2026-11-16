@@ -15,13 +15,13 @@
   let { title, text, icon = 'info', onclose, tail = 44 }: Props = $props()
 </script>
 
-<div class="balloon" role="status" style:--tail="{tail}px">
+<div class="balloon" data-testid="balloon" role="status" style:--tail="{tail}px">
   <div class="head">
     <Icon name={icon} size={16} />
-    <b>{title}</b>
-    <button type="button" class="x" aria-label="Close" onclick={onclose}>&times;</button>
+    <b data-testid="balloon-title">{title}</b>
+    <button type="button" class="x" data-testid="balloon-close" aria-label="Close" onclick={onclose}>&times;</button>
   </div>
-  <p>{text}</p>
+  <p data-testid="balloon-text">{text}</p>
 </div>
 
 <style>

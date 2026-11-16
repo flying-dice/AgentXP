@@ -62,7 +62,7 @@
   }
 </script>
 
-<div class="composer">
+<div class="composer" data-testid="chat-composer">
   <label class="prompt" for="composer-input">
     Message to {agentName} <span class="hint">(Enter to send, Shift+Enter for a new line)</span>
   </label>
@@ -73,7 +73,7 @@
       {/each}
     </div>
   {/if}
-  <TextBox id="composer-input" class="input" multiline bind:ref={input} bind:value={draft} onkeydown={onKeydown} />
+  <TextBox id="composer-input" data-testid="chat-composer-input" class="input" multiline bind:ref={input} bind:value={draft} onkeydown={onKeydown} />
   <div class="bar">
     {#if modeItems.length > 0}
       <label for="composer-mode">Mode:</label>
@@ -82,14 +82,15 @@
         value={modeId ?? ''}
         style="width: 170px"
         aria-label="Mode"
+        testid="chat-mode"
         onchange={(id) => onmode?.(id)}
       />
     {/if}
     <CheckBox label="Include open file" bind:checked={includeFile} disabled={!openFilePath} class="include" />
     <span class="spacer"></span>
-    <Button onclick={attach}>Attach…</Button>
-    <Button disabled={!running} onclick={() => oncancel?.()}>Stop</Button>
-    <Button isDefault disabled={!canSend} onclick={send}>Send</Button>
+    <Button data-testid="chat-attach" onclick={attach}>Attach…</Button>
+    <Button data-testid="chat-stop" disabled={!running} onclick={() => oncancel?.()}>Stop</Button>
+    <Button data-testid="chat-send" isDefault disabled={!canSend} onclick={send}>Send</Button>
   </div>
 </div>
 
@@ -126,7 +127,8 @@
   .bar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 6px 10px;
     margin-top: 6px;
   }
   .bar :global(.include) {

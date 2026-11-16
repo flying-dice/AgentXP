@@ -21,14 +21,14 @@
   let { name, argument, status, expandable = false, open = false, onopenchange, children }: Props = $props()
 </script>
 
-<div class="tool-card" data-status={status.kind}>
+<div class="tool-card" data-testid="tool-call-card" data-status={status.kind}>
   <div class="head">
     <ToolStatusIcon kind={status.kind} label={status.label} />
     <span class="name">{name}</span>
     <span class="arg" title={argument}>{argument}</span>
     <span class="state">{status.label}</span>
     {#if expandable}
-      <Button class="toggle" aria-expanded={open} onclick={() => onopenchange?.(!open)}>{open ? 'Hide' : 'Show'}</Button>
+      <Button class="toggle" data-testid="tool-call-toggle" aria-expanded={open} onclick={() => onopenchange?.(!open)}>{open ? 'Hide' : 'Show'}</Button>
     {/if}
   </div>
   {#if expandable && open}<div class="body">{@render children?.()}</div>{/if}

@@ -14,6 +14,8 @@
     running?: boolean
     /** This item's window has focus. */
     active?: boolean
+    /** `data-testid` of the button. */
+    testid?: string
   }
 </script>
 
@@ -59,9 +61,9 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="w7-taskbar {className}" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
+<div class="w7-taskbar {className}" data-testid="taskbar" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
   <div class="strip" bind:this={strip}>
-    <button type="button" class="orb" class:open={startOpen} aria-label="Start" aria-haspopup="menu" aria-expanded={startOpen} onclick={() => onstart?.()}>
+    <button type="button" class="orb" data-testid="taskbar-start" class:open={startOpen} aria-label="Start" aria-haspopup="menu" aria-expanded={startOpen} onclick={() => onstart?.()}>
       <span class="orb-gloss"></span>
       <Icon name="agent7" size={22} />
     </button>
@@ -69,6 +71,8 @@
       <button
         type="button"
         class="task"
+        data-testid={item.testid}
+        data-window-id={item.id}
         class:pinned={item.pinned && !item.running}
         class:running={item.running}
         class:active={item.active}
@@ -82,9 +86,9 @@
       </button>
     {/each}
   </div>
-  <div class="tray">
+  <div class="tray" data-testid="taskbar-tray">
     {@render tray?.()}
-    <span class="clock" role="timer" aria-label="{time} {date}">{time}<br />{date}</span>
+    <span class="clock" data-testid="taskbar-clock" role="timer" aria-label="{time} {date}">{time}<br />{date}</span>
   </div>
 </div>
 

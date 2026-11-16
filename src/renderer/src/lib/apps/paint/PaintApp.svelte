@@ -305,9 +305,9 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="paint" role="application" aria-label="Agent Paint" tabindex="-1" {onkeydown}>
+<div class="paint" data-testid="paint-app" role="application" aria-label="Agent Paint" tabindex="-1" {onkeydown}>
   <div class="tabs">
-    <button type="button" class="appbtn" onclick={openMenu}>Paint</button>
+    <button type="button" class="appbtn" data-testid="paint-menu" onclick={openMenu}>Paint</button>
     <span class="tab on">Home</span>
     <span class="tab">View</span>
   </div>
@@ -315,7 +315,7 @@
     <section class="group" aria-label="Tools">
       <div class="body tools">
         {#each TOOLS as t (t.id)}
-          <button type="button" class="rb" class:on={tool === t.id} title={t.label} aria-label={t.label} aria-pressed={tool === t.id} onclick={() => (tool = t.id)}>
+          <button type="button" class="rb" data-testid="paint-tool-{t.id}" class:on={tool === t.id} title={t.label} aria-label={t.label} aria-pressed={tool === t.id} onclick={() => (tool = t.id)}>
             <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
               {#if t.id === 'pencil'}<path d="M2 14l.8-3.2L11 2.6l2.4 2.4-8.2 8.2z" fill="#f4c542" stroke="#7a5a10" stroke-linejoin="round" /><path d="M2 14l.8-3.2 2.4 2.4z" fill="#e8c9a0" stroke="#7a5a10" stroke-linejoin="round" /><path d="M11 2.6l2.4 2.4" stroke="#d9534f" stroke-width="2" />
               {:else if t.id === 'brush'}<path d="M13.5 1.5c.8.8-.4 2.4-4.6 6.2L7.4 6.2c3.8-4.2 5.3-5.5 6.1-4.7z" fill="#b97a57" stroke="#6b4423" stroke-linejoin="round" /><path d="M7.4 6.2l1.5 1.5c-.5 2.4-2.4 3.6-4.6 3.8-1 0-1.8.4-2.3 1.2 2.6 1.6 7.4 1 8.3-3.4.2-1 0-2-.9-3z" fill="#3f9bf0" stroke="#1d5fae" stroke-linejoin="round" />
@@ -332,7 +332,7 @@
     <section class="group" aria-label="Shapes">
       <div class="body shapes">
         {#each SHAPES as s (s.id)}
-          <button type="button" class="rb" class:on={tool === s.id} title={s.label} aria-label={s.label} aria-pressed={tool === s.id} onclick={() => (tool = s.id)}>
+          <button type="button" class="rb" data-testid="paint-tool-{s.id}" class:on={tool === s.id} title={s.label} aria-label={s.label} aria-pressed={tool === s.id} onclick={() => (tool = s.id)}>
             <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
               {#if s.id === 'line'}<path d="M2.5 13.5l11-11" stroke="#1d3f7a" stroke-width="1.6" />
               {:else if s.id === 'rect'}<rect x="2.5" y="4" width="11" height="8" fill="none" stroke="#1d3f7a" stroke-width="1.6" />
@@ -346,7 +346,7 @@
     <section class="group" aria-label="Size">
       <div class="body sizes">
         {#each STROKE_SIZES as s (s)}
-          <button type="button" class="size" class:on={size === s} aria-label="Size {s}" aria-pressed={size === s} onclick={() => (size = s)}>
+          <button type="button" class="size" data-testid="paint-size-{s}" class:on={size === s} aria-label="Size {s}" aria-pressed={size === s} onclick={() => (size = s)}>
             <span style:height="{s}px"></span>
           </button>
         {/each}
@@ -365,7 +365,7 @@
         </div>
         <div class="palette" role="group" aria-label="Palette">
           {#each PALETTE as c (c)}
-            <button type="button" class="sw" style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
+            <button type="button" class="sw" data-testid="paint-swatch" data-color={c} style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
           {/each}
         </div>
       </div>
@@ -374,12 +374,13 @@
   </div>
 
   <div class="workspace w7-scroll">
-    {#if agentDrawing}<div class="pill" role="status">The agent is drawing…</div>{/if}
+    {#if agentDrawing}<div class="pill" data-testid="paint-agent-drawing" role="status">The agent is drawing…</div>{/if}
     <div class="sheet" style:width="{width}px" style:height="{height}px">
       <canvas
         bind:this={canvas}
         {width}
         {height}
+        data-testid="paint-canvas"
         class:cross={tool !== 'picker' && tool !== 'text'}
         aria-label="Canvas"
         {onpointerdown}

@@ -71,8 +71,8 @@
   const codeWindow = $derived(host.state.windows.find((w) => w.view.app === 'code'))
   const openFilePath = $derived(codeWindow?.view.app === 'code' ? codeWindow.view.activePath : null)
   const tabs = $derived<TabDef[]>([
-    { id: 'changes', title: changes.length > 0 ? `Changes (${changes.length})` : 'Changes' },
-    { id: 'tasks', title: 'Tasks' }
+    { id: 'changes', title: changes.length > 0 ? `Changes (${changes.length})` : 'Changes', testid: 'chat-tab-changes' },
+    { id: 'tasks', title: 'Tasks', testid: 'chat-tab-tasks' }
   ])
 
   // The window title follows the chat title.
@@ -102,11 +102,12 @@
   const pickFiles = (): Promise<string[]> => host.api.dialogs.pickFiles()
 </script>
 
-<div class="chat">
+<div class="chat" data-testid="chat-app" data-session-id={sessionId}>
   <div class="bar">
     <span>Model:</span>
     <ComboBox
       aria-label="Model"
+      testid="chat-model"
       items={models.map((m) => ({ value: m.id, label: m.name }))}
       value={modelId}
       disabled={models.length === 0}
@@ -114,7 +115,7 @@
       style="width:170px"
     />
     <span class="spring"></span>
-    <ToolStripButton icon="changes" text={changes.length > 0 ? `Tasks and changes (${changes.length})` : 'Tasks and changes'} bind:checked={panelOpen} checkOnClick />
+    <ToolStripButton icon="changes" text={changes.length > 0 ? `Tasks and changes (${changes.length})` : 'Tasks and changes'} bind:checked={panelOpen} checkOnClick data-testid="chat-panel-toggle" />
   </div>
   <div class="row">
     <div class="main">
@@ -127,7 +128,7 @@
       {/if}
     </div>
     {#if panelOpen}
-      <aside class="side" aria-label="Tasks and changes">
+      <aside class="side" data-testid="chat-side-panel" aria-label="Tasks and changes">
         <TabControl {tabs} bind:selected={panelTab} aria-label="Inspector">
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
@@ -154,7 +155,7 @@
         <span class="pct">{percent}%</span>
       </StatusStripLabel>
     {/if}
-    <StatusStripLabel text={connectionLabel(status)} borders={['left']} />
+    <StatusStripLabel testid="chat-status" text={connectionLabel(status)} borders={['left']} />
   </StatusStrip>
 </div>
 
@@ -188,6 +189,7 @@
   .main {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
     min-height: 0;
     display: flex;
     flex-direction: column;

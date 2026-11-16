@@ -139,7 +139,7 @@
     { key: 'chat', header: 'Chat' }
   ]
   const rows = $derived<ListRow[]>(
-    visible.map((e) => ({ id: String(e.id), icon: LEVEL_ICON[e.level], level: LEVEL_LABEL[e.level], when: formatDateTime(e.at), source: SOURCE_LABEL[e.source], name: `${e.direction === 'in' ? '←' : '→'} ${e.name}`, chat: chatTitle(e.sessionId) ?? '' }))
+    visible.map((e) => ({ id: String(e.id), testid: 'event-viewer-row', attrs: { 'data-source': e.source, 'data-name': e.name, 'data-level': e.level }, icon: LEVEL_ICON[e.level], level: LEVEL_LABEL[e.level], when: formatDateTime(e.at), source: SOURCE_LABEL[e.source], name: `${e.direction === 'in' ? '←' : '→'} ${e.name}`, chat: chatTitle(e.sessionId) ?? '' }))
   )
 
   const levelItems = (['all', 'info', 'warning', 'error'] as const).map((l) => ({ value: l, label: l === 'all' ? 'All levels' : LEVEL_LABEL[l] }))
@@ -157,11 +157,11 @@
   ]
 </script>
 
-<div class="ev">
+<div class="ev" data-testid="event-viewer-app">
   <div class="body">
     <SplitContainer splitterDistance={176} panel1MinSize={120} panel2MinSize={300} fixedPanel="panel1">
       {#snippet panel1()}
-        <TreeView {nodes} bind:selected={node} bind:expanded aria-label="Logs" class="tree" />
+        <TreeView testid="event-viewer-logs" {nodes} bind:selected={node} bind:expanded aria-label="Logs" class="tree" />
       {/snippet}
       {#snippet panel2()}
         <div class="row">
@@ -171,17 +171,17 @@
                 <div class="center">
                   <div class="heading">
                     <strong>{scope.sessionId !== null ? (chatTitle(scope.sessionId) ?? scope.title) : scope.title}</strong>
-                    <span class="count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}</span>
+                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}</span>
                     <span class="spring"></span>
-                    <CheckBox bind:checked={autoscroll}>Autoscroll</CheckBox>
+                    <CheckBox testid="event-viewer-autoscroll" bind:checked={autoscroll}>Autoscroll</CheckBox>
                   </div>
                   <div class="grid" bind:this={gridEl}>
-                    <ListView {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? 'No events.'} />
+                    <ListView testid="event-viewer-list" {columns} {rows} bind:selected aria-label="Events" emptyText={error ?? 'No events.'} />
                   </div>
                 </div>
               {/snippet}
               {#snippet panel2()}
-                <div class="detail">
+                <div class="detail" data-testid="event-viewer-detail">
                   {#if current}
                     <div class="dhead"><Icon name={LEVEL_ICON[current.level]} /> <strong>Event {current.id}, {SOURCE_LABEL[current.source]}</strong></div>
                     <TabControl {tabs} bind:selected={tab} aria-label="Event detail">
@@ -212,9 +212,9 @@
               <div class="ahead">Actions</div>
               <div class="asub">{scope.title}</div>
               {#each actions as a (a.label)}
-                <button type="button" class="act" onclick={a.run}><Icon name={a.icon} />{a.label}</button>
+                <button type="button" class="act" data-testid="event-viewer-action-{a.label.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')}" onclick={a.run}><Icon name={a.icon} />{a.label}</button>
               {/each}
-              {#if filterActive}<button type="button" class="act" onclick={() => ((level = 'all'), (text = ''))}><Icon name="close" />Clear Filter</button>{/if}
+              {#if filterActive}<button type="button" class="act" data-testid="event-viewer-action-clear-filter" onclick={() => ((level = 'all'), (text = ''))}><Icon name="close" />Clear Filter</button>{/if}
             </aside>
         </div>
       {/snippet}
@@ -222,16 +222,16 @@
   </div>
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={error ?? (autoscroll ? 'Following new events' : 'Autoscroll is off')} spring />
-    <StatusStripLabel text="Events: {events.length}" borders={['left']} width={100} />
+    <StatusStripLabel testid="event-viewer-total" text="Events: {events.length}" borders={['left']} width={100} />
   </StatusStrip>
 
   {#if filtering}
-    <Dialog title="Filter Current Log" iconName="options" width="360px" contained onclose={() => (filtering = null)}>
+    <Dialog testid="event-viewer-filter-dialog" title="Filter Current Log" iconName="options" width="360px" contained onclose={() => (filtering = null)}>
       <div class="filter">
         <span>Event level:</span>
-        <ComboBox aria-label="Event level" items={levelItems} value={filtering.level} onchange={(v) => filtering && (filtering.level = v as EventLevel | 'all')} />
+        <ComboBox testid="event-viewer-level" aria-label="Event level" items={levelItems} value={filtering.level} onchange={(v) => filtering && (filtering.level = v as EventLevel | 'all')} />
         <label for="ev-text">Contains text:</label>
-        <TextBox id="ev-text" bind:value={filtering.text} />
+        <TextBox id="ev-text" data-testid="event-viewer-filter-text" bind:value={filtering.text} />
       </div>
       {#snippet buttons()}
         <DialogButtons buttons={['ok', 'cancel']} onresult={finishFilter} />
@@ -239,10 +239,10 @@
     </Dialog>
   {/if}
   {#if finding !== null}
-    <Dialog title="Find" iconName="search" width="340px" contained onclose={() => (finding = null)}>
+    <Dialog testid="event-viewer-find-dialog" title="Find" iconName="search" width="340px" contained onclose={() => (finding = null)}>
       <div class="filter">
         <label for="ev-find">Find what:</label>
-        <TextBox id="ev-find" bind:value={finding} onkeydown={(e) => e.key === 'Enter' && finishFind('ok')} />
+        <TextBox id="ev-find" data-testid="event-viewer-find-text" bind:value={finding} onkeydown={(e) => e.key === 'Enter' && finishFind('ok')} />
       </div>
       {#snippet buttons()}
         <DialogButtons buttons={['ok', 'cancel']} onresult={finishFind} />

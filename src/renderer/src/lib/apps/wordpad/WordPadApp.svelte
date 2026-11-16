@@ -227,7 +227,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="wordpad" role="application" aria-label="WordPad" tabindex="-1" {onkeydown}>
+<div class="wordpad" data-testid="wordpad-app" role="application" aria-label="WordPad" tabindex="-1" {onkeydown}>
   <div class="tabs">
     <button
       type="button"
@@ -242,8 +242,8 @@
     <span class="tab on">Home</span>
   </div>
   <ToolStrip aria-label="Formatting">
-    <ToolStripButton text="Read" checked={mode === 'read'} onclick={() => setMode('read')} title="Show the formatted document" />
-    <ToolStripButton text="Edit" checked={mode === 'edit'} onclick={() => setMode('edit')} title="Edit the markdown source" />
+    <ToolStripButton data-testid="wordpad-mode-read" text="Read" checked={mode === 'read'} onclick={() => setMode('read')} title="Show the formatted document" />
+    <ToolStripButton data-testid="wordpad-mode-edit" text="Edit" checked={mode === 'edit'} onclick={() => setMode('edit')} title="Edit the markdown source" />
     <span class="sep"></span>
     <ToolStripButton text="B" class="bold" disabled={!editing} title="Bold (Ctrl+B)" aria-label="Bold" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '**'))} />
     <ToolStripButton text="I" class="italic" disabled={!editing} title="Italic (Ctrl+I)" aria-label="Italic" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '_'))} />
@@ -262,6 +262,7 @@
     {#if mode === 'edit'}
       <textarea
         class="source w7-scroll"
+        data-testid="wordpad-source"
         bind:this={area}
         bind:value={text}
         aria-label="Document source"
@@ -271,7 +272,7 @@
         onclick={updateCaret}
       ></textarea>
     {:else}
-      <div class="reader w7-scroll" bind:this={reader} tabindex="-1" onscroll={updateHeading} aria-label="Document">
+      <div class="reader w7-scroll" data-testid="wordpad-reader" bind:this={reader} tabindex="-1" onscroll={updateHeading} aria-label="Document">
         {#if text.trim() === ''}
           <p class="empty">{message || 'This document is empty. Choose Edit to start writing, or File > Open.'}</p>
         {:else}

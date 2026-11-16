@@ -50,13 +50,13 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="w7-start" role="menu" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
+<div class="w7-start" data-testid="start-menu" role="menu" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
   <div class="tile" aria-hidden="true"><Icon name="agent7" size={40} /></div>
   <div class="left">
     <ul class="programs">
       {#each shownPrograms as item (item.id)}
         <li>
-          <button type="button" role="menuitem" class="entry" onclick={() => onrun?.(item.id)}>
+          <button type="button" role="menuitem" class="entry" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
             {#if item.icon}<Icon name={item.icon} size={28} />{/if}
             <span class="text">
               <span class="title">{item.title}</span>
@@ -71,14 +71,14 @@
         {#each shownGroups as group (group.id)}
           {@const open = searching || openGroups[group.id]}
           <li>
-            <button type="button" role="menuitem" class="entry small" aria-expanded={open} onclick={() => (openGroups[group.id] = !open)}>
+            <button type="button" role="menuitem" class="entry small" data-testid="start-menu-group-{group.id}" aria-expanded={open} onclick={() => (openGroups[group.id] = !open)}>
               <Icon name="folder" size={16} /><span class="title">{group.title}</span><span class="caret" class:open aria-hidden="true">▸</span>
             </button>
             {#if open}
               <ul class="sub">
                 {#each group.items as item (item.id)}
                   <li>
-                    <button type="button" role="menuitem" class="entry small" onclick={() => onrun?.(item.id)}>
+                    <button type="button" role="menuitem" class="entry small" data-testid="start-menu-item-{item.id}" onclick={() => onrun?.(item.id)}>
                       {#if item.icon}<Icon name={item.icon} size={16} />{/if}<span class="title">{item.title}</span>
                     </button>
                   </li>
@@ -94,7 +94,7 @@
       <ul class="recent">
         {#each shownRecent as item (item.id)}
           <li>
-            <button type="button" role="menuitem" class="entry small" onclick={() => onrecent?.(item.id)}>
+            <button type="button" role="menuitem" class="entry small" data-testid="start-menu-recent" data-session-id={item.id} onclick={() => onrecent?.(item.id)}>
               <Icon name="session" size={16} /><span class="title">{item.title}</span>
             </button>
           </li>
@@ -103,18 +103,18 @@
     {/if}
     {#if empty}<div class="none">No items match your search.</div>{/if}
     <div class="search">
-      <input bind:this={search} bind:value={query} type="search" placeholder="Search apps and chats" aria-label="Search apps and chats" />
+      <input data-testid="start-menu-search" bind:this={search} bind:value={query} type="search" placeholder="Search apps and chats" aria-label="Search apps and chats" />
       <Icon name="search" size={14} />
     </div>
   </div>
   <div class="right">
     <ul>
       {#each places as item (item.id)}
-        <li><button type="button" role="menuitem" class="place" onclick={() => onplace?.(item.id)}>{item.title}</button></li>
+        <li><button type="button" role="menuitem" class="place" data-testid="start-menu-place-{item.id}" onclick={() => onplace?.(item.id)}>{item.title}</button></li>
       {/each}
     </ul>
     <div class="power">
-      <button type="button" class="power-btn" onclick={() => onpower?.()}><Icon name={powerLabel.startsWith('Resume') ? 'play' : 'pause'} size={14} />{powerLabel}</button>
+      <button type="button" class="power-btn" data-testid="start-menu-power" onclick={() => onpower?.()}><Icon name={powerLabel.startsWith('Resume') ? 'play' : 'pause'} size={14} />{powerLabel}</button>
     </div>
   </div>
 </div>

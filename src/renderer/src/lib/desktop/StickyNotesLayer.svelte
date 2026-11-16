@@ -84,7 +84,7 @@
 </script>
 
 {#if open}
-  <div class="notes" bind:this={layer} aria-label="Sticky notes">
+  <div class="notes" data-testid="sticky-notes-layer" bind:this={layer} aria-label="Sticky notes">
     {#each notes as note (note.id)}
       <StickyNote
         {note}

@@ -10,7 +10,7 @@
   let { onopen }: Props = $props()
 </script>
 
-<Dialog title="Welcome to Agent7" iconName="agent7" width="440px" closable={false} contained bodyColor="window">
+<Dialog testid="welcome-dialog" title="Welcome to Agent7" iconName="agent7" width="440px" closable={false} contained bodyColor="window">
   <div class="body">
     <Icon name="agent7" size={48} />
     <div>
@@ -19,7 +19,7 @@
     </div>
   </div>
   {#snippet buttons()}
-    <div class="buttons"><Button isDefault data-autofocus onclick={() => onopen?.()}>Agent7 Desktops…</Button></div>
+    <div class="buttons"><Button data-testid="welcome-open-launcher" isDefault data-autofocus onclick={() => onopen?.()}>Agent7 Desktops…</Button></div>
   {/snippet}
 </Dialog>
 

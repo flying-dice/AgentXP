@@ -118,7 +118,7 @@
   )
 </script>
 
-<div class="am">
+<div class="am" data-testid="agent-manager-app">
   <div class="tabs">
     <TabControl {tabs} bind:selected={tab} aria-label="Agent7 Task Manager">
       {#snippet panel(t)}
@@ -129,14 +129,14 @@
               {#if procRows.length === 0}<div class="empty">No agent is running. Start a chat to launch one.</div>{/if}
             </div>
             <div class="buttons">
-              <Button disabled={!selectedProcess} onclick={endProcess}>End process</Button>
+              <Button data-testid="agent-manager-end-process" disabled={!selectedProcess} onclick={endProcess}>End process</Button>
             </div>
           {:else if t.id === 'chats'}
             <div class="grid">
-              <ListView columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" emptyText="There are no chats on this desktop yet." />
+              <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" emptyText="There are no chats on this desktop yet." />
             </div>
             <div class="buttons">
-              <Button disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
+              <Button data-testid="agent-manager-end-task" disabled={!selectedChatRow || !selectedChatRow.busy} onclick={endTask}>End Task</Button>
             </div>
           {:else if t.id === 'terminals'}
             <div class="grid">

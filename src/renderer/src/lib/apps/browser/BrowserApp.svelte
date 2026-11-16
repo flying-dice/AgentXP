@@ -163,11 +163,11 @@
   const status = $derived(loading ? `Opening page ${url}...` : 'Done')
 </script>
 
-<div class="browser">
+<div class="browser" data-testid="browser-app">
   <div class="chrome">
     <div class="orbs">
-      <button class="orb" aria-label="Back" title="Back" disabled={!canBack} onclick={() => step(-1)}><Icon name="chevron-left" size={16} /></button>
-      <button class="orb" aria-label="Forward" title="Forward" disabled={!canForward} onclick={() => step(1)}><Icon name="chevron-right" size={16} /></button>
+      <button class="orb" data-testid="browser-back" aria-label="Back" title="Back" disabled={!canBack} onclick={() => step(-1)}><Icon name="chevron-left" size={16} /></button>
+      <button class="orb" data-testid="browser-forward" aria-label="Forward" title="Forward" disabled={!canForward} onclick={() => step(1)}><Icon name="chevron-right" size={16} /></button>
     </div>
     <form
       class="address"
@@ -177,8 +177,8 @@
       }}
     >
       <Icon name={isSecure(url) ? 'lock' : 'globe'} />
-      <input class="field" bind:value={address} aria-label="Address" spellcheck="false" placeholder="Type a web address or a search" />
-      <button class="mini" type="submit" aria-label="Go" title="Go to"><Icon name="chevron-right" size={14} /></button>
+      <input class="field" data-testid="browser-address" bind:value={address} aria-label="Address" spellcheck="false" placeholder="Type a web address or a search" />
+      <button class="mini" data-testid="browser-go" type="submit" aria-label="Go" title="Go to"><Icon name="chevron-right" size={14} /></button>
       {#if loading}
         <button class="mini" type="button" aria-label="Stop" title="Stop" onclick={stop}><Icon name="close" size={14} /></button>
       {:else}

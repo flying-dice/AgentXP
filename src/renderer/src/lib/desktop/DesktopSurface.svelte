@@ -32,11 +32,11 @@
   let menuY = $state(0)
 
   const menu = $derived<MenuItemDef[]>([
-    { label: 'New &chat', icon: 'session', action: () => onnewchat?.() },
-    { label: 'Open &Computer', icon: 'computer', action: () => onopencomputer?.() },
+    { id: 'desktop-new-chat', label: 'New &chat', icon: 'session', action: () => onnewchat?.() },
+    { id: 'desktop-open-computer', label: 'Open &Computer', icon: 'computer', action: () => onopencomputer?.() },
     { separator: true },
-    { label: '&Gadgets', checked: gadgets, action: () => ontogglegadgets?.() },
-    { label: 'Control &Centre', icon: 'options', action: () => oncontrolcentre?.() }
+    { id: 'desktop-gadgets', label: '&Gadgets', checked: gadgets, action: () => ontogglegadgets?.() },
+    { id: 'desktop-control-centre', label: 'Control &Centre', icon: 'options', action: () => oncontrolcentre?.() }
   ])
 
   function onContext(event: MouseEvent): void {
@@ -76,7 +76,7 @@
   onkeydown={onKeydown}
 >
   {#each icons as icon (icon.id)}
-    <DesktopIcon label={icon.label} icon={icon.icon} selected={selected === icon.id} onselect={() => onselect?.(icon.id)} onopen={() => onopen?.(icon.id)} oncontextmenu={() => {}} />
+    <DesktopIcon testid="desktop-icon-{icon.id}" label={icon.label} icon={icon.icon} selected={selected === icon.id} onselect={() => onselect?.(icon.id)} onopen={() => onopen?.(icon.id)} oncontextmenu={() => {}} />
   {/each}
 </div>
 <ContextMenuStrip items={menu} bind:open={menuOpen} x={menuX} y={menuY} label="Desktop" />

@@ -78,6 +78,8 @@
 
 <article
   class="note"
+  data-testid={isPlan ? 'notes-plan' : 'notes-sticky'}
+  data-note-id={note.id}
   class:agent={note.author === 'agent'}
   style:left="{bounds.x}px"
   style:top="{bounds.y}px"
@@ -97,10 +99,10 @@
   }}
 >
   <header class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
-    <button type="button" class="btn" title="New note" aria-label="New note" onpointerdown={(e) => e.stopPropagation()} onclick={onadd}>+</button>
+    <button type="button" class="btn" data-testid="notes-sticky-add" title="New note" aria-label="New note" onpointerdown={(e) => e.stopPropagation()} onclick={onadd}>+</button>
     {#if note.author === 'agent'}<span class="by" title="Written by the agent">Agent7</span>{/if}
     <span class="spring"></span>
-    <button type="button" class="btn" title="Delete note" aria-label="Delete note" onpointerdown={(e) => e.stopPropagation()} onclick={onremove}>×</button>
+    <button type="button" class="btn" data-testid="notes-sticky-delete" title="Delete note" aria-label="Delete note" onpointerdown={(e) => e.stopPropagation()} onclick={onremove}>×</button>
   </header>
   {#if isPlan}
     <div class="plan w7-scroll" role="list" aria-label="Tasks">
@@ -117,6 +119,7 @@
   {:else}
     <textarea
       class="text w7-scroll"
+      data-testid="notes-sticky-text"
       bind:value={draft}
       aria-label="Note text"
       spellcheck="false"

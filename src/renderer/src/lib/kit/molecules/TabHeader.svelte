@@ -10,15 +10,17 @@
     id?: string
     /** Id of the tab panel this header controls. */
     controls?: string
+    testid?: string
     onclick?: () => void
     onkeydown?: (event: KeyboardEvent) => void
   }
 
-  let { title, icon, selected = false, disabled = false, id, controls, onclick, onkeydown }: Props = $props()
+  let { title, icon, selected = false, disabled = false, id, controls, testid, onclick, onkeydown }: Props = $props()
 </script>
 
 <button
   {id}
+  data-testid={testid}
   type="button"
   class="tab"
   class:selected

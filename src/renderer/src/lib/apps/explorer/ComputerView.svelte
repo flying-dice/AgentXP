@@ -26,7 +26,7 @@
   const caption = (d: DriveDto): string => (d.kind === 'system' ? 'Private to this desktop' : 'Plugged-in project')
 </script>
 
-<div class="computer {className}" role="listbox" aria-label="Computer" tabindex="-1">
+<div class="computer {className}" data-testid="explorer-computer" role="listbox" aria-label="Computer" tabindex="-1">
   {#each sections as section (section.id)}
     <div class="group">
       <div class="head"><span>{section.title} ({section.items.length})</span><i></i></div>
@@ -38,6 +38,7 @@
             role="option"
             aria-selected={selected === root}
             class="tile"
+            data-testid="explorer-drive-{drive.letter.toLowerCase()}"
             class:selected={selected === root}
             onclick={() => onselect?.(root)}
             ondblclick={() => onactivate?.(drive)}

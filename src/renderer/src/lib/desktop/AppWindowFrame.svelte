@@ -69,7 +69,10 @@
   class:minimized
   class:glow={glowing}
   style="{frameStyle(bounds, maximized)}z-index:{z}"
+  data-testid="window-{w.view.app}"
   data-window-id={w.id}
+  data-window-state={w.windowState}
+  data-focused={focused}
   onpointerdowncapture={onPointerDown}
   onpointermove={onPointerMove}
   onpointerup={onPointerUp}

@@ -35,6 +35,7 @@
 </script>
 
 <Dialog
+  testid="message-box"
   {open}
   title={caption}
   width="auto"

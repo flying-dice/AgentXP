@@ -40,6 +40,7 @@ export function taskbarItems(
     .map((w) => ({
       id: String(w.id),
       title: w.title,
+      testid: `taskbar-item-${w.app}`,
       icon: icons[w.app],
       running: true,
       active: w.id === focusedId && w.windowState !== 'minimized'
