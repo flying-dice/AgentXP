@@ -141,7 +141,7 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
       changed()
     },
     newChat: async (_desktopId, _agentId, _cwd) => api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId: nextId }),
-    openReview: async (_desktopId, root, baseRef) => api.openWindow({ desktopId: desktop.id, app: 'code-review', path: root, baseRef, sessionId: options.createReviewSession?.(root) ?? nextId++ }),
+    openReview: async (_desktopId, root, baseRef, _agentId, selectedPath) => api.openWindow({ desktopId: desktop.id, app: 'code-review', path: root, baseRef, selectedPath, sessionId: options.createReviewSession?.(root) ?? nextId++ }),
     openAside: async (_desktopId, windowId) => {
       const w = find(windowId)
       if (w.asideSessionId === undefined) {

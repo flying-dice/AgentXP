@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { SEVERITY_HELP, addCommentTitle, baseLabel, filesStatusLabel, verdictLine, chatLabel, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
+import { SEVERITY_HELP, addCommentTitle, baseLabel, filesStatusLabel, verdictLine, chatLabel, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -137,9 +137,22 @@ describe('opening file, change position and totals (UX-41, UX-42)', () => {
     expect(baseLabel('HEAD')).toBe('HEAD (the last saved version)')
     expect(baseLabel('main')).toBe('main')
     expect(STATUS_LABEL.untracked).toBe('New file')
-    expect(chatLabel({ id: 4, title: 'Fix the login...' })).toBe('Fix the login...')
-    expect(chatLabel({ id: 4, title: 'New session' })).toBe('Chat 4')
-    expect(chatLabel({ id: 5, title: '' })).toBe('Chat 5')
+  })
+
+  it('names a chat as its window does: the title, or New chat with the project', () => {
+    expect(chatLabel({ title: 'Fix the login...' }, 'review-notes')).toBe('Fix the login...')
+    expect(chatLabel({ title: 'New session' }, 'review-notes')).toBe('New chat (review-notes)')
+    expect(chatLabel({ title: 'New chat' }, 'review-notes')).toBe('New chat (review-notes)')
+    expect(chatLabel({ title: '' }, 'review-notes')).toBe('New chat (review-notes)')
+    expect(chatLabel({ title: null })).toBe('New chat')
+  })
+
+  it('finds the project of a path by the label of its drive', () => {
+    const drives = [{ letter: 'C', label: 'Agent home' }, { letter: 'E', label: 'review-notes' }]
+    expect(projectNameOf('E:\\', drives)).toBe('review-notes')
+    expect(projectNameOf('E:\\src\\a.ts', drives)).toBe('review-notes')
+    expect(projectNameOf('F:\\', drives)).toBeNull()
+    expect(projectNameOf('nonsense', drives)).toBeNull()
   })
 })
 
@@ -162,7 +175,7 @@ describe('numbers in digits (UX-77)', () => {
 describe('adding a comment (UX-76)', () => {
   it('explains the default severity and the "+" of the gutter', () => {
     expect(SEVERITY_HELP).toContain('Minor is the usual choice')
-    expect(addCommentTitle(2)).toBe('Add a comment on line 2')
+    expect(addCommentTitle(2)).toBe('Add a comment on this line')
     expect(addCommentTitle(undefined)).toContain('no line')
   })
 })

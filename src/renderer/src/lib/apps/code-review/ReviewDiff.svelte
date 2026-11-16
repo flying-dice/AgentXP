@@ -368,7 +368,7 @@
     text-align: right;
     cursor: default;
   }
-  /* The "+" shows on hover and on focus; its box is 24 x 24 px, centred on the 17 px row. */
+  /* The "+" is always there at 40% strength, full strength on hover and focus; its box is 24 x 24 px, centred on the 17 px row. */
   .plus {
     flex: none;
     align-self: center;
@@ -382,6 +382,9 @@
     font: inherit;
     font-weight: 700;
     cursor: default;
+    opacity: 0.4;
+  }
+  .plus:disabled {
     opacity: 0;
   }
   .row:hover > .plus:not(:disabled),

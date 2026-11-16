@@ -6,7 +6,7 @@ import { paginate } from './paging'
 import type { ActionResult, AppRequests, BrowserDriver, BrowserGuard, DesktopOps, PageBox, PageInfo, PageContent } from './ports'
 import { attempt, imageResult, textResult, type ToolContext, type ToolResult } from './types'
 import { pickWindow } from './windows'
-import { clickLabel, findLabel, READ_LABEL, SCREENSHOT_LABEL, selectLabel, tabsLabel, typeLabel, type ElementName } from './browserLabels'
+import { clickLabel, findLabel, READ_LABEL, SCREENSHOT_LABEL, selectLabel, tabsLabel, typeLabel, WAIT_LABEL, waitDetail, type ElementName } from './browserLabels'
 
 type FindArgs = { text?: string; role?: string; name?: string; limit?: number; window?: number }
 
@@ -111,19 +111,19 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
   }
 
   /** Tells the Browser app what the agent is doing (the "Agent is using this page" bar and the highlight ring). Never blocks or fails. */
-  const announce = (desktopId: Id, id: Id, label: string, box?: PageBox, reading?: boolean): void => {
-    void requests?.request(desktopId, id, 'activity', { label, box, reading }, 1500).catch(() => {})
+  const announce = (desktopId: Id, id: Id, label: string, box?: PageBox, reading?: boolean, extra?: { detail?: string; read?: boolean }): void => {
+    void requests?.request(desktopId, id, 'activity', { label, box, reading, ...extra }, 1500).catch(() => {})
   }
 
   /** Announces `label` now and every few seconds until `run` ends: a slow action keeps the bar on screen. Reads announce too. */
-  const whileAnnounced = async <T>(desktopId: Id, id: Id, label: string, run: () => Promise<T>, reading?: boolean): Promise<T> => {
-    announce(desktopId, id, label, undefined, reading)
-    const timer = setInterval(() => announce(desktopId, id, label, undefined, reading), HEARTBEAT_MS)
+  const whileAnnounced = async <T>(desktopId: Id, id: Id, label: string, run: () => Promise<T>, reading?: boolean, detail?: string): Promise<T> => {
+    announce(desktopId, id, label, undefined, reading, { detail })
+    const timer = setInterval(() => announce(desktopId, id, label, undefined, reading, { detail }), HEARTBEAT_MS)
     try {
       return await run()
     } finally {
       clearInterval(timer)
-      if (reading) announce(desktopId, id, label, undefined, false) // done reading: the bar stays, "Agent: reading" goes
+      if (reading) announce(desktopId, id, label, undefined, false, { read: true }) // done reading: the bar stays, "Agent: reading" goes, the page counts as read
     }
   }
 
@@ -231,7 +231,7 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
         const guard = guardFor(desktopId)
         guard()
         const what = text !== undefined ? `"${text}"` : ref !== undefined ? `[${ref}]` : 'the page to settle'
-        const result = await whileAnnounced(desktopId, id, `Waiting for ${what}`, () => driver.wait(id, { text, ref, timeoutMs: timeoutMs ?? 5000 }, guard))
+        const result = await whileAnnounced(desktopId, id, WAIT_LABEL, () => driver.wait(id, { text, ref, timeoutMs: timeoutMs ?? 5000 }, guard), false, waitDetail(text, ref))
         return textResult(result.found ? `Done waiting for ${what} after ${result.waitedMs} ms.` : `Timed out after ${result.waitedMs} ms waiting for ${what}. Read the page to see where it stands.`)
       }),
 

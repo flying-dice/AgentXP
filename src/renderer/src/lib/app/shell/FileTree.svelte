@@ -20,9 +20,11 @@
     /** Right click (or the Menu key) on a row: a project root, a folder or a file. */
     oncontextmenu?: (target: FileTreeTarget, event: MouseEvent) => void
     onerror?: (error: unknown) => void
+    /** The selected row (a project root, a folder or a file); null when nothing is selected. For toolbars beside the tree. */
+    selectedTarget?: FileTreeTarget | null
   }
 
-  let { roots, readDir, changedPaths = [], git, onopen, oncontextmenu, onerror }: Props = $props()
+  let { roots, readDir, changedPaths = [], git, onopen, oncontextmenu, onerror, selectedTarget = $bindable(null) }: Props = $props()
 
   const listings = new SvelteMap<VPath, VfsEntryDto[]>()
   const requested = new Set<VPath>()
@@ -31,6 +33,14 @@
   let selected = $state<string | null>(null)
 
   const nodes = $derived(buildFileTree(roots, listings, changedPaths, git))
+
+  /** The row that is selected, as the target of the toolbar buttons next to the tree. */
+  $effect(() => {
+    const file = selected ? fileOfNode(selected) : null
+    const dir = selected ? dirOfNode(selected) : null
+    const path = file ?? dir
+    selectedTarget = path === null ? null : { kind: file !== null ? 'file' : roots.some((r) => r.path === dir) ? 'project' : 'folder', path }
+  })
 
   /** Expands a folder or a project so its rows show (the context menu's Open). */
   export function expand(path: VPath): void {

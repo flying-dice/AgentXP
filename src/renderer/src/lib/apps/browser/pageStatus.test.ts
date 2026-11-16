@@ -46,12 +46,18 @@ describe('failureHint', () => {
 })
 
 describe('assistantStatus', () => {
-  it('says whether the agent can see the page', () => {
-    expect(assistantStatus('allow', false)).toBe('Agent: can see this page')
+  it('says whether the agent can read the page', () => {
+    expect(assistantStatus('allow', false)).toBe('Agent: can read this page')
     expect(assistantStatus('ask', false)).toBe('Agent: asks first')
-    expect(assistantStatus('deny', false)).toBe('Agent: cannot see pages')
+    expect(assistantStatus('deny', false)).toBe('Agent: cannot read pages')
     expect(assistantStatus('allow', true)).toBe('Agent: reading')
-    expect(assistantStatus('deny', true)).toBe('Agent: cannot see pages')
+    expect(assistantStatus('deny', true)).toBe('Agent: cannot read pages')
+  })
+  it('says that the agent read the page once it did', () => {
+    expect(assistantStatus('allow', false, true)).toBe('The agent read this page')
+    expect(assistantStatus('ask', false, true)).toBe('The agent read this page')
+    expect(assistantStatus('allow', true, true)).toBe('Agent: reading')
+    expect(assistantStatus('deny', false, true)).toBe('Agent: cannot read pages')
   })
 })
 

@@ -202,3 +202,14 @@ describe('placeNewWindow (UX-88)', () => {
     expect(overlap(b, titleStrip(wide.bounds))).toBe(false)
   })
 })
+
+describe('Code Review window title (UX-109)', () => {
+  const view = { app: 'code-review', root: 'E:\\', baseRef: 'HEAD', selectedPath: null, sessionId: 1 } as const
+  it('is Review - and the project name', () => {
+    expect(windowTitle(view, 'review-notes')).toBe('Review - review-notes')
+  })
+  it('names the drive or the folder without a project name', () => {
+    expect(windowTitle(view)).toBe('Review - E:\\')
+    expect(windowTitle({ ...view, root: 'E:\\src\\app' })).toBe('Review - app')
+  })
+})

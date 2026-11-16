@@ -303,6 +303,8 @@ export interface OpenWindowInput {
   topic?: string
   /** The base ref of a `code-review` window (default `HEAD`). */
   baseRef?: string
+  /** The file a `code-review` window shows first (a path below its root, with `/`); default: the first changed file. */
+  selectedPath?: string
   /** Browser: open another window even when one is open (File > New window). Read by the desktop shell; main ignores it. */
   newWindow?: boolean
 }
@@ -332,6 +334,8 @@ export interface AskChatRequest {
   url?: string
   /** The page title of a Browser request. */
   title?: string
+  /** For kind ask: the question that fills the box after the context ("What does this page say?"), so the user can send it as it is. */
+  question?: string
 }
 
 /** Calls from inside a desktop window. Listing, creating, opening and deleting desktops is `LauncherApi`. */
@@ -359,7 +363,7 @@ export interface DesktopApi {
    * Starts a code review of the folder `root` (a VPath on a plugged-in drive or C:) against `baseRef` (default `HEAD`):
    * creates the review session (role `review`, `cwd` = `root`), opens its Code Review window and asks the agent for a review.
    */
-  openReview(desktopId: Id, root: VPath, baseRef?: string, agentId?: Id): Promise<AppWindowState>
+  openReview(desktopId: Id, root: VPath, baseRef?: string, agentId?: Id, selectedPath?: string): Promise<AppWindowState>
   /**
    * The chat pane of an app window (not Chat, Code Review or a surface): returns the id of the window's `aside` session,
    * creating it on the first call (cwd = the window's drive, else the agent's home). The session lives and dies with the

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { browserStep, browserToolName, browserWork, coalesceSteps } from './browserSteps'
+import { browserStep, browserToolName, browserWork, coalesceSteps, stepKinds } from './browserSteps'
 import type { WorkRow } from './transcriptRows'
 
 const tool = (name: string, rawInput = '{}', id = name): WorkRow => ({ kind: 'tool', id, toolCallId: id, name, rawInput, result: null })
@@ -36,13 +36,19 @@ describe('coalesceSteps', () => {
 describe('browserWork', () => {
   it('summarises a group of Browser tools with its first and last step', () => {
     const rows = [tool('browser_navigate', '{"url":"http://localhost:3000/chat"}', 'a'), ...Array.from({ length: 24 }, (_, i) => tool('browser_read', '{}', `r${i}`)), tool('browser_type', '{"ref":3,"text":"hi"}', 'z')]
-    expect(browserWork(rows)).toEqual({ summary: 'Worked in the Browser: 26 steps', detail: 'First: Opened localhost:3000/chat. Last: Typed on the page.' })
+    expect(browserWork(rows)).toEqual({ summary: 'Used 26 steps in the browser (read, opened, typed)', tooltip: 'Read 24 times, opened 1 time, typed 1 time', detail: 'First: Opened localhost:3000/chat. Last: Typed on the page.' })
   })
   it('says "step" for one and has no detail', () => {
-    expect(browserWork([tool('browser_read')])).toEqual({ summary: 'Worked in the Browser: 1 step', detail: null })
+    expect(browserWork([tool('browser_read')])).toEqual({ summary: 'Used 1 step in the browser (read)', tooltip: 'Read 1 time', detail: null })
   })
   it('is null when any other tool is mixed in, or there is no tool', () => {
     expect(browserWork([tool('browser_read'), tool('terminal_run')])).toBeNull()
     expect(browserWork([{ kind: 'reasoning', id: 'x', text: 'hmm' }])).toBeNull()
+  })
+})
+
+describe('stepKinds', () => {
+  it('counts steps by what they did, most frequent first', () => {
+    expect(stepKinds(['browser_click', 'browser_read', 'browser_find', 'browser_type', 'browser_click', 'browser_click'])).toEqual([['clicked', 3], ['read', 2], ['typed', 1]])
   })
 })

@@ -1,4 +1,5 @@
 /** Pure helpers of the Code app: tabs and the visible line range of the editor. */
+import type { Id } from '@shared/models'
 
 export interface TabState {
   tabs: string[]
@@ -40,3 +41,64 @@ export function scrollTopForLine(line: number, clientHeight: number, lineHeight:
 
 export const sameRange = (a: readonly [number, number] | null, b: readonly [number, number] | null): boolean =>
   a === b || (!!a && !!b && a[0] === b[0] && a[1] === b[1])
+
+/** Which panes of the Code window are open: Management (left), Changes and Git (bottom) and the chat pane (right). */
+export interface Panes {
+  management: boolean
+  logs: boolean
+  chat: boolean
+}
+
+export const ALL_PANES: Panes = { management: true, logs: true, chat: true }
+export const NO_PANES: Panes = { management: false, logs: false, chat: false }
+
+/** The file has the whole window: no pane is open. */
+export const isFocused = (panes: Panes): boolean => !panes.management && !panes.logs && !panes.chat
+
+/**
+ * "Focus on the file" and "Show panes" are one toggle. Focusing remembers the panes that were open and closes all of them;
+ * showing brings back what was open (every pane when nothing is remembered).
+ */
+export function toggleFocus(current: Panes, remembered: Panes | null): { panes: Panes; remembered: Panes | null } {
+  if (!isFocused(current)) return { panes: NO_PANES, remembered: { ...current } }
+  return { panes: remembered && !isFocused(remembered) ? { ...remembered } : { ...ALL_PANES }, remembered: null }
+}
+
+/** What a Code window remembers about its panes (the chat pane remembers itself). */
+export interface RememberedLayout {
+  management: boolean
+  logs: boolean
+  restore: Panes | null
+}
+
+export const focusKey = (desktopId: Id, windowId: Id): string => `agent7.codepanes.${desktopId}.${windowId}`
+
+const bool = (value: unknown, fallback: boolean): boolean => (typeof value === 'boolean' ? value : fallback)
+
+/** Reads the remembered layout; anything unreadable (no storage, junk) is the default (both panes open). */
+export function readLayout(storage: Pick<Storage, 'getItem'> | null, key: string): RememberedLayout {
+  try {
+    const parsed: unknown = JSON.parse(storage?.getItem(key) ?? 'null')
+    if (parsed && typeof parsed === 'object') {
+      const { management, logs, restore } = parsed as Partial<RememberedLayout>
+      const r = restore && typeof restore === 'object' ? (restore as Partial<Panes>) : null
+      return {
+        management: bool(management, true),
+        logs: bool(logs, true),
+        restore: r ? { management: bool(r.management, true), logs: bool(r.logs, true), chat: bool(r.chat, false) } : null
+      }
+    }
+  } catch {
+    /* blocked storage or junk: start from the default */
+  }
+  return { management: true, logs: true, restore: null }
+}
+
+/** Remembers the layout; storage that throws is ignored. */
+export function writeLayout(storage: Pick<Storage, 'setItem'> | null, key: string, layout: RememberedLayout): void {
+  try {
+    storage?.setItem(key, JSON.stringify(layout))
+  } catch {
+    /* quota or blocked storage */
+  }
+}

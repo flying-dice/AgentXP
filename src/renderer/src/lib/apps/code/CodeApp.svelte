@@ -36,10 +36,11 @@
   import { errorText } from '../shared/listing'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
-  import { closeTab, openTab, reconcileTabs, sameRange, scrollTopForLine, visibleRange } from './codeModel'
-  import { treeMenu, type TreeMenuTarget } from './codeContext'
+  import { closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout, type Panes } from './codeModel'
+  import { localStore } from '../../desktop/chatPane'
+  import { treeMenu, treeToolbar, type TreeMenuTarget } from './codeContext'
   import DockPane from './DockPane.svelte'
-  import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
+  import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitRowTooltip, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
   import type { FileTreeTarget } from '../../app/files/fileTree'
@@ -71,6 +72,8 @@
   let lineChanges = $state.raw<GitLineChange[]>([])
   /** The lines added and removed per changed file, per project (the Git list's last column). */
   let gitCounts = $state.raw<{ root: string; counts: ReturnType<typeof countsByPath> }[]>([])
+  /** The changed lines of every file in the Git list (the row's tooltip names them). */
+  let gitHunks = $state.raw<Record<string, GitLineChange[]>>({})
   let peek = $state<number | null>(null)
   let caret = $state({ line: 1, col: 1 })
   let files = $state.raw<Record<string, { text: string | null; error: string | null }>>({})
@@ -149,6 +152,13 @@
     if (peek !== null && peek >= changes.length) peek = null
   }
 
+  /** The line changes of the files in the Git list, for the row tooltips (the first files only: a long list stays cheap). */
+  const MAX_HUNK_FILES = 40
+  async function hunksOf(paths: readonly string[]): Promise<Record<string, GitLineChange[]>> {
+    const found = await Promise.all(paths.slice(0, MAX_HUNK_FILES).map(async (path) => [path, await host.api.git.lineChanges(desktopId, path).catch(() => [])] as const))
+    return Object.fromEntries(found)
+  }
+
   let refreshing = false
   let refreshAgain = false
   /** Status of every drive plus the active file's changes. Overlapping calls collapse into one more run. */
@@ -171,6 +181,8 @@
           }))
         )
         if (JSON.stringify(counted.map((c) => [c.root, [...c.counts]])) !== JSON.stringify(untrack(() => gitCounts).map((c) => [c.root, [...c.counts]]))) gitCounts = counted
+        const hunks = await hunksOf(next.flatMap((s) => s?.entries.map((e) => e.path) ?? []))
+        if (JSON.stringify(hunks) !== JSON.stringify(untrack(() => gitHunks))) gitHunks = hunks
         await refreshActive()
       } while (refreshAgain)
     } finally {
@@ -418,29 +430,52 @@
     }
   }
 
-  /** View > Focus on the file: every panel closes and the file uses the whole window; Show all panels brings them back (UX-75). */
-  let chatHiddenByFocus = $state(false)
-  const anyPanelOpen = $derived(showManagement || showLogs || host.chatPaneOpen(win.id))
-  const allPanelsOpen = $derived(showManagement && showLogs)
-  function focusOnFile(): void {
-    showManagement = false
-    showLogs = false
-    chatHiddenByFocus = host.chatPaneOpen(win.id)
-    if (chatHiddenByFocus) host.toggleChatPane(win.id)
+  /**
+   * Focus on the file (toolbar button, View menu, F11, Ctrl+Shift+F): the chat pane, Management and Changes and Git close
+   * together and the file has the whole window. The same control then reads "Show panes" and brings back what was open.
+   */
+  const panes = $derived<Panes>({ management: showManagement, logs: showLogs, chat: host.chatPaneOpen(win.id) })
+  const focusMode = $derived(isFocused(panes))
+  const allPanelsOpen = $derived(showManagement && showLogs && panes.chat)
+  let restorePanes = $state.raw<Panes | null>(null)
+  function setPanes(next: Panes): void {
+    showManagement = next.management
+    showLogs = next.logs
+    if (next.chat !== host.chatPaneOpen(win.id)) host.toggleChatPane(win.id)
+  }
+  function toggleFocusOnFile(): void {
+    const next = toggleFocus(panes, restorePanes)
+    restorePanes = next.remembered
+    setPanes(next.panes)
   }
   function showAllPanels(): void {
-    showManagement = true
-    showLogs = true
-    if (chatHiddenByFocus && !host.chatPaneOpen(win.id)) host.toggleChatPane(win.id)
-    chatHiddenByFocus = false
+    restorePanes = null
+    setPanes({ management: true, logs: true, chat: true })
   }
 
-  /** Ctrl+Shift+F works from the whole window, also after the panes closed and took the keyboard focus with them. */
+  // The window remembers its panes (and what Show panes brings back) for as long as the window lives on this computer.
+  // svelte-ignore state_referenced_locally
+  const layoutKey = focusKey(desktopId, win.id)
+  // svelte-ignore state_referenced_locally
+  const remembered = readLayout(localStore(), layoutKey)
+  // svelte-ignore state_referenced_locally
+  showManagement = remembered.management
+  // svelte-ignore state_referenced_locally
+  showLogs = remembered.logs
+  // svelte-ignore state_referenced_locally
+  restorePanes = remembered.restore
+  $effect(() => {
+    writeLayout(localStore(), layoutKey, { management: showManagement, logs: showLogs, restore: restorePanes })
+  })
+
+  /** F11 and Ctrl+Shift+F work from the whole window, also after the panes closed and took the keyboard focus with them. */
   function onFocusKey(event: KeyboardEvent): void {
-    if (!focused || event.key.toLowerCase() !== 'f' || !event.ctrlKey || !event.shiftKey || event.altKey) return
+    if (!focused || event.altKey) return
+    const f11 = event.key === 'F11' && !event.ctrlKey && !event.shiftKey
+    const ctrlShiftF = event.key.toLowerCase() === 'f' && event.ctrlKey && event.shiftKey
+    if (!f11 && !ctrlShiftF) return
     event.preventDefault()
-    if (anyPanelOpen) focusOnFile()
-    else showAllPanels()
+    toggleFocusOnFile()
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -463,13 +498,11 @@
     return drive ? driveRoot(drive) : (roots[0]?.path ?? host.state.home)
   }
 
-  /** Show changes: Code Review on the file against HEAD. Read only; the window starts no agent. */
+  /** Show changes: Code Review on the file against HEAD. Read only; the window starts no agent. The row's file is chosen before the window opens. */
   async function showChanges(path: string): Promise<void> {
     const root = rootOf(path)
     try {
-      const opened = await host.api.desktop.openReview(desktopId, root)
-      const selectedPath = relativeToRoot(root, path)
-      if (opened.view.app === 'code-review' && selectedPath) host.updateView(opened.id, { ...opened.view, selectedPath })
+      await host.api.desktop.openReview(desktopId, root, undefined, undefined, relativeToRoot(root, path) ?? undefined)
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
     }
@@ -514,6 +547,20 @@
 
   // ---- the project tree: context menus ---------------------------------------------------------
   let tree = $state<{ expand(path: string): void } | null>(null)
+  /** The row selected in the tree: the buttons above the tree act on it. */
+  let treeTarget = $state<FileTreeTarget | null>(null)
+  const treeBar = $derived.by(() => {
+    const letter = treeTarget?.kind === 'project' ? parseVPath(treeTarget.path)?.drive : undefined
+    const removable = letter !== undefined && host.state.drives.some((d) => d.letter === letter && d.kind === 'removable')
+    return treeToolbar(treeTarget, activeRoot(), removable)
+  })
+  /** New chat here: a chat that works in the selected project or folder (the folder of the open file when nothing is selected). */
+  const newChatHere = (): void => void host.startChat(treeBar.chatFolder)
+  /** Remove from desktop: takes the selected project off the desktop; its folder stays on the disk. */
+  const removeSelectedProject = (): void => {
+    const letter = treeTarget ? parseVPath(treeTarget.path)?.drive : undefined
+    if (letter) void host.ejectDrive(letter)
+  }
 
   function treeContext(event: MouseEvent, target: FileTreeTarget | null): void {
     const kind: TreeMenuTarget = target ? target.kind : 'empty'
@@ -597,11 +644,12 @@
       label: '&File',
       items: [
         newChatItem('code', () => void host.startDefaultChat()),
+        { id: 'code-new-chat-here', testid: 'code-menu-new-chat-here', label: 'New chat &here', icon: 'session', title: 'Start a chat that works in the selected project or folder', action: newChatHere },
         { separator: true },
         { id: 'code-open', label: '&Open...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
         { separator: true },
         { id: 'code-plug-in', testid: 'code-menu-plug-in', label: '&Plug in a project...', icon: 'plus', action: () => void plugIn() },
-        { id: 'code-eject', testid: 'code-menu-eject', label: 'E&ject project...', icon: 'usb', disabled: ejectable === null, action: () => ejectable && void host.ejectDrive(ejectable) },
+        { id: 'code-eject', testid: 'code-menu-eject', label: 'Remo&ve project from desktop...', icon: 'usb', disabled: ejectable === null, action: () => ejectable && void host.ejectDrive(ejectable) },
         { separator: true },
         { id: 'code-close-file', label: '&Close file', disabled: active === null, action: () => active && close(active) },
         { id: 'code-close-all', label: 'Close &all files', disabled: tabs.length === 0, action: () => [...tabs].forEach(close) },
@@ -624,8 +672,8 @@
         { id: 'code-view-logs', label: '&Changes and Git', checked: showLogs, action: () => (showLogs = !showLogs) },
         { id: 'code-view-ruler', label: '&Overview ruler', checked: showRuler, action: () => (showRuler = !showRuler) },
         { separator: true },
-        { id: 'code-view-focus', testid: 'code-menu-focus', label: '&Focus on the file', shortcut: 'Ctrl+Shift+F', disabled: !anyPanelOpen, action: focusOnFile },
-        { id: 'code-view-show-all', testid: 'code-menu-show-all', label: 'Show all &panels', disabled: allPanelsOpen && !chatHiddenByFocus, action: showAllPanels },
+        { id: 'code-view-focus', testid: 'code-menu-focus', label: '&Focus on the file', shortcut: 'F11', disabled: focusMode, action: toggleFocusOnFile },
+        { id: 'code-view-show-all', testid: 'code-menu-show-all', label: 'Show all &panels', disabled: allPanelsOpen, action: showAllPanels },
         { separator: true },
         help.paneItem(win.id)
       ]
@@ -702,7 +750,8 @@
         attrs: { 'data-path': e.path, 'data-git-status': state },
         text: GIT_STATE_WORD[state],
         file: e.path,
-        lines: gitLinesLabel(countsOf(e.path))
+        lines: gitLinesLabel(countsOf(e.path)),
+        tooltip: gitRowTooltip(vpathName(e.path), gitHunks[e.path])
       }
     })
   )
@@ -740,6 +789,8 @@
     <ToolStripButton data-testid="code-next-change" icon="chevron-down" title="Next change (Alt+F5)" aria-label="Next change" disabled={lineChanges.length === 0} onclick={() => step(1)} />
     <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title="Revert hunk" aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
+    <ToolStripButton data-testid="code-ask-selection" icon="session" text="Ask about selection" title={selection ? 'Ask the chat about the lines you selected' : 'Select some lines of the file first'} disabled={active === null || selection === null} onclick={() => ask('ask', selectedText() || linesOf(text, selection))} />
+    <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-refresh" icon="refresh" title="Refresh git status" aria-label="Refresh git status" onclick={() => void refreshGit()} />
     <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Look at the changes of this project. Nothing starts until you ask the agent to review." onclick={() => void reviewChanges()} />
     <ToolStripButton text="Management" icon="folder" bind:checked={showManagement} checkOnClick data-testid="code-management-toggle" title="Show or hide the Management pane" />
@@ -748,6 +799,14 @@
       {#if editing}
         <span class="editing" data-testid="code-editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
       {/if}
+      <ToolStripButton
+        data-testid="code-focus-toggle"
+        data-focused={focusMode}
+        icon={focusMode ? 'folder' : 'open-folder'}
+        text={focusMode ? 'Show panes' : 'Focus on the file'}
+        title={focusMode ? 'Bring back the chat, Management and Changes and Git panes (F11)' : 'Hide the chat, Management and Changes and Git panes so that the file has the whole window (F11)'}
+        onclick={toggleFocusOnFile}
+      />
     {/snippet}
   </ToolStrip>
   <div class="work">
@@ -756,9 +815,13 @@
         <TabControl tabs={mgmtTabs} bind:selected={mgmtTab} aria-label="Management">
           {#snippet panel(tab)}
             {#if tab.id === 'projects'}
+              <ToolStrip aria-label="Project tools" class="tree-tools">
+                <ToolStripButton data-testid="code-tree-new-chat" icon="session" text="New chat here" title="Start a chat that works in the selected project or folder" onclick={newChatHere} />
+                <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
+              </ToolStrip>
               <div class="tree" data-testid="code-tree" role="presentation" oncontextmenu={(e) => treeContext(e, null)}>
                 {#key rootsKey}
-                  <FileTree bind:this={tree} {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} oncontextmenu={(target, e) => treeContext(e, target)} />
+                  <FileTree bind:this={tree} bind:selectedTarget={treeTarget} {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} oncontextmenu={(target, e) => treeContext(e, target)} />
                 {/key}
               </div>
             {:else if tab.id === 'files'}
@@ -952,6 +1015,12 @@
   }
   .work :global(.w7-split) {
     flex: 1;
+  }
+  .work :global(.tree-tools) {
+    flex: none;
+    height: auto;
+    min-height: 26px;
+    flex-wrap: wrap;
   }
   .tree {
     flex: 1;

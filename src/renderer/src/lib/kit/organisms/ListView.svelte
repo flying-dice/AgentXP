@@ -70,7 +70,7 @@
   const details = $derived(view === 'Details')
   const textKey = $derived(columns[0]?.key ?? 'id')
   const widthOf = (c: ListColumn): number | undefined => widths[c.key] ?? c.width
-  const minWidth = $derived(columns.reduce((sum, c) => sum + (widthOf(c) ?? 80), 0))
+  const minWidth = $derived(columns.reduce((sum, c) => sum + (widthOf(c) ?? c.minWidth ?? 80), 0))
   const activeIndex = $derived(shown.findIndex((r) => r.id === activeId))
   const domId = (id: string): string => `${uid}-${id}`
 
@@ -152,6 +152,8 @@
   })
 
   /** Extra `data-*` attributes a row carries in its `attrs` field. */
+  /** The tooltip of a row: its `tooltip` field. */
+  const rowTitle = (row: ListRow): string | undefined => (typeof row.tooltip === 'string' ? row.tooltip : undefined)
   const rowAttrs = (row: ListRow): Record<string, string> => (typeof row.attrs === 'object' && row.attrs !== null ? (row.attrs as Record<string, string>) : {})
   const cellText = (row: ListRow, key: string): string => String(row[key] ?? '')
 </script>
@@ -199,7 +201,7 @@
           class="lvr"
           data-testid={typeof row.testid === 'string' ? row.testid : rowTestid}
           data-row-id={row.id}
-        {...rowAttrs(row)}
+          title={rowTitle(row)}
           {...rowAttrs(row)}
           class:selected={selected.includes(row.id)}
           class:focus={focused && row.id === activeId}
@@ -214,7 +216,7 @@
             {@const w = widthOf(col)}
             <span class="cell" role="gridcell" style:width={w !== undefined ? `${w}px` : undefined} class:flex={w === undefined} style:justify-content={col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : undefined}>
               {#if i === 0 && row.icon}<Icon name={row.icon} />{/if}
-              {#if cell}{@render cell(row, col)}{:else}<span class="t" title={cellText(row, col.key)}>{cellText(row, col.key)}</span>{/if}
+              {#if cell}{@render cell(row, col)}{:else}<span class="t" title={rowTitle(row) ?? cellText(row, col.key)}>{cellText(row, col.key)}</span>{/if}
             </span>
           {/each}
         </div>
@@ -229,6 +231,7 @@
         class="item"
         data-testid={typeof row.testid === 'string' ? row.testid : rowTestid}
         data-row-id={row.id}
+        title={rowTitle(row)}
         {...rowAttrs(row)}
         class:selected={selected.includes(row.id)}
         class:focus={focused && row.id === activeId}

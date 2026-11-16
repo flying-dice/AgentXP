@@ -16,7 +16,7 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
-  import { HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchHits, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
+  import { HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchSections, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
   import { escapeHtml, renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
 
@@ -41,7 +41,7 @@
   const sync = new ViewSync<{ topic: string }>((v) => v.topic)
   const topic = $derived(history.current)
   const current = $derived(topics.find((t) => t.id === topic) ?? null)
-  const hits = $derived(searchHits(topics, query, preferred))
+  const hits = $derived(searchSections(topics, query, preferred))
   const words = $derived(queryWords(query))
   const searching = $derived(query.trim() !== '')
   const html = $derived(current ? (searching ? markWords(renderHelpMarkdown(current.body), words) : renderHelpMarkdown(current.body)) : '')
@@ -204,21 +204,27 @@
     <nav class="topics w7-scroll" aria-label="Help topics" data-testid="help-topics">
       <div class="caption">{searching ? 'Search results' : 'Help topics'}</div>
       <ul>
-        {#each hits as hit (hit.topic.id)}
-          {@const t = hit.topic}
-          <li>
-            <button type="button" class="topic" class:on={t.id === topic} class:hit={searching} data-testid="help-topic" data-topic={t.id} aria-current={t.id === topic ? 'page' : undefined} onclick={() => show(t.id, hit.sectionId)}>
-              <span class="head"><Icon name={t.id === HOME_TOPIC ? 'help' : 'file-text'} size={16} />{t.title}</span>
-              {#if searching}
-                <span class="snippet" data-testid="help-snippet">
-                  {#if hit.section}<span class="section">{hit.section}: </span>{/if}{@html markWords(escapeHtml(hit.snippet), words)}
-                </span>
-              {/if}
-            </button>
-          </li>
+        {#if searching}
+          {#each hits as hit (`${hit.topic.id}#${hit.sectionId}`)}
+            <li>
+              <button type="button" class="topic hit" data-testid="help-result" data-topic={hit.topic.id} data-section={hit.sectionId} onclick={() => show(hit.topic.id, hit.sectionId)}>
+                <span class="head"><Icon name="file-text" size={16} /><span class="section-title">{hit.section || hit.topic.title}</span></span>
+                <span class="where" data-testid="help-result-topic">{hit.topic.title}</span>
+                <span class="snippet" data-testid="help-snippet">{@html markWords(escapeHtml(hit.snippet), words)}</span>
+              </button>
+            </li>
+          {:else}
+            <li class="none" data-testid="help-no-results">No sections match your search.</li>
+          {/each}
         {:else}
-          <li class="none" data-testid="help-no-results">No topics match your search.</li>
-        {/each}
+          {#each topics as t (t.id)}
+            <li>
+              <button type="button" class="topic" class:on={t.id === topic} data-testid="help-topic" data-topic={t.id} aria-current={t.id === topic ? 'page' : undefined} onclick={() => show(t.id)}>
+                <span class="head"><Icon name={t.id === HOME_TOPIC ? 'help' : 'file-text'} size={16} />{t.title}</span>
+              </button>
+            </li>
+          {/each}
+        {/if}
       </ul>
     </nav>
     {/if}
@@ -235,7 +241,7 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Help" />
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel testid="help-status" text={searching ? `${hits.length} of ${topics.length} topics match` : (current?.title ?? '')} spring />
+    <StatusStripLabel testid="help-status" text={searching ? `${hits.length} ${hits.length === 1 ? 'section matches' : 'sections match'}` : (current?.title ?? '')} spring />
     <StatusStripLabel testid="help-status-topic" text={current?.title ?? ''} borders={['left']} width={190} />
   </StatusStrip>
 </div>
@@ -328,8 +334,14 @@
     background: #ffe97a;
     color: inherit;
   }
-  .section {
+  .section-title {
+    font-weight: 700;
     color: #1d3f7a;
+  }
+  .where {
+    padding-left: 22px;
+    color: var(--w7-text-muted);
+    font-size: 11px;
   }
   .topic {
     width: 100%;

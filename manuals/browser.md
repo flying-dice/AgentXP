@@ -45,7 +45,7 @@ The page area shows the web page of the active tab. A new tab shows **Type an ad
 
 ### The Status Bar
 
-The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the agent can see the page, and the zoom of the page. The part **Agent:** says **can see this page**, **asks first**, **cannot see pages**, or **reading** while the assistant reads the page. Point to it to read where to change it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer), whether the assistant can read the page, and the zoom of the page. The part **Agent:** says **can read this page**, **asks first**, **cannot read pages**, or **reading** while the assistant reads the page. After the assistant read the page it says **The agent read this page**. Point to it to read where to change it. Next to it, click **Ask about this page** to open the chat pane with the question **What does this page say?** ready in the message box. You can change the question before you send it. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
@@ -68,10 +68,11 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | New tab | Opens a blank tab. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
 | Agent bar | Shows "Agent is using this page" with what the agent does, for the whole job and 20 seconds after the last step. After you take over, it says that you have control. | `browser-agent-bar` |
-| Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'"), or that you have control. | `browser-agent-bar-text` |
+| Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'", "Waiting for the page to change"), or that you have control. Point to it to see what the agent waits for. | `browser-agent-bar-text` |
 | Take over | Pauses the agent on this page so that you can use it. It stays at the right of the bar and then reads **Taken over**. The agent must ask before it uses the page again. | `browser-agent-takeover` |
 | Give control back | Shows after you took over. The agent may use the page again, and it asks first. | `browser-agent-giveback` |
-| Agent status | Says whether the agent can see the page: can see this page, asks first, cannot see pages, or reading. | `browser-assistant-status` |
+| Agent status | Says whether the assistant can read the page: can read this page, asks first, cannot read pages, reading, or that the agent read this page. | `browser-assistant-status` |
+| Ask about this page | Opens the chat pane with the question "What does this page say?" ready. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
 | Error page | Shows when a page could not be opened. | `browser-error-page` |
 | Error title | "This page can't be displayed". | `browser-error-title` |
