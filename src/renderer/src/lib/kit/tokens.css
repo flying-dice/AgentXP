@@ -81,25 +81,26 @@
 
 /* Added by organisms batch: Aero Basic window frame, caption buttons, taskbar, code viewer */
 :root {
-  --w7-frame-border: #27405f;
-  --w7-frame-active: linear-gradient(180deg, rgba(214, 230, 250, 0.97) 0, rgba(170, 200, 238, 0.95) 34px, rgba(184, 208, 240, 0.96) 100%);
+  --w7-frame-border: rgba(20, 36, 60, 0.85);
+  --w7-frame-active: linear-gradient(180deg, rgba(196, 220, 248, 0.72) 0, rgba(160, 196, 238, 0.68) 34px, rgba(172, 204, 242, 0.7) 100%);
   --w7-frame-inactive: linear-gradient(180deg, #eef1f5 0, #e1e6ed 34px, #e4e8ee 100%);
   --w7-frame-inactive-border: #7c8794;
-  --w7-frame-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 10px 36px rgba(0, 0, 0, 0.55);
+  --w7-frame-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 10px 36px rgba(0, 0, 0, 0.55);
   --w7-frame-shadow-inactive: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 0, 0, 0.35);
   --w7-client-border: #5d6c82;
   --w7-title-glow: 0 0 9px #fff, 0 0 5px #fff, 0 0 2px #fff;
   --w7-caption-border: #3a4f6e;
   --w7-caption-face: linear-gradient(#e6eef9 0, #c3d4ea 48%, #a9c0de 50%, #c3d6ee 100%);
   --w7-caption-hover-face: linear-gradient(#f4fbff 0, #cfeafc 48%, #8fd0f5 50%, #bfe6fb 100%);
-  --w7-caption-close-face: linear-gradient(#e9a79f 0, #d4695d 48%, #bb2f1f 50%, #d8584a 100%);
-  --w7-caption-close-hover-face: linear-gradient(#f6c1b8 0, #ec7d6c 48%, #d4301c 50%, #f07a62 100%);
+  --w7-caption-close-face: linear-gradient(#f0b3a8 0, #d9604f 48%, #c4301e 50%, #e0604a 100%);
+  --w7-caption-close-hover-face: linear-gradient(#ffd0c4 0, #f58a74 48%, #e5381c 50%, #ff8a6a 100%);
   --w7-caption-close-active-face: linear-gradient(#b4574c 0, #9e2a1d 48%, #8a1608 50%, #a9392a 100%);
   --w7-desktop-bg: radial-gradient(ellipse at 72% 22%, rgba(150, 215, 250, 0.9) 0, rgba(150, 215, 250, 0) 46%),
     radial-gradient(ellipse at 15% 90%, rgba(8, 52, 120, 0.85) 0, rgba(8, 52, 120, 0) 55%),
     linear-gradient(160deg, #134b8a 0, #2a86c8 55%, #7cc4ee 100%);
-  --w7-taskbar-face: linear-gradient(180deg, rgba(150, 185, 225, 0.82) 0, rgba(60, 100, 155, 0.9) 48%, rgba(25, 55, 100, 0.94) 50%, rgba(40, 80, 130, 0.96) 100%);
-  --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.55), rgba(190, 220, 250, 0.28) 50%, rgba(150, 190, 235, 0.25));
+  --w7-taskbar-face: linear-gradient(180deg, rgba(120, 165, 215, 0.5) 0, rgba(40, 80, 135, 0.58) 45%, rgba(14, 38, 76, 0.7) 100%);
+  --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.16));
+  --w7-glass-blur: blur(10px) saturate(1.6);
   --w7-code-bg: #fff;
   --w7-code-gutter: #2b91af;
   --w7-code-gutter-bg: #fff;
@@ -114,9 +115,9 @@
   --w7-gadget-border: rgba(190, 215, 245, 0.55);
   --w7-gadget-text: #eef5ff;
   --w7-gadget-muted: #b4c8e4;
-  --w7-glass-face: linear-gradient(rgba(124, 164, 214, 0.93), rgba(52, 92, 148, 0.95) 48%, rgba(38, 76, 130, 0.96) 52%, rgba(64, 108, 166, 0.96));
-  --w7-glass-border: rgba(20, 44, 84, 0.9);
-  --w7-start-hover: linear-gradient(rgba(255, 255, 255, 0.55), rgba(190, 220, 250, 0.4));
+  --w7-glass-face: linear-gradient(rgba(90, 140, 200, 0.62), rgba(30, 70, 125, 0.68));
+  --w7-glass-border: rgba(10, 24, 48, 0.85);
+  --w7-start-hover: linear-gradient(rgba(255, 255, 255, 0.7), rgba(210, 232, 252, 0.55));
   --w7-popup-border: #6f7f96;
   --w7-uac-band: linear-gradient(#3b88d8, #1f5cab);
   --w7-uac-band-warn: linear-gradient(#f6c94a, #d79a12);
