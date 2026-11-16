@@ -14,6 +14,8 @@ export interface MenuItemDef {
   /** Draw the checked mark as a radio bullet. */
   radio?: boolean
   disabled?: boolean
+  /** Tooltip: one sentence that says what the item does. */
+  title?: string
   separator?: boolean
   items?: MenuItemDef[]
   action?: () => void

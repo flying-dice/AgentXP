@@ -3,7 +3,7 @@
   import Button from '../atoms/Button.svelte'
   import CheckBox from '../atoms/CheckBox.svelte'
   import { highlighter, plainTokens, type CodeToken } from './highlighter'
-  import type { GutterMark } from './CodeViewer'
+  import { markTitle, type GutterMark } from './CodeViewer'
 
   interface Props {
     code: string
@@ -122,13 +122,13 @@
           {#if gutterMarks}
             <span class="gutter">
               {#if bar}
-                <button class="bar {bar.kind}" data-testid="code-gutter-mark" data-kind={bar.kind} data-line={no} data-index={bar.index} tabindex="-1" aria-label="{bar.kind} lines {bar.line}-{bar.end}" onclick={() => onmarkclick?.(bar)}></button>
+                <button class="bar {bar.kind}" data-testid="code-gutter-mark" data-kind={bar.kind} data-line={no} data-index={bar.index} tabindex="-1" aria-label={markTitle(bar)} title={markTitle(bar)} onclick={() => onmarkclick?.(bar)}></button>
               {/if}
               {#if topTri}
-                <button class="tri top" data-testid="code-gutter-mark" data-kind="deleted" data-line={1} data-index={topTri.index} tabindex="-1" aria-label="Lines deleted above line 1" onclick={() => onmarkclick?.(topTri)}></button>
+                <button class="tri top" data-testid="code-gutter-mark" data-kind="deleted" data-line={1} data-index={topTri.index} tabindex="-1" aria-label={markTitle(topTri)} title={markTitle(topTri)} onclick={() => onmarkclick?.(topTri)}></button>
               {/if}
               {#if tri}
-                <button class="tri" data-testid="code-gutter-mark" data-kind="deleted" data-line={no} data-index={tri.index} tabindex="-1" aria-label="Lines deleted below line {no}" onclick={() => onmarkclick?.(tri)}></button>
+                <button class="tri" data-testid="code-gutter-mark" data-kind="deleted" data-line={no} data-index={tri.index} tabindex="-1" aria-label={markTitle(tri)} title={markTitle(tri)} onclick={() => onmarkclick?.(tri)}></button>
               {/if}
             </span>
           {/if}

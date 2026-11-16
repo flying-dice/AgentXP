@@ -67,17 +67,17 @@ describe('placeWindow', () => {
 
 describe('helpWindowTitle', () => {
   it('titles a help window after the app of its topic', () => {
-    expect(helpWindowTitle('notepad')).toBe('Notepad Help')
-    expect(helpWindowTitle('agent-manager')).toBe('Task Manager Help')
-    expect(helpWindowTitle('explorer')).toBe('Explorer Help')
+    expect(helpWindowTitle('notepad')).toBe('Agent7 Help and Support: Using Notepad')
+    expect(helpWindowTitle('agent-manager')).toBe('Agent7 Help and Support: Using Task Manager')
+    expect(helpWindowTitle('explorer')).toBe('Agent7 Help and Support: Using Explorer')
   })
 
   it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
-    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Help and Support')
+    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Agent7 Help and Support')
   })
 
   it('is what windowTitle gives a help view', () => {
-    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Terminal Help')
+    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Agent7 Help and Support: Using Terminal')
   })
 })
 

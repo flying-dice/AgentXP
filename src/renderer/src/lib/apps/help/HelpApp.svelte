@@ -16,8 +16,8 @@
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
-  import { HOME_TOPIC, back, forward, searchTopics, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
-  import { renderHelpMarkdown } from './helpMarkdown'
+  import { HOME_TOPIC, back, forward, markWords, queryWords, searchHits, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
+  import { escapeHtml, renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
 
   let { window: win, host }: AppProps<'help'> = $props()
@@ -27,16 +27,31 @@
   let history = $state.raw(startHistory(win.view.topic || HOME_TOPIC))
   let query = $state('')
   let article = $state<HTMLElement | null>(null)
+  /** The Contents list (the topics) is shown; Contents in the toolbar hides it to give the article room. */
+  let contentsOpen = $state(true)
+  /** The section a search hit opened (its heading id), scrolled to when the article shows. */
+  let pendingSection = $state<string | null>(null)
 
   const sync = new ViewSync<{ topic: string }>((v) => v.topic)
   const topic = $derived(history.current)
   const current = $derived(topics.find((t) => t.id === topic) ?? null)
-  const shown = $derived(searchTopics(topics, query))
-  const html = $derived(current ? renderHelpMarkdown(current.body) : '')
+  const hits = $derived(searchHits(topics, query))
+  const words = $derived(queryWords(query))
   const searching = $derived(query.trim() !== '')
+  const html = $derived(current ? (searching ? markWords(renderHelpMarkdown(current.body), words) : renderHelpMarkdown(current.body)) : '')
 
-  function show(next: string): void {
+  function show(next: string, sectionId: string | null = null): void {
+    pendingSection = sectionId || null
     history = visit(history, next)
+  }
+
+  /** Scrolls to a heading of the article and marks it. */
+  function goToSection(id: string): void {
+    if (!article) return
+    for (const old of article.querySelectorAll('.target')) old.classList.remove('target')
+    const heading = article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`)
+    heading?.classList.add('target')
+    heading?.scrollIntoView({ block: 'start' })
   }
 
   // Report the topic (the shell stores it) and follow a topic that arrives from outside (F1 on another window).
@@ -49,10 +64,18 @@
     if (!incoming || !sync.isExternal({ topic: incoming })) return
     untrack(() => show(incoming))
   })
-  // A new article starts at the top.
+  // A new article starts at the top, or at the section and the first marked word of a search hit.
   $effect(() => {
     void html
-    void tick().then(() => article && (article.scrollTop = 0))
+    const section = untrack(() => pendingSection)
+    void tick().then(() => {
+      if (!article) return
+      article.scrollTop = 0
+      if (section) goToSection(section)
+      const mark = searching ? article.querySelector('mark') : null
+      if (mark && !section) mark.scrollIntoView({ block: 'center' })
+      pendingSection = null
+    })
   })
 
   // svelte-ignore state_referenced_locally
@@ -100,7 +123,7 @@
     const href = anchor.getAttribute('href') ?? ''
     const target = topicOfHref(href)
     if (target) show(target)
-    else if (href.startsWith('#')) article?.querySelector(`[id="${CSS.escape(href.slice(1))}"]`)?.scrollIntoView({ block: 'start' })
+    else if (href.startsWith('#')) goToSection(href.slice(1))
   }
 </script>
 
@@ -112,7 +135,8 @@
       <button class="orb" data-testid="help-back" aria-label="Back" title="Back" disabled={history.past.length === 0} onclick={() => (history = back(history))}><Icon name="chevron-left" size={16} /></button>
       <button class="orb" data-testid="help-forward" aria-label="Forward" title="Forward" disabled={history.future.length === 0} onclick={() => (history = forward(history))}><Icon name="chevron-right" size={16} /></button>
     </div>
-    <ToolStripButton data-testid="help-home" icon="help" text="Home" title="Help and Support home" onclick={() => show(HOME_TOPIC)} />
+    <ToolStripButton data-testid="help-home" icon="help" text="Home" title="Show the Help and Support home page" onclick={() => show(HOME_TOPIC)} />
+    <ToolStripButton data-testid="help-contents" icon="file-text" text="Contents" title="Show or hide the list of topics" checked={contentsOpen} onclick={() => (contentsOpen = !contentsOpen)} />
     <span class="spring"></span>
     <label class="search" for="help-search-box">
       <TextBox id="help-search-box" data-testid="help-search" bind:value={query} placeholder="Search Help" aria-label="Search Help" spellcheck={false} />
@@ -120,13 +144,20 @@
     </label>
   </div>
   <div class="body">
+    {#if contentsOpen}
     <nav class="topics w7-scroll" aria-label="Help topics" data-testid="help-topics">
       <div class="caption">{searching ? 'Search results' : 'Help topics'}</div>
       <ul>
-        {#each shown as t (t.id)}
+        {#each hits as hit (hit.topic.id)}
+          {@const t = hit.topic}
           <li>
-            <button type="button" class="topic" class:on={t.id === topic} data-testid="help-topic" data-topic={t.id} aria-current={t.id === topic ? 'page' : undefined} onclick={() => show(t.id)}>
-              <Icon name={t.id === HOME_TOPIC ? 'help' : 'file-text'} size={16} />{t.title}
+            <button type="button" class="topic" class:on={t.id === topic} class:hit={searching} data-testid="help-topic" data-topic={t.id} aria-current={t.id === topic ? 'page' : undefined} onclick={() => show(t.id, hit.sectionId)}>
+              <span class="head"><Icon name={t.id === HOME_TOPIC ? 'help' : 'file-text'} size={16} />{t.title}</span>
+              {#if searching}
+                <span class="snippet" data-testid="help-snippet">
+                  {#if hit.section}<span class="section">{hit.section}: </span>{/if}{@html markWords(escapeHtml(hit.snippet), words)}
+                </span>
+              {/if}
             </button>
           </li>
         {:else}
@@ -134,6 +165,7 @@
         {/each}
       </ul>
     </nav>
+    {/if}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
     <article class="article w7-scroll" data-testid="help-article" data-topic={topic} aria-label={current?.title ?? 'Help'} bind:this={article} onclick={onArticleClick}>
       {#if current}
@@ -146,8 +178,8 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Help" />
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel testid="help-status" text={searching ? `${shown.length} of ${topics.length} topics` : (current?.title ?? '')} spring />
-    <StatusStripLabel text="Topic: {topic}" borders={['left']} width={170} />
+    <StatusStripLabel testid="help-status" text={searching ? `${hits.length} of ${topics.length} topics match` : (current?.title ?? '')} spring />
+    <StatusStripLabel testid="help-status-topic" text={current?.title ?? ''} borders={['left']} width={190} />
   </StatusStrip>
 </div>
 
@@ -223,11 +255,31 @@
     padding: 0 0 8px;
     list-style: none;
   }
-  .topic {
-    width: 100%;
+  .head {
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+  .snippet {
+    padding-left: 22px;
+    color: var(--w7-text-muted);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .snippet :global(mark),
+  .w7-help-md :global(mark) {
+    background: #ffe97a;
+    color: inherit;
+  }
+  .section {
+    color: #1d3f7a;
+  }
+  .topic {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1px;
     padding: 3px 10px;
     border: 1px solid transparent;
     background: transparent;
@@ -275,6 +327,9 @@
     font-weight: normal;
     color: #003399;
     border-bottom: 1px solid #d5dfee;
+  }
+  .w7-help-md :global(.target) {
+    background: #fff3b0;
   }
   .w7-help-md :global(h3) {
     margin: 12px 0 4px;

@@ -96,7 +96,6 @@
   }
 
   const newItems = $derived<MenuItemDef[]>([
-    { label: 'Free-form Snip', disabled: true },
     { label: '&Rectangular Snip', action: () => void snip('rect') },
     { label: '&Window Snip', action: () => void snip('window') },
     { label: '&Full-screen Snip', action: () => void snip('full') }

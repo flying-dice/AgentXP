@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { escapeHtml, renderHelpMarkdown, slugOf } from './helpMarkdown'
+import { escapeHtml, hideTestIds, linkContents, renderHelpMarkdown, slugOf } from './helpMarkdown'
 
 describe('renderHelpMarkdown', () => {
   it('renders headings with ids, paragraphs, bold and lists', () => {
@@ -45,5 +45,35 @@ describe('escapeHtml and slugOf', () => {
   it('makes a slug of a heading', () => {
     expect(slugOf('The Window')).toBe('the-window')
     expect(slugOf('4 - Controls Reference')).toBe('4-controls-reference')
+  })
+})
+
+describe('what the reader sees of a manual (UX-45)', () => {
+  const table = '| Name | What it does | data-testid |\n|---|---|---|\n| Send | Sends it. The attribute `data-session-id` gives the chat. Click it. | `chat-send` |'
+
+  it('hides the data-testid column and the sentences about data attributes', () => {
+    const text = hideTestIds(table)
+    expect(text).not.toContain('chat-send')
+    expect(text).not.toContain('data-session-id')
+    expect(text).toContain('| Send | Sends it. Click it. |')
+    expect(renderHelpMarkdown(table)).not.toContain('chat-send')
+  })
+
+  it('keeps other tables and the text around the table', () => {
+    const source = 'Before\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\nAfter'
+    expect(hideTestIds(source)).toContain('| 1 | 2 |')
+    expect(hideTestIds(source).startsWith('Before')).toBe(true)
+    expect(hideTestIds(source).endsWith('After')).toBe(true)
+  })
+
+  it('turns the Table of Contents into links to the headings', () => {
+    const source = '# T\n\n## Table of Contents\n\n- 1 - What It Is For\n  - The Window\n- 9 - Missing\n\n---\n\n## 1 - What It Is For\n\n### The Window\n'
+    const text = linkContents(source)
+    expect(text).toContain('- [1 - What It Is For](#1-what-it-is-for)')
+    expect(text).toContain('  - [The Window](#the-window)')
+    expect(text).toContain('- 9 - Missing')
+    const html = renderHelpMarkdown(source)
+    expect(html).toContain('<a href="#1-what-it-is-for" data-anchor="1-what-it-is-for">')
+    expect(html).toContain('<h2 id="1-what-it-is-for">')
   })
 })

@@ -1,9 +1,10 @@
 <script lang="ts">
   /**
    * Code Review: a WinDiff-style diff of a working tree against a base ref (outline of the changed files, expanded
-   * view with the coloured margin bar, side by side), with a dedicated ACP session beside it (the embedded chat
-   * panel in role `review`) whose agent leaves inline comments like a merge request gets them. The comments can be
-   * passed to a chat to fix. See manuals/code-review.md.
+   * view with the coloured margin bar, side by side, or every file in one page), with a dedicated ACP session beside
+   * it (the embedded chat panel in role `review`) whose agent leaves inline comments like a merge request gets them.
+   * Opening the window is read only: no agent starts reviewing until the user clicks "Ask the agent to review...".
+   * The comments can be passed to a chat to fix. See manuals/code-review.md.
    */
   import { onMount, tick, untrack } from 'svelte'
   import type { Agent7Events } from '@shared/ipc'
@@ -24,6 +25,7 @@
   import TextBox from '../../kit/atoms/TextBox.svelte'
   import Separator from '../../kit/atoms/Separator.svelte'
   import ComboBox from '../../kit/atoms/ComboBox.svelte'
+  import Splitter from '../../kit/atoms/Splitter.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import type { MenuDef } from '../../kit/molecules/MenuItem'
@@ -41,7 +43,21 @@
   import ReviewDiff from './ReviewDiff.svelte'
   import ReviewOutline from './ReviewOutline.svelte'
   import SendToChatDialog, { type SendTarget } from './SendToChatDialog.svelte'
-  import { commentCounts, fileView, neighbourFile, openCounts, selectForSend, type ReviewLayout, type ReviewViewMode } from './reviewModel'
+  import {
+    HEAD_MEANING,
+    STATUS_LABEL,
+    baseLabel,
+    changePositionLabel,
+    changeTotals,
+    commentCounts,
+    fileView,
+    neighbourFile,
+    openCounts,
+    openingFile,
+    selectForSend,
+    type ReviewLayout,
+    type ReviewViewMode
+  } from './reviewModel'
 
   let { window: win, host, focused = true }: AppProps<'code-review'> = $props()
 
@@ -67,6 +83,9 @@
   let layout = $state<ReviewLayout>(loadLayout())
   let selectedRow = $state<number | null>(null)
   let commentsOpen = $state(true)
+  let commentsWidth = $state(260)
+  const COMMENTS_MIN = 180
+  const COMMENTS_MAX = 480
   // A narrow window (tiled beside another one) starts with the comments list and the reviewer chat closed, so the diff has room.
   let clientWidth = $state(0)
   let sized = false
@@ -101,8 +120,10 @@
     }
   }
 
-  const selectedPath = $derived(changes.some((c) => c.path === chosenPath) ? chosenPath : (changes[0]?.path ?? null))
+  // The window opens on the first file that has a comment (else the first file).
+  const selectedPath = $derived(changes.some((c) => c.path === chosenPath) ? chosenPath : openingFile(changes, review.comments))
   const fv = $derived(fileView(file, layout))
+  const positionLabel = $derived(changePositionLabel(fv.regions, selectedRow))
   const counts = $derived(commentCounts(review.comments))
   const opens = $derived(openCounts(review.comments))
   const reviewing = $derived(store?.running ?? false)
@@ -214,19 +235,15 @@
     }
   })
 
-  // ---- the first prompt: the reviewer starts on its own when the window opens with an empty transcript ---------
-  const kickedOff = new Set<number>()
-  $effect(() => {
-    const s = store
-    const id = sessionId
-    if (!s || !session || id <= 0 || kickedOff.has(id)) return
-    kickedOff.add(id)
-    untrack(() => void kickoff(s))
-  })
+  // ---- ask the agent to review ------------------------------------------------------------------
+  // Opening a review starts nothing: the reviewer reads and comments only when the user asks (UX-37).
+  const ASK_HINT = 'The agent will read the changes and add comments. It cannot change files.'
 
-  async function kickoff(s: SessionAgentStore): Promise<void> {
+  async function askAgent(): Promise<void> {
+    const s = store
+    if (!s || s.running) return
     await s.whenConnected()
-    if (s.messages.length === 0 && !s.running) void s.send(reviewKickoffPrompt(root, baseRef))
+    if (!s.running) void s.send(reviewKickoffPrompt(root, baseRef))
   }
 
   // ---- navigation: F7 / Shift+F7 ----------------------------------------------------------------
@@ -234,6 +251,42 @@
     selectedRow = row
     await tick()
     diff?.scrollToRow(row)
+  }
+
+  // ---- All changes: every file's diff in one scroll ---------------------------------------------------
+  let allFiles = $state.raw<Record<string, ReviewFileDto>>({})
+  let allToken = 0
+  let allScroller = $state<HTMLElement | null>(null)
+
+  async function loadAll(list: readonly ReviewChangeDto[], base: string, token: number): Promise<void> {
+    const next: Record<string, ReviewFileDto> = {}
+    for (const change of list) {
+      if (token !== allToken) return
+      try {
+        next[change.path] = await host.api.review.file(desktopId, root, base, change.path)
+        allFiles = { ...next }
+      } catch {
+        /* the file vanished since the list was read: its section stays "Loading" until the next refresh */
+      }
+    }
+  }
+
+  $effect(() => {
+    if (mode !== 'all') return
+    const list = changes
+    const base = baseRef
+    const token = ++allToken
+    untrack(() => void loadAll(list, base, token))
+  })
+
+  /** "Next file" and "Previous file" of the All changes page: scrolls to the section after (before) the one on top. */
+  function scrollAll(direction: 1 | -1): void {
+    if (!allScroller || changes.length === 0) return
+    const sections = [...allScroller.querySelectorAll<HTMLElement>('[data-testid="review-all-file"]')]
+    const top = allScroller.getBoundingClientRect().top
+    const current = Math.max(0, sections.findLastIndex((el) => el.getBoundingClientRect().top - top <= 4))
+    const next = sections[Math.max(0, Math.min(sections.length - 1, current + direction))]
+    next?.scrollIntoView({ block: 'start' })
   }
 
   async function goToFile(path: string, step: 'first' | 'last' | null): Promise<void> {
@@ -253,6 +306,7 @@
   })
 
   function step(direction: 1 | -1): void {
+    if (mode === 'all') return scrollAll(direction)
     if (mode === 'outline') mode = 'expanded'
     const regions = fv.regions
     const next = stepRegion(regions, selectedRow, direction)
@@ -321,6 +375,14 @@
     diff?.scrollToRow(Math.max(0, (layout === 'split' ? fv.split.findIndex((r) => (c.side === 'old' ? r.left?.oldNo === c.lineEnd : r.right?.newNo === c.lineEnd)) : fv.lines.findIndex((l) => (c.side === 'old' ? l.oldNo === c.lineEnd : l.newNo === c.lineEnd)))))
   }
 
+  const diffHandlers = {
+    oncomment: (input: { path: string; side: 'old' | 'new'; line: number; body: string; severity: NewReviewComment['severity'] }) => void addComment(input),
+    onresolve: (c: ReviewCommentDto, resolved: boolean) => void resolveComment(c, resolved),
+    onreply: (r: ReviewCommentDto, body: string) => void replyTo(r, body),
+    ondelete: (c: ReviewCommentDto) => void deleteComment(c),
+    onsend: (c: ReviewCommentDto) => void openSend([c.id])
+  }
+
   // ---- send to chat -----------------------------------------------------------------------------
   async function openSend(ids: number[] | 'open'): Promise<void> {
     const selection = selectForSend(review, ids, baseRef)
@@ -372,10 +434,11 @@
   const menus = $derived<MenuDef[]>(
     menuBar([
     {
-      label: '&Review',
+      label: '&File',
       items: [
-        { id: 'review-send-all', testid: 'review-menu-send-all', label: 'Send all open comments to &chat...', disabled: counts.open === 0, action: () => void openSend('open') },
         { id: 'review-refresh', testid: 'review-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => void loadChanges() },
+        { id: 'review-send-all', testid: 'review-menu-send-all', label: 'Send all open comments to &chat...', disabled: counts.open === 0, action: () => void openSend('open') },
+        { id: 'review-ask', testid: 'review-menu-ask-agent', label: '&Ask the agent to review...', disabled: !store || reviewing, action: () => void askAgent() },
         ...closeItems('code-review', () => void host.closeWindow(win.id))
       ]
     },
@@ -384,9 +447,10 @@
       items: [
         { id: 'view-outline', testid: 'review-menu-outline', label: '&Outline', radio: true, checked: mode === 'outline', action: () => (mode = 'outline') },
         { id: 'view-expanded', testid: 'review-menu-expanded', label: '&Expanded', radio: true, checked: mode === 'expanded', action: () => (mode = 'expanded') },
+        { id: 'view-all', testid: 'review-menu-all', label: 'All &changes', radio: true, checked: mode === 'all', action: () => (mode = 'all') },
         { separator: true },
         { id: 'view-split', testid: 'review-menu-split', label: '&Side by side', checked: layout === 'split', action: () => toggleLayout() },
-        { id: 'view-comments', testid: 'review-menu-comments', label: '&Comments list', checked: commentsOpen, action: () => (commentsOpen = !commentsOpen) },
+        { id: 'view-comments', testid: 'review-menu-comments', label: 'Comments &list', checked: commentsOpen, action: () => (commentsOpen = !commentsOpen) },
         { separator: true },
         { id: 'view-next', testid: 'review-menu-next', label: '&Next change', shortcut: 'F7', action: () => step(1) },
         { id: 'view-prev', testid: 'review-menu-prev', label: '&Previous change', shortcut: 'Shift+F7', action: () => step(-1) }
@@ -418,46 +482,62 @@
 
 <div class="review" bind:clientWidth data-testid="code-review-app" data-session-id={sessionId} data-mode={mode} data-layout={layout}>
   <MenuStrip {menus} aria-label="Code Review menu" />
-  <div class="bar">
-    <ToolStripButton icon="file" text="Outline" checked={mode === 'outline'} onclick={() => (mode = 'outline')} data-testid="review-view-outline" />
-    <ToolStripButton icon="file-code" text="Expanded" checked={mode === 'expanded'} onclick={() => (mode = 'expanded')} data-testid="review-view-expanded" />
+  <div class="bar" role="toolbar" aria-label="Code Review toolbar">
+    <ToolStripButton icon="file" text="Outline" checked={mode === 'outline'} onclick={() => (mode = 'outline')} data-testid="review-view-outline" title="List the changed files" />
+    <ToolStripButton icon="file-code" text="Expanded" checked={mode === 'expanded'} onclick={() => (mode = 'expanded')} data-testid="review-view-expanded" title="Show one file with all its lines" />
+    <ToolStripButton icon="tasks" text="All changes" checked={mode === 'all'} onclick={() => (mode = 'all')} data-testid="review-view-all" title="Show every changed file in one page" />
     <Separator orientation="vertical" />
-    <ToolStripButton icon="changes" text="Side by side" checked={layout === 'split'} onclick={toggleLayout} data-testid="review-split-toggle" />
+    <ToolStripButton icon="changes" text="Side by side" checked={layout === 'split'} onclick={toggleLayout} data-testid="review-split-toggle" title="Show the old and the new text in two columns" />
     <Separator orientation="vertical" />
     <ToolStripButton icon="chevron-up" text="Previous" onclick={() => step(-1)} disabled={changes.length === 0} data-testid="review-prev-change" title="Previous change (Shift+F7)" />
     <ToolStripButton icon="chevron-down" text="Next" onclick={() => step(1)} disabled={changes.length === 0} data-testid="review-next-change" title="Next change (F7)" />
+    {#if mode === 'all'}
+      <ToolStripButton icon="chevron-down" text="Next file" onclick={() => scrollAll(1)} disabled={changes.length === 0} data-testid="review-next-file" title="Go to the next file" />
+    {/if}
     <Separator orientation="vertical" />
-    <span>Against:</span>
-    <TextBox
-      bind:value={baseDraft}
-      aria-label="Base ref"
-      data-testid="review-base-ref"
-      style="width:110px"
-      onkeydown={(event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault()
-          applyBase()
-        }
-      }}
-      onblur={applyBase}
-    />
-    <ToolStripButton icon="refresh" onclick={() => void loadChanges()} data-testid="review-refresh" title="Refresh" />
+    <span class="against">
+      <label for="review-base">Against:</label>
+      <TextBox
+        id="review-base"
+        bind:value={baseDraft}
+        aria-label="Compare with"
+        title="HEAD is the last saved version (the last commit). Type a branch or a commit name to compare with another version."
+        data-testid="review-base-ref"
+        style="width:110px"
+        onkeydown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            applyBase()
+          }
+        }}
+        onblur={applyBase}
+      />
+      {#if baseRef === 'HEAD'}<span class="hint" data-testid="review-base-hint">({HEAD_MEANING})</span>{/if}
+    </span>
+    <ToolStripButton icon="refresh" onclick={() => void loadChanges()} data-testid="review-refresh" title="Read the changes again (F5)" />
     {#if mode === 'expanded'}
       <Separator orientation="vertical" />
       <ComboBox aria-label="File" testid="review-file-select" items={fileItems} value={selectedPath ?? ''} onchange={(path) => void goToFile(path, null)} disabled={changes.length === 0} style="width:230px" />
     {/if}
     <span class="spring"></span>
-    <ToolStripButton icon="properties" text="Comments ({counts.open})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" />
+    <ToolStripButton icon="agent" text="Ask the agent to review..." onclick={() => void askAgent()} disabled={!store || reviewing} data-testid="review-ask-agent" title={ASK_HINT} />
+    <ToolStripButton icon="properties" text="Comments ({counts.open})" checked={commentsOpen} onclick={() => (commentsOpen = !commentsOpen)} data-testid="review-comments-toggle" title="Show or hide the list of comments" />
   </div>
 
   {#if review.summary}
     <div class="banner {review.summary.verdict}" data-testid="review-verdict" data-verdict={review.summary.verdict} role="status">
       <b>{VERDICT_LABELS[review.summary.verdict]}</b>
       {#if review.summary.body}<span class="body">{review.summary.body}</span>{/if}
+      {@render commentsLink()}
     </div>
   {:else}
     <div class="banner pending" data-testid="review-banner" data-state={reviewing ? 'reviewing' : 'waiting'} role="status">
-      {reviewing ? 'The reviewer is reading the changes...' : 'No verdict yet. Ask the reviewer in the chat panel, or click a line number to comment yourself.'}
+      <span class="body">
+        {reviewing
+          ? 'The agent is reading the changes. It cannot change files.'
+          : 'Nobody has reviewed these changes yet. Click a line number to comment yourself, or click "Ask the agent to review...".'}
+      </span>
+      {@render commentsLink()}
     </div>
   {/if}
 
@@ -465,6 +545,33 @@
     <div class="main">
       {#if error}
         <div class="note" data-testid="review-error">{error}</div>
+      {:else if mode === 'all'}
+        <div class="file-head" data-testid="review-all-head">
+          <b>{changeTotals(changes)}</b>
+          <span class="spring"></span>
+          <span class="stat">Use Next file or F7 to go from file to file.</span>
+        </div>
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <div class="all w7-scroll" bind:this={allScroller} role="region" tabindex="0" aria-label="All changes" data-testid="review-all">
+          {#each changes as change (change.path)}
+            {@const loaded = allFiles[change.path]}
+            <section class="one" data-testid="review-all-file" data-path={change.path}>
+              <div class="file-head">
+                <b>{change.path}</b>
+                {#if change.oldPath}<span class="was">(was {change.oldPath})</span>{/if}
+                <span class="spring"></span>
+                <span class="stat">{STATUS_LABEL[change.status]}, +{change.additions} -{change.deletions}</span>
+              </div>
+              {#if loaded}
+                <ReviewDiff flow file={loaded} view={fileView(loaded, layout)} {layout} comments={review.comments} {...diffHandlers} />
+              {:else}
+                <div class="note">Loading...</div>
+              {/if}
+            </section>
+          {:else}
+            <div class="note" data-testid="review-outline-empty">{loading ? 'Looking for changes...' : 'No changes against the base. Nothing to review.'}</div>
+          {/each}
+        </div>
       {:else if mode === 'outline' || !file}
         <ReviewOutline
           {changes}
@@ -481,45 +588,49 @@
           <span class="spring"></span>
           <span class="stat">{fv.regions.length} {fv.regions.length === 1 ? 'change' : 'changes'}</span>
         </div>
-        <ReviewDiff
-          bind:this={diff}
-          {file}
-          view={fv}
-          {layout}
-          comments={review.comments}
-          {selectedRow}
-          onselectrow={(row) => (selectedRow = row)}
-          oncomment={(input) => void addComment(input)}
-          onresolve={(c, resolved) => void resolveComment(c, resolved)}
-          onreply={(r, body) => void replyTo(r, body)}
-          ondelete={(c) => void deleteComment(c)}
-          onsend={(c) => void openSend([c.id])}
-        />
+        <ReviewDiff bind:this={diff} {file} view={fv} {layout} comments={review.comments} {selectedRow} onselectrow={(row) => (selectedRow = row)} {...diffHandlers} />
       {/if}
     </div>
     {#if commentsOpen}
-      <ReviewComments comments={review.comments} selectedId={selectedCommentId} onselect={(c) => void showComment(c)} onsendall={() => void openSend('open')} />
+      <Splitter
+        orientation="vertical"
+        value={commentsWidth}
+        min={COMMENTS_MIN}
+        max={COMMENTS_MAX}
+        label="Resize the comments list"
+        step={20}
+        onresize={(d) => (commentsWidth = Math.max(COMMENTS_MIN, Math.min(COMMENTS_MAX, commentsWidth - d)))}
+      />
+      <div class="comments" style="width:{commentsWidth}px" data-testid="review-comments-wrap">
+        <ReviewComments comments={review.comments} selectedId={selectedCommentId} onselect={(c) => void showComment(c)} onsendall={() => void openSend('open')} />
+      </div>
     {/if}
-    <EmbeddedChat
-      {host}
-      {sessionId}
-      role="review"
-      collapsible
-      resizable
-      contained
-      bind:collapsed={chatCollapsed}
-      bind:width={chatWidth}
-      bind:store
-      bind:session
-      title="Reviewer"
-      contextProvider={contextOf}
-      openFilePath={selectedPath}
-    />
+    <!-- The reviewer panel is clipped to the window: it never grows past 38 percent of it. -->
+    <div class="reviewer" data-testid="review-reviewer-wrap">
+      <EmbeddedChat
+        {host}
+        {sessionId}
+        role="review"
+        collapsible
+        resizable
+        contained
+        bind:collapsed={chatCollapsed}
+        bind:width={chatWidth}
+        bind:store
+        bind:session
+        title="Reviewer"
+        contextProvider={contextOf}
+        openFilePath={selectedPath}
+      />
+    </div>
   </div>
 
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel testid="review-status-root" text="{root} against {baseRef}" spring />
+    <StatusStripLabel testid="review-status-root" text="{root} against {baseLabel(baseRef)}" spring />
     <StatusStripLabel testid="review-status-files" text="{changes.length} {changes.length === 1 ? 'file' : 'files'}" borders={['left']} />
+    {#if mode === 'expanded' && positionLabel}
+      <StatusStripLabel testid="review-status-change" text={positionLabel} borders={['left']} />
+    {/if}
     <StatusStripLabel testid="review-status-comments" text="{counts.open} open, {counts.resolved} resolved, {counts.sent} sent" borders={['left']} />
     <StatusStripLabel testid="review-status-agent" text={connectionLabel(status)} borders={['left']} />
   </StatusStrip>
@@ -530,6 +641,14 @@
     <SendToChatDialog chats={sendDialog.chats} count={sendDialog.count} cwd={root} busy={sending} onsend={(target) => void confirmSend(target)} oncancel={() => (sendDialog = null)} />
   {/if}
 </div>
+
+{#snippet commentsLink()}
+  {#if counts.total > 0}
+    <button type="button" class="link" data-testid="review-banner-comments" onclick={() => (commentsOpen = true)}>
+      {counts.total} {counts.total === 1 ? 'comment' : 'comments'}
+    </button>
+  {/if}
+{/snippet}
 
 <style>
   .review {
@@ -543,15 +662,65 @@
   .bar {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
+    gap: 2px 4px;
     min-height: 30px;
-    padding: 0 6px;
+    padding: 1px 6px;
     background: linear-gradient(#fafcfe, #dce6f4);
     border-bottom: 1px solid #aab7cb;
   }
   .spring {
     flex: 1;
+  }
+  .against {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+  }
+  .hint {
+    color: var(--w7-text-muted);
+    white-space: nowrap;
+  }
+  .link {
+    flex: none;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--w7-link);
+    font: inherit;
+    text-decoration: underline;
+    cursor: default;
+  }
+  .comments {
+    flex: none;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+  }
+  .comments :global(.panel) {
+    width: 100%;
+  }
+  /* The reviewer panel is clipped inside the client area. */
+  .reviewer {
+    flex: none;
+    min-width: 0;
+    max-width: 38%;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+  }
+  .all {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    background: var(--w7-window);
+    border: 1px solid var(--w7-panel-border);
+  }
+  .one {
+    margin-bottom: 8px;
   }
   .banner {
     flex: none;
@@ -575,6 +744,8 @@
     color: var(--w7-text-muted);
   }
   .banner .body {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

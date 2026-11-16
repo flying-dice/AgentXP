@@ -2,6 +2,7 @@
   import Icon from '../atoms/Icon.svelte'
   import ColumnHeader from '../molecules/ColumnHeader.svelte'
   import type { SortDirection } from '../molecules/ColumnHeader'
+  import type { Snippet } from 'svelte'
   import { rangeIds, sortRows, type ListColumn, type ListRow, type ListViewMode } from './ListView'
 
   interface Props {
@@ -27,6 +28,8 @@
     testid?: string
     /** `data-testid` of every row; a row's own `testid` field wins. Rows also carry `data-row-id`. */
     rowTestid?: string
+    /** Draws a cell of the Details view instead of its text (for example a bold name with a grey folder beside it). */
+    cell?: Snippet<[ListRow, ListColumn]>
   }
 
   let {
@@ -45,7 +48,8 @@
     class: className = '',
     'aria-label': ariaLabel = 'List',
     testid,
-    rowTestid
+    rowTestid,
+    cell
   }: Props = $props()
 
   const uid = $props.id()
@@ -210,7 +214,7 @@
             {@const w = widthOf(col)}
             <span class="cell" role="gridcell" style:width={w !== undefined ? `${w}px` : undefined} class:flex={w === undefined} style:justify-content={col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : undefined}>
               {#if i === 0 && row.icon}<Icon name={row.icon} />{/if}
-              <span class="t" title={cellText(row, col.key)}>{cellText(row, col.key)}</span>
+              {#if cell}{@render cell(row, col)}{:else}<span class="t" title={cellText(row, col.key)}>{cellText(row, col.key)}</span>{/if}
             </span>
           {/each}
         </div>

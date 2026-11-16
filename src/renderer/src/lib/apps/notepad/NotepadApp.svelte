@@ -19,6 +19,9 @@
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
   import { caretPosition, offsetOfLine } from './caret'
+  import FindDialog from './FindDialog.svelte'
+  import { findNext } from './find'
+  import SaveAsDialog from '../shared/SaveAsDialog.svelte'
 
   let { window: win, host, focused }: AppProps<'notepad'> = $props()
 
@@ -29,6 +32,8 @@
   let wrap = $state(false)
   let message = $state('')
   let picking = $state(false)
+  let saving = $state(false)
+  let finding = $state(false)
   let area = $state<HTMLTextAreaElement | null>(null)
 
   // svelte-ignore state_referenced_locally
@@ -120,15 +125,35 @@
   }
 
   async function save(): Promise<void> {
-    if (path === null) return
+    // A new file has no name yet: Save asks for one, like Save As.
+    if (path === null) {
+      saving = true
+      return
+    }
+    await write(path)
+  }
+
+  async function write(target: string): Promise<void> {
     try {
-      await host.api.vfs.writeFile(host.state.desktopId, path, text)
+      await host.api.vfs.writeFile(host.state.desktopId, target, text)
+      path = target
       original = text
-      message = `Saved ${vpathName(path)}`
+      message = `Saved ${vpathName(target)}`
       report()
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Notepad', buttons: 'OK', icon: 'error' })
     }
+  }
+
+  /** Selects the next match of the Find box, from the end of the selection. Returns false when there is none. */
+  function find(query: string, matchCase: boolean): boolean {
+    if (!area) return false
+    const at = findNext(text, query, area.selectionEnd, matchCase)
+    if (at < 0) return false
+    area.focus()
+    area.setSelectionRange(at, at + query.length)
+    updateCaret()
+    return true
   }
 
   function insertTimeDate(): void {
@@ -176,31 +201,39 @@
         items: [
           { id: 'new', label: '&New', shortcut: 'Ctrl+N', action: () => void newFile() },
           { id: 'open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void openFile() },
-          { id: 'save', label: '&Save', shortcut: 'Ctrl+S', disabled: path === null || !dirty, action: () => void save() },
-          ...closeItems('notepad', () => void host.closeWindow(win.id))
+          { id: 'save', label: '&Save', shortcut: 'Ctrl+S', disabled: path !== null && !dirty, action: () => void save() },
+          { id: 'save-as', testid: 'notepad-menu-save-as', label: 'Save &As...', shortcut: 'Ctrl+Shift+S', action: () => (saving = true) },
+          ...closeItems('notepad', () => void host.closeWindow(win.id), 'E&xit')
         ]
       },
-      { label: '&Edit', items: [...editItems('notepad-menu', ops, { hasSelection: true }), { separator: true }, { id: 'time', label: 'Time/&Date', shortcut: 'F5', action: insertTimeDate }] },
+      { label: '&Edit', items: [...editItems('notepad-menu', ops, { hasSelection: true }), { separator: true }, { id: 'find', testid: 'notepad-menu-find', label: '&Find...', shortcut: 'Ctrl+F', action: () => (finding = true) }, { id: 'time', label: 'Time/&Date', shortcut: 'F5', action: insertTimeDate }] },
       { label: 'F&ormat', items: [{ id: 'wrap', label: '&Word Wrap', checked: wrap, action: () => (wrap = !wrap) }] },
       help.viewMenu(win.id),
       help.menu()
     ])
   )
 
-  /** Ctrl+N and Ctrl+O work wherever the focus is inside the focused Notepad window. */
+  /** Ctrl+N, Ctrl+O, Ctrl+F and Ctrl+Shift+S work wherever the focus is inside the focused Notepad window. */
   function onWindowKey(event: KeyboardEvent): void {
-    if (!focused || picking || !event.ctrlKey || event.altKey || event.shiftKey) return
+    if (!focused || picking || saving || finding || !event.ctrlKey || event.altKey) return
     const key = event.key.toLowerCase()
-    if (key !== 'n' && key !== 'o') return
+    if (event.shiftKey) {
+      if (key !== 's') return
+      event.preventDefault()
+      saving = true
+      return
+    }
+    if (key !== 'n' && key !== 'o' && key !== 'f') return
     event.preventDefault()
-    void (key === 'n' ? newFile() : openFile())
+    if (key === 'f') finding = true
+    else void (key === 'n' ? newFile() : openFile())
   }
 
   function onkeydown(event: KeyboardEvent): void {
     if (event.key === 'F5') {
       event.preventDefault()
       insertTimeDate()
-    } else if (event.ctrlKey && event.key.toLowerCase() === 's') {
+    } else if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 's') {
       event.preventDefault()
       void save()
     }
@@ -250,6 +283,22 @@
       }}
       onclose={() => (picking = false)}
     />
+  {/if}
+  {#if saving}
+    <SaveAsDialog
+      caption="Notepad"
+      name={path ? vpathName(path) : 'Untitled.txt'}
+      onsave={(name) => {
+        saving = false
+        const dir = path ? vpathParent(path) : joinVPath(host.state.home, 'Documents')
+        const target = dir ? joinVPath(dir, name) : null
+        if (target) void write(target)
+      }}
+      onclose={() => (saving = false)}
+    />
+  {/if}
+  {#if finding}
+    <FindDialog query={area && area.selectionStart !== area.selectionEnd ? text.slice(area.selectionStart, area.selectionEnd) : ''} onfind={find} onclose={() => ((finding = false), area?.focus())} />
   {/if}
 </div>
 

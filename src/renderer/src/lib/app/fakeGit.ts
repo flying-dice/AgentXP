@@ -98,6 +98,7 @@ export function createFakeGit(options: FakeGitOptions): GitApi {
     },
     lineChanges: (desktopId, path) => changesOf(desktopId, path),
     headText: async (_desktopId, path) => head[normaliseVPath(path) ?? path] ?? null,
+    init: async (_desktopId, gitRoot) => options.changed?.(gitRoot),
     revertHunk: async (desktopId, path, hunkIndex) => {
       const hunk = (await changesOf(desktopId, path))[hunkIndex]
       const working = await read(desktopId, path)

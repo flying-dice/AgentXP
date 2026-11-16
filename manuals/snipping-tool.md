@@ -34,7 +34,7 @@ Click **Start -> Accessories -> Snipping Tool**.
 The toolbar has **New**, the arrow next to it, **Cancel**, **Options**, and **Copy**.
 
 - **New** – Takes a rectangular snip.
-- **Arrow** – Opens the snip types: **Free-form Snip** (dimmed), **Rectangular Snip**, **Window Snip**, and **Full-screen Snip**.
+- **Arrow** – Opens the snip types: **Rectangular Snip**, **Window Snip**, and **Full-screen Snip**.
 - **Cancel** – Stops a snip that waits for your selection.
 - **Options** – Opens the options dialog box with the delay before the capture: No delay, 1, 3, or 5 seconds.
 - **Copy** – Copies the last snip to the clipboard.

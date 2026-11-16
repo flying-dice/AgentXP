@@ -21,7 +21,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
-  import { recycleRows, restoreSummary } from './recycleModel'
+  import { recycleRows, restoreSummary, restoredMessage } from './recycleModel'
 
   let { window: win, host }: AppProps<'recycle-bin'> = $props()
 
@@ -30,6 +30,8 @@
   // svelte-ignore state_referenced_locally
   let selected = $state<string[]>(win.view.selectedId !== null ? [String(win.view.selectedId)] : [])
   let error = $state<string | null>(null)
+  /** The status line after a restore. */
+  let notice = $state('')
 
   const desktopId = $derived(host.state.desktopId)
   const current = $derived(items.find((i) => String(i.id) === selected[0]) ?? null)
@@ -71,6 +73,7 @@
   async function restore(item: RecycledChangeDto): Promise<void> {
     try {
       await host.api.recycle.restore(item.id)
+      notice = restoredMessage([item])
     } catch (e) {
       await fail(e)
     }
@@ -78,8 +81,10 @@
   }
 
   async function restoreAll(): Promise<void> {
+    const all = items
     try {
-      for (const item of items) await host.api.recycle.restore(item.id)
+      for (const item of all) await host.api.recycle.restore(item.id)
+      notice = restoredMessage(all)
     } catch (e) {
       await fail(e)
     }
@@ -145,10 +150,10 @@
   }
 
   const columns: ListColumn[] = [
-    { key: 'name', header: 'Name', width: 150 },
-    { key: 'location', header: 'Original location', width: 150 },
+    { key: 'name', header: 'Name', width: 140 },
+    { key: 'location', header: 'Original location', width: 200 },
     { key: 'when', header: 'Date deleted', width: 140 },
-    { key: 'chat', header: 'Chat' }
+    { key: 'chat', header: 'Chat', width: 220 }
   ]
 </script>
 
@@ -161,7 +166,7 @@
     <ToolStripButton data-testid="recycle-bin-empty" icon="delete" text="Empty the Recycle Bin" disabled={items.length === 0} onclick={() => void empty()} />
   </ToolStrip>
   <div class="body">
-    <SplitContainer orientation="horizontal" splitterDistance={170} panel1MinSize={80} panel2MinSize={90} fixedPanel="panel2">
+    <SplitContainer orientation="horizontal" splitterDistance={130} panel1MinSize={80} panel2MinSize={190} fixedPanel="panel2">
       {#snippet panel1()}
         <div class="list">
           <ListView testid="recycle-bin-list" rowTestid="recycle-bin-item" {columns} {rows} bind:selected aria-label="Reverted changes" emptyText={error ?? 'The Recycle Bin is empty.'} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} />
@@ -182,7 +187,8 @@
     </SplitContainer>
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text="{items.length} item{items.length === 1 ? '' : 's'}" spring />
+    <StatusStripLabel testid="recycle-bin-status-notice" text={notice} spring />
+    <StatusStripLabel text="{items.length} item{items.length === 1 ? '' : 's'}" />
   </StatusStrip>
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Recycle Bin" />
   <AppAbout {help} />

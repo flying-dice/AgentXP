@@ -2,9 +2,6 @@
   import { tick, untrack } from 'svelte'
   import type { AskChatRequest } from '@shared/desktop'
   import type { AppProps } from '../types'
-  import TextBox from '../../kit/atoms/TextBox.svelte'
-  import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
-  import type { DialogResult } from '../../kit/molecules/DialogButtons'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
   import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
@@ -15,13 +12,13 @@
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ToolStripButton from '../../kit/molecules/ToolStripButton.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
-  import Dialog from '../../kit/organisms/Dialog.svelte'
   import MarkdownView from '../../kit/organisms/MarkdownView.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import ToolStrip from '../../kit/organisms/ToolStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { registerAppRequestHandler } from '../appRequests'
   import OpenFileDialog from '../shared/OpenFileDialog.svelte'
+  import SaveAsDialog from '../shared/SaveAsDialog.svelte'
   import { joinVPath, normaliseVPath, vpathName, vpathParent } from '@shared/vfs'
   import { errorText } from '../shared/listing'
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
@@ -186,19 +183,10 @@
     }
   }
 
-  async function finishSaveAs(result: DialogResult): Promise<void> {
-    const name = saveAs?.trim() ?? ''
-    if (result !== 'ok') {
-      saveAs = null
-      return
-    }
-    if (!name || /[\\/:*?"<>|]/.test(name)) {
-      await showMessageBox({ text: 'The file name is not valid.', caption: 'WordPad', buttons: 'OK', icon: 'error' })
-      return
-    }
+  function finishSaveAs(name: string): void {
     saveAs = null
     path = joinVPath(host.state.home, 'Documents', name)
-    await save()
+    void save()
   }
 
   function followLink(href: string): void {
@@ -321,8 +309,8 @@
     <ToolStripButton text="B" class="bold" disabled={!editing} title="Bold (Ctrl+B)" aria-label="Bold" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '**'))} />
     <ToolStripButton text="I" class="italic" disabled={!editing} title="Italic (Ctrl+I)" aria-label="Italic" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '_'))} />
     <span class="sep"></span>
-    <ToolStripButton text="H1" disabled={!editing} title="Heading 1" aria-label="Heading 1" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 1))} />
-    <ToolStripButton text="H2" disabled={!editing} title="Heading 2" aria-label="Heading 2" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 2))} />
+    <ToolStripButton text="H1" disabled={!editing} title="Heading 1" aria-label="H1 Heading 1" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 1))} />
+    <ToolStripButton text="H2" disabled={!editing} title="Heading 2" aria-label="H2 Heading 2" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 2))} />
     <span class="sep"></span>
     <ToolStripButton text="• List" disabled={!editing} title="Bulleted list" aria-label="Bulleted list" onclick={() => format(toggleBullets)} />
     <ToolStripButton text="1. List" disabled={!editing} title="Numbered list" aria-label="Numbered list" onclick={() => format(toggleNumbers)} />
@@ -375,15 +363,7 @@
     />
   {/if}
   {#if saveAs !== null}
-    <Dialog title="Save as" iconName="save" width="340px" contained onclose={() => (saveAs = null)}>
-      <div class="saveas">
-        <label for="wp-name">File name:</label>
-        <TextBox id="wp-name" bind:value={saveAs} onkeydown={(e) => e.key === 'Enter' && void finishSaveAs('ok')} />
-      </div>
-      {#snippet buttons()}
-        <DialogButtons buttons={['ok', 'cancel']} onresult={(r) => void finishSaveAs(r)} />
-      {/snippet}
-    </Dialog>
+    <SaveAsDialog caption="WordPad" name={saveAs} onsave={finishSaveAs} onclose={() => (saveAs = null)} />
   {/if}
 </div>
 
@@ -443,11 +423,5 @@
   }
   .empty {
     color: var(--w7-text-muted);
-  }
-  .saveas {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 10px;
   }
 </style>

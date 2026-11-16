@@ -140,10 +140,13 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
   }
 }
 
-/** "Notepad Help" for the topic of an app, "Help and Support" for the home, desktop, launcher and Help topics. */
+/** The program name of every Help window (UX-44): the same whatever topic it shows. */
+export const HELP_PROGRAM_NAME = 'Agent7 Help and Support'
+
+/** "Agent7 Help and Support: Using Notepad" for the topic of an app, "Agent7 Help and Support" for the home, desktop, launcher and Help topics. */
 export function helpWindowTitle(topic: string): string {
   const kind = (APP_KINDS as readonly string[]).includes(topic) ? (topic as AppKind) : null
-  return kind && kind !== 'help' ? `${APP_DISPLAY_NAMES[kind]} Help` : APP_DISPLAY_NAMES.help
+  return kind && kind !== 'help' ? `${HELP_PROGRAM_NAME}: Using ${APP_DISPLAY_NAMES[kind]}` : HELP_PROGRAM_NAME
 }
 
 export function windowTitle(view: AppView): string {

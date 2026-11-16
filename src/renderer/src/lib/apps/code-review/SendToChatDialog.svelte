@@ -4,6 +4,7 @@
   import Icon from '../../kit/atoms/Icon.svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import Dialog from '../../kit/organisms/Dialog.svelte'
+  import { chatLabel } from './reviewModel'
 
   export type SendTarget = { kind: 'chat'; sessionId: number } | { kind: 'new' }
 
@@ -28,20 +29,20 @@
 
 <Dialog testid="review-send-dialog" title="Send to chat" iconName="session" width="440px" contained bodyColor="window" onclose={oncancel}>
   <div class="body">
-    <p>Send {count} {count === 1 ? 'comment' : 'comments'} to a chat to fix. The chat gets a prompt with each file, line, severity and text{count === 1 ? '' : ', and the verdict'}.</p>
+    <p>Send {count} {count === 1 ? 'comment' : 'comments'} to a chat to fix. The chat gets a message with each file, line, severity and text{count === 1 ? '' : ', and the verdict'}.</p>
     <ul role="radiogroup" aria-label="Chat">
       {#each chats as chat (chat.id)}
         <li>
           <button type="button" class="option" role="radio" aria-checked={choice === `chat:${chat.id}`} class:on={choice === `chat:${chat.id}`} data-testid="review-send-chat" data-session-id={chat.id} onclick={() => (chosen = `chat:${chat.id}`)}>
             <Icon name="session" size={24} />
-            <span class="text"><span class="title">{chat.title || 'New chat'}</span><span class="sub">{chat.cwd}</span></span>
+            <span class="text"><span class="title">{chatLabel(chat)}</span><span class="sub">{chat.cwd}</span></span>
           </button>
         </li>
       {/each}
       <li>
         <button type="button" class="option" role="radio" aria-checked={choice === 'new'} class:on={choice === 'new'} data-testid="review-send-new-chat" onclick={() => (chosen = 'new')}>
           <Icon name="new" size={24} />
-          <span class="text"><span class="title">New chat</span><span class="sub">Starts an agent in {cwd}</span></span>
+          <span class="text"><span class="title">Start a new chat</span><span class="sub">The agent works in {cwd}</span></span>
         </button>
       </li>
     </ul>

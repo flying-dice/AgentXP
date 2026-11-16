@@ -217,7 +217,7 @@
   }
   .wrap .grid.unified {
     grid-template-columns: auto auto auto minmax(0, 1fr);
-    width: auto;
+    width: 100%;
   }
   .split .no + .tx {
     border-right: 1px solid var(--w7-border-light);

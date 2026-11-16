@@ -243,9 +243,11 @@
 
   /** Ctrl+N works wherever the focus is inside the focused Paint window (not while typing text on the canvas). */
   function onWindowKey(event: KeyboardEvent): void {
-    if (!focused || textBox || !event.ctrlKey || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'n') return
+    if (!focused || textBox || !event.ctrlKey || event.altKey || event.shiftKey) return
+    const key = event.key.toLowerCase()
+    if (key !== 'n' && key !== 'o' && key !== 's') return
     event.preventDefault()
-    void newImage()
+    void (key === 'n' ? newImage() : key === 'o' ? chooseOpen() : savePng())
   }
 
   // ---- canvas resize handle ---------------------------------------------------------------------
@@ -286,6 +288,49 @@
     dirty = false
   }
 
+  let fileInput = $state<HTMLInputElement | null>(null)
+
+  /** File > Save as PNG...: the picture goes to the Downloads folder of this computer, named Picture.png. */
+  async function savePng(): Promise<void> {
+    try {
+      const blob = await new Promise<Blob | null>((r) => canvas!.toBlob(r, 'image/png'))
+      if (!blob) throw new Error('empty')
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = 'Picture.png'
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+      dirty = false
+    } catch {
+      await showMessageBox({ text: 'The picture could not be saved.', caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  /** File > Open...: shows a picture from this computer on the canvas. */
+  async function openPicture(file: File | undefined): Promise<void> {
+    if (!file) return
+    try {
+      const bitmap = await createImageBitmap(file)
+      snapshot()
+      width = canvas!.width = Math.min(bitmap.width, 4000)
+      height = canvas!.height = Math.min(bitmap.height, 4000)
+      blank()
+      ctx().drawImage(bitmap, 0, 0)
+      bitmap.close()
+      dirty = false
+    } catch {
+      await showMessageBox({ text: 'That file is not a picture Agent Paint can open.', caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
+    }
+  }
+
+  async function chooseOpen(): Promise<void> {
+    if (dirty) {
+      const answer = await showMessageBox({ text: 'Do you want to discard the picture?', caption: 'Agent Paint', buttons: 'YesNo', icon: 'warning' })
+      if (answer !== 'yes') return
+    }
+    fileInput?.click()
+  }
+
   async function copyImage(): Promise<void> {
     try {
       const blob = await new Promise<Blob | null>((r) => canvas!.toBlob(r, 'image/png'))
@@ -301,7 +346,7 @@
 
   const menus = $derived<MenuDef[]>(
     menuBar([
-      { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
+      { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, { id: 'open', testid: 'paint-menu-open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void chooseOpen() }, { id: 'save-png', testid: 'paint-menu-save-png', label: '&Save as PNG...', shortcut: 'Ctrl+S', action: () => void savePng() }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
       { label: '&Edit', items: editItems('paint-menu', { undo: undoLast, copy: () => void copyImage() }, { hasSelection: true }) },
       help.viewMenu(win.id),
       help.menu()
@@ -395,6 +440,18 @@
   <div class="workspace w7-scroll">
     {#if agentDrawing}<div class="pill" data-testid="paint-agent-drawing" role="status">The agent is drawing…</div>{/if}
     <div class="sheet" style:width="{width}px" style:height="{height}px">
+      <input
+        bind:this={fileInput}
+        type="file"
+        accept="image/*"
+        hidden
+        data-testid="paint-open-input"
+        aria-label="Picture to open"
+        onchange={(e) => {
+          void openPicture(e.currentTarget.files?.[0])
+          e.currentTarget.value = ''
+        }}
+      />
       <canvas
         bind:this={canvas}
         {width}

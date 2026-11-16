@@ -144,7 +144,7 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 
 Every app has in-app Help and a context menu.
 
-**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `<App> Help`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
+**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `Agent7 Help and Support: Using <App>`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
 
 **Context menus.** Right-click, the Menu key and Shift+F10 open a kit `ContextMenuStrip` in every app, on rows and items first and on the window background otherwise. The renderer cancels the browser's own `contextmenu` event on the desktop and the launcher. The taskbar button has its own menu: Restore, Minimize, Close window.
 

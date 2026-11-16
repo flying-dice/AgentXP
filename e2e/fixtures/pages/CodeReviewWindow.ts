@@ -61,6 +61,11 @@ export class CodeReviewWindow {
     return this.id('review-send-all')
   }
 
+  /** The button that asks the reviewer for a review; nothing starts before it is clicked (UX-37). */
+  get askAgent(): Locator {
+    return this.id('review-ask-agent')
+  }
+
   get statusAgent(): Locator {
     return this.id('review-status-agent')
   }

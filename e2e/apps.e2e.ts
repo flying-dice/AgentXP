@@ -57,6 +57,26 @@ describe('apps open from the Start menu', () => {
       await ctx.desktop.closeWindow('notepad')
     })
 
+    it('Notepad: Ctrl+F finds text and Ctrl+Shift+S asks for a file name (UX-46)', async () => {
+      const notepad = await ctx.desktop.openApp('notepad')
+      await notepad.getByTestId('notepad-text').fill('alpha beta gamma')
+      await ctx.desktopPage.keyboard.press('Control+F')
+      const find = ctx.desktopPage.getByTestId('notepad-find-dialog')
+      await see.visible(find)
+      await find.getByTestId('notepad-find-text').fill('zzz')
+      await find.getByTestId('notepad-find-next').click()
+      await see.text(find.getByTestId('notepad-find-missing'), 'Cannot find')
+      await find.getByTestId('notepad-find-text').fill('beta')
+      await find.getByTestId('notepad-find-next').click()
+      await see.eventually(async () => expect(await notepad.getByTestId('notepad-text').evaluate((el) => (el as HTMLTextAreaElement).value.slice((el as HTMLTextAreaElement).selectionStart, (el as HTMLTextAreaElement).selectionEnd))).toBe('beta'))
+      await find.getByTestId('notepad-find-cancel').click()
+      await ctx.desktopPage.keyboard.press('Control+Shift+S')
+      await see.visible(ctx.desktopPage.getByTestId('save-as-dialog'))
+      await ctx.desktopPage.getByTestId('save-as-dialog').getByTestId('dialog-button-cancel').click()
+      // Mine is the newest window, on top of the one an earlier test left open.
+      await ctx.desktop.closeWindow('notepad', 1)
+    })
+
     it('WordPad: Ctrl+O opens the file dialog', async () => {
       await ctx.desktop.openApp('wordpad')
       await ctx.desktopPage.keyboard.press('Control+O')

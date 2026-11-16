@@ -159,14 +159,15 @@
     flex: none;
     display: flex;
     align-items: center;
-    height: 22px;
+    height: 24px;
     padding: 0 2px;
     background: linear-gradient(#fdfefe, #e3ebf6);
     border-bottom: 1px solid #b4bfcf;
     outline: none;
   }
   .mb {
-    height: 22px;
+    height: 24px;
+    min-width: 24px;
     padding: 0 8px;
     border: 1px solid transparent;
     background: transparent;

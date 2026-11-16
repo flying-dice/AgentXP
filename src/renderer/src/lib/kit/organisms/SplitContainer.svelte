@@ -13,6 +13,8 @@
     fixedPanel?: 'none' | 'panel1' | 'panel2'
     panel1: Snippet
     panel2: Snippet
+    /** Accessible name of the splitter bar. */
+    splitterLabel?: string
     class?: string
     onchange?: (distance: number) => void
   }
@@ -25,6 +27,7 @@
     fixedPanel = 'none',
     panel1,
     panel2,
+    splitterLabel = 'Resize panes',
     class: className = '',
     onchange
   }: Props = $props()
@@ -67,7 +70,7 @@
   <div class="p1" style={orientation === 'vertical' ? `width:${splitterDistance}px` : `height:${splitterDistance}px`}>
     {@render panel1()}
   </div>
-  <Splitter {orientation} onresize={(d) => set(splitterDistance + d)} />
+  <Splitter {orientation} value={splitterDistance} min={panel1MinSize} max={Math.max(panel1MinSize, size - SPLITTER - panel2MinSize)} label={splitterLabel} onresize={(d) => set(splitterDistance + d)} />
   <div class="p2">{@render panel2()}</div>
 </div>
 

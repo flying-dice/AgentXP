@@ -30,6 +30,7 @@
     {id}
     data-testid={item.testid ?? (item.id ? `menu-item-${item.id}` : undefined)}
     class="mi"
+    title={item.title}
     class:hot
     class:disabled={item.disabled}
     {role}

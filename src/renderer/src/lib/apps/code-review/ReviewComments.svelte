@@ -2,6 +2,7 @@
   /** The comments list panel: every thread of the review with where it is, its severity and state, and "Send all open comments". */
   import { SEVERITY_LABELS, commentLocation, sortComments, type ReviewCommentDto } from '@shared/review'
   import Button from '../../kit/atoms/Button.svelte'
+  import Icon from '../../kit/atoms/Icon.svelte'
   import CheckBox from '../../kit/atoms/CheckBox.svelte'
   import { commentCounts } from './reviewModel'
 
@@ -25,14 +26,21 @@
     <b>Comments</b>
     <span class="counts" data-testid="review-comment-count" data-open={counts.open} data-total={counts.total}>{counts.open} open of {counts.total}</span>
   </div>
-  <div class="filter"><CheckBox label="Open only" bind:checked={onlyOpen} testid="review-filter-open" /></div>
-  <div class="list w7-scroll" role="list">
+  <div class="filter">
+    <CheckBox label="Open only" bind:checked={onlyOpen} testid="review-filter-open" />
+    <span class="sentcol" aria-hidden="true">Sent</span>
+  </div>
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div class="list w7-scroll" role="list" tabindex="0" aria-label="Comments">
     {#each roots as c (c.id)}
       <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">
           <span class="dot {c.severity}" title={SEVERITY_LABELS[c.severity]}></span>
           <span class="loc">{commentLocation(c)}</span>
-          {#if c.state !== 'open'}<span class="state">{c.state === 'sent' ? 'sent' : 'resolved'}</span>{/if}
+          {#if c.state === 'resolved'}<span class="state">Resolved</span>{/if}
+          <span class="sent" data-testid="review-comment-sent" data-sent={c.state === 'sent' ? 'yes' : 'no'}>
+            {#if c.state === 'sent'}<Icon name="check" size={12} title="Sent to chat" />{/if}
+          </span>
         </span>
         <span class="text">{c.body}</span>
         {#if replies(c) > 0}<span class="rep">{replies(c)} {replies(c) === 1 ? 'reply' : 'replies'}</span>{/if}
@@ -71,6 +79,9 @@
   .filter {
     flex: none;
     padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   .list {
     flex: 1;
@@ -96,10 +107,21 @@
   .row.selected {
     background: var(--w7-select-face, #dcebfc);
   }
-  .row[data-state='resolved'] .text,
-  .row[data-state='sent'] .text {
-    text-decoration: line-through;
-    opacity: 0.6;
+  .row[data-state='resolved'] .text {
+    color: var(--w7-text-muted);
+  }
+  .sent {
+    flex: none;
+    width: 34px;
+    display: inline-flex;
+    justify-content: center;
+    color: #237a23;
+  }
+  .sentcol {
+    float: right;
+    width: 34px;
+    text-align: center;
+    color: var(--w7-text-muted);
   }
   .head {
     display: flex;

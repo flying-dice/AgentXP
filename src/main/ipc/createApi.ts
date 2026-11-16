@@ -104,7 +104,8 @@ export function createApi(s: ApiServices): InvokeApi {
       status: (desktopId, root) => s.git.status(desktopId, root),
       lineChanges: (desktopId, path) => s.git.lineChanges(desktopId, path),
       headText: (desktopId, path) => s.git.headText(desktopId, path),
-      revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex)
+      revertHunk: (desktopId, path, hunkIndex) => s.git.revertHunk(desktopId, path, hunkIndex),
+      init: (desktopId, root) => s.git.init(desktopId, root)
     },
     review: {
       changes: (desktopId, root, baseRef) => s.reviews.changes(desktopId, root, baseRef),
