@@ -166,11 +166,20 @@
     padding: 3px;
     border: 1px solid var(--w7-glass-border);
     border-radius: 8px;
-    background: var(--w7-glass-face);
-    backdrop-filter: var(--w7-glass-blur);
+    isolation: isolate;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 2px 2px 14px rgba(0, 0, 0, 0.55);
     font: var(--w7-font);
     user-select: none;
+  }
+  .w7-start::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--w7-glass-face);
+    backdrop-filter: var(--w7-glass-blur);
+    pointer-events: none;
   }
   .tile {
     position: absolute;
