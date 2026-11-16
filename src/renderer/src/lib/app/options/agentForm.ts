@@ -36,32 +36,43 @@ export const formatEnv = (env: Record<string, string>): string =>
     .join('\n')
 
 export interface AgentFormValues {
+  /** Optional: without one the agent is listed by its command line. */
   name: string
   command: string
   args: string
   env: string
+  /** "Make this the default agent for new desktops and chats". */
+  makeDefault: boolean
 }
 
-export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '' })
+/** A new agent is the default unless the person unticks the box. */
+export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '', makeDefault: true })
 
 export const formFromAgent = (agent: AgentDto): AgentFormValues => ({
   name: agent.name,
   command: agent.command,
   args: formatArgs(agent.args),
-  env: formatEnv(agent.env)
+  env: formatEnv(agent.env),
+  makeDefault: agent.isDefault
 })
+
+/** The command line of a form ("node my-agent.js"): the name an agent gets when none is typed. */
+export const commandLine = (values: Pick<AgentFormValues, 'command' | 'args'>): string =>
+  [values.command.trim(), ...parseArgs(values.args)].filter(Boolean).join(' ')
 
 /** Validation message, or null when the form can be submitted. */
 export function validateAgentForm(values: AgentFormValues): string | null {
-  if (!values.name.trim()) return 'Enter a name for the agent.'
-  if (!values.command.trim()) return 'Enter the command that starts the agent.'
+  if (!values.command.trim()) return 'Enter the program that starts the agent.'
   const { invalid } = parseEnv(values.env)
   return invalid.length ? `Environment lines must look like KEY=VALUE: ${invalid[0]}` : null
 }
 
 export const inputFromForm = (values: AgentFormValues): AgentInput => ({
-  name: values.name.trim(),
+  name: values.name.trim() || commandLine(values),
   command: values.command.trim(),
   args: parseArgs(values.args),
   env: parseEnv(values.env).env
 })
+
+/** The line under the Test button. */
+export const checkMessage = (command: string, found: boolean): string => (found ? `Found '${command.trim()}'.` : `Could not find '${command.trim()}'.`)

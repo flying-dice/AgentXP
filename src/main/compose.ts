@@ -14,6 +14,7 @@ import { createMemoryWindowHost, type DesktopWindowHost } from './application/de
 import { LauncherService, type ApprovalNotifier } from './application/launcher/LauncherService'
 import { ThumbnailService, type ThumbnailCapturer } from './application/launcher/ThumbnailService'
 import { SessionFiles } from './application/SessionFiles'
+import { ToolCallDiffs } from './application/vfs/ToolCallDiffs'
 import { ToolPaths } from './application/tools/ToolPaths'
 import { DriveService } from './application/vfs/DriveService'
 import { VirtualFileSystem } from './application/vfs/VirtualFileSystem'
@@ -29,6 +30,7 @@ import { CompositeA2uiSink } from './application/CompositeA2uiSink'
 import { ToolCallPaths } from './application/vfs/ToolCallPaths'
 import { SessionEventBus } from './application/SessionEventBus'
 import { AgentService } from './application/AgentService'
+import { NodeCommandLocator } from './infrastructure/process/NodeCommandLocator'
 import { ChangeReverter } from './application/ChangeReverter'
 import { FileChangeRecorder } from './application/FileChangeRecorder'
 import { FanOutEventPublisher } from './application/FanOutEventPublisher'
@@ -198,7 +200,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const changeRecorder = new FileChangeRecorder(repos.changes, publisher)
   const sessionFiles = new SessionFiles({ vfs, host: hostFiles, sessions: repos.sessions, recorder: changeRecorder })
   const callPaths = new ToolCallPaths(vfs, (sessionId) => repos.sessions.get(sessionId)?.desktopId)
-  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster, (sessionId, toolCall) => callPaths.patch(sessionId, toolCall))
+  const broker = new PermissionBroker(repos.permissions, repos.transcripts, publisher, broadcaster, (sessionId, toolCall) => callPaths.patch(sessionId, toolCall), new ToolCallDiffs(vfs, (sessionId) => repos.sessions.get(sessionId)?.desktopId))
   const pool = new AgentConnectionPool()
   const eventBus = new SessionEventBus((sessionId, event) => callPaths.event(sessionId, event))
   const projector = new SessionEventProjector(repos.sessions, repos.transcripts, repos.tasks, publisher, broadcaster)
@@ -366,7 +368,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const agui = new AguiRunCoordinator({ queries, sessions, a2ui, broker, events: eventBus, appEvents: publisher })
 
   const api = createApi({
-    agents: new AgentService(repos.agents),
+    agents: new AgentService(repos.agents, new NodeCommandLocator()),
     folders: folderService,
     sessions,
     queries,

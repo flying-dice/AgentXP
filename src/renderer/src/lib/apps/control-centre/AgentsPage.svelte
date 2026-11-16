@@ -24,9 +24,9 @@
   let editing = $state<{ agent: AgentDto | null } | null>(null)
 
   const columns: ListColumn[] = [
-    { key: 'name', header: 'Name', width: 130 },
+    { key: 'name', header: 'Name', width: 120 },
     { key: 'command', header: 'Command' },
-    { key: 'isDefault', header: 'Default', width: 60 }
+    { key: 'isDefault', header: 'Default', width: 56 }
   ]
   const rows = $derived<ListRow[]>(
     agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, command: [a.command, ...a.args].join(' '), isDefault: a.isDefault ? 'Yes' : '' }))
@@ -43,11 +43,13 @@
 
   onMount(() => void guard(() => agents.load()))
 
-  async function submit(input: AgentInput): Promise<void> {
+  async function submit(input: AgentInput, makeDefault: boolean): Promise<void> {
     const target = editing?.agent
     await guard(async () => {
-      if (target) await agents.update(target.id, input)
-      else selected = [String((await agents.create(input)).id)]
+      const id = target ? target.id : (await agents.create(input)).id
+      if (target) await agents.update(id, input)
+      else selected = [String(id)]
+      if (makeDefault && !target?.isDefault) await agents.setDefault(id)
     })
   }
 
@@ -59,7 +61,7 @@
   }
 </script>
 
-<p class="lead">Agents are the programs behind your chats. New chats start the default agent unless you pick another one.</p>
+<p class="lead">Agents are the programs behind your chats. New desktops use the default agent. A chat uses the agent of the desktop it is on.</p>
 <div class="agents">
   <div class="list">
     <ListView
@@ -67,15 +69,17 @@
       {rows}
       bind:selected
       aria-label="Agents"
+      testid="agents-list"
+      rowTestid="agents-row"
       emptyText="No agents yet. Choose Add... to register one."
       onactivate={() => selectedAgent && (editing = { agent: selectedAgent })}
     />
   </div>
   <div class="side">
-    <Button onclick={() => (editing = { agent: null })}>Add...</Button>
-    <Button disabled={!selectedAgent} onclick={() => selectedAgent && (editing = { agent: selectedAgent })}>Edit...</Button>
-    <Button disabled={!selectedAgent} onclick={remove}>Remove</Button>
-    <Button disabled={!selectedAgent || selectedAgent.isDefault} onclick={() => selectedAgent && guard(() => agents.setDefault(selectedAgent.id))}>Set as Default</Button>
+    <Button data-testid="agents-add" onclick={() => (editing = { agent: null })}>Add...</Button>
+    <Button data-testid="agents-edit" disabled={!selectedAgent} onclick={() => selectedAgent && (editing = { agent: selectedAgent })}>Edit...</Button>
+    <Button data-testid="agents-remove" disabled={!selectedAgent} onclick={remove}>Remove</Button>
+    <Button data-testid="agents-set-default" disabled={!selectedAgent || selectedAgent.isDefault} onclick={() => selectedAgent && guard(() => agents.setDefault(selectedAgent.id))}>Set as Default</Button>
   </div>
 </div>
 
@@ -84,6 +88,7 @@
     title={editing.agent ? 'Edit Agent' : 'Add Agent'}
     initial={editing.agent ? formFromAgent(editing.agent) : undefined}
     contained
+    oncheck={(command) => host.api.agents.check(command)}
     onsubmit={submit}
     onclose={() => (editing = null)}
   />

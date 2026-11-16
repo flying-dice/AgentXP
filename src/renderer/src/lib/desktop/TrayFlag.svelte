@@ -7,6 +7,8 @@
   }
 
   let { count = 0, open = false, onclick, element = $bindable(null) }: Props = $props()
+
+  const tip = $derived(count === 0 ? 'Action Center: nothing is waiting for you.' : count === 1 ? '1 request is waiting for you.' : `${count} requests are waiting for you.`)
 </script>
 
 <button
@@ -19,7 +21,7 @@
   aria-label={count > 0 ? `Action Center: ${count} waiting` : 'Action Center'}
   aria-haspopup="dialog"
   aria-expanded={open}
-  title="Action Center"
+  title={tip}
   {onclick}
 >
   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">

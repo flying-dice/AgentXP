@@ -26,8 +26,8 @@
   {/if}
   <div class="text">
     <div class="name">Agent7</div>
-    <div class="version">Version {version || '0.0.0'}</div>
-    <p>A Windows 7 era desktop for coding agents that speak the Agent Client Protocol (ACP). The agent lives on this desktop and works through its apps.</p>
+    <div class="version" data-testid="control-centre-version">{version ? `Version ${version}` : ''}</div>
+    <p>A Windows 7 style desktop for coding agents. The agent lives on this desktop and works through its apps.</p>
     <p class="muted">Windows 7 is the look; the agents are modern. Built with Electron and Svelte.</p>
   </div>
 </div>

@@ -77,6 +77,8 @@ export interface Agent7Api {
     update(id: Id, input: AgentInput): Promise<AgentDto>
     remove(id: Id): Promise<void>
     setDefault(id: Id): Promise<void>
+    /** True when `command` is a program that can be started (the Add Agent dialog's Test button). */
+    check(command: string): Promise<boolean>
   }
   folders: {
     list(): Promise<FolderDto[]>

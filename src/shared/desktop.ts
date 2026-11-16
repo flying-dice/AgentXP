@@ -151,7 +151,10 @@ export interface DesktopState {
   /** Enabled tool groups, derived from the open windows with `enabledToolGroups`. */
   tools: ToolGroup[]
   paused: boolean
+  /** "Ask before every action": the agent must ask before every action, whatever the permissions say. */
   userInControl: boolean
+  /** The Control Centre permissions, so the top bar can show what is on, asks or off. Absent in older fixtures. */
+  policy?: ToolPolicyDto
   /** The desktop's sticky notes (the agent sees them in `desktop_state`). */
   notes: StickyNoteDto[]
   /** Every A2UI surface of the desktop's chats and where it is shown. */

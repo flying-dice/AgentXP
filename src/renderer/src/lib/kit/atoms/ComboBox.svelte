@@ -227,6 +227,7 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
           id="{uid}-opt-{i}"
+          data-testid={testid ? `${testid}-option-${item.value}` : undefined}
           class="option"
           role="option"
           tabindex="-1"

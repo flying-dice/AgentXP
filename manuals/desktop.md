@@ -53,10 +53,10 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
-- **Status** – Shows Idle, Working, or Paused. A colored dot shows the same state.
-- **Agent can use** – Lists a chip for each tool group that the open apps give to the agent. If no app is open, the list says nothing yet.
-- **Pause or Resume** – Stops the agent or lets it work again.
-- **Take control or Release** – Tells the agent that you work on the desktop yourself.
+- **Status** – Shows Idle, Working, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.**
+- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. A chip says **(asks)** when the agent must ask you first, and **(off)** when the agent cannot use it, because you denied it or because its app is closed. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Centre. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
+- **Pause all agents or Resume agents** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents**. A step that was stopped stays stopped. After you resume, the Action Center has a message for each chat that was stopped, with a **Continue** button.
+- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The top bar then shows **Asking before every action** in amber. Click the box again to go back to the settings in Control Centre.
 
 ### The Desktop Icons
 
@@ -84,7 +84,7 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **Recent chats** – Lists your latest chats.
 - **Search apps and chats** – Filters the lists while you type.
 - **Places** – Lists Computer, Documents, Control Centre, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
-- **Pause agent or Resume agent** – Stops the agent or lets it work again.
+- **Pause all agents or Resume agents** – Stops every agent or lets them work again.
 - **Disconnect** – Closes the window. Its arrow opens **Disconnect**, **Switch desktop...**, and **Delete desktop...**.
 
 ### The Notification Area
@@ -98,16 +98,16 @@ The notification area is at the right end of the taskbar. It has these parts:
 
 ### The Action Center
 
-Click the flag to open the Action Center. It lists each request that waits for your approval and each message. Click **Review** to answer a request. Click **Open Control Centre** to change what the agent can do.
+Click the flag to open the Action Center. Point at the flag to see how many requests wait for you. The Action Center lists each request that waits for your approval, in two lines: what the agent wants to do (for example **Change src/auth/redirect.ts**) and which chat asked, with the time the chat started. A chat that waits has the prefix **Waiting:** on its taskbar button. Click **Review** to answer a request. Click **Open Control Centre** to change what the agent can do.
 
 ### Permission Prompts
 
 Agent7 asks before the agent does an action that you set to **Ask** in **[Control Centre](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
 
-- The title asks if the agent can do the action.
-- The reason line tells why Agent7 asks.
-- **Show details** shows the command or the diff of the file.
-- The buttons answer the request. The first button allows the action.
+- The title asks in plain words if the agent can do the action, for example **Allow the agent to change src/auth/redirect.ts?**
+- The line **Reason:** tells why Agent7 asks, for example that Running commands is set to Ask.
+- The box shows the command, or the change to the file: the full path, how many lines are added and removed, and the lines. Long lines wrap. **Show all lines** shows a long change in full. If Agent7 cannot read the file, the box says that the change replaces the whole file.
+- The choices answer the request. Each has a second line that tells what happens. The focus starts on the refusal.
 
 Press Esc or click **Not now** to close the dialog box without an answer. The request stays in the Action Center.
 
@@ -136,10 +136,11 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
-| Tool chip | Names one tool group, for example Notepad. | `topbar-tool-chip-*` |
-| Nothing yet | Shows that no tool group is on. | `topbar-tool-chips-none` |
-| Pause, Resume | Pauses the agent or lets it work. | `topbar-pause` |
-| Take control, Release | Tells the agent that you are in control. | `topbar-take-control` |
+| Tool chip | Names one tool group, for example Read files. Opens Control Centre at Permissions. | `topbar-tool-chip-*` |
+| Nothing yet | Shows that no app gives the agent a tool. | `topbar-tool-chips-none` |
+| Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
+| Ask before every action | A check box. Makes the agent ask before every action. | `topbar-take-control` |
+| Asking before every action | The amber chip that shows the check box is on. | `topbar-ask-first-chip` |
 
 ### Icons, windows, and desktop menu
 
@@ -196,14 +197,22 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Action Center | Holds the requests and the messages. | `action-center` |
 | Request | Shows one request that waits. | `action-center-approval` |
 | Review | Opens the permission dialog box. | `action-center-review` |
+| Request action | Names what the agent wants to do, for example Change src/auth/redirect.ts. | `action-center-approval-title` |
+| Request chat | Names the chat that asked and when it started. | `action-center-approval-chat` |
 | Message | Shows one message. | `action-center-message` |
+| Continue | Asks the chat to carry on after you resumed the agents. | `action-center-continue` |
 | Open Control Centre | Opens Control Centre. | `action-center-open-control-centre` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |
 | Permission dialog box | Asks if the agent can do the action. | `uac-dialog` |
-| Action name | Names the action. | `uac-tool` |
-| Show details, Hide details | Shows or hides the command or the diff. | `uac-details` |
-| Allow button | Allows the action. | `uac-allow` |
-| Other answer button | Gives another answer that the agent offers. | `uac-option-*` |
+| Question | Asks, in plain words, if the agent can do the action. | `uac-question` |
+| Chat | Names the chat that asked. | `uac-from` |
+| Reason | Says why you are asked, for example that Running commands is set to Ask. | `uac-reason` |
+| Details | Shows the change to the file or the command. | `uac-detail` |
+| Details: file | Shows the full path of the file. | `uac-detail-path` |
+| Details: size | Tells how many lines are added and removed. | `uac-detail-summary` |
+| Show all lines | Shows every line of a long change. | `uac-detail-more` |
+| Allow | Allows the action. | `uac-allow` |
+| Other answer | Gives another answer that the agent offers, for example Deny. The focus starts on the first refusal. | `uac-option-*` |
 | Cancel the action | Ends the turn of the agent. Appears if the agent offers no answer. | `uac-cancel-action` |
 | Not now | Closes the dialog box. The request stays. | `uac-not-now` |
 
@@ -254,16 +263,16 @@ To open an app, follow the steps below:
 1. Click **Start**. The Start menu opens.
 2. Click the app, or type its name in **Search apps and chats**.
 
-To pause the agent, click **Pause** in the top bar. Click **Resume** to let the agent work again.
+To pause the agent, click **Pause all agents** in the top bar. Click **Resume agents** to let the agents work again. A step that was stopped stays stopped: click **Continue** in the Action Center, or send a message in the chat.
 
 To answer a permission request, follow the steps below:
 
 1. Click the flag in the notification area. The Action Center opens.
 2. Click **Review** next to the request. The permission dialog box appears.
-3. Click **Show details** to see the command or the change.
-4. Click **Allow**, or click the button that refuses the action.
+3. Read the change to the file or the command in the box.
+4. Click **Allow**, or click the button that refuses the action. The focus starts on the refusal.
 
-To work without the agent, click **Take control** in the top bar. Click **Release** to give control back.
+To make the agent ask before every action, even reading, tick **Ask before every action** in the top bar. Clear the box to go back to the settings in Control Centre.
 
 To eject a USB drive, follow the steps below:
 

@@ -20,7 +20,7 @@ describe('desktop shell: connection bar, disconnect and chats on a drive', () =>
   it('shows the connection bar with the desktop title and a tooltip that says the agents keep running', async () => {
     await see.visible(bar('connbar'))
     await see.text(bar('connbar-title'), 'Shell desktop')
-    expect(await bar('connbar-close').getAttribute('title')).toContain('agents keep running')
+    expect(await bar('connbar-close').getAttribute('title')).toContain('Agents keep running')
     await see.attribute(bar('connbar'), 'data-pinned', 'true')
   })
 

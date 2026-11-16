@@ -80,4 +80,23 @@ describe('PermissionBroker', () => {
     broker.respond(pendingRequestId(), 'reject')
     await decision
   })
+  it('stores a change with the old text the diff reader found', async () => {
+    const withDiffs = new PermissionBroker(
+      f.repos.permissions,
+      f.repos.transcripts,
+      f.publisher,
+      new SessionBroadcaster(f.repos.sessions, f.publisher),
+      (_id, toolCall) => toolCall,
+      {
+        needsText: () => true,
+        complete: async (_id, patch) => ({ ...patch, contents: [{ kind: 'diff', path: 'E:\\a.ts', oldText: 'old\n', newText: 'new\n' }] })
+      }
+    )
+    const decision = withDiffs.forSession(f.sessionId).prompt({ ...request(), toolCall: { title: 'Edit a.ts', toolKind: 'edit', contents: [{ kind: 'diff', path: 'E:\\a.ts', oldText: null, newText: 'new\n' }] } })
+    await new Promise((r) => setTimeout(r, 0))
+    const entry = f.publisher.payloads('transcript.upserted').at(-1)?.entry
+    expect(entry).toMatchObject({ kind: 'tool_call', contents: [{ kind: 'diff', oldText: 'old\n' }] })
+    withDiffs.respond(pendingRequestId(), 'allow')
+    await decision
+  })
 })
