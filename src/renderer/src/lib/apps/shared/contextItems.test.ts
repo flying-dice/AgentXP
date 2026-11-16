@@ -1,19 +1,34 @@
 import { describe, expect, it, vi } from 'vitest'
-import { askChatItems, selectionLines } from './contextItems'
+import { askAboutFileItem, askChatItems, selectionLines, startChatHereItem } from './contextItems'
 
 describe('askChatItems', () => {
-  it('lists Explain this, Ask chat... and Send selection with ids and a separator first', () => {
+  it('lists the same three chat items in every app: Explain this, Ask chat about this..., Open in Chat window', () => {
     const ask = vi.fn()
     const items = askChatItems('notepad', { hasSelection: true, ask })
     expect(items[0].separator).toBe(true)
-    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-explain', 'notepad-ctx-ask', 'notepad-ctx-send', 'notepad-ctx-open-chat'])
+    expect(items.slice(1).map((i) => i.testid)).toEqual(['notepad-ctx-explain', 'notepad-ctx-ask', 'notepad-ctx-open-chat'])
+    expect(items.slice(1).map((i) => i.label)).toEqual(['&Explain this', 'Ask &chat about this...', 'Open in Chat &window'])
     items.slice(1).forEach((i) => i.action?.())
-    expect(ask.mock.calls.map((c) => c[0])).toEqual(['explain', 'ask', 'send', 'window'])
+    expect(ask.mock.calls.map((c) => c[0])).toEqual(['explain', 'ask', 'window'])
   })
 
-  it('needs a selection for Explain this and Send selection only', () => {
+  it('needs a selection for Explain this and Open in Chat window only', () => {
     const items = askChatItems('code', { hasSelection: false, ask: () => {} })
-    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain', 'code-ctx-send', 'code-ctx-open-chat'])
+    expect(items.filter((i) => i.disabled).map((i) => i.testid)).toEqual(['code-ctx-explain', 'code-ctx-open-chat'])
+  })
+})
+
+describe('file chat items', () => {
+  it('name what they do: pane for a file, window for a folder or drive', () => {
+    const ask = vi.fn()
+    const start = vi.fn()
+    const askItem = askAboutFileItem('code', ask)
+    const startItem = startChatHereItem('code', start)
+    expect(askItem).toMatchObject({ testid: 'code-ctx-ask', label: 'Ask &chat about this file...' })
+    expect(startItem).toMatchObject({ testid: 'code-ctx-start-chat', label: 'Start a &chat here' })
+    askItem.action?.()
+    startItem.action?.()
+    expect([ask.mock.calls.length, start.mock.calls.length]).toEqual([1, 1])
   })
 })
 

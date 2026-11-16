@@ -140,6 +140,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Nothing yet | Shows that no tool group is on. | `topbar-tool-chips-none` |
 | Pause, Resume | Pauses the agent or lets it work. | `topbar-pause` |
 | Take control, Release | Tells the agent that you are in control. | `topbar-take-control` |
+| Agent: not started | A red chip. It shows when the agent of a chat could not start. Open that chat to see why. | `topbar-agent-problem` |
 
 ### Icons, windows, and desktop menu
 

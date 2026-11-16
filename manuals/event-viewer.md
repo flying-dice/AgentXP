@@ -33,7 +33,7 @@ Click **Start -> System Tools -> Event Viewer**.
 
 ### The Log Tree
 
-The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **MCP**. **Chats** has one entry for each chat. Select an entry to show only its events.
+The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **MCP**. **Chats** has one entry for each chat. Select an entry to show only its events. Point at **ACP**, **AG-UI**, or **MCP** to read what the log is. ACP is how Agent7 talks to the agent.
 
 ### The Event List
 

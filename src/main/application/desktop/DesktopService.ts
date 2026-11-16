@@ -34,7 +34,7 @@ import type { DesktopStates } from './ports'
 
 /** What `DesktopService` needs from the chat lifecycle (satisfied by `SessionService`). */
 export interface ChatLifecycle {
-  create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined, role?: SessionRole): Promise<SessionDto>
+  create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined, role?: SessionRole, options?: { background?: boolean }): Promise<SessionDto>
   cancel(sessionId: Id): Promise<void>
   remove(sessionId: Id): Promise<void>
 }
@@ -280,7 +280,8 @@ export class DesktopService implements DesktopStates {
 
   async newChat(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<AppWindowState> {
     const desktop = this.record(desktopId)
-    const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, cwd)
+    // The window always opens: an agent that cannot start is reported in it, not by a missing window.
+    const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, cwd, 'chat', { background: true })
     return this.openWindow({ desktopId, app: 'chat', sessionId: session.id })
   }
 

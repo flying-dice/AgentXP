@@ -25,6 +25,7 @@ export function workingText(chats: readonly ChatActivityInput[]): string | null 
     }
   }
   const first = busy[busy.length - 1]
+  if (first.status === 'connecting') return 'Starting the agent...'
   return first.status === 'awaiting_permission' ? 'Waiting for approval' : first.title || 'Thinking'
 }
 

@@ -28,7 +28,7 @@ describe('ProcessService', () => {
     pool.add(a.id, live('1', 4312))
     pool.add(b.id, live('2'))
     pool.add(f.sessionId, live('3')) // no desktop: not listed
-    expect(service.list()).toEqual([{ agentId: f.agentId, agentName: 'Claude Code', desktopId: Number(desktop), pid: 4312, sessionIds: [a.id, b.id] }])
+    expect(service.list()).toEqual([{ agentId: f.agentId, agentName: 'Claude Code', desktopId: Number(desktop), pid: 4312, memoryBytes: null, cpuPercent: null, sessionIds: [a.id, b.id] }])
   })
 
   it('ends a process: its chats are disposed and show as closed', async () => {

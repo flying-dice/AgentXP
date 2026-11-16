@@ -3,16 +3,19 @@
 
   interface Props {
     title: string
+    /** Where the chat works, as a person says it. */
     path?: string
+    /** The full path, as the tooltip of `path`. */
+    fullPath?: string
   }
 
-  let { title, path = '' }: Props = $props()
+  let { title, path = '', fullPath = path }: Props = $props()
 </script>
 
 <div class="header">
   <Icon name="session" size={16} />
   <b class="title">{title}</b>
-  {#if path}<span class="path" title={path}>{path}</span>{/if}
+  {#if path}<span class="path" title={fullPath}>{path}</span>{/if}
 </div>
 
 <style>

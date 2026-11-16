@@ -6,8 +6,8 @@
   const { Story } = defineMeta({
     title: 'App/Session/Transcript',
     component: Transcript,
-    args: { sessionId: 1, agentName: 'Claude Code', folderName: 'claude-code-win', running: false, error: null, waitingToolCallId: null },
-    argTypes: { running: { control: 'boolean' }, error: { control: 'text' }, agentName: { control: 'text' } }
+    args: { sessionId: 1, agentName: 'Claude Code', folderName: 'claude-code-win', running: false, problem: null, waitingToolCallId: null },
+    argTypes: { running: { control: 'boolean' }, agentName: { control: 'text' } }
   })
 
   const completed = completedTurn()
@@ -30,6 +30,18 @@
 </Story>
 
 <Story name="Running" args={{ messages: running.messages, agentState: running.state, activities: new Map(), running: true }}>
+  {#snippet template(args)}<div class="box"><Transcript {...args} /></div>{/snippet}
+</Story>
+
+<Story
+  name="AgentStopped"
+  args={{
+    messages: completed.messages,
+    agentState: completed.state,
+    activities: new Map(),
+    problem: { text: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed', actions: [{ id: 'restart-send', label: 'Restart and send again' }, { id: 'details', label: 'Details...' }] }
+  }}
+>
   {#snippet template(args)}<div class="box"><Transcript {...args} /></div>{/snippet}
 </Story>
 

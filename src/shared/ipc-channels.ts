@@ -67,6 +67,8 @@ const INVOKE_METHODS = {
     respondPermission: true,
     revertChange: true,
     clearTranscript: true,
+    retry: true,
+    restartAgent: true,
     exportTranscript: true
   },
   desktop: {

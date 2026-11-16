@@ -233,7 +233,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       list: async (desktopId) => (desktopId === undefined ? sessions : sessions.filter((s) => s.desktopId === desktopId)),
       get: async (id) => sessions.find((s) => s.id === id) ?? session(id, 1, 'Fake session'),
       create: async (desktopId, agentId, cwd) => {
-        const created = session(nextId++, desktopId, 'New session', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
+        const created = session(nextId++, desktopId, 'New chat', { agentId: agentId ?? 1, cwd: cwd ?? AGENT_HOME })
         sessions = [...sessions, created]
         return created
       },
@@ -257,6 +257,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       respondPermission: async () => {},
       revertChange: async () => {},
       clearTranscript: async () => {},
+      retry: async () => false,
+      restartAgent: async () => {},
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
     },
     desktop: (desktopApi = createFakeDesktop({
@@ -274,7 +276,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     recycle: extras.recycle,
     snip: extras.snip,
     processes: {
-      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
+      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, memoryBytes: 47_300_000, cpuPercent: 1.2, sessionIds: sessions.map((s) => s.id) }],
       end: async () => {}
     },
     a2ui: { dispatch: async () => {}, deleteSurface: async () => {}, moveSurface: async () => {}, setSidebarHidden: async () => {} },

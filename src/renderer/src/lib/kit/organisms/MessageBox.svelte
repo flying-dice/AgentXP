@@ -1,9 +1,10 @@
 <script lang="ts">
   import DialogButtons from '../molecules/DialogButtons.svelte'
-  import { cancelResultFor, type DialogResult, type MessageBoxButtons } from '../molecules/DialogButtons'
+  import { cancelResultFor, type MessageBoxButtons } from '../molecules/DialogButtons'
   import MessageIcon from '../molecules/MessageIcon.svelte'
   import type { MessageIconKind } from '../molecules/MessageIcon'
-  import { resultsFor } from './messageBox'
+  import Button from '../atoms/Button.svelte'
+  import { resultsFor, type MessageBoxAction } from './messageBox'
   import Dialog from './Dialog.svelte'
 
   interface Props {
@@ -14,7 +15,9 @@
     icon?: MessageIconKind | 'none'
     defaultButton?: number
     contained?: boolean
-    onresult?: (result: DialogResult) => void
+    /** Buttons with their own words in place of `buttons`; `onresult` gets the id of the one picked (Esc: the last). */
+    actions?: readonly MessageBoxAction[]
+    onresult?: (result: string) => void
   }
 
   let {
@@ -25,6 +28,7 @@
     icon = 'information',
     defaultButton = 0,
     contained = false,
+    actions,
     onresult
   }: Props = $props()
 
@@ -42,8 +46,8 @@
   bodyColor="window"
   {contained}
   {role}
-  closable={cancel !== undefined}
-  onclose={() => cancel && onresult?.(cancel)}
+  closable={actions ? actions.length > 0 : cancel !== undefined}
+  onclose={() => (actions ? actions.length > 0 && onresult?.(actions[actions.length - 1]!.id) : cancel && onresult?.(cancel))}
   class="w7-messagebox"
 >
   <div class="message">
@@ -51,7 +55,15 @@
     <p class="text">{text}</p>
   </div>
   {#snippet buttons()}
-    <DialogButtons buttons={results} acceptButton={accept} cancelButton={cancel ?? 'none'} {onresult} />
+    {#if actions}
+      <div class="actions">
+        {#each actions as action, i (action.id)}
+          <Button isDefault={i === Math.min(defaultButton, actions.length - 1)} data-testid="message-box-action-{action.id}" data-autofocus={i === Math.min(defaultButton, actions.length - 1) ? '' : undefined} onclick={() => onresult?.(action.id)}>{action.label}</Button>
+        {/each}
+      </div>
+    {:else}
+      <DialogButtons buttons={results} acceptButton={accept} cancelButton={cancel ?? 'none'} {onresult} />
+    {/if}
   {/snippet}
 </Dialog>
 
@@ -67,6 +79,16 @@
     padding: 20px 22px 20px 18px;
     min-height: 62px;
     background: var(--w7-window);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .actions :global(.w7-btn) {
+    min-width: 75px;
+    width: auto;
   }
   .text {
     margin: 0;

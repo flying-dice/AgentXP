@@ -167,6 +167,8 @@ export function createApi(s: ApiServices): InvokeApi {
       respondPermission: async (requestId, optionId) => s.broker.respond(requestId, optionId),
       revertChange: (changeId) => s.reverter.revert(changeId),
       clearTranscript: async (id) => s.sessions.clearTranscript(id),
+      retry: async (id) => s.sessions.retry(id),
+      restartAgent: (id) => s.sessions.restartAgent(id),
       exportTranscript: (id) => s.exporter.export(id)
     },
     a2ui: {

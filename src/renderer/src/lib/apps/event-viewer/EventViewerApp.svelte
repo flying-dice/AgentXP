@@ -30,7 +30,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
-  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, logTree, nodeScope, summaryOf } from './eventModel'
+  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, filterEvents, findNext, formatDateTime, generalLines, logTree, nodeScope, summaryOf } from './eventModel'
 
   let { window: win, host }: AppProps<'event-viewer'> = $props()
 
@@ -253,7 +253,7 @@
               {#snippet panel2()}
                 <div class="detail" data-testid="event-viewer-detail">
                   {#if current}
-                    <div class="dhead"><Icon name={LEVEL_ICON[current.level]} /> <strong>Event {current.id}, {SOURCE_LABEL[current.source]}</strong></div>
+                    <div class="dhead"><Icon name={LEVEL_ICON[current.level]} /> <strong title={SOURCE_HINT[current.source]}>Event {current.id}, {SOURCE_LABEL[current.source]}</strong></div>
                     <TabControl {tabs} bind:selected={tab} aria-label="Event detail">
                       {#snippet panel(t)}
                         {#if t.id === 'general'}

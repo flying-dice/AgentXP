@@ -32,11 +32,11 @@ Click **Start -> System Tools -> Task Manager**, or click **Start -> Task Manage
 
 ### The Chats Tab
 
-The tab lists the chats with the columns **Chat**, **Agent**, **Status**, **Tokens**, and **Context**. **End Task** stops the turn of the selected chat. The button works only while the chat is busy.
+The tab lists the chats with the columns **Chat**, **Agent**, **Status**, and **Context**. A chat that waits for your next message reads **Idle (the agent program is still running)**. The tokens of each chat are on the **Performance** tab. **End Task** stops the turn of the selected chat. The button works only while the chat is busy.
 
 ### The Processes Tab
 
-The tab lists the agent programs with the columns **Agent**, **PID**, **Desktop**, and **Chats**. **End process** stops the selected program. Its chats close, and work in progress is lost.
+The tab lists the agent programs with the columns **Agent**, **PID**, **Desktop**, **Chats**, **Memory**, and **CPU**. **Memory** and **CPU** show what the program uses now. A dash means that Agent7 cannot read it. **End process** stops the selected program. Its chats close, and work in progress is lost.
 
 ### The Terminals Tab
 
@@ -105,7 +105,7 @@ To stop a chat that does not respond, follow the steps below:
 To end an agent program, follow the steps below:
 
 1. Open the **Processes** tab and select the agent.
-2. Click **End process**. A question appears.
+2. Click **End process**. A question appears, for example: End 'Claude Code'? Its 1 chat will stop and work in progress is lost.
 3. Click **Yes**.
 
 ## 6 - Troubleshooting

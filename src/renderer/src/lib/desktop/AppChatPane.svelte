@@ -52,8 +52,9 @@
 </script>
 
 {#if pane.collapsed}
-  <button type="button" class="edge" data-testid="chat-pane-toggle" aria-label="Show the chat pane" title="Show the chat pane (Ctrl+Shift+C)" onclick={() => desktop.setChatPane(w.id, true)}>
-    <Icon name="chevron-left" size={10} />
+  <button type="button" class="edge" data-testid="chat-pane-toggle" aria-label="Show chat pane" title="Show chat pane (Ctrl+Shift+C)" onclick={() => desktop.setChatPane(w.id, true)}>
+    <Icon name="chevron-left" size={12} />
+    <span class="label">Chat</span>
   </button>
 {:else}
   <div class="pane" data-testid="chat-pane" data-window-id={w.id}>
@@ -88,17 +89,22 @@
   }
   .edge {
     flex: none;
-    width: 12px;
-    padding: 0;
+    width: 24px;
+    min-width: 24px;
+    padding: 6px 0 0;
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 6px;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
     background: linear-gradient(90deg, #f9fbfd, #e4ecf6);
     border: 0;
     border-left: 1px solid #9aa9bf;
     border-radius: 0;
     cursor: pointer;
+  }
+  .label {
+    writing-mode: vertical-rl;
+    color: var(--w7-text-muted);
   }
   .edge:hover {
     background: var(--w7-btn-hover-face);

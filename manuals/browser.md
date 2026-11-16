@@ -41,11 +41,11 @@ The tab strip is under the toolbar. Each tab shows the title of its page. **New 
 
 ### The Page
 
-The page area shows the web page of the active tab.
+The page area shows the web page of the active tab. A new tab shows **Type an address above to open a page.** When a page cannot be opened, Browser shows **This page can't be displayed**, the address, the cause, and what to try. Click **Refresh** to try again, or **Help** to read this manual.
 
 ### The Status Bar
 
-The status bar shows **Done** or **Opening page** with the address. It also shows the zone (Internet or Computer) and the zoom.
+The status bar shows what the page does: **Connecting...** while a page loads, **Done** when it is open, and **Could not load the page** when it failed. It also shows the zone (Internet or Computer) and the zoom of the page. Press Ctrl+Plus and Ctrl+Minus to zoom, and Ctrl+0 to go back to 100%.
 
 ### The Chat Pane
 
@@ -68,7 +68,13 @@ Each Browser window has a chat pane at its right edge. The pane starts closed, a
 | New tab | Opens a blank tab. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
 | Agent bar | Shows "Agent is using this page" while the agent works. | `browser-agent-bar` |
-| Take control | Puts you in control of the desktop. | `browser-agent-takeover` |
+| Take over | Pauses the agent on this page so that you can use it. The agent must ask before it uses the page again. | `browser-agent-takeover` |
+| Start page | The text of a new tab: type an address above. | `browser-start-page` |
+| Error page | Shows when a page could not be opened. | `browser-error-page` |
+| Error title | "This page can't be displayed". | `browser-error-title` |
+| Error cause | The address that failed and why. | `browser-error-cause` |
+| Error refresh | Tries to open the address again. | `browser-error-refresh` |
+| Error help | Opens this manual. | `browser-error-help` |
 | Highlight ring | An orange frame around the item the agent used. | `browser-agent-ring` |
 
 ### Menu Bar and Context Menu
@@ -89,6 +95,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: copy address | Edit menu: copies the address of the page. | `browser-menu-copy-address` |
 | Menu: refresh | View menu: loads the page again. F5. | `browser-menu-refresh` |
 | Menu: stop | View menu: stops loading. | `browser-menu-stop` |
+| Menu: zoom in | View menu: makes the page larger. Ctrl+Plus. | `browser-menu-zoom-in` |
+| Menu: zoom out | View menu: makes the page smaller. Ctrl+Minus. | `browser-menu-zoom-out` |
+| Menu: actual size | View menu: sets the page to 100%. Ctrl+0. | `browser-menu-zoom-reset` |
 | Menu: back | View menu: goes back. | `browser-menu-back` |
 | Menu: forward | View menu: goes forward. | `browser-menu-forward` |
 | Context menu: back | Goes back. | `browser-ctx-back` |
@@ -126,7 +135,9 @@ The agent can use a web app such as a team chat, mail, or documents. Follow the 
 2. Sign in yourself. Agent7 keeps the session. The agent never types a password.
 3. Ask the agent to read or send messages.
 
-While the agent works, a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. To stop the agent, click **Take control**, or pause Agent7 on the top bar. When you are in control, the agent must ask you before each action.
+While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". An orange frame shows the item the agent used. To use the page yourself, click **Take over**, or click **Pause all agents** on the top bar. After **Take over**, the agent must ask you before each action.
+
+The chip **Browser** on the top bar shows that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one.
 
 ### What the Agent Can Do
 
@@ -150,6 +161,7 @@ The agent reads the whole page, also below the fold, in frames, and in shadow ro
 ## 6 - Troubleshooting
 
 - **Back is dimmed.** The window has no earlier page.
+- **The page says "This page can't be displayed".** Make sure the address is right and your computer is online. Then click **Refresh**.
 - **The page stays blank.** Click **Refresh**. Make sure that your computer is online.
 - **The agent cannot browse.** Open Browser. The permission for Browser must be **Allow** or **Ask** in **[Control Centre](control-centre.md)**.
 

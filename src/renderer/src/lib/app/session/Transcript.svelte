@@ -4,6 +4,7 @@
   import type { AguiSessionState } from '@shared/agui-state'
   import type { SurfaceActivity } from '../../agui/activities'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
+  import type { ChatProblem, ProblemActionId, SendState } from './chatProblem'
   import A2uiActivity from './A2uiActivity.svelte'
   import SurfaceRow from './SurfaceRow.svelte'
   import { noSurfaceControls, surfaceRowModel, type SurfaceControls } from './surfaceRow'
@@ -14,6 +15,7 @@
   import ToolCallItem from './ToolCallItem.svelte'
   import UserMessage from './UserMessage.svelte'
   import { buildTranscriptRows } from './transcriptRows'
+  import { earlierStepRowIds } from './toolSummary'
 
   interface Props {
     messages: readonly Message[]
@@ -23,7 +25,18 @@
     agentName: string
     folderName: string
     running?: boolean
-    error?: string | null
+    /** What went wrong, in plain words with its buttons (see `describeProblem`); null when all is well. */
+    problem?: ChatProblem | null
+    onproblem?: (id: ProblemActionId) => void
+    /** The send state of a user message by message id (`not-sent`, `stopped`); a message not in it was sent. */
+    sendStates?: ReadonlyMap<string, SendState>
+    /** "Send again" and "Edit" of a message that was not sent. */
+    onresend?: () => void
+    onedit?: () => void
+    /** The user pressed Stop and the reply ended: the notice "You stopped this reply" shows at the end. */
+    stopped?: boolean
+    /** Tool calls whose permission request the user denied. */
+    deniedToolCalls?: ReadonlySet<string>
     /** The tool call a permission request is open for. */
     waitingToolCallId?: string | null
     onaction?: (event: A2uiClientEvent) => void
@@ -40,44 +53,76 @@
     agentName,
     folderName,
     running = false,
-    error = null,
+    problem = null,
+    onproblem,
+    sendStates = new Map(),
+    onresend,
+    onedit,
+    stopped = false,
     waitingToolCallId = null,
+    deniedToolCalls = new Set(),
     onaction,
     surfaceControls = noSurfaceControls,
     onlink
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
+  const rowDenied = (rowId: string): boolean => {
+    const row = rows.find((r) => r.id === rowId)
+    return row?.kind === 'tool' && deniedToolCalls.has(row.toolCallId)
+  }
+  const earlier = $derived(earlierStepRowIds(rows, rowDenied))
 
   let scroller: HTMLDivElement | undefined = $state()
   let pinned = true
+  /** Content grew while the user had scrolled up: the bar "New messages" offers the way to the end. */
+  let unseen = $state(false)
 
   const onScroll = (): void => {
-    if (scroller) pinned = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24
+    if (!scroller) return
+    pinned = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 24
+    if (pinned) unseen = false
   }
 
-  // Follow new content while the user is at the bottom. Streaming text grows without changing `rows`
-  // identity, so the observer below covers growth as well.
+  const toEnd = (): void => {
+    if (!scroller) return
+    scroller.scrollTop = scroller.scrollHeight
+    pinned = true
+    unseen = false
+  }
+
+  // Follow new content while the user is at the bottom, and say so when they are not. Streaming text grows without
+  // changing `rows` identity, so the observer below covers growth as well.
   $effect(() => {
     if (!scroller) return
     const content = scroller.firstElementChild
     if (!content) return
     const follow = (): void => {
-      if (pinned && scroller) scroller.scrollTop = scroller.scrollHeight
+      if (pinned) toEnd()
+      else unseen = true
     }
     const observer = new ResizeObserver(follow)
     observer.observe(content)
-    follow()
+    toEnd()
     return () => observer.disconnect()
   })
+
+  /** An inline form that appears is scrolled fully into view, also for a user who had scrolled up. */
+  function reveal(node: HTMLElement): void {
+    void Promise.resolve().then(() => {
+      node.scrollIntoView({ block: 'nearest' })
+      unseen = false
+    })
+  }
 </script>
 
+<div class="wrap">
 <div class="transcript w7-scroll" data-testid="chat-transcript" data-running={running} bind:this={scroller} onscroll={onScroll} role="log" aria-label="Conversation" aria-live="polite">
   <div class="rows">
     {#each rows as row (row.id)}
       <div class="row">
         {#if row.kind === 'user'}
-          <UserMessage text={row.text} attachments={row.attachments} />
+          <UserMessage text={row.text} attachments={row.attachments} state={sendStates.get(row.id) ?? 'sent'} {onresend} {onedit} />
         {:else if row.kind === 'agent'}
           <AgentMessage {agentName} text={row.text} {onlink} />
         {:else if row.kind === 'reasoning'}
@@ -88,6 +133,8 @@
             toolCall={agentState.toolCalls[row.toolCallId]}
             terminals={agentState.terminals}
             waiting={waitingToolCallId === row.toolCallId}
+            denied={deniedToolCalls.has(row.toolCallId)}
+            earlier={earlier.has(row.id)}
           />
         {:else if row.kind === 'stop'}
           <StopNotice reason={row.reason} />
@@ -101,7 +148,7 @@
               ondelete={() => surfaceControls.remove(surface)}
               onmove={(target) => surfaceControls.move(surface, target)}
             />
-            {#if surface.target === 'inline'}<A2uiActivity messages={surface.messages} {sessionId} {onaction} />{/if}
+            {#if surface.target === 'inline'}<div use:reveal><A2uiActivity messages={surface.messages} {sessionId} {onaction} {running} /></div>{/if}
           {/if}
         {/if}
       </div>
@@ -110,8 +157,11 @@
         <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
       </div>
     {/each}
-    {#if error}
-      <div class="row"><ErrorRow message={error} /></div>
+    {#if stopped && !running && !problem}
+      <div class="row"><StopNotice reason="cancelled" /></div>
+    {/if}
+    {#if problem}
+      <div class="row"><ErrorRow message={problem.text} actions={problem.actions} onaction={onproblem} /></div>
     {/if}
     {#if running}
       <div class="busy">
@@ -121,8 +171,36 @@
     {/if}
   </div>
 </div>
+  {#if unseen}
+    <button type="button" class="more" data-testid="chat-new-messages" onclick={toEnd}>New messages. Click to go to the end.</button>
+  {/if}
+</div>
 
 <style>
+  .wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .more {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    padding: 2px 12px;
+    border: 1px solid #7a9cc9;
+    border-radius: 3px;
+    background: linear-gradient(#fdfeff, #dbe8f8);
+    font: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+  .more:hover {
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
+  }
   .transcript {
     flex: 1;
     min-height: 0;

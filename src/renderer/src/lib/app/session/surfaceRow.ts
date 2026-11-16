@@ -11,10 +11,14 @@ export interface SurfaceRowModel {
   target: A2uiSurfaceTarget
   state: 'open' | 'closed'
   stateLabel: 'Open' | 'Closed'
+  /** "Board: Open": the title and the state in one reading, so the state is never next to a button of the same word. */
+  stateText: string
+  /** The caption of the button that shows the surface: "Open" for a closed one, "Show" for one that is already open. */
+  openLabel: 'Open' | 'Show'
   icon: IconName
   /** Inline surfaces have nothing to open or close: they are in the transcript. */
   hasOpenClose: boolean
-  /** Open (re)opens or focuses; it is never disabled for a window (focus), but is for a sidebar tab already shown. */
+  /** Open (re)opens, Show brings the open surface to the front; it is never disabled. */
   canOpen: boolean
   canClose: boolean
   /** The places the surface can be moved to (every place but its own). */
@@ -38,15 +42,18 @@ export const surfaceDisplayTitle = (messages: readonly A2uiServerMessage[]): str
 export function surfaceRowModel(surface: Pick<SurfaceActivity, 'surfaceId' | 'target' | 'hidden' | 'messages'>, windowOpen: boolean): SurfaceRowModel {
   const { target } = surface
   const open = target === 'inline' || (target === 'sidebar' ? !surface.hidden : windowOpen)
+  const title = surfaceDisplayTitle(surface.messages)
   return {
     surfaceId: surface.surfaceId,
-    title: surfaceDisplayTitle(surface.messages),
+    title,
     target,
     state: open ? 'open' : 'closed',
     stateLabel: open ? 'Open' : 'Closed',
+    stateText: `${title}: ${open ? 'Open' : 'Closed'}`,
+    openLabel: open ? 'Show' : 'Open',
     icon: ICONS[target],
     hasOpenClose: target !== 'inline',
-    canOpen: target === 'window' || !open,
+    canOpen: true,
     canClose: open,
     moveTargets: (['inline', 'sidebar', 'window'] as const).filter((t) => t !== target)
   }

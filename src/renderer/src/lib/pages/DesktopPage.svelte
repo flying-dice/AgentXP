@@ -108,7 +108,7 @@
   ]
 
   function runApp(id: string): void {
-    if (id === 'chat') void desktop.newChat()
+    if (id === 'chat') void desktop.newChatFlow()
     else if (id === 'code-review') void desktop.openReview()
     else void desktop.openApp({ app: id as AppKind })
   }
@@ -119,7 +119,7 @@
         return void desktop.openApp({ app: 'explorer', path: '' })
       case 'chats': {
         const latest = desktop.chats[0]
-        return void (latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat())
+        return void (latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChatFlow())
       }
       case 'recycle':
         return void desktop.openApp({ app: 'recycle-bin' })
@@ -184,7 +184,7 @@
       gadgets={desktop.gadgetsVisible}
       onselect={(id) => (desktop.selectedIcon = id)}
       onopen={openIcon}
-      onnewchat={() => void desktop.newChat()}
+      onnewchat={() => void desktop.newChatFlow()}
       onopencomputer={() => void desktop.openApp({ app: 'explorer', path: '' })}
       ontogglegadgets={() => (desktop.gadgetsVisible = !desktop.gadgetsVisible)}
       oncontrolcentre={() => void desktop.openApp({ app: 'control-centre' })}
@@ -199,6 +199,7 @@
       <TopBar
         title={desktop.state.title}
         working={desktop.working}
+        agentProblem={desktop.agentProblem}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
         tools={desktop.state.tools}
@@ -276,6 +277,7 @@
     {#if desktop.newChatDialogOpen}
       <NewChatDialog
         drives={desktop.state.drives}
+        preselect={desktop.lastChatDrive}
         oncancel={() => (desktop.newChatDialogOpen = false)}
         onstart={(cwd) => {
           desktop.newChatDialogOpen = false

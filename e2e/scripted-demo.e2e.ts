@@ -155,7 +155,8 @@ describe('scripted agent: demo.json, deny path', () => {
     await see.visible(chat.agentMessage('I left the files alone'))
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.toolCalls, 1)
-    await see.attribute(chat.toolCalls, 'data-status', 'failed')
+    await see.attribute(chat.toolCalls, 'data-status', 'denied') // "Denied by you", not a failure
+    await see.text(chat.toolCalls, 'Denied by you')
 
     const acp = protocolNames(await protocolEvents(ctx.desktopPage, { source: 'acp', sessionId }))
     expect(acp).toContain('session/request_permission (response)')

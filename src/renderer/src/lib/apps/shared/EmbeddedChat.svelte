@@ -19,11 +19,14 @@
   import { DESKTOP_CONTEXT_DESCRIPTION } from '@shared/desktop'
   import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
-  import { connectionLabel } from '../../app/sessionStatus'
+  import { connectionLabel, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
+  import { logLines, problemDetails } from '../../app/session/chatProblem'
+  import { folderLabel } from '../../app/session/folderLabel'
   import Composer from '../../app/session/Composer.svelte'
   import SessionView from '../../app/session/SessionView.svelte'
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import Icon from '../../kit/atoms/Icon.svelte'
+  import { showMessageBox } from '../../kit/organisms/messageBox'
   import { cwdLabel } from '../explorer/explorerModel'
   import { useSessionStores } from '../sessionStores.svelte'
   import type { DesktopHost } from '../types'
@@ -178,8 +181,23 @@
   const suggestionsOpen = $derived(suggestions.length > 0 && !starting)
 
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
+  const folderText = $derived(session ? folderLabel(session.cwd, host.state.drives) : undefined)
+
+  /** "Details...": the technical text of the error and the last lines of the chat's log (shown nowhere else). */
+  async function showDetails(detail: string | null): Promise<void> {
+    const events = await host.api.events.query({ desktopId: host.state.desktopId, sessionId, limit: 200 }).catch(() => [])
+    await showMessageBox({ text: problemDetails(detail, logLines(events)), caption: 'Agent7', buttons: 'OK', icon: 'information' })
+  }
+  async function showInEventViewer(): Promise<void> {
+    const viewer = await host.openApp({ app: 'event-viewer' })
+    host.updateView(viewer.id, { app: 'event-viewer', sessionId, level: 'all', selectedEventId: null })
+  }
+  const setAskFirst = (on: boolean): void => void host.api.desktop.setUserInControl(host.state.desktopId, on)
+  /** "Reconnect" of a chat that lost its agent: a fresh agent program, then the chat loads again. */
+  const reconnect = (): void => void shared?.reconnect()
+
   const heading = $derived(title ?? shared?.state.session.title ?? session?.title ?? 'Chat')
-  const status = $derived(shared?.state.session.status && shared.state.session.status !== 'closed' ? shared.state.session.status : (session?.status ?? null))
+  const status = $derived(effectiveStatus(shared?.state.session.status, session?.status))
 
   function startResize(event: PointerEvent): void {
     const target = event.currentTarget as HTMLElement
@@ -204,28 +222,31 @@
 </script>
 
 {#if collapsible && collapsed}
-  <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat panel (collapsed)">
-    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show the chat panel" title="Show the chat panel" onclick={() => (collapsed = false)}>
+  <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat pane (collapsed)">
+    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show the chat pane" title="Show chat pane" onclick={() => (collapsed = false)}>
       <Icon name="chevron-left" />
     </button>
     <span class="vertical">{heading}</span>
   </aside>
 {:else}
   {#if resizable}
-    <div class="resizer" data-testid="embedded-chat-resizer" role="slider" aria-orientation="horizontal" aria-valuemin={260} aria-valuemax={720} aria-valuenow={width} aria-label="Chat panel width" tabindex="0" onpointerdown={startResize} onkeydown={resizeKey}></div>
+    <div class="resizer" data-testid="embedded-chat-resizer" role="slider" aria-orientation="horizontal" aria-valuemin={260} aria-valuemax={720} aria-valuenow={width} aria-label="Chat pane width" tabindex="0" onpointerdown={startResize} onkeydown={resizeKey}></div>
   {/if}
-  <aside class="panel" class:padded={collapsible || resizable} data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="false" style={resizable || collapsible ? `width:${width}px` : undefined} aria-label="Chat panel">
+  <aside class="panel" class:padded={collapsible || resizable} data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="false" style={resizable || collapsible ? `width:${width}px` : undefined} aria-label="Chat pane">
     {#if collapsible}
       <div class="head">
         <Icon name="session" size={16} />
         <b class="heading" data-testid="embedded-chat-title" title={heading}>{heading}</b>
-        <span class="state" data-testid="embedded-chat-status">{connectionLabel(status)}</span>
+        <span class="state" data-testid="embedded-chat-status">{connectionLabel(starting ? 'connecting' : status)}</span>
+        {#if isDisconnected(status) && sessionId > 0}
+          <button type="button" class="reconnect" data-testid="embedded-chat-reconnect" title="Start the agent again" onclick={reconnect}>Reconnect</button>
+        {/if}
         {#if onnew && sessionId > 0}
           <button type="button" class="collapse" data-testid="embedded-chat-new" aria-label="New conversation" title="New conversation: deletes this one" onclick={() => void onnew?.()}>
             <Icon name="refresh" />
           </button>
         {/if}
-        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat panel" title="Hide the chat panel" onclick={() => (collapsed = true)}>
+        <button type="button" class="collapse" data-testid="embedded-chat-toggle" aria-label="Hide the chat pane" title="Hide chat pane" onclick={() => (collapsed = true)}>
           <Icon name="chevron-right" />
         </button>
       </div>
@@ -233,7 +254,7 @@
     <div class="body">
       {#if shared && session}
         {#key sessionId}
-          <SessionView store={shared} {session} {folder} {agent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
+          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} askFirst={host.state.userInControl} onaskfirst={setAskFirst} ondetails={(detail) => void showDetails(detail)} onshowevents={() => void showInEventViewer()} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
         {/key}
       {:else if sessionId <= 0 && onstart}
         <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : 'Ask about what you are looking at. The conversation ends when you close this window.')}</div>
@@ -293,6 +314,20 @@
   .state {
     color: var(--w7-text-muted);
     font-size: 11px;
+  }
+  .reconnect {
+    flex: none;
+    height: 18px;
+    padding: 0 6px;
+    border: 1px solid #9aa9bf;
+    border-radius: 2px;
+    background: linear-gradient(#fdfeff, #e6eef8);
+    font: inherit;
+    font-size: 11px;
+  }
+  .reconnect:hover {
+    border-color: var(--w7-btn-hover-border);
+    background: var(--w7-btn-hover-face);
   }
   .collapse,
   .expand {

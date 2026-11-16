@@ -7,9 +7,11 @@
     messages: readonly A2uiServerMessage[]
     sessionId: number
     onaction?: (event: A2uiClientEvent) => void
+    /** True while the agent works on a turn (the form says "Sending..." then "Sent."). */
+    running?: boolean
   }
 
-  let { messages, sessionId, onaction }: Props = $props()
+  let { messages, sessionId, onaction, running }: Props = $props()
 
   const title = $derived.by(() => {
     for (const m of messages) if ('createSurface' in m) return m.createSurface.theme?.title ?? ''
@@ -18,5 +20,5 @@
 </script>
 
 <GroupBox text={title}>
-  <A2uiSurface {messages} {sessionId} {onaction} />
+  <A2uiSurface {messages} {sessionId} {onaction} busy={running} />
 </GroupBox>

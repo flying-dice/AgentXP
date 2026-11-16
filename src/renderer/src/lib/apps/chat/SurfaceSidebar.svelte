@@ -15,9 +15,11 @@
     /** The X of a tab: hides the surface (it stays reopenable from its chat row). */
     onclose?: (surface: SurfaceActivity) => void
     onaction?: (event: A2uiClientEvent) => void
+    /** True while the agent works on a turn (a form says "Sending..." then "Sent."). */
+    running?: boolean
   }
 
-  let { surfaces, sessionId, selected, width = $bindable(300), onselect, onclose, onaction }: Props = $props()
+  let { surfaces, sessionId, selected, width = $bindable(300), onselect, onclose, onaction, running }: Props = $props()
 
   const current = $derived(surfaces.find((s) => s.surfaceId === selected) ?? surfaces[0])
 
@@ -59,7 +61,7 @@
     </div>
     <div class="body w7-scroll" role="tabpanel">
       {#key current.surfaceId}
-        <A2uiSurface messages={current.messages} {sessionId} {onaction} />
+        <A2uiSurface messages={current.messages} {sessionId} {onaction} busy={running} />
       {/key}
     </div>
   </aside>

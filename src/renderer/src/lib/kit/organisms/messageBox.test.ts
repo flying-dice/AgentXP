@@ -36,6 +36,17 @@ describe('MessageBoxService', () => {
   })
 })
 
+describe('MessageBoxService with actions', () => {
+  it('resolves with the id of the picked action', async () => {
+    const service = new MessageBoxService()
+    const promise = service.show({ text: 'The agent could not start.', actions: [{ id: 'agents', label: 'Open Agents' }, { id: 'close', label: 'Close' }] })
+    const [box] = get(service.queue)
+    expect(box.options.actions?.map((a) => a.id)).toEqual(['agents', 'close'])
+    service.settle(box.id, 'agents')
+    await expect(promise).resolves.toBe('agents')
+  })
+})
+
 describe('cancelResultFor', () => {
   it('follows the Windows Esc rules', () => {
     expect(cancelResultFor(MESSAGE_BOX_BUTTONS.OK)).toBe('ok')

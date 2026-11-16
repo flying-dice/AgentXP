@@ -134,6 +134,69 @@ describe('SessionAgentStore', () => {
     expect(store.running).toBe(false)
   })
 
+  describe('a send that fails', () => {
+    const calls: string[] = []
+    beforeEach(() => {
+      calls.length = 0
+      store = new SessionAgentStore(5, api, () => ({
+        retry: async () => (calls.push('retry'), true),
+        restartAgent: async () => void calls.push('restart')
+      }))
+    })
+    const failing = (input: RunAgentInput): object[] => [
+      { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId },
+      { type: EventType.RUN_ERROR, message: 'ACP connection closed' }
+    ]
+
+    it('keeps the message, marks it unanswered and resolves false', async () => {
+      api.script = failing
+      expect(await store.send('go')).toBe(false)
+      expect(store.failedSend).toMatchObject({ text: 'go', unanswered: true })
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+    })
+
+    it('Send again withdraws the failed copy and sends one new message, so the transcript has it once', async () => {
+      api.script = failing
+      await store.send('go')
+      api.script = (input) => bookends(input)
+      expect(await store.resend()).toBe(true)
+      expect(calls).toEqual(['retry'])
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+      expect(store.failedSend).toBeNull()
+      expect(store.error).toBeNull()
+    })
+
+    it('Restart and send again starts a fresh agent first', async () => {
+      api.script = failing
+      await store.send('go')
+      api.script = (input) => bookends(input)
+      await store.resend({ restart: true })
+      expect(calls).toEqual(['restart', 'retry'])
+    })
+
+    it('Edit takes the message back and returns it for the composer', async () => {
+      api.script = failing
+      await store.send('go', ['/a.txt'])
+      const back = await store.takeBack()
+      expect(back).toMatchObject({ text: 'go', attachments: ['/a.txt'] })
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(0)
+      expect(store.failedSend).toBeNull()
+    })
+  })
+
+  it('remembers a denied tool call and a stopped turn', async () => {
+    api.script = (input) => bookends(input).map((e, i) => (i === 1 ? { ...e, ...interruptOutcome('9') } : e))
+    await store.send('go')
+    api.script = (input) => bookends(input)
+    await store.resolveInterrupt(null)
+    expect(store.deniedToolCalls.has('t1')).toBe(true)
+    expect(store.stoppedByUser).toBe(false)
+    await store.cancel()
+    expect(store.stoppedByUser).toBe(true)
+    await store.send('again')
+    expect(store.stoppedByUser).toBe(false)
+  })
+
   it('cancel aborts the thread; with a suspended permission request it reconnects afterwards', async () => {
     api.script = (input) => bookends(input).map((e, i) => (i === 1 ? { ...e, ...interruptOutcome('2') } : e))
     await store.send('go')

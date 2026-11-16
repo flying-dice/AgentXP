@@ -3,7 +3,7 @@ import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SessionDto } from '@shared/models'
 import { composeApp, type AppServices } from './compose'
 import { RecordingPublisher } from './application/test-helpers'
@@ -162,7 +162,9 @@ describe('app composition with the fake ACP agent', () => {
 
     const chat = await app.api.desktop.newChat(desktop.id, agent.id, 'E:\\')
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
-    expect(await app.api.sessions.get(sessionId)).toMatchObject({ desktopId: desktop.id, status: 'idle', cwd: 'E:\\' })
+    // The window opens at once; the agent starts in the background (the chat is `connecting` until it is up).
+    expect(await app.api.sessions.get(sessionId)).toMatchObject({ desktopId: desktop.id, cwd: 'E:\\' })
+    await vi.waitFor(async () => expect(await app.api.sessions.get(sessionId)).toMatchObject({ status: 'idle' }))
 
     await app.api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
     const changed = publisher.payloads('desktop.changed')
@@ -209,6 +211,7 @@ describe('app composition with the fake ACP agent', () => {
     const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
     const chat = await app.api.desktop.newChat(desktop.id, agent.id, 'E:\\')
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
+    await vi.waitFor(async () => expect(await app.api.sessions.get(sessionId)).toMatchObject({ status: 'idle' }))
     const systemDisk = join(app.vfs.systemRoot(desktop.id))
     expect(existsSync(systemDisk)).toBe(true)
 

@@ -18,6 +18,7 @@
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
+  import { pageStatus, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -38,8 +39,10 @@
   const waiters = new Map<number, (() => void)[]>()
   /** The tab main drives right now. */
   let attachedTo = 0
+  /** The bar stays this long after the agent's last action, so it does not flicker between steps of one turn. */
+  const ACTIVITY_MS = 8000
 
-  type BrowserTabPageApi = { navigate(url: string): void; step(delta: -1 | 1): void; reload(): void; stop(): void }
+  type BrowserTabPageApi = { navigate(url: string): void; step(delta: -1 | 1): void; reload(): void; stop(): void; zoomBy(direction: -1 | 0 | 1): void }
 
   const active = $derived(tabs.find((t) => t.id === activeId) ?? tabs[0])
   const sync = new ViewSync<{ url: string }>((v) => v.url)
@@ -148,9 +151,11 @@
   async function handle(method: string, params: unknown): Promise<unknown> {
     if (method === 'activity') {
       const p = (params ?? {}) as { label?: string; box?: { x: number; y: number; width: number; height: number } }
+      // The first action of a turn brings the window to the front: the user sees what the agent does without hunting for it.
+      if (activity === null) void host.focusWindow(win.id)
       activity = p.label || 'working'
       clearTimeout(activityTimer)
-      activityTimer = setTimeout(() => (activity = null), 2500)
+      activityTimer = setTimeout(() => (activity = null), ACTIVITY_MS)
       if (p.box) {
         ring = p.box
         clearTimeout(ringTimer)
@@ -229,6 +234,10 @@
         label: '&View',
         items: [
           { id: 'refresh', testid: 'browser-menu-refresh', label: '&Refresh', shortcut: 'F5', action: () => pages[activeId]?.reload() },
+          { id: 'zoom-in', testid: 'browser-menu-zoom-in', label: 'Zoom &in', shortcut: 'Ctrl++', action: () => pages[activeId]?.zoomBy(1) },
+          { id: 'zoom-out', testid: 'browser-menu-zoom-out', label: 'Zoom &out', shortcut: 'Ctrl+-', action: () => pages[activeId]?.zoomBy(-1) },
+          { id: 'zoom-reset', testid: 'browser-menu-zoom-reset', label: '&Actual size', shortcut: 'Ctrl+0', action: () => pages[activeId]?.zoomBy(0) },
+          { separator: true },
           { id: 'stop', testid: 'browser-menu-stop', label: '&Stop', shortcut: 'Esc', disabled: !active.loading, action: () => pages[activeId]?.stop() },
           { separator: true },
           { id: 'back', testid: 'browser-menu-back', label: '&Back', shortcut: 'Alt+Left', disabled: !active.canBack, action: () => pages[activeId]?.step(-1) },
@@ -242,11 +251,21 @@
   )
 
   const zone = $derived(active.url.startsWith('file:') || active.url === BLANK ? 'Computer' : 'Internet')
-  const status = $derived(active.loading ? `Opening page ${active.url}...` : 'Done')
+  const status = $derived(pageStatus({ url: active.url, loading: active.loading, failed: active.failed }))
+  const userInControl = $derived(host.state.userInControl)
+
+  /** Ctrl+Plus, Ctrl+Minus and Ctrl+0 zoom the page (the guest page keeps its own keys when it has focus). */
+  function zoomKey(event: KeyboardEvent): void {
+    if (!event.ctrlKey || event.altKey) return
+    const direction = event.key === '+' || event.key === '=' ? 1 : event.key === '-' ? -1 : event.key === '0' ? 0 : null
+    if (direction === null) return
+    event.preventDefault()
+    pages[activeId]?.zoomBy(direction)
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="browser" data-testid="browser-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+<div class="browser" data-testid="browser-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => (zoomKey(e), ctx.key(e, contextItems))}>
   <MenuStrip {menus} aria-label="Browser menu" />
   <div class="chrome">
     <div class="orbs">
@@ -292,6 +311,7 @@
         testId="browser-page-{tab.id}"
         onpatch={(change) => patch(tab.id, change)}
         onready={(wc) => void ready(tab.id, wc)}
+        onhelp={help.open}
         oncontext={(info) => ((pageSelection = info.selectionText), ctx.showAt(info.x, info.y, contextItems(info)))}
       />
     {/each}
@@ -299,7 +319,12 @@
       <div class="agentbar" data-testid="browser-agent-bar" role="status">
         <Icon name="shield" size={12} />
         <span>Agent is using this page: {activity}</span>
-        <button class="takeover" data-testid="browser-agent-takeover" onclick={() => void host.api.desktop.setUserInControl(host.state.desktopId, true)}>Take control</button>
+        <button
+          class="takeover"
+          data-testid="browser-agent-takeover"
+          disabled={userInControl}
+          title="Pause the agent on this page so that you can use it. The agent must ask before it uses the page again."
+          onclick={() => void host.api.desktop.setUserInControl(host.state.desktopId, true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
       </div>
     {/if}
     {#if ring}
@@ -310,10 +335,10 @@
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={status} spring />
-    <StatusStripLabel borders={['left']} width={230}>
-      <Icon name={zone === 'Internet' ? 'globe' : 'shield'} /> <span>{zone} | Protected Mode: On</span>
+    <StatusStripLabel borders={['left']} width={130}>
+      <Icon name={zone === 'Internet' ? 'globe' : 'shield'} /> <span>{zone}</span>
     </StatusStripLabel>
-    <StatusStripLabel text="100%" borders={['left']} width={56} textAlign="right" />
+    <StatusStripLabel text={zoomText(active.zoom)} borders={['left']} width={56} textAlign="right" />
   </StatusStrip>
 </div>
 

@@ -19,9 +19,11 @@
     onmaximize?: () => void
     /** Disconnect: closes the window, the agents keep running. */
     ondisconnect?: () => void
+    /** A red chip next to the status when an agent could not start ("Agent: not started"); null = all is well. */
+    agentProblem?: string | null
   }
 
-  let { title, working, paused, userInControl, tools, onpause, ontakecontrol, maximized = false, onminimize, onmaximize, ondisconnect }: Props = $props()
+  let { title, working, paused, userInControl, tools, onpause, ontakecontrol, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
 
@@ -38,6 +40,7 @@
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" data-testid="topbar-status" title={status}>{status}</span>
+    {#if agentProblem}<span class="problem" data-testid="topbar-agent-problem" title="Open the Control Center, then Agents, to change the command of the agent.">{agentProblem}</span>{/if}
   </ConnectionBar>
   <div class="body">
     <div class="chips" data-testid="topbar-tool-chips" aria-label="Tools the agent can use now">
@@ -82,6 +85,16 @@
   .w7-topbar.folded:hover .body,
   .w7-topbar.folded:has(:focus-visible) .body {
     display: flex;
+  }
+  .problem {
+    flex: none;
+    margin-left: 6px;
+    padding: 0 6px;
+    border: 1px solid #a02020;
+    border-radius: 2px;
+    background: #c62828;
+    color: #fff;
+    white-space: nowrap;
   }
   .status {
     flex: 0 1 auto;

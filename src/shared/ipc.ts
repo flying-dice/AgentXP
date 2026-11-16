@@ -112,6 +112,13 @@ export interface Agent7Api {
     respondPermission(requestId: Id, optionId: string | null): Promise<void>
     revertChange(changeId: Id): Promise<void>
     clearTranscript(id: Id): Promise<void>
+    /**
+     * Takes back the last message of the chat when the agent never answered it (a send that failed), so sending it
+     * again does not duplicate it. Resolves false when the last entry is not an unanswered message of the user.
+     */
+    retry(id: Id): Promise<boolean>
+    /** Ends the chat's agent program (if any) and starts a fresh one: "Reconnect", "Restart and send again". */
+    restartAgent(id: Id): Promise<void>
     exportTranscript(id: Id): Promise<string | null>
   }
   a2ui: {

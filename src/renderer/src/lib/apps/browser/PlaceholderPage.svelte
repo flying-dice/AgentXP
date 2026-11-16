@@ -15,10 +15,7 @@
 
 <div class="frame" class:loading aria-label="Page preview">
   {#if blank}
-    <div class="blank">
-      <h1>Blank page</h1>
-      <p>Type a web address in the address bar. The agent can browse here too.</p>
-    </div>
+    <!-- the start page of the tab covers this -->
   {:else if example}
     <div class="example">
       <h1>Example Domain</h1>
@@ -48,8 +45,7 @@
     opacity: 0.55;
   }
   .example,
-  .generic,
-  .blank {
+  .generic {
     max-width: 600px;
     margin: 0 auto;
     padding: 30px 40px;

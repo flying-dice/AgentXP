@@ -14,7 +14,7 @@ class FakeChats implements ChatLifecycle {
   created = 0
   async create(desktopId: number, agentId: number | undefined, cwd: string | undefined, role?: SessionRole): Promise<SessionDto> {
     this.created++
-    return this.f.repos.sessions.create({ agentId: agentId ?? this.f.agentId, desktopId, cwd, title: 'New session', role })
+    return this.f.repos.sessions.create({ agentId: agentId ?? this.f.agentId, desktopId, cwd, title: 'New chat', role })
   }
   async cancel(id: number): Promise<void> {
     this.cancelled.push(id)
@@ -141,7 +141,7 @@ describe('DesktopService: windows and state', () => {
   it('shows the chat title and follows renames', async () => {
     const chat = await service.newChat(desktopId)
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
-    expect(chat).toMatchObject({ app: 'chat', title: 'New session' })
+    expect(chat).toMatchObject({ app: 'chat', title: 'New chat' })
     expect(service.openWindow({ desktopId, app: 'chat', sessionId }).id).toBe(chat.id)
     f.repos.sessions.rename(sessionId, 'Fix the build')
     service.onSessionChanged(f.repos.sessions.get(sessionId)!)

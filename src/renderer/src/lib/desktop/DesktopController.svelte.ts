@@ -14,6 +14,7 @@ import {
 } from '@shared/desktop'
 import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
+import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
 import { showMessageBox } from '../kit/organisms/messageBox'
@@ -92,6 +93,8 @@ export class DesktopController implements DesktopHost {
   startOpen = $state(false)
   /** The "New chat on..." dialog (pick the working drive). */
   newChatDialogOpen = $state(false)
+  /** The drive letter of the project the last chat was started in; the New chat dialog preselects it. */
+  lastChatDrive = $state<string | null>(null)
   actionCenterOpen = $state(false)
   gadgetsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
@@ -145,6 +148,10 @@ export class DesktopController implements DesktopHost {
     const inputs = this.activityInputs
     return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })))
   }
+  /** "Agent: not started" while a chat of this desktop has an agent that could not start (the red chip of the bar); else null. */
+  get agentProblem(): string | null {
+    return this.chats.some((c) => c.problem?.kind === 'start-failed') ? 'Agent: not started' : null
+  }
   get feed(): FeedItem[] {
     return recentToolCalls(this.activityInputs, 8)
   }
@@ -155,7 +162,8 @@ export class DesktopController implements DesktopHost {
     const store = session ? this.inbox.stores.get(session.id) : undefined
     const used = store?.state.session.contextUsed || session?.contextUsed || 0
     const size = store?.state.session.contextSize || session?.contextSize || 0
-    return { title: session?.title ?? null, used, size, ratio: size > 0 ? Math.min(1, used / size) : 0 }
+    const title = session ? (chatTitleLabels(this.chats).get(session.id) ?? session.title) : null
+    return { title, used, size, ratio: size > 0 ? Math.min(1, used / size) : 0 }
   }
   get busy(): boolean {
     return this.allSessions.some((s) => isBusy(s.status))
@@ -177,7 +185,7 @@ export class DesktopController implements DesktopHost {
   }
 
   private createStore(id: Id): SessionAgentStore {
-    const store = new SessionAgentStore(id, this.api.agui)
+    const store = new SessionAgentStore(id, this.api.agui, () => this.api.sessions)
     store.contextProvider = () => [{ description: DESKTOP_CONTEXT_DESCRIPTION, value: JSON.stringify(this.contextFor(id)) }]
     void store.connect()
     return store
@@ -423,6 +431,26 @@ export class DesktopController implements DesktopHost {
   }
 
   /**
+   * "New chat" from the Start menu, the Chats icon and the taskbar: asks where the agent works only when there is a
+   * choice. One project plugged in: the chat starts there. Several: the New chat dialog opens with the last used one
+   * preselected. None: the agent works on C: and a balloon says so.
+   */
+  async newChatFlow(): Promise<void> {
+    this.startOpen = false
+    const projects = this.state.drives.filter((d) => d.kind === 'removable')
+    if (projects.length > 1) {
+      this.newChatDialogOpen = true
+      return
+    }
+    if (projects.length === 1) {
+      await this.newChatIn(`${projects[0]!.letter}:\\`)
+      return
+    }
+    this.showBalloon({ title: 'New chat', text: 'No project is plugged in, so the agent works in its own folder on C:.', icon: 'info' })
+    await this.newChat()
+  }
+
+  /**
    * "Ask chat about this": the requesting window's chat pane opens (expanded) and gets the prompt: "Explain this" and
    * "Send selection to chat" send it, "Ask chat..." fills the composer so the user adds the question. A window without
    * a pane (or one that is gone) starts a full chat instead, like `askChatWindow`.
@@ -447,7 +475,9 @@ export class DesktopController implements DesktopHost {
     const cwd = askChatCwd(request, this.state.windows, this.state.home)
     const window = await this.newChatIn(cwd)
     if (window.view.app !== 'chat') return
-    const store = this.inbox.storeFor(window.view.sessionId) as Partial<Pick<SessionAgentStore, 'send'>>
+    // The agent starts in the background and the store loads the chat meanwhile: wait for that, a send during it is ignored.
+    const store = this.inbox.storeFor(window.view.sessionId) as Partial<Pick<SessionAgentStore, 'send' | 'whenConnected'>>
+    await store.whenConnected?.()
     await store.send?.(askChatPrompt(request))
   }
 
@@ -555,6 +585,8 @@ export class DesktopController implements DesktopHost {
   /** Starts a chat; `cwd` (a VPath on a plugged-in drive) is the agent's working directory, default its home on C:. */
   async newChatIn(cwd: VPath): Promise<AppWindowState> {
     this.startOpen = false
+    const letter = /^([A-Za-z]):/.exec(cwd)?.[1]?.toUpperCase()
+    if (letter && letter !== 'C') this.lastChatDrive = letter
     return this.api.desktop.newChat(this.state.desktopId, undefined, cwd)
   }
 

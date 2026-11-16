@@ -367,6 +367,10 @@ export interface AgentProcessDto {
   agentName: string
   desktopId: Id
   pid: number | null
+  /** Memory of the program in bytes; null when it cannot be read. */
+  memoryBytes: number | null
+  /** Percent of one CPU core; null when it cannot be read. */
+  cpuPercent: number | null
   sessionIds: Id[]
 }
 
