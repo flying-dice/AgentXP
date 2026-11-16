@@ -31,7 +31,7 @@ describe.skipIf(!existsSync(script))('built a2ui-mcp.js', () => {
         })
       )
       await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ deleteSurface: { surfaceId: 'x' } }] } })
-      expect(received).toEqual([{ sessionKey: 'k1', messages: [{ deleteSurface: { surfaceId: 'x' } }] }])
+      expect(received).toEqual([{ sessionKey: 'k1', messages: [{ version: 'v0.9', deleteSurface: { surfaceId: 'x' } }] }])
     } finally {
       await client.close()
       await bridge.stop()

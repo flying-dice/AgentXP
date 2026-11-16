@@ -4,6 +4,7 @@
  * method maps 1:1 to an `ipcMain.handle` channel named after the key path
  * (e.g. `sessions.create`); every event maps to a `webContents.send` channel.
  */
+import type { BaseEvent, RunAgentInput } from '@ag-ui/core'
 import type {
   AgentDto,
   FileChangeDto,
@@ -29,6 +30,24 @@ export interface AgentInput {
   command: string
   args: string[]
   env: Record<string, string>
+}
+
+/** What main sends on the `agui.event` channel: one AG-UI event of one run. */
+export interface AguiEventMessage {
+  runId: string
+  event: BaseEvent
+}
+
+/**
+ * AG-UI over IPC. The renderer is the AG-UI client, main is the agent backend.
+ * Call `onEvent(runId, ...)` before `run(input)` so no event is missed; the
+ * stream ends with RUN_FINISHED or RUN_ERROR and `run` resolves after it.
+ */
+export interface AguiApi {
+  run(input: RunAgentInput): Promise<void>
+  /** Cancels the turn running in the session `threadId` (the ACP turn ends as cancelled). */
+  abort(threadId: string, runId: string): Promise<void>
+  onEvent(runId: string, listener: (event: BaseEvent) => void): () => void
 }
 
 export interface AgentXpApi {
@@ -76,20 +95,18 @@ export interface AgentXpApi {
   shell: {
     openPath(path: string): Promise<void>
   }
+  agui: AguiApi
   on<K extends keyof AgentXpEvents>(event: K, listener: (payload: AgentXpEvents[K]) => void): () => void
 }
 
-/** Push events from main to renderer. */
+/**
+ * Push events from main to renderer. Transcript, tasks, changes, terminals and
+ * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
+ * What remains feeds the session list and the status bar.
+ */
 export interface AgentXpEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
-  'transcript.upserted': { sessionId: Id; entry: TranscriptEntryDto }
-  'transcript.cleared': { sessionId: Id }
-  'tasks.changed': { sessionId: Id; tasks: TaskDto[] }
-  'changes.changed': { sessionId: Id; changes: FileChangeDto[] }
-  'terminal.changed': TerminalDto
-  'surface.changed': A2uiSurfaceDto
-  'surface.removed': { sessionId: Id; surfaceId: string }
   'folders.changed': FolderDto[]
   'status.message': { text: string }
 }

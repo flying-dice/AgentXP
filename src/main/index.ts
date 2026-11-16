@@ -3,6 +3,7 @@ import { app, BrowserWindow, dialog, shell } from 'electron'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { composeApp, type AppServices } from './compose'
 import { openDatabase } from './infrastructure/db/open-database'
+import { registerAguiHandlers } from './ipc/registerAguiHandlers'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { ElectronFolderPicker, ElectronPathOpener, ElectronTextFileSaver } from './ipc/ElectronDialogs'
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
@@ -53,8 +54,10 @@ async function bootstrap(): Promise<() => Promise<void>> {
   })
   await services.start()
   const unregister = registerIpcHandlers(services.api)
+  const unregisterAgui = registerAguiHandlers(services.agui, { validate: is.dev })
   return async () => {
     unregister()
+    unregisterAgui()
     await services.shutdown()
     db.close()
   }

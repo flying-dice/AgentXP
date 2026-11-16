@@ -2,7 +2,7 @@ import { createServer, type Server, type Socket } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { rmSync } from 'node:fs'
-import { validateServerMessages } from '@shared/a2ui-catalog'
+import { A2uiMessageValidator } from '@shared/a2ui/validation'
 import type { A2uiMessageSink } from '../../domain/a2ui/ports'
 import { LineSplitter } from './ndjson'
 import { ENV_SESSION_KEY, ENV_SOCKET, MCP_SERVER_NAME, type BridgeResponse } from './protocol'
@@ -27,7 +27,8 @@ export class A2uiBridgeServer {
 
   constructor(
     private readonly sink: A2uiMessageSink,
-    readonly socketPath: string = defaultSocketPath()
+    readonly socketPath: string = defaultSocketPath(),
+    private readonly validator: A2uiMessageValidator = new A2uiMessageValidator()
   ) {}
 
   start(): Promise<void> {
@@ -78,10 +79,10 @@ export class A2uiBridgeServer {
     const { id, sessionKey, messages } = req as Record<string, unknown>
     const reqId = typeof id === 'string' ? id : ''
     if (typeof sessionKey !== 'string' || !sessionKey) return { id: reqId, ok: false, errors: ['missing sessionKey'] }
-    const validated = validateServerMessages(messages)
+    const validated = this.validator.validate(messages)
     if (!validated.ok) return { id: reqId, ok: false, errors: validated.errors }
     try {
-      const result = await this.sink.apply(sessionKey, validated.value)
+      const result = await this.sink.apply(sessionKey, validated.messages)
       return result.ok ? { id: reqId, ok: true } : { id: reqId, ok: false, errors: result.errors }
     } catch (e) {
       return { id: reqId, ok: false, errors: [e instanceof Error ? e.message : String(e)] }

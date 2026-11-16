@@ -20,8 +20,10 @@ src/
                    handlers (fs, terminals, permissions), session update mapping.
       a2ui/        Stdio MCP server handed to agents + bridge into the app.
       fs/          Workspace file system access, sandboxed to registered folders.
+    application/agui/  The AG-UI backend: run coordinator, event translator, shared state, interrupts.
     ipc/           ipcMain handlers that adapt AgentXpApi calls to application services,
-                   and the event publisher that pushes AgentXpEvents to windows.
+                   the AG-UI stream transport, and the event publisher that pushes the
+                   renderer-facing AgentXpEvents (session list, status bar) to windows.
     index.ts       Composition root: builds everything and wires it together.
   preload/         contextBridge implementation of AgentXpApi.
   renderer/src/
@@ -34,6 +36,7 @@ src/
       actions/     Shared behaviour (click-outside, popup positioning, roving focus).
     lib/a2ui/      A2UI surface store + renderer mapping catalog components to kit components.
     lib/stores/    Svelte 5 rune stores over window.agentxp (one store per concern).
+    lib/agui/      AG-UI client: IpcAgent (AbstractAgent over IPC) and SessionAgentStore.
     lib/pages/     Pages (the main window) composed from kit templates/organisms.
 ```
 
@@ -76,3 +79,23 @@ component properties and data models). Images from agents are stored as BLOB.
 5. The A2UI MCP tool lets the agent draw WinForms surfaces inline in the
    transcript; user actions on a surface are delivered back to the agent as a
    prompt.
+
+## AG-UI (renderer <-> main)
+
+The renderer is an [AG-UI](https://docs.ag-ui.com) client (`@ag-ui/client`), the main process is the
+agent backend that runs the ACP agents. Events travel over IPC, not HTTP: `agui.run` (invoke with a
+`RunAgentInput`) makes main stream AG-UI events on `agui.event` as `{ runId, event }`; `agui.abort`
+cancels the session's turn. One thread per session (`threadId` = session id).
+
+- `AguiRunCoordinator` (main/application/agui) turns agent events into AG-UI events: text and thought
+  chunks become text / reasoning messages, tool calls become tool call events, everything richer
+  (kind, status, locations, diffs, terminals, tasks, changes, session info) is the shared state
+  (`src/shared/agui-state.ts`, STATE_SNAPSHOT at run start, STATE_DELTA as JSON Patch), A2UI surfaces
+  are `a2ui-surface` activity messages.
+- A run is a prompt (input ends with a new user message), a resume (answers permission interrupts),
+  an A2UI action (`forwardedProps.a2uiAction`) or a connect (none of these: MESSAGES_SNAPSHOT +
+  STATE_SNAPSHOT of the persisted session). A permission request ends the run with a
+  RUN_FINISHED `interrupt` outcome; the ACP turn stays suspended until a run with a matching
+  `resume` entry continues it.
+- Transcript, tasks, changes, terminals and surfaces are therefore no longer pushed as separate
+  events: services still publish them internally (`InternalEvents`), the coordinator consumes them.

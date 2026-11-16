@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
-import type { A2uiServerMessage } from '@shared/a2ui'
+import { A2UI_CATALOG_ID, type A2uiServerMessage } from '@shared/a2ui'
 import type { A2uiMessageSink, A2uiSinkResult } from '../../domain/a2ui/ports'
 import { A2uiBridgeServer, buildA2uiMcpServerConfig, defaultSocketPath } from './bridge-server'
 import { SocketForwarder } from './bridge-client'
@@ -41,23 +41,64 @@ describe('A2UI MCP <-> bridge', () => {
   it('lists tools and serves the catalog', async () => {
     const tools = (await client.listTools()).tools.map((t) => t.name).sort()
     expect(tools).toEqual(['a2ui_catalog', 'a2ui_delete_surface', 'a2ui_render'])
-    expect(textOf(await client.callTool({ name: 'a2ui_catalog', arguments: {} }))).toContain('DataGridView')
+    const catalog = textOf(await client.callTool({ name: 'a2ui_catalog', arguments: {} }))
+    expect(catalog).toContain('Draw interactive Windows 7 WinForms style UI')
+    expect(catalog).toContain('"DataGridView"')
+    expect(catalog).toContain('"formatString"')
+    expect(catalog).toContain('Example messages')
+    // The catalog document web_core generates is embedded as JSON between the instructions and the example.
+    const document = JSON.parse(catalog.split('\n\n')[2]!) as { catalogId: string; components: Record<string, unknown> }
+    expect(document.catalogId).toBe(A2UI_CATALOG_ID)
+    expect(Object.keys(document.components)).toHaveLength(30)
   })
 
   it('forwards valid messages to the sink', async () => {
     const messages = [
-      { createSurface: { surfaceId: 's', catalogId: 'c' } },
-      { updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Label', text: 'hi' }] } }
+      { version: 'v0.9', createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } },
+      { version: 'v0.9', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Label', text: 'hi' }] } }
     ]
     const res = await client.callTool({ name: 'a2ui_render', arguments: { messages } })
     expect(textOf(res)).toBe('ok')
     expect(sink.calls).toEqual([{ sessionKey: 'sess-1', messages }])
   })
 
+  it('adds the default protocol version', async () => {
+    await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } }] } })
+    expect(sink.calls[0]!.messages).toEqual([{ version: 'v0.9', createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID } }])
+  })
+
   it('returns validation errors and does not call the sink', async () => {
-    const res = await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ updateComponents: { surfaceId: 's', components: [{ id: 'x', component: 'Button', text: 'a' }] } }] } })
+    const res = await client.callTool({
+      name: 'a2ui_render',
+      arguments: { messages: [{ updateComponents: { surfaceId: 's', components: [{ id: 'x', component: 'Button', text: 'a' }, { id: 'y', component: 'Nope' }] } }] }
+    })
     expect((res as { isError?: boolean }).isError).toBe(true)
-    expect(textOf(res)).toContain('action')
+    const text = textOf(res)
+    expect(text).toContain('Rejected. Fix and resend')
+    expect(text).toContain('messages[0].components[0] (x)')
+    expect(text).toContain("Unknown component type 'Nope'")
+    expect(sink.calls).toHaveLength(0)
+  })
+
+  it('rejects unknown catalogs, bad bindings and bad messages before the app is contacted', async () => {
+    const call = async (messages: unknown[]) => textOf(await client.callTool({ name: 'a2ui_render', arguments: { messages } }))
+    expect(await call([{ createSurface: { surfaceId: 's', catalogId: 'https://example.com/other' } }])).toContain('Catalog not found')
+    expect(await call([{ updateComponents: { surfaceId: 's', components: [{ id: 'a', component: 'TextBox', value: { path: 5 } }] } }])).toContain('components[0] (a)')
+    expect(await call([{ nonsense: true }])).toContain('messages[0]')
+    expect(sink.calls).toHaveLength(0)
+  })
+
+  it('also validates on the app side of the bridge', async () => {
+    // A client that skips the MCP-side validation (e.g. an older MCP server build) is still checked by the bridge.
+    const lenient = { validate: (m: unknown) => ({ ok: true as const, messages: m as A2uiServerMessage[] }) }
+    const server = createA2uiMcpServer(new SocketForwarder(bridge.socketPath, 'sess-1'), lenient as never)
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    const other = new Client({ name: 't2', version: '0' })
+    await Promise.all([server.connect(a), other.connect(b)])
+    const res = await other.callTool({ name: 'a2ui_render', arguments: { messages: [{ updateComponents: { surfaceId: 's', components: [{ id: 'y', component: 'Nope' }] } }] } })
+    await other.close()
+    expect((res as { isError?: boolean }).isError).toBe(true)
+    expect(textOf(res)).toContain("Unknown component type 'Nope'")
     expect(sink.calls).toHaveLength(0)
   })
 
@@ -65,7 +106,7 @@ describe('A2UI MCP <-> bridge', () => {
     sink.result = { ok: false, errors: ['no such session'] }
     const res = await client.callTool({ name: 'a2ui_delete_surface', arguments: { surfaceId: 's' } })
     expect(textOf(res)).toContain('no such session')
-    expect(sink.calls[0].messages).toEqual([{ deleteSurface: { surfaceId: 's' } }])
+    expect(sink.calls[0].messages).toEqual([{ version: 'v0.9', deleteSurface: { surfaceId: 's' } }])
   })
 })
 

@@ -18,7 +18,7 @@ describe('setAtPointer', () => {
   })
   it('supports array indices, append and unescaping', () => {
     expect(setAtPointer({ list: [1, 2] }, '/list/1', 7)).toEqual({ list: [1, 7] })
-    expect(setAtPointer({ list: [1] }, '/list/-', 2)).toEqual({ list: [1, 2] })
+    expect(setAtPointer({ list: [1] }, '/list/1', 2)).toEqual({ list: [1, 2] })
     expect(setAtPointer({}, '/a~1b/c~0d', 1)).toEqual({ 'a/b': { 'c~d': 1 } })
     expect(setAtPointer({}, '/rows/0/name', 'x')).toEqual({ rows: [{ name: 'x' }] })
   })

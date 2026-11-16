@@ -1,5 +1,4 @@
 import type { Database } from '../infrastructure/db/sql'
-import type { AgentXpEventName, AgentXpEvents } from '@shared/ipc'
 import type { ContentBlockDto } from '@shared/models'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import { createFixture, type Fixture } from '../infrastructure/db/test-helpers'
@@ -16,6 +15,8 @@ import type {
   AcpSessionState,
   AgentConnector,
   AgentLaunch,
+  AppEventName,
+  AppEvents,
   EventPublisher,
   LiveAgentConnection,
   OpenedAcpSession,
@@ -23,22 +24,22 @@ import type {
 } from './ports'
 
 export interface PublishedEvent {
-  event: AgentXpEventName
+  event: AppEventName
   payload: unknown
 }
 
 export class RecordingPublisher implements EventPublisher {
   readonly published: PublishedEvent[] = []
 
-  publish<K extends AgentXpEventName>(event: K, payload: AgentXpEvents[K]): void {
+  publish<K extends AppEventName>(event: K, payload: AppEvents[K]): void {
     this.published.push({ event, payload })
   }
 
-  payloads<K extends AgentXpEventName>(event: K): AgentXpEvents[K][] {
-    return this.published.filter((p) => p.event === event).map((p) => p.payload as AgentXpEvents[K])
+  payloads<K extends AppEventName>(event: K): AppEvents[K][] {
+    return this.published.filter((p) => p.event === event).map((p) => p.payload as AppEvents[K])
   }
 
-  names(): AgentXpEventName[] {
+  names(): AppEventName[] {
     return this.published.map((p) => p.event)
   }
 }

@@ -1,13 +1,18 @@
 /**
- * A2UI (Agent-to-UI) protocol types, aligned with the A2UI v0.9 message
- * shapes: an agent streams messages that create a surface, add/update a
- * flat list of components (adjacency list by id), update the surface's data
- * model, and delete the surface. Components are rendered by the renderer
- * using the AgentXP WinForms catalog (see `A2UI_CATALOG`).
+ * A2UI (Agent-to-UI) contracts shared by main, preload and renderer.
+ *
+ * The protocol itself is the official A2UI v0.9 one, implemented by `@a2ui/web_core`: server
+ * messages are its `A2uiMessage`, the catalog is `a2ui/winforms-catalog.json` (see
+ * `a2ui/catalog.ts`). Only the app-specific shapes live here: the persisted surface snapshot and
+ * the event sent back to the agent.
  */
+import type { A2uiMessage } from '@a2ui/web_core/v0_9'
 
-/** A value that is either a literal or bound to a JSON-pointer path in the data model. */
-export type A2uiDynamic<T> = T | { path: string }
+/** Id of the AgentXP WinForms catalog; equals `catalogId` in `a2ui/winforms-catalog.json`. */
+export const A2UI_CATALOG_ID = 'https://agentxp.dev/a2ui/catalogs/winforms/v1'
+
+/** An A2UI v0.9 server message: createSurface, updateComponents, updateDataModel or deleteSurface. */
+export type A2uiServerMessage = A2uiMessage
 
 export interface A2uiComponent {
   /** Unique within the surface. The root component has id "root". */
@@ -21,15 +26,9 @@ export interface A2uiComponent {
 export interface A2uiAction {
   /** Action name chosen by the agent, e.g. "submit". */
   name: string
-  /** Static context merged with resolved data-model values. */
+  /** Event context with data bindings already resolved. */
   context?: Record<string, unknown>
 }
-
-export type A2uiServerMessage =
-  | { createSurface: { surfaceId: string; catalogId: string; title?: string } }
-  | { updateComponents: { surfaceId: string; components: A2uiComponent[] } }
-  | { updateDataModel: { surfaceId: string; path?: string; value: unknown } }
-  | { deleteSurface: { surfaceId: string } }
 
 /** A user interaction sent back to the agent. */
 export interface A2uiClientEvent {
@@ -42,13 +41,16 @@ export interface A2uiClientEvent {
   timestamp: string
 }
 
+/**
+ * Persisted state of one surface. `a2uiSurfaceToMessages` turns it back into the replayable
+ * message sequence (createSurface, updateComponents, updateDataModel).
+ */
 export interface A2uiSurfaceDto {
   surfaceId: string
   sessionId: number
+  /** `createSurface.theme.title`. */
   title: string | null
   catalogId: string
   components: A2uiComponent[]
   dataModel: unknown
 }
-
-export const A2UI_CATALOG_ID = 'https://agentxp.dev/a2ui/catalogs/winforms/v1'

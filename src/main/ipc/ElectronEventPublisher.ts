@@ -1,10 +1,11 @@
 import { BrowserWindow } from 'electron'
-import type { AgentXpEventName, AgentXpEvents } from '../../shared/ipc'
-import type { EventPublisher } from '../application/ports'
+import { isRendererEvent } from '../../shared/ipc-channels'
+import type { AppEventName, AppEvents, EventPublisher } from '../application/ports'
 
-/** Sends every event to all open windows. */
+/** Sends the renderer-facing events to all open windows; internal events (AG-UI backend input) stay in main. */
 export class ElectronEventPublisher implements EventPublisher {
-  publish<K extends AgentXpEventName>(event: K, payload: AgentXpEvents[K]): void {
+  publish<K extends AppEventName>(event: K, payload: AppEvents[K]): void {
+    if (!isRendererEvent(event)) return
     for (const window of BrowserWindow.getAllWindows()) {
       if (!window.isDestroyed()) window.webContents.send(event, payload)
     }

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { A2UI_CATALOG_ID, type A2uiClientEvent } from '@shared/a2ui'
+import { A2UI_CATALOG_ID, type A2uiClientEvent, type A2uiServerMessage } from '@shared/a2ui'
+import { a2uiSurfaceToMessages } from '@shared/a2ui/messages'
+import { A2uiMessageValidator } from '@shared/a2ui/validation'
 import { A2uiService, type HiddenPrompter } from './A2uiService'
 import { createAppFixture } from './test-helpers'
 
@@ -15,13 +17,18 @@ beforeEach(() => {
 })
 
 const key = (): string => String(f.sessionId)
+const v = 'v0.9' as const
+const createSurface = (surfaceId = 's1', theme?: { title: string }): A2uiServerMessage => ({
+  version: v,
+  createSurface: { surfaceId, catalogId: A2UI_CATALOG_ID, ...(theme ? { theme } : {}) }
+})
 
 describe('A2uiService.apply', () => {
   it('creates a surface with a transcript entry and publishes both', async () => {
     const result = await service.apply(key(), [
-      { createSurface: { surfaceId: 's1', catalogId: A2UI_CATALOG_ID, title: 'Form' } },
-      { updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Label', text: 'Hi' }] } },
-      { updateDataModel: { surfaceId: 's1', path: '/name', value: 'Ann' } }
+      createSurface('s1', { title: 'Form' }),
+      { version: v, updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Label', text: 'Hi' }] } },
+      { version: v, updateDataModel: { surfaceId: 's1', path: '/name', value: 'Ann' } }
     ])
 
     expect(result).toEqual({ ok: true })
@@ -32,20 +39,58 @@ describe('A2uiService.apply', () => {
     expect(surface?.components).toHaveLength(1)
   })
 
-  it('does not add a second transcript entry when a surface is re-created', async () => {
-    const create = { createSurface: { surfaceId: 's1', catalogId: A2UI_CATALOG_ID } }
-    await service.apply(key(), [create])
-    await service.apply(key(), [create])
+  it('rejects re-creating a surface (web_core: it already exists) and keeps one transcript entry', async () => {
+    await service.apply(key(), [createSurface()])
+    const again = await service.apply(key(), [createSurface()])
+    expect(again).toEqual({ ok: false, errors: ['messages[0]: Surface s1 already exists.'] })
     expect(f.repos.transcripts.list(f.sessionId)).toHaveLength(1)
   })
 
+  it('stores nothing when any message of the batch is invalid', async () => {
+    const result = await service.apply(key(), [
+      createSurface(),
+      { version: v, updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Button', text: 'no action' }] } }
+    ])
+    expect(result.ok).toBe(false)
+    expect(f.repos.surfaces.get(f.sessionId, 's1')).toBeNull()
+    expect(f.repos.transcripts.list(f.sessionId)).toHaveLength(0)
+  })
+
+  it('persists surfaces that replay as valid messages (the ACTIVITY_SNAPSHOT content)', async () => {
+    await service.apply(key(), [
+      createSurface('s1', { title: 'Form' }),
+      {
+        version: v,
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            { id: 'root', component: 'Panel', children: ['name'] },
+            { id: 'name', component: 'TextBox', value: { path: '/name' } }
+          ]
+        }
+      },
+      { version: v, updateDataModel: { surfaceId: 's1', path: '/name', value: 'Ann' } }
+    ])
+    const replay = a2uiSurfaceToMessages(f.repos.surfaces.get(f.sessionId, 's1')!)
+    expect(replay.map((m) => Object.keys(m).find((k) => k !== 'version'))).toEqual(['createSurface', 'updateComponents', 'updateDataModel'])
+    expect(new A2uiMessageValidator().validate(replay).ok).toBe(true)
+  })
+
+  it('removes a data model key when the value is omitted', async () => {
+    await service.apply(key(), [createSurface(), { version: v, updateDataModel: { surfaceId: 's1', value: { a: 1, b: 2 } } }])
+    await service.apply(key(), [{ version: v, updateDataModel: { surfaceId: 's1', path: '/a' } }])
+    expect(f.repos.surfaces.get(f.sessionId, 's1')?.dataModel).toEqual({ b: 2 })
+    await service.apply(key(), [{ version: v, updateDataModel: { surfaceId: 's1' } }])
+    expect(f.repos.surfaces.get(f.sessionId, 's1')?.dataModel).toEqual({})
+  })
+
   it('removes surfaces and reports unknown ones', async () => {
-    await service.apply(key(), [{ createSurface: { surfaceId: 's1', catalogId: A2UI_CATALOG_ID } }])
-    expect(await service.apply(key(), [{ deleteSurface: { surfaceId: 's1' } }])).toEqual({ ok: true })
+    await service.apply(key(), [createSurface()])
+    expect(await service.apply(key(), [{ version: v, deleteSurface: { surfaceId: 's1' } }])).toEqual({ ok: true })
     expect(f.publisher.payloads('surface.removed')).toEqual([{ sessionId: f.sessionId, surfaceId: 's1' }])
 
-    const result = await service.apply(key(), [{ updateComponents: { surfaceId: 'nope', components: [] } }])
-    expect(result).toEqual({ ok: false, errors: ['unknown surface: nope'] })
+    const result = await service.apply(key(), [{ version: v, updateComponents: { surfaceId: 'nope', components: [{ id: 'root', component: 'Label', text: 'x' }] } }])
+    expect(result).toEqual({ ok: false, errors: ['messages[0]: Surface not found for message: nope'] })
   })
 
   it('rejects unknown sessions', async () => {
@@ -65,7 +110,7 @@ describe('A2uiService.dispatch', () => {
   })
 
   it('sends a readable line plus the JSON event to the session owning the surface', async () => {
-    await service.apply(key(), [{ createSurface: { surfaceId: 's1', catalogId: A2UI_CATALOG_ID } }])
+    await service.apply(key(), [createSurface()])
     await service.dispatch(event())
 
     expect(sent).toHaveLength(1)

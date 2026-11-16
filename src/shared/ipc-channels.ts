@@ -1,7 +1,30 @@
 import type { AgentXpApi, AgentXpEventName } from './ipc'
 
-/** The request/response part of the API (everything except the `on` subscription). */
-export type InvokeApi = Omit<AgentXpApi, 'on'>
+/**
+ * The request/response part of the API handled generically (everything except the `on`
+ * subscription and `agui`, whose streaming handlers need the sending window).
+ */
+export type InvokeApi = Omit<AgentXpApi, 'on' | 'agui'>
+
+/** AG-UI transport channels. */
+export const AGUI_CHANNELS = {
+  /** invoke: `RunAgentInput` in, resolves once the run's events have all been sent. */
+  run: 'agui.run',
+  /** invoke: `(threadId, runId)`. */
+  abort: 'agui.abort',
+  /** main -> renderer: `AguiEventMessage`. */
+  event: 'agui.event'
+} as const
+
+/** Push events that reach the renderer (the type forces this list to match `AgentXpEvents`). */
+const RENDERER_EVENTS = {
+  'session.changed': true,
+  'session.removed': true,
+  'folders.changed': true,
+  'status.message': true
+} as const satisfies Record<AgentXpEventName, true>
+
+export const isRendererEvent = (name: string): name is AgentXpEventName => name in RENDERER_EVENTS
 
 /** Every invoke method, as `true` flags. The type forces this list to match `AgentXpApi` exactly. */
 const INVOKE_METHODS = {

@@ -1,11 +1,13 @@
 import type { Database } from './infrastructure/db/sql'
 import { A2uiService } from './application/A2uiService'
+import { AguiRunCoordinator } from './application/agui/AguiRunCoordinator'
 import { AgentConnectionPool } from './application/AgentConnectionPool'
 import { CompositeA2uiSink } from './application/CompositeA2uiSink'
 import { SessionEventBus } from './application/SessionEventBus'
 import { AgentService } from './application/AgentService'
 import { ChangeReverter } from './application/ChangeReverter'
 import { FileChangeRecorder } from './application/FileChangeRecorder'
+import { FanOutEventPublisher } from './application/FanOutEventPublisher'
 import { FolderService } from './application/FolderService'
 import { PermissionBroker } from './application/PermissionBroker'
 import type {
@@ -56,7 +58,9 @@ export interface ComposeOptions {
 export interface AppServices {
   api: InvokeApi
   sessions: SessionService
-  /** Extension points for additional front ends (e.g. an AG-UI server). */
+  /** The AG-UI backend: the renderer's view on sessions (run / resume / connect), streamed over IPC. */
+  agui: AguiRunCoordinator
+  /** Agent events of every session (extension point for additional front ends). */
   events: SessionEventBus
   a2uiSink: CompositeA2uiSink
   broker: PermissionBroker
@@ -69,7 +73,9 @@ export interface AppServices {
 
 /** Wires repositories, services and adapters. The only place that knows every concrete class. */
 export function composeApp(options: ComposeOptions): AppServices {
-  const { db, publisher } = options
+  const { db } = options
+  // Services publish through this; the renderer-facing events go on to `options.publisher`, the rest feed the AG-UI backend.
+  const publisher = new FanOutEventPublisher(options.publisher)
   const repos = {
     agents: new SqliteAgentRepository(db),
     folders: new SqliteFolderRepository(db),
@@ -136,18 +142,21 @@ export function composeApp(options: ComposeOptions): AppServices {
   const a2uiSink = new CompositeA2uiSink(a2ui)
   a2uiBridge = new A2uiBridgeServer(a2uiSink)
 
+  const queries = new SessionQueryService(
+    repos.sessions,
+    repos.transcripts,
+    repos.tasks,
+    repos.changes,
+    repos.terminals,
+    repos.surfaces
+  )
+  const agui = new AguiRunCoordinator({ queries, sessions, a2ui, broker, events: eventBus, appEvents: publisher })
+
   const api = createApi({
     agents: new AgentService(repos.agents),
     folders: new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher),
     sessions,
-    queries: new SessionQueryService(
-      repos.sessions,
-      repos.transcripts,
-      repos.tasks,
-      repos.changes,
-      repos.terminals,
-      repos.surfaces
-    ),
+    queries,
     broker,
     reverter: new ChangeReverter(repos.changes, repos.sessions, repos.folders, fileSystem, changeRecorder),
     exporter: new TranscriptExporter(repos.sessions, repos.transcripts, options.saver),
@@ -159,6 +168,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   return {
     api,
     sessions,
+    agui,
     events: eventBus,
     a2uiSink,
     broker,
@@ -168,6 +178,7 @@ export function composeApp(options: ComposeOptions): AppServices {
       await bridge.start()
     },
     shutdown: async () => {
+      agui.dispose()
       await pool.disposeAll()
       await bridge.stop()
     }

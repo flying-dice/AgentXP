@@ -1,13 +1,43 @@
-import type { AgentDto, ContentBlockDto, FileNodeDto, Id, SessionModeDto, SessionModelDto } from '@shared/models'
-import type { AgentXpEventName, AgentXpEvents } from '@shared/ipc'
+import type { A2uiSurfaceDto } from '@shared/a2ui'
+import type {
+  AgentDto,
+  ContentBlockDto,
+  FileChangeDto,
+  FileNodeDto,
+  Id,
+  SessionModeDto,
+  SessionModelDto,
+  TaskDto,
+  TerminalDto,
+  TranscriptEntryDto
+} from '@shared/models'
+import type { AgentXpEvents } from '@shared/ipc'
 import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSink'
 import type { FileAccess, FileAccessProvider } from '../domain/agent/FileAccess'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import type { PermissionPrompter } from '../domain/agent/PermissionPrompter'
 
-/** Pushes events to the renderer(s). */
+/**
+ * Events that stay inside the main process. The AG-UI backend translates them into the AG-UI
+ * stream; they are never sent to the renderer directly.
+ */
+export interface InternalEvents {
+  'transcript.upserted': { sessionId: Id; entry: TranscriptEntryDto }
+  'transcript.cleared': { sessionId: Id }
+  'tasks.changed': { sessionId: Id; tasks: TaskDto[] }
+  'changes.changed': { sessionId: Id; changes: FileChangeDto[] }
+  'terminal.changed': TerminalDto
+  'surface.changed': A2uiSurfaceDto
+  'surface.removed': { sessionId: Id; surfaceId: string }
+}
+
+/** Every event services publish: the renderer-facing ones plus the internal ones. */
+export type AppEvents = AgentXpEvents & InternalEvents
+export type AppEventName = keyof AppEvents
+
+/** Publishes application events (the Electron adapter forwards the renderer-facing ones to windows). */
 export interface EventPublisher {
-  publish<K extends AgentXpEventName>(event: K, payload: AgentXpEvents[K]): void
+  publish<K extends AppEventName>(event: K, payload: AppEvents[K]): void
 }
 
 /** Native "choose a folder" dialog. Resolves to the chosen path or null when cancelled. */
