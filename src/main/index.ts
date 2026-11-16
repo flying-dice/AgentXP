@@ -13,7 +13,11 @@ import { ElectronFilePicker, ElectronFolderPicker, ElectronPathOpener, ElectronT
 import { ElectronScreenCapturer } from './ipc/ElectronScreenCapturer'
 import { ElectronEventPublisher } from './ipc/ElectronEventPublisher'
 import { ElectronNotifier } from './ipc/ElectronNotifier'
+import { inheritLoginShellPath } from './infrastructure/process/loginShellPath'
 import { ElectronThumbnailCapturer, handleThumbnailScheme, registerThumbnailScheme } from './ipc/ElectronThumbnails'
+
+// A packaged app started from Finder has a minimal PATH: take the login shell's, so `npx` and other agents are found.
+if (app.isPackaged) inheritLoginShellPath()
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
 const userDataOverride = process.env['AGENT7_USER_DATA']
