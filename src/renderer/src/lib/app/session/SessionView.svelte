@@ -17,6 +17,8 @@
     /** Overrides for the IPC calls (stories, tests); default to `window.agent7`. */
     setMode?: (sessionId: number, modeId: string) => Promise<void>
     pickFiles?: () => Promise<string[]>
+    /** Show permission requests inside this view (a desktop window) instead of over the whole viewport. */
+    contained?: boolean
   }
 
   let {
@@ -26,7 +28,8 @@
     agent,
     openFilePath = null,
     setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
-    pickFiles = () => window.agent7.dialogs.pickFiles()
+    pickFiles = () => window.agent7.dialogs.pickFiles(),
+    contained = false
   }: Props = $props()
 
   const agentName = $derived(agent?.name ?? 'Agent')
@@ -71,6 +74,7 @@
         title={permission.title}
         options={permission.options}
         toolCall={request.toolCallId ? store.state.toolCalls[request.toolCallId] : undefined}
+        {contained}
         onanswer={(optionId) => void store.resolveInterrupt(optionId, request.id)}
       />
     {/key}
@@ -81,6 +85,7 @@
   .session-view {
     display: flex;
     flex-direction: column;
+    position: relative;
     min-width: 0;
     min-height: 0;
     height: 100%;

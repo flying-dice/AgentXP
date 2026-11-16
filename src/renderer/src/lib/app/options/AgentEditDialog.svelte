@@ -12,9 +12,11 @@
     initial?: AgentFormValues
     onsubmit?: (input: AgentInput) => void
     onclose?: () => void
+    /** Cover the nearest positioned ancestor (a desktop window) instead of the viewport. */
+    contained?: boolean
   }
 
-  let { title = 'Add Agent', initial = emptyAgentForm(), onsubmit, onclose }: Props = $props()
+  let { title = 'Add Agent', initial = emptyAgentForm(), onsubmit, onclose, contained = false }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let form = $state<AgentFormValues>({ ...initial })
@@ -31,7 +33,7 @@
   }
 </script>
 
-<Dialog {title} iconName="agent" width="460px" {onclose}>
+<Dialog {title} iconName="agent" width="460px" {contained} {onclose}>
   <div class="form">
     <LabeledField label="Name:" for="agent-name" labelWidth={90}>
       <TextBox id="agent-name" bind:value={form.name} />

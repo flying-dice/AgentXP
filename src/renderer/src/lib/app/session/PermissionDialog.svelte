@@ -19,9 +19,11 @@
     toolCall?: AguiToolCallState
     /** The chosen option id, or null when the dialog was dismissed (Esc / close box). */
     onanswer?: (optionId: string | null) => void
+    /** Cover the nearest positioned ancestor (a desktop window) instead of the viewport. */
+    contained?: boolean
   }
 
-  let { agentName, title, options, toolCall, onanswer }: Props = $props()
+  let { agentName, title, options, toolCall, onanswer, contained = false }: Props = $props()
 
   let remember = $state(false)
 
@@ -37,7 +39,7 @@
   }
 </script>
 
-<Dialog title={agentName} width="560px" iconName="shield" bodyColor="window" onclose={() => onanswer?.(null)} role="alertdialog">
+<Dialog title={agentName} width="560px" iconName="shield" {contained} bodyColor="window" onclose={() => onanswer?.(null)} role="alertdialog">
   <div class="body">
     <MessageIcon kind="shield" size={40} />
     <div class="main">

@@ -25,6 +25,11 @@ export class SessionStoreCache {
     return this.stores.has(id)
   }
 
+  /** The stores opened so far. */
+  values(): SessionAgentStore[] {
+    return [...this.stores.values()]
+  }
+
   forget(id: Id): void {
     this.stores.get(id)?.dispose()
     this.stores.delete(id)

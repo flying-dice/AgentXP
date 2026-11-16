@@ -82,8 +82,8 @@ export const sampleState = (): AguiSessionState => {
 
 const noop = (): void => {}
 
-/** Fake AG-UI transport: every run (connect included) answers with the sample transcript and state. */
-function fakeAgui(): Agent7Api['agui'] {
+/** Fake AG-UI transport: every run (connect included) answers with the sample transcript and `stateOf()` (default: the sample state). */
+export function fakeAgui(stateOf: () => AguiSessionState = sampleState): Agent7Api['agui'] {
   const listeners = new Map<string, (event: BaseEvent) => void>()
   return {
     run: async (input: RunAgentInput) => {
@@ -91,7 +91,7 @@ function fakeAgui(): Agent7Api['agui'] {
       const { messages } = completedTurn()
       const events: BaseEvent[] = [
         { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
-        { type: EventType.STATE_SNAPSHOT, snapshot: sampleState() } as BaseEvent,
+        { type: EventType.STATE_SNAPSHOT, snapshot: stateOf() } as BaseEvent,
         { type: EventType.MESSAGES_SNAPSHOT, messages } as BaseEvent,
         { type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent
       ]
