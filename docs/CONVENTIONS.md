@@ -15,12 +15,10 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/main-window.pn
   Pure helpers in `<Name>.ts` next to it when needed.
 - Visuals: scoped `<style>` in the component using the `--xp-*` tokens. Add new tokens
   to `tokens.css` (append only, grouped with a comment) rather than hard-coding a colour
-  that will be reused. Tailwind utilities are fine for layout in pages, not for the
-  Win7 skin.
-- Behaviour/accessibility: where a shadcn-svelte primitive exists in
-  `src/renderer/src/lib/components/ui` (or the bits-ui primitive it wraps), use it for
-  behaviour and keyboard handling, and skin it Win7. Do NOT use the shadcn default
-  visual classes. Do not edit files in `components/ui`.
+  that will be reused. No Tailwind, no CSS frameworks.
+- Behaviour/accessibility: pure Svelte 5. No third-party UI libraries (no bits-ui, no
+  shadcn). Popups, keyboard handling and ARIA are implemented in the kit; shared
+  behaviour lives in `src/renderer/src/lib/kit/actions/` (Svelte actions/attachments).
 - Era honesty: Windows 7 Aero Basic / WinForms. 12px Segoe UI, 23px buttons, gradient
   faces, dotted focus rectangles, no rounded "modern" cards, no transitions beyond
   what Win7 had (hover glow fade is fine), no emoji.

@@ -31,8 +31,7 @@ src/
       organisms/   Large controls (MenuStrip, TreeView, DataGridView, CodeViewer, ...).
       templates/   Window layouts (Form, SplitContainer layouts, MainWindow template).
       tokens.css   Win7 design tokens. Components use these variables.
-    lib/components/ui/  shadcn-svelte primitives (bits-ui) used for behaviour; kit
-                   components wrap them with the Win7 skin.
+      actions/     Shared behaviour (click-outside, popup positioning, roving focus).
     lib/a2ui/      A2UI surface store + renderer mapping catalog components to kit components.
     lib/stores/    Svelte 5 rune stores over window.agentxp (one store per concern).
     lib/pages/     Pages (the main window) composed from kit templates/organisms.
