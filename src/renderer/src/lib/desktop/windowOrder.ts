@@ -47,3 +47,15 @@ export function taskbarItems(
       flashing: w.attention === true && w.id !== focusedId
     }))
 }
+
+/**
+ * Alt+Tab: the window to switch to. Windows are ordered by recent use (the front one first); `direction` 1 goes to the
+ * next older window, -1 to the oldest. Minimised windows take part (switching restores them).
+ */
+export function cycleTarget(windows: readonly AppWindowState[], focusedId: Id | null, direction: 1 | -1): Id | null {
+  const recent = [...windows].reverse()
+  if (recent.length === 0) return null
+  const at = recent.findIndex((w) => w.id === focusedId)
+  if (at < 0) return recent[0].id
+  return recent[(at + direction + recent.length) % recent.length].id
+}

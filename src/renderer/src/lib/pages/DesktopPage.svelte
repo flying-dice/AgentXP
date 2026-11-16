@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, tick, untrack } from 'svelte'
   import type { Agent7Api } from '@shared/ipc'
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
@@ -27,6 +27,7 @@
   import NewChatDialog from '../desktop/NewChatDialog.svelte'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
+  import { cycleRegion, focusRegion, tabOutOfWindow } from '../desktop/shellRegions'
   import { taskbarItems } from '../desktop/windowOrder'
   import { taskbarMenuItems } from '../desktop/taskbarMenu'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
@@ -55,7 +56,7 @@
   const since = new Date()
 
   onMount(() => {
-    void desktop.start()
+    void desktop.start().then(() => desktop.showIconHint())
     const stopRequests = startAppRequests(desktop.api)
     void desktop.api.window.getState().then((s) => (maximized = s.maximized)).catch(() => {})
     const stopWindow = desktop.api.window.onStateChanged((s) => (maximized = s.maximized))
@@ -70,16 +71,20 @@
   const icons = $derived(
     Object.fromEntries((Object.keys(appRegistry) as AppKind[]).map((k) => [k, appRegistry[k].icon])) as Record<AppKind, IconName>
   )
-  const items = $derived(taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons))
+  // An app that is opening has its taskbar button at once.
+  const items = $derived([
+    ...taskbarItems(desktop.state.windows, desktop.state.focusedWindowId, icons),
+    ...desktop.opening.map((o) => ({ id: `opening-${o.key}`, title: `Opening ${o.title}...`, icon: o.icon, running: true, testid: 'taskbar-item-opening' }))
+  ])
 
   const desktopIcons = $derived<DesktopIconDef[]>([
-    { id: 'computer', label: 'Computer', icon: 'computer' },
-    { id: 'chats', label: 'Chats', icon: 'session' },
-    { id: 'code', label: 'Code', icon: 'file-code' },
-    { id: 'terminal', label: 'Terminal', icon: 'terminal' },
-    { id: 'browser', label: 'Browser', icon: 'globe' },
-    { id: 'control-centre', label: 'Control Centre', icon: 'options' },
-    { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle' }
+    { id: 'computer', label: 'Computer', icon: 'computer', title: 'Computer: see the drives and the plugged-in projects' },
+    { id: 'chats', label: 'Chats', icon: 'session', title: 'Chats: talk to the agent' },
+    { id: 'code', label: 'Code', icon: 'file-code', title: 'Code: read the files of a project' },
+    { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
+    { id: 'browser', label: 'Browser', icon: 'globe', title: 'Browser: browse the web together with the agent' },
+    { id: 'control-centre', label: 'Control Centre', icon: 'options', title: 'Control Centre: agents, permissions and settings' },
+    { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
   const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser']
@@ -98,6 +103,7 @@
   const recent = $derived<StartItem[]>(desktop.chats.slice(0, 8).map((s) => ({ id: String(s.id), title: s.title || 'New chat' })))
   const places: StartItem[] = [
     { id: 'computer', title: 'Computer' },
+    { id: 'eject', title: 'Eject a project...' },
     { id: 'documents', title: 'Documents' },
     { id: 'control-centre', title: 'Control Centre' },
     { id: 'agent-manager', title: 'Task Manager' },
@@ -108,24 +114,29 @@
   ]
 
   function runApp(id: string): void {
-    if (id === 'chat') void desktop.newChat()
-    else if (id === 'code-review') void desktop.openReview()
-    else void desktop.openApp({ app: id as AppKind })
+    const item = programs.find((p) => p.id === id) ?? groups.flatMap((g) => g.items).find((i) => i.id === id)
+    const open = (): Promise<unknown> => (id === 'chat' ? desktop.newChat() : id === 'code-review' ? desktop.openReview() : desktop.openApp({ app: id as AppKind }))
+    void desktop.openWithFeedback(item?.title ?? id, item?.icon, open)
   }
 
+  /** Enter or double click on a desktop icon: the busy cursor and a taskbar button at once; a failure shows a message. */
   function openIcon(id: string): void {
-    switch (id) {
-      case 'computer':
-        return void desktop.openApp({ app: 'explorer', path: '' })
-      case 'chats': {
-        const latest = desktop.chats[0]
-        return void (latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat())
+    const icon = desktopIcons.find((i) => i.id === id)
+    const open = (): Promise<unknown> => {
+      switch (id) {
+        case 'computer':
+          return desktop.openApp({ app: 'explorer', path: '' })
+        case 'chats': {
+          const latest = desktop.chats[0]
+          return latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat()
+        }
+        case 'recycle':
+          return desktop.openApp({ app: 'recycle-bin' })
+        default:
+          return desktop.openApp({ app: id as AppKind })
       }
-      case 'recycle':
-        return void desktop.openApp({ app: 'recycle-bin' })
-      default:
-        return void desktop.openApp({ app: id as AppKind })
     }
+    void desktop.openWithFeedback(icon?.label ?? id, icon?.icon, open)
   }
 
   function openPlace(id: string): void {
@@ -133,6 +144,7 @@
     if (id === 'desktops') void desktop.showLauncher()
     else if (id === 'chat-on') desktop.newChatDialogOpen = true
     else if (id === 'help') void desktop.openApp({ app: 'help', topic: HOME_TOPIC })
+    else if (id === 'eject') desktop.openEjectList()
     else if (id === 'computer') void desktop.openApp({ app: 'explorer', path: '' })
     else if (id === 'documents') void desktop.openApp({ app: 'explorer', path: joinVPath(desktop.state.home, 'Documents') ?? desktop.state.home })
     else void desktop.openApp({ app: id as AppKind })
@@ -163,19 +175,41 @@
       event.preventDefault()
       const focused = desktop.state.windows.find((w) => w.id === desktop.state.focusedWindowId && w.windowState !== 'minimized')
       void desktop.openApp({ app: 'help', topic: topicForApp(focused?.app) })
+    } else if (event.key === 'F6' && root) {
+      // F6 and Shift+F6: desktop icons, the active window, the bar, the taskbar, the tray.
+      event.preventDefault()
+      cycleRegion(root, event.shiftKey ? -1 : 1)
+    } else if (event.key === 'Tab' && event.altKey) {
+      // Alt+Tab (where the system lets it through) and Ctrl+Alt+Tab: the next window.
+      event.preventDefault()
+      void desktop.cycleWindows(event.shiftKey ? -1 : 1)
+    } else if (event.key === 'Tab' && root && tabOutOfWindow(root, event)) {
+      event.preventDefault()
     }
   }
+
+  /** Enter or Space on a taskbar button brings the window forward and moves focus into it (the composer of a chat). */
+  async function activateTaskbarItem(item: { id: string }): Promise<void> {
+    await desktop.activateFromTaskbar(Number(item.id))
+    await tick()
+    if (root) focusRegion(root, 'window')
+  }
+
+  // The Start menu search starts empty every time the menu opens (Ctrl+Esc included).
+  $effect(() => {
+    if (desktop.startOpen) untrack(() => (query = ''))
+  })
 </script>
 
 <!-- The browser's own context menu never shows on the desktop: every app and the desktop have their own. -->
 <svelte:window onkeydown={onKeydown} oncontextmenu={(e) => e.preventDefault()} />
 
-<div class="page" bind:this={root}>
+<div class="page" class:busy={desktop.opening.length > 0} bind:this={root}>
   <Desktop
     taskbarItems={items}
     startOpen={desktop.startOpen}
     onstart={() => desktop.toggleStart()}
-    onitemclick={(item) => void desktop.toggleFromTaskbar(Number(item.id))}
+    onitemclick={(item, via) => void (via.keyboard ? activateTaskbarItem(item) : desktop.toggleFromTaskbar(Number(item.id)))}
     onitemcontext={taskbarContext}
   >
     <DesktopSurface
@@ -196,6 +230,7 @@
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
     {#if !desktop.needsDesktop}
+      <div class="region" data-region="bar">
       <TopBar
         title={desktop.state.title}
         working={desktop.working}
@@ -209,6 +244,7 @@
         onmaximize={() => void desktop.api.window.toggleMaximize()}
         ondisconnect={() => void desktop.disconnect()}
       />
+      </div>
     {/if}
 
     {#if desktop.snipOverlay}
@@ -305,6 +341,14 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+  }
+  /* The agent is opening an app: the "working in background" cursor everywhere. */
+  .page.busy,
+  .page.busy :global(*) {
+    cursor: progress !important;
+  }
+  .region {
+    display: contents;
   }
   .start {
     position: absolute;

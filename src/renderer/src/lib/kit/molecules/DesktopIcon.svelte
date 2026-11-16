@@ -4,6 +4,8 @@
 
   interface Props {
     label: string
+    /** Tooltip: what the icon opens. */
+    title?: string
     /** `data-testid` of the icon button. */
     testid?: string
     icon: IconName
@@ -14,7 +16,7 @@
     oncontextmenu?: (event: MouseEvent) => void
   }
 
-  let { label, icon, testid = 'desktop-icon', selected = false, onselect, onopen, oncontextmenu }: Props = $props()
+  let { label, title, icon, testid = 'desktop-icon', selected = false, onselect, onopen, oncontextmenu }: Props = $props()
 </script>
 
 <button
@@ -23,6 +25,7 @@
   class="w7-desktop-icon"
   class:selected
   data-desktop-icon
+  {title}
   aria-pressed={selected}
   onclick={() => onselect?.()}
   ondblclick={() => onopen?.()}
@@ -72,8 +75,13 @@
   }
   .w7-desktop-icon.selected,
   .w7-desktop-icon:focus-visible {
-    outline: none;
     border-color: rgba(255, 255, 255, 0.7);
     background: rgba(120, 175, 235, 0.42);
+  }
+  /* The dotted focus rectangle stays visible on the blue desktop (white on blue, over 3:1). */
+  .w7-desktop-icon:focus-visible {
+    outline: 1px dotted #fff;
+    outline-offset: -2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
   }
 </style>

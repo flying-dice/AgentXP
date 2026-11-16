@@ -10,6 +10,9 @@ import type { AppKind, AskChatRequest, AppView, AppWindowState, DesktopState, Op
 import type { AguiSessionState } from '@shared/agui-state'
 import { createFakeApi, fakeAgui, type FakeApi } from '../app/fakeApi'
 import { createFakeDesktop } from '../app/fakeDesktop'
+import type { DriveDto } from '@shared/vfs'
+import { chooseFolder } from './shared/chooseFolder'
+import { addRemoved, type RemovedProject } from '../desktop/projectDrives'
 import type { DesktopHost } from './types'
 
 export class StoryHost implements DesktopHost {
@@ -49,7 +52,21 @@ export class StoryHost implements DesktopHost {
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
 
-  ejectDrive = (letter: string): Promise<void> => this.api.drives.eject(this.current.desktopId, letter)
+  /** Projects ejected through this host, newest first (the real desktop keeps the same list). */
+  recentlyRemoved = $state.raw<RemovedProject[]>([])
+  ejectDrive = async (letter: string): Promise<void> => {
+    const drive = this.current.drives.find((d) => d.letter === letter)
+    await this.api.drives.eject(this.current.desktopId, letter)
+    if (drive?.folderId != null) this.recentlyRemoved = addRemoved(this.recentlyRemoved, { folderId: drive.folderId, label: drive.label })
+  }
+  plugInProject = async (): Promise<DriveDto | null> => {
+    const folder = await chooseFolder(this.api, 'plug-in')
+    return folder ? this.api.drives.plugIn(this.current.desktopId, folder.id) : null
+  }
+  plugInAgain = async (folderId: number): Promise<DriveDto | null> => {
+    this.recentlyRemoved = this.recentlyRemoved.filter((r) => r.folderId !== folderId)
+    return this.api.drives.plugIn(this.current.desktopId, folderId)
+  }
 
   startChat = async (cwd: string): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId, undefined, cwd))
 

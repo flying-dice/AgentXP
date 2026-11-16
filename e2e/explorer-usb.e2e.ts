@@ -20,7 +20,7 @@ describe('Explorer and USB drives', () => {
     await see.visible(explorer.drive('e'))
     await see.text(explorer.drive('e'), workspace.name)
     await see.text(explorer.drive('c'), 'Private to this desktop')
-    await see.text(explorer.drive('e'), 'Plugged-in project')
+    await see.text(explorer.drive('e'), 'Project folder (plugged in)')
   })
 
   it('shows the USB tray icon', async () => {

@@ -11,6 +11,12 @@
     icon?: Snippet
     /** CSS width of the dialog window. */
     width?: string
+    /** CSS height; default `auto` (fits the content). */
+    height?: string
+    /** The content fills the dialog's height (a resizable dialog); default sizes to the content. */
+    fill?: boolean
+    /** Extra inline style of the dialog frame (for example `min-width` and `resize` of a resizable dialog). */
+    style?: string
     /** Esc and the close box call `onclose`; false disables both (like a YesNo MessageBox). */
     closable?: boolean
     /** Position the overlay inside the nearest positioned ancestor instead of the viewport. */
@@ -32,6 +38,9 @@
     iconName,
     icon,
     width = '400px',
+    height = 'auto',
+    style = '',
+    fill = false,
     closable = true,
     contained = false,
     bodyColor = 'face',
@@ -65,7 +74,8 @@
         {role}
         aria-modal={true}
         {width}
-        height="auto"
+        {height}
+        {style}
         {bodyColor}
         sizeGrip={false}
         {closable}
@@ -73,7 +83,7 @@
         {testid}
         class="w7-dialog {className}"
       >
-        <div class="content">{@render children?.()}</div>
+        <div class="content" class:fill>{@render children?.()}</div>
         {#if buttons}<div class="bar">{@render buttons()}</div>{/if}
       </Form>
     </div>
@@ -99,6 +109,10 @@
   .content {
     flex: 1;
     min-height: 0;
+  }
+  .content.fill {
+    display: flex;
+    flex-direction: column;
   }
   .bar {
     flex: none;

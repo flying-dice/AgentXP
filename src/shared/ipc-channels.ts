@@ -102,6 +102,7 @@ const INVOKE_METHODS = {
   app: { version: true },
   a2ui: { dispatch: true, deleteSurface: true, moveSurface: true, setSidebarHidden: true },
   shell: { openPath: true },
+  fs: { browse: true, makeFolder: true, nativePicker: true },
   dialogs: { pickFiles: true }
 } as const satisfies { [G in keyof InvokeApi]: { [M in keyof InvokeApi[G]]: true } }
 

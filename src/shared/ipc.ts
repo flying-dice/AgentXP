@@ -8,6 +8,7 @@ import type { BaseEvent, RunAgentInput } from '@ag-ui/core'
 import type {
   AgentDto,
   FileChangeDto,
+  BrowseListingDto,
   FileNodeDto,
   FolderDto,
   Id,
@@ -80,7 +81,7 @@ export interface Agent7Api {
   }
   folders: {
     list(): Promise<FolderDto[]>
-    /** Shows the native folder picker; returns null when cancelled. */
+    /** Shows the native folder dialog (only with `AGENT7_NATIVE_PICKER=1`; the app uses `fs.browse`); returns null when cancelled. */
     pick(): Promise<FolderDto | null>
     add(path: string): Promise<FolderDto>
     remove(id: Id): Promise<void>
@@ -125,6 +126,14 @@ export interface Agent7Api {
   }
   shell: {
     openPath(path: string): Promise<void>
+  }
+  fs: {
+    /** The sub-folders of a folder on the user's disk (folders only). '' lists the drives (or `/`) and the shortcuts. */
+    browse(path: string): Promise<BrowseListingDto>
+    /** Creates a folder below `parent` (named `name`, made unique) and resolves its path. */
+    makeFolder(parent: string, name: string): Promise<string>
+    /** True when the native folder dialog replaces the in-app Browse For Folder dialog (`AGENT7_NATIVE_PICKER=1`). */
+    nativePicker(): Promise<boolean>
   }
   dialogs: {
     /** Shows the native open-file dialog (multi-select); resolves to the chosen absolute paths, empty when cancelled. */

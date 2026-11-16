@@ -1,5 +1,5 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
-import type { FilePicker, ScreenCapturer } from '../application/ports'
+import type { DirectoryBrowser, FilePicker, ScreenCapturer } from '../application/ports'
 import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
 import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
@@ -39,6 +39,8 @@ export interface ApiServices {
   launcher: LauncherService
   processes: ProcessService
   files: FilePicker
+  directories: DirectoryBrowser
+  nativePicker: boolean
   appRequests: AppRequestBroker
   notes: StickyNoteService
   eventLog: ProtocolEventLog
@@ -81,7 +83,16 @@ export function createApi(s: ApiServices): InvokeApi {
       updateView: async (windowId, view) => s.desktops.updateView(windowId, view),
       setPaused: (desktopId, paused) => s.desktops.setPaused(desktopId, paused),
       setUserInControl: async (desktopId, on) => s.desktops.setUserInControl(desktopId, on),
-      newChat: (desktopId, agentId, cwd) => s.desktops.newChat(desktopId, agentId, cwd),
+      newChat: async (desktopId, agentId, cwd) => {
+        try {
+          const opened = await s.desktops.newChat(desktopId, agentId, cwd)
+          s.launcher.clearStartFailure(desktopId)
+          return opened
+        } catch (error) {
+          s.launcher.recordStartFailure(desktopId, error instanceof Error ? error.message : String(error))
+          throw error
+        }
+      },
       openReview: (desktopId, root, baseRef, agentId) => s.desktops.openReview(desktopId, root, baseRef, agentId),
       openAside: (desktopId, windowId, agentId) => s.desktops.openAside(desktopId, windowId, agentId),
       closeAside: (windowId) => s.desktops.closeAside(windowId),
@@ -176,6 +187,11 @@ export function createApi(s: ApiServices): InvokeApi {
       setSidebarHidden: async (sessionId, surfaceId, hidden) => s.a2ui.setSidebarHidden(sessionId, surfaceId, hidden)
     },
     shell: { openPath: (path) => s.shell.openPath(path) },
+    fs: {
+      browse: (path) => s.directories.browse(path),
+      makeFolder: (parent, name) => s.directories.makeFolder(parent, name),
+      nativePicker: async () => s.nativePicker
+    },
     dialogs: { pickFiles: () => s.files.pickFiles() }
   }
 }

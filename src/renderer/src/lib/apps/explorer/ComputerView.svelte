@@ -1,7 +1,9 @@
 <script lang="ts">
   /** The Win7 "Computer" folder: Hard Disk Drives and Devices with Removable Storage as tiles. */
+  import type { Id } from '@shared/models'
   import type { DriveDto, VPath } from '@shared/vfs'
   import Icon from '../../kit/atoms/Icon.svelte'
+  import type { RemovedProject } from '../../desktop/projectDrives'
   import { driveGroups, driveRoot, driveTitle } from './explorerModel'
 
   interface Props {
@@ -11,11 +13,19 @@
     onselect?: (path: VPath) => void
     onactivate?: (drive: DriveDto) => void
     oncontextmenu?: (drive: DriveDto, event: MouseEvent) => void
+    /** The last ejected projects (the "Recently removed" group). */
+    removed?: readonly RemovedProject[]
+    /** Selected removed project. */
+    removedSelected?: Id | null
+    onselectremoved?: (folderId: Id) => void
+    /** Double click or Enter on a removed project: plug it in again. */
+    onplugagain?: (folderId: Id) => void
+    onremovedcontextmenu?: (project: RemovedProject, event: MouseEvent) => void
     /** Folders to sit empty when no drive is plugged in. */
     class?: string
   }
 
-  let { drives, selected = null, onselect, onactivate, oncontextmenu, class: className = '' }: Props = $props()
+  let { drives, selected = null, onselect, onactivate, oncontextmenu, removed = [], removedSelected = null, onselectremoved, onplugagain, onremovedcontextmenu, class: className = '' }: Props = $props()
 
   const groups = $derived(driveGroups(drives))
   const sections = $derived([
@@ -23,7 +33,7 @@
     { id: 'removable', title: 'Devices with Removable Storage', items: groups.removable }
   ].filter((s) => s.items.length > 0))
 
-  const caption = (d: DriveDto): string => (d.kind === 'system' ? 'Private to this desktop' : 'Plugged-in project')
+  const caption = (d: DriveDto): string => (d.kind === 'system' ? 'Private to this desktop' : 'Project folder (plugged in)')
 </script>
 
 <div class="computer {className}" data-testid="explorer-computer" role="listbox" aria-label="Computer" tabindex="-1">
@@ -62,6 +72,38 @@
       </div>
     </div>
   {/each}
+  {#if removed.length > 0}
+    <div class="group" data-testid="explorer-removed-group">
+      <div class="head"><span>Recently removed ({removed.length})</span><i></i></div>
+      <div class="tiles">
+        {#each removed as project (project.folderId)}
+          <button
+            type="button"
+            role="option"
+            aria-selected={removedSelected === project.folderId}
+            class="tile gone"
+            data-testid="explorer-removed-item"
+            data-folder-id={project.folderId}
+            class:selected={removedSelected === project.folderId}
+            onclick={() => onselectremoved?.(project.folderId)}
+            ondblclick={() => onplugagain?.(project.folderId)}
+            onkeydown={(event) => event.key === 'Enter' && onplugagain?.(project.folderId)}
+            oncontextmenu={(event) => {
+              event.preventDefault()
+              onselectremoved?.(project.folderId)
+              onremovedcontextmenu?.(project, event)
+            }}
+          >
+            <Icon name="usb" size={32} />
+            <span class="info">
+              <span class="name">{project.label}</span>
+              <span class="sub">Removed. Double-click to plug in again.</span>
+            </span>
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
   {#if drives.length === 0}
     <p class="none">This computer has no drives.</p>
   {/if}
@@ -112,6 +154,9 @@
   .tile:hover {
     border-color: var(--w7-hot-border);
     background: var(--w7-hot-face);
+  }
+  .tile.gone .info {
+    opacity: 0.7;
   }
   .tile.selected {
     border-color: var(--w7-select-border);

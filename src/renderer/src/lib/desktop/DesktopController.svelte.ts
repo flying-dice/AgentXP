@@ -1,5 +1,5 @@
 import type { Agent7Api } from '@shared/ipc'
-import type { Id, SessionDto } from '@shared/models'
+import type { FolderDto, Id, SessionDto } from '@shared/models'
 import {
   DESKTOP_CONTEXT_DESCRIPTION,
   supportsAside,
@@ -16,6 +16,8 @@ import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
+import { chooseFolder } from '../apps/shared/chooseFolder'
+import { addRemoved, ejectBalloonText, pluggedBalloonText, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
@@ -26,7 +28,10 @@ import type { PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { nextFocus, raise } from './windowOrder'
+import { cycleTarget, nextFocus, raise } from './windowOrder'
+import { ICON_HINT, takeIconHint } from './shellHints'
+import { errorText } from '../apps/shared/listing'
+import type { IconName } from '../kit/atoms/icons'
 
 export const VIEW_DEBOUNCE_MS = 300
 const GLOW_MS = 1800
@@ -102,6 +107,11 @@ export class DesktopController implements DesktopHost {
   recycleCount = $state(0)
   /** A USB drive that was just plugged in: the AutoPlay dialog shows it. */
   autoPlay = $state.raw<DriveDto | null>(null)
+  /** Apps being opened (a desktop icon or Start menu was used): the busy cursor and a taskbar button show until the window exists. */
+  opening = $state.raw<{ key: number; title: string; icon?: IconName }[]>([])
+  private openingKey = 0
+  /** Projects ejected from this desktop since it opened, newest first (at most three): Computer's "Recently removed". */
+  recentlyRemoved = $state.raw<RemovedProject[]>([])
   /** The tray balloon, auto-hidden after `BALLOON_MS`. */
   balloon = $state.raw<Balloon | null>(null)
   /** The Safely Remove menu of the tray icon is open. */
@@ -614,7 +624,61 @@ export class DesktopController implements DesktopHost {
     }
     await this.api.drives.eject(this.state.desktopId, letter)
     if (this.current) this.current = { ...this.current, drives: this.current.drives.filter((d) => d.letter !== letter) }
-    this.showBalloon({ title: 'Safe To Remove Hardware', text: `The '${title}' device can now be safely removed from the computer.`, icon: 'usb-safe' })
+    if (drive.folderId !== null) this.recentlyRemoved = addRemoved(this.recentlyRemoved, { folderId: drive.folderId, label: drive.label })
+    this.showBalloon({ title: 'Safe To Remove Hardware', text: ejectBalloonText(title), icon: 'usb-safe' })
+  }
+
+  /** Plug in a project: the Browse For Folder dialog, then the drive. Resolves the drive (also when it was plugged in already), or null when cancelled or it failed. */
+  async plugInProject(): Promise<DriveDto | null> {
+    this.startOpen = false
+    let folder: FolderDto | null
+    try {
+      folder = await chooseFolder(this.api, 'plug-in')
+    } catch (error) {
+      await this.plugInFailed('the folder', error)
+      return null
+    }
+    return folder ? this.plugInFolder(folder) : null
+  }
+
+  /** Plugs a recently removed project in again, without the dialog. */
+  async plugInAgain(folderId: Id): Promise<DriveDto | null> {
+    const folder = (await this.api.folders.list()).find((f) => f.id === folderId)
+    if (!folder) {
+      this.recentlyRemoved = this.recentlyRemoved.filter((r) => r.folderId !== folderId)
+      return null
+    }
+    return this.plugInFolder(folder)
+  }
+
+  private async plugInFolder(folder: FolderDto): Promise<DriveDto | null> {
+    const already = this.state.drives.find((d) => d.kind === 'removable' && d.folderId === folder.id)
+    if (already) {
+      await showMessageBox({ text: `${folder.name} is already plugged in as drive ${already.letter}:.`, caption: 'Plug in a project', buttons: 'OK', icon: 'information' })
+      return already
+    }
+    try {
+      const drive = await this.api.drives.plugIn(this.state.desktopId, folder.id)
+      if (!drive) return null
+      this.recentlyRemoved = this.recentlyRemoved.filter((r) => r.folderId !== folder.id)
+      this.showBalloon({ title: 'Project plugged in', text: pluggedBalloonText(driveTitle(drive)), icon: 'info' })
+      return drive
+    } catch (error) {
+      await this.plugInFailed(folder.name, error)
+      return null
+    }
+  }
+
+  private async plugInFailed(name: string, error: unknown): Promise<void> {
+    const reason = error instanceof Error ? error.message : String(error)
+    await showMessageBox({ text: `Could not plug in '${name}'. ${reason}`, caption: 'Plug in a project', buttons: 'OK', icon: 'error' })
+  }
+
+  /** Start > Eject a project...: opens the tray list of plugged-in projects, or says that there is none. */
+  openEjectList(): void {
+    this.startOpen = false
+    if (this.state.drives.some((d) => d.kind === 'removable')) this.usbMenuOpen = true
+    else this.showBalloon({ title: 'Safely Remove Hardware', text: 'No project is plugged in.', icon: 'info' })
   }
 
   showBalloon(balloon: Balloon): void {
@@ -639,6 +703,41 @@ export class DesktopController implements DesktopHost {
   }
 
   // ---- shell ui ---------------------------------------------------------------------------------
+
+  /**
+   * Runs `work` (opens an app) with feedback: `opening` shows the busy cursor and a taskbar button at once. When it fails
+   * the user sees a message box, never nothing. Resolves false after a failure.
+   */
+  async openWithFeedback(title: string, icon: IconName | undefined, work: () => Promise<unknown>): Promise<boolean> {
+    const key = ++this.openingKey
+    this.opening = [...this.opening, { key, title, icon }]
+    try {
+      await work()
+      return true
+    } catch (error) {
+      await showMessageBox({ text: `Could not open ${title}. ${errorText(error)}`, caption: title, buttons: 'OK', icon: 'error' })
+      return false
+    } finally {
+      this.opening = this.opening.filter((o) => o.key !== key)
+    }
+  }
+
+  /** The balloon "Double-click an icon to open it." the first time a user sees a desktop. */
+  showIconHint(storage: Pick<Storage, 'getItem' | 'setItem'> | null = localStore()): void {
+    if (this.needsDesktop || !takeIconHint(storage)) return
+    this.showBalloon({ ...ICON_HINT, icon: 'info' })
+  }
+
+  /** Alt+Tab (`1`) and Alt+Shift+Tab (`-1`): switch to the next or previous window in recent order. */
+  async cycleWindows(direction: 1 | -1): Promise<void> {
+    const id = cycleTarget(this.state.windows, this.state.focusedWindowId, direction)
+    if (id !== null) await this.focusWindow(id)
+  }
+
+  /** Enter or Space on a taskbar button: brings the window forward (restores it) and never minimizes it. */
+  async activateFromTaskbar(windowId: Id): Promise<void> {
+    if (this.windowById(windowId)) await this.focusWindow(windowId)
+  }
 
   toggleStart(): void {
     this.actionCenterOpen = false

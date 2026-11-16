@@ -9,24 +9,34 @@ import { APP_DISPLAY_NAMES, APP_KINDS, type AppKind, type AppView, type Bounds, 
 export const SURFACE_FALLBACK_TITLE = 'Agent window'
 
 export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
-  chat: { x: 40, y: 40, width: 640, height: 520 },
+  chat: { x: 40, y: 40, width: 680, height: 560 },
   explorer: { x: 120, y: 80, width: 620, height: 420 },
   notepad: { x: 200, y: 120, width: 520, height: 380 },
   code: { x: 80, y: 60, width: 820, height: 560 },
   terminal: { x: 160, y: 300, width: 640, height: 300 },
   browser: { x: 100, y: 50, width: 860, height: 600 },
-  'control-centre': { x: 180, y: 90, width: 640, height: 460 },
-  'agent-manager': { x: 220, y: 110, width: 560, height: 400 },
+  'control-centre': { x: 180, y: 90, width: 760, height: 540 },
+  'agent-manager': { x: 220, y: 110, width: 640, height: 440 },
   paint: { x: 140, y: 70, width: 860, height: 640 },
   wordpad: { x: 170, y: 80, width: 700, height: 520 },
   'sticky-notes': { x: 600, y: 60, width: 360, height: 420 },
-  'event-viewer': { x: 130, y: 90, width: 860, height: 520 },
+  'event-viewer': { x: 130, y: 90, width: 980, height: 560 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
-  'recycle-bin': { x: 240, y: 120, width: 600, height: 400 },
+  'recycle-bin': { x: 240, y: 120, width: 680, height: 420 },
   surface: { x: 260, y: 100, width: 480, height: 360 },
-  help: { x: 150, y: 70, width: 760, height: 540 },
+  help: { x: 150, y: 70, width: 800, height: 560 },
   'code-review': { x: 50, y: 30, width: 1120, height: 650 }
 }
+
+/** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
+export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 } }
+export const DEFAULT_MIN_WINDOW_SIZE = { width: 480, height: 320 } as const
+export const minWindowSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? DEFAULT_MIN_WINDOW_SIZE
+
+/** Height of the top bar of the desktop; a new window starts below it (with a gap of 4). */
+export const TOP_BAR_HEIGHT = 30
+/** The lowest `y` a new window is placed at. */
+export const WINDOW_MIN_Y = TOP_BAR_HEIGHT + 4
 
 /** Default bounds of a new window, cascaded by the number of windows already open. */
 export function cascadedBounds(app: AppKind, openCount: number, size?: { width: number; height: number }): Bounds {
@@ -54,8 +64,8 @@ const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.m
 /** Moves (and, when it is larger than the area, shrinks) `b` so it lies inside `area`. */
 function within(b: Bounds, area: { width: number; height: number }): Bounds {
   const width = Math.min(b.width, area.width)
-  const height = Math.min(b.height, area.height)
-  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, 0, area.height - height), width, height }
+  const height = Math.min(b.height, Math.max(1, area.height - WINDOW_MIN_Y))
+  return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, WINDOW_MIN_Y, Math.max(WINDOW_MIN_Y, area.height - height)), width, height }
 }
 
 /**
@@ -74,7 +84,7 @@ export function placeWindow(
   const base = within(cascadedBounds(app, openCount, size), area)
   if (!avoid || !overlaps(base, avoid)) return base
   const { width, height } = base
-  const top = clamp(avoid.y, 0, area.height - height)
+  const top = clamp(avoid.y, WINDOW_MIN_Y, Math.max(WINDOW_MIN_Y, area.height - height))
   const left = clamp(avoid.x, 0, area.width - width)
   const rightX = avoid.x + avoid.width + PLACEMENT_GAP
   const belowY = avoid.y + avoid.height + PLACEMENT_GAP
@@ -84,7 +94,7 @@ export function placeWindow(
     { x: avoid.x - PLACEMENT_GAP - width, y: top, width, height },
     { x: left, y: avoid.y - PLACEMENT_GAP - height, width, height }
   ]
-  const fits = exact.find((b) => b.x >= 0 && b.y >= 0 && b.x + b.width <= area.width && b.y + b.height <= area.height)
+  const fits = exact.find((b) => b.x >= 0 && b.y >= WINDOW_MIN_Y && b.x + b.width <= area.width && b.y + b.height <= area.height)
   if (fits) return fits
   const roomRight = area.width - rightX
   if (roomRight >= MIN_TILE.width) return { x: rightX, y: top, width: roomRight, height }

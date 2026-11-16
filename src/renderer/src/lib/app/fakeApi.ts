@@ -2,6 +2,7 @@
 import { EventType, type BaseEvent, type Message, type RunAgentInput } from '@ag-ui/core'
 import { createFakeDesktop } from './fakeDesktop'
 import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
+import { createFakeFs } from './fakeFs'
 import { createFakeVfs } from './fakeVfs'
 import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
@@ -278,6 +279,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       end: async () => {}
     },
     a2ui: { dispatch: async () => {}, deleteSurface: async () => {}, moveSurface: async () => {}, setSidebarHidden: async () => {} },
+    fs: createFakeFs(),
     dialogs: { pickFiles: async () => [] },
     shell: { openPath: async () => {} },
     app: { version: async () => '0.1.0' },

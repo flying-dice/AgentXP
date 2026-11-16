@@ -45,4 +45,31 @@ export class ExplorerWindow {
   async up(): Promise<void> {
     await this.frame.getByTestId('explorer-up').click()
   }
+
+  // ---- Computer: plug in, eject, recently removed -----------------------------------------------
+
+  get plugIn(): Locator {
+    return this.frame.getByTestId('explorer-plug-in')
+  }
+
+  get plugInAgain(): Locator {
+    return this.frame.getByTestId('explorer-plug-in-again')
+  }
+
+  get eject(): Locator {
+    return this.frame.getByTestId('explorer-eject')
+  }
+
+  get removedGroup(): Locator {
+    return this.frame.getByTestId('explorer-removed-group')
+  }
+
+  get removed(): Locator {
+    return this.frame.getByTestId('explorer-removed-item')
+  }
+
+  /** Status bar text ("1 project plugged in" on Computer). */
+  get itemCount(): Locator {
+    return this.frame.getByTestId('explorer-item-count')
+  }
 }

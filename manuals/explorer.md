@@ -23,7 +23,9 @@ This manual describes Explorer. Explorer shows the drives and the folders of a d
 
 ## 1 - What It Is For
 
-Use Explorer to see the files that the agent can reach, to open a file, to plug in a project as a USB drive, and to eject it. The **Agent status** column shows which files the agent changed.
+Use Explorer to see the files that the agent can reach, to open a file, to plug in a project as a drive, and to eject it. The **Agent status** column shows which files the agent changed.
+
+Explorer only shows files. It has no commands to copy, move, rename, or delete them. To change a file, open it with Notepad or Code, or ask the agent.
 
 ## 2 - Open It
 
@@ -39,7 +41,7 @@ The row at the top has **Back**, **Up**, the address bar, and **Refresh**. The a
 
 ### The Command Bar
 
-The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Open**, and **Eject**.
+The command bar appears only in the **Computer** window. It has **Plug in a project...**, **Plug in again**, **Open**, and **Eject**. Point to a button to read what it does. For example, **Plug in a project...** says: Plug in a project folder as a drive so that the agent can see its files. **Eject** says: Safely remove the selected project from this desktop. The folder stays on your disk.
 
 ### The Navigation Pane
 
@@ -47,15 +49,19 @@ The pane is at the left. It has **Favorites**, **Libraries**, and **Computer** w
 
 ### The File List
 
-The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click a folder to see **Open** and **Start a chat here**.
+The list shows the files of the folder. It has the columns **Name**, **Type**, and **Agent status**. Double-click a folder to open it. Double-click a file to open it in Notepad (text, markdown, and log files) or in Code (all other files). Right-click an item to see **Open**, **Open with Notepad** and **Open with Code** (files only), **Copy as path**, **Start a chat here**, **Ask chat about this...**, and **Properties**.
 
 ### The Computer Window
 
-The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the C: drive. The group **Devices with Removable Storage** has the USB drives. Right-click a drive to see **Open**, **Start a chat here**, and **Eject**.
+The **Computer** window shows a tile for each drive. The group **Hard Disk Drives** has the C: drive. The group **Devices with Removable Storage** has the projects that you plugged in. Each one says **Project folder (plugged in)**. Right-click a drive, here or in the navigation pane, to see **Open**, **Start a chat here**, **Eject**, and **Properties**.
+
+The group **Recently removed** shows the last three projects that you ejected from this desktop. Select one and click **Plug in again**, double-click it, or right-click it and click **Plug in again**. No dialog box appears.
+
+After you plug in a project, its drive is selected here. If the project is plugged in already, a message names its drive and the drive is selected.
 
 ### The Status Bar
 
-The status bar shows the number of items and the selection.
+The status bar shows the number of items and the selection. In **Computer** it shows how many projects are plugged in, for example **1 project plugged in**.
 
 ### The Chat Pane
 
@@ -72,7 +78,8 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Folder in the trail | Goes to that folder. | `explorer-crumb` |
 | Address box | Lets you type a path. Press Enter to go. | `explorer-address-field` |
 | Refresh | Reads the folders again. | `explorer-refresh` |
-| Plug in a project... | Lets you select a folder and plugs it in as a USB drive. | `explorer-plug-in` |
+| Plug in a project... | Opens the **Browse For Folder** dialog box and plugs the folder in as a drive. | `explorer-plug-in` |
+| Plug in again | Plugs the selected recently removed project in again. | `explorer-plug-in-again` |
 | Open | Opens the selected drive. | `explorer-open` |
 | Eject | Safely removes the selected USB drive. | `explorer-eject` |
 | Navigation pane | The tree at the left. | `explorer-nav` |
@@ -86,6 +93,8 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | File or folder | One row of the list. | `explorer-item` |
 | Computer window | Holds the drive tiles. | `explorer-computer` |
 | Drive tile | One drive. | `explorer-drive-*` |
+| Recently removed | The group of the last three ejected projects. | `explorer-removed-group` |
+| Removed project | One ejected project. Double-click it to plug it in again. | `explorer-removed-item` |
 | Item count | Shows how many items the folder has. | `explorer-item-count` |
 | Selection | Describes the selected items. | `explorer-selection` |
 | Open (menu) | Opens a folder or a drive. | `menu-item-explorer-folder-open`, `menu-item-explorer-drive-open` |
@@ -106,6 +115,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: open | File menu: opens the selected file, folder or drive. | `explorer-menu-open` |
 | Menu: plug in | File menu: plugs in a project as a USB drive. | `explorer-menu-plug-in` |
+| Menu: plug in again | File menu: plugs the selected recently removed project in again. | `explorer-menu-plug-in-again` |
 | Menu: eject | File menu: ejects the selected USB drive. | `explorer-menu-eject` |
 | Menu: properties | File menu: shows the properties of the selected file or folder. | `explorer-menu-properties` |
 | Menu: close | Closes the window. Alt+F4. | `explorer-menu-close` |
@@ -124,6 +134,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: up | Background menu: goes up one level. | `explorer-ctx-up` |
 | Context menu: drive ask | Drive menu: starts a chat about the drive. | `explorer-ctx-drive-ask` |
 | Context menu: drive copy path | Drive menu: copies the drive path. | `explorer-ctx-drive-copy-path` |
+| Context menu: drive properties | Drive menu: shows the type, letter and date of the drive. | `explorer-ctx-drive-properties` |
+| Context menu: plug in again | Removed project menu: plugs the project in again. | `explorer-ctx-plug-in-again` |
 
 ### Keys
 
@@ -139,7 +151,9 @@ To plug in a project, follow the steps below:
 
 1. Open **Computer**. The command bar appears.
 2. Click **Plug in a project...** The **Browse For Folder** dialog box appears.
-3. Select the folder of your project and click **OK**. The project appears as a USB drive, and AutoPlay asks what to do.
+3. Select the folder of your project and click **OK**. The project appears as a drive and is selected. A balloon says that it is ready to use, and AutoPlay asks what to do.
+
+To plug in a project that you ejected, select it under **Recently removed** and click **Plug in again**.
 
 To go to a path, follow the steps below:
 
@@ -149,7 +163,7 @@ To go to a path, follow the steps below:
 
 To start a chat in a folder, right-click the folder and click **Start a chat here**.
 
-To eject a drive, select the USB drive in **Computer** and click **Eject**. A balloon tells you that the drive is safe to remove.
+To eject a project, select it in **Computer** and click **Eject**, or right-click it and click **Eject**. A balloon tells you that it can be removed and that its files on disk did not change.
 
 ## 6 - Troubleshooting
 

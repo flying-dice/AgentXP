@@ -117,6 +117,8 @@
 
   function onkeydown(event: KeyboardEvent): void {
     if (!active || event.ctrlKey || event.altKey || event.metaKey) return
+    // Any key but a letter ends the word typed so far (type-ahead starts anew after Right, Down, ...).
+    if (event.key.length !== 1) buffer = ''
     switch (event.key) {
       case 'ArrowDown':
         selectIndex(activeIndex + 1)

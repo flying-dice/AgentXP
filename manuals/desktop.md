@@ -30,6 +30,8 @@ The desktop is the shell of Agent7. It looks like Windows 7. It holds the apps o
 
 Use the desktop to open apps, to switch between windows, to pause the agent, and to answer permission requests.
 
+**Desktop (also called a workspace)** – A workspace where an agent works on your projects. The bar at the top of the window shows the name of the desktop.
+
 ## 2 - Open It
 
 You open a desktop from the **[Desktop Connection](launcher.md)** window. Select a desktop and click **Connect**. A new window opens and shows the desktop.
@@ -60,7 +62,7 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Centre, and Recycle Bin. Double-click an icon to open its app. Use the arrow keys to move between icons.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Centre, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: talk to the agent**. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
 Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Centre**.
 
@@ -72,7 +74,11 @@ If the agent opened a window, the label **opened by agent** appears at its edge.
 
 ### The Taskbar
 
-The taskbar is at the bottom of the screen. It has the Start button, one button for each open window, and the notification area. Click a button to show the window. Click the button of the window that has focus to minimize it. Press the Left or Right arrow to move between the buttons.
+The taskbar is at the bottom of the screen. It has the Start button, one button for each open window, and the notification area. Click a button to show the window. Click the button of the window that has focus to minimize it. Press the Left or Right arrow to move between the buttons. Press Enter or Space on a button to bring the window forward and move the focus into it (to the message box of a chat). The keys never minimize a window; use the window menu key to see **Minimize**. A button **Opening ...** shows while an app opens.
+
+### Moving With the Keyboard
+
+Press F6 to move the focus to the next part of the desktop: the desktop icons, the active window, the bar at the top, the taskbar, and the notification area. Press Shift+F6 to go back. Inside a part, Tab moves as usual. Tab after the last control of a window goes on to the next part. Press Alt+Tab (Alt+Shift+Tab to go back) to switch windows. Your system may keep Alt+Tab for itself; Ctrl+Alt+Tab always works.
 
 ### The Start Menu
 
@@ -82,8 +88,8 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **Accessories** – A folder with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
 - **System Tools** – A folder with Event Viewer, Task Manager, and Control Centre.
 - **Recent chats** – Lists your latest chats.
-- **Search apps and chats** – Filters the lists while you type.
-- **Places** – Lists Computer, Documents, Control Centre, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
+- **Search apps and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
+- **Places** – Lists Computer, Eject a project..., Documents, Control Centre, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
 - **Pause agent or Resume agent** – Stops the agent or lets it work again.
 - **Disconnect** – Closes the window. Its arrow opens **Disconnect**, **Switch desktop...**, and **Delete desktop...**.
 
@@ -91,10 +97,10 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 
 The notification area is at the right end of the taskbar. It has these parts:
 
-- **Safely Remove Hardware and Eject Media** – A USB icon. It appears only while a project is plugged in. Click it to eject a USB drive.
+- **Safely Remove Hardware** – A USB icon. It appears while a project is plugged in. Point to it to read **Safely Remove Hardware: 1 project plugged in**. Click it to see **Eject** and the name of each project, for example **Eject login-app (E:)**. **Start -> Eject a project...** opens the same list.
 - **Action Center** – A flag. A number on the flag tells how many requests wait for your answer.
 - **Clock** – Shows the time and the date.
-- **Balloon** – A message above the tray, for example **Safe To Remove Hardware**. It closes by itself after nine seconds.
+- **Balloon** – A message above the tray, for example **Project plugged in** (**login-app (E:) is ready to use.**) or **Safe To Remove Hardware** (**login-app (E:) can now be removed. Its files on disk were not changed.**). It closes by itself after nine seconds.
 
 ### The Action Center
 
@@ -161,6 +167,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Taskbar | Holds the buttons and the tray. | `taskbar` |
 | Start | Opens or closes the Start menu. | `taskbar-start` |
 | Window button | Shows, hides, or focuses one window. | `taskbar-item-*` |
+| Opening button | Shows while an app opens. | `taskbar-item-opening` |
 | Notification area | Holds the tray icons and the clock. | `taskbar-tray` |
 | Clock | Shows time and date. | `taskbar-clock` |
 | Safely Remove Hardware | Opens the list of USB drives. | `usb-tray` |
@@ -244,6 +251,10 @@ Right-click a taskbar button to open its menu.
 | F1 | Opens Help and Support on the topic of the focused window. | none |
 | Ctrl+Esc | Opens or closes the Start menu. | none |
 | Alt+F4 | Closes the focused window. | none |
+| F6, Shift+F6 | Move the focus between the desktop icons, the active window, the bar, the taskbar, and the notification area. | none |
+| Alt+Tab, Alt+Shift+Tab, Ctrl+Alt+Tab | Switch to the next or the previous window. | none |
+| Enter, Space (taskbar button) | Bring the window forward and move the focus into it. | none |
+| Enter (desktop icon) | Opens the app of the selected icon. | none |
 | Arrow keys | Move between desktop icons or taskbar buttons. | none |
 | Esc | Closes the Action Center or the permission dialog box. | none |
 
@@ -267,8 +278,8 @@ To work without the agent, click **Take control** in the top bar. Click **Releas
 
 To eject a USB drive, follow the steps below:
 
-1. Click the **Safely Remove Hardware and Eject Media** icon in the notification area.
-2. Click **Eject** and the name of the drive. A balloon tells you that the drive is safe to remove.
+1. Click the **Safely Remove Hardware** icon in the notification area, or click **Start -> Eject a project...**.
+2. Click **Eject** and the name of the project. A balloon tells you that the project can be removed and that its files on disk did not change.
 
 To open the manual of a window, select the window and press F1.
 
@@ -277,7 +288,7 @@ To open the manual of a window, select the window and press F1.
 - **The agent cannot use a tool.** Open the app that gives the tool. The top bar lists the tools that are on.
 - **The agent asks for permission each time.** Open **[Control Centre](control-centre.md)**. Change the setting of the action from **Ask** to **Allow**.
 - **The permission dialog box closed and the agent waits.** Click the flag in the notification area, then click **Review**.
-- **The USB icon is gone.** The icon appears only while a project is plugged in.
+- **The USB icon is gone.** The icon appears only while a project is plugged in. To plug a project in again, open **Computer** and click **Plug in a project...**.
 - **A window is outside the screen.** Click its taskbar button, then drag the title bar.
 
 ## 7 - Need Help?

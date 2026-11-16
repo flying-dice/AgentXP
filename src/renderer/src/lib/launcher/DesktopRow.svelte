@@ -1,26 +1,31 @@
 <script lang="ts">
   /** One desktop in the launcher list: thumbnail, title, state, drives and last use. */
   import type { DesktopSummaryDto } from '@shared/vfs'
-  import { drivesLine, lastUsedText, stateLabel, stateTone } from './launcherModel'
+  import Icon from '../kit/atoms/Icon.svelte'
+  import { drivesLine, lastUsedText, rowStatus } from './launcherModel'
 
   interface Props {
     desktop: DesktopSummaryDto
     selected?: boolean
     /** Clock for "last used" (stories pass a fixed one). */
     now?: Date
+    /** Connect was pressed and the desktop window is not up yet. */
+    opening?: boolean
     onselect?: () => void
     onactivate?: () => void
   }
 
-  let { desktop, selected = false, now, onselect, onactivate }: Props = $props()
+  let { desktop, selected = false, now, opening = false, onselect, onactivate }: Props = $props()
 
-  const tone = $derived(stateTone(desktop))
+  const status = $derived(rowStatus(desktop))
 </script>
 
 <div
   class="row"
   data-testid="launcher-desktop-row"
   class:selected
+  class:waiting={status.tone === 'approval'}
+  class:failed={status.tone === 'error'}
   role="option"
   tabindex="-1"
   aria-selected={selected}
@@ -39,9 +44,11 @@
   <div class="text">
     <div class="title">
       <span class="name" data-testid="launcher-desktop-name">{desktop.title}</span>
-      {#if desktop.connected}<span class="chip" data-testid="launcher-desktop-connected">Connected</span>{/if}
+      {#if opening && !desktop.connected}<span class="chip" data-testid="launcher-desktop-opening">Opening...</span>{:else if desktop.connected}<span class="chip" data-testid="launcher-desktop-connected">Connected</span>{/if}
     </div>
-    <div class="state {tone}" data-testid="launcher-desktop-state"><i class="dot" aria-hidden="true"></i>{stateLabel(desktop)}</div>
+    <div class="state {status.tone}" class:strong={status.strong} data-testid="launcher-desktop-state" data-state={status.tone} title={status.hint || undefined}>
+      {#if status.icon}<Icon name={status.icon} size={16} />{:else}<i class="dot" aria-hidden="true"></i>{/if}{status.label}
+    </div>
     <div class="meta">{drivesLine(desktop.drives)}</div>
     <div class="meta">Last used {lastUsedText(desktop.lastUsedAt, now)}</div>
   </div>
@@ -59,6 +66,10 @@
   .row:hover {
     border-color: var(--w7-hot-border);
     background: var(--w7-hot-face);
+  }
+  .row.waiting {
+    background: #fff4d6;
+    border-color: #f0d9a0;
   }
   .row.selected {
     border-color: var(--w7-select-border);
@@ -135,6 +146,9 @@
   }
   .error {
     color: #a01408;
+  }
+  .strong {
+    font-weight: 700;
   }
   .meta {
     color: var(--w7-text-muted);

@@ -198,3 +198,24 @@ export interface FileNodeDto {
   path: string
   isDirectory: boolean
 }
+
+/** One folder in the "Browse For Folder" tree. `hasChildren` says whether it has sub-folders (shows the expand arrow). */
+export interface BrowseEntryDto {
+  name: string
+  /** Absolute path on the user's disk. */
+  path: string
+  hasChildren: boolean
+}
+
+/** A shortcut at the top of the "Browse For Folder" tree (Home, Documents, Desktop). */
+export interface BrowsePlaceDto {
+  name: string
+  path: string
+}
+
+/** The sub-folders of one folder; `path` '' lists the drives (or `/`) and also returns the shortcuts. */
+export interface BrowseListingDto {
+  path: string
+  entries: BrowseEntryDto[]
+  places: BrowsePlaceDto[]
+}

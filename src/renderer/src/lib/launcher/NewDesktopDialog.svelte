@@ -1,15 +1,15 @@
 <script lang="ts">
-  /** "New desktop": a name, the projects to plug in as USB drives, and the agent. */
+  /** "New desktop": a name, the project folders the agent can use (plugged in as drives), and the agent. */
   import type { AgentDto, FolderDto, Id } from '@shared/models'
   import type { NewDesktopInput } from '@shared/vfs'
   import Button from '../kit/atoms/Button.svelte'
   import CheckedListBox from '../kit/atoms/CheckedListBox.svelte'
   import ComboBox from '../kit/atoms/ComboBox.svelte'
   import Label from '../kit/atoms/Label.svelte'
-  import TextBox from '../kit/atoms/TextBox.svelte'
   import DialogButtons from '../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../kit/molecules/DialogButtons'
   import Dialog from '../kit/organisms/Dialog.svelte'
+  import DesktopNameField from './DesktopNameField.svelte'
   import { validateDesktopName } from './launcherModel'
 
   interface Props {
@@ -17,7 +17,7 @@
     agents: AgentDto[]
     /** Names of the existing desktops (no duplicates). */
     existingNames?: string[]
-    /** The Browse... button: shows the folder picker; resolves the new folder, or null when cancelled. */
+    /** The Browse... button: shows the Browse For Folder dialog; resolves the new folder, or null when cancelled. */
     onbrowse?: () => Promise<FolderDto | null>
     oncreate?: (input: NewDesktopInput) => void
     oncancel?: () => void
@@ -34,7 +34,6 @@
     if (agentId === '' && agents.length > 0) agentId = String((agents.find((a) => a.isDefault) ?? agents[0]).id)
   })
   let shown = $state.raw<FolderDto[]>([])
-  let touched = $state(false)
 
   const all = $derived([...folders, ...shown.filter((f) => !folders.some((x) => x.id === f.id))])
   const error = $derived(validateDesktopName(name, existingNames))
@@ -49,21 +48,18 @@
 
   function result(r: DialogResult): void {
     if (r === 'cancel') return oncancel?.()
-    touched = true
     if (error) return
     oncreate?.({ title: name.trim(), folderIds: $state.snapshot(checked), agentId: agentId ? Number(agentId) : undefined })
   }
 </script>
 
-<Dialog testid="new-desktop-dialog" title="New desktop" iconName="computer" width="440px" contained onclose={oncancel}>
+<Dialog testid="new-desktop-dialog" title="New desktop" iconName="computer" width="460px" contained onclose={oncancel}>
   <div class="form">
     <div class="field">
-      <Label text="Desktop name:" for="nd-name" />
-      <TextBox id="nd-name" data-testid="new-desktop-name" bind:value={name} data-autofocus onfocus={(e) => (e.currentTarget as HTMLInputElement).select()} />
-      <span class="error" data-testid="new-desktop-error" role="alert">{touched && error ? error : ''}</span>
+      <DesktopNameField bind:value={name} label="Desktop name:" {existingNames} idPrefix="new-desktop" />
     </div>
     <div class="field">
-      <Label text="Projects to plug in as USB drives:" />
+      <Label text="Project folders the agent can use (they appear as drives):" />
       <div class="projects">
         <CheckedListBox testid="new-desktop-projects" {items} bind:checked width="100%" height={112} label="Projects" />
         <Button data-testid="new-desktop-browse" onclick={() => void browse()}>Browse...</Button>
@@ -75,7 +71,7 @@
     </div>
   </div>
   {#snippet buttons()}
-    <DialogButtons buttons={[{ result: 'ok', label: 'Create' }, 'cancel']} onresult={result} />
+    <DialogButtons buttons={[{ result: 'ok', label: 'Create', disabled: error !== null }, 'cancel']} onresult={result} />
   {/snippet}
 </Dialog>
 
@@ -105,9 +101,5 @@
   .projects > :global(*:first-child) {
     flex: 1;
     min-width: 0;
-  }
-  .error {
-    min-height: 15px;
-    color: #a01408;
   }
 </style>
