@@ -7,7 +7,7 @@ describe('permissionsTable', () => {
     expect(permissionRows(DEFAULT_TOOL_POLICY).map((r) => r.label)).toEqual([
       'Read files',
       'Write files',
-      'Terminal (run commands)',
+      'Run commands (Terminal)',
       'Code',
       'Notepad',
       'Browser',
@@ -20,6 +20,12 @@ describe('permissionsTable', () => {
       'Code review',
       'Agent may open apps'
     ])
+  })
+
+  it('the Notepad row says in one place that saving uses Write files; the Terminal row is named like its chip', () => {
+    const rows = permissionRows(DEFAULT_TOOL_POLICY)
+    expect(rows.find((r) => r.key === 'notepad')?.description).toBe('Open and read documents. Saving a file uses Write files.')
+    expect(rows.find((r) => r.key === 'terminal')?.label).toBe('Run commands (Terminal)')
   })
 
   it('splits the rows into the two blocks of the page', () => {

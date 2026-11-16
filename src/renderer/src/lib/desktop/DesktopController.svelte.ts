@@ -24,6 +24,7 @@ import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
 import { isBusy } from '../app/sessionStatus'
+import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE, resumedLine, stoppedLine } from '../app/session/resumeNote'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
 import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
 import type { PendingApproval } from './approval'
@@ -58,12 +59,10 @@ export interface ShellMessage {
   id: number
   text: string
   at: Date
-  /** A button of the message: "Continue" sends the chat `CONTINUE_TEXT`. */
-  continueChat?: Id
 }
 
-/** What "Continue" says to an agent whose step Pause stopped. */
-export const CONTINUE_TEXT = 'Please continue where you stopped.'
+/** How long "Resumed. Nothing was stopped." stands in for "Idle" on the bar. */
+export const NOTICE_MS = 6000
 
 const emptyState = (): DesktopState => ({
   desktopId: 0,
@@ -99,6 +98,8 @@ export class DesktopController implements DesktopHost {
   glowing = $state.raw<ReadonlySet<Id>>(new Set())
   messages = $state.raw<ShellMessage[]>([])
   policy = $state.raw<ToolPolicyDto | null>(null)
+  /** A short line that stands in for "Idle" on the top bar ("Resumed. Nothing was stopped."); null when there is none. */
+  notice = $state<string | null>(null)
 
   // shell UI state
   startOpen = $state(false)
@@ -191,8 +192,7 @@ export class DesktopController implements DesktopHost {
   private started = false
   private offs: (() => void)[] = []
   private messageId = 0
-  /** The chats whose turn the last Pause stopped; Resume leaves each a "Continue" message. */
-  private stoppedByPause = new Set<Id>()
+  private noticeTimer: ReturnType<typeof setTimeout> | null = null
   private glowTimers = new Set<ReturnType<typeof setTimeout>>()
   private balloonTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -243,6 +243,7 @@ export class DesktopController implements DesktopHost {
     this.glowTimers.forEach(clearTimeout)
     this.glowTimers.clear()
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
   }
 
@@ -311,8 +312,8 @@ export class DesktopController implements DesktopHost {
     for (const s of this.allSessions) if (isBusy(s.status)) this.inbox.storeFor(s.id)
   }
 
-  private pushMessage(text: string, continueChat?: Id): void {
-    this.messages = [{ id: ++this.messageId, text, at: new Date(), continueChat }, ...this.messages].slice(0, 10)
+  private pushMessage(text: string): void {
+    this.messages = [{ id: ++this.messageId, text, at: new Date() }, ...this.messages].slice(0, 10)
   }
 
   // ---- windows ----------------------------------------------------------------------------------
@@ -429,42 +430,63 @@ export class DesktopController implements DesktopHost {
 
   // ---- agent controls ---------------------------------------------------------------------------
 
-  /** Pause all agents / Resume agents. Resuming does not restart a stopped step: each affected chat gets a Continue message. */
   /** Opens Control Center (one window per desktop) at a page, e.g. the top bar chips open Permissions. */
   async openControlCentre(page: ControlCentrePage): Promise<void> {
     const window = await this.openApp({ app: 'control-centre' })
     await this.api.desktop.updateView(window.id, { app: 'control-centre', page })
   }
 
+  /**
+   * Pause all agents / Resume agents and continue. Pause saves in main which chats it stopped; Resume sends each of them
+   * `CONTINUE_TEXT` as the user's message, so the stopped step carries on. With nothing to continue the bar says so.
+   */
   async togglePaused(): Promise<void> {
-    const paused = !this.state.paused
-    if (paused) this.stoppedByPause = new Set(this.allSessions.filter((s) => isBusy(s.status)).map((s) => s.id))
-    if (this.current) this.current = { ...this.current, paused }
-    await this.api.desktop.setPaused(this.state.desktopId, paused)
-    if (!paused) this.noteResumed()
-  }
-
-  private noteResumed(): void {
-    const stopped = [...this.stoppedByPause]
-    this.stoppedByPause = new Set()
-    for (const id of stopped) {
-      const title = this.sessions.byId(id)?.title || 'New chat'
-      this.pushMessage(`In chat '${title}': Resumed. The step that was stopped stays stopped. Send a message to continue.`, id)
+    const desktopId = this.state.desktopId
+    if (!this.state.paused) {
+      if (this.current) this.current = { ...this.current, paused: true }
+      await this.api.desktop.setPaused(desktopId, true)
+      return
     }
-    if (stopped.length > 0) this.showBalloon({ title: 'Agents resumed', text: 'A step that was stopped stays stopped. Open the Action Center and click Continue, or send a message.', icon: 'info' })
+    if (this.current) this.current = { ...this.current, paused: false }
+    await this.continueStopped(await this.api.desktop.resumeAgents(desktopId))
   }
 
-  /** The Continue button of a resume message: asks the chat's agent to carry on, and clears the message. */
-  async continueChat(sessionId: Id): Promise<void> {
-    this.messages = this.messages.filter((m) => m.continueChat !== sessionId)
-    await this.inbox.storeFor(sessionId).send(CONTINUE_TEXT)
+  private async continueStopped(sessionIds: readonly Id[]): Promise<void> {
+    if (sessionIds.length === 0) return this.showNotice(NOTHING_STOPPED_NOTICE)
+    for (const id of sessionIds) this.pushMessage(resumedLine(this.sessions.byId(id)?.title || 'New chat'))
+    await Promise.all(
+      sessionIds.map(async (id) => {
+        const store = this.inbox.storeFor(id) as Partial<Pick<SessionAgentStore, 'send' | 'whenConnected'>>
+        await store.whenConnected?.()
+        await store.send?.(CONTINUE_TEXT)
+      })
+    )
   }
 
-  /** True while the chat has a Resume note that Continue has not cleared. */
-  hasResumeNote(sessionId: Id): boolean {
-    return this.messages.some((m) => m.continueChat === sessionId)
+  private showNotice(text: string): void {
+    this.notice = text
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
+    this.noticeTimer = setTimeout(() => (this.notice = null), NOTICE_MS)
   }
 
+  /** True while the desktop is paused and Pause stopped a step of this chat (the saved list in the desktop state). */
+  stoppedByPause(sessionId: Id): boolean {
+    return this.state.paused && (this.state.stoppedByPause ?? []).includes(sessionId)
+  }
+
+  /** What the Action Center lists besides approvals: the chats Pause stopped (from the saved list), then the pushed messages. */
+  get centreMessages(): { id: number; text: string }[] {
+    const stopped = this.state.paused ? (this.state.stoppedByPause ?? []) : []
+    return [
+      ...stopped.map((id) => ({ id: -id, text: stoppedLine(this.sessions.byId(id)?.title || 'New chat') })),
+      ...this.messages.map((m) => ({ id: m.id, text: m.text }))
+    ]
+  }
+
+  /**
+   * "Ask before every action" and "Give control back". Taking control stops the running steps in main; the bar then reads
+   * "You are in control" and the chats read "Waiting for you" instead of "Working".
+   */
   async toggleUserInControl(): Promise<void> {
     const on = !this.state.userInControl
     if (this.current) this.current = { ...this.current, userInControl: on }

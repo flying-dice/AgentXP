@@ -36,6 +36,9 @@ export class SqliteDesktopRepository implements DesktopRepository {
   private readonly updateTitle: Statement<[string, Id]>
   private readonly updateFlag: Record<'is_open' | 'paused' | 'user_in_control', Statement<[number, Id]>>
   private readonly remove_: Statement<[Id]>
+  private readonly selectStopped: Statement<[Id], { session_id: number }>
+  private readonly insertStopped: Statement<[Id, Id]>
+  private readonly clearStopped: Statement<[Id]>
 
   constructor(db: Database) {
     this.selectAll = prepare(db, `SELECT ${COLUMNS} FROM desktops ORDER BY id`)
@@ -48,6 +51,9 @@ export class SqliteDesktopRepository implements DesktopRepository {
     const flag = (column: string): Statement<[number, Id]> => prepare(db, `UPDATE desktops SET ${column} = ? WHERE id = ?`)
     this.updateFlag = { is_open: flag('is_open'), paused: flag('paused'), user_in_control: flag('user_in_control') }
     this.remove_ = prepare(db, 'DELETE FROM desktops WHERE id = ?')
+    this.selectStopped = prepare(db, 'SELECT session_id FROM desktop_stopped_chats WHERE desktop_id = ? ORDER BY rowid')
+    this.insertStopped = prepare(db, 'INSERT OR IGNORE INTO desktop_stopped_chats (desktop_id, session_id) VALUES (?, ?)')
+    this.clearStopped = prepare(db, 'DELETE FROM desktop_stopped_chats WHERE desktop_id = ?')
   }
 
   list(): DesktopRecord[] {
@@ -92,6 +98,15 @@ export class SqliteDesktopRepository implements DesktopRepository {
 
   setUserInControl(id: Id, on: boolean): void {
     this.updateFlag.user_in_control.run(on ? 1 : 0, id)
+  }
+
+  stoppedChats(id: Id): Id[] {
+    return this.selectStopped.all(id).map((row) => row.session_id)
+  }
+
+  setStoppedChats(id: Id, sessionIds: readonly Id[]): void {
+    this.clearStopped.run(id)
+    for (const sessionId of sessionIds) this.insertStopped.run(id, sessionId)
   }
 
   remove(id: Id): boolean {

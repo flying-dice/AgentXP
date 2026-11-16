@@ -17,6 +17,16 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-stop')
   }
 
+  /** The line that says what the user answered to the last permission request ("You allowed: ..."). */
+  get permissionResult(): Locator {
+    return this.frame.getByTestId('chat-permission-result')
+  }
+
+  /** The line under the answers of the permission dialog box ("Press Alt+A to allow or Alt+D to deny."). */
+  get permissionHint(): Locator {
+    return this.frame.getByTestId('permission-hint')
+  }
+
   get errors(): Locator {
     return this.frame.getByTestId('chat-error')
   }

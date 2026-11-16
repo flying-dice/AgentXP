@@ -18,10 +18,20 @@ describe('ProblemAwareSessions', () => {
   it('attaches the problem to the row and takes it away when cleared', () => {
     expect(sessions.get(f.sessionId)?.problem).toBeUndefined()
     problems.set(f.sessionId, problem)
-    expect(sessions.get(f.sessionId)?.problem).toEqual(problem)
-    expect(sessions.list().find((s) => s.id === f.sessionId)?.problem).toEqual(problem)
+    expect(sessions.get(f.sessionId)?.problem).toEqual({ ...problem, failures: 1 })
+    expect(sessions.list().find((s) => s.id === f.sessionId)?.problem).toEqual({ ...problem, failures: 1 })
     problems.clear(f.sessionId)
     expect(sessions.get(f.sessionId)?.problem).toBeUndefined()
+  })
+  it('counts failures in a row; clear keeps the count, recovered resets it', () => {
+    problems.set(f.sessionId, problem)
+    problems.clear(f.sessionId)
+    problems.set(f.sessionId, problem)
+    expect(problems.get(f.sessionId)?.failures).toBe(2)
+    problems.recovered(f.sessionId)
+    expect(problems.get(f.sessionId)).toBeNull()
+    problems.set(f.sessionId, problem)
+    expect(problems.get(f.sessionId)?.failures).toBe(1)
   })
   it('forgets the problem of a removed session', () => {
     problems.set(f.sessionId, problem)

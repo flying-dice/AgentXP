@@ -4,6 +4,7 @@
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
+  import { CONTROL_NOTE } from '../desktop/activity'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import StartMenu from '../kit/organisms/StartMenu.svelte'
   import type { StartGroup, StartItem } from '../kit/organisms/StartMenu'
@@ -158,7 +159,7 @@
   const centreApprovals = $derived(
     approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt) }))
   )
-  const messages = $derived(desktop.messages.map((m) => ({ id: m.id, text: m.text, continueId: m.continueChat })))
+  const messages = $derived(desktop.centreMessages)
   const policy = $derived(desktop.state.policy ?? desktop.policy)
 
   // The taskbar button menu: Restore, Minimize, Close window.
@@ -231,7 +232,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} {since} />
+      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={desktop.state.userInControl ? CONTROL_NOTE : null} {since} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
@@ -243,6 +244,7 @@
         agentProblem={desktop.agentProblem}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
+        notice={desktop.notice}
         tools={desktop.state.tools}
         {policy}
         onpause={() => void desktop.togglePaused()}
@@ -298,10 +300,6 @@
           onreview={(key) => {
             const a = approvals.find((x) => x.key === key)
             if (a) void desktop.review(a)
-          }}
-          oncontinue={(id) => {
-            const chat = desktop.messages.find((m) => m.id === id)?.continueChat
-            if (chat !== undefined) void desktop.continueChat(chat)
           }}
           onopencontrolcentre={() => {
             desktop.actionCenterOpen = false

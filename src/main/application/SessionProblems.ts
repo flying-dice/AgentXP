@@ -17,17 +17,29 @@ import type { NewSession, SessionRepository } from '../domain/repositories/sessi
  */
 export class SessionProblems {
   private readonly problems = new Map<Id, SessionProblemDto>()
+  /** Failures in a row per chat: a restart clears the problem but not this, only a start that worked does. */
+  private readonly failures = new Map<Id, number>()
 
   get(sessionId: Id): SessionProblemDto | null {
     return this.problems.get(sessionId) ?? null
   }
 
+  /** Records a failure; the problem carries how many times in a row this chat failed (`failures`). */
   set(sessionId: Id, problem: SessionProblemDto): void {
-    this.problems.set(sessionId, problem)
+    const failures = (this.failures.get(sessionId) ?? 0) + 1
+    this.failures.set(sessionId, failures)
+    this.problems.set(sessionId, { ...problem, failures })
   }
 
+  /** Takes the problem away (a restart is about to try again); the count of failures in a row stays. */
   clear(sessionId: Id): void {
     this.problems.delete(sessionId)
+  }
+
+  /** The agent started and works: no problem, and the next failure is the first again. */
+  recovered(sessionId: Id): void {
+    this.problems.delete(sessionId)
+    this.failures.delete(sessionId)
   }
 
   /** The row with its problem attached (the row itself when there is none). */
@@ -69,6 +81,9 @@ export class ProblemAwareSessions implements SessionRepository {
   setStatus(id: Id, status: SessionStatus): void {
     this.inner.setStatus(id, status)
   }
+  setAgent(id: Id, agentId: Id): void {
+    this.inner.setAgent(id, agentId)
+  }
   setAcpSessionId(id: Id, acpSessionId: string | null): void {
     this.inner.setAcpSessionId(id, acpSessionId)
   }
@@ -94,7 +109,7 @@ export class ProblemAwareSessions implements SessionRepository {
     this.inner.touch(id)
   }
   remove(id: Id): boolean {
-    this.problems.clear(id)
+    this.problems.recovered(id)
     return this.inner.remove(id)
   }
 }

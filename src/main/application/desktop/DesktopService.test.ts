@@ -237,8 +237,45 @@ describe('DesktopService: control flags and policy', () => {
     expect(service.state(desktopId).paused).toBe(true)
     await service.setPaused(desktopId, false)
     expect(chats.cancelled).toHaveLength(1)
-    service.setUserInControl(desktopId, true)
+    await service.setUserInControl(desktopId, true)
     expect(service.state(desktopId).userInControl).toBe(true)
+  })
+
+  it('saves the chats Pause stopped, and Resume returns them once (the saved list, not window memory)', async () => {
+    const busy = await service.newChat(desktopId)
+    const idle = await service.newChat(desktopId)
+    const id = (w: typeof busy): number => (w.view.app === 'chat' ? w.view.sessionId : 0)
+    f.repos.sessions.setStatus(id(busy), 'awaiting_permission')
+    f.repos.sessions.setStatus(id(idle), 'idle')
+    await service.setPaused(desktopId, true)
+    expect(service.state(desktopId).stoppedByPause).toEqual([id(busy)])
+    // A second Pause (another window, the API) keeps the list: the first one saw the working chats.
+    f.repos.sessions.setStatus(id(busy), 'idle')
+    await service.setPaused(desktopId, true)
+    expect(service.state(desktopId).stoppedByPause).toEqual([id(busy)])
+    expect(await service.resumeAgents(desktopId)).toEqual([id(busy)])
+    expect(service.state(desktopId)).toMatchObject({ paused: false, stoppedByPause: [] })
+    expect(await service.resumeAgents(desktopId)).toEqual([])
+  })
+
+  it('lifting the pause through setPaused(false) forgets the stopped chats', async () => {
+    const busy = await service.newChat(desktopId)
+    f.repos.sessions.setStatus(busy.view.app === 'chat' ? busy.view.sessionId : 0, 'working')
+    await service.setPaused(desktopId, true)
+    await service.setPaused(desktopId, false)
+    expect(service.state(desktopId).stoppedByPause).toEqual([])
+  })
+
+  it('taking control cancels the running steps once and handing control back does not', async () => {
+    const busy = await service.newChat(desktopId)
+    const sessionId = busy.view.app === 'chat' ? busy.view.sessionId : 0
+    f.repos.sessions.setStatus(sessionId, 'working')
+    await service.setUserInControl(desktopId, true)
+    expect(chats.cancelled).toEqual([sessionId])
+    await service.setUserInControl(desktopId, true)
+    await service.setUserInControl(desktopId, false)
+    expect(chats.cancelled).toEqual([sessionId])
+    expect(service.state(desktopId).userInControl).toBe(false)
   })
 
   it('serves the default policy and stores changes', () => {

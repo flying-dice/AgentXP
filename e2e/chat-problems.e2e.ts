@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { registerAgent, see, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
+import { registerAgent, registerFakeAgent, see, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
 
 /** What the chat says and offers when the agent cannot start, or is stopped: plain words, Restart, no protocol names. */
 describe('chat: the agent cannot start', () => {
@@ -7,31 +7,57 @@ describe('chat: the agent cannot start', () => {
 
   afterAll(async () => ctx?.app.close())
 
-  it('says which program was not found, offers Try again and Details, and shows the problem on the top bar', async () => {
+  it('says which program was not found in the chat itself, with buttons that stay reachable and no dialog box over them', async () => {
     ctx = await startConnectedDesktop({
       title: 'Broken agent',
       agent: (page) => registerAgent(page, { name: 'Broken agent', command: 'not-a-real-command', args: [], env: {} })
     })
     await ctx.desktop.openApp('chat')
-    const box = ctx.desktopPage.getByTestId('message-box')
-    await see.visible(box)
-    await see.text(box, "The program 'not-a-real-command' was not found.")
-    await see.visible(ctx.desktopPage.getByTestId('message-box-action-agents'))
-    await see.visible(ctx.desktopPage.getByTestId('message-box-action-other'))
-    await ctx.desktopPage.getByTestId('message-box-action-close').click()
-    await see.gone(box)
-
     const chat = ctx.desktop.chat()
+    await see.text(chat.errors, "The program 'not-a-real-command' was not found.")
     await see.text(chat.errors, 'The agent could not start.')
     expect(await chat.errors.innerText()).not.toMatch(/ACP|ENOENT|JSON/)
-    await see.visible(chat.frame.getByTestId('chat-error-restart'))
+    await see.count(ctx.desktopPage.getByTestId('message-box'), 0)
+    await see.text(chat.frame.getByTestId('chat-error-restart'), 'Try again')
+    await see.visible(chat.frame.getByTestId('chat-error-open-agents'))
+    await see.visible(chat.frame.getByTestId('chat-error-choose-agent'))
     await see.visible(chat.frame.getByTestId('chat-error-details'))
     await see.text(chat.frame.getByTestId('chat-status'), 'Disconnected')
     await see.visible(ctx.desktopPage.getByTestId('topbar-agent-problem'))
+  })
 
+  it('Details opens the technical text inline and Hide details closes it', async () => {
+    const chat = ctx.desktop.chat()
     await chat.frame.getByTestId('chat-error-details').click()
-    await see.text(ctx.desktopPage.getByTestId('message-box'), 'ENOENT')
-    await ctx.desktopPage.getByTestId('message-box').getByTestId('dialog-button-ok').click()
+    await see.text(chat.frame.getByTestId('chat-error-details-text'), 'ENOENT')
+    await see.text(chat.frame.getByTestId('chat-error-details'), 'Hide details')
+    await chat.frame.getByTestId('chat-error-details').click()
+    await see.gone(chat.frame.getByTestId('chat-error-details-text'))
+  })
+
+  it('Open Agents opens Control Center at Agents and leaves the chat as it was', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.frame.getByTestId('chat-error-open-agents').click()
+    await see.visible(ctx.desktop.window('control-centre'))
+    await see.text(ctx.desktopPage.getByTestId('control-centre-heading'), 'Agents')
+    await see.visible(chat.errors)
+  })
+
+  it('Try again names the new default agent, and uses it', async () => {
+    const chat = ctx.desktop.chat()
+    // The person makes another agent the default in Control Center and closes it: back in the chat, the button says
+    // which agent it will use.
+    await registerFakeAgent(ctx.desktopPage, 'Working agent')
+    await ctx.desktop.closeWindow('control-centre')
+    await see.text(chat.frame.getByTestId('chat-error-restart'), 'Try again with Working agent')
+    await chat.frame.getByTestId('chat-error-restart').click()
+    await see.gone(chat.errors)
+    await see.text(chat.frame.getByTestId('chat-status'), 'Connected')
+  })
+
+  it('Ctrl+N in the chat starts a new chat on the same folder', async () => {
+    await ctx.desktop.chat().composer.press('Control+n')
+    await see.visible(ctx.desktop.window('chat', 1))
   })
 })
 
@@ -58,7 +84,9 @@ describe('chat: the agent program is stopped from Task Manager', () => {
 
     await see.text(chat.errors, 'The agent program was stopped.')
     await chat.frame.getByTestId('chat-error-restart').click()
+    await see.visible(chat.frame.getByTestId('chat-restart-status'))
     await see.gone(chat.errors)
+    await see.text(chat.frame.getByTestId('chat-restart-status'), 'The agent is running again.')
     await see.text(chat.frame.getByTestId('chat-status'), 'Connected')
   })
 

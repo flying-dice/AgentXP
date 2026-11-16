@@ -81,6 +81,7 @@ const INVOKE_METHODS = {
     setWindowState: true,
     updateView: true,
     setPaused: true,
+    resumeAgents: true,
     setUserInControl: true,
     newChat: true,
     openReview: true,

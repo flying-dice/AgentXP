@@ -23,9 +23,9 @@ export const GROUP_TITLES: Record<PermissionGroupId, string> = {
 const META: { key: PolicyKey; group: PermissionGroupId; label: string; description: string }[] = [
   { key: 'fs.read', group: 'abilities', label: 'Read files', description: 'Read and list files in the project folders (Explorer, Code)' },
   { key: 'fs.write', group: 'abilities', label: 'Write files', description: 'Create and change files in any app (Notepad, Code)' },
-  { key: 'terminal', group: 'abilities', label: 'Terminal (run commands)', description: 'Run commands and read their output' },
+  { key: 'terminal', group: 'abilities', label: 'Run commands (Terminal)', description: 'Run commands and read their output' },
   { key: 'code', group: 'apps', label: 'Code', description: 'Open files, reveal lines and show diffs in Code' },
-  { key: 'notepad', group: 'apps', label: 'Notepad', description: 'Open and read documents in Notepad' },
+  { key: 'notepad', group: 'apps', label: 'Notepad', description: 'Open and read documents. Saving a file uses Write files.' },
   { key: 'browser', group: 'apps', label: 'Browser', description: 'Go to web pages, read them and click in them' },
   { key: 'paint', group: 'apps', label: 'Agent Paint', description: 'Draw on, read and resize the Agent Paint canvas' },
   { key: 'wordpad', group: 'apps', label: 'WordPad', description: 'Open, read and write documents in WordPad' },

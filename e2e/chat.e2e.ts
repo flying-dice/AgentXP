@@ -78,10 +78,32 @@ describe('chat turn with the fake agent', () => {
     await see.text(ctx.desktopPage.getByTestId('uac-reason'), 'Reason: ')
     expect(await ctx.desktop.uac.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
     await see.eventually(async () => expect(await ctx.desktopPage.getByTestId('uac-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
+    await see.text(ctx.desktopPage.getByTestId('uac-hint'), 'Press Alt+A to allow or Alt+D to deny.')
     await ctx.desktop.uacAllow.click()
     await see.gone(ctx.desktop.uac)
     await see.gone(chat.permissionDialog)
     await see.count(ctx.desktop.approvals, 0)
+    // The chat says what was answered, whichever dialog took the answer.
+    await see.text(chat.permissionResult, 'You allowed: ')
+  })
+
+  it('the permission dialog of the chat answers by key: Alt+D denies, Alt+A allows, and the chat says so', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.send('Write it a third time')
+    await see.visible(chat.permissionDialog)
+    await see.text(chat.permissionHint, 'Press Alt+A to allow or Alt+D to deny.')
+    // Deny keeps the first focus (the safe answer); Left and Right move to Allow and back.
+    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
+    await ctx.desktopPage.keyboard.press('ArrowLeft')
+    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-allow').evaluate((el) => el === document.activeElement)).toBe(true))
+    await ctx.desktopPage.keyboard.press('Alt+d')
+    await see.gone(chat.permissionDialog)
+    await see.text(chat.permissionResult, 'You denied: ')
+    await chat.send('Write it a fourth time')
+    await see.visible(chat.permissionDialog)
+    await ctx.desktopPage.keyboard.press('Alt+a')
+    await see.gone(chat.permissionDialog)
+    await see.text(chat.permissionResult, 'You allowed: ')
   })
 
   it('the Event Viewer logged the traffic of the turn', async () => {

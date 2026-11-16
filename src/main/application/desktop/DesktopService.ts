@@ -114,6 +114,7 @@ export class DesktopService implements DesktopStates {
       windows,
       tools: enabledToolGroups(windows.map((w) => w.app)),
       paused: desktop.paused,
+      stoppedByPause: this.deps.desktops.stoppedChats(desktopId),
       userInControl: desktop.userInControl,
       policy: this.policy(),
       notes: this.deps.notes.list(desktopId),
@@ -261,20 +262,50 @@ export class DesktopService implements DesktopStates {
 
   // ---- control flags -----------------------------------------------------------------------------
 
-  /** Pausing also cancels the turns that are running on this desktop. */
+  /**
+   * Pausing cancels the turns that are running on this desktop and saves which chats they were (`stoppedByPause`), so
+   * "Resume agents and continue" can carry each on. Lifting the pause this way forgets the list: the steps stay stopped.
+   */
   async setPaused(desktopId: Id, paused: boolean): Promise<void> {
     this.record(desktopId)
-    this.deps.desktops.setPaused(desktopId, paused)
+    if (!paused) {
+      this.deps.desktops.setPaused(desktopId, false)
+      this.deps.desktops.setStoppedChats(desktopId, [])
+      this.emit(desktopId)
+      return
+    }
+    const busy = this.busyChats(desktopId)
+    if (!this.deps.desktops.get(desktopId)?.paused) this.deps.desktops.setStoppedChats(desktopId, busy.map((s) => s.id))
+    this.deps.desktops.setPaused(desktopId, true)
     this.emit(desktopId)
-    if (!paused) return
-    const busy = this.deps.sessions.listByDesktop(desktopId).filter((s) => BUSY_STATUSES.includes(s.status))
-    await Promise.allSettled(busy.map((s) => this.deps.chats.cancel(s.id)))
+    await this.cancelAll(busy)
   }
 
-  setUserInControl(desktopId: Id, on: boolean): void {
+  /** "Resume agents and continue": lifts the pause and returns the chats that Pause had stopped (the caller continues them). */
+  async resumeAgents(desktopId: Id): Promise<Id[]> {
     this.record(desktopId)
+    const stopped = this.deps.desktops.stoppedChats(desktopId).filter((id) => this.deps.sessions.get(id)?.desktopId === desktopId)
+    await this.setPaused(desktopId, false)
+    return stopped
+  }
+
+  /**
+   * "You are in control" (the check box or the Browser's Take over): the running steps are cancelled at once, so the
+   * agent stops reading, and every later action asks first. Handing control back only clears the flag.
+   */
+  async setUserInControl(desktopId: Id, on: boolean): Promise<void> {
+    const wasOn = this.record(desktopId).userInControl
     this.deps.desktops.setUserInControl(desktopId, on)
     this.emit(desktopId)
+    if (on && !wasOn) await this.cancelAll(this.busyChats(desktopId))
+  }
+
+  private busyChats(desktopId: Id): SessionDto[] {
+    return this.deps.sessions.listByDesktop(desktopId).filter((s) => BUSY_STATUSES.includes(s.status))
+  }
+
+  private async cancelAll(sessions: readonly SessionDto[]): Promise<void> {
+    await Promise.allSettled(sessions.map((s) => this.deps.chats.cancel(s.id)))
   }
 
   // ---- chats -------------------------------------------------------------------------------------

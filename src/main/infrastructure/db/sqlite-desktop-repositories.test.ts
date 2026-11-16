@@ -36,6 +36,22 @@ describe('SqliteDesktopRepository', () => {
     expect(desktops.list()).toEqual([])
   })
 
+  it('saves the chats Pause stopped, replaces the list, and drops it with the desktop or the chat', () => {
+    const { db, desktops, desktop, sessions, agentId } = setup()
+    const a = sessions.create({ agentId, desktopId: desktop.id, title: 'a' })
+    const b = sessions.create({ agentId, desktopId: desktop.id, title: 'b' })
+    expect(desktops.stoppedChats(desktop.id)).toEqual([])
+    desktops.setStoppedChats(desktop.id, [a.id, b.id, a.id])
+    expect(desktops.stoppedChats(desktop.id)).toEqual([a.id, b.id])
+    desktops.setStoppedChats(desktop.id, [b.id])
+    expect(desktops.stoppedChats(desktop.id)).toEqual([b.id])
+    sessions.remove(b.id)
+    expect(desktops.stoppedChats(desktop.id)).toEqual([])
+    desktops.setStoppedChats(desktop.id, [a.id])
+    desktops.remove(desktop.id)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM desktop_stopped_chats').get()).toEqual({ n: 0 })
+  })
+
   it('removes the chats of a deleted desktop (cascade)', () => {
     const { db, desktops, desktop, sessions, agentId } = setup()
     const session = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })

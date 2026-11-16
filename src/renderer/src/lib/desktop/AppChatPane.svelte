@@ -9,7 +9,10 @@
   import type { AppWindowState } from '@shared/desktop'
   import EmbeddedChat from '../apps/shared/EmbeddedChat.svelte'
   import Icon from '../kit/atoms/Icon.svelte'
+  import { chatAboutTitle } from '../app/session/folderLabel'
+  import { OPEN_PANE_TIP } from '../app/session/chatPaneText'
   import { PANE_MIN_WIDTH, suggestionsFor } from './chatPane'
+  import { asideCwd } from '@shared/desktop-views'
   import type { DesktopController } from './DesktopController.svelte'
 
   interface Props {
@@ -38,6 +41,9 @@
   const sessionId = $derived(local ?? w.asideSessionId ?? 0)
 
   const suggestions = $derived(suggestionsFor(w.app, desktop.contextOf(w.id)))
+  /** Where the pane works: the project drive of the window's view, else the agent's home ("Chat about login-app (E:)"). */
+  const cwd = $derived(asideCwd(w.view, desktop.state.home))
+  const heading = $derived(chatAboutTitle(cwd, desktop.state.drives))
 
   async function start(): Promise<number> {
     const id = await desktop.openAside(w.id)
@@ -52,8 +58,8 @@
 </script>
 
 {#if pane.collapsed}
-  <button type="button" class="edge" data-testid="chat-pane-toggle" aria-label="Show chat pane" title="Show chat pane (Ctrl+Shift+C)" onclick={() => desktop.setChatPane(w.id, true)}>
-    <Icon name="chevron-left" size={12} />
+  <button type="button" class="edge" data-testid="chat-pane-toggle" aria-label="Open the chat pane" title="{OPEN_PANE_TIP} (Ctrl+Shift+C)" onclick={() => desktop.setChatPane(w.id, true)}>
+    <Icon name="chevron-left" size={14} />
     <span class="label">Chat</span>
   </button>
 {:else}
@@ -62,7 +68,8 @@
       host={desktop}
       {sessionId}
       role="aside"
-      title={w.view.app === 'browser' ? 'Chat about this page' : 'Chat pane'}
+      title={w.view.app === 'browser' ? 'Chat about this page' : heading}
+      onopenwindow={() => void desktop.startChat(cwd)}
       collapsible
       resizable
       compact
@@ -89,8 +96,8 @@
   }
   .edge {
     flex: none;
-    width: 24px;
-    min-width: 24px;
+    width: 28px;
+    min-width: 28px;
     padding: 6px 0 0;
     display: flex;
     flex-direction: column;

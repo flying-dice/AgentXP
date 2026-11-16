@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest'
+import { browserStep, browserToolName, browserWork, coalesceSteps } from './browserSteps'
+import type { WorkRow } from './transcriptRows'
+
+const tool = (name: string, rawInput = '{}', id = name): WorkRow => ({ kind: 'tool', id, toolCallId: id, name, rawInput, result: null })
+
+describe('browserToolName', () => {
+  it('finds a Browser tool under the names an agent gives it', () => {
+    expect(browserToolName('browser_click')).toBe('browser_click')
+    expect(browserToolName('agent7.browser_read')).toBe('browser_read')
+    expect(browserToolName('mcp__agent7__browser_navigate')).toBe('browser_navigate')
+    expect(browserToolName('terminal_run')).toBeNull()
+    expect(browserToolName('my_browser_thing')).toBeNull()
+  })
+})
+
+describe('browserStep', () => {
+  it('words each step in the past tense without element numbers or tool names', () => {
+    expect(browserStep('browser_navigate', '{"url":"http://localhost:3000/chat?x=1"}')).toBe('Opened localhost:3000/chat')
+    expect(browserStep('browser_navigate', '{}')).toBe('Opened a web page')
+    expect(browserStep('browser_read', '{"mode":"tree"}')).toBe('Read the page')
+    expect(browserStep('browser_click', '{"ref":12}')).toBe('Clicked on the page')
+    expect(browserStep('browser_type', '{"ref":7,"text":"secret"}')).toBe('Typed on the page')
+    expect(browserStep('browser_find', '{"text":"Send"}')).toBe('Looked for "Send" on the page')
+    expect(browserStep('browser_press', '{"key":"Enter"}')).toBe('Pressed Enter')
+    expect(browserStep('fs.read_text_file', '{}')).toBeNull()
+  })
+})
+
+describe('coalesceSteps', () => {
+  it('joins runs of the same step', () => {
+    expect(coalesceSteps(['Opened a', 'Read the page', 'Read the page', 'Read the page', 'Clicked on the page'])).toEqual(['Opened a', 'Read the page 3 times', 'Clicked on the page'])
+  })
+})
+
+describe('browserWork', () => {
+  it('summarises a group of Browser tools with its first and last step', () => {
+    const rows = [tool('browser_navigate', '{"url":"http://localhost:3000/chat"}', 'a'), ...Array.from({ length: 24 }, (_, i) => tool('browser_read', '{}', `r${i}`)), tool('browser_type', '{"ref":3,"text":"hi"}', 'z')]
+    expect(browserWork(rows)).toEqual({ summary: 'Worked in the Browser: 26 steps', detail: 'First: Opened localhost:3000/chat. Last: Typed on the page.' })
+  })
+  it('says "step" for one and has no detail', () => {
+    expect(browserWork([tool('browser_read')])).toEqual({ summary: 'Worked in the Browser: 1 step', detail: null })
+  })
+  it('is null when any other tool is mixed in, or there is no tool', () => {
+    expect(browserWork([tool('browser_read'), tool('terminal_run')])).toBeNull()
+    expect(browserWork([{ kind: 'reasoning', id: 'x', text: 'hmm' }])).toBeNull()
+  })
+})

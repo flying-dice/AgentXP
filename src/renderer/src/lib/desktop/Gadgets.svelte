@@ -12,12 +12,14 @@
     contextUsed: number
     contextSize: number
     feed: FeedItem[]
+    /** "Stopped: you took control" while the user is in control (the running step was stopped); null otherwise. */
+    controlNote?: string | null
     /** Session start for the running-time line; defaults to when the gadgets appeared. */
     since?: Date
     now?: Date
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, since = new Date(), now: fixedNow }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow }: Props = $props()
 
   let tick = $state(new Date())
   $effect(() => {
@@ -58,6 +60,7 @@
   </Gadget>
   <Gadget title="Activity">
     <ul class="feed">
+      {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>{/if}
       {#each feed as item (item.key)}
         <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
       {:else}
@@ -114,6 +117,9 @@
     align-items: flex-start;
     gap: 6px;
     line-height: 1.25;
+  }
+  .feed li.control {
+    font-weight: 700;
   }
   .t {
     min-width: 0;

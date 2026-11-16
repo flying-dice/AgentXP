@@ -4,7 +4,7 @@ import type { A2uiClientEvent } from '@shared/a2ui'
 import { emptyAguiState, type AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, AguiApi } from '@shared/ipc'
 import { surfacesOf, type SurfaceActivity } from './activities'
-import { permissionMetadata } from '../app/session/permissionOptions'
+import { decisionText, isAllow, permissionMetadata, requestLabel } from '../app/session/permissionOptions'
 import { pathToFileUrl } from './fileUrl'
 import { IpcAgent } from './IpcAgent'
 
@@ -56,6 +56,8 @@ export class SessionAgentStore {
   failedSend = $state.raw<FailedSend | null>(null)
   /** Tool calls whose permission request the user denied (they show "Denied by you", not "Failed"). */
   deniedToolCalls = $state.raw<ReadonlySet<string>>(new Set())
+  /** What the user answered to the last permission request ("You allowed: Change NOTE.md."), until the next message. */
+  lastDecision = $state.raw<{ allowed: boolean; text: string } | null>(null)
   /** The user pressed Stop and the turn ended: the transcript says so until the next message. */
   stoppedByUser = $state(false)
   /** Interrupts of the last run that still wait for an answer. */
@@ -147,6 +149,7 @@ export class SessionAgentStore {
     if (this.running || this.interrupts.length > 0) return false
     this.failedSend = null
     this.stoppedByUser = false
+    this.lastDecision = null
     const message: UserMessage = { id: randomUUID(), role: 'user', content: userContent(text, attachments) }
     this.agent.addMessage(message)
     this.messages = [...this.agent.messages]
@@ -222,6 +225,7 @@ export class SessionAgentStore {
   async resolveInterrupt(optionId: string | null, interruptId: string | undefined = this.pendingInterrupt?.id): Promise<void> {
     if (interruptId === undefined || this.running) return
     this.noteDenial(interruptId, optionId)
+    this.noteDecision(interruptId, optionId)
     this.answers = {
       ...this.answers,
       [interruptId]: optionId === null ? { status: 'cancelled' } : { status: 'resolved', payload: { optionId } }
@@ -230,6 +234,16 @@ export class SessionAgentStore {
     const resume = buildResumeArray(this.interrupts, this.answers)
     this.interrupts = []
     await this.run({ resume })
+  }
+
+  /** Remembers what the user answered, for the line the chat shows ("You allowed: ..."). A dismissed request counts as denied. */
+  private noteDecision(interruptId: string, optionId: string | null): void {
+    const interrupt = this.interrupts.find((i) => i.id === interruptId)
+    const meta = interrupt ? permissionMetadata(interrupt.metadata) : null
+    if (!interrupt || !meta) return
+    const option = meta.options.find((o) => o.optionId === optionId)
+    const allowed = option ? isAllow(option.kind) : false
+    this.lastDecision = { allowed, text: decisionText(allowed, requestLabel(meta, interrupt.toolCallId ? this.state.toolCalls[interrupt.toolCallId] : undefined)) }
   }
 
   /** Remembers that the user denied the tool call this interrupt asked about (a dismissed request counts as denied). */

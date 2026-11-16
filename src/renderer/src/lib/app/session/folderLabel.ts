@@ -11,3 +11,6 @@ export function folderLabel(cwd: VPath, drives: readonly Pick<DriveDto, 'letter'
   const name = parsed.segments.length > 0 ? parsed.segments[parsed.segments.length - 1]! : (drive?.label ?? '')
   return name ? `${name} (${parsed.drive}:)` : `${parsed.drive}:`
 }
+
+/** The header of the chat pane of a window: "Chat about login-app (E:)", so the pane says where it works. */
+export const chatAboutTitle = (cwd: VPath, drives: readonly Pick<DriveDto, 'letter' | 'label'>[]): string => `Chat about ${folderLabel(cwd, drives)}`

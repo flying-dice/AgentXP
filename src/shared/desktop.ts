@@ -151,6 +151,11 @@ export interface DesktopState {
   /** Enabled tool groups, derived from the open windows with `enabledToolGroups`. */
   tools: ToolGroup[]
   paused: boolean
+  /**
+   * The chats whose step the last Pause stopped, saved in main (migration 011) so the "Paused" note and the Action
+   * Center line do not depend on the window that paused. "Resume agents" continues each of them. Absent in older fixtures.
+   */
+  stoppedByPause?: Id[]
   /** "Ask before every action": the agent must ask before every action, whatever the permissions say. */
   userInControl: boolean
   /** The Control Center permissions, so the top bar can show what is on, asks or off. Absent in older fixtures. */
@@ -338,6 +343,11 @@ export interface DesktopApi {
   /** Debounced by the caller. Transient: not persisted except path/url. */
   updateView(windowId: Id, view: AppView): Promise<void>
   setPaused(desktopId: Id, paused: boolean): Promise<void>
+  /**
+   * "Resume agents and continue": lifts the pause and returns the chats whose step Pause had stopped (the saved list,
+   * which is then cleared) so the caller can send each "Please continue where you stopped.". Empty when nothing was stopped.
+   */
+  resumeAgents(desktopId: Id): Promise<Id[]>
   setUserInControl(desktopId: Id, on: boolean): Promise<void>
   /** Starts a chat (ACP session) on the desktop and opens its Chat window. `cwd` (a VPath on a plugged-in drive or C:) defaults to `AGENT_HOME`. */
   newChat(desktopId: Id, agentId?: Id, cwd?: VPath): Promise<AppWindowState>

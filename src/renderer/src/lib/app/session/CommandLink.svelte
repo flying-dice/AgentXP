@@ -7,9 +7,12 @@
     testid?: string
     /** The dialog puts the first focus here (`data-autofocus`). */
     autofocus?: boolean
+    /** Index of the access key letter in `title` (-1: none); it is underlined while `showKey` is true (Alt is held). */
+    keyIndex?: number
+    showKey?: boolean
   }
 
-  let { kind, title, description, onclick, testid, autofocus = false }: Props = $props()
+  let { kind, title, description, onclick, testid, autofocus = false, keyIndex = -1, showKey = false }: Props = $props()
 </script>
 
 <button class="command-link" type="button" data-testid={testid} data-decision={kind} data-autofocus={autofocus ? '' : undefined} {onclick}>
@@ -23,7 +26,7 @@
     {/if}
   </svg>
   <span class="text">
-    <span class="title">{title}</span>
+    <span class="title">{#if keyIndex >= 0}{title.slice(0, keyIndex)}<span class="key" class:shown={showKey}>{title[keyIndex]}</span>{title.slice(keyIndex + 1)}{:else}{title}{/if}</span>
     <span class="description">{description}</span>
   </span>
 </button>
@@ -51,6 +54,9 @@
     display: block;
     font-size: 14px;
     color: #003399;
+  }
+  .key.shown {
+    text-decoration: underline;
   }
   .description {
     display: block;

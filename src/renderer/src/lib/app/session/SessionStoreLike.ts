@@ -16,6 +16,8 @@ export interface SessionStoreLike {
   readonly failedSend: FailedSend | null
   /** Tool calls whose permission request the user denied (shown "Denied by you"). */
   readonly deniedToolCalls: ReadonlySet<string>
+  /** What the user answered to the last permission request, until the next message (optional for fakes). */
+  readonly lastDecision?: { allowed: boolean; text: string } | null
   /** The user stopped the last reply. */
   readonly stoppedByUser: boolean
   /** Resolves true when the turn went through. */
