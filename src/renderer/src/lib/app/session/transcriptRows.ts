@@ -75,3 +75,59 @@ export function buildTranscriptRows(messages: readonly Message[], surfaces: Read
   }
   return rows
 }
+
+/** The rows that fold into an activity group: what the agent did on the way to its answer. */
+export type WorkRow = Extract<TranscriptRow, { kind: 'agent' | 'reasoning' | 'tool' }>
+
+export type DisplayItem =
+  | { kind: 'row'; row: TranscriptRow }
+  /** Everything between a user message (or a surface or notice) and the agent's final answer. */
+  | { kind: 'activity'; id: string; rows: WorkRow[] }
+
+/**
+ * Folds the work of a turn into one group, so the transcript reads as: your message, one collapsed "Thinking" line,
+ * the answer. The work is every agent, reasoning and tool row up to the last reasoning or tool row of the turn; the
+ * agent text after it is the answer and stays a plain row, as do user, surface and stop rows (which also end the run).
+ * A turn without any reasoning or tool row has no group.
+ */
+export function groupTranscript(rows: readonly TranscriptRow[]): DisplayItem[] {
+  const items: DisplayItem[] = []
+  let run: WorkRow[] = []
+  const flush = (): void => {
+    let last = -1
+    run.forEach((row, i) => {
+      if (row.kind !== 'agent') last = i
+    })
+    if (last >= 0) items.push({ kind: 'activity', id: `activity:${run[0]!.id}`, rows: run.slice(0, last + 1) })
+    for (const row of run.slice(last + 1)) items.push({ kind: 'row', row })
+    run = []
+  }
+  for (const row of rows) {
+    if (row.kind === 'agent' || row.kind === 'reasoning' || row.kind === 'tool') run.push(row)
+    else {
+      flush()
+      items.push({ kind: 'row', row })
+    }
+  }
+  flush()
+  return items
+}
+
+export interface ActivityStats {
+  tools: number
+  failed: number
+  thought: boolean
+}
+
+export const activityStats = (rows: readonly WorkRow[], failed: (toolCallId: string) => boolean): ActivityStats => ({
+  tools: rows.filter((r) => r.kind === 'tool').length,
+  failed: rows.filter((r) => r.kind === 'tool' && failed(r.toolCallId)).length,
+  thought: rows.some((r) => r.kind === 'reasoning' || r.kind === 'agent')
+})
+
+/** "Thought and used 4 tools", "Used 1 tool, 1 failed", "Thought". */
+export function activitySummary({ tools, failed, thought }: ActivityStats): string {
+  const used = tools > 0 ? `used ${tools} ${tools === 1 ? 'tool' : 'tools'}` : ''
+  const text = thought ? (used ? `Thought and ${used}` : 'Thought') : used.charAt(0).toUpperCase() + used.slice(1)
+  return failed > 0 ? `${text}, ${failed} failed` : text
+}

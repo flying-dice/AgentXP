@@ -6,6 +6,7 @@
    * passed to a chat to fix. See manuals/code-review.md.
    */
   import { onMount, tick, untrack } from 'svelte'
+  import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import type { Agent7Events } from '@shared/ipc'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import type { SessionDto } from '@shared/models'
@@ -386,6 +387,7 @@
         { id: 'view-expanded', testid: 'review-menu-expanded', label: '&Expanded', radio: true, checked: mode === 'expanded', action: () => (mode = 'expanded') },
         { separator: true },
         { id: 'view-split', testid: 'review-menu-split', label: '&Side by side', checked: layout === 'split', action: () => toggleLayout() },
+        { id: 'view-details', testid: 'review-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() },
         { id: 'view-comments', testid: 'review-menu-comments', label: '&Comments list', checked: commentsOpen, action: () => (commentsOpen = !commentsOpen) },
         { separator: true },
         { id: 'view-next', testid: 'review-menu-next', label: '&Next change', shortcut: 'F7', action: () => step(1) },
