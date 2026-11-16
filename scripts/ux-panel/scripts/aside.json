@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "aside",
-  "description": "Panel copy of agents/scripted-agent/scripts/aside.json (H-38). Same rules, plus: any question about lines, code or what the file does gets an answer about lines 1 and 2 of index.ts; the fallback no longer echoes the question. The panel resolves scripts in scripts/ux-panel/scripts first, so e2e/aside.e2e.ts keeps using the original.",
+  "description": "Panel copy of agents/scripted-agent/scripts/aside.json (H-38). Same rules, plus: any question about lines, code or what the file does gets an answer about lines 1 and 2 of index.ts; the fallback no longer echoes the question. The panel resolves scripts in scripts/ux-panel/scripts first, so e2e/aside.e2e.ts keeps using the original. H-56: the chip \"Explain this\" answers for the selected lines like the right-click route (same text as explain-lines), not about the whole file.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -27,14 +27,8 @@
           "message": "the appContext has no selection"
         },
         {
-          "type": "extract",
-          "from": "desktop",
-          "regex": "\"openFile\":\"[^\"]*?([A-Za-z0-9_-]+\\.[a-z]+)\"",
-          "saveAs": "file"
-        },
-        {
           "type": "message",
-          "text": "Short answer: {{file}} exports a small constant and a function that returns it."
+          "text": "Short answer: lines 1 and 2 of index.ts. Line 1 sets answer to the number 42. Line 2 sets question to the text \"what is it?\". They are two constants that the function below uses."
         }
       ]
     },

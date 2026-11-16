@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Facilitator tool. NOT for panelists.
-//   node scripts/ux-panel/session.mjs start --task T01.1 --level haiku --out <dir>
-//   node scripts/ux-panel/session.mjs task  --task T01.1 [--level haiku]
-//   node scripts/ux-panel/session.mjs check --out <dir> [--task T01.1] [--answer "<panelist answer>"]
-//   node scripts/ux-panel/session.mjs stop  --out <dir>
+//   node scripts/ux-panel/session.mjs start --task T01.1 --level novice --out <dir>   (novice | intermediate | expert)
+//   node scripts/ux-panel/session.mjs task  --task T01.1 [--level novice]
+//   node scripts/ux-panel/session.mjs check --out <dir> [--task T01.1] [--answer "<panelist answer>" | --no-answer]
+//   node scripts/ux-panel/session.mjs stop  --out <dir> [--record <record.md>]   (reads "- SEQ: n" from the record)
 //   node scripts/ux-panel/session.mjs list
 import { spawn, spawnSync } from 'node:child_process'
 import { createServer } from 'node:net'
@@ -13,12 +13,12 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from './lib/args.mjs'
 import { countSteps, readLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
-import { asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, scenarioText } from './lib/tasktext.mjs'
+import { answerProblem, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, scenarioText, seqFromRecord, withSeq } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', seq: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool' })
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
 const sessionInfo = () => {
   const file = join(outDir(), 'session.json')
@@ -56,7 +56,7 @@ function facilitatorLines(task, level, info = {}) {
   if (!t) return [`(task ${task} not found in docs/ux/tasks.md)`]
   return [
     `Task ${task} - ${t.title}${t.planned ? ' [planned feature]' : ''}`,
-    `Min ${t.min}; step budget for ${level ?? 'opus/sonnet'}: ${budgetFor(t, level)}${level ? '' : ` (haiku: ${t.budgetNovice})`}; time budget 10 minutes`,
+    `Min ${t.min}; step budget for ${level ?? 'intermediate/expert'}: ${budgetFor(t, level)}${level ? '' : ` (novice: ${t.budgetNovice})`}; time budget 10 minutes`,
     ...(info.preset ? [`Preset ${info.preset}${info.note ? ` (${info.note})` : ''}`] : []),
     ...(TASK_NOTES[task] ? [`Facilitator note: ${TASK_NOTES[task]}`] : [])
   ]
@@ -69,7 +69,8 @@ async function start() {
   if (existsSync(join(out, 'session.json'))) throw new Error(`${out} already holds a session; use a new folder`)
   mkdirSync(out, { recursive: true })
   if (!existsSync(join(here, '../../out/main/index.js'))) throw new Error('the app is not built: run `npx electron-vite build` first')
-  const args = [join(here, 'server.mjs'), '--session', out, '--task', flags.task, '--level', flags.level ?? 'sonnet', '--port', String(flags.port ?? (await freePort()))]
+  const level = normalizeLevel(flags.level ?? 'intermediate') // H-48: unknown level names are refused
+  const args = [join(here, 'server.mjs'), '--session', out, '--task', flags.task, '--level', level, '--port', String(flags.port ?? (await freePort()))]
   const useXvfb = !flags['no-xvfb'] && !process.env.DISPLAY && spawnSync('which', ['xvfb-run']).status === 0
   const log = openSync(join(out, 'server.log'), 'a')
   const child = useXvfb
@@ -89,32 +90,33 @@ async function start() {
   }
   const info = sessionInfo()
   // stdout is the panelist block only; facilitator notes go to stderr (or to stdout with --facilitator).
-  const facilitator = [`Session ready: ${out}`, `Level ${flags.level ?? 'sonnet'}`, ...facilitatorLines(flags.task, flags.level ?? 'sonnet', info), `Test page: ${info.testPageUrl}`]
+  const facilitator = [`Session ready: ${out}`, `Level ${level}`, ...facilitatorLines(flags.task, level, info), `Test page: ${info.testPageUrl}`]
   const note = facilitator.map((l) => `[facilitator] ${l}`).join('\n')
   if (flags.facilitator) console.log(`${note}\n`)
   else console.error(note)
-  console.log(['=== FOR THE PANELIST (give exactly this, nothing else) ===', ...panelistBlock(flags.task, flags.level ?? 'sonnet', { testPageUrl: info.testPageUrl, out }), '=== END ==='].join('\n'))
+  console.log(['=== FOR THE PANELIST (give exactly this, nothing else) ===', ...panelistBlock(flags.task, level, { testPageUrl: info.testPageUrl, out }), '=== END ==='].join('\n'))
 }
 
 async function check() {
   const info = sessionInfo()
   const task = flags.task ?? info.task
+  const t = loadTasks()[baseTaskId(task)]
+  // H-59: no verdict for an answer task without the panelist's answer (or an explicit --no-answer).
+  const missing = answerProblem(t, { answer: flags.answer, noAnswer: flags['no-answer'] })
+  if (missing) throw new Error(missing)
   const reply = await request(info.admin, { op: 'check', task, answer: flags.answer })
   if (!reply.ok) throw new Error(reply.text)
   const result = reply.result
   const entries = readLog(join(outDir(), 'log.jsonl'))
   const steps = countSteps(entries)
-  const t = loadTasks()[baseTaskId(task)]
-  const level = flags.level ?? info.level
+  const level = normalizeLevel(flags.level ?? info.level)
   const budget = t ? budgetFor(t, level) : null
   const lines = [`${result.status}: ${result.reason}`, ...result.notes.map((n) => `  note: ${n}`), `steps: ${steps}${budget ? ` of budget ${budget}` : ''}`]
-  const verdict = budgetVerdict(result.status, steps, budget, flags.seq)
+  const verdict = budgetVerdict(result.status, steps, budget, null)
   const status = verdict.status
   lines.push(...verdict.lines)
-  // H-29: a question task needs the panelist's `Answer:` line.
-  if (t && asksQuestion(t.scenario) && !flags.answer) lines.push('warning: the scenario asks a question but --answer was not given; pass the "Answer: ..." line of the final report')
   console.log(lines.join('\n'))
-  writeFileSync(join(outDir(), 'check.json'), JSON.stringify({ task, level, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: flags.seq ?? null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, checkedAt: new Date().toISOString() }, null, 2))
+  writeFileSync(join(outDir(), 'check.json'), JSON.stringify({ task, level, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), checkedAt: new Date().toISOString() }, null, 2))
   process.exitCode = status === 'PASS' ? 0 : status === 'FAIL' ? 1 : 2
 }
 
@@ -139,6 +141,17 @@ async function stop() {
     }
   } else if (!existsSync(join(out, 'check.json')) && !flags['no-check']) {
     throw new Error(`no check.json in ${out}: run \`check\` first (or pass --no-check to archive without a verdict)`)
+  }
+  // H-53: the rating comes from the record (`- SEQ: n`), never from a command line option.
+  if (flags.record) {
+    const seq = seqFromRecord(readFileSync(resolve(flags.record), 'utf8'))
+    if (seq === null) throw new Error(`no "- SEQ: <1-7>" line in ${flags.record}`)
+    const file = join(out, 'check.json')
+    if (existsSync(file)) {
+      const check = withSeq(JSON.parse(readFileSync(file, 'utf8')), seq)
+      writeFileSync(file, JSON.stringify(check, null, 2))
+      console.log(`SEQ ${seq} read from the record${check.weak ? '; weak pass (SEQ below 5 or at the budget limit)' : ''}`)
+    }
   }
   await request(info.admin, { op: 'shutdown' }).catch(() => undefined)
   for (let i = 0; i < 100; i++) {

@@ -4,10 +4,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { normalizeKey, parseArgs, parseCommand } from './lib/args.mjs'
 import { countSteps, createLog, readLog, summarize } from './lib/log.mjs'
-import { asksQuestion, baseTaskId, budgetVerdict, loadTasks, parseTasks, scenarioText } from './lib/tasktext.mjs'
+import { answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
-import { countWords, helpInfo, lastProgress, nameWords, resourceText, userText } from './checks/util.mjs'
-import { fillsWindow, judgeTabs } from './checks/features.mjs'
+import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, userText } from './checks/util.mjs'
+import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
 import { LOGIN_ORIGINAL, REDIRECT_BUG } from './lib/fixtures.mjs'
 import { TASKS } from './tasks.mjs'
 
@@ -242,9 +242,11 @@ describe('H-08 T19.1 scenario and checker agree', () => {
     const read = { sessions: [{ id: 's1' }], entries: [{ kind: 'tool_call', title: 'browser_read', status: 'completed' }] }
     expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }))).status).toBe('MANUAL')
     expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:4173/') }))).status).toBe('FAIL')
-    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('PASS')
+    // H-49: the answer says what the page says, as the assistant told it
+    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant says the page is "Example Domain"')).status).toBe('PASS')
+    expect((await run('T19.1', fakeCtx({ state, ...read, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('FAIL')
     // H-40: no browser_read call, no pass
-    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:5555/') }), 'The assistant can now see the page')).status).toBe('FAIL')
+    expect((await run('T19.1', fakeCtx({ state, desktop: desktop('http://127.0.0.1:5555/') }), 'It says Example Domain')).status).toBe('FAIL')
   })
   it('the server takes a configurable port', () => {
     expect(source('server.mjs')).toContain('flags.port')
@@ -287,10 +289,10 @@ describe('H-12 T11.2 accepts all-Ask and needs no prompt', () => {
 })
 
 describe('H-14 T24.1 lines', () => {
-  it('asks for lines; the checker needs the three files and 3', async () => {
+  it('asks for lines; the checker needs the three files and the lines 1, 3 and 4 (H-60)', async () => {
     expect(loadTasks()['T24.1'].scenario).toContain('which lines of redirect.ts')
     const ctx = fakeCtx()
-    expect((await run('T24.1', ctx, 'redirect.ts login.ts session.ts, line 3')).status).toBe('PASS')
+    expect((await run('T24.1', ctx, 'redirect.ts login.ts session.ts, lines 1, 3 and 4')).status).toBe('PASS')
     expect((await run('T24.1', ctx, 'redirect.ts login.ts session.ts')).status).toBe('FAIL')
   })
 })
@@ -388,8 +390,8 @@ describe('H-24 T22.1 accepts a tooltip answer, H-25 number words', () => {
     expect((await run('T25.2', ctx, 'Changes requested, two comments')).status).toBe('PASS')
     expect((await run('T25.2', ctx, 'Changes requested, 2 comments')).status).toBe('PASS')
     expect((await run('T25.2', ctx, 'Changes requested, five comments')).status).toBe('FAIL')
-    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: three files')).status).toBe('PASS')
-    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: 3 files')).status).toBe('PASS')
+    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: lines one, three and four')).status).toBe('PASS')
+    expect((await run('T24.1', fakeCtx(), 'redirect.ts, login.ts and session.ts: 3 files')).status).toBe('FAIL')
   })
 })
 
@@ -478,6 +480,7 @@ describe('H-39 T14.1, H-42 T17.2, H-44 T06.1 and T08.2 check the answer', () => 
     const ctx = fakeCtx({ state: { pendingDesktopId: 'p', errorDesktopTitle: 'Docs site' }, list })
     expect((await run('T14.1', ctx)).status).toBe('MANUAL')
     expect((await run('T14.1', ctx, 'Docs site has a problem')).status).toBe('PASS')
+    expect((await run('T14.1', ctx, 'the docs-site workspace has a problem')).status).toBe('PASS')
     expect((await run('T14.1', ctx, 'Scratch pad has a problem')).status).toBe('FAIL')
     expect(loadTasks()['T14.1'].scenario).toContain('which workspace has a problem')
   })
@@ -495,9 +498,9 @@ describe('H-39 T14.1, H-42 T17.2, H-44 T06.1 and T08.2 check the answer', () => 
 
 describe('H-29 H-30 H-43 H-46 facilitator tools', () => {
   it('asksQuestion recognises question scenarios', () => {
-    expect(asksQuestion(loadTasks()['T25.2'].scenario)).toBe(true)
-    expect(asksQuestion('Close the window and open a new chat.')).toBe(false)
-    expect(source('session.mjs')).toContain('--answer was not given')
+    expect(asksQuestion(loadTasks()['T25.2'])).toBe(true)
+    expect(asksQuestion(loadTasks()['T04.2'])).toBe(false)
+    expect(source('session.mjs')).toContain('answerProblem')
   })
   it('stop needs a check.json unless --no-check, and keeps the folder of a gone session', () => {
     expect(source('session.mjs')).toContain("flags['no-check']")
@@ -541,5 +544,267 @@ describe('H-27 H-31 H-38 H-40 scripts', () => {
     const agent = json('scripts/browser-agent.json')
     expect(agent.rules.find((r) => r.id === 'read-page').steps.some((x) => x.tool === 'browser_read')).toBe(true)
     expect(JSON.stringify(agent.fallback)).toContain('I can read the page that is open in the Browser.')
+  })
+})
+
+// ---------------------------------------------------------------- round 3 harness defects H-47 to H-64
+describe('H-47 T29.1 reads the address from the title attribute of the tab button', () => {
+  // The markup of BrowserApp.svelte: one button.tab with title={tab.url} and a span.label; no .tabtitle child.
+  const element = (attrs, label) => ({ getAttribute: (n) => attrs[n] ?? null, querySelector: (sel) => (sel === '.label' ? { textContent: label } : null) })
+  const base = 'http://127.0.0.1:5555/'
+  it('readTabs returns the address and the label of the real tab markup', () => {
+    const tab = readTabs([element({ 'data-testid': 'browser-tab-t1', 'data-active': 'true', title: base }, 'Fixture page')])[0]
+    expect(tab).toEqual({ id: 'browser-tab-t1', active: 'true', url: base, label: 'Fixture page' })
+  })
+  it('two correct tabs of the real markup pass judgeTabs', () => {
+    const tabs = readTabs([element({ 'data-testid': 'browser-tab-a', 'data-active': 'true', title: base }, 'Fixture page'), element({ 'data-testid': 'browser-tab-b', 'data-active': 'false', title: `${base}second` }, 'Second page')])
+    expect(judgeTabs(tabs, base).every(([ok]) => ok)).toBe(true)
+    expect(staleTabNotes(tabs)).toEqual([])
+  })
+  it('an empty reading prints a stale-selector warning', () => {
+    const tabs = readTabs([element({ 'data-testid': 'browser-tab-a', 'data-active': 'true' }, 'Fixture page')])
+    expect(tabs[0].url).toBe('')
+    expect(staleTabNotes(tabs)[0]).toContain('stale')
+  })
+  it('the checker uses readTabs and the product still has title={tab.url} and no .tabtitle', () => {
+    expect(source('checks/features.mjs')).toContain('.evaluateAll(readTabs)')
+    expect(source('checks/features.mjs')).not.toContain('button.tabtitle')
+    const svelte = readFileSync(join(hereDir, '../../src/renderer/src/lib/apps/browser/BrowserApp.svelte'), 'utf8')
+    expect(svelte).toContain('title={tab.url}')
+    expect(svelte).not.toContain('tabtitle')
+  })
+})
+
+describe('H-48 budgets follow the level', () => {
+  const task = { budgetNovice: 20, budgetExpert: 15 }
+  it('novice gets the novice budget, intermediate and expert the 3 x Min budget', () => {
+    expect(budgetFor(task, 'novice')).toBe(20)
+    expect(budgetFor(task, 'intermediate')).toBe(15)
+    expect(budgetFor(task, 'expert')).toBe(15)
+    expect(budgetFor(task, 'haiku')).toBe(20)
+    expect(budgetFor(task, 'sonnet')).toBe(15)
+    expect(budgetFor(task, undefined)).toBe(15)
+  })
+  it('T20.1 novice is 20, intermediate 15', () => {
+    const t = loadTasks()['T20.1']
+    expect([budgetFor(t, 'novice'), budgetFor(t, 'intermediate')]).toEqual([20, 15])
+  })
+  it('an unknown level is an error', () => {
+    expect(() => budgetFor(task, 'beginner')).toThrow(/unknown level/)
+    expect(() => normalizeLevel('')).toThrow()
+    expect(source('session.mjs')).toContain('normalizeLevel')
+  })
+})
+
+describe('H-49 T19.1 asks the assistant, H-50 T02.2 asks for the reason', () => {
+  it('the scenario asks to ask the assistant what the page says', () => {
+    const t = loadTasks()['T19.1']
+    expect(t.scenario).toBe('Open the web page at {TEST_PAGE_URL} on this desktop, then ask the assistant what it says.')
+    expect(t.answer).toContain('Example Domain')
+  })
+  it('the browser-agent read rule matches "what does it say"', () => {
+    const rule = JSON.parse(source('scripts/browser-agent.json')).rules.find((r) => r.id === 'read-page')
+    expect(new RegExp(rule.match.regex, 'i').test('What does it say?')).toBe(true)
+    expect(new RegExp(rule.match.regex, 'i').test('Please read this')).toBe(true)
+  })
+  it('T02.2 tries the same name and needs the reason', async () => {
+    const t = loadTasks()['T02.2']
+    expect(t.scenario).toContain('Try to give it the same name. If the program will not allow that, say why')
+    expect(t.scenario).not.toContain('with the same name.')
+    const list = [{ id: 'a', title: 'Fix login redirect', drives: [] }, { id: 'b', title: 'Docs', drives: [{ label: 'docs-site' }] }]
+    const ctx = fakeCtx({ state: { desktopId: 'a' }, list })
+    expect((await run('T02.2', ctx, 'The program said the name is already taken by another workspace')).status).toBe('PASS')
+    expect((await run('T02.2', ctx, 'Every workspace needs its own name')).status).toBe('PASS')
+    expect((await run('T02.2', ctx, 'it was refused')).status).toBe('FAIL')
+  })
+})
+
+describe('H-51 T14.1 start state waits for the agent problem', () => {
+  it('the four-desktops preset runs checkAgents and waits for agentProblem after the last desktop', () => {
+    const src = source('presets/desktops.mjs')
+    const i = src.indexOf("'four-desktops'")
+    const body = src.slice(i)
+    expect(body.indexOf('launcher.checkAgents')).toBeGreaterThan(body.indexOf("title: 'Scratch pad'"))
+    expect(body).toContain('agentProblem')
+  })
+  it('T14.1 notes a row without a problem and accepts the hyphenated name', async () => {
+    const list = [{ id: 'p', connected: true }, { id: 'e', agentProblem: null }]
+    const ctx = fakeCtx({ state: { pendingDesktopId: 'p', errorDesktopId: 'e', errorDesktopTitle: 'Docs site' }, list })
+    const result = await run('T14.1', ctx, 'Docs site')
+    expect(result.status).toBe('PASS')
+    expect(result.notes.join(' ')).toContain('shows no agent problem')
+    const okList = [{ id: 'p', connected: true }, { id: 'e', agentProblem: 'The agent could not start.' }]
+    expect((await run('T14.1', fakeCtx({ state: { pendingDesktopId: 'p', errorDesktopId: 'e', errorDesktopTitle: 'Docs site' }, list: okList }), 'Docs site')).notes.join(' ')).not.toContain('no agent problem')
+  })
+})
+
+describe('H-52 a hover waits for the tooltip', () => {
+  it('move waits longer than the 500 ms tooltip delay', () => {
+    const src = source('server.mjs')
+    expect(src).toContain('HOVER_WAIT_MS = 800')
+    expect(src).toContain("cmd === 'move' ? HOVER_WAIT_MS : 150")
+  })
+  it('PANELIST.md says to look again after a hover', () => {
+    expect(source('PANELIST.md')).toContain('look again')
+  })
+})
+
+describe('H-53 the rating comes from the record, H-59 answer tasks need --answer or --no-answer, H-54 Answer: lines', () => {
+  it('seqFromRecord reads the SEQ line', () => {
+    expect(seqFromRecord('# T04.1 - novice\n- Result: PASS\n- SEQ: 6\n- Errors: none')).toBe(6)
+    expect(seqFromRecord('- SEQ: 2 (hard)')).toBe(2)
+    expect(seqFromRecord('- SEQ: n/a')).toBe(null)
+    expect(seqFromRecord('- SEQ: 9')).toBe(null)
+    expect(seqFromRecord('no rating')).toBe(null)
+  })
+  it('withSeq recomputes the weak flag from the rating', () => {
+    const check = { status: 'PASS', steps: 3, budget: 12, seq: null, weak: false }
+    expect(withSeq(check, 6)).toMatchObject({ seq: 6, weak: false })
+    expect(withSeq(check, 4)).toMatchObject({ seq: 4, weak: true })
+    expect(withSeq({ ...check, weak: true }, 7)).toMatchObject({ seq: 7, weak: false })
+    expect(withSeq({ ...check, status: 'FAIL' }, 2).weak).toBe(false)
+  })
+  it('check takes no --seq; stop takes --record', () => {
+    const src = source('session.mjs')
+    expect(src).not.toContain("seq: 'string'")
+    expect(src).toContain("record: 'string'")
+    expect(src).toContain('seqFromRecord')
+    expect(source('FACILITATOR.md')).not.toContain('--seq <SEQ>')
+  })
+  it('answerProblem refuses an answer task without --answer or --no-answer', () => {
+    const task = loadTasks()['T22.1']
+    expect(answerProblem(task, {})).toContain('--no-answer')
+    expect(answerProblem(task, { answer: 'It plugs in a folder' })).toBe(null)
+    expect(answerProblem(task, { noAnswer: true })).toBe(null)
+    expect(answerProblem(loadTasks()['T04.2'], {})).toBe(null)
+  })
+  it('"Find out" scenarios without an Answer: line do not ask a question (T01.1, T07.1)', () => {
+    const tasks = loadTasks()
+    expect(tasks['T01.1'].scenario).toMatch(/find out/i)
+    expect(asksQuestion(tasks['T01.1'])).toBe(false)
+    expect(asksQuestion(tasks['T07.1'])).toBe(false)
+    expect(answerProblem(tasks['T07.1'], {})).toBe(null)
+  })
+  it('every task whose checker reads the answer has an Answer: line in tasks.md, and the other tasks have none', () => {
+    const withChecker = ['T02.2', 'T05.1', 'T06.1', 'T08.2', 'T10.1', 'T10.2', 'T12.2', 'T14.1', 'T15.1', 'T16.2', 'T17.2', 'T18.1', 'T19.1', 'T19.2', 'T20.1', 'T22.1', 'T22.2', 'T24.1', 'T24.2', 'T25.1', 'T25.2', 'T28.1', 'T30.2', 'T31.2']
+    const tasks = loadTasks()
+    for (const id of withChecker) expect(asksQuestion(tasks[id]), id).toBe(true)
+    const rest = Object.keys(tasks).filter((id) => !withChecker.includes(id))
+    for (const id of rest) expect(asksQuestion(tasks[id]), id).toBe(false)
+  })
+  it('the smoke test passes --no-answer', () => {
+    expect(source('presets-smoke.mjs')).toContain("'--no-answer'")
+  })
+})
+
+describe('H-55 H-56 the scripted agents speak plain words', () => {
+  const json = (file) => JSON.parse(source(file))
+  const texts = (x) => JSON.stringify(x).match(/"text":"[^"]*"/g) ?? []
+  it('eject-victim and a2ui print no tool result fields', () => {
+    for (const file of ['scripts/eject-victim.json', 'scripts/a2ui.json']) {
+      const all = texts(json(file)).join(' ')
+      expect(all, file).not.toMatch(/Error: \{\{|isError|Tool said|Update result|surface "|\{\{render\}\}|\{\{update\}\}/)
+    }
+    expect(texts(json('scripts/eject-victim.json')).join(' ')).toContain('I could not read README.md: {{readme}}')
+  })
+  it('the chip "Explain this" answers for the selected lines, like the right-click route', () => {
+    const aside = json('scripts/aside.json')
+    const final = (id) => aside.rules.find((r) => r.id === id).steps.filter((x) => x.type === 'message').at(-1).text
+    expect(final('explain')).toBe(final('explain-lines'))
+    expect(final('explain')).toContain('lines 1 and 2 of index.ts')
+    expect(JSON.stringify(aside.rules.find((r) => r.id === 'explain'))).not.toContain('{{file}}')
+  })
+})
+
+describe('H-57 H-58 H-63 presets', () => {
+  it('T07.1 asks for two different files and checks the flag shows 2', () => {
+    const src = source('presets/chat.mjs')
+    expect(src).toContain('PROMPT_LOGIN')
+    expect(src).toContain("'2', 'the taskbar flag showing 2 waiting requests'")
+    const base = source('presets/base.mjs')
+    expect(base).toContain('src/auth/login.ts')
+    const rules = JSON.parse(source('scripts/fix-redirect.json')).rules
+    const login = rules.find((r) => r.id === 'login')
+    expect(rules.indexOf(login)).toBeLessThan(rules.findIndex((r) => r.id === 'work'))
+    expect(new RegExp(login.match.regex, 'i').test('Trim the user name in src/auth/login.ts before it is checked')).toBe(true)
+    expect(new RegExp(login.match.regex, 'i').test('Fix the login redirect bug so that deep links survive sign-in')).toBe(false)
+    expect(JSON.stringify(login)).toContain('src/auth/login.ts')
+    expect(JSON.stringify(login)).not.toContain('src/auth/redirect.ts')
+  })
+  it('crashed-agent asserts Restart and send again; the second failure is its own task', () => {
+    const src = source('presets/chat.mjs')
+    expect(src).toContain('chat-error-restart-send')
+    expect(src).toContain('options.twice')
+    expect(TASKS['T23.1']).toEqual({ preset: 'crashed-agent' })
+    expect(TASKS['T23.1-twice']).toMatchObject({ preset: 'crashed-agent', options: { twice: true } })
+    expect(baseTaskId('T23.1-twice')).toBe('T23.1')
+    expect(CHECKS['T23.1']).toBeTypeOf('function')
+  })
+  it('T23.1 prints a note when the start state was not the first crash', async () => {
+    const entries = [msg('user', 'a'), msg('agent', 'b'), msg('user', 'c')]
+    const base = { entries, sessions: [{ id: 's1', status: 'idle' }] }
+    const ctx = fakeCtx({ ...base, state: { firstCrashOffersRestartSend: false, startedAtSecondFailure: true } })
+    ctx.runOutcomes = async () => ['cancelled', 'success']
+    const result = await run('T23.1', ctx)
+    expect(result.status).toBe('PASS')
+    expect(result.notes.join(' ')).toContain('"Restart and send again"')
+    const ok = fakeCtx({ ...base, state: { firstCrashOffersRestartSend: true } })
+    ok.runOutcomes = async () => ['success']
+    expect((await run('T23.1', ok)).notes).toEqual([])
+  })
+  it('the presets with a reopened chat dismiss the "Reopened ..." note', () => {
+    const src = source('presets/chat.mjs')
+    expect(src.match(/dismissReopenedNotes/g).length).toBe(2)
+    expect(source('lib/context.mjs')).toContain('chat-reopened-dismiss')
+  })
+})
+
+describe('H-60 T24.1 needs the lines 1, 3 and 4', () => {
+  const files = 'redirect.ts, login.ts and session.ts changed'
+  it('numbersIn expands ranges and ignores digits inside longer numbers', () => {
+    expect([...numbersIn('lines 1, 3 and 4')].sort()).toEqual([1, 3, 4])
+    expect([...numbersIn('lines 1-4')].sort()).toEqual([1, 2, 3, 4])
+    expect(numbersIn('line 13 and 1.5').has(1)).toBe(false)
+    expect(missingNumbers('3 and 4', [1, 3, 4])).toEqual([1])
+  })
+  it('passes with all three lines, fails with a lone 3 or two lines', async () => {
+    expect((await run('T24.1', fakeCtx(), `${files}; new lines 1, 3 and 4 of redirect.ts`)).status).toBe('PASS')
+    expect((await run('T24.1', fakeCtx(), `${files}; lines 1 to 4 of redirect.ts`)).status).toBe('PASS')
+    const noLine = await run('T24.1', fakeCtx(), `${files}; line 3`)
+    expect(noLine.status).toBe('FAIL')
+    expect(noLine.reason).toContain('1, 4')
+    expect((await run('T24.1', fakeCtx(), `${files}; 3 files, line 3 and 4`)).status).toBe('FAIL')
+    expect((await run('T24.1', fakeCtx(), 'redirect.ts and login.ts; lines 1, 3 and 4')).status).toBe('FAIL')
+    expect((await run('T24.1', fakeCtx())).status).toBe('MANUAL')
+  })
+})
+
+describe('H-61 the panelist quotes the screen', () => {
+  it('PANELIST.md asks for text copied from a shot and a last look', () => {
+    const text = source('PANELIST.md')
+    expect(text).toContain('copied from a screenshot')
+    expect(text).toContain('one more `shot`')
+    expect(source('FACILITATOR.md')).toContain('LAST shot')
+  })
+})
+
+describe('H-62 T19.2 keywords by cause', () => {
+  const desktop = { windows: [win('browser', { url: 'http://127.0.0.1:9/' })], tools: ['browser'] }
+  it('the blocked-port answer of the novice passes, a vague answer fails', async () => {
+    const ctx = fakeCtx({ desktop })
+    const novice = 'The address 127.0.0.1:9 uses a port that the Browser blocks. Check the number after the colon and type the right address.'
+    expect((await run('T19.2', ctx, novice)).status).toBe('PASS')
+    expect((await run('T19.2', ctx, 'The page does not load')).status).toBe('PASS')
+    expect((await run('T19.2', ctx, 'The connection was refused')).status).toBe('PASS')
+    expect((await run('T19.2', ctx, 'something is wrong with it')).status).toBe('FAIL')
+    expect((await run('T19.2', ctx)).status).toBe('MANUAL')
+  })
+})
+
+describe('H-64 T27.2 does not say side panel', () => {
+  it('the scenario asks for the whole window and that nothing else shares it', () => {
+    const t = loadTasks()['T27.2']
+    expect(t.scenario).toBe('The file has too little room. Make the file use the whole window. Nothing else should share the window with the file.')
+    expect(t.scenario).not.toMatch(/side panel/i)
   })
 })

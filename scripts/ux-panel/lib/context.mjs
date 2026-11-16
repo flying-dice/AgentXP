@@ -215,6 +215,17 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
         await sleep(200)
       }
     },
+    /** H-63: closes the "Reopened '...'. Your earlier messages are kept." notes of reopened chat windows (they are not part of a start state). */
+    async dismissReopenedNotes(desktopId) {
+      const page = await ctx.desktopPage(desktopId)
+      const notes = page.getByTestId('chat-reopened-dismiss')
+      await notes.first().waitFor({ state: 'visible', timeout: 2500 }).catch(() => undefined)
+      for (let i = 0; i < 6 && (await notes.count()) > 0; i++) {
+        await notes.first().click().catch(() => undefined)
+        await sleep(150)
+      }
+      return (await notes.count()) === 0
+    },
     async closeWindowsOf(desktopId, app) {
       const page = await ctx.desktopPage(desktopId)
       await page.evaluate(async ({ app }) => {

@@ -1,7 +1,7 @@
 // Start states with chats: open chat, pending requests, running turns, changes, recycled changes.
 import { lastProgress } from '../checks/util.mjs'
 import { resolveScript } from '../lib/context.mjs'
-import { ALL_ALLOW, PROMPT_FIX, chatWithPendingRequest, projectDesktop } from './base.mjs'
+import { ALL_ALLOW, PROMPT_FIX, PROMPT_LOGIN, chatWithPendingRequest, projectDesktop } from './base.mjs'
 
 const idleChat = async (ctx, options, extra = {}) => {
   const { desktop, agent } = await projectDesktop(ctx, { ...options, ...extra })
@@ -38,11 +38,17 @@ export const presets = {
     const { desktop } = await projectDesktop(ctx, { script: 'fix-redirect' })
     const first = await chatWithPendingRequest(ctx, desktop.id, PROMPT_FIX)
     await ctx.dismissDialogs(desktop.id)
+    // H-57: two different requests on two files (redirect.ts and login.ts), so the panelist can tell the chats apart.
     const second = await ctx.newChat(desktop.id)
-    await ctx.sendPrompt(desktop.id, second.sessionId, PROMPT_FIX)
+    await ctx.sendPrompt(desktop.id, second.sessionId, PROMPT_LOGIN)
     await ctx.waitPending(second.sessionId)
     await ctx.dismissDialogs(desktop.id)
     ctx.state.sessionIds = [first.sessionId, second.sessionId]
+    // State check: the Action Center flag on the taskbar counts both waiting requests.
+    const page = await ctx.desktopPage(desktop.id)
+    const flag = page.getByTestId('action-center-flag')
+    await ctx.waitFor(async () => (await flag.getAttribute('data-count').catch(() => null)) === '2', 'the taskbar flag showing 2 waiting requests')
+    ctx.state.flagCountAtStart = Number(await flag.getAttribute('data-count'))
     ctx.saveState()
   },
 
@@ -86,6 +92,7 @@ export const presets = {
     if (changes.length < 2) throw new Error(`expected agent changes, found ${changes.length}`)
     ctx.saveState()
     await ctx.setPolicy({ 'fs.write': 'ask' })
+    await ctx.dismissReopenedNotes(desktop.id) // H-63
   },
 
   /** One recycled change for redirect.ts (the user reverted it). */
@@ -102,14 +109,19 @@ export const presets = {
     await page.reload()
     await page.getByTestId('taskbar').waitFor()
     ctx.state.revertShownInList = (await ctx.recycled(ctx.state.desktopId)).length === 1
+    await ctx.dismissReopenedNotes(ctx.state.desktopId) // H-63: the reload reopens the chat with a "Reopened ..." note
     ctx.saveState()
   },
 
   /**
    * Crash: the first turn hangs ("Working on it..." in the `crash-recovery` script), then the agent process is killed. The agent
    * is then pointed at `crash-recovered`, so the retry after the restart ends in under 5 s with "Done. The slow job is finished." (H-31).
+   * H-58: the start state records whether the red box offers "Restart and send again" (state.firstCrashOffersRestartSend; the option
+   * `strict` throws when it does not). The option `twice` is the second-failure task (T23.1-twice): "It stopped again", plain Restart.
+   * Known product defect (R4 note): one SIGKILL mid-turn is counted as two failures (SessionRuntime.onClosed and SessionService.runTurn
+   * both record it), so the box already says "It stopped again" on the first crash; the T23.1 checker prints a note while this holds.
    */
-  async 'crashed-agent'(ctx) {
+  async 'crashed-agent'(ctx, options = {}) {
     const { desktop, agent } = await idleChat(ctx, { script: 'crash-recovery' })
     await ctx.sendPrompt(desktop.id, ctx.state.sessionId, 'please do the slow job')
     const proc = await ctx.waitFor(async () => (await ctx.processes()).find((p) => p.pid), 'the agent process')
@@ -126,6 +138,37 @@ export const presets = {
       { id: agent.id, retryScript }
     )
     ctx.state.crashedPid = proc.pid
+    const page = await ctx.desktopPage(desktop.id)
+    const errorText = async () => (await page.getByTestId('chat-error-text').first().textContent({ timeout: 1000 }).catch(() => null)) ?? ''
+    // H-58: read what the red box offers now. The first crash must offer "Restart and send again" (data-testid chat-error-restart-send).
+    await ctx.waitFor(async () => (await page.getByTestId('chat-error').count()) > 0, 'the red box of the crashed chat')
+    const restartSend = () => page.getByTestId('chat-error-restart-send').isVisible().catch(() => false)
+    ctx.state.firstCrashOffersRestartSend = await restartSend()
+    if (!ctx.state.firstCrashOffersRestartSend) ctx.state.startedAtSecondFailure = /stopped again/i.test(await errorText())
+    if (options.strict && !ctx.state.firstCrashOffersRestartSend) throw new Error(`the first crash did not offer "Restart and send again" (error text: ${(await errorText()).slice(0, 200)})`)
+    if (options.twice && ctx.state.firstCrashOffersRestartSend) {
+      // Second failure: point the agent at the crashing script again, press Restart and send again, kill the new process.
+      await ctx.eval(async ({ id, script }) => {
+        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? script : a))
+        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+      }, { id: agent.id, script: resolveScript('crash-recovery') })
+      await page.getByTestId('chat-error-restart-send').click()
+      const second = await ctx.waitFor(async () => (await ctx.processes()).find((p) => p.pid && p.pid !== proc.pid), 'the restarted agent process')
+      await ctx.sleep(1500)
+      process.kill(second.pid, 'SIGKILL')
+      await ctx.waitFor(async () => /stopped again/i.test(await errorText()), 'the "It stopped again" line')
+    }
+    if (options.twice) {
+      // The retry of the second-failure task must finish too (the agent points at crash-recovered again).
+      await ctx.eval(async ({ id, script }) => {
+        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? script : a))
+        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+      }, { id: agent.id, script: retryScript })
+      ctx.state.secondFailure = /stopped again/i.test(await errorText())
+      if (!ctx.state.secondFailure) throw new Error('the second-failure start state did not show "It stopped again"')
+    }
     ctx.saveState()
   },
 

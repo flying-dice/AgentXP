@@ -37,6 +37,10 @@ export const presets = {
     await ctx.eval(({ id, agent }) => window.agent7.sessions.create(id, agent).catch(() => null), { id: broken.id, agent: bad })
     await ctx.createDesktop({ title: 'Try new ideas', connect: false, agentId: demo.id })
     await ctx.createDesktop({ title: 'Scratch pad', connect: false, agentId: demo.id })
+    // H-51: all desktops exist now; check the agents of every row and wait until the broken one shows its problem, so the
+    // launcher does not read "Idle" for it for the first 30 s (the check ran at mount, before the row existed).
+    await ctx.eval(() => window.agent7.launcher.checkAgents())
+    await ctx.waitFor(async () => Boolean((await ctx.launcherList()).find((d) => d.id === broken.id)?.agentProblem), 'the agent problem on the Docs site row')
     Object.assign(ctx.state, { pendingDesktopId: desktop.id, errorDesktopId: broken.id, errorDesktopTitle: 'Docs site' })
     ctx.saveState()
   },

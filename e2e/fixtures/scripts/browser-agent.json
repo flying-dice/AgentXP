@@ -807,7 +807,7 @@
     {
       "id": "read-page",
       "match": {
-        "regex": "summar|read|look|see|page|browser|tell me"
+        "regex": "summar|read|look|see|say|says|what|page|browser|tell me"
       },
       "steps": [
         {

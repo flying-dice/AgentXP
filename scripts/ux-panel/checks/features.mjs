@@ -23,6 +23,15 @@ export function judgeTabs(tabs, testPageUrl) {
   ]
 }
 
+/**
+ * H-47: reads the tabs of the Browser. The tab is one `button.tab` with the address in its `title` attribute and the page
+ * title in `.label` (BrowserApp.svelte); there is no `.tabtitle` child. No closure: Playwright serialises it into the page.
+ */
+export const readTabs = (els) => els.map((e) => ({ id: e.getAttribute('data-testid'), active: e.getAttribute('data-active'), url: e.getAttribute('title') ?? '', label: e.querySelector('.label')?.textContent ?? '' }))
+
+/** H-47: an empty address or label means the selectors are stale (the markup changed), not that the user did something wrong. */
+export const staleTabNotes = (tabs) => (tabs.some((t) => !t.url || !t.label) ? ['warning: a tab reading is empty (address or label); the selectors of readTabs may be stale after a markup change of BrowserApp.svelte'] : [])
+
 /** H-23/H-38: the question sent from the pane names the file, a line, the selected text, or carries the desktop's selection. */
 export const namesSelection = (message) => /index\.ts|lines?\s*\d|first (two|2)|export const (answer|question)/i.test(userText(message)) || (/"selection"/.test(resourceText(message)) && /index\.ts/.test(resourceText(message)))
 
@@ -137,8 +146,8 @@ export const checks = {
     const page = await desktopPage(ctx)
     const tabs = await page
       .locator('[data-testid^="browser-tab-"]:not([data-testid^="browser-tab-close"]):not([data-testid="browser-tab-new"])')
-      .evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-testid'), active: e.getAttribute('data-active'), url: e.querySelector('button.tabtitle')?.getAttribute('title') ?? '', label: e.querySelector('.label')?.textContent ?? '' })))
-    return all(judgeTabs(tabs, ctx.state.testPageUrl ?? TEST_PAGE_URL))
+      .evaluateAll(readTabs)
+    return all(judgeTabs(tabs, ctx.state.testPageUrl ?? TEST_PAGE_URL), staleTabNotes(tabs))
   },
 
   async 'T30.1'(ctx) {

@@ -126,7 +126,7 @@
         },
         {
           "type": "message",
-          "text": "The window is open. Tool said: {{render}}"
+          "text": "I opened the form in its own window."
         }
       ]
     },
@@ -235,7 +235,7 @@
         },
         {
           "type": "message",
-          "text": "The sidebar is open. Tool said: {{render}}"
+          "text": "I opened the form beside the chat."
         }
       ]
     },
@@ -266,7 +266,7 @@
         },
         {
           "type": "message",
-          "text": "Update result: {{update}}"
+          "text": "I tried to change the form."
         }
       ]
     },

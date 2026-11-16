@@ -76,6 +76,27 @@ const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'sev
 /** Keyword group for a count: the digits and the word ("5", "five"). */
 export const countWords = (n) => [String(n), ...(NUMBER_WORDS[n] ? [NUMBER_WORDS[n]] : [])]
 
+/**
+ * H-60: the whole numbers of a text, with ranges expanded ("1, 3 and 4" -> 1 3 4; "lines 1-4" or "1 to 4" -> 1 2 3 4).
+ * A digit inside a longer number or a decimal ("13", "1.5") is not a line number.
+ */
+export function numbersIn(text) {
+  const found = new Set()
+  const t = String(text ?? '')
+  for (const m of t.matchAll(/(?<![\d.])(\d+)\s*(?:-|\u2013|to|through)\s*(\d+)(?![\d.])/gi)) {
+    const [a, b] = [Number(m[1]), Number(m[2])]
+    if (b >= a && b - a <= 200) for (let n = a; n <= b; n++) found.add(n)
+  }
+  for (const m of t.matchAll(/(?<![\d.])\d+(?![\d]|\.\d)/g)) found.add(Number(m[0]))
+  NUMBER_WORDS.forEach((word, n) => {
+    if (n > 0 && new RegExp(`\\b${word}\\b`, 'i').test(t)) found.add(n)
+  })
+  return found
+}
+
+/** H-60: the wanted numbers that the text does not name. */
+export const missingNumbers = (text, wanted) => wanted.filter((n) => !numbersIn(text).has(n))
+
 /** Keyword group for a file path: the base name with and without the extension ("README.md", "README"). */
 export function nameWords(path) {
   const base = String(path).split(/[\\/]/).pop() ?? ''

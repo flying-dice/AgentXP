@@ -19,7 +19,7 @@ R=docs/ux/panel/<round>                       # e.g. docs/ux/panel/r1
 S=/tmp/ux-sessions/<round>/<task>-<level>     # session folder (log, shots, state)
 
 # 1. Start: a fresh user-data folder, the start state of the task, the app is up.
-node scripts/ux-panel/session.mjs start --task T05.2 --level haiku --out $S
+node scripts/ux-panel/session.mjs start --task T05.2 --level novice --out $S
 ```
 
 `start` prints on **stdout** the block for the panelist (between `=== FOR THE PANELIST` and `=== END ===`: session folder,
@@ -27,7 +27,7 @@ step budget for the level, scenario with any address already filled in, command 
 block. The facilitator notes (task id, Min, preset, notes, test page address) go to **stderr** with the prefix
 `[facilitator]`; `--facilitator` prints them on stdout as well. Never forward them. If a start state needs a spoken detail,
 it is part of the scenario text (tasks.md), not a separate note: a hint that a panelist has to know belongs in the
-scenario they read. `session.mjs task --task T05.2 --level haiku` prints the panelist block again (variant ids such as
+scenario they read. `session.mjs task --task T05.2 --level novice` prints the panelist block again (variant ids such as
 `T18.1-window` work); `session.mjs list` lists every task and its preset.
 
 ```
@@ -35,7 +35,8 @@ scenario they read. `session.mjs task --task T05.2 --level haiku` prints the pan
 #    Prompt = contents of scripts/ux-panel/PANELIST.md with LEVEL replaced
 #             + the panelist block printed by `start` (session folder, step budget, scenario)
 #    Nothing else: no task id, no preset, no repository hints.
-#    Levels: opus -> expert, sonnet -> intermediate, haiku -> novice.
+#    Levels (H-48): novice (Haiku, budget 4 x Min), intermediate (Sonnet, 3 x Min), expert (Opus, 3 x Min). `--level` takes these
+#    names (haiku, sonnet and opus are accepted as aliases); any other name is refused.
 ```
 
 The panelist finishes with its final report (think-aloud, SEQ, frustrations). A panelist that stops before the scenario
@@ -45,13 +46,15 @@ allowed sentence is "Continue when you are ready"; a task that needed it is reco
 
 ```
 # 3. Check: state-based verdict from the app (PASS / FAIL / MANUAL) + step count against the budget.
-node scripts/ux-panel/session.mjs check --out $S --answer "<the text after 'Answer:' in the panelist's final report>" --seq <SEQ>
+node scripts/ux-panel/session.mjs check --out $S --answer "<the text after 'Answer:' in the panelist's final report>"
+node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with an Answer: line, and the panelist gave none
 ```
 
-- The final report of the panelist contains an `Answer:` line when the scenario asks a question. Pass it with `--answer`; `check`
-  prints a warning when the scenario asks a question and `--answer` is missing (H-29, otherwise the task ends in MANUAL).
-- `--seq <n>` (the panelist's SEQ) is optional. A PASS at the budget limit, or with SEQ below 5, prints
-  `weak pass: ...` and sets `weak: true` in check.json (H-46).
+- A task asks a question when its entry in `docs/ux/tasks.md` has an `Answer:` line (H-54; the scenario wording is not guessed).
+  For such a task `check` refuses to write a verdict unless you pass `--answer "<text>"` or `--no-answer` (H-59, H-29). Other tasks need neither.
+- There is no `--seq` option (H-53). The rating is read from the record: write the record (step 4) with its `- SEQ: <1-7>` line
+  first, then `stop --record <file>` copies the rating into check.json and recomputes the weak flag. A PASS at the budget limit, or
+  with SEQ below 5, is a weak pass (`weak: true`, H-46).
 - Compare the SEQ with the frustrations list: a SEQ that differs by 3 or more from what the report says (for example SEQ 2 after a
   two-step pass) is rating noise; flag it in the record and report the measured values (H-36).
 
@@ -59,17 +62,19 @@ node scripts/ux-panel/session.mjs check --out $S --answer "<the text after 'Answ
   what the panelist says. Exceeding the step budget turns the verdict into FAIL (printed). A PASS within +25 percent of
   the budget prints "within +25 percent: review" and sets `nearMiss` in check.json, so the researcher can flag a near miss.
 - `MANUAL` means the state part is fine but a researcher must judge the panelist's answer: the line says what the correct
-  answer is. Without `--answer`, tasks that ask a question end in MANUAL. With `--answer`, simple keyword checks run.
+  answer is. `--no-answer` ends an answer task in MANUAL. With `--answer`, keyword checks run.
 - Exit code: 0 PASS, 1 FAIL, 2 MANUAL.
 
 ```
-# 4. Archive and shut down (log.jsonl, shots/, state.json, check.json, summary.json stay in $S).
-#    `stop` refuses without a check.json (a session lost to an outage must not look finished); `--no-check` archives anyway.
-#    When the session is already gone it prints "no running session" with a restart hint and keeps the folder (H-30).
-node scripts/ux-panel/session.mjs stop --out $S
-mkdir -p $R && cp -r $S $R/<task>-<level>-session
+# 4. Write the record docs/ux/panel/<round>/<task>-<level>.md (template below). Before writing MANUAL or a content verdict,
+#    open the LAST shot of the session and compare it with what the panelist says it saw (H-61).
 
-# 5. Write the record docs/ux/panel/<round>/<task>-<level>.md (template below).
+# 5. Archive and shut down (log.jsonl, shots/, state.json, check.json, summary.json stay in $S).
+#    `stop` refuses without a check.json (a session lost to an outage must not look finished); `--no-check` archives anyway.
+#    `--record <file>` reads the `- SEQ:` line of the record into check.json (H-53).
+#    When the session is already gone it prints "no running session" with a restart hint and keeps the folder (H-30).
+node scripts/ux-panel/session.mjs stop --out $S --record $R/<task>-<level>.md
+mkdir -p $R && cp -r $S $R/<task>-<level>-session
 ```
 
 Record template:
@@ -115,6 +120,8 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
   sandbox. The path is in `session.json` (`home`, `fixtures`); never give it to a panelist.
 - Presets that change the desktop act through the UI (H-35): `eject-mid-job` uses the taskbar's Safely Remove Hardware menu and
   answers Yes; `paused-desktop` presses Pause all agents on the top bar. `recycled-change` reloads the desktop window after the revert (H-34).
+- `ux move` waits 800 ms before its screenshot (H-52), because tooltips appear after 500 ms.
+- T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1-twice` is the second failure ("It stopped again", plain Restart) as its own task.
 - `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
 - T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".
 - Folder pickers: the start states stub the native folder dialog (answers docs-site; login-app in launcher states). The stub
