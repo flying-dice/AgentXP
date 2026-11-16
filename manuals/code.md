@@ -79,9 +79,9 @@ The status bar shows the path, **Agent editing** while the agent writes, the vis
 | Open... | Opens a file. Ctrl+O. | `menu-item-code-open` |
 | Close file | Closes the active tab. | `menu-item-code-close-file` |
 | Close all files | Closes all tabs. | `menu-item-code-close-all` |
-| Exit | Closes the window. | `menu-item-code-exit` |
 | Edit menu | Opens the Edit menu. | `menubar-edit` |
 | Copy | Copies the selected text. Ctrl+C. | `menu-item-code-copy` |
+| Select All | Selects all code in the file. Ctrl+A. | `menu-item-code-select-all` |
 | Revert hunk... | Reverts the block under the caret. | `menu-item-code-revert-hunk` |
 | View menu | Opens the View menu. | `menubar-view` |
 | Management | Shows or hides the left pane. | `menu-item-code-view-management` |
@@ -93,8 +93,8 @@ The status bar shows the path, **Agent editing** while the agent writes, the vis
 | Tools menu | Opens the Tools menu. | `menubar-tools` |
 | Refresh git status | Reads the git status again. | `menu-item-code-refresh` |
 | Help menu | Opens the Help menu. | `menubar-help` |
-| Help on Code | Opens this manual. F1. | `code-menu-help` |
-| About Code... | Shows a short description. | `menu-item-code-about` |
+| View Help | Opens the Code Help window. F1. | `code-menu-help` |
+| About Code | Shows the About box. | `code-menu-about` |
 | New | Always dimmed. The agent creates files. | `code-new` |
 | Open file | Opens a file. | `code-open` |
 | Save | Always dimmed. The agent edits files. | `code-save` |

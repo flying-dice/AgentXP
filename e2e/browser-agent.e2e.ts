@@ -10,6 +10,16 @@ import { projectRoot } from './fixtures/launch'
  * The page lives in a webview, so the spec checks it through what the agent reads back (the script's `expect` steps fail
  * the turn when the page does not look right) and through the Browser window's own controls.
  */
+/** Waits for an agent message; when it never comes, fails with the transcript (the script's own failure text is in it). */
+async function agentSays(ctx: ScriptedDesktop, text: string): Promise<void> {
+  const chat = ctx.desktop.chat()
+  try {
+    await see.visible(chat.agentMessage(text))
+  } catch {
+    throw new Error(`The agent never said "${text}". Transcript:\n${(await chat.transcript.innerText()).slice(-3000)}`)
+  }
+}
+
 describe('Browser agent: a local chat web app', () => {
   let ctx: ScriptedDesktop
   let web: WebServer
@@ -37,7 +47,7 @@ describe('Browser agent: a local chat web app', () => {
     await see.text(browser.getByTestId('browser-agent-bar'), 'Agent is using this page')
 
     // The last step is a message that quotes the agent's own message as the page shows it.
-    await see.visible(chat.agentMessage('DONE'))
+    await agentSays(ctx, 'DONE')
     await see.text(chat.agentMessage('DONE'), 'You Second message via submit')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
@@ -52,7 +62,7 @@ describe('Browser agent: a local chat web app', () => {
     const chat = ctx.desktop.chat()
     const browser = ctx.desktop.window('browser')
     await chat.send(`Check the tabs at ${web.origin}/`)
-    await see.visible(chat.agentMessage('TABS OK'))
+    await agentSays(ctx, 'TABS OK')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.visible(browser.getByTestId('browser-tab-1'))
     await see.gone(browser.getByTestId('browser-tab-2'))
@@ -61,7 +71,7 @@ describe('Browser agent: a local chat web app', () => {
 
   it('the user opens and closes tabs with the tab strip', async () => {
     const browser = ctx.desktop.window('browser')
-    await ctx.desktop.focusWindow('browser') // the chat window is tiled over part of it
+    await ctx.desktop.closeWindow('chat') // it is tiled over part of the Browser window
     await browser.getByTestId('browser-tab-new').click()
     const created = browser.getByTestId('browser-tab-3')
     await see.visible(created)

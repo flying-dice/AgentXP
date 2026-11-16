@@ -24,7 +24,10 @@ export interface EntryActions {
 export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] {
   const file = target.kind === 'file'
   return [
-    { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: '&Open', icon: file ? 'file-text' : 'open-folder', action: a.open },
+    // A folder keeps the ids `explorer-folder-open` and `explorer-folder-chat` (test ids `menu-item-<id>`) that specs use.
+    file
+      ? { id: 'explorer-ctx-open', testid: 'explorer-ctx-open', label: '&Open', icon: 'file-text', action: a.open }
+      : { id: 'explorer-folder-open', label: '&Open', icon: 'open-folder', action: a.open },
     ...(file
       ? [
           { id: 'explorer-ctx-open-code', testid: 'explorer-ctx-open-code', label: 'Open with &Code', icon: 'file-code', action: () => a.openWith('code') } as MenuItemDef,
@@ -34,7 +37,9 @@ export function entryItems(target: EntryTarget, a: EntryActions): MenuItemDef[] 
     { separator: true },
     { id: 'explorer-ctx-copy-path', testid: 'explorer-ctx-copy-path', label: 'Copy as &path', icon: 'copy', action: a.copyPath },
     { separator: true },
-    { id: 'explorer-ctx-start-chat', testid: 'explorer-ctx-start-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat },
+    file
+      ? { id: 'explorer-ctx-start-chat', testid: 'explorer-ctx-start-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat }
+      : { id: 'explorer-folder-chat', label: 'Start a &chat here', icon: 'session', action: a.startChat },
     { id: 'explorer-ctx-ask', testid: 'explorer-ctx-ask', label: 'Ask chat a&bout this...', icon: 'session', action: a.askChat },
     { separator: true },
     { id: 'explorer-ctx-properties', testid: 'explorer-ctx-properties', label: 'P&roperties', icon: 'properties', action: a.properties }

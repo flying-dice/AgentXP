@@ -28,9 +28,9 @@ Click **Start -> Accessories -> Agent Paint**.
 
 ## 3 - The Window
 
-### The Menu Button
+### The Menu Bar
 
-The **Paint** button is at the top left. It opens a menu with **New**, **Undo**, **Copy picture**, **Help on Paint**, and **Exit**.
+The menu bar has the menus **File**, **Edit**, and **Help**. It sits above the ribbon.
 
 ### The Ribbon
 
@@ -54,12 +54,6 @@ The status bar shows the pointer position, the size of the canvas, and a tip.
 | Name | What it does | data-testid |
 |---|---|---|
 | Agent Paint window | The root of the window. | `paint-app` |
-| Paint | Opens the menu. | `paint-menu` |
-| New | Starts a blank picture. Ctrl+N. | none |
-| Undo | Undoes the last stroke. Ctrl+Z. | none |
-| Copy picture | Copies the picture to the clipboard. | none |
-| Help on Paint | Opens this manual. F1. | `paint-menu-help` |
-| Exit | Closes the window. | none |
 | Tool | Selects Pencil, Brush, Eraser, Fill with color, Text, or Color picker. The name ends with `pencil`, `brush`, `eraser`, `fill`, `text`, or `picker`. | `paint-tool-*` |
 | Shape | Selects Line, Rectangle, or Oval. The name ends with `line`, `rect`, or `ellipse`. | `paint-tool-*` |
 | Size | Selects a stroke size. The name ends with 1, 2, 4, or 8. | `paint-size-*` |

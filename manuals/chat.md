@@ -84,12 +84,12 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Name | What it does | data-testid |
 |---|---|---|
 | Chat window | The root of the window. | `chat-app` |
-| Chat menu | Opens the Chat menu. | `menubar-chat` |
+| File menu | Opens the File menu. | `menubar-file` |
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
 | Close | Closes the window. | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
-| Help on Chat | Opens this manual. | `chat-menu-help` |
+| View Help | Opens the Chat Help window. F1. | `chat-menu-help` |
 | Model | Selects the model of the agent. | `chat-model` |
 | Tasks and changes | Shows or hides the right pane. | `chat-panel-toggle` |
 | Transcript | Lists all entries. The attribute `data-running` tells if the agent works. | `chat-transcript` |

@@ -28,9 +28,9 @@ Click **Start -> Accessories -> WordPad**.
 
 ## 3 - The Window
 
-### The Menu Button
+### The Menu Bar
 
-The **WordPad** button is at the top left. It opens a menu with **New**, **Open...**, **Save**, **Help on WordPad**, and **Exit**.
+The menu bar has the menus **File**, **Edit**, **View**, and **Help**.
 
 ### The Toolbar
 
@@ -49,12 +49,6 @@ The status bar shows the file path, a message, **Modified**, the number of words
 | Name | What it does | data-testid |
 |---|---|---|
 | WordPad window | The root of the window. | `wordpad-app` |
-| WordPad | Opens the menu. | none |
-| New | Starts an empty document. Ctrl+N. | none |
-| Open... | Opens a document. Ctrl+O. | none |
-| Save | Saves the document. Ctrl+S. | none |
-| Help on WordPad | Opens this manual. F1. | `wordpad-menu-help` |
-| Exit | Closes the window. | none |
 | Read | Shows the formatted document. | `wordpad-mode-read` |
 | Edit | Shows the markdown source. | `wordpad-mode-edit` |
 | B, I, H1, H2, List, 1. List, Code, Link | Add markdown marks in edit mode. | none |

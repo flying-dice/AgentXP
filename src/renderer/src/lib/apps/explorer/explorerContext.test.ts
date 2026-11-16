@@ -10,8 +10,10 @@ describe('entryItems', () => {
     expect(ids(items)).toEqual(['explorer-ctx-open', 'explorer-ctx-open-code', 'explorer-ctx-open-notepad', 'explorer-ctx-copy-path', 'explorer-ctx-start-chat', 'explorer-ctx-ask', 'explorer-ctx-properties'])
   })
 
-  it('a folder has no Open with', () => {
-    expect(ids(entryItems({ path: 'E:\\src', kind: 'directory' }, actions()))).not.toContain('explorer-ctx-open-code')
+  it('a folder has no Open with and keeps the ids of its Open and Start a chat here items', () => {
+    const items = entryItems({ path: 'E:\\src', kind: 'directory' }, actions())
+    expect(ids(items)).not.toContain('explorer-ctx-open-code')
+    expect(items.map((i) => i.id)).toEqual(expect.arrayContaining(['explorer-folder-open', 'explorer-folder-chat']))
   })
 
   it('runs the matching action', () => {

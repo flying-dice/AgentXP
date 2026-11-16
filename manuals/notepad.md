@@ -51,9 +51,7 @@ The status bar shows **Modified** when you changed the text. After you save, it 
 | New | Starts an empty file. Ctrl+N. | `menu-item-new` |
 | Open... | Opens a file. Ctrl+O. | `menu-item-open` |
 | Save | Writes the file. Ctrl+S. | `menu-item-save` |
-| Exit | Closes the window. | `menu-item-exit` |
 | Edit menu | Opens the Edit menu. | `menubar-edit` |
-| Select All | Selects all text. Ctrl+A. | `menu-item-all` |
 | Time/Date | Types the time and date at the caret. F5. | `menu-item-time` |
 | Format menu | Opens the Format menu. | `menubar-format` |
 | Word Wrap | Wraps long lines. | `menu-item-wrap` |
