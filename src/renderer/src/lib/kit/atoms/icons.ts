@@ -365,7 +365,11 @@ const markup: Record<IconName, string> = {
   )
 }
 
-/** Inner SVG markup for an icon with its gradient ids namespaced (`ix-<name>-`). */
-export function iconMarkup(name: IconName): string {
-  return markup[name].replaceAll('~', `ix-${name}-`)
+/**
+ * Inner SVG markup for an icon with its gradient ids namespaced (`ix-<scope>-<name>-`). Pass a `scope` that is unique per
+ * rendered icon: `url(#id)` resolves to the first element with that id in the page, so icons sharing ids lose their
+ * fills as soon as the first copy sits in a hidden subtree (a minimised window, a closed pane).
+ */
+export function iconMarkup(name: IconName, scope = ''): string {
+  return markup[name].replaceAll('~', `ix-${scope ? `${scope}-` : ''}${name}-`)
 }
