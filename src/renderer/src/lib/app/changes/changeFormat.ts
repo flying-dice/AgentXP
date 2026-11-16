@@ -1,9 +1,15 @@
 import { changeCounts, changeCountsShort } from '@shared/lineCounts'
 import type { FileChangeDto, FileChangeKind } from '@shared/models'
+import type { IconName } from '../../kit/atoms/icons'
 
 const KIND: Record<FileChangeKind, string> = { added: 'Added', modified: 'Modified', deleted: 'Deleted' }
 
 export const changeKindLabel = (kind: FileChangeKind): string => KIND[kind]
+
+/** The picture of a status in a list too narrow for its word (UX-207). The word is its tooltip and its name for a screen reader. */
+const KIND_ICON: Record<FileChangeKind, IconName> = { added: 'plus', modified: 'edit', deleted: 'delete' }
+export const changeKindIcon = (kind: FileChangeKind): IconName => KIND_ICON[kind]
+export const REVERTED_ICON: IconName = 'undo'
 
 type Counted = Pick<FileChangeDto, 'additions' | 'deletions'> & Partial<Pick<FileChangeDto, 'kind' | 'originalText' | 'currentText'>>
 
@@ -45,7 +51,7 @@ export const revertConfirmText = (path: string): string =>
   `Revert the changes to ${path}?\n\nThe file goes back to how it was before the agent edited it. You can get it back from the Recycle Bin.`
 
 /** What a reverted row says in place of its change kind (UX-79). */
-export const REVERTED_LABEL = 'Reverted. Restore from the Recycle Bin'
+export const REVERTED_LABEL = 'Reverted. Select it and click Restore to put the file back.'
 /** The one line above the list when a file was reverted; the link beside it opens the Recycle Bin (UX-151). */
 export const REVERTED_NOTE = 'Reverted files are in the Recycle Bin.'
 

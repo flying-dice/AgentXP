@@ -44,7 +44,7 @@ Agent7 remembers if the pane is open, and its width, for each window.
 
 ### The Edge Toggle
 
-When the pane is closed, a strip shows at the right edge of the window. It is 28 pixels wide and reads **Chat** with an arrow. Point to it to read **Open the chat pane: ask about what you are looking at**. Click the strip to open the pane.
+When the pane is closed, a strip shows at the right edge of the window. It is 44 pixels wide and has a chat icon. It reads **Chat**, and in the Code window it reads **Ask about this file**. Point to it to read **Open the chat pane: ask about what you are looking at**. Click the strip to open the pane.
 
 ### The Title Bar
 

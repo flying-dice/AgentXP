@@ -209,3 +209,60 @@ export function budgetVerdict(status, steps, budget, seq) {
     lines: [`BUDGET EXCEEDED (${steps} > ${budget}): the task counts as FAILED`, ...(near ? [`within +25 percent: review (limit ${Math.floor(budget * 1.25)}); the researcher may flag this as a near miss`] : [])]
   }
 }
+
+/** H-109: minutes between the first and the last log entry (one decimal), or null when the log has fewer than two timed entries. */
+export function minutesFromLog(entries) {
+  const times = entries.map((e) => Date.parse(e.ts)).filter(Number.isFinite)
+  if (times.length < 2) return null
+  return Math.max(0.1, Math.round(((Math.max(...times) - Math.min(...times)) / 60_000) * 10) / 10)
+}
+
+/** H-109: the Result line of a record gets `Time: <n> min` measured from the log, replacing whatever the panelist wrote (a placeholder, "not measured", a bare number). Without a Result line the text is unchanged. */
+export function withTimeLine(text, minutes) {
+  if (minutes === null || minutes === undefined) return text
+  const time = `Time: ${minutes} min`
+  return text.replace(/^(- Result:.*)$/m, (line) => (/\bTime:/i.test(line) ? line.replace(/\bTime:.*$/i, time) : `${line.replace(/\s+$/, '')}   ${time}`))
+}
+
+const TEMPLATE_PLACEHOLDER = /<(?:stop fills[^<>\n]*|leave this line as it is[^<>\n]*|min|n|budget|reason from check|task|title|level|round|1-7|one sentence[^<>\n]*|packaged\|unpackaged[^<>\n]*)>/gi
+
+/** H-109: the template placeholders that are still in a finished record (`<stop fills in>`, `<min>`, `<n>`, ...), without repeats. */
+export const recordPlaceholders = (text) => [...new Set(String(text ?? '').match(TEMPLATE_PLACEHOLDER) ?? [])]
+
+/** H-109: the refusal text for a record with a placeholder, or null. */
+export const recordPlaceholderProblem = (text) => {
+  const found = recordPlaceholders(text)
+  return found.length ? `the record still has template placeholders: ${found.join(' ')}. Fill them in (Time, Steps and Build are filled by stop; the rest is the panelist's report) and run stop again` : null
+}
+
+/** H-110: check.json with the rerun and finished-by-facilitator flags set, and the reason in `notes`. A flag that is not given keeps its value. */
+export function withRunFlags(check, { rerun, finishedByFacilitator } = {}) {
+  const notes = [...(check.notes ?? [])]
+  if (rerun && !notes.includes(`rerun: ${rerun}`)) notes.push(`rerun: ${rerun}`)
+  if (finishedByFacilitator && !notes.includes('finished by the facilitator')) notes.push('finished by the facilitator')
+  return { ...check, ...(rerun ? { rerun: { reason: rerun } } : {}), ...(finishedByFacilitator ? { finishedByFacilitator: true } : {}), notes }
+}
+
+/**
+ * H-110: a session whose lost first run is kept as `<task>-<level>-session-lost` is a rerun; `stop` refuses without `--rerun "<reason>"`
+ * (the flag goes into check.json, so the synthesis can count it). `lostRunExists` is true when that folder exists beside the record.
+ */
+export const rerunProblem = ({ lostRunExists, rerun, check }) =>
+  lostRunExists && !rerun && !check?.rerun ? 'a "-session-lost" folder of this task exists, so this session is a rerun: pass --rerun "<why the first run was lost>" (H-110)' : null
+
+/** H-111: `stop` needs the record, because the rating (`seq`) is read from it; `--no-record` is for a session that has no record. */
+export const stopRecordProblem = ({ hasCheck, record, noRecord, noCheck }) =>
+  hasCheck && !record && !noRecord && !noCheck ? 'stop needs --record <record.md>: the rating (SEQ) in check.json is read from the record\'s "- SEQ:" line (H-111). Pass --no-record only when there is no record' : null
+
+/**
+ * H-119: what `check` prints. The panelist must not learn what the check needs, so a result other than PASS shows no reason and no
+ * notes (they are in check.json for the facilitator); `--facilitator` prints everything.
+ */
+export function checkLines({ result, steps, budget, facilitator = false }) {
+  const shown = facilitator || result.status === 'PASS'
+  return [
+    shown ? `${result.status}: ${result.reason}` : `${result.status}: (the reason is kept for the facilitator in check.json, H-119)`,
+    ...(shown ? result.notes.map((n) => `  note: ${n}`) : []),
+    `steps: ${steps}${budget ? ` of budget ${budget}` : ''}`
+  ]
+}

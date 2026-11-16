@@ -13,7 +13,7 @@ This manual describes Notepad. Notepad reads and edits plain text files.
   - The Chat Pane
 - 4 - Controls Reference
 - 5 - Common Tasks
-- Save a file
+  - Save a file
 - 6 - Troubleshooting
 - 7 - Need Help?
 

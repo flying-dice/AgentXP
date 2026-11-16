@@ -21,31 +21,50 @@ export interface ChatProblem {
   actions: ProblemAction[]
   /** One sentence and the next step for the status bar ("The agent stopped. Click Restart, then send your message again."); no technical words. */
   status: string
+  /** Something the user did or asked for (ending the agent program): a plain notice, not a red error (UX-201). */
+  notice?: boolean
 }
 
 /** True for text that only a developer reads: protocol names, error codes, process words. */
 const isTechnical = (text: string): boolean => /\bACP\b|JSON-RPC|AG-UI|\bMCP\b|-32\d{3}|exit code|spawn|stack|\bat .+\(.+:\d+/i.test(text) || /\bE[A-Z]{3,}\b/.test(text)
 const isTimeout = (text: string): boolean => /time(d)? ?out|ETIMEDOUT/i.test(text)
 
+/** A step of the agent's own work that timed out ("Timed out after 5183 ms waiting for ..."), not a request that got no answer. */
+const isStepTimeout = (text: string): boolean => /time(d)? ?out after \d+ ?(ms|s)\b.*waiting for|waiting for .*time(d)? ?out/i.test(text)
+/** What the step waited for, in plain words ("the page"), or null when the text does not say. */
+const stepWaitsFor = (text: string): string | null => (/page|browser|selector|navigat|element|"/i.test(text) ? 'the page' : null)
+
 /**
  * A failure that is not about the agent program (no `session.problem`) in plain words: a timeout, a program that would not start, a
  * dropped connection, or any other technical text. The agent's own plain error ("Rate limit") is not changed.
- * `unanswered`: the message was never answered, so "Send again" is the next step.
+ * `unanswered`: the message was never answered. `failed`: a message of this chat failed, so "Send again" is the next step, also when
+ * the agent had started on it (UX-195). `status` is the short sentence for the status bar: it fits its field.
  */
-export function plainError(error: string, unanswered: boolean): { text: string; status: string } | null {
-  const again = unanswered ? 'Click Send again to try again.' : 'Click Details... to read more.'
+export function plainError(error: string, unanswered: boolean, failed = unanswered): { text: string; status: string } | null {
+  // The box says what to do next only when there is something to send again (the button is there).
+  const next = failed ? ' Click Send again to try again.' : ''
+  const short = failed ? ' Click Send again.' : ' Click Details...'
   if (isConnectionLossText(error)) {
     return unanswered
-      ? { text: 'Your message could not be sent because the connection to the agent dropped.', status: `The connection to the agent dropped. ${again}` }
-      : { text: 'The agent stopped before it finished.', status: `The agent stopped before it finished. ${again}` }
+      ? { text: `Your message could not be sent because the connection to the agent dropped.${next}`, status: `Connection dropped.${short}` }
+      : { text: `The agent stopped before it finished.${next}`, status: `The agent stopped.${short}` }
   }
-  if (isTimeout(error)) return { text: 'The agent did not answer in time.', status: `The agent did not answer in time. ${again}` }
+  if (isTimeout(error)) {
+    if (isStepTimeout(error)) {
+      const waits = stepWaitsFor(error)
+      return { text: `A step took too long${waits ? ` (waiting for ${waits})` : ''}.${next}`, status: `A step took too long.${short}` }
+    }
+    // A message that was answered with steps and then stopped did not "get no answer": it stopped before it finished.
+    return unanswered || !failed
+      ? { text: `The agent did not answer in time.${next}`, status: `No answer in time.${short}` }
+      : { text: `The agent stopped before it finished.${next}`, status: `The agent stopped.${short}` }
+  }
   if (/spawn|ENOENT|EACCES/i.test(error)) return { text: 'The agent could not start.', status: 'The agent could not start. Open Agents to check its command.' }
   if (isTechnical(error)) {
     // The agent's own sentence stays when one is left after the protocol words are taken away ("Internal error: Scripted expectation failed").
     const own = error.replace(/JSON-RPC( error)?|\bACP\b|-32\d{3}|\bInternal error\b/gi, '').replace(/^[\s:,.-]+/, '').trim()
-    if (own && !isTechnical(own)) return { text: own, status: `${own} ${again}` }
-    return { text: 'Something went wrong while the agent worked.', status: `Something went wrong. ${again}` }
+    if (own && !isTechnical(own)) return { text: `${own}${next}`, status: `${own}${short}` }
+    return { text: `Something went wrong while the agent worked.${next}`, status: `Something went wrong.${short}` }
   }
   return null
 }
@@ -79,11 +98,22 @@ export function startNextStep(problem: Pick<SessionProblemDto, 'cause' | 'messag
 /** A program that is not there is not fixed by trying again, and neither is any start that failed twice: then "Choose another agent" is the default (UX-174). */
 export const chooseAgentFirst = (problem: Pick<SessionProblemDto, 'cause' | 'message' | 'failures'>): boolean => /was not found/i.test(problem.cause ?? problem.message) || (problem.failures ?? 1) >= 2
 
-/** The technical text for "Details...": the plain sentence of the box first, so it never starts with "Internal error" (UX-174). */
-export function detailWithLead(text: string, detail: string | null): string | null {
+/** The line above the technical part of Details, and its label (UX-196). */
+const DETAILS_RULE = '------------------------------'
+export const TECHNICAL_HEADING = 'Technical details'
+
+/**
+ * The text for "Details...": the plain sentence of the box first, then `hint` (what to do) when there is one, then the technical
+ * text below a rule under the label "Technical details". It never starts with "Internal error" or a protocol line (UX-174, UX-196).
+ */
+export function detailWithLead(text: string, detail: string | null, hint?: string): string {
   const lead = text.split('\n')[0]
-  return detail === null || detail === lead ? detail : `${lead}\n\n${detail}`
+  const plain = hint ? `${lead}\n${hint}` : lead
+  return detail === null || detail === lead ? plain : `${plain}\n\n${DETAILS_RULE}\n${TECHNICAL_HEADING}\n${detail}`
 }
+
+/** What to do after a program that would not start, the second line of its Details. */
+const START_FAILED_HINT = 'What to do: open Agents and choose another agent.'
 
 export interface ProblemInput {
   /** The error of the last run (technical text), or null. */
@@ -101,6 +131,11 @@ export interface ProblemInput {
 const lowerFirst = (text: string): string => (/^[A-Z][a-z]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text)
 
 const START_LEAD = 'The agent could not start. '
+
+/** The notice after the user ended the agent program (Task Manager): what happened and the one thing to do. */
+export const ENDED_TEXT = 'You ended the agent program. Click Restart to use the chat again.'
+/** Why Send is off after the user ended the agent program (the tooltip of the button). */
+export const ENDED_SEND_OFF = 'The agent program is ended. Click Restart in the chat first.'
 
 /** "The agent could not start. The program 'x' was not found." as "My assistant could not start: the program 'x' was not found." */
 export function namedStartFailure(message: string, agentName: string | null | undefined): string {
@@ -136,7 +171,7 @@ function statusOf(result: Raw, { problem, error, agentName }: ProblemInput): str
     case 'agent-stopped':
       return first?.id === 'restart-send' ? 'The agent stopped. Click Restart and send again.' : again ? 'The agent stopped again. Click Restart, or start a new chat.' : 'The agent stopped. Click Restart, then send your message again.'
     case 'agent-ended':
-      return again ? 'The agent program was ended again. Click Restart, or start a new chat.' : 'The agent program was ended. Click Restart, then send your message again.'
+      return again ? 'You ended the agent program again. Click Restart, or start a new chat.' : 'You ended the agent program. Click Restart.'
     case 'start-failed':
       return `${startHeadline(problem, agentName)} ${startNextStep(problem) || 'Open Agents to change the command, or choose another agent.'}`
     default:
@@ -154,7 +189,7 @@ function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName
   if (problem) {
     const again = (problem.failures ?? 1) >= 2
     const tail = again && !problem.agentChanged ? `\n${repeatLine(problem)}` : ''
-    const withLead = (text: string): { text: string; detail: string | null } => ({ text, detail: detailWithLead(text, problem.detail || error) })
+    const withLead = (text: string, hint?: string): { text: string; detail: string | null } => ({ text, detail: detailWithLead(text, problem.detail || error, hint) })
     switch (problem.kind) {
       case 'start-failed': {
         const retry: ProblemAction = failed ? { id: 'send-again', label: 'Send again' } : { id: 'restart', label: newDefaultAgent ? `Try again with ${newDefaultAgent}` : 'Try again' }
@@ -164,7 +199,7 @@ function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName
         const next = startNextStep(problem)
         const sentence = `${startHeadline(problem, agentName)}${cause}${next ? ` ${next}` : ''}${failed ? ' Your message was not sent.' : ''}${tail}`
         return {
-          ...withLead(sentence),
+          ...withLead(sentence, START_FAILED_HINT),
           actions: choose.primary ? [choose, retry, OPEN_AGENTS, ...extra, DETAILS] : [retry, OPEN_AGENTS, choose, ...extra, DETAILS]
         }
       }
@@ -173,31 +208,43 @@ function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName
         return { ...withLead(`${problem.message}${tail}`), actions: [restart, ...(again ? [newChat(failed)] : []), DETAILS, EVENT_VIEWER] }
       }
       case 'agent-ended': {
-        const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
-        return { ...withLead(`${problem.message}${tail}`), actions: [restart, ...(again ? [newChat(failed), EVENT_VIEWER] : [])] }
+        // The user ended the program: a plain notice, not a red error. Restart only starts it; nothing is sent again (UX-201).
+        const text = `${ENDED_TEXT}${tail}`
+        return { ...withLead(text), notice: true, actions: [{ id: 'restart', label: 'Restart' }, ...(again ? [newChat(failed), EVENT_VIEWER] : [])] }
       }
     }
   }
   if (error === null) return null
-  const resend: ProblemAction[] = failed?.unanswered ? [{ id: 'send-again', label: 'Send again' }] : []
-  const plain = plainError(error, !!failed?.unanswered)
+  // Any failed message can be sent again, also one the agent had started on (UX-195).
+  const resend: ProblemAction[] = failed ? [{ id: 'send-again', label: 'Send again' }] : []
+  const plain = plainError(error, !!failed?.unanswered, !!failed)
   if (plain) return { ...plain, detail: detailWithLead(plain.text, error), actions: [...resend, DETAILS] }
   // An error the agent reported itself in plain words: as it came; an unanswered message can still be sent again.
   return { text: error, detail: null, actions: resend, status: error }
 }
 
 /** How the user's message looks in the transcript: normal, "Not sent" (never answered) or "Stopped" (answered halfway). */
-export type SendState = 'sent' | 'not-sent' | 'stopped'
+export type SendState = 'sent' | 'not-sent' | 'stopped' | 'sent-again'
 
-export function sendStateOf(messageId: string, failed: (Pick<FailedSend, 'messageId' | 'unanswered'>) | null, hasProblem: boolean): SendState {
-  if (!failed || failed.messageId !== messageId || !hasProblem) return 'sent'
-  return failed.unanswered ? 'not-sent' : 'stopped'
+/** Which messages of a cut-off turn were sent again: the first one is "Stopped", the repeat "Sent again" (UX-201). */
+export interface RepeatMarks {
+  stoppedIds?: ReadonlySet<string>
+  resentIds?: ReadonlySet<string>
+}
+
+export function sendStateOf(messageId: string, failed: (Pick<FailedSend, 'messageId' | 'unanswered'>) | null, hasProblem: boolean, marks: RepeatMarks = {}): SendState {
+  if (failed && failed.messageId === messageId && hasProblem) return failed.unanswered ? 'not-sent' : 'stopped'
+  if (marks.stoppedIds?.has(messageId)) return 'stopped'
+  return marks.resentIds?.has(messageId) ? 'sent-again' : 'sent'
 }
 
 /** The text of "Details...": the technical message, then the last lines of the log. */
 export function problemDetails(detail: string | null, log: readonly string[]): string {
-  const lines = log.length > 0 ? `\n\nLast lines of the log:\n${log.join('\n')}` : ''
-  return `${detail ?? 'There is nothing more to show.'}${lines}`
+  const head = detail ?? 'There is nothing more to show.'
+  if (log.length === 0) return head
+  const lines = `Last lines of the log:\n${log.join('\n')}`
+  // The log is technical: under the heading, whether the text had one or not.
+  return head.includes(TECHNICAL_HEADING) ? `${head}\n\n${lines}` : `${head}\n\n${DETAILS_RULE}\n${TECHNICAL_HEADING}\n${lines}`
 }
 
 /** The last lines of a chat's protocol log, one short line each ("10:42:07 ACP session/prompt"), oldest first. */

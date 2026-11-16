@@ -2,8 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { see, startScriptedDesktop, type ScriptedDesktop } from './fixtures'
 
 /**
- * UX-140 and UX-141: the agent program is ended while a request runs. One end counts once ("again" only after a restart), and after
- * the second end Restart says that the request was not sent again and offers to send it in one click.
+ * UX-140, UX-141 and UX-201: the agent program is ended (by the user, in Task Manager) while a request runs. It shows as a plain notice,
+ * the message box stays empty, Send is off, and Restart only starts the agent: nothing is sent again. One end counts once ("again" only
+ * after a restart).
  */
 describe('chat: the agent program ends while a request runs', () => {
   let ctx: ScriptedDesktop
@@ -27,20 +28,33 @@ describe('chat: the agent program ends while a request runs', () => {
     await ctx.desktop.closeWindow('agent-manager')
   }
 
-  it('the first end says it once, without "again", and Restart and send again sends the request', async () => {
+  it('the first end is a plain notice that says it once, the box stays empty with Send off, and Restart only starts the agent (UX-201)', async () => {
     const chat = ctx.desktop.chat()
     await chat.send('step through')
     await see.attribute(chat.transcript, 'data-running', 'true')
     await endAgentProgram()
     await see.visible(chat.errors)
-    expect(await chat.frame.getByTestId('chat-error-text').innerText()).not.toMatch(/again/i)
-    await see.visible(chat.frame.getByTestId('chat-error-restart-send'))
-    await chat.frame.getByTestId('chat-error-restart-send').click()
-    await see.attribute(chat.transcript, 'data-running', 'true')
+    await see.attribute(chat.errors, 'data-notice', 'true')
+    await see.text(chat.frame.getByTestId('chat-error-text'), 'You ended the agent program. Click Restart to use the chat again.')
+    expect(await chat.frame.getByTestId('chat-error-text').innerText()).not.toMatch(/stopped again|ended again/i)
+    // The cut-off message says Stopped, the box is not refilled, and Send is off until the agent runs.
+    await see.text(chat.frame.getByTestId('chat-message-stopped'), 'Stopped')
+    expect(await chat.composer.inputValue()).toBe('')
+    await see.attribute(chat.frame.getByTestId('chat-send'), 'disabled', '')
+    await see.count(chat.frame.getByTestId('chat-error-restart-send'), 0)
+    await chat.frame.getByTestId('chat-error-restart').click()
+    await see.text(chat.frame.getByTestId('chat-restart-status'), 'The agent is running again.')
+    // Nothing was sent again, and nothing says so as if it was a mistake.
+    await see.count(chat.userMessages, 1)
+    await see.attribute(chat.transcript, 'data-running', 'false')
+    await see.count(chat.frame.getByTestId('chat-restarted-note'), 0)
   })
 
-  it('the second end after a restart says "again", keeps the text, and Restart then says the request was not sent again', async () => {
+  it('after the restart Send is on again, a new request goes out once, and a second end says "again" and offers a new chat with the text', async () => {
     const chat = ctx.desktop.chat()
+    await chat.send('step through')
+    await see.attribute(chat.transcript, 'data-running', 'true')
+    await see.text(chat.userMessages.last(), 'step through')
     await endAgentProgram()
     await see.text(chat.frame.getByTestId('chat-error-text'), 'It stopped again')
     await see.text(chat.frame.getByTestId('chat-error-new-chat'), 'Start a new chat with your text')
@@ -49,15 +63,14 @@ describe('chat: the agent program ends while a request runs', () => {
     expect(await chat.frame.getByTestId('chat-error-event-viewer').getAttribute('class')).not.toContain('w7-btn')
     expect(await chat.frame.getByTestId('chat-error-text').innerText()).not.toContain('Show in Event Viewer')
     await chat.frame.getByTestId('chat-error-restart').click()
-    await see.text(chat.frame.getByTestId('chat-restarted-note'), 'Agent7 restarted. Your last request was not sent again:')
-    await see.text(chat.frame.getByTestId('chat-restarted-text'), 'step through')
+    await see.text(chat.frame.getByTestId('chat-restart-status'), 'The agent is running again.')
+    await see.count(chat.frame.getByTestId('chat-restarted-note'), 0)
   })
 
-  it('Send it again sends the request in one click, and the note goes away', async () => {
+  it('Send works again after the second restart and the request goes out once', async () => {
     const chat = ctx.desktop.chat()
-    await chat.frame.getByTestId('chat-restarted-resend').click()
+    await chat.send('step through')
     await see.attribute(chat.transcript, 'data-running', 'true')
-    await see.gone(chat.frame.getByTestId('chat-restarted-note'))
     await see.text(chat.userMessages.last(), 'step through')
   })
   it('after 20 seconds of work the status line offers to end the agent program, and the menus lead to Task Manager (UX-176)', async () => {
@@ -89,7 +102,10 @@ describe('chat: the agent program ends while a request runs', () => {
     const next = ctx.desktop.chat(1)
     await see.eventually(async () => expect(await next.composer.inputValue()).toBe('step through'))
     expect(await chat.composer.inputValue()).toBe('')
+    // UX-201: the old window says it went on elsewhere, in grey, and shows no red box and no Reconnect.
     await see.text(chat.frame.getByTestId('chat-continued-note'), 'Continued in a new chat.')
-    await see.visible(chat.errors)
+    await see.gone(chat.errors)
+    await see.text(chat.frame.getByTestId('chat-status'), 'Continued in a new chat')
+    await see.count(chat.frame.getByTestId('chat-reconnect'), 0)
   })
 })

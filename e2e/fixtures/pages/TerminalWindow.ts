@@ -13,9 +13,14 @@ export class TerminalWindow {
     return this.frame.getByTestId('terminal-picker')
   }
 
-  /** The note a key press shows at the bottom of the screen: the Terminal is read-only. */
+  /** The note at the top of the window that a key press shows and flashes: the Terminal is read-only. */
   get readOnlyNotice(): Locator {
     return this.frame.getByTestId('terminal-readonly-notice')
+  }
+
+  /** The left cell of the status bar: it says that nothing was typed while the note flashes. */
+  get readOnlyStatus(): Locator {
+    return this.frame.getByTestId('terminal-readonly-status')
   }
 
   get status(): Locator {

@@ -17,10 +17,14 @@ export function chapterOf(headings: readonly { tag: string; id: string }[], id: 
 }
 
 /** Space above a heading that a jump scrolls to, in px: the text above it is out of sight, not cut in half (UX-183). */
-export const HEADING_GAP = 8
+export const HEADING_GAP = 24
 
 /** How far to scroll a box so that a heading (px from the top of its content) has `HEADING_GAP` above it. */
 export const scrollTopFor = (headingTop: number): number => Math.max(0, Math.round(headingTop - HEADING_GAP))
+
+/** Extra room needed under the content so that the box can scroll to `scrollTopFor(headingTop)` (a heading near the end would stop short and sit mid-window). */
+export const tailPadding = (headingTop: number, scrollHeight: number, clientHeight: number, current = 0): number =>
+  Math.max(0, scrollTopFor(headingTop) + clientHeight - (scrollHeight - current))
 
 /** Which chapter lines of the contents hide their sections: every line that has some, except the open chapter. */
 export const collapsedLines = (lines: readonly { id: string | null; hasSections: boolean }[], open: string | null): boolean[] =>

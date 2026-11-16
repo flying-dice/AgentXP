@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, TOOL_GROUPS } from '@shared/desktop'
 import { toolChips } from '../../desktop/activity'
-import { ASK_HELP, decisionNote, isDecision, permissionGroups, permissionRows, policiesEqual, settingTestid, withAllDecisions, withDecision } from './permissionsTable'
+import { ASK_HELP, NARROW_PAGE_PX, PERMISSIONS_HELP, decisionNote, helpFor, isNarrowPage, isDecision, permissionGroups, permissionRows, policiesEqual, settingTestid, withAllDecisions, withDecision } from './permissionsTable'
 
 describe('permissionsTable', () => {
   it('lists the human names in order, abilities first', () => {
@@ -91,5 +91,27 @@ describe('permissionsTable', () => {
   it('validates decisions', () => {
     expect(isDecision('ask')).toBe(true)
     expect(isDecision('maybe')).toBe(false)
+  })
+})
+
+describe('the help of a narrow page (UX-198)', () => {
+  it('is narrow under 520 px, and not before the page is measured', () => {
+    expect(NARROW_PAGE_PX).toBe(520)
+    expect(isNarrowPage(0)).toBe(false)
+    expect(isNarrowPage(100)).toBe(true)
+    expect(isNarrowPage(519)).toBe(true)
+    expect(isNarrowPage(520)).toBe(false)
+  })
+  it('shows all of it at 700 px and 520 px', () => {
+    for (const width of [700, 520]) expect(helpFor(isNarrowPage(width), false)).toEqual({ text: PERMISSIONS_HELP, collapsed: false })
+  })
+  it('shows its first two sentences at 300 px, and all of it after More', () => {
+    const short = helpFor(isNarrowPage(300), false)
+    expect(short).toEqual({ text: 'Each row is separate. The line under each name says what it covers.', collapsed: true })
+    expect(helpFor(isNarrowPage(300), true)).toEqual({ text: PERMISSIONS_HELP, collapsed: false })
+  })
+  it('names the top bar box with the same phrase as the box (UX-199)', () => {
+    expect(PERMISSIONS_HELP).toContain("'Ask before every action (this session only)'")
+    expect(PERMISSIONS_HELP).toContain('it is not saved')
   })
 })

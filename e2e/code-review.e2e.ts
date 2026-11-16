@@ -58,7 +58,7 @@ describe('Code Review', () => {
     const banner = (await review.verdict.boundingBox())!
     // The sentence runs the full width, so the banner is one or two lines high, not a tall narrow column.
     expect(banner.height).toBeLessThan(60)
-    await see.text(review.frame.getByTestId('review-status-files'), /Showing .+ \(1 of 2 changed files\)/)
+    await see.text(review.frame.getByTestId('review-status-files'), /.+ \(file 1 of 2 changed files\)/)
     await see.visible(review.frame.getByTestId('review-send-comments'))
     await see.enabled(review.frame.getByTestId('review-send-comments'))
   })
@@ -170,5 +170,10 @@ describe('Code Review', () => {
     // After Send the count in the tab is the count in the banner: both say 2, none says 0 (UX-155).
     await see.text(review.frame.getByTestId('review-comments-toggle'), 'Comments (2)')
     await see.text(review.frame.getByTestId('review-banner-comments'), '2 comments')
+    // The review says itself that the comments went and that the chat is working on them (UX-211).
+    await see.text(review.frame.getByTestId('review-sent-line'), '2 comments sent to the chat. Waiting for the assistant.')
+    await see.text(review.frame.getByTestId('review-send-comments'), 'Comments sent')
+    // The list names each level in words beside its colour.
+    await see.text(review.frame.getByTestId('review-comment-level').first(), /^(Blocker|Major|Minor|Nit)$/)
   })
 })

@@ -16,7 +16,7 @@
   import { selectionContext, useAppContext } from '../shared/appContext.svelte'
   import { useDesktopStores } from '../sessionStores.svelte'
   import { ViewSync } from '../viewSync'
-  import { collectTerminals, isTypingKey, lastLines, NOTICE_MS, READ_ONLY_NOTICE, renderTerminal, terminalLabel } from './terminalModel'
+  import { collectTerminals, FLASH_MS, isTypingKey, lastLines, NOTHING_TYPED, NOTICE_MS, READ_ONLY_NOTICE, READ_ONLY_STATUS, renderTerminal, terminalLabel } from './terminalModel'
 
   let { window: win, host }: AppProps<'terminal'> = $props()
 
@@ -51,20 +51,40 @@
   let screen = $state<HTMLElement | null>(null)
 
   /**
-   * The read-only notice at the bottom of the screen. It shows when the window opens and stays until the first click in the text
-   * area (UX-190); after that a click or a key press shows it for a few seconds.
+   * The read-only note at the top of the window. It shows when the window opens and stays until the first click in the text
+   * area (UX-190); after that a click or a key press shows it for a few seconds. A key press also flashes it for a second and
+   * the status bar says nothing was typed (UX-215).
    */
   let notice = $state(true)
+  let flash = $state(false)
   let noticeTimer: ReturnType<typeof setTimeout> | undefined
+  let flashTimer: ReturnType<typeof setTimeout> | undefined
   function showNotice(): void {
     notice = true
     clearTimeout(noticeTimer)
     noticeTimer = setTimeout(() => (notice = false), NOTICE_MS)
   }
-  function typed(event: KeyboardEvent): void {
-    if (isTypingKey(event)) showNotice()
+  function flashNotice(): void {
+    flash = false
+    clearTimeout(flashTimer)
+    // A new frame between the two states, so a second key press flashes again.
+    requestAnimationFrame(() => {
+      flash = true
+      flashTimer = setTimeout(() => (flash = false), FLASH_MS)
+    })
   }
-  $effect(() => () => clearTimeout(noticeTimer))
+  /** A key anywhere in the window except its menus and the terminal list: the focus is rarely inside the text itself. */
+  function typed(event: KeyboardEvent): void {
+    if (!isTypingKey(event)) return
+    const target = event.target as HTMLElement | null
+    if (target?.closest('[role="menubar"], [role="menu"], input, select, textarea, [role="combobox"], [role="listbox"]')) return
+    showNotice()
+    flashNotice()
+  }
+  $effect(() => () => {
+    clearTimeout(noticeTimer)
+    clearTimeout(flashTimer)
+  })
 
   // svelte-ignore state_referenced_locally
   const help = new AppHelp(host, 'terminal')
@@ -152,8 +172,11 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="terminal" data-testid="terminal-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => ctx.key(e, contextItems)}>
+<div class="terminal" data-testid="terminal-app" oncontextmenu={(e) => ctx.show(e, contextItems())} onkeydown={(e) => (typed(e), ctx.key(e, contextItems))}>
   <MenuStrip {menus} aria-label="Terminal menu" />
+  {#if notice}
+    <div class="notice" class:flash data-testid="terminal-readonly-notice" data-flash={flash} role="status">{READ_ONLY_NOTICE}</div>
+  {/if}
   <div class="head">
     <span class="title">Agent7 shell - cmd.exe</span>
     <span class="spring"></span>
@@ -170,16 +193,13 @@
     {/if}
   </div>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onkeydown={typed} onpointerdown={showNotice}>
+  <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onpointerdown={showNotice}>
     <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" lockedCursor />
-    {#if notice}
-      <div class="notice" data-testid="terminal-readonly-notice" role="status">{READ_ONLY_NOTICE}</div>
-    {/if}
   </div>
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Terminal" />
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text="Read-only: the agent is the only user of this shell. You can watch, not type." spring />
+    <StatusStripLabel testid="terminal-readonly-status" text={flash ? NOTHING_TYPED : READ_ONLY_STATUS} spring />
     <StatusStripLabel testid="terminal-status" text={current ? (current.running ? 'Running' : `Exit code ${current.exitCode}`) : 'No terminals'} borders={['left']} width={110} />
   </StatusStrip>
 </div>
@@ -217,15 +237,20 @@
     background: var(--w7-console-bg);
   }
   .notice {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    flex: none;
     padding: 4px 8px;
     background: #2b2b2b;
-    border-top: 1px solid #6b6b6b;
+    border-bottom: 1px solid #6b6b6b;
     color: #ffd866;
     font: var(--w7-font);
+  }
+  /* The key press the note answers: a bright block for a second. */
+  .notice.flash {
+    background: #ffd866;
+    color: #1b1b1b;
+    outline: 2px solid #ff8a00;
+    outline-offset: -2px;
+    font-weight: 700;
   }
   .screen :global(.w7-console) {
     flex: 1;

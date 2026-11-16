@@ -4,22 +4,23 @@
    * place to review changes: the chat window and the Code window show this same pane (UX-40).
    * The list shows the whole file name beside its counts (UX-111, UX-116). It takes only the height of its rows (two at least, 35% of the
    * pane at most) so the diff has the rest, about 12 lines (UX-184); a bar between them remembers where the user put it. Reverted files
-   * stay in the list (UX-117); selecting one says where the change is and offers "Restore..." (UX-185). The notice about them is one
+   * stay in the list (UX-117); selecting one says where the change is and offers "Restore", which puts the file back in one click (UX-185, UX-209). Status, File and Path are columns of their own, sized to their words (UX-207). The notice about them is one
    * line above the list, so it never takes height from the list.
    */
   import type { FileChangeDto, Id } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
-  import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
+  import type { ListRow } from '../../kit/organisms/ListView'
   import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
 import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../../apps/shared/ContextMenu.svelte'
   import { changeRowItems } from '../changes/changeMenu'
-  import { CHANGES_EMPTY, UNDONE_TEXT, gitNote, revertReasonText } from '../changes/changesText'
+  import { CHANGES_EMPTY, OPEN_BIN_LABEL, OPEN_GIT_LINK, RESTORE_LABEL, UNDONE_TEXT, gitNote, restoreFailedText, restoredText, revertReasonText } from '../changes/changesText'
+  import type { RestoreOutcome } from '../changes/openRecycleBin'
   import { localStore } from '../../desktop/chatPane'
-  import { REVERTED_KIND, REVERTED_LABEL, REVERTED_NOTE, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
-  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, MIN_ROWS, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
+  import { REVERTED_ICON, REVERTED_KIND, REVERTED_LABEL, REVERTED_NOTE, changeKindIcon, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import { BESIDE_MAX_HEIGHT, changeColumns, isCompactList, BESIDE_LIST_WIDTH, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, DIFF_WANTED_HEIGHT, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, MIN_ROWS, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
 
   interface Props {
     changes: FileChangeDto[]
@@ -34,6 +35,8 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     onopeneditor?: (change: FileChangeDto) => void
     /** The link above the list and the "Restore..." button of a reverted row (with that row's Recycle Bin entry); without it they are not shown. */
     onopenrecyclebin?: (entryId?: Id) => void
+    /** "Restore" of a reverted row: puts the file back in one click. Without it the button opens the Recycle Bin instead (UX-209). */
+    onrestore?: (entryId: Id) => Promise<RestoreOutcome>
     /** How many files Git lists as changed. When the agent changed nothing but this is more than 0, the pane says so (UX-152). */
     gitCount?: number
     /** Whether the folder is under Git; false adds the line "This folder is not tracked by Git". Undefined: not known, no line. */
@@ -42,22 +45,20 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     onopengit?: () => void
   }
 
-  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin, gitCount = 0, gitTracked, onopengit }: Props = $props()
+  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin, onrestore, gitCount = 0, gitTracked, onopengit }: Props = $props()
   const uid = $props.id()
   const reasonId = `${uid}-reason`
 
-  // Two columns: the file column takes what the counts leave, so the counts are always on screen (UX-79, UX-111).
-  const columns: ListColumn[] = [
-    { key: 'file', header: 'File', minWidth: 120 },
-    { key: 'lines', header: 'Lines', width: 84, align: 'right' }
-  ]
-
+  let listBoxWidth = $state(0)
+  // A list too narrow for the Status column shows the status as the picture of each row instead (UX-207).
+  const compact = $derived(isCompactList(listBoxWidth))
   const rows = $derived<ListRow[]>([
     ...changes.map((c) => ({
       id: String(c.id),
       testid: 'changes-item',
-      icon: 'file-code' as const,
+      icon: compact ? changeKindIcon(c.kind) : ('file-code' as const),
       file: c.path,
+      dir: splitChangePath(c.path).dir,
       kind: changeKindLabel(c.kind),
       // A number, so that sorting by this column sorts by size.
       lines: fileChangeCounts(c).additions + fileChangeCounts(c).deletions,
@@ -67,9 +68,10 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     ...reverted.map((c) => ({
       id: `reverted-${c.id}`,
       testid: 'changes-reverted',
-      icon: 'file-code' as const,
+      icon: compact ? REVERTED_ICON : ('file-code' as const),
       file: c.path,
-      kind: '',
+      dir: splitChangePath(c.path).dir,
+      kind: REVERTED_KIND,
       lines: -1,
       label: '',
       reverted: true
@@ -101,17 +103,42 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   let paneHeight = $state(0)
   const beside = $derived(paneWidth >= BESIDE_MIN_WIDTH && paneHeight < BESIDE_MAX_HEIGHT)
   // svelte-ignore state_referenced_locally
-  let listWidth = $state(readListSize(localStore(), `${layoutKey}-beside`) ?? 260)
+  let listWidth = $state(readListSize(localStore(), `${layoutKey}-beside`) ?? BESIDE_LIST_WIDTH)
+
+  // File takes the free width, Status is as wide as its words, Path shows in a wide pane (UX-207).
+  const columns = $derived(changeColumns(rows.map((r) => String(r.kind)), listBoxWidth))
+
+  // "Restore" puts the file back in one click and says so; when that cannot be done it says why and offers the Recycle Bin (UX-209).
+  let restoring = $state(false)
+  let restored = $state<string | null>(null)
+  let restoreFailed = $state<{ id: Id; text: string } | null>(null)
+  const failedHere = $derived(pickedReverted !== null && restoreFailed?.id === pickedReverted.id ? restoreFailed : null)
+  async function restore(entry: RevertedChange): Promise<void> {
+    if (!onrestore) return onopenrecyclebin?.(entry.id)
+    restoring = true
+    try {
+      const outcome = await onrestore(entry.id)
+      if (outcome.restored) {
+        restoreFailed = null
+        restored = restoredText(entry.path)
+      } else {
+        restored = null
+        restoreFailed = { id: entry.id, text: restoreFailedText(outcome.message) }
+      }
+    } finally {
+      restoring = false
+    }
+  }
 
   // Why a button is grey, in words (the tooltip and the line beside the buttons).
-  const revertReason = $derived(revertReasonText(changes.length > 0, selected !== null))
-  const editorReason = $derived(!selected ? 'Select a changed file first.' : selected.kind === 'deleted' ? 'A deleted file cannot be opened.' : null)
+  const revertReason = $derived(pickedReverted ? null : revertReasonText(changes.length > 0, selected !== null))
+  const editorReason = $derived(pickedReverted ? null : !selected ? 'Select a changed file first.' : selected.kind === 'deleted' ? 'A deleted file cannot be opened.' : null)
   // The agent changed none: say so, then what Git knows or why there is nothing more (UX-152, UX-187).
   const nothingChanged = $derived(changes.length === 0 && reverted.length === 0)
   const note = $derived(nothingChanged ? gitNote(gitCount, gitTracked) : null)
   const reason = $derived(revertReason ?? editorReason)
 
-  // The right-click menu of a row: Revert on a changed row, "Restore from the Recycle Bin" on a reverted one (UX-169).
+  // The right-click menu of a row: Revert on a changed row, "Show in the Recycle Bin" on a reverted one (UX-169).
   const menu = new ContextMenu()
   const rowItems = (id: string) =>
     changeRowItems({
@@ -127,7 +154,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
 </script>
 
 {#snippet listPanel()}
-  <div class="list">
+  <div class="list" bind:clientWidth={listBoxWidth}>
     <ListView
       {columns}
       {rows}
@@ -140,16 +167,23 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
         const picked = ids[0]?.startsWith('reverted-') ?? false
         revertedPick = picked ? Number(ids[0].slice('reverted-'.length)) : null
         selectedId = ids[0] && !picked ? Number(ids[0]) : null
+        restored = null
       }}
     >
       {#snippet cell(row, col)}
         {#if col.key === 'file'}
-          {@const parts = splitChangePath(String(row.file))}
-          {@const name = splitForMiddleEllipsis(parts.name)}
+          {@const name = splitForMiddleEllipsis(splitChangePath(String(row.file)).name)}
           <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : `${row.file} (${String(row.kind).toLowerCase()})`} data-testid="changes-file">
             <b class="name"><span class="head" data-testid="changes-name-head">{name.head}</span><span class="tail" data-testid="changes-name-tail">{name.tail}</span></b>
-            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text" title={REVERTED_LABEL}>{REVERTED_KIND}</span>{:else}<span class="kind">{row.kind}</span>{#if parts.dir}<span class="dir">{parts.dir}</span>{/if}{/if}
           </span>
+        {:else if col.key === 'kind'}
+          {#if row.reverted}
+            <span class="kind reverted" data-testid="changes-reverted-text" title={REVERTED_LABEL}>{row.kind}</span>
+          {:else}
+            <span class="kind" data-testid="changes-status" data-status={String(row.kind).toLowerCase()}>{row.kind}</span>
+          {/if}
+        {:else if col.key === 'dir'}
+          <span class="dir" class:reverted={row.reverted} title={String(row.file)} data-testid="changes-path">{row.dir}</span>
         {:else}
           <span class="t" class:reverted={row.reverted} data-testid="changes-lines">{row.label}</span>
         {/if}
@@ -166,8 +200,12 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
       {/key}
     {:else if pickedReverted}
       <div class="hint undone" data-testid="changes-undone">
-        <span data-testid="changes-undone-text">{UNDONE_TEXT}</span>
-        {#if onopenrecyclebin}<Button data-testid="changes-restore" onclick={() => onopenrecyclebin?.(pickedReverted.id)}>Restore...</Button>{/if}
+        <span data-testid="changes-undone-text">{failedHere ? failedHere.text : UNDONE_TEXT}</span>
+        {#if onrestore && !failedHere}
+          <Button data-testid="changes-restore" disabled={restoring} onclick={() => void restore(pickedReverted)}>{RESTORE_LABEL}</Button>
+        {:else if onopenrecyclebin}
+          <Button data-testid="changes-restore" data-mode="open-bin" onclick={() => onopenrecyclebin?.(pickedReverted.id)}>{OPEN_BIN_LABEL}</Button>
+        {/if}
       </div>
     {:else}
       <div class="hint">Select a changed file to view its diff.</div>
@@ -179,10 +217,13 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   {#if note?.kind === 'files'}
     <div class="note" data-testid="changes-git-note">
       {note.text}
-      {#if onopengit}<button type="button" class="link" data-testid="changes-open-git" onclick={onopengit}>Open Git</button>{/if}
+      {#if onopengit}<button type="button" class="link" data-testid="changes-open-git" onclick={onopengit}>{OPEN_GIT_LINK}</button>{/if}
     </div>
   {:else if note}
     <div class="note" data-testid="changes-git-note">{note.text}</div>
+  {/if}
+  {#if restored}
+    <div class="note" data-testid="changes-restored" role="status">{restored}</div>
   {/if}
   {#if reverted.length > 0 && onopenrecyclebin}
     <div class="note line" data-testid="changes-reverted-note">
@@ -254,7 +295,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     overflow: hidden;
     white-space: nowrap;
   }
-  /* The name is never cut at its front or its end: the folder and the change word shrink first, then the middle of the stem gets an ellipsis. */
+  /* The name is never cut at its front or its end: the middle of the stem gets an ellipsis. */
   .name {
     flex: 0 1 auto;
     display: flex;
@@ -271,12 +312,15 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   .tail {
     flex: none;
   }
-  .kind,
+  .kind {
+    white-space: nowrap;
+  }
   .dir {
-    flex: 0 100 auto;
+    display: block;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--w7-text-muted);
   }
   .reverted,

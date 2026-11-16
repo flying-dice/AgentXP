@@ -176,13 +176,13 @@ export function verdictLine(verdict: ReviewVerdict, comments: readonly Pick<Revi
 }
 
 /**
- * The status bar: "2 files changed", and "Showing redirect.ts (1 of 2 changed files)" when one of several files is open (UX-77,
+ * The status bar: "2 files changed", and "redirect.ts (file 1 of 2 changed files)" when one of several files is open (UX-77,
  * UX-131, UX-167, UX-191: the file's name says which one). With a single changed file there is nothing to explain.
  * `path` is the open file; its name (not the folder) goes in the label.
  */
 export const filesStatusLabel = (total: number, shown: number, path?: string): string => {
   const name = path ? (path.split(/[\\/]/).filter(Boolean).pop() ?? path) : ''
-  return shown > 0 && total > shown ? (name ? `Showing ${name} (${shown} of ${total} changed files)` : `Showing ${shown} of ${total} changed files`) : `${plural(total, 'file', 'files')} changed`
+  return shown > 0 && total > shown ? (name ? `${name} (file ${shown} of ${total} changed files)` : `File ${shown} of ${total} changed files`) : `${plural(total, 'file', 'files')} changed`
 }
 
 export interface StatusField {
@@ -215,3 +215,14 @@ export const SEVERITY_HELP = 'Minor is the usual choice for a suggestion. Use Bl
 
 /** The tooltip of the "+" in the gutter. */
 export const addCommentTitle = (line: number | undefined): string => (line === undefined ? 'There is no line to comment on here' : 'Add a comment on this line')
+
+/** The line under the verdict once comments went to a chat: where they are and what happens next (UX-211). Null while none were sent. */
+export const sentCommentsLine = (sent: number): string | null =>
+  sent <= 0 ? null : `${sent} ${sent === 1 ? 'comment' : 'comments'} sent to the chat. Waiting for the assistant.`
+
+/** The words of the toolbar button that sends comments: it says "Comments sent" when everything open went out (UX-211). */
+export const sendButtonText = (open: number, sent: number): string => (open === 0 && sent > 0 ? 'Comments sent' : 'Send comments to chat...')
+
+/** The tooltip of that button. */
+export const sendButtonTitle = (open: number, sent: number): string =>
+  open > 0 ? 'Send the open comments to a chat, so the agent can fix them' : sent > 0 ? 'All comments were sent to the chat.' : 'There are no open comments to send.'

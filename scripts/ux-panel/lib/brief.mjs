@@ -5,7 +5,7 @@ import { asksQuestion } from './tasktext.mjs'
 /** The record template (also in FACILITATOR.md). */
 export const RECORD_TEMPLATE = `# <task> <title> - <level>
 - Build: <leave this line as it is; stop fills it in>
-- Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
+- Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <stop fills it in>
 - Context: fresh panelist, previous tasks: none
 - Answer: <the text after 'Answer:' in the final report; tasks without a question: not asked>
 - SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
@@ -56,11 +56,11 @@ export function buildBrief({ task, level, taskInfo, panelist, round = 'r1', out,
     checkCmd,
     '```',
     '',
-    'The verdict (PASS, FAIL or MANUAL, steps against the budget) is the result. Never go back and change your report or act in the app because of it. If the command refuses (for example the answer is too short), fix the command line, not the report.',
+    'The verdict (PASS, FAIL or MANUAL, steps against the budget) is the result. A result other than PASS shows no reason on purpose (H-119): the facilitator reads it from check.json. Never go back and change your report or act in the app because of it, and never run `check` again to try another answer. After the verdict do not open the session folder, `check.json` or any file of it (H-113); you write the record from what you saw and from your own report. If the command refuses (for example the answer is too short), fix the command line, not the report.',
     '',
     '## 4. Record',
     '',
-    `Write \`${record}\` with this template, copying your final report into it (the numbered step list; Errors, Help and Frustrations from your report; SEQ line exactly as in your report). The Result line copies the first lines that \`check\` printed. The Evidence line is the repository path shown in the template, not the temporary folder.`,
+    `Write \`${record}\` with this template, copying your final report into it (the numbered step list; Errors, Help and Frustrations from your report; SEQ line exactly as in your report). The Result line copies the first line that \`check\` printed (when it shows no reason, write \`(reason kept for the facilitator)\`); leave Time as it is, \`stop\` measures it from the log (H-109), and a record that still has a template placeholder is refused. The Evidence line is the repository path shown in the template, not the temporary folder.`,
     '',
     '```',
     RECORD_TEMPLATE.replaceAll('<round>', round).replaceAll('<task>', task).replace('<title>', taskInfo?.title ?? '<title>').replaceAll('<level>', level),
@@ -73,7 +73,7 @@ export function buildBrief({ task, level, taskInfo, panelist, round = 'r1', out,
     `mkdir -p docs/ux/panel/${round} && cp -r ${folder} docs/ux/panel/${round}/${task}-${level}-session`,
     '```',
     '',
-    '`stop` reads your `- SEQ:` line into check.json, adds "Steps: N of M" to the Result line when it is missing, and shuts the app down. If it refuses because the record contradicts itself, correct the record (not the rating) and run it again.',
+    '`stop` reads your `- SEQ:` line into check.json (it refuses without `--record`, H-111), adds "Steps: N of M" and "Time: N min" to the Result line, and shuts the app down. If it refuses because the record contradicts itself, correct the record (not the rating) and run it again.',
     '',
     `Your last message to the orchestrator: the path \`${record}\` and the Result line of the record. Nothing else.`
   ].join('\n')

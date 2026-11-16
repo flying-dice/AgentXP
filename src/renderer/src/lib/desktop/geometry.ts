@@ -101,18 +101,29 @@ export function fitInsideWorkArea(b: Bounds, area: Size, barHeight: number): Bou
 
 const boundsOverlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
+/** A new window that does not fit beside the window it came from starts this far right of and below it, on top, so its whole title bar (28 px) stays visible (UX-203). */
+export const OPENER_CASCADE = 28
+
+/** A second chat window is never narrower than this (UX-203). */
+export const CHAT_MIN_WIDTH = 560
+
 /**
- * Where a window that the user opened from another window belongs (UX-181): whole inside the work area, and beside the window it
- * came from (to the right, then below, then left, then above, else squeezed into the room that is left) instead of over it.
- * `opened` is where it is now; the result equals `opened` when nothing has to move. `opener` is null when no window had the focus
- * (or it was minimized).
+ * Where a window that the user opened from another window belongs (UX-181, UX-203): whole inside the work area, and beside the window
+ * it came from (to the right, then below, then left, then above, else squeezed into the room that is left) instead of over it. When
+ * the work area has no room beside it, the new window is cascaded 24 px right of and below the window it came from and is on top.
+ * A chat opened from a chat gets the size of that chat (at least 560 px wide). `opened` is where it is now; the result equals
+ * `opened` when nothing has to move. `opener` is null when no window had the focus (or it was minimized).
  */
-export function placeBesideOpener(app: AppKind, opened: Bounds, opener: Bounds | null, area: Size, barHeight: number, openCount: number): Bounds {
-  const fitted = fitInsideWorkArea(opened, area, barHeight)
+export function placeBesideOpener(app: AppKind, opened: Bounds, opener: Bounds | null, area: Size, barHeight: number, openCount: number, openerApp?: AppKind): Bounds {
+  const sameAsOpener = app === 'chat' && openerApp === 'chat' && opener !== null
+  const size = sameAsOpener ? { width: Math.max(CHAT_MIN_WIDTH, opener.width), height: opener.height } : { width: opened.width, height: opened.height }
+  const fitted = fitInsideWorkArea({ ...opened, ...size }, area, barHeight)
   if (!opener || !boundsOverlap(fitted, opener)) return fitted
   const minY = barHeight > 0 ? minYBelow(barHeight) : 0
-  const beside = placeWindow(app, openCount, opener, area, { width: fitted.width, height: fitted.height }, minY)
-  return boundsOverlap(beside, opener) ? fitted : fitInsideWorkArea(beside, area, barHeight)
+  const beside = fitInsideWorkArea(placeWindow(app, openCount, opener, area, { width: fitted.width, height: fitted.height }, minY), area, barHeight)
+  // A second chat keeps the size of the first: it is never squeezed to fit beside it, it cascades instead.
+  if (!boundsOverlap(beside, opener) && !(sameAsOpener && beside.width < fitted.width)) return beside
+  return fitInsideWorkArea({ ...fitted, x: opener.x + OPENER_CASCADE, y: opener.y + OPENER_CASCADE }, area, barHeight)
 }
 
 /** The Help window: 760 x 520, or the work area minus 40 px when that is less, never narrower than 640 px (UX-165). */

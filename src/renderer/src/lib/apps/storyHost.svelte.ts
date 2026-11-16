@@ -70,6 +70,7 @@ export class StoryHost implements DesktopHost {
   chatProgress = (): string | null => null
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
+  returnToOpener = async (): Promise<void> => {}
 
   /** Projects ejected through this host, newest first (the real desktop keeps the same list). */
   recentlyRemoved = $state.raw<RemovedProject[]>([])

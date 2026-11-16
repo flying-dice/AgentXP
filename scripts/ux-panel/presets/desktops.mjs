@@ -53,7 +53,7 @@ export const presets = {
   /**
    * The default agent has a bad command; a chat was started and the assistant does not answer. A working scripted agent
    * ("Helper assistant") is in the Agents list but not the default, so that "choose another agent" can be done (H-97). The
-   * built-in Claude Code entry stays in the list too.
+   * built-in Claude Code entry is removed (H-107): it cannot start here and looked usable.
    */
   async 'bad-default-agent'(ctx) {
     const bad = await ctx.eval(async () => {
@@ -62,6 +62,11 @@ export const presets = {
       return a.id
     })
     const helper = await ctx.useScript('demo', { makeDefault: false, name: 'Helper assistant' })
+    // H-107: the built-in Claude Code row starts with `npx`, which is not installed here, so it looked usable and failed. Remove it:
+    // every row that is left either fails for the stated reason or answers.
+    await ctx.eval(async () => {
+      for (const a of await window.agent7.agents.list()) if (a.name === 'Claude Code') await window.agent7.agents.remove(a.id)
+    })
     const d = await ctx.createDesktop({ title: 'Fix login redirect', projects: [ctx.fixtures.loginApp], agentId: bad })
     const attempt = await ctx.eval(({ id, bad }) => window.agent7.desktop.newChat(id, bad).then(() => 'chat opened', (e) => String(e?.message ?? e)), { id: d.id, bad }).catch((e) => String(e))
     await ctx.answerFolderPicker(ctx.fixtures.docsSite)

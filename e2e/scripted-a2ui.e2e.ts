@@ -64,7 +64,7 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
     it('shows the surface in a side panel of the chat, with a tab and a chat row', async () => {
       await chat().send('Open a sidebar please')
       await see.visible(chat().sidebar)
-      await see.text(chat().sidebarTabs.first(), 'Form')
+      await see.text(chat().sidebarTabs.first(), 'Notes') // the tab and the row use one name: the title the agent gave (UX-216)
       await see.visible(chat().sidebar.getByTestId('a2ui-textbox'))
       await see.visible(chat().agentMessage('The sidebar is open.'))
       await settled()
@@ -82,6 +82,10 @@ describe('scripted agent: A2UI surfaces (a2ui.json)', () => {
       await see.visible(chat().agentMessage('Got action send from send on notes; hello Bob.'))
       await see.text(chat().sidebar.getByTestId('a2ui-sent'), 'Sent. The agent answered: Got action send from send on notes')
       await settled()
+      // UX-216: the line stays under the form until the person edits a field again.
+      await see.visible(chat().sidebar.getByTestId('a2ui-sent'))
+      await chat().sidebar.getByTestId('a2ui-textbox').fill('Carol')
+      await see.count(chat().sidebar.getByTestId('a2ui-sent'), 0)
     })
 
     it('closing the tab hides the sidebar; Open on the chat row brings it back', async () => {

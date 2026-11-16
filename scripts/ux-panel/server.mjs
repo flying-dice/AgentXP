@@ -5,12 +5,11 @@
 // Run it under a display: `xvfb-run -a node scripts/ux-panel/server.mjs --session <dir> --task T01.1`
 import { createServer } from 'node:http'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { ACTION_COMMANDS, normalizeKey, parseArgs, scrollReport, scrollWarning } from './lib/args.mjs'
+import { ACTION_COMMANDS, enterNote, normalizeKey, parseArgs, scrollReport, scrollWarning, tooltipNote } from './lib/args.mjs'
 import { launchApp, makeContext, repoRoot, sleep } from './lib/context.mjs'
 import { readBuild } from './lib/build.mjs'
-import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
+import { createDocsSite, createLoginApp, sandboxParent, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
 import { countSteps, createLog, readLog, REPLAY_TASKS } from './lib/log.mjs'
 import { windowKind, windowLine } from './lib/windows.mjs'
 import { serve } from './lib/rpc.mjs'
@@ -20,7 +19,7 @@ import { runPreset } from './presets/index.mjs'
 const { flags } = parseArgs(process.argv.slice(2), { session: 'string', task: 'string', level: 'string', socket: 'string', admin: 'string', 'no-preset': 'bool', port: 'string' })
 const sessionDir = resolve(flags.session ?? '.')
 mkdirSync(join(sessionDir, 'shots'), { recursive: true })
-const tmp = mkdtempSync(join(tmpdir(), 'a7ux-'))
+const tmp = mkdtempSync(join(sandboxParent(), 'a7ux-')) // H-104: not under /tmp when the home folder is writable
 const socketPath = flags.socket ?? join(tmp, 'ux.sock')
 const adminPath = flags.admin ?? join(tmp, 'admin.sock')
 const log = createLog(join(sessionDir, 'log.jsonl'))
@@ -179,6 +178,15 @@ const SCROLL_POSITION_SOURCE = ({ x, y }) => {
   return root && root.scrollHeight > root.clientHeight ? { top: root.scrollTop, max: root.scrollHeight - root.clientHeight } : null
 }
 
+/** H-112: the nearest `title` attribute at the point and up its parents (what the browser would show as a tooltip). Runs in the page. */
+const TOOLTIP_SOURCE = ({ x, y }) => {
+  for (let el = document.elementFromPoint(x, y); el; el = el.parentElement) {
+    const title = el.getAttribute?.('title')
+    if (title) return title
+  }
+  return null
+}
+
 // ---------------------------------------------------------------- panelist commands
 const HOVER_WAIT_MS = 1200 // H-103: a tooltip needs about 500 ms and the screenshot adds 250 ms
 /** H-102: after a click, wait this long for a window that the click opens (the app switches to a new window after 300 ms). */
@@ -194,6 +202,7 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
     let text = ''
     let page
     let scrollBefore = null
+    let typeNote = null
     const windowsBefore = live()
     if (cmd === 'windows') {
       text = ['Windows:', ...(await windowList())].join('\n')
@@ -236,6 +245,7 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
         await page.mouse.wheel(0, args[2])
       } else if (cmd === 'type') {
         await page.keyboard.type(args[0], { delay: 10 })
+        typeNote = enterNote(args[0]) // H-118
       } else if (cmd === 'key') {
         await page.keyboard.press(normalizeKey(args[0]))
       }
@@ -255,6 +265,13 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
       page = await currentPage().catch(() => null)
     }
     const lines = [text]
+    if (typeNote) lines.push(typeNote)
+    if (cmd === 'move' && page) {
+      // H-112: the browser's own tooltip (a `title` attribute) is not in a screenshot; say what it reads.
+      const title = await page.evaluate(TOOLTIP_SOURCE, { x: args[0], y: args[1] }).catch(() => null)
+      const note = tooltipNote(title)
+      if (note) lines.push(note)
+    }
     if (cmd === 'scroll' && page) {
       // H-78: say what the scroll did (the unit is raw pixels) and warn about a tiny one.
       const after = await page.evaluate(SCROLL_POSITION_SOURCE, { x: args[0], y: args[1] }).catch(() => null)

@@ -12,14 +12,14 @@
   import ChatStrip from '../apps/shared/ChatStrip.svelte'
   import { chatStripHidden } from './chatStrip.svelte'
   import { chatAboutTitle } from '../app/session/folderLabel'
-  import { PANE_MIN_WIDTH, suggestionsFor } from './chatPane'
+  import { paneMaxWidth, suggestionsFor } from './chatPane'
   import { asideCwd } from '@shared/desktop-views'
   import type { DesktopController } from './DesktopController.svelte'
 
   interface Props {
     window: AppWindowState
     desktop: DesktopController
-    /** Width of the window's client area (the pane never takes more than 60 % of it). */
+    /** Width of the window's client area (the pane never takes more than 60 % of it, nor so much that the app has under 380 px). */
     available: number
   }
 
@@ -29,7 +29,7 @@
   untrack(() => desktop.loadPane(w.id))
 
   const pane = $derived(desktop.paneOf(w.id))
-  const maxWidth = $derived(Math.max(PANE_MIN_WIDTH, Math.floor(available * 0.6)))
+  const maxWidth = $derived(paneMaxWidth(available))
 
   /** The session shown: what this panel just started (or ended) until `desktop.changed` says the same, else the window's. */
   let local = $state<number | null>(null)
@@ -75,7 +75,7 @@
 
 {#if pane.collapsed}
   {#if !chatStripHidden.has(w.id)}
-    <ChatStrip testid="chat-pane-toggle" {news} title="Chat (Ctrl+Shift+C): ask about what you are looking at" onopen={() => desktop.setChatPane(w.id, true)} />
+    <ChatStrip testid="chat-pane-toggle" {news} label={w.app === 'code' ? 'Ask about this file' : undefined} title="Chat (Ctrl+Shift+C): ask about what you are looking at" onopen={() => desktop.setChatPane(w.id, true)} />
   {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->

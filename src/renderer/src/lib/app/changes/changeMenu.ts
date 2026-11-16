@@ -14,11 +14,11 @@ export interface ChangeRowMenuOptions {
 
 /**
  * The menu of one row of the Changes list. A changed row offers Revert and Open in editor; a reverted row offers
- * "Restore from the Recycle Bin", where the file waits (UX-169: the way back is where a user looks, on the row).
+ * "Show in the Recycle Bin", where the file waits (the Restore button beside the list puts it back in one click) (UX-169: the way back is where a user looks, on the row).
  */
 export function changeRowItems({ change, onrevert, onopeneditor, onopenrecyclebin }: ChangeRowMenuOptions): MenuItemDef[] {
   if (!change) {
-    return onopenrecyclebin ? [{ id: 'changes-ctx-restore', testid: 'changes-ctx-restore', label: '&Restore from the Recycle Bin', icon: 'recycle', title: 'Open the Recycle Bin, where the reverted file waits.', action: onopenrecyclebin }] : []
+    return onopenrecyclebin ? [{ id: 'changes-ctx-restore', testid: 'changes-ctx-restore', label: '&Show in the Recycle Bin', icon: 'recycle', title: 'Open the Recycle Bin, where the reverted file waits.', action: onopenrecyclebin }] : []
   }
   const items: MenuItemDef[] = []
   if (onrevert) items.push({ id: 'changes-ctx-revert', testid: 'changes-ctx-revert', label: '&Revert', icon: 'recycle', title: 'Put the file back to how it was before the agent changed it.', action: () => onrevert(change) })

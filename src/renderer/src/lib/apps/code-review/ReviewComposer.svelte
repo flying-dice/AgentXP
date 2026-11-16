@@ -75,6 +75,19 @@
     border: 1px solid var(--w7-panel-border);
     font: var(--w7-font);
   }
+  /* The box that has the keyboard shows it: a blue border around the whole box and a blue caret (UX-211). */
+  .composer:focus-within {
+    border-color: #3d7bad;
+    box-shadow: 0 0 0 1px #3d7bad;
+  }
+  .composer :global(textarea) {
+    caret-color: #0a58ca;
+  }
+  .composer :global(textarea:focus) {
+    border-color: #1c6ed6;
+    border-top-color: #1c6ed6;
+    box-shadow: 0 0 0 1px #1c6ed6;
+  }
   .where {
     color: var(--w7-text-muted);
     font-family: var(--w7-font-mono);

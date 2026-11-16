@@ -225,7 +225,7 @@ describe('Code app git awareness', () => {
   it('the Changes tab never says the chat changed nothing beside a Git list: it says what the chat did and names the Git count with a link (UX-152, UX-187)', async () => {
     const code = ctx.desktop.code()
     await code.showChanges()
-    await see.text(code.frame.getByTestId('changes-git-note'), 'Git shows 2 changed files from before.')
+    await see.text(code.frame.getByTestId('changes-git-note'), 'Git shows 2 changed files from before:')
     await see.count(code.frame.getByTestId('changes-item'), 0)
     const listText = await code.frame.getByTestId('changes-list').innerText()
     expect(listText).toContain('No uncommitted changes from this chat.')
@@ -243,11 +243,11 @@ describe('Code app git awareness', () => {
     await see.attribute(code.frame.getByTestId('code-open'), 'aria-label', 'Open a file')
   })
 
-  it('the collapsed chat strip is a tab with the word Chat; Focus mode hides it and the Focus bar brings the chat back (UX-153)', async () => {
+  it('the collapsed chat strip is a tab that says Ask about this file; Focus mode hides it and the Focus bar brings the chat back (UX-153)', async () => {
     const code = ctx.desktop.code()
     const strip = code.frame.getByTestId('chat-pane-toggle')
     await see.visible(strip)
-    await see.text(strip, 'Chat')
+    await see.text(strip, 'Ask about this file')
     expect((await strip.boundingBox())!.width).toBeGreaterThanOrEqual(40)
     await code.frame.getByTestId('code-focus-toggle').click()
     await see.gone(strip)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chooseAgentFirst, defaultActionId, describeProblem, detailWithLead, startNextStep, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
+import { ENDED_TEXT, TECHNICAL_HEADING, chooseAgentFirst, defaultActionId, describeProblem, detailWithLead, startNextStep, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
 
 const stopped = { kind: 'agent-stopped', message: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed' } as const
 const notFound = { kind: 'start-failed', message: "The agent could not start. The program 'not-a-real-command' was not found.", detail: 'spawn not-a-real-command ENOENT' } as const
@@ -14,7 +14,7 @@ describe('describeProblem', () => {
     expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.')
     expect(result.text).not.toMatch(/ACP/)
     expect(result.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Event Viewer'])
-    expect(result.detail).toBe('The agent stopped unexpectedly. Your request was not finished.\n\nACP connection closed')
+    expect(result.detail).toBe('The agent stopped unexpectedly. Your request was not finished.\n\n------------------------------\nTechnical details\nACP connection closed')
   })
 
   it('an agent that stopped with nothing to send again offers Restart', () => {
@@ -47,6 +47,14 @@ describe('describeProblem', () => {
     expect(shown.detail?.startsWith('The agent could not start.')).toBe(true)
     expect(shown.detail).toContain('Internal error')
     expect(shown.detail).not.toMatch(/^Internal error/)
+    // UX-196: the sentence, then what to do, then the protocol lines under "Technical details".
+    const lines = shown.detail!.split('\n')
+    expect(lines[0]).toBe(shown.text)
+    expect(lines[1]).toBe('What to do: open Agents and choose another agent.')
+    expect(lines.indexOf(TECHNICAL_HEADING)).toBeGreaterThan(1)
+    expect(lines.indexOf('Internal error')).toBeGreaterThan(lines.indexOf(TECHNICAL_HEADING))
+    // Even with no technical text at all, Details are the plain sentence and what to do, never empty or "Internal error".
+    expect(describeProblem({ error: null, problem: { ...early, detail: '' }, failed: null })!.detail).toBe(`${shown.text}\nWhat to do: open Agents and choose another agent.`)
     expect(startNextStep({ message: 'The agent could not start. The folder is gone.' })).toBe('')
   })
 
@@ -76,12 +84,20 @@ describe('describeProblem', () => {
 
   it('an agent ended from Task Manager says so and offers Restart', () => {
     const ended = { kind: 'agent-ended', message: 'The agent program was stopped.', detail: 'x' } as const
-    expect(describeProblem({ error: null, problem: ended, failed: null })).toMatchObject({ text: 'The agent program was stopped.', actions: [{ id: 'restart', label: 'Restart' }] })
+    expect(describeProblem({ error: null, problem: ended, failed: null })).toMatchObject({ text: ENDED_TEXT, notice: true, actions: [{ id: 'restart', label: 'Restart' }] })
+  })
+
+  it('after the user ended the program, Restart only starts it: nothing is sent again, also with a failed message (UX-201)', () => {
+    const ended = { kind: 'agent-ended', message: 'The agent program was stopped.', detail: 'x' } as const
+    const shown = describeProblem({ error: null, problem: ended, failed: { unanswered: false } })!
+    expect(shown.actions.map((a) => a.id)).toEqual(['restart'])
+    expect(shown.text).toBe('You ended the agent program. Click Restart to use the chat again.')
+    expect(shown.status).toBe('You ended the agent program. Click Restart.')
   })
 
   it('a dropped connection without a known problem is a failed send with Send again', () => {
     const result = describeProblem({ error: 'ACP connection closed', problem: null, failed: { unanswered: true } })!
-    expect(result.text).toBe('Your message could not be sent because the connection to the agent dropped.')
+    expect(result.text).toBe('Your message could not be sent because the connection to the agent dropped. Click Send again to try again.')
     expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'details'])
   })
 
@@ -102,7 +118,7 @@ describe('describeProblem', () => {
     const result = describeProblem({ error: null, problem: notFound, failed: null })!
     expect(result.status).toBe("The agent could not start. The program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent.")
     const raw = describeProblem({ error: 'spawn x ENOENT', problem: null, failed: null })!
-    expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'The agent could not start.\n\nspawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
+    expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'The agent could not start.\n\n------------------------------\nTechnical details\nspawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
   })
 
   it('names the agent in the start failure: "My assistant could not start: the program x was not found."', () => {
@@ -115,8 +131,29 @@ describe('describeProblem', () => {
 
   it('a timeout is plain too, with Send again for a message nobody answered', () => {
     const result = describeProblem({ error: 'Request timed out after 60000ms', problem: null, failed: { unanswered: true } })!
-    expect(result).toMatchObject({ text: 'The agent did not answer in time.', status: 'The agent did not answer in time. Click Send again to try again.' })
+    expect(result).toMatchObject({ text: 'The agent did not answer in time. Click Send again to try again.', status: 'No answer in time. Click Send again.' })
     expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'details'])
+  })
+
+  it('a step that timed out inside the agent work is not "the agent did not answer" (UX-195)', () => {
+    const error = 'Timed out after 5183 ms waiting for "Standup notes"'
+    const result = describeProblem({ error, problem: null, failed: { unanswered: false } })!
+    expect(result.text).toBe('A step took too long (waiting for the page). Click Send again to try again.')
+    expect(result.status).toBe('A step took too long. Click Send again.')
+    expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'details'])
+    expect(defaultActionId(result.actions)).toBe('send-again')
+    expect(result.detail?.startsWith('A step took too long')).toBe(true)
+  })
+
+  it('a message that was answered with steps and then timed out stopped before it finished, and offers Send again (UX-195)', () => {
+    const result = describeProblem({ error: 'Request timed out after 60000ms', problem: null, failed: { unanswered: false } })!
+    expect(result.text).toBe('The agent stopped before it finished. Click Send again to try again.')
+    expect(result.actions[0]).toEqual({ id: 'send-again', label: 'Send again' })
+  })
+
+  it('every status line of a failed turn fits the status field (40 letters)', () => {
+    for (const error of ['Request timed out after 60000ms', 'Timed out after 5183 ms waiting for "x"', 'ACP connection closed', 'JSON-RPC error -32603'])
+      for (const unanswered of [true, false]) expect(describeProblem({ error, problem: null, failed: { unanswered } })!.status.length).toBeLessThanOrEqual(40)
   })
 
   it('keeps the sentence of the agent when one is left after the protocol words', () => {
@@ -125,7 +162,7 @@ describe('describeProblem', () => {
   })
 
   it('other technical text is replaced by one sentence and kept behind Details', () => {
-    expect(describeProblem({ error: 'JSON-RPC error -32603', problem: null, failed: null })).toMatchObject({ text: 'Something went wrong while the agent worked.', detail: 'Something went wrong while the agent worked.\n\nJSON-RPC error -32603' })
+    expect(describeProblem({ error: 'JSON-RPC error -32603', problem: null, failed: null })).toMatchObject({ text: 'Something went wrong while the agent worked.', detail: 'Something went wrong while the agent worked.\n\n------------------------------\nTechnical details\nJSON-RPC error -32603' })
   })
 })
 
@@ -133,6 +170,7 @@ describe('plainError', () => {
   it('keeps the agent words and says nothing about plain text', () => {
     expect(plainError('Rate limit', false)).toBeNull()
     expect(plainError('ACP connection closed', false)?.text).toBe('The agent stopped before it finished.')
+    expect(plainError('ACP connection closed', false, true)?.text).toBe('The agent stopped before it finished. Click Send again to try again.')
   })
 })
 
@@ -155,11 +193,22 @@ describe('sendStateOf', () => {
     expect(sendStateOf('m1', failed, false)).toBe('sent')
     expect(sendStateOf('m1', null, true)).toBe('sent')
   })
+  it('marks a cut-off message Stopped once and its repeat Sent again (UX-201)', () => {
+    const marks = { stoppedIds: new Set(['m1']), resentIds: new Set(['m2']) }
+    expect(sendStateOf('m1', null, false, marks)).toBe('stopped')
+    expect(sendStateOf('m2', null, false, marks)).toBe('sent-again')
+    expect(sendStateOf('m3', null, false, marks)).toBe('sent')
+    // A repeat that failed again is the failed one: it reads Stopped, not Sent again.
+    expect(sendStateOf('m2', { messageId: 'm2', unanswered: false }, true, marks)).toBe('stopped')
+  })
 })
 
 describe('problemDetails and logLines', () => {
   it('appends the last log lines to the technical text', () => {
-    expect(problemDetails('ACP connection closed', ['10:42:07 ACP session/prompt'])).toBe('ACP connection closed\n\nLast lines of the log:\n10:42:07 ACP session/prompt')
+    expect(problemDetails('ACP connection closed', ['10:42:07 ACP session/prompt'])).toBe('ACP connection closed\n\n------------------------------\nTechnical details\nLast lines of the log:\n10:42:07 ACP session/prompt')
+    // A text that already has the heading gets the log under it, without a second heading.
+    const detail = detailWithLead('One.', 'tech')
+    expect(problemDetails(detail, ['a'])).toBe(`${detail}\n\nLast lines of the log:\na`)
     expect(problemDetails(null, [])).toBe('There is nothing more to show.')
   })
 
@@ -186,8 +235,9 @@ describe('defaultActionId (UX-160)', () => {
     expect(id({ error: null, problem: early, failed: null })).toBe('restart')
     expect(id({ error: null, problem: { ...early, failures: 2 }, failed: null })).toBe('choose-agent')
     expect(chooseAgentFirst({ message: 'The agent could not start. The folder is gone.', failures: 3 })).toBe(true)
-    expect(detailWithLead('One.\nTwo.', 'tech')).toBe('One.\n\ntech')
-    expect(detailWithLead('One.', null)).toBeNull()
+    expect(detailWithLead('One.\nTwo.', 'tech')).toBe('One.\n\n------------------------------\nTechnical details\ntech')
+    expect(detailWithLead('One.', null)).toBe('One.')
+    expect(detailWithLead('One.', 'tech', 'Do this.')).toBe('One.\nDo this.\n\n------------------------------\nTechnical details\ntech')
   })
   it('is none when there is nothing to retry', () => {
     expect(id({ error: 'Rate limit', problem: null, failed: null })).toBeNull()

@@ -24,7 +24,7 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import type { TabDef } from '../../kit/organisms/TabControl'
   import { showMessageBox } from '../../kit/organisms/messageBox'
-  import { chatRows, chatSelection, contextState, formatTokens, initialTab, processRows, terminalRows } from './processRows'
+  import { chatRows, chatSelection, contextState, CHATS_HINT, formatTokens, initialTab, processRows, terminalRows } from './processRows'
 
   let { window: win, host }: AppProps<'agent-manager'> = $props()
 
@@ -108,6 +108,7 @@
   const chatColumns: ListColumn[] = [
     { key: 'title', header: 'Chat', width: 220 },
     { key: 'agent', header: 'Agent', width: 90 },
+    { key: 'window', header: 'Window', width: 64 },
     { key: 'status', header: 'Status' },
     { key: 'context', header: 'Context', width: 70, align: 'right' }
   ]
@@ -118,7 +119,9 @@
     { key: 'cwd', header: 'Working folder' }
   ]
   const termRows = $derived<ListRow[]>(terminalRows(terminals, sessions).map((t) => ({ ...t, icon: 'terminal' as const })))
-  const chats = $derived(chatRows(sessions, agents, (id) => host.chatProgress(id)))
+  /** The chats that have a window on this desktop. */
+  const openChats = $derived(new Set(host.state.windows.flatMap((w) => (w.view.app === 'chat' ? [w.view.sessionId] : []))))
+  const chats = $derived(chatRows(sessions, agents, (id) => host.chatProgress(id), (id) => openChats.has(id)))
   const chatListRows = $derived<ListRow[]>(chats.map((c) => ({ ...c, icon: 'session' as const })))
 
   // The Chats list always has a selected row, so that "Open chat" is on when the window opens (UX-180).
@@ -252,10 +255,10 @@
               <ReasonNote testid="agent-manager-reason" reason={selectedProcess ? null : 'Select a program first'} />
             </div>
           {:else if t.id === 'chats'}
+            <p class="hint" data-testid="agent-manager-hint">{CHATS_HINT}</p>
             <div class="grid">
               <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" onactivate={switchTo} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
-            <p class="hint" data-testid="agent-manager-hint">Double-click a chat to open it.</p>
             <div class="buttons">
               <Button data-testid="agent-manager-open-chat" {...reasonFor(openReason, 'Open the window of this chat')} onclick={() => selectedChatRow && switchTo(selectedChatRow)}>Open chat</Button>
               <Button data-testid="agent-manager-end-task" {...reasonFor(endTaskReason, 'Stop the step that this chat is working on')} onclick={endTask}>End Task</Button>

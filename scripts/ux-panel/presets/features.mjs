@@ -75,6 +75,19 @@ async function reviewDesktop(ctx, options) {
   return desktop
 }
 
+/** T25.3 (H-115): the Code Review window is open but nobody has reviewed yet; the chat is the IDE chat and its agent is `chat-review`. */
+async function chatReviewDesktop(ctx) {
+  ctx.fixtures.reviewNotes = createReviewNotes(ctx.fixtures.base)
+  const { desktop } = await projectDesktop(ctx, { script: 'chat-review', projects: ['reviewNotes'], open: [] })
+  const chat = await ctx.newChat(desktop.id)
+  const window = await desktop.page.evaluate(({ id, root }) => window.agent7.desktop.openReview(id, root), { id: desktop.id, root: await driveLetter(ctx, desktop.id) })
+  await desktop.page.getByTestId('window-code-review').getByTestId('review-ask-agent').waitFor({ timeout: 30_000 })
+  await ctx.dismissDialogs(desktop.id)
+  Object.assign(ctx.state, { sessionId: chat.sessionId, chatWindowId: chat.windowId, reviewSessionId: window.view.sessionId, reviewWindowId: window.id })
+  ctx.saveState()
+  return desktop
+}
+
 async function asideDesktop(ctx, options) {
   ctx.fixtures.asideProject = createAsideProject(ctx.fixtures.base)
   const { desktop } = await projectDesktop(ctx, { script: 'aside', projects: ['asideProject'], open: [] })
@@ -102,6 +115,12 @@ export const presets = {
   async 'review-ready'(ctx, options) {
     await reviewDesktop(ctx, options)
     return 'Code Review open with two reviewer comments; a chat is open'
+  },
+
+  /** J25 (T25.3): a chat (the IDE chat, agent chat-review) and an empty Code Review window; the chat is asked to do the review. */
+  async 'review-chat'(ctx) {
+    await chatReviewDesktop(ctx)
+    return 'Code Review open without remarks; the chat reviews when asked'
   },
 
   /** J27: the Code window shows index.ts with the chat pane collapsed (option paneOpen: expanded). Agent: aside.json. */

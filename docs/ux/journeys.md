@@ -743,7 +743,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
   - The reviewer is the same agent that wrote the change: the user cannot tell that it is a second opinion (trust).
 - **Success measure.** P2 names the blocking comment and its line in under 1 minute. P1 finds the verdict without help.
 - **E2E coverage.** `code-review.e2e.ts` (outline, threads, verdict, margin, F7, split). Missing: errors, ejected drive, binary files, keyboard-only.
-- **Docs and panel.** Manual topic `manuals/code-review.md`. Panel tasks: T25.1, T25.2 in `tasks.md`.
+- **Docs and panel.** Manual topic `manuals/code-review.md`. Panel tasks: T25.1, T25.2, T25.3 (the chat you ask does the review, UX-193) in `tasks.md`.
 
 ## J26 - Send review comments to a chat, and comment yourself
 

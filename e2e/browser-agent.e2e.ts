@@ -64,25 +64,28 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The turn ended: the yellow bar is gone at once, not 20 seconds later (UX-156).
+    // The turn ended: the bar says that the agent stopped, for a few seconds, and then goes (UX-214; it does not wait 20 seconds, UX-156).
+    await see.text(browser.getByTestId('browser-agent-bar-text'), 'The agent stopped using this page.')
+    await see.count(browser.getByTestId('browser-agent-takeover'), 0)
     await see.gone(browser.getByTestId('browser-agent-bar'))
 
-    // A second job: one click on Take over while the agent works. The bar says the user has control, Take over reads "Taken over",
+    // A second job: one click on Take over while the agent works. The bar says the user has the page
     // and the desktop is in the user's control.
     await chat.send(`Use the chat app at ${web.origin}/ again`)
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-    await browser.getByTestId('browser-agent-takeover').click()
-    await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
-    await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
-    await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
-    // UX-143: the sentence says what the click did to every tool, in the tooltip of the button and on the top bar, with a Resume button.
+    // UX-143: the tooltip of the button says what the click does to every tool.
     await see.attribute(browser.getByTestId('browser-agent-takeover'), 'title', 'Stop the agent here and use the page yourself.')
-    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume.')
+    await browser.getByTestId('browser-agent-takeover').click()
+    // UX-214: the bar stays and says what to do: the page is the user's, the agent waits, Give back lets it go on.
+    await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have the page. The agent waits. Click Give back to let it continue.')
+    await see.visible(browser.getByTestId('browser-agent-giveback'))
+    await see.count(browser.getByTestId('browser-agent-takeover'), 0)
+    await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
+    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you click Resume.')
     await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
-    // Resume is one button, on the top bar; the page bar only shows the state.
-    await see.count(browser.getByTestId('browser-agent-giveback'), 0)
-    await ctx.desktopPage.getByTestId('topbar-give-back').click()
+    // Give back in the bar and Resume on the top bar are the same action.
+    await browser.getByTestId('browser-agent-giveback').click()
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'false')
 
     await see.text(browser.getByTestId('browser-assistant-status'), 'The agent read this page')
@@ -163,5 +166,20 @@ describe('Browser agent: a local chat web app', () => {
     const article = ctx.desktop.window('help').getByTestId('help-article')
     await see.attribute(article, 'data-topic', 'browser')
     await see.eventually(async () => expect(await article.evaluate((el) => (el as HTMLElement).scrollTop)).toBeGreaterThan(0))
+  })
+
+  it('the page narrows when the chat pane opens, so the pane covers none of it (UX-214)', async () => {
+    const browser = ctx.desktop.window('browser')
+    const aside = ctx.desktop.aside('browser')
+    await ctx.desktop.closeWindow('help') // the previous test opened it over the Browser
+    if (await aside.hide.isVisible()) await aside.hide.click()
+    await see.visible(aside.edgeToggle)
+    const wide = (await browser.getByTestId('browser-page-1').boundingBox())!.width
+    await aside.edgeToggle.click()
+    await see.visible(aside.panel)
+    await see.eventually(async () => expect((await browser.getByTestId('browser-page-1').boundingBox())!.width).toBeLessThan(wide))
+    const page = (await browser.getByTestId('browser-page-1').boundingBox())!
+    const pane = (await aside.panel.boundingBox())!
+    expect(page.x + page.width).toBeLessThanOrEqual(pane.x + 1)
   })
 })

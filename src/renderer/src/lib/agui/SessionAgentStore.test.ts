@@ -204,6 +204,75 @@ describe('SessionAgentStore', () => {
       expect(calls).toEqual(['restart', 'retry'])
     })
 
+    // The agent answered with a step, then the turn failed: the message is not "unanswered".
+    const halfway = (input: RunAgentInput): object[] => [
+      { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId },
+      { type: EventType.TEXT_MESSAGE_START, messageId: 'a1', role: 'assistant' },
+      { type: EventType.TEXT_MESSAGE_CONTENT, messageId: 'a1', delta: 'Working on it' },
+      { type: EventType.TEXT_MESSAGE_END, messageId: 'a1' },
+      { type: EventType.RUN_ERROR, message: 'Request timed out' }
+    ]
+
+    it('Send again after a cut-off turn keeps the first message and marks it Stopped once and the repeat Sent again (UX-201)', async () => {
+      api.script = halfway
+      await store.send('start the long job')
+      const first = store.failedSend!
+      expect(first.unanswered).toBe(false)
+      api.script = (input) => bookends(input)
+      expect(await store.resend()).toBe(true)
+      const users = store.messages.filter((m) => m.role === 'user')
+      expect(users).toHaveLength(2)
+      expect([...store.stoppedIds]).toEqual([first.messageId])
+      expect([...store.resentIds]).toEqual([users[1].id])
+      expect(calls).toEqual([])
+    })
+
+    it('Send again after a message nobody answered marks nothing: the failed copy is replaced', async () => {
+      api.script = failing
+      await store.send('go')
+      api.script = (input) => bookends(input)
+      await store.resend()
+      expect(store.stoppedIds.size).toBe(0)
+      expect(store.resentIds.size).toBe(0)
+    })
+
+    it('Reconnect does not send the failed request again and says which one it is (UX-195)', async () => {
+      api.script = halfway
+      await store.send('start the long job')
+      api.script = (input) => bookends(input)
+      await store.reconnect()
+      expect(store.notResent).toBe('start the long job')
+      expect(calls).toEqual(['restart'])
+      expect(store.messages.filter((m) => m.role === 'user')).toHaveLength(1)
+      // A new send clears the line.
+      await store.send('hello')
+      expect(store.notResent).toBeNull()
+    })
+
+    it('says nothing about the request when the user ended the program on purpose (UX-201)', async () => {
+      api.script = halfway
+      await store.send('start the long job')
+      api.script = (input) => bookends(input)
+      await store.reconnect({ announce: false })
+      expect(store.notResent).toBeNull()
+    })
+
+    it('has nothing to say about a Reconnect when no request failed', async () => {
+      api.script = (input) => bookends(input)
+      await store.reconnect()
+      expect(store.notResent).toBeNull()
+    })
+
+    it('"Start a new chat" marks this chat as continued until it runs again (UX-201)', async () => {
+      api.script = failing
+      await store.send('go')
+      store.markContinued()
+      expect(store.continued).toBe(true)
+      api.script = (input) => bookends(input)
+      await store.send('again')
+      expect(store.continued).toBe(false)
+    })
+
     it('Edit takes the message back and returns it for the composer', async () => {
       api.script = failing
       await store.send('go', ['/a.txt'])

@@ -96,9 +96,20 @@ export const TAKE_OVER_BUTTON_TIP = 'Stop the agent here and use the page yourse
 /** How long "The agent read this page." stays in the yellow bar after the read is done (UX-128). */
 export const READ_DONE_MS = 5000
 
-/** What the yellow bar over the page says: that the user has control, that the agent finished reading, or what the agent does now. */
-export function agentBarText({ userInControl, readDone, activity }: { userInControl: boolean; readDone: boolean; activity: string | null }): string {
-  if (userInControl) return 'You have control of this page. The agent stops and asks before it uses the page again. Click Resume at the top to let it go on.'
+/** How long the bar stays after the agent's last action, saying that the agent stopped (UX-214). */
+export const STOPPED_MS = 5000
+
+/** What the bar says while the user has the page (UX-214): the agent waits, and the way to let it go on. */
+export const TAKEN_OVER_TEXT = 'You have the page. The agent waits. Click Give back to let it continue.'
+/** The tooltip of the Give back button of the bar. */
+export const GIVE_BACK_BUTTON_TIP = 'Let the agent use the page again.'
+/** What the bar says for a few seconds after the agent's last action. */
+export const STOPPED_TEXT = 'The agent stopped using this page.'
+
+/** What the yellow bar over the page says: that the user has the page, that the agent finished reading or stopped, or what it does now. */
+export function agentBarText({ userInControl, readDone, activity, stopped = false }: { userInControl: boolean; readDone: boolean; activity: string | null; stopped?: boolean }): string {
+  if (userInControl) return TAKEN_OVER_TEXT
   if (readDone) return 'The agent read this page.'
+  if (stopped && activity === null) return STOPPED_TEXT
   return `Agent is using this page: ${activity ?? 'working'}`
 }

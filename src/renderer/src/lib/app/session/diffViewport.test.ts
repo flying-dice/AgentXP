@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DIFF_ROW_PX, diffViewportPx, isLongChange, previewIsTight, wholeChangePx } from './diffViewport'
+import { DIFF_ROW_PX, canShowMore, diffViewportPx, growRoomPx, isLongChange, previewIsTight, wholeChangePx } from './diffViewport'
 
 describe('diffViewportPx', () => {
   it('gives a short change 9 rows (UX-177)', () => {
@@ -39,5 +39,28 @@ describe('isLongChange', () => {
   it('is true above 14 rows', () => {
     expect(isLongChange(13)).toBe(false)
     expect(isLongChange(14)).toBe(true)
+  })
+})
+
+describe('growRoomPx', () => {
+  it('adds what the chat above can give up, keeping one row', () => {
+    expect(growRoomPx(100, 200)).toBe(100 + 200 - 32)
+    expect(growRoomPx(100, 20)).toBe(100)
+  })
+})
+
+describe('canShowMore (UX-194)', () => {
+  it('is false in a short window where the click would change nothing', () => {
+    expect(canShowMore(100, growRoomPx(100, 40), 5)).toBe(false)
+  })
+  it('is true when the chat above can give room for at least one more row', () => {
+    expect(canShowMore(100, growRoomPx(100, 120), 5)).toBe(true)
+  })
+  it('is false when the preview already shows the whole change', () => {
+    expect(canShowMore(6 * DIFF_ROW_PX, 400, 5)).toBe(false)
+  })
+  it('stops at the limit of a very long change', () => {
+    expect(canShowMore(400, 900, 500)).toBe(false)
+    expect(canShowMore(290, 900, 500)).toBe(true)
   })
 })

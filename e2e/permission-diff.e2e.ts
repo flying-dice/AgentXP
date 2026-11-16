@@ -46,4 +46,34 @@ describe('permission box: edit of an existing file', () => {
     expect((await chat.transcript.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(28)
     await see.text(chat.frame.getByTestId('chat-status'), 'Waiting for your answer')
   })
+
+  // UX-194: a click on the link always changes the screen. In the default window the chat above the box is already at one row, so the
+  // box cannot grow: the click opens the whole change in a box over the chat, at the full height of the window.
+  it('"Show the whole change" shows every row of the change, in a box when the window has no room to grow (UX-194)', async () => {
+    const chat = ctx.desktop.chat()
+    const more = chat.frame.getByTestId('permission-detail-more')
+    await see.text(more, 'Show the whole change')
+    await see.attribute(more, 'data-mode', 'dialog')
+    const before = (await chat.frame.getByTestId('permission-detail-view').boundingBox())?.height ?? 0
+    await more.click()
+    const whole = chat.frame.getByTestId('permission-whole-change')
+    await see.visible(whole)
+    const view = chat.frame.getByTestId('permission-whole-change-view')
+    await see.eventually(async () => expect((await view.boundingBox())?.height ?? 0).toBeGreaterThan(before))
+    // The answers still wait: Allow and Deny are in the window, and Esc closes the whole change, it does not answer.
+    await see.visible(chat.frame.getByTestId('permission-hint'))
+    await chat.frame.getByTestId('permission-whole-change-close').click()
+    await see.gone(whole)
+    await see.visible(chat.permissionDialog)
+  })
+
+  it('in a window with room the link grows the box, reads "Show fewer lines", and the chat above keeps one row (UX-194)', async () => {
+    const chat = ctx.desktop.chat()
+    await chat.frame.getByTestId('window-maximize').click()
+    const more = chat.frame.getByTestId('permission-detail-more')
+    // A big window shows the whole change at once: the link is not offered when a click could show nothing more.
+    await see.eventually(async () => expect((await chat.frame.getByTestId('permission-detail-view').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(180))
+    await see.count(more, 0)
+    await see.visible(chat.permissionDialog)
+  })
 })

@@ -20,11 +20,11 @@ describe('changeRowItems', () => {
     expect(open.disabled).toBe(true)
     expect(open.title).toContain('deleted')
   })
-  it('a reverted row offers Restore from the Recycle Bin', () => {
+  it('a reverted row offers Show in the Recycle Bin', () => {
     const onopenrecyclebin = vi.fn()
     const items = changeRowItems({ change: null, onopenrecyclebin })
     expect(items).toHaveLength(1)
-    expect(items[0].label).toContain('Restore from the Recycle Bin')
+    expect(items[0].label).toContain('Show in the Recycle Bin')
     items[0].action?.()
     expect(onopenrecyclebin).toHaveBeenCalled()
   })

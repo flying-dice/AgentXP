@@ -42,13 +42,13 @@ The status area of the top bar always shows one of these:
 
 - **Working** – An agent works. The text names what it does now.
 - **Paused: no agent will act until you resume.** – You paused the desktop.
-- **You are in control. All tools ask first until you resume.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser. If some tools need an app that is not open, the status adds a sentence that names the apps, for example **Terminal and Browser are not open.**
+- **You are in control. All tools ask first until you click Resume. This is not saved.** – You selected **Ask before every action**, or you clicked **Take over** in the Browser. If some tools need an app that is not open, the status adds a sentence that names the apps, for example **Terminal and Browser are not open.**
 - **Waiting for you: 2 requests to approve** – An agent waits for your answer to a request.
 - **Idle** – No agent works.
 
-When you take control, Agent7 stops the step that runs now. The Activity list shows **You are in control. The agent asks first.** when a step was running. If nothing was running, it shows **You are in control. All tools ask first until you resume.** Below it, the list says **This is not saved. To keep a tool on Ask, change it in Control Center.** The words **Control Center** are a link to the Permissions page. The check box is for this desktop only. A setting in Control Center stays. The chat status reads **Waiting for you**, not **Working**. The button **Resume** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action**.
+When you take control, Agent7 stops the step that runs now. The Activity list shows **You are in control. The agent asks first.** when a step was running. If nothing was running, it shows **You are in control. All tools ask first until you click Resume. This is not saved.** Below it, the list says **To keep a tool on Ask, change it in Control Center.** The words **Control Center** are a link to the Permissions page. The check box is for this desktop only. A setting in Control Center stays. The chat status reads **Waiting for you**, not **Working**. The button **Resume** shows next to the status. Click it to return to the settings of Control Center. You can also clear the check box **Ask before every action (this session only)**.
 
-The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask**, **Run commands: Ask (Terminal is closed)**. While **Ask before every action** is on, a chip that is not on Ask in Control Center reads **Ask (now)**. See **[Using Control Center](control-centre.md)** for what the part in brackets means. Point to a chip to read its tooltip. Click a chip to change the setting.
+The tool chips show one pattern, for example **Read files: Allow**, **Write files: Ask first**, **Run commands: Ask first**. While **Ask before every action** is on, a chip that is not on Ask in Control Center reads **Ask first (now)**. See **[Using Control Center](control-centre.md)** for what the chips mean. Point to a chip to read its tooltip. Click a chip to change the setting.
 
 ## 5 - Troubleshooting
 

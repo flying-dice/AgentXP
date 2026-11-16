@@ -244,7 +244,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T17.2 - It does not start**
 - Scenario: "You started a chat and the assistant does not answer. Find out why and tell me what to do. You may change the assistant setting of the program if that helps."
-- Start state: the default agent has a bad command (`not-a-real-command`). The Agents list also has a working scripted agent, "Helper assistant" (not the default), and Claude Code (H-97).
+- Start state: the default agent has a bad command (`not-a-real-command`). The Agents list also has a working scripted agent, "Helper assistant" (not the default). The built-in Claude Code row is removed from this fixture, because it cannot start without `npx` and looked usable (H-97, H-107): every row that is left either fails for the stated reason or answers.
 - Success check: the answer names the wrong command or "not found", points to the Agents page and says what to do (edit or change it, choose another agent, set a default, new chat; H-42); the panelist did not restart the app.
 - Answer: why the assistant does not answer and what to do.
 - Min 3. Budget 9 / 12.
@@ -372,6 +372,14 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Answer: the verdict and the number of remarks (2).
 - Min 2. Budget 6 / 8.
 
+**T25.3 - The chat reviews** (H-115, round 9 re-test of UX-193)
+- Scenario: "Ask the assistant in the chat to review the changes in this project and leave its remarks in the review window. When it has finished, tell me how many remarks it left and where you were taken afterwards."
+- Start state: `review-notes` with a chat open (the IDE chat) and the Code Review window open, with no remarks yet; scripted agent `chat-review` (`scripts/ux-panel/scripts/chat-review.json`), which calls `review_open`, `review_list_changes`, `review_read_diff`, `review_add_comment` twice and `review_submit` through the chat's own session. UX-193: a chat does this through `review_open` from any chat, and the verdict is handed back to it.
+- Success check: two remarks exist in the review with the agent (the chat) as author; the verdict is set; no chat message lists the remarks as text in place of the tools; after `review_submit` the IDE chat window is the focused window; the answer says 2 remarks and the chat.
+- Answer: how many remarks the chat left (2) and where the panelist was taken afterwards (the chat).
+- Min 4 (type the request, Send, read the banner, read the chat). Budget 12 / 16.
+- Run at both levels in round 9 with T25.1, T25.2, T26.1 and T26.2.
+
 ### J26 Send review comments to a chat, and comment yourself
 
 **T26.1 - Pass the remarks on**
@@ -486,7 +494,7 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 | J22 | T22.1, T22.2 |
 | J23 | T23.1, T23.1b, T23.2 |
 | J24 | T24.1, T24.2 |
-| J25 | T25.1, T25.2 |
+| J25 | T25.1, T25.2, T25.3 |
 | J26 | T26.1, T26.2 |
 | J27 | T27.1, T27.2 |
 | J28 | T28.1, T28.2 |

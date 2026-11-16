@@ -29,3 +29,23 @@ export function previewIsTight(availablePx: number, changeRows: number): boolean
 
 /** True when the change has more rows than the preview shows at most, so "Show all N lines" is offered. */
 export const isLongChange = (changeRows: number): boolean => changeRows + 1 > DIFF_MAX_ROWS
+
+/** The chat above the approval box keeps this much (one row) when the preview grows (UX-177). */
+export const MIN_TRANSCRIPT_PX = 32
+
+/**
+ * The tallest the preview can get right now: what it has, plus what the chat above it can give up (it keeps one row). Both are
+ * measured in pixels from the window (UX-194).
+ */
+export function growRoomPx(previewPx: number, transcriptPx: number): number {
+  return previewPx + Math.max(0, transcriptPx - MIN_TRANSCRIPT_PX)
+}
+
+/**
+ * Whether "Show the whole change" can show more rows: the click would make the preview at least one row taller. When it cannot
+ * (a short window), the link is not shown, because a click that changes nothing is worse than no link (UX-194).
+ */
+export function canShowMore(previewPx: number, roomPx: number, changeRows: number): boolean {
+  const wanted = wholeChangePx(changeRows)
+  return Math.min(wanted, roomPx) >= previewPx + DIFF_ROW_PX
+}

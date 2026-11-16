@@ -89,7 +89,7 @@
       {#if page === 'agents'}
         <AgentsPage {host} />
       {:else if page === 'permissions'}
-        <PermissionsPage {host} selectedRow={win.view.row ?? null} />
+        <PermissionsPage {host} windowId={win.id} selectedRow={win.view.row ?? null} />
       {:else if page === 'appearance'}
         <AppearancePage />
       {:else}
@@ -110,6 +110,7 @@
     display: flex;
     flex-direction: column;
     background: var(--w7-window);
+    container: cc / inline-size;
   }
   .row {
     flex: 1;
@@ -176,5 +177,33 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+    /* A short window never cuts a page off: the page scrolls (UX-198). */
+    overflow-y: auto;
+  }
+  /* A narrow window (the chat pane is open beside it): the pages go in a strip on top, so the page keeps the whole width (UX-198). */
+  @container cc (max-width: 639px) {
+    .row {
+      flex-direction: column;
+    }
+    .tasks {
+      width: auto;
+      padding: 4px 8px;
+      border-right: 0;
+      border-bottom: 1px solid #b5c4dc;
+    }
+    .caption {
+      display: none;
+    }
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 4px;
+    }
+    .task {
+      width: auto;
+    }
+    .content {
+      padding: 8px 12px 10px;
+    }
   }
 </style>

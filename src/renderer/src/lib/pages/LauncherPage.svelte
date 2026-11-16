@@ -47,6 +47,9 @@
   // svelte-ignore state_referenced_locally
   let dialogOpen = $state<'new' | 'rename' | null>(dialog)
   let helpOpen = $state(false)
+  /** The user chose a row (click, arrow keys or a new desktop): from then on the list never moves the selection (UX-202). */
+  // svelte-ignore state_referenced_locally
+  let picked = selectedId !== null
   /** Desktops that Connect was pressed for and whose window is not up yet. */
   let opening = $state<number[]>([])
   /** Desktops just created whose window did not open: the row says to click Connect. */
@@ -66,8 +69,9 @@
     const changed = loaded && listKey(next) !== listKey(desktops)
     desktops = next
     if (changed) checkAgents()
-    // Nothing selected yet (or the selected desktop is gone): a desktop that waits for approval, else the most recent one.
-    if (selected === null || !next.some((d) => d.id === selected)) selected = initialSelection(next)
+    // Until the user chooses a row, the selection is the first row that needs the user (approval, then an agent problem), else the most recent one.
+    // It follows the list while it loads and while the agent check reports a problem (UX-202).
+    if (!picked || selected === null || !next.some((d) => d.id === selected)) selected = initialSelection(next)
   }
 
   onMount(() => {
@@ -143,6 +147,7 @@
     dialogOpen = null
     try {
       const created = await api.launcher.create(input)
+      picked = true
       selected = created.id
       // The new desktop opens at once; when that fails the row says to click Connect.
       ready = [...ready, created.id]
@@ -216,7 +221,10 @@
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = sorted[Math.max(0, Math.min(sorted.length - 1, at + (event.key === 'ArrowDown' ? 1 : -1)))]
-      if (next) selected = next.id
+      if (next) {
+        picked = true
+        selected = next.id
+      }
     } else if (event.key === 'Delete' && current) {
       event.preventDefault()
       void remove()
@@ -254,7 +262,7 @@
         <!-- A listbox needs option children: with no desktops the list is plain. -->
         <div class="list w7-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
           {#each sorted as desktop (desktop.id)}
-            <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} ready={ready.includes(desktop.id)} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
+            <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} ready={ready.includes(desktop.id)} selected={desktop.id === selected} onselect={() => ((picked = true), (selected = desktop.id))} onactivate={() => void connect()} />
           {:else}
             <p class="empty" data-testid="launcher-empty">{loaded ? 'No desktops yet. A desktop is a workspace where an agent works on your projects. Click New... to create one.' : 'Loading...'}</p>
             {#if loaded}<p class="empty" data-testid="launcher-empty-help">{EMPTY_LAUNCHER_HELP}</p>{/if}

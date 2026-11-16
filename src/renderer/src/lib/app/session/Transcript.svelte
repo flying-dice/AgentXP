@@ -289,7 +289,7 @@
       <div class="row"><StopNotice reason="cancelled" /></div>
     {/if}
     {#if problem}
-      <div class="row"><ErrorRow message={problem.text} actions={problem.actions} onaction={onproblem} details={problemDetails} /></div>
+      <div class="row"><ErrorRow message={problem.text} actions={problem.actions} onaction={onproblem} details={problemDetails} notice={problem.notice} /></div>
     {/if}
     {#if restart === 'working' || (restart === 'done' && !problem)}
       <div class="row restart" role="status" data-testid="chat-restart-status" data-state={restart}>

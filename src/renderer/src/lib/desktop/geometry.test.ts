@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, placeBesideOpener, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, placeBesideOpener, CHAT_MIN_WIDTH, OPENER_CASCADE, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -135,5 +135,24 @@ describe('placeBesideOpener (UX-181)', () => {
   it('pulls a window that runs to the bottom of the screen inside the work area', () => {
     const b = placeBesideOpener('chat', { x: 700, y: 400, width: 500, height: 600 }, null, area, 68, 2)
     expect(inside(b)).toBe(true)
+  })
+  it('cascades 28 px from the opener when the work area has no room beside it (UX-203)', () => {
+    const full = { x: 0, y: 72, width: 1280, height: 658 }
+    const b = placeBesideOpener('code', { x: 80, y: 100, width: 820, height: 600 }, full, area, 68, 2, 'explorer')
+    expect(b.x).toBe(full.x + OPENER_CASCADE)
+    expect(b.y).toBe(full.y + OPENER_CASCADE)
+    expect(inside(b)).toBe(true)
+  })
+  it('gives a second chat the size of the first, at least 560 px wide (UX-203)', () => {
+    const first = { x: 20, y: 72, width: 600, height: 560 }
+    const roomy = placeBesideOpener('chat', { x: 150, y: 100, width: 450, height: 400 }, first, area, 68, 2, 'chat')
+    expect(roomy).toMatchObject({ width: 600, height: 560 })
+    expect(covers(roomy, first)).toBe(false)
+    // No room for the same size beside it: the second chat cascades at the same size, not squeezed.
+    const wide = { x: 100, y: 72, width: 600, height: 560 }
+    const cascaded = placeBesideOpener('chat', { x: 150, y: 100, width: 450, height: 400 }, wide, area, 68, 2, 'chat')
+    expect(cascaded).toMatchObject({ x: wide.x + OPENER_CASCADE, y: wide.y + OPENER_CASCADE, width: 600, height: 560 })
+    const narrow = placeBesideOpener('chat', { x: 150, y: 100, width: 450, height: 400 }, { ...first, width: 400 }, area, 68, 2, 'chat')
+    expect(narrow.width).toBe(CHAT_MIN_WIDTH)
   })
 })

@@ -97,10 +97,9 @@ If the agent cannot start, a red row in the chat says why and names the program.
 - **Open Agents** – Opens Control Center at **Agents**, where you can correct the command of the agent.
 - **Choose another agent** – Opens Control Center at **Agents**. Make another agent the default, come back, and click **Try again**. When the program was not found, and after the agent failed a second time, this is the highlighted button, because trying again cannot help.
 
-The row says what to do next. For a program that is not there: **Check the command in Agents, or choose another agent.** For a program that stops at once: **Check that it is installed, or choose another agent.** When you made another agent the default and it could not start either, the row says **The default agent is now** and the name, and **It could not start either.** The technical text behind **Details...** starts with the same plain sentence.
-- **Details...** – Shows the technical text under the buttons. Click **Hide details** to close it.
+The row says what to do next. For a program that is not there: **Check the command in Agents, or choose another agent.** For a program that stops at once: **Check that it is installed, or choose another agent.** When you made another agent the default and it could not start either, the row says **The default agent is now** and the name, and **It could not start either.** - **Details...** – Shows more under the buttons. The first line is the same plain sentence as the row. For a program that did not start, a second line says **What to do: open Agents and choose another agent.** The technical text is below a line, under the words **Technical details**. Click **Hide details** to close it.
 
-While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat with your text** replaces **Restart and send again**, so that you do not send your message into the same failure again. The new chat opens with your text in its message box. Press Enter to send it. The old chat keeps its error and says **Continued in a new chat.** After **Restart**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
+While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat with your text** replaces **Restart and send again**, so that you do not send your message into the same failure again. The new chat opens with your text in its message box. Press Enter to send it. The old chat shows **Continued in a new chat.** in grey, with no red box, and its status bar says the same. After **Restart** or **Reconnect**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. **Restart and send again** sends the request for you, and the chat says **Your request was sent again.** Your first message then says **Stopped** and the repeat says **Sent again**, so you see each try once. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
 
 ## 4 - Controls Reference
 
@@ -132,19 +131,21 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Browser steps | A line under a Thinking line that only used the Browser. It names the first and the last step. | `chat-activity-detail` |
 | Tool call card | One tool call. The attribute `data-status` gives the state. | `tool-call-card` |
 | Show, Hide | Opens or closes the details of a card. | `tool-call-toggle` |
-| Stop notice | Tells why a turn ended. | `chat-stop-notice` |
-| Stop notice: agent program | After your own Stop, says that the agent program is ended in Task Manager, on the Processes tab. | `chat-stop-notice-program` |
-| Stop notice: Open Task Manager | A link in that line. It opens Task Manager on the Processes tab. | `chat-stop-notice-taskmgr` |
-| Error | Shows an error in plain words. Buttons under it fix the problem. | `chat-error` |
+| Stop notice | Tells why a turn ended. After your own Stop it says **You stopped this reply. The agent waits for your next message.** | `chat-stop-notice` |
+| Stop notice text | The first sentence of the notice. | `chat-stop-notice-text` |
+| Stop notice: agent program | The second line, shown while the agent program still runs: **To end the agent program, use File > End the agent program.** | `chat-stop-notice-program` |
+| Error | Shows an error in plain words. Buttons under it fix the problem. When you ended the agent program yourself, it is a grey notice with an information icon, and the attribute `data-notice` is true. | `chat-error` |
 | Error text | The words of the error. | `chat-error-text` |
 | Error buttons | **Send again**, **Restart**, **Restart and send again**, **Try again**, **Open Agents**, **Choose another agent**, **Start a new chat**, **Details...**. The name ends with the id of the button. The button that fixes the problem, for example **Restart**, is highlighted. | `chat-error-*` |
 | Event Viewer (error link) | The link in the sentence **The details are in Event Viewer.** under the buttons of a crash. | `chat-error-event-viewer` |
-| Error details | The technical text, under the buttons, after you click **Details...**. | `chat-error-details-text` |
+| Error details | The plain sentence first, then what to do, then the technical text under **Technical details**, under the buttons, after you click **Details...**. | `chat-error-details-text` |
 | Restart | Says **Restarting the agent...** with a bar, and then **The agent is running again.** The attribute `data-state` is `working` or `done`. | `chat-restart-status` |
 | Not sent | Marks your message that did not reach the agent. | `chat-message-not-sent` |
 | Send again | Sends the message that was not sent. | `chat-message-send-again` |
 | Edit | Takes the message back into the box so that you can change it. | `chat-message-edit` |
 | Stopped | Marks your message that the agent started on and then stopped. | `chat-message-stopped` |
+| Sent again | Marks the repeat of a message that was stopped. | `chat-message-sent-again` |
+| Request sent again | The line **Your request was sent again.** after **Restart and send again**. | `chat-resent-note` |
 | Newer messages | Shows above the message box when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
 | Card note | A line under a tool card, for example "Denied by you" or "The agent could not finish this step." | `tool-call-note` |
 | Show in Event Viewer (step) | A link under a failed step. It opens Event Viewer on the event of that step. | `tool-call-show-event` |
@@ -160,7 +161,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Reopened note | Tells once that the chat was opened again after the program restarted. | `chat-reopened-note` |
 | Dismiss note | Hides the reopened note. | `chat-reopened-dismiss` |
 | Reconnect | Starts the agent again when it is disconnected. | `chat-reconnect` |
-| Sent | A drawn form says "Sent. The agent answered: ..." (the start of the next reply) for 3 seconds after you use a button on it. | `a2ui-sent` |
+| Sent | A drawn form says "Sent. The agent answered: ..." (the start of the next reply) until you change a field of the form again. | `a2ui-sent` |
 | Composer | Holds the controls to write. | `chat-composer` |
 | Message box | The input for your message. | `chat-composer-input` |
 | Mode | Opens the list of modes. Each entry has a short description. | `chat-mode` |
@@ -178,11 +179,11 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Diff | Shows the diff of the selected file. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the selected file in Code. | `changes-open-editor` |
-| Reverted row | A change that was reverted stays in the list, in grey, with the word "Reverted". Point to it to read "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
+| Reverted row | A change that was reverted stays in the list, in grey, with the word "Reverted". Point to it to read "Reverted. Select it and click Restore to put the file back." | `changes-reverted` |
 | Reverted text | The word "Reverted" on a reverted row. Its tooltip has the full words. | `changes-reverted-text` |
 | Row menu: Revert | Right-click a changed file: undoes the change, after a question. | `changes-ctx-revert` |
 | Row menu: Open in editor | Right-click a changed file: shows the file in Code. Dimmed for a deleted file. | `changes-ctx-open-editor` |
-| Row menu: Restore from the Recycle Bin | Right-click a reverted file: opens the Recycle Bin, where you restore it. | `changes-ctx-restore` |
+| Row menu: Show in the Recycle Bin | Right-click a reverted file: opens the Recycle Bin on it. To put it back in one click, select the row and click **Restore**. | `changes-ctx-restore` |
 | Menu: undo revert | Edit menu: takes the file that you reverted last out of the Recycle Bin. It shows only right after a revert. | `chat-menu-undo-revert` |
 | Open Recycle Bin | The link in the one line above the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
 | Changes pane | The whole pane: the list, the diff and the buttons. | `changes-pane` |
@@ -203,10 +204,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Move to | Opens the list of places. | `chat-surface-move` |
 | Move to Inline, Sidebar, Window | Moves the form. | `chat-surface-move-*` |
 | Working folder | Shows the folder of the chat. | `chat-cwd` |
-| Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, for example "The agent stopped. Click Restart, then send your message again." | `chat-problem-line` |
+| Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, in a short line that fits, for example "The agent stopped. Click Send again." | `chat-problem-line` |
 | Connection state | Shows the state of the connection. While a permission box is open it reads **Waiting for your answer**. | `chat-status` |
 | Not responding link | Shows in the status bar when the chat has worked for more than 20 seconds. It opens Task Manager on the Processes tab. | `chat-end-agent-link` |
-| Continued note | Says **Continued in a new chat.** in the old chat after **Start a new chat**. | `chat-continued-note` |
+| Continued note | Says **Continued in a new chat.** in grey in the old chat after **Start a new chat**. The old chat shows no red box. | `chat-continued-note` |
 | Permission box | Asks if the agent can act. It is a part of the chat, above the message box. It takes up to half of the chat window. Only the lines of a change scroll inside it, and the two choices stay in the window. | `permission-dialog` |
 | Allow or refuse | The two choices. The name ends with the id of the choice. A allows. Enter denies, because Deny has the focus. | `permission-option-*` |
 | Keys line | Tells which keys answer: Enter denies, A allows. | `permission-hint` |
@@ -256,7 +257,9 @@ To start a new chat, follow the steps below:
 
 To send a message, type it in the message box and click **Send**.
 
-To stop the answer of the chat, click **Stop**. To end the agent program itself, choose **File -> End the agent program...** or **Tools -> Task Manager...**. Task Manager opens on the **Processes** tab. When the chat has worked for more than 20 seconds, the status bar adds the link **Not responding? End the agent program**.
+To stop the answer of the chat, click **Stop**. The chat says **You stopped this reply. The agent waits for your next message.** To end the agent program itself, choose **File -> End the agent program...** or **Tools -> Task Manager...**. Task Manager opens on the **Processes** tab. When the chat has worked for more than 20 seconds, the status bar adds the link **Not responding? End the agent program**.
+
+When you end the agent program yourself, the chat shows a grey notice, not a red box: **You ended the agent program. Click Restart to use the chat again.** The message box stays empty and **Send** is off until the agent runs again. **Restart** only starts the agent. It does not send anything.
 
 ### Undo a Change of the Agent (Revert)
 
@@ -265,7 +268,7 @@ To undo a change of the agent, follow the steps below:
 1. Click **Changes** at the top of the chat window. The pane opens on the **Changes** tab.
 2. Select the file.
 3. Click **Revert**. A question appears.
-4. Click **Yes**. The file goes back to its old text. The row says "Reverted". Point to it, or read the line above the list, for "Restore from the Recycle Bin". You can also right-click the row and click **Restore from the Recycle Bin**, or click **Edit**, **Undo revert** right after the revert.
+4. Click **Yes**. The file goes back to its old text. The row says "Reverted". To put it back, select the row and click **Restore**. You can also right-click the row and click **Show in the Recycle Bin**, or click **Edit**, **Undo revert** right after the revert.
 
 To get a reverted change back, click **Open Recycle Bin** under the list, or open the **[Recycle Bin](recycle-bin.md)**, select the item, and click **Restore this item**.
 

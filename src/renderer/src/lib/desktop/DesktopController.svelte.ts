@@ -400,16 +400,35 @@ export class DesktopController implements DesktopHost {
     const known = new Set(this.state.windows.map((w) => w.id))
     const opener = this.windowById(this.state.focusedWindowId ?? -1)
     const opened = await open()
-    return known.has(opened.id) || opened.app === 'code-review' ? opened : this.placeBesideOpener(opened, opener)
+    if (known.has(opened.id)) return opened
+    if (opener && opener.id !== opened.id) this.openers.set(opened.id, opener.id)
+    const placed = opened.app === 'code-review' ? opened : await this.placeBesideOpener(opened, opener)
+    // A window opened for a task is in front and has the focus, never behind the window it came from (UX-203).
+    if (this.state.focusedWindowId !== placed.id) await this.raiseWindow(placed.id)
+    return placed
+  }
+
+  /** The window each window was opened from, by window id (kept while both exist). */
+  private readonly openers = new Map<Id, Id>()
+
+  /**
+   * Gives the focus back to the window that opened this one, when it is still there (Control Center after OK, UX-203). Nothing
+   * happens when that window was closed or minimized.
+   */
+  async returnToOpener(windowId: Id): Promise<void> {
+    const from = this.openers.get(windowId)
+    const opener = from === undefined ? undefined : this.windowById(from)
+    if (opener && opener.windowState !== 'minimized') await this.raiseWindow(opener.id)
   }
 
   private async placeBesideOpener(win: AppWindowState, opener: AppWindowState | undefined): Promise<AppWindowState> {
     const area = this.workArea?.()
     if (!area || area.width <= 0 || area.height <= 0) return win
     const barHeight = this.barRect?.height ?? 0
-    // Beside the chat the user is typing in; from another window a new one cascades from it (main places it), so its title bar stays in reach.
+    // Beside the chat the user is typing in, and with no room beside it 24 px right of and below it, on top (UX-203). From another window main
+    // cascades a new one by 24 px (or tiles a tool beside it), so its title bar stays in reach.
     const from = opener?.app === 'chat' && opener.windowState === 'normal' && opener.id !== win.id ? this.boundsOf(opener) : null
-    const bounds = placeBesideOpener(win.app, this.boundsOf(win), from, area, barHeight, this.state.windows.length)
+    const bounds = placeBesideOpener(win.app, this.boundsOf(win), from, area, barHeight, this.state.windows.length, opener?.app)
     const b = this.boundsOf(win)
     if (bounds.x === b.x && bounds.y === b.y && bounds.width === b.width && bounds.height === b.height) return win
     this.patch(win.id, { bounds })

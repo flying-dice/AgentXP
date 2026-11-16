@@ -57,7 +57,9 @@
   const root = useSignal(() => controller.root)
 </script>
 
-<div class="a2ui-surface {className}" data-a2ui-surface data-testid="a2ui-surface">
+<!-- Editing a field again ends "Sent." (input and change bubble from every field of the form). -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="a2ui-surface {className}" data-a2ui-surface data-testid="a2ui-surface" oninput={() => submit.reset()} onchange={() => submit.reset()}>
   {#if root.current}
     {#key root.current.id}
       <NodeView node={root.current} />

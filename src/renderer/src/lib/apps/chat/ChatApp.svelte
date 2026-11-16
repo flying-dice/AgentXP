@@ -13,7 +13,7 @@
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
-  import { openRecycleBin } from '../../app/changes/openRecycleBin'
+  import { openRecycleBin, restoreReverted } from '../../app/changes/openRecycleBin'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { undoRevertItem } from '../../app/changes/changeMenu'
   import TasksPane from '../../app/shell/TasksPane.svelte'
@@ -54,8 +54,10 @@
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
   /** Where the chat works, as a person says it ("login-app (E:)"); the full path is the tooltip. */
   const where = $derived(session ? folderLabel(session.cwd, host.state.drives) : '')
+  /** The user started a new chat with this chat's failed text: this window shows "Continued in a new chat" and no error (UX-201). */
+  const continued = $derived(!!store?.continued)
   /** What went wrong, in plain words with the next step; the status bar shows this and never the raw error. */
-  const problemLine = $derived(describeProblem({ error: store?.error ?? null, problem: session?.problem, failed: store?.failedSend ?? null, agentName: agent?.name })?.status ?? null)
+  const problemLine = $derived(continued ? null : (describeProblem({ error: store?.error ?? null, problem: session?.problem, failed: store?.failedSend ?? null, agentName: agent?.name })?.status ?? null))
   let panelOpen = $state(false)
   let panelTab = $state('changes')
   let selectedChangeId = $state<number | null>(null)
@@ -408,6 +410,7 @@
                 bind:selectedId={selectedChangeId}
                 onrevert={(c) => revert(c)}
                 onopenrecyclebin={(id) => void openRecycleBin(host, id)}
+                onrestore={(id) => restoreReverted(host, id)}
                 onopeneditor={(c) => folder && void host.openApp({ app: 'code', path: c.path })}
               />
             {:else}
@@ -434,8 +437,8 @@
         <button type="button" class="reconnect" data-testid="chat-end-agent-link" title={NOT_RESPONDING_TIP} onclick={openProcesses}>{NOT_RESPONDING_LINK}</button>
       </StatusStripLabel>
     {/if}
-    <StatusStripLabel testid="chat-status" text={connectionLabel(status, host.state.userInControl)} borders={['left']} />
-    {#if isDisconnected(status)}
+    <StatusStripLabel testid="chat-status" text={continued ? 'Continued in a new chat' : connectionLabel(status, host.state.userInControl)} borders={['left']} />
+    {#if isDisconnected(status) && !continued}
       <StatusStripLabel borders={['left']}>
         <button type="button" class="reconnect" data-testid="chat-reconnect" title="Start the agent again" onclick={() => void store?.reconnect()}>Reconnect</button>
       </StatusStripLabel>

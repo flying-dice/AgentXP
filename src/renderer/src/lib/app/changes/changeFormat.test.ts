@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REVERTED_KIND, REVERTED_LABEL, splitFileName, splitForMiddleEllipsis, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
+import { REVERTED_ICON, changeKindIcon, REVERTED_KIND, REVERTED_LABEL, splitFileName, splitForMiddleEllipsis, absolutePath, changeKindLabel, changesSummary, linesLabel, revertConfirmText, splitChangePath } from './changeFormat'
 
 describe('changeFormat', () => {
   it('labels kinds and line counts', () => {
@@ -41,7 +41,7 @@ describe('changes list (UX-40)', () => {
 
   it('tells where a reverted file can be found', () => {
     expect(revertConfirmText('E:\\a.ts')).toContain('You can get it back from the Recycle Bin.')
-    expect(REVERTED_LABEL).toBe('Reverted. Restore from the Recycle Bin')
+    expect(REVERTED_LABEL).toBe('Reverted. Select it and click Restore to put the file back.')
     expect(REVERTED_KIND).toBe('Reverted')
   })
 })
@@ -78,5 +78,12 @@ describe('a 30-character file name (UX-116)', () => {
     expect(head + tail).toBe(name)
     expect(tail.endsWith('.ts')).toBe(true)
     expect(tail.length).toBeLessThan(name.length / 2)
+  })
+})
+
+describe('status pictures (UX-207)', () => {
+  it('has one picture for each status, and a different one for a reverted row', () => {
+    const icons = [changeKindIcon('added'), changeKindIcon('modified'), changeKindIcon('deleted'), REVERTED_ICON]
+    expect(new Set(icons).size).toBe(4)
   })
 })

@@ -17,9 +17,10 @@
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { ViewSync } from '../viewSync'
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
+  import ToolTip from '../../kit/atoms/ToolTip.svelte'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
-  import { agentBarText, ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, READ_DONE_MS, TAKE_OVER_BUTTON_TIP, zoomText } from './pageStatus'
+  import { agentBarText, ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, GIVE_BACK_BUTTON_TIP, pageStatus, READ_DONE_MS, STOPPED_MS, TAKE_OVER_BUTTON_TIP, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -63,6 +64,9 @@
   let readUrl = $state<string | null>(null)
   /** The user took control while the agent worked: the bar stays, with Resume, until the user gives it back. */
   let engaged = $state(false)
+  /** The agent's last action was a moment ago: the bar says it stopped, for STOPPED_MS (UX-214). */
+  let stopped = $state(false)
+  let stoppedTimer: ReturnType<typeof setTimeout> | undefined
   let ring = $state<{ x: number; y: number; width: number; height: number } | null>(null)
   let activityTimer: ReturnType<typeof setTimeout> | undefined
   let ringTimer: ReturnType<typeof setTimeout> | undefined
@@ -176,6 +180,12 @@
   function stopActivity(all: boolean): void {
     if (!all && readDone) return
     clearTimeout(activityTimer)
+    // The bar does not vanish: it says the agent stopped, then goes after a few seconds (a finished read has its own message).
+    if (activity !== null && !readDone) {
+      stopped = true
+      clearTimeout(stoppedTimer)
+      stoppedTimer = setTimeout(() => (stopped = false), STOPPED_MS)
+    }
     activity = null
     reading = false
     activityDetail = null
@@ -187,6 +197,8 @@
       const p = (params ?? {}) as { label?: string; detail?: string; reading?: boolean; read?: boolean; box?: { x: number; y: number; width: number; height: number } }
       // The first action of a turn brings the window to the front: the user sees what the agent does without hunting for it.
       if (activity === null) void host.focusWindow(win.id)
+      stopped = false
+      clearTimeout(stoppedTimer)
       activity = p.label || 'working'
       reading = p.reading === true
       activityDetail = p.detail ?? null
@@ -246,6 +258,7 @@
   $effect(() => () => {
     clearTimeout(activityTimer)
     clearTimeout(ringTimer)
+    clearTimeout(stoppedTimer)
   })
 
   // svelte-ignore state_referenced_locally
@@ -373,8 +386,24 @@
         {/each}
       </div>
     </div>
-    <button class="newtab" data-testid="browser-tab-new" aria-label="New tab" title="New tab" onclick={() => openTab()}><Icon name="plus" size={12} /></button>
+    <ToolTip text="New tab" delay={300}>
+      <button class="newtab" data-testid="browser-tab-new" aria-label="New tab" onclick={() => openTab()}><Icon name="plus" size={12} /></button>
+    </ToolTip>
   </div>
+  <!-- The bar sits above the page, not over it: no text of the page is covered (UX-214). -->
+  {#if activity !== null || engaged || stopped}
+    <div class="agentbar" data-testid="browser-agent-bar" data-taken-over={userInControl} role="status">
+      <Icon name="shield" size={12} />
+      <span data-testid="browser-agent-bar-text" title={activityDetail ?? undefined}
+        >{agentBarText({ userInControl, readDone, activity, stopped })}</span
+      >
+      {#if userInControl}
+        <button class="bar-button takeover" data-testid="browser-agent-giveback" title={GIVE_BACK_BUTTON_TIP} onclick={() => setControl(false)}>Give back</button>
+      {:else if !stopped || activity !== null}
+        <button class="bar-button takeover" data-testid="browser-agent-takeover" title={TAKE_OVER_BUTTON_TIP} onclick={() => setControl(true)}>Take over</button>
+      {/if}
+    </div>
+  {/if}
   <div class="page">
     {#each tabs as tab (tab.id)}
       <BrowserTabPage
@@ -389,20 +418,6 @@
         oncontext={(info) => ((pageSelection = info.selectionText), ctx.showAt(info.x, info.y, contextItems(info)))}
       />
     {/each}
-    {#if activity !== null || engaged}
-      <div class="agentbar" data-testid="browser-agent-bar" data-taken-over={userInControl} role="status">
-        <Icon name="shield" size={12} />
-        <span data-testid="browser-agent-bar-text" title={activityDetail ?? undefined}
-          >{agentBarText({ userInControl, readDone, activity })}</span
-        >
-        <button
-          class="bar-button takeover"
-          data-testid="browser-agent-takeover"
-          disabled={userInControl}
-          title={TAKE_OVER_BUTTON_TIP}
-          onclick={() => setControl(true)}>{userInControl ? 'Taken over' : 'Take over'}</button>
-      </div>
-    {/if}
     {#if ring}
       <div class="ring" data-testid="browser-agent-ring" style:left="{ring.x - 3}px" style:top="{ring.y - 3}px" style:width="{ring.width + 6}px" style:height="{ring.height + 6}px"></div>
     {/if}
@@ -626,11 +641,7 @@
     border-top: 1px solid #8ea4c4;
   }
   .agentbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 5;
+    flex: none;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -640,7 +651,6 @@
     background: linear-gradient(#fff6c7, #ffe58a);
     border-bottom: 1px solid #c9a227;
     color: #4a3a00;
-    pointer-events: none;
   }
   /* The sentence wraps to a second line (never cut with "..."): it says what the agent may do next (UX-172). */
   .agentbar span {

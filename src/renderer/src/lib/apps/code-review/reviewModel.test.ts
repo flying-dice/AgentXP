@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { fitStatusFields, SEVERITY_HELP, addCommentTitle, addCommentButtonTitle, chatChoiceLabel, NEW_CHAT_FOR_COMMENTS, baseLabel, filesStatusLabel, verdictLine, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
+import { sentCommentsLine, sendButtonText, sendButtonTitle, fitStatusFields, SEVERITY_HELP, addCommentTitle, addCommentButtonTitle, chatChoiceLabel, NEW_CHAT_FOR_COMMENTS, baseLabel, filesStatusLabel, verdictLine, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -158,8 +158,8 @@ describe('numbers in digits (UX-77)', () => {
     expect(verdictLine('approve', [])).toBe('Approved.')
   })
   it('says how many files changed and how many are shown', () => {
-    expect(filesStatusLabel(2, 1)).toBe('Showing 1 of 2 changed files')
-    expect(filesStatusLabel(2, 1, 'src\\auth/redirect.ts')).toBe('Showing redirect.ts (1 of 2 changed files)')
+    expect(filesStatusLabel(2, 1)).toBe('File 1 of 2 changed files')
+    expect(filesStatusLabel(2, 1, 'src\\auth/redirect.ts')).toBe('redirect.ts (file 1 of 2 changed files)')
     expect(filesStatusLabel(1, 1, 'redirect.ts')).toBe('1 file changed')
     expect(filesStatusLabel(2, 0)).toBe('2 files changed')
     expect(filesStatusLabel(1, 1)).toBe('1 file changed')
@@ -205,5 +205,22 @@ describe('fitStatusFields (UX-167)', () => {
   })
   it('measures nothing before the window has a width', () => {
     expect(fitStatusFields(fields, 0)).toHaveLength(4)
+  })
+})
+
+describe('sent comments (UX-211)', () => {
+  it('says where the comments went and what happens next', () => {
+    expect(sentCommentsLine(0)).toBeNull()
+    expect(sentCommentsLine(1)).toBe('1 comment sent to the chat. Waiting for the assistant.')
+    expect(sentCommentsLine(2)).toBe('2 comments sent to the chat. Waiting for the assistant.')
+  })
+
+  it('turns the send button into "Comments sent" when nothing open is left', () => {
+    expect(sendButtonText(2, 0)).toBe('Send comments to chat...')
+    expect(sendButtonText(1, 3)).toBe('Send comments to chat...')
+    expect(sendButtonText(0, 2)).toBe('Comments sent')
+    expect(sendButtonText(0, 0)).toBe('Send comments to chat...')
+    expect(sendButtonTitle(0, 2)).toBe('All comments were sent to the chat.')
+    expect(sendButtonTitle(0, 0)).toBe('There are no open comments to send.')
   })
 })

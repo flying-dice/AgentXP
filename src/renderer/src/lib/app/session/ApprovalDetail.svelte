@@ -1,11 +1,13 @@
 <script lang="ts">
   /** What a permission request would do, for the approval dialogs: the change to a file, or the command. */
   import type { AguiToolCallState } from '@shared/agui-state'
+  import Button from '../../kit/atoms/Button.svelte'
   import CodeViewer from '../../kit/organisms/CodeViewer.svelte'
+  import Dialog from '../../kit/organisms/Dialog.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import { gateReasonOf } from '@shared/gateReason'
   import { changeSummary } from './changeSummary'
-  import { diffViewportPx, isLongChange, previewIsTight, wholeChangePx } from './diffViewport'
+  import { canShowMore, diffViewportPx, growRoomPx, isLongChange, previewIsTight, wholeChangePx } from './diffViewport'
   import { toolArgument } from './toolSummary'
 
   interface Props {
@@ -22,12 +24,23 @@
 
   /** The height the preview has right now; below 8 rows the box offers "Show the whole change" (UX-158). */
   let available = $state(Infinity)
+  /** The tallest the preview can get: what it has plus what the chat above it can give up (UX-194). */
+  let room = $state(Infinity)
+  /** The window has no room to grow: the link opens the whole change in a box over the chat instead (UX-194). */
+  let whole = $state(false)
 
   function measure(node: HTMLElement): { destroy: () => void } {
-    const read = (): void => void (available = node.clientHeight)
+    const transcript = (): HTMLElement | null => node.closest('.session-view')?.querySelector<HTMLElement>('[data-testid="chat-transcript"]') ?? null
+    const read = (): void => {
+      available = node.clientHeight
+      const above = transcript()
+      room = above ? growRoomPx(node.clientHeight, above.clientHeight) : Infinity
+    }
     read()
     const observer = new ResizeObserver(read)
     observer.observe(node)
+    const above = transcript()
+    if (above) observer.observe(above)
     return { destroy: () => observer.disconnect() }
   }
 
@@ -40,16 +53,36 @@
   const viewport = $derived(expanded ? wholeChangePx(rows) : diffViewportPx(rows))
   /** The box is too small for 8 rows of the preview. */
   const tight = $derived(!expanded && previewIsTight(available, rows))
-  const clipped = $derived(!!summary && (tight || expanded || isLongChange(rows)))
+  /** More of the change is out of view than the preview shows: the link offers it. A click always changes the screen (UX-194). */
+  const clipped = $derived(!!summary && (expanded || tight || isLongChange(rows)))
+  /** The click makes the preview taller when the window has room, else it opens the whole change in a box. */
+  const grows = $derived(expanded || canShowMore(available, room, rows))
+  function toggleMore(): void {
+    if (grows) expanded = !expanded
+    else whole = true
+  }
 </script>
 
 {#if diff?.kind === 'diff' && summary}
+  {#if whole}
+    <Dialog title="Whole change" width="calc(100% - 16px)" height="calc(100% - 16px)" fill contained bodyColor="window" testid="{testid}-whole-change" onclose={() => (whole = false)}>
+      <div class="whole">
+        <div class="whole-path">{diff.path} <span class="summary">{summary.text}</span></div>
+        <div class="whole-view" data-testid="{testid}-whole-change-view">
+          <DiffViewer oldText={diff.oldText ?? ''} newText={diff.newText} fileName={diff.path} toolbar={false} wrap label="Whole change" />
+        </div>
+      </div>
+      {#snippet buttons()}
+        <Button isDefault data-testid="{testid}-whole-change-close" onclick={() => (whole = false)}>Close</Button>
+      {/snippet}
+    </Dialog>
+  {/if}
   <div class="detail" data-testid="{testid}-detail">
     <div class="head">
       <span class="path" data-testid="{testid}-detail-path">{diff.path}</span>
       <span class="summary" data-testid="{testid}-detail-summary">{summary.text}</span>
       {#if clipped}
-        <button type="button" class="more" data-testid="{testid}-detail-more" aria-expanded={expanded} onclick={() => (expanded = !expanded)}>{expanded ? 'Show fewer lines' : tight ? 'Show the whole change' : `Show all ${summary.rows} lines`}</button>
+        <button type="button" class="more" data-testid="{testid}-detail-more" aria-expanded={grows ? expanded : undefined} aria-haspopup={grows ? undefined : 'dialog'} data-mode={grows ? 'grow' : 'dialog'} onclick={toggleMore}>{expanded ? 'Show fewer lines' : tight || !grows ? 'Show the whole change' : `Show all ${summary.rows} lines`}</button>
       {/if}
     </div>
     {#if summary.unreadable}
@@ -104,6 +137,30 @@
     margin-top: 3px;
     font-size: 11px;
     color: var(--w7-text-muted);
+  }
+  /* The whole change in a box over the chat: the path on top, the diff at the full height of the box (UX-194). */
+  .whole {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 8px 0;
+  }
+  .whole-path {
+    flex: none;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    margin-bottom: 4px;
+  }
+  .whole-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .whole-view :global(.w7-diffviewer) {
+    flex: 1 1 auto;
+    min-height: 0;
   }
   /* On the line of the file and the size of the change, so the preview gets the height (UX-177). */
   .more {

@@ -76,7 +76,7 @@ The right edge of the window holds the chat with the reviewer. You can ask a que
 
 ### The Status Bar
 
-The status bar shows the folder, how many files changed (for example "2 files changed", or "Showing redirect.ts (1 of 2 changed files)" when you opened one of them). In a narrow window the least important parts are left out, so no part is cut, the number of open comments, and what the reviewer does. Every number in the window is written in digits.
+The status bar shows the folder, how many files changed (for example "2 files changed", or "redirect.ts (file 1 of 2 changed files)" when you opened one of them). In a narrow window the least important parts are left out, so no part is cut, the number of open comments, and what the reviewer does. Every number in the window is written in digits.
 
 ## 4 - Controls Reference
 
@@ -113,6 +113,8 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Comments | Shows or hides the comments pane. The number is the number of all comments, the same as in the banner. | `review-comments-toggle` |
 | Verdict | The verdict of the reviewer. The attribute `data-verdict` gives it. | `review-verdict` |
 | No verdict yet | Shows until the reviewer gives a verdict. | `review-banner` |
+| Comments sent | Shows after you send comments to a chat: how many went, and that the chat is working on them. | `review-sent-line` |
+| Level | The word beside the colour of a comment in the Comments list: Blocker, Major, Minor or Nit. | `review-comment-level` |
 | Error | Shows a problem, for example that git is missing. | `review-error` |
 | Outline list | Lists the changed files. | `review-outline` |
 | Changed file | One file. The attributes `data-path` and `data-status` give the name and status. | `review-file` |
@@ -132,7 +134,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Line number | Starts a comment on the line. The unified view has one column: the new line number, or the old one on a removed line. | `review-gutter-add` |
 | Lost comments | Lists comments whose line is not in the file any more. | `review-orphans` |
 | New comment | The form to write a comment. | `review-compose` |
-| Comment text | The input for the comment. | `review-compose-input` |
+| Comment text | The input for the comment. It has a blue border and a blue cursor while the keyboard types into it. | `review-compose-input` |
 | Severity (new) | Selects Blocker, Major, Minor, or Nit. Minor is selected at first. | `review-compose-severity` |
 | Severity help | Says what the selected severity is for: Minor is the usual choice for a suggestion. | `review-compose-severity-help` |
 | Comment (button) | Saves the comment. | `review-compose-submit` |
@@ -153,7 +155,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Comment row | One comment of the list. Click it to go to its line. | `review-comment-row` |
 | No comments | Shows when the list is empty. | `review-comments-empty` |
 | Send comments to chat | Opens the **Send to chat** dialog box. | `review-send-all` |
-| Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. | `review-send-comments` |
+| Send comments to chat (toolbar) | Opens the **Send to chat** dialog box. It is next to **Comments**. Disabled when no comment is open. After you send, it reads **Comments sent**. | `review-send-comments` |
 | Verdict text | The verdict in one sentence, and how many comments are blockers, for example "Changes requested. 1 comment is a blocker." The link at the end of the sentence says how many comments there are. | `review-verdict-line` |
 | Send to chat dialog | Asks which chat gets the comments. The chat that is open reads "Chat: name (in folder)". The other choice reads "Start a new chat for these comments". | `review-send-dialog` |
 | Open chat | The line of an open chat in the dialog box: its name and the folder it works in. | `review-send-chat-name` |
@@ -202,7 +204,7 @@ To send the comments to a chat that fixes the code, follow the steps below:
 1. Click **Send comments to chat** in the toolbar. The **Send to chat** dialog box appears.
 2. Check the number of comments that the dialog box names.
 3. Select a chat, or select **New chat**.
-4. Click **Send**. The chat gets the comments. The comments change to **sent**.
+4. Click **Send**. The chat gets the comments. The comments change to **sent**, and a line under the verdict says how many went and that the chat is working on them.
 
 To compare with another base, type its name in **Base** and press Enter.
 
