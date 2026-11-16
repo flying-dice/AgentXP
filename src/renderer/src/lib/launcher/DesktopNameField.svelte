@@ -44,18 +44,23 @@
     data-autofocus
     onfocus={(e) => (e.currentTarget as HTMLInputElement).select()}
   />
-  <div id="{uid}-error" class="error" role="alert" data-testid="{idPrefix}-error">
-    {#if error}
-      <Icon name="error" size={14} />
-      <span>{error}</span>
-    {/if}
+  <!-- A fixed area (two lines of text and a row for the links): the dialog does not change size when a message comes or goes. -->
+  <div class="feedback">
+    <div id="{uid}-error" class="error" role="alert" data-testid="{idPrefix}-error">
+      {#if error}
+        <Icon name="error" size={14} />
+        <span>{error}</span>
+      {/if}
+    </div>
+    <div class="links">
+      {#if withProject}
+        <button type="button" class="use" data-testid="{idPrefix}-use-project-suggestion" onclick={() => use(withProject)}>Use '{withProject}'</button>
+      {/if}
+      {#if suggestion}
+        <button type="button" class="use" data-testid="{idPrefix}-use-suggestion" onclick={() => use(suggestion)}>Use '{suggestion}'</button>
+      {/if}
+    </div>
   </div>
-  {#if withProject}
-    <button type="button" class="use" data-testid="{idPrefix}-use-project-suggestion" onclick={() => use(withProject)}>Use '{withProject}'</button>
-  {/if}
-  {#if suggestion}
-    <button type="button" class="use" data-testid="{idPrefix}-use-suggestion" onclick={() => use(suggestion)}>Use '{suggestion}'</button>
-  {/if}
 </div>
 
 <style>
@@ -64,8 +69,15 @@
     flex-direction: column;
     gap: 3px;
   }
+  .feedback {
+    flex: none;
+    height: 56px;
+    overflow: hidden;
+  }
   .error {
-    min-height: 15px;
+    height: 36px;
+    overflow: hidden;
+    line-height: 18px;
     display: flex;
     gap: 5px;
     align-items: flex-start;
@@ -75,8 +87,18 @@
     flex: none;
     margin-top: 1px;
   }
+  .links {
+    height: 20px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
   .use {
-    align-self: flex-start;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding: 0;
     border: 0;
     background: none;

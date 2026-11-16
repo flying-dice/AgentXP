@@ -361,7 +361,7 @@
           { id: 'open', testid: 'explorer-menu-open', label: '&Open', disabled: !selectedEntry && !selectedDrive, action: () => (selectedEntry ? openEntry(selectedEntry) : selectedDrive && go(driveRoot(selectedDrive.letter))) },
           { id: 'plug', testid: 'explorer-menu-plug-in', label: '&Plug in a project...', action: () => void plugIn() },
           { id: 'plug-again', testid: 'explorer-menu-plug-in-again', label: 'Plug in a&gain', disabled: path !== '' || removedSelected === null, action: () => void plugInAgain() },
-          { id: 'eject', testid: 'explorer-menu-eject', label: '&Eject', disabled: selectedDrive?.kind !== 'removable', action: () => selectedDrive && void host.ejectDrive(selectedDrive.letter) },
+          { id: 'eject', testid: 'explorer-menu-eject', label: '&Eject (remove from this desktop)', disabled: selectedDrive?.kind !== 'removable', action: () => selectedDrive && void host.ejectDrive(selectedDrive.letter) },
           { id: 'props', testid: 'explorer-menu-properties', label: 'P&roperties', disabled: !selectedEntry, action: () => selectedEntry && void showProperties(selectedEntry) },
           ...closeItems('explorer', () => void host.closeWindow(win.id))
         ]
@@ -439,8 +439,8 @@
       <ToolTip text="Open the selected drive.">
         <ToolStripButton data-testid="explorer-open" icon="open-folder" text="Open" disabled={!selectedDrive} onclick={() => selectedDrive && go(driveRoot(selectedDrive.letter))} />
       </ToolTip>
-      <ToolTip text="Safely remove the selected project from this desktop. The folder stays on your disk.">
-        <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
+      <ToolTip text="Remove the selected project from this desktop. The folder stays on your disk.">
+        <ToolStripButton data-testid="explorer-eject" icon="usb" text="Eject (remove from this desktop)" disabled={selectedDrive?.kind !== 'removable'} onclick={() => selectedDrive && void host.ejectDrive(selectedDrive.letter)} />
       </ToolTip>
     </div>
   {/if}

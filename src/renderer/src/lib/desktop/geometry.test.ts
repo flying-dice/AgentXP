@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -58,5 +58,22 @@ describe('snap and fit', () => {
   it('maximised frames start below the top bar', () => {
     expect(frameStyle(b, true)).toContain('top:0;')
     expect(frameStyle(b, false)).toBe('left:100px;top:100px;width:400px;height:300px;')
+  })
+})
+
+describe('belowBar', () => {
+  for (const height of [52, 68]) {
+    it(`puts a window that starts under a bar of ${height} px just below it`, () => {
+      const bar = { left: 300, right: 800, height }
+      expect(minYBelow(height)).toBe(height + 4)
+      expect(belowBar({ x: 400, y: 20, width: 200, height: 200 }, bar).y).toBe(height + 4)
+    })
+  }
+  it('leaves windows that are clear of the bar alone (same object)', () => {
+    const bar = { left: 300, right: 800, height: 52 }
+    const low = { x: 400, y: 80, width: 200, height: 200 }
+    const side = { x: 0, y: 0, width: 200, height: 200 }
+    expect(belowBar(low, bar)).toBe(low)
+    expect(belowBar(side, bar)).toBe(side)
   })
 })

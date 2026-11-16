@@ -46,6 +46,18 @@ describe('launcher: empty text, name suggestions and a start error on the row', 
     await page.getByTestId('dialog-button-cancel').click()
   })
 
+  it('the buttons of the New desktop dialog stay where they are when the name error appears (UX-89)', async () => {
+    await page.getByTestId('launcher-new').click()
+    const ok = page.getByTestId('dialog-button-ok')
+    const browse = page.getByTestId('new-desktop-browse')
+    const before = { ok: await ok.boundingBox(), browse: await browse.boundingBox(), cancel: await page.getByTestId('dialog-button-cancel').boundingBox() }
+    await page.getByTestId('new-desktop-name').fill('Fix login redirect')
+    await see.text(page.getByTestId('new-desktop-error'), 'already exists')
+    await see.visible(page.getByTestId('new-desktop-use-suggestion'))
+    expect({ ok: await ok.boundingBox(), browse: await browse.boundingBox(), cancel: await page.getByTestId('dialog-button-cancel').boundingBox() }).toEqual(before)
+    await page.getByTestId('dialog-button-cancel').click()
+  })
+
   it('the Rename dialog offers the numbered name only', async () => {
     await launcher.select('Fix login redirect')
     await page.getByTestId('launcher-rename').click()
@@ -61,15 +73,14 @@ describe('launcher: empty text, name suggestions and a start error on the row', 
     await page.getByTestId('dialog-button-cancel').click()
   })
 
-  it('a desktop whose agent program is missing shows "The agent could not start" on its row', async () => {
+  it('a desktop whose agent program is missing shows "Agent problem" on its row', async () => {
     await registerAgent(page, { name: 'Missing agent', command: 'agent7-test-no-such-program', args: [], env: {} })
     // The New desktop dialog reads the agents when the launcher opens, so open it again to see the new default agent.
     await page.reload()
     await launcher.createDesktop('Docs site')
-    // The launcher looks for the program when it opens (and every 30 seconds while it is open).
-    await page.reload()
+    // No reload: the launcher looks for the program again when a desktop is created (UX-87).
     const state = launcher.row('Docs site').getByTestId('launcher-desktop-state')
-    await see.text(state, 'The agent could not start')
+    await see.text(state, "Agent problem: The program 'agent7-test-no-such-program' was not found.")
     await see.attribute(state, 'data-state', 'error')
     await see.attribute(state, 'title', 'Open the desktop, then Control Center > Agents, to change the command.')
   })

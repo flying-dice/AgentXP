@@ -49,14 +49,23 @@
   let helpOpen = $state(false)
   /** Desktops that Connect was pressed for and whose window is not up yet. */
   let opening = $state<number[]>([])
+  /** Desktops just created whose window did not open: the row says to click Connect. */
+  let ready = $state<number[]>([])
   let folders = $state.raw<FolderDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
 
   const sorted = $derived(sortDesktops(desktops))
   const current = $derived(sorted.find((d) => d.id === selected) ?? null)
 
+  /** Looks for the agent program of each desktop (nothing is started). Quiet when it fails. */
+  const checkAgents = (): void => void api.launcher.checkAgents().catch(() => {})
+  /** The desktops that exist, by id and name: a change means one was created, renamed or removed. */
+  const listKey = (list: readonly DesktopSummaryDto[]): string => list.map((d) => `${d.id}:${d.title}`).join('|')
+
   function apply(next: DesktopSummaryDto[]): void {
+    const changed = loaded && listKey(next) !== listKey(desktops)
     desktops = next
+    if (changed) checkAgents()
     // Nothing selected yet (or the selected desktop is gone): a desktop that waits for approval, else the most recent one.
     if (selected === null || !next.some((d) => d.id === selected)) selected = initialSelection(next)
   }
@@ -64,10 +73,11 @@
   onMount(() => {
     document.title = LAUNCHER_WINDOW_TITLE
     const off = api.on('launcher.changed', apply)
-    // Is the agent program of each desktop there? Looked up when the launcher opens and every 30 seconds while it is open.
-    const check = (): void => void api.launcher.checkAgents().catch(() => {})
-    check()
-    const timer = setInterval(check, AGENT_CHECK_MS)
+    // Is the agent program of each desktop there? Looked up when the launcher opens, when the list changes, when the window
+    // gets focus and every 30 seconds while it is open.
+    checkAgents()
+    const timer = setInterval(checkAgents, AGENT_CHECK_MS)
+    window.addEventListener('focus', checkAgents)
     void api.launcher.list().then(
       (items) => {
         apply(items)
@@ -81,6 +91,7 @@
     return () => {
       off()
       clearInterval(timer)
+      window.removeEventListener('focus', checkAgents)
     }
   })
 
@@ -99,18 +110,24 @@
     await showMessageBox({ text: errorText(error), caption: 'Agent7 Desktop Connection', buttons: 'OK', icon: 'error' })
   }
 
-  async function connect(): Promise<void> {
-    const target = current
-    if (!target) return
+  /** Opens the desktop's window; false when it failed (the user has been told). */
+  async function openDesktop(target: DesktopSummaryDto): Promise<boolean> {
     // A connected desktop is only brought to the front ("Show desktop").
     if (!target.connected) opening = [...opening, target.id]
     try {
       await api.launcher.connect(target.id)
+      ready = ready.filter((id) => id !== target.id)
+      return true
     } catch (error) {
       await fail(error)
+      return false
     } finally {
       opening = opening.filter((id) => id !== target.id)
     }
+  }
+
+  async function connect(): Promise<void> {
+    if (current) await openDesktop(current)
   }
 
   async function disconnect(): Promise<void> {
@@ -127,6 +144,9 @@
     try {
       const created = await api.launcher.create(input)
       selected = created.id
+      // The new desktop opens at once; when that fails the row says to click Connect.
+      ready = [...ready, created.id]
+      await openDesktop(created)
     } catch (error) {
       await fail(error)
     }
@@ -234,7 +254,7 @@
         <!-- A listbox needs option children: with no desktops the list is plain. -->
         <div class="list w7-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
           {#each sorted as desktop (desktop.id)}
-            <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
+            <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} ready={ready.includes(desktop.id)} selected={desktop.id === selected} onselect={() => (selected = desktop.id)} onactivate={() => void connect()} />
           {:else}
             <p class="empty" data-testid="launcher-empty">{loaded ? 'No desktops yet. A desktop is a workspace where an agent works on your projects. Click New... to create one.' : 'Loading...'}</p>
             {#if loaded}<p class="empty" data-testid="launcher-empty-help">{EMPTY_LAUNCHER_HELP}</p>{/if}

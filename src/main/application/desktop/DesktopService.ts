@@ -17,7 +17,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeNewWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
@@ -160,7 +160,7 @@ export class DesktopService implements DesktopStates {
 
   /**
    * Opens a window (or brings the existing one of a singleton app / chat forward). A new window is tiled
-   * beside the focused chat instead of over it (`placeWindow`) and comes to the front with the focus. When the user
+   * beside the focused window instead of over it (`placeNewWindow`) and comes to the front with the focus. When the user
    * typed in another window in the last 2 seconds, an agent's window comes to the front without the focus and its
    * taskbar button flashes until the user focuses it.
    */
@@ -175,11 +175,12 @@ export class DesktopService implements DesktopStates {
       if (input.topic !== undefined && existing.app === 'help') this.updateView(existing.id, { app: 'help', topic: input.topic })
       return this.windowState(existing.id)
     }
-    const avoid = focused?.app === 'chat' && focused.windowState === 'normal' ? focused.bounds : null
+    // New windows start below the top bar and beside the focused window (`placeNewWindow`).
+    const parent = focused && focused.windowState === 'normal' ? { app: focused.app, bounds: focused.bounds } : null
     const record = this.deps.windows.create({
       desktopId,
       app: input.app,
-      bounds: placeWindow(input.app, this.deps.windows.list(desktopId).length, avoid, undefined, sizeOf(input.app, size)),
+      bounds: placeNewWindow(input.app, this.deps.windows.list(desktopId).length, parent, undefined, sizeOf(input.app, size)),
       windowState: 'normal',
       openedBy,
       ...this.subtypeOf(input)

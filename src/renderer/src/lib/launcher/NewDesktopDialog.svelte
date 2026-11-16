@@ -59,6 +59,7 @@
   <div class="form">
     <div class="field">
       <DesktopNameField bind:value={name} label="Desktop name:" {existingNames} idPrefix="new-desktop" project={firstProject} />
+      <p class="opens" data-testid="new-desktop-opens-note">Agent7 opens the new desktop when you click Create.</p>
     </div>
     <div class="field">
       <Label text="Project folders the agent can use (they appear as drives):" />
@@ -88,6 +89,10 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+  }
+  .opens {
+    margin: 0;
+    color: var(--w7-text-muted);
   }
   .field.inline {
     flex-direction: row;

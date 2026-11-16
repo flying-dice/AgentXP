@@ -39,7 +39,7 @@ The window opens when you start Agent7. To open it again from a desktop, click *
 The list is in the middle of the window. Each row shows a picture of the desktop, its name, its state, its drives, and when you used it last.
 
 - **Name** – The name of the desktop. The word **Connected** appears next to the name while a window shows the desktop.
-- **State** – Working, Needs your approval, Idle, or The agent could not start. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop whose agent could not start has a red error icon and bold text. Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**.
+- **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has an amber error icon and bold text, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. Agent7 looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
 
 When the window opens, the desktop that needs your approval is already selected. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
 
@@ -51,6 +51,8 @@ Click **Show Options** to see the details of the selected desktop. The pane list
 
 The buttons are at the bottom of the window. **Show Options** is at the left. **New...**, **Rename...**, **Delete...**, and **Connect** are at the right. Press Alt and the underlined letter to use a button: Alt+N, Alt+R, Alt+D, and Alt+C.
 
+When you click **Create** in the New desktop dialog box, the new desktop opens at once and stays selected in the list. If it does not open, the row says **Ready. Click Connect to open it.** and **Connect** is the default button.
+
 When you click **Connect**, the row shows **Opening...** and then **Connected**, and the desktop window comes to the front. While the selected desktop is connected, the button reads **Show desktop** and brings its window to the front.
 
 Press F1 to read this manual.
@@ -59,7 +61,7 @@ Press F1 to read this manual.
 
 The dialog box has a name box, a list of projects, and an agent list.
 
-- **Desktop name** – The name of the new desktop. The name must have 1 to 60 characters and must be new. Agent7 checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. **Create** stays dimmed until the name is good.
+- **Desktop name** – The name of the new desktop. The line under the box says: Agent7 opens the new desktop when you click Create. The name must have 1 to 60 characters and must be new. Agent7 checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. The place for the message and the links is always reserved, so the buttons do not move when the message appears. **Create** stays dimmed until the name is good.
 - **Project folders the agent can use (they appear as drives)** – A list of folders. Select the projects that the desktop gets.
 - **Browse...** – Opens the **Browse For Folder** dialog box and adds the folder that you select to the list.
 - **Agent** – The agent that the chats of the desktop start. The default agent is selected first.
@@ -98,6 +100,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | Connect | Opens the selected desktop. | `launcher-connect` |
 | New desktop | The New desktop dialog box. | `new-desktop-dialog` |
 | Desktop name (new) | Names the new desktop. | `new-desktop-name` |
+| Opens note | Says that Agent7 opens the new desktop when you click Create. | `new-desktop-opens-note` |
 | Name error | Shows why the name is not valid, with an error icon. | `new-desktop-error` |
 | Use a free name | Fills in the suggested name (New desktop dialog box). | `new-desktop-use-suggestion` |
 | Use name with project | Fills in the name followed by the first chosen project folder. Appears when the name is taken. | `new-desktop-use-project-suggestion` |
@@ -144,7 +147,7 @@ To create a desktop for a project, follow the steps below:
 1. Click **New...**. The **New desktop** dialog box appears.
 2. Type a name in **Desktop name**.
 3. Click **Browse...**. The **Browse For Folder** dialog box appears. Select the folder of your project and click **OK**. The project appears in the list with its option selected.
-4. Click **Create**. The desktop appears in the list.
+4. Click **Create**. The desktop appears in the list, and its window opens at once. You do not need to click **Connect**.
 
 To connect to a desktop, select it and click **Connect**.
 
@@ -165,7 +168,7 @@ To delete a desktop, follow the steps below:
 - **The name is not accepted.** Type a name of 1 to 60 characters. Use a name that no other desktop has, or click the link under the name box.
 - **Connect is dimmed.** Select a desktop in the list first.
 - **The desktop shows Needs your approval.** Connect and answer the request in the **Action Center**.
-- **The desktop shows The agent could not start.** Connect, open **Control Center**, and click **Agents** to change the command. Open **Event Viewer** to read the messages.
+- **The desktop shows Agent problem.** Connect, open **Control Center**, and click **Agents** to change the command. Open **Event Viewer** to read the messages.
 
 ## 7 - Need Help?
 

@@ -25,7 +25,7 @@
   let { drives, open = $bindable(false), oneject, removed = [], onplugagain, element = $bindable(null) }: Props = $props()
 
   const usb = $derived(sortDrives(drives).filter((d) => d.kind === 'removable'))
-  const ejectItems = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')}`, icon: 'usb', action: () => oneject?.(d.letter) })))
+  const ejectItems = $derived<MenuItemDef[]>(usb.map((d) => ({ testid: `usb-eject-${d.letter.toLowerCase()}`, label: `Eject ${driveTitle(d).replaceAll('&', '&&')} (remove from this desktop)`, icon: 'usb', action: () => oneject?.(d.letter) })))
   const againItems = $derived<MenuItemDef[]>(removed.map((p) => ({ testid: 'usb-plug-again', label: plugAgainLabel(p).replaceAll('&', '&&'), icon: 'usb', action: () => onplugagain?.(p.folderId) })))
   const items = $derived<MenuItemDef[]>(againItems.length > 0 && ejectItems.length > 0 ? [...ejectItems, { separator: true }, ...againItems] : [...ejectItems, ...againItems])
   /** `Safely Remove Hardware: 1 project plugged in`. */

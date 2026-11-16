@@ -27,13 +27,22 @@ describe('launcher', () => {
     await see.count(launcher.rows, 0)
   })
 
-  it('creates a desktop through the New dialog', async () => {
+  it('the New dialog says that Create opens the desktop', async () => {
+    await page.getByTestId('launcher-new').click()
+    await see.text(page.getByTestId('new-desktop-opens-note'), 'Agent7 opens the new desktop when you click Create.')
+    await page.getByTestId('dialog-button-cancel').click()
+  })
+
+  it('creates a desktop through the New dialog and the desktop window opens at once (UX-86)', async () => {
     await launcher.createDesktop('Alpha')
     await see.count(launcher.rows, 1)
     await see.text(launcher.row('Alpha'), 'Alpha')
+    await see.visible(launcher.connectedChip('Alpha'))
+    const desktopPage = await app.desktopWindow(await desktopIdByTitle(page, 'Alpha'))
+    await see.visible(desktopPage.getByTestId('taskbar-start'))
   })
 
-  it('connects: a desktop window opens and the row shows Connected', async () => {
+  it('connects: Show desktop brings the open window forward and the row shows Connected', async () => {
     const id = await desktopIdByTitle(page, 'Alpha')
     await launcher.connect('Alpha')
     const desktopPage = await app.desktopWindow(id)
