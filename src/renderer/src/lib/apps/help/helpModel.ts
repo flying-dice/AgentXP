@@ -16,7 +16,7 @@ export interface HelpTopic {
 /** The topic that shows first and the one F1 opens when no window has focus. */
 export const HOME_TOPIC = 'index'
 export const DESKTOP_TOPIC = 'desktop'
-/** The topic F1 opens on the desktop when no app has the focus: the keys that work everywhere (UX-81). */
+/** The topic of the keys that work everywhere (a task topic; F1 on the desktop opens `DESKTOP_TOPIC`, which links to it). */
 export const KEYBOARD_TOPIC = 'keyboard'
 
 /** Topics in reading order: Home, the desktop, the launcher, the apps in the order of `APP_KINDS`, the rest by name. */
@@ -41,10 +41,10 @@ export const slugOf = (text: string): string =>
 
 /**
  * The topic F1 and View Help open for the focused window: the app's topic at its top, so the title is the first line
- * (UX-148). A desktop without a focused window gets the keyboard topic.
+ * (UX-148). A desktop without a focused window gets "Using the Desktop" (UX-165), never the keyboard topic.
  */
 export function topicForApp(app: AppKind | null | undefined): string {
-  return app ?? KEYBOARD_TOPIC
+  return app ?? DESKTOP_TOPIC
 }
 
 /**

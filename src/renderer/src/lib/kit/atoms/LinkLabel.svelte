@@ -8,6 +8,7 @@
     disabled?: boolean
     href?: string
     class?: string
+    'data-testid'?: string
     onclick?: (event: MouseEvent) => void
     children?: Snippet
   }
@@ -18,6 +19,7 @@
     disabled = false,
     href = '#',
     class: className = '',
+    'data-testid': testid,
     onclick,
     children
   }: Props = $props()
@@ -38,6 +40,7 @@
   class:visited
   class:disabled
   {href}
+  data-testid={testid}
   aria-disabled={disabled || undefined}
   tabindex={disabled ? -1 : undefined}
   onclick={handleClick}

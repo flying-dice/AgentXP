@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -92,5 +92,20 @@ describe('fitInsideWorkArea (UX-148)', () => {
   })
   it('moves a window that sticks out to the right or bottom back in', () => {
     expect(fitInsideWorkArea({ x: 700, y: 400, width: 400, height: 200 }, area, 0)).toEqual({ x: 500, y: 300, width: 400, height: 200 })
+  })
+})
+
+describe('helpBounds (UX-165)', () => {
+  it('is 760 x 520 and centred below the bar on a large desktop', () => {
+    const b = helpBounds({ width: 1280, height: 730 }, 68)
+    expect(b).toMatchObject({ width: 760, height: 520 })
+    expect(b.x).toBe(260)
+    expect(b.y).toBeGreaterThanOrEqual(minYBelow(68))
+    expect(b.y + b.height).toBeLessThanOrEqual(730)
+  })
+  it('takes the work area minus 40 px on a small one, never narrower than 640', () => {
+    expect(helpBounds({ width: 720, height: 500 }, 68)).toMatchObject({ width: 680 })
+    expect(helpBounds({ width: 660, height: 500 }, 68).width).toBe(640)
+    expect(helpBounds({ width: 600, height: 500 }, 68).width).toBe(600)
   })
 })

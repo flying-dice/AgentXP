@@ -127,6 +127,8 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Tool call card | One tool call. The attribute `data-status` gives the state. | `tool-call-card` |
 | Show, Hide | Opens or closes the details of a card. | `tool-call-toggle` |
 | Stop notice | Tells why a turn ended. | `chat-stop-notice` |
+| Stop notice: agent program | After your own Stop, says that the agent program is ended in Task Manager, on the Processes tab. | `chat-stop-notice-program` |
+| Stop notice: Open Task Manager | A link in that line. It opens Task Manager on the Processes tab. | `chat-stop-notice-taskmgr` |
 | Error | Shows an error in plain words. Buttons under it fix the problem. | `chat-error` |
 | Error text | The words of the error. | `chat-error-text` |
 | Error buttons | **Send again**, **Restart**, **Restart and send again**, **Try again**, **Open Agents**, **Choose another agent**, **Start a new chat**, **Details...**, **Show in Event Viewer**. The name ends with the id of the button. | `chat-error-*` |

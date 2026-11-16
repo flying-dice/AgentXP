@@ -39,13 +39,23 @@ describe('window placement below the top bar', () => {
     expect(covers).toBe(false)
   })
 
-  it('Help opens without covering the title bar of the window that is open', async () => {
+  it('Help opens whole and centred, with its search box inside the window (UX-165)', async () => {
     const help = await ctx.desktop.openHelp()
     await see.visible(help)
     const helpBox = await box(help)
     expect(helpBox.y).toBeGreaterThanOrEqual(await barBottom())
-    const terminal = await box(ctx.desktop.window('terminal'))
-    const covers = helpBox.x < terminal.x + terminal.width && terminal.x < helpBox.x + helpBox.width && helpBox.y < terminal.y + 28 && terminal.y < helpBox.y + helpBox.height
-    expect(covers).toBe(false)
+    expect(helpBox.width).toBeGreaterThanOrEqual(640)
+    const work = await box(ctx.desktop.taskbar)
+    expect(helpBox.x).toBeGreaterThanOrEqual(work.x)
+    expect(helpBox.x + helpBox.width).toBeLessThanOrEqual(work.x + work.width)
+    expect(Math.abs(helpBox.x - work.x - (work.width - helpBox.width) / 2)).toBeLessThanOrEqual(2)
+    const search = await box(help.getByTestId('help-search'))
+    expect(search.x + search.width).toBeLessThanOrEqual(helpBox.x + helpBox.width - 8)
+  })
+
+  it('a new window does not cover the desktop icons (UX-166)', async () => {
+    const icons = await box(ctx.desktop.icon('control-centre'))
+    const win = await box(await ctx.desktop.openApp('notepad'))
+    expect(win.x).toBeGreaterThanOrEqual(icons.x + icons.width)
   })
 })

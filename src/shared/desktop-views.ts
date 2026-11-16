@@ -177,6 +177,20 @@ export function placeNewWindow(
   size?: { width: number; height: number },
   minY: number = WINDOW_MIN_Y
 ): Bounds {
+  const placed = placeBesideParent(app, openCount, parent, area, size, minY)
+  const cleared = clearIconColumn(placed, area)
+  // Moving off the icons must not put the window back over the window it was tiled beside.
+  return parent && overlaps(cleared, parent.bounds) && !overlaps(placed, parent.bounds) ? placed : cleared
+}
+
+function placeBesideParent(
+  app: AppKind,
+  openCount: number,
+  parent: PlacementParent | null,
+  area: { width: number; height: number },
+  size: { width: number; height: number } | undefined,
+  minY: number
+): Bounds {
   if (!parent) return placeWindow(app, openCount, null, area, size, minY)
   if (parent.app === 'chat') return placeWindow(app, openCount, parent.bounds, area, size, minY)
   const base = within(cascadedBounds(app, openCount, size), area, minY)
@@ -200,6 +214,15 @@ export function placeNewWindow(
   // No room to cascade: keep the title bar of the focused window free (tile beside it when the default spot would cover it).
   const titleStrip: Bounds = { x: p.x, y: p.y, width: p.width, height: PARENT_OFFSET }
   return overlaps(base, titleStrip) ? placeWindow(app, openCount, p, area, size, minY) : base
+}
+
+/** The desktop icons sit in the left 100 px of the work area; a new window starts to the right of them (UX-166). */
+export const ICON_COLUMN_WIDTH = 100
+
+/** Moves a window that covers the icon column to the right of it, as far as the work area allows (it keeps its size). */
+export function clearIconColumn(b: Bounds, area: { width: number; height: number }): Bounds {
+  if (b.x >= ICON_COLUMN_WIDTH) return b
+  return { ...b, x: Math.max(b.x, Math.min(ICON_COLUMN_WIDTH, area.width - b.width)) }
 }
 
 /** Smallest share of a Browser that a chat opened from it may cover (UX-120): none beyond a sliver. */

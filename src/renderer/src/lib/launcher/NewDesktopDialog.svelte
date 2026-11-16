@@ -71,6 +71,7 @@
         <CheckedListBox testid="new-desktop-projects" {items} bind:checked width="100%" height={112} label="Projects" />
         <Button data-testid="new-desktop-browse" onclick={() => void browse()}>Browse...</Button>
       </div>
+      <p class="opens" data-testid="new-desktop-projects-note">You can add projects later.</p>
     </div>
     <div class="field inline">
       <Label text="Agent:" for="nd-agent" />

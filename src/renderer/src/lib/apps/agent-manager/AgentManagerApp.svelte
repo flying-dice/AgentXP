@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import type { AgentProcessDto } from '@shared/desktop'
+  import { onMount, untrack } from 'svelte'
+  import type { AgentProcessDto, TaskManagerTab } from '@shared/desktop'
   import type { AgentDto, SessionDto, TerminalDto } from '@shared/models'
   import type { AppProps } from '../types'
   import Button from '../../kit/atoms/Button.svelte'
@@ -35,12 +35,34 @@
   let sessions = $state.raw<SessionDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
   let terminals = $state.raw<TerminalDto[]>([])
-  let tab = $state('chats')
-  /** The first refresh picks the tab once (UX-130); a tab the user chose first is kept. */
-  let tabChosen = false
+  // svelte-ignore state_referenced_locally
+  let tab = $state<TaskManagerTab>(win.view.tab ?? 'chats')
+  /** The first refresh picks the tab once (UX-130); a tab the user chose first, or the one the desktop opened Task Manager on, is kept. */
+  // svelte-ignore state_referenced_locally
+  let tabChosen = win.view.tab !== undefined
   let current = $state<CellRef>({ row: 0, col: 0 })
-  let selectedChat = $state<string[]>([])
   let error = $state<string | null>(null)
+
+  // svelte-ignore state_referenced_locally
+  let selectedChat = $state<string[]>(win.view.chatId === undefined ? [] : [String(win.view.chatId)])
+  // The tab and chat last seen in the window's view: a stale echo of our own report must not flip them back; a view that changes from outside (the Chats icon, the toast of a closed chat) does.
+  // svelte-ignore state_referenced_locally
+  let seenInView = `${win.view.tab}:${win.view.chatId}`
+  $effect(() => {
+    const { tab: incoming, chatId } = win.view
+    const key = `${incoming}:${chatId}`
+    if (key === seenInView) return
+    seenInView = key
+    untrack(() => {
+      if (incoming) {
+        tab = incoming
+        tabChosen = true
+      }
+      if (chatId !== undefined) selectedChat = [String(chatId)]
+    })
+  })
+  // The shell hides the chat pane on the Chats tab (UX-163), so it needs to know the tab.
+  $effect(() => host.updateView(win.id, { app: 'agent-manager', tab }))
 
   const tabs: TabDef[] = [
     { id: 'chats', title: 'Chats' },
@@ -96,7 +118,7 @@
     { key: 'cwd', header: 'Working folder' }
   ]
   const termRows = $derived<ListRow[]>(terminalRows(terminals, sessions).map((t) => ({ ...t, icon: 'terminal' as const })))
-  const chats = $derived(chatRows(sessions, agents))
+  const chats = $derived(chatRows(sessions, agents, (id) => host.chatProgress(id)))
   const chatListRows = $derived<ListRow[]>(chats.map((c) => ({ ...c, icon: 'session' as const })))
 
   const selectedChatRow = $derived(chats.find((c) => c.id === selectedChat[0]) ?? null)
@@ -136,7 +158,10 @@
   const help = new AppHelp(host, 'agent-manager')
   const ctx = new ContextMenu()
 
+  /** Opens the chat's own window (the same chat, with its messages) and brings it to the front (UX-163). */
   const switchTo = (chat: { id: string }): void => void host.openApp({ app: 'chat', sessionId: Number(chat.id) })
+  /** Why Open chat is off. */
+  const openReason = $derived(selectedChatRow ? null : 'Select a chat first')
 
   /** The actions that exist as buttons: Switch to and End Task on a chat, End process on an agent process, Refresh anywhere. */
   function contextItems(): MenuItemDef[] {
@@ -176,9 +201,9 @@
         items: [
           { id: 'refresh', testid: 'agent-manager-menu-refresh', label: '&Refresh Now', shortcut: 'F5', action: () => void refresh() },
           { separator: true },
-          ...tabs.map((t) => ({ id: `tab-${t.id}`, testid: `agent-manager-menu-tab-${t.id}`, label: t.title, radio: true, checked: tab === t.id, action: () => (tab = t.id) })),
+          ...tabs.map((t) => ({ id: `tab-${t.id}`, testid: `agent-manager-menu-tab-${t.id}`, label: t.title, radio: true, checked: tab === t.id, action: () => (tab = t.id as TaskManagerTab) })),
           { separator: true },
-          help.paneItem(win.id)
+          ...(tab === 'chats' ? [] : [help.paneItem(win.id)])
         ]
       },
       {
@@ -222,9 +247,10 @@
             </div>
           {:else if t.id === 'chats'}
             <div class="grid">
-              <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
+              <ListView testid="agent-manager-chats" rowTestid="agent-manager-chat" columns={chatColumns} rows={chatListRows} bind:selected={selectedChat} aria-label="Chats" onactivate={switchTo} oncontextmenu={(_row, e) => ctx.show(e, contextItems())} emptyText="There are no chats on this desktop yet." />
             </div>
             <div class="buttons">
+              <Button data-testid="agent-manager-open-chat" {...reasonFor(openReason, 'Open the window of this chat')} onclick={() => selectedChatRow && switchTo(selectedChatRow)}>Open chat</Button>
               <Button data-testid="agent-manager-end-task" {...reasonFor(endTaskReason, 'Stop the step that this chat is working on')} onclick={endTask}>End Task</Button>
               <ReasonNote testid="agent-manager-reason" reason={endTaskReason} />
             </div>

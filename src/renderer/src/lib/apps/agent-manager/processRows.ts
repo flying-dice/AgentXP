@@ -1,5 +1,6 @@
 /** Pure row builders of the Agent Manager. */
 import type { AgentProcessDto } from '@shared/desktop'
+import type { AguiToolCallState } from '@shared/agui-state'
 import type { AgentDto, SessionDto, TerminalDto } from '@shared/models'
 import { contextPercent, isBusy, statusLabel } from '../../app/sessionStatus'
 
@@ -58,14 +59,18 @@ export interface ChatRow {
 /** A chat that is idle has its agent program running: the table says so, because "Idle" next to a process reads like "off". */
 export const chatStatusText = (status: SessionDto['status']): string => (status === 'idle' ? 'Idle (the agent program is still running)' : statusLabel(status))
 
-export function chatRows(sessions: readonly SessionDto[], agents: readonly AgentDto[]): ChatRow[] {
+/** `progress` tells what a chat is doing now (the running tool); a working chat then shows it beside its status (UX-163). */
+/** `Working: Step 12 of 30`; the status alone when there is nothing to add. */
+export const withProgress = (status: string, progress: string | null): string => (progress ? `${status}: ${progress}` : status)
+
+export function chatRows(sessions: readonly SessionDto[], agents: readonly AgentDto[], progress: (sessionId: number) => string | null = () => null): ChatRow[] {
   return sessions.map((s) => {
     const percent = contextPercent(s.contextUsed, s.contextSize)
     return {
       id: String(s.id),
       title: s.title || 'New chat',
       agent: agents.find((a) => a.id === s.agentId)?.name ?? `Removed agent (${s.agentId})`,
-      status: chatStatusText(s.status),
+      status: withProgress(chatStatusText(s.status), isBusy(s.status) ? progress(s.id) : null),
       context: s.contextSize > 0 ? `${percent}%` : '-',
       tokens: s.contextSize > 0 ? `${formatTokens(s.contextUsed)} / ${formatTokens(s.contextSize)}` : '-',
       percent,
@@ -99,4 +104,11 @@ export function terminalRows(terminals: readonly TerminalDto[], sessions: readon
       status: status(t)
     }))
     .sort((a, b) => Number(b.status === 'Running') - Number(a.status === 'Running'))
+}
+
+/** The title of the tool call that is running in a chat ("Step 12 of 30"), the last one when several are; null when none. */
+export function runningToolTitle(toolCalls: Record<string, Pick<AguiToolCallState, 'status' | 'title'>>): string | null {
+  const calls = Object.values(toolCalls)
+  for (let i = calls.length - 1; i >= 0; i--) if (calls[i].status === 'pending' || calls[i].status === 'in_progress') return calls[i].title || null
+  return null
 }

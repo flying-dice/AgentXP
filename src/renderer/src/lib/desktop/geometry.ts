@@ -97,3 +97,21 @@ export function fitInsideWorkArea(b: Bounds, area: Size, barHeight: number): Bou
   const height = Math.min(b.height, Math.max(1, area.height - minY))
   return { x: clamp(b.x, 0, area.width - width), y: clamp(b.y, minY, Math.max(minY, area.height - height)), width, height }
 }
+
+/** The Help window: 760 x 520, or the work area minus 40 px when that is less, never narrower than 640 px (UX-165). */
+export const HELP_SIZE: Size = { width: 760, height: 520 }
+export const HELP_MIN_WIDTH = 640
+const HELP_MARGIN = 40
+
+/** Where the Help window opens: centred in the work area below the top bar, so its search box and topic column are whole. */
+export function helpBounds(area: Size, barHeight: number): Bounds {
+  const minY = barHeight > 0 ? minYBelow(barHeight) : 0
+  const width = Math.min(area.width, Math.max(HELP_MIN_WIDTH, Math.min(HELP_SIZE.width, area.width - HELP_MARGIN)))
+  const height = Math.max(1, Math.min(HELP_SIZE.height, area.height - minY - HELP_MARGIN))
+  return {
+    x: Math.round((area.width - width) / 2),
+    y: Math.round(minY + Math.max(0, (area.height - minY - height) / 2)),
+    width,
+    height
+  }
+}
