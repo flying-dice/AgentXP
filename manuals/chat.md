@@ -72,7 +72,7 @@ The composer is below the transcript.
 
 Click **Changes** to open the pane at the right. It has two tabs.
 
-- **Changes** – Lists each file that the agent changed. Select a file to see the diff. **Revert** undoes the change. **Open in editor** shows the file in Code.
+- **Changes** – Lists each file that the agent changed and that is not committed yet. When you commit a file in Git, its row leaves the list. Select a file to see the diff. **Revert** undoes the change. **Open in editor** shows the file in Code.
 - **Tasks** – Shows the plan of the agent, with a bar for the finished tasks.
 
 ### The Sidebar

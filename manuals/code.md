@@ -51,7 +51,7 @@ The pane is at the left. It has three tabs.
 
 - **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
-- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. A row marked "Reverted" shows "This change was undone" and a **Restore...** button that opens the Recycle Bin on that file. When the chat did not change any file, the list says so; if Git shows changed files from before, the line above the list says how many and links to Git. In a folder without Git it says that the folder is not tracked by Git.
+- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. A row marked "Reverted" shows "This change was undone" and a **Restore...** button that opens the Recycle Bin on that file. The list shows only changes that are not committed yet: when you commit a file in Git, its row leaves the list (in a folder without Git every change stays). When nothing is left, the list says "No uncommitted changes from this chat."; if Git shows changed files from before, the line above the list says how many and links to Git. In a folder without Git it says that the folder is not tracked by Git.
 
 ### The Editor
 

@@ -49,6 +49,7 @@
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
   import { useRevertedChanges } from '../../app/changes/revertedChanges.svelte'
+  import { useUncommittedChanges } from '../../app/changes/uncommitted.svelte'
   import type { FileTreeTarget } from '../../app/files/fileTree'
 
   let { window: win, host, focused = false }: AppProps<'code'> = $props()
@@ -105,13 +106,17 @@
   const stores = $derived(desktop.list)
   // A revert from anywhere updates the Changes list at once (UX-79).
   $effect(() => refreshOnRevert(host.api, desktopId, () => untrack(() => stores)))
-  const changes = $derived<FileChangeDto[]>(stores.flatMap((s) => s.state.changes))
+  const allChanges = $derived<FileChangeDto[]>(stores.flatMap((s) => s.state.changes))
+  // Only what is still uncommitted: a change leaves the list once Git lists its file as clean (folders without Git keep all).
+  // svelte-ignore state_referenced_locally
+  const uncommitted = useUncommittedChanges(host.api, () => desktopId, () => allChanges)
+  const changes = $derived(uncommitted.list)
   // Files reverted by any chat of this desktop stay in the list after a reopen (UX-117).
   const revertedChanges = useRevertedChanges(
     host.api,
     () => desktopId,
     () => chatSessionIds(host),
-    () => changes
+    () => allChanges
   )
   const changedPaths = $derived(changes.map((c) => normaliseVPath(c.path) ?? c.path))
   const editing = $derived(
@@ -178,6 +183,7 @@
   let refreshAgain = false
   /** Status of every drive plus the active file's changes. Overlapping calls collapse into one more run. */
   async function refreshGit(): Promise<void> {
+    void uncommitted.refresh()
     if (refreshing) {
       refreshAgain = true
       return

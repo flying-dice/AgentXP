@@ -3,7 +3,7 @@ import { CHANGES_EMPTY, UNDONE_TEXT, gitNote, revertReasonText } from './changes
 
 describe('the words of the Changes pane (UX-185, UX-187)', () => {
   it('never says the chat changed nothing beside a Git list', () => {
-    expect(CHANGES_EMPTY).toBe('This chat did not change any file.')
+    expect(CHANGES_EMPTY).toBe('No uncommitted changes from this chat.')
     expect(gitNote(3, true)).toEqual({ kind: 'files', text: 'Git shows 3 changed files from before.' })
     expect(gitNote(1, true)?.text).toBe('Git shows 1 changed file from before.')
   })
