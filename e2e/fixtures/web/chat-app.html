@@ -133,8 +133,9 @@
       }
 
       // Older messages load when the list is scrolled to the top (after a short delay, like a network call).
-      list.addEventListener('scroll', () => {
-        if (loading || start === 0 || list.scrollTop > 40) return
+      // A request that arrives while a load is pending is not lost: it runs when that load is done (H-108).
+      let again = false
+      function startLoad() {
         loading = true
         $('search-status').textContent = 'Loading older messages...'
         setTimeout(() => {
@@ -144,7 +145,17 @@
           list.scrollTop = list.scrollHeight - before + 41 // keep the reader where they were
           $('search-status').textContent = start === 0 ? 'Beginning of the channel' : ''
           loading = false
+          if (again && start > 0) {
+            again = false
+            startLoad()
+          }
+          again = false
         }, 150)
+      }
+      list.addEventListener('scroll', () => {
+        if (start === 0 || list.scrollTop > 40) return
+        if (loading) again = true
+        else startLoad()
       })
 
       // ---- composer: contenteditable, Enter sends --------------------------------------------------------------

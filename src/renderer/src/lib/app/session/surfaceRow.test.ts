@@ -63,15 +63,22 @@ describe('what a surface says about itself', () => {
   })
 })
 
-describe('surfaceTabLabels (UX-135)', () => {
+describe('surfaceTabLabels (UX-216)', () => {
   const input: A2uiServerMessage = { version: 'v0.9', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'TextBox' }] } } as never
-  it('calls a form "Form" (numbered when there are several) and keeps the title as tooltip', () => {
-    const form = { surfaceId: 'a', messages: [...messages('Notes'), input] }
-    const panel = { surfaceId: 'b', messages: messages('Board') }
-    const one = surfaceTabLabels([form, panel])
-    expect(one.get('a')).toEqual({ label: 'Form', tooltip: 'Notes' })
-    expect(one.get('b')).toEqual({ label: 'Board', tooltip: 'Board' })
-    const two = surfaceTabLabels([form, { ...form, surfaceId: 'c' }])
+  it('gives the card and the tab one name: the title the agent gave, else "Form"', () => {
+    const titled = { surfaceId: 'a', messages: [...messages('Notes'), input] }
+    const plain = { surfaceId: 'b', messages: [...messages(), input] }
+    const panel = { surfaceId: 'c', messages: messages('Board') }
+    const labels = surfaceTabLabels([titled, plain, panel])
+    expect(labels.get('a')).toEqual({ label: 'Notes', tooltip: 'Notes' })
+    expect(labels.get('b')).toEqual({ label: 'Form', tooltip: 'Form' })
+    expect(labels.get('c')).toEqual({ label: 'Board', tooltip: 'Board' })
+    expect(surfaceDisplayTitle(titled.messages)).toBe(labels.get('a')?.label)
+    expect(surfaceDisplayTitle(plain.messages)).toBe(labels.get('b')?.label)
+  })
+  it('numbers forms that have no title', () => {
+    const plain = { surfaceId: 'a', messages: [...messages(), input] }
+    const two = surfaceTabLabels([plain, { ...plain, surfaceId: 'c' }])
     expect([two.get('a')?.label, two.get('c')?.label]).toEqual(['Form 1', 'Form 2'])
   })
 })

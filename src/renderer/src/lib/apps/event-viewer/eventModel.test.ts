@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProtocolEventDto } from '@shared/desktop'
-import { SOURCE_HINT, ALL_NODE, eventView, lastProblem, FALLBACK_COUNT, appendEvents, chatNode, eventForToolCall, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
+import { SOURCE_HINT, START_FAILED, hiddenText, lastFinished, rawLines, shownText, whatHappened, whatToDo, ALL_NODE, eventView, lastProblem, FALLBACK_COUNT, appendEvents, chatNode, eventForToolCall, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
 
 const ev = (id: number, over: Partial<ProtocolEventDto> = {}): ProtocolEventDto => ({ id, at: '2026-11-16T09:00:00Z', desktopId: 1, sessionId: 1, source: 'acp', direction: 'in', level: 'info', name: `m${id}`, payload: '{}', ...over })
 
@@ -104,7 +104,7 @@ describe('eventView', () => {
 describe('lastProblem', () => {
   it('names the newest warning or error with its own message', () => {
     const list = [ev(1, { level: 'error', payload: '{"error":{"message":"Old"}}' }), ev(2, { level: 'warning', payload: '{"error":{"message":"Drive E: was removed"}}' }), ev(3)]
-    expect(lastProblem(list)).toEqual({ level: 'warning', text: 'Drive E: was removed' })
+    expect(lastProblem(list)).toEqual({ level: 'warning', text: 'Drive E: is not plugged in on this desktop.' })
   })
   it('is null without a warning or an error, and falls back to a plain sentence', () => {
     expect(lastProblem([ev(1)])).toBeNull()
@@ -120,12 +120,57 @@ describe('problem sentences (UX-188)', () => {
   })
   it('says "Drive E: was removed" for a drive that is not plugged in, whole', () => {
     const message = 'Drive E: is not plugged in on this desktop. Ask the user to plug the project in, or work on C:.'
-    expect(lastProblem([ev(1, { level: 'warning', source: 'mcp', payload: JSON.stringify({ content: [{ type: 'text', text: message }] }) })])?.text).toBe('Drive E: was removed')
+    expect(lastProblem([ev(1, { level: 'warning', source: 'mcp', payload: JSON.stringify({ content: [{ type: 'text', text: message }] }) })])?.text).toBe('Drive E: is not plugged in on this desktop.')
   })
   it('drops the problem of a chat once the same chat finished a later turn, but not of another chat', () => {
     const error = ev(1, { source: 'ag-ui', level: 'error', name: 'RUN_ERROR' })
     expect(lastProblem([error, ev(2, { source: 'ag-ui', name: 'RUN_FINISHED' })])).toBeNull()
     expect(lastProblem([error, ev(2, { sessionId: 2, source: 'ag-ui', name: 'RUN_FINISHED' })])?.level).toBe('error')
     expect(lastProblem([ev(1, { sessionId: null, level: 'warning' }), ev(2, { name: 'RUN_FINISHED' })])?.level).toBe('warning')
+  })
+})
+
+describe('a warning is not hidden by a later event (UX-212)', () => {
+  it('keeps a warning of a chat that finished a later turn', () => {
+    const drive = ev(1, { level: 'warning', source: 'mcp', payload: JSON.stringify({ content: [{ type: 'text', text: 'Drive E: is not plugged in on this desktop.' }] }) })
+    expect(lastProblem([drive, ev(2, { name: 'RUN_FINISHED' })])?.text).toBe('Drive E: is not plugged in on this desktop.')
+    expect(lastProblem([drive, ev(2, { name: 'RUN_FINISHED' }), ev(3, { name: 'tools/call' })])?.level).toBe('warning')
+  })
+})
+
+describe('lastFinished (UX-212)', () => {
+  it('says what was last done, and is null only for an empty log', () => {
+    expect(lastFinished([])).toBeNull()
+    expect(lastFinished([ev(1)])).toBe('The agent is connected. Nothing was asked yet.')
+    expect(lastFinished([ev(1), ev(2, { source: 'ag-ui', name: 'RUN_FINISHED' })])).toBe('The agent finished its last turn.')
+  })
+  it('names an error that the chat recovered from', () => {
+    const error = ev(1, { source: 'ag-ui', level: 'error', name: 'RUN_ERROR', payload: '{"message":"The connection dropped"}' })
+    expect(lastProblem([error, ev(2, { source: 'ag-ui', name: 'RUN_FINISHED' })])).toBeNull()
+    expect(lastFinished([error, ev(2, { source: 'ag-ui', name: 'RUN_FINISHED' })])).toBe('Recovered: The connection dropped. The chat finished a later turn.')
+  })
+})
+
+describe('plain sentences for the rows (UX-213)', () => {
+  const start = ev(1, { level: 'error', name: 'session/new', direction: 'in', payload: '{"error":{"message":"Internal error"}}' })
+  it('says that the program stopped before it was ready, not "Internal error", and what to do', () => {
+    expect(whatHappened(start)).toBe(START_FAILED)
+    expect(whatHappened(ev(2, { level: 'error', name: 'session/new', payload: '{"error":{"message":"Query closed before response received"}}' }))).toBe(START_FAILED)
+    expect(whatToDo(start)).toContain('choose another agent')
+  })
+  it('gives no sentence to the traffic of the logs', () => {
+    expect(whatHappened(ev(3))).toBe('')
+    expect(whatToDo(ev(3))).toBe('')
+  })
+  it('moves the raw names to the Details tab for a warning or an error', () => {
+    expect(generalLines(start, 'Chat').map(([k]) => k)).not.toContain('Event')
+    expect(rawLines(start)).toContainEqual(['Event', 'session/new'])
+    expect(generalLines(ev(4), 'Chat').map(([k]) => k)).toContain('Event')
+  })
+  it('counts what is shown and what is hidden in words', () => {
+    expect(shownText([ev(1, { level: 'warning' })])).toBe('1 warning shown')
+    expect(shownText([ev(1, { level: 'error' }), ev(2, { level: 'warning' }), ev(3, { level: 'warning' })])).toBe('1 error and 2 warnings shown')
+    expect(hiddenText(25)).toBe('25 other events hidden: Show all')
+    expect(hiddenText(1)).toBe('1 other event hidden: Show all')
   })
 })

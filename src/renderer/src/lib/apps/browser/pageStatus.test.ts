@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agentBarText, assistantStatus, describeLoadFailure, failureHint, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
+import { STOPPED_MS, STOPPED_TEXT, TAKEN_OVER_TEXT, agentBarText, assistantStatus, describeLoadFailure, failureHint, isShownFailure, pageStatus, shortAddress, stepZoom, zoomText } from './pageStatus'
 
 describe('load failures', () => {
   it('names the cause in plain words and keeps the technical text', () => {
@@ -78,6 +78,14 @@ describe('agentBarText (UX-128)', () => {
   it('says what the agent does, that it read the page, or that the user has control', () => {
     expect(agentBarText({ userInControl: false, readDone: false, activity: 'Reading the page' })).toBe('Agent is using this page: Reading the page')
     expect(agentBarText({ userInControl: false, readDone: true, activity: 'Reading the page' })).toBe('The agent read this page.')
-    expect(agentBarText({ userInControl: true, readDone: true, activity: null })).toContain('You have control of this page')
+    expect(agentBarText({ userInControl: true, readDone: true, activity: null })).toBe(TAKEN_OVER_TEXT)
+  })
+  it('keeps the words of the user\'s turn: the agent waits, and Give back lets it go on (UX-214)', () => {
+    expect(TAKEN_OVER_TEXT).toBe('You have the page. The agent waits. Click Give back to let it continue.')
+  })
+  it('says that the agent stopped for a few seconds after its last action (UX-214)', () => {
+    expect(agentBarText({ userInControl: false, readDone: false, activity: null, stopped: true })).toBe(STOPPED_TEXT)
+    expect(agentBarText({ userInControl: false, readDone: false, activity: 'Scrolling', stopped: true })).toBe('Agent is using this page: Scrolling')
+    expect(STOPPED_MS).toBe(5000)
   })
 })

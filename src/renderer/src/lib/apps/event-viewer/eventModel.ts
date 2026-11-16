@@ -138,12 +138,22 @@ export function nodeScope(id: string | null): { source: Source | null; sessionId
   return { source: null, sessionId: null, title: 'Agent7 Logs' }
 }
 
-/** The General tab: a few readable lines. */
-export function generalLines(e: ProtocolEventDto, chat: string | undefined): [string, string][] {
+/** The raw names of an event (log, message, direction): the Details tab shows them above the message (UX-213). */
+export function rawLines(e: ProtocolEventDto): [string, string][] {
   return [
     ['Log Name', SOURCE_LABEL[e.source]],
     ['Event', e.name],
-    ['Direction', e.direction === 'in' ? 'From the agent' : 'To the agent'],
+    ['Direction', e.direction === 'in' ? 'From the agent' : 'To the agent']
+  ]
+}
+
+/**
+ * The General tab: a few readable lines. A warning or an error keeps the raw names (log, event, direction) for the Details tab,
+ * so the tab leads with the sentence and the plain facts (UX-213).
+ */
+export function generalLines(e: ProtocolEventDto, chat: string | undefined): [string, string][] {
+  return [
+    ...(isNotable(e) ? [] : rawLines(e)),
     ['Level', LEVEL_LABEL[e.level]],
     ['Logged', formatDateTime(e.at)],
     ['Chat', chat ?? (e.sessionId === null ? '(none)' : `Chat ${e.sessionId}`)],
@@ -196,12 +206,18 @@ export interface ProblemLine {
 const PROTOCOL_WORD = /RUN_ERROR|RUN_FINISHED|JSON-?RPC|\bACP\b|AG-UI|\bMCP\b|session\/|\(response\)|\bInternal error\b|\bnpx\b/i
 const DRIVE_GONE = /Drive ([A-Z]):\s+(?:is not plugged in|was removed)/
 const CONNECTION = /closed before|connection|disconnect|econnreset|epipe|socket/i
+/** The messages that start an agent: an error here means the program stopped before it was ready (UX-213). */
+const START_MESSAGE = /^(session\/new|session\/load|initialize)\b/
+
+/** The sentence of an agent that stopped while it started, and what to do about it (the chat's box says the same). */
+export const START_FAILED = 'The agent program stopped before it was ready.'
 
 /** A plain sentence for one warning or error: what it says when that is readable, else one sentence per kind of event (UX-188). */
 export function problemSentence(e: ProtocolEventDto): string {
   const message = summaryOf(e.payload).replace(/\s+/g, ' ').trim()
   const drive = DRIVE_GONE.exec(message) ?? DRIVE_GONE.exec(e.payload)
-  if (drive) return `Drive ${drive[1]}: was removed`
+  if (drive) return `Drive ${drive[1]}: is not plugged in on this desktop.`
+  if (e.level === 'error' && START_MESSAGE.test(e.name)) return START_FAILED
   if (CONNECTION.test(message)) return 'The connection dropped'
   if (e.name === 'RUN_ERROR') return 'The agent stopped unexpectedly'
   if (message && !PROTOCOL_WORD.test(message) && message.length <= 160) return message
@@ -210,15 +226,55 @@ export function problemSentence(e: ProtocolEventDto): string {
   return e.source === 'ag-ui' ? 'The agent stopped unexpectedly' : 'The agent reported a problem'
 }
 
+/** What to do about a problem, one plain sentence for the General tab; '' when there is nothing to add. */
+export function whatToDo(e: ProtocolEventDto): string {
+  if (!isNotable(e)) return ''
+  const sentence = problemSentence(e)
+  if (sentence === START_FAILED) return 'Check that the program is installed, or open Agents and choose another agent.'
+  if (/^Drive [A-Z]:/.test(sentence)) return 'Plug the drive in again, or work on another project.'
+  if (sentence === 'The connection dropped') return 'Click Reconnect in the chat, then send your request again.'
+  if (sentence === 'The agent was stopped') return 'Send your request again if you still need it.'
+  if (sentence === 'The agent was not allowed to do that') return 'Open Control Center and allow it, or ask the agent to do something else.'
+  return 'Send your request again. If it keeps failing, choose another agent.'
+}
+
+/** The "What happened" cell of a row: the sentence of a warning or an error, empty for the traffic of the logs. */
+export const whatHappened = (e: ProtocolEventDto): string => (isNotable(e) ? problemSentence(e) : '')
+
 /** A chat that finished a turn after event `e` has recovered from it (a later RUN_FINISHED of the same chat). */
 const recovered = (events: readonly ProtocolEventDto[], e: ProtocolEventDto): boolean =>
   e.sessionId !== null && events.some((o) => o.id > e.id && o.sessionId === e.sessionId && o.name === 'RUN_FINISHED' && o.level === 'info')
 
 /**
  * The newest warning or error of the log that is still current, for the Activity gadget; null when there is none.
- * A problem of a chat is dropped once the same chat has a later successful turn. `events` is oldest first.
+ * An error of a chat is dropped once the same chat has a later successful turn. A warning stays: a later event of
+ * another kind never hides a warning that Event Viewer lists (UX-212). `events` is oldest first.
  */
 export function lastProblem(events: readonly ProtocolEventDto[]): ProblemLine | null {
-  const e = events.findLast((o) => isNotable(o) && !recovered(events, o))
+  const e = events.findLast((o) => isNotable(o) && (o.level === 'warning' || !recovered(events, o)))
   return e ? { level: e.level as ProblemLine['level'], text: problemSentence(e) } : null
 }
+
+/**
+ * The last thing that finished, for the Activity gadget when it has no problem, no running job and no step to list: an error that
+ * the chat recovered from, else the last finished turn, else that the agent is ready; null only for a log with no event (UX-212).
+ */
+export function lastFinished(events: readonly ProtocolEventDto[]): string | null {
+  const healed = events.findLast((o) => o.level === 'error' && recovered(events, o))
+  const done = events.findLast((o) => o.name === 'RUN_FINISHED' && o.level === 'info')
+  if (healed && (!done || done.id > healed.id)) return `Recovered: ${problemSentence(healed)}. The chat finished a later turn.`
+  if (done) return 'The agent finished its last turn.'
+  return events.length > 0 ? 'The agent is connected. Nothing was asked yet.' : null
+}
+
+/** "1 warning shown", "2 errors shown", "1 error and 2 warnings shown": what the default list holds. */
+export function shownText(events: readonly ProtocolEventDto[]): string {
+  const errors = events.filter((e) => e.level === 'error').length
+  const warnings = events.filter((e) => e.level === 'warning').length
+  const part = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`
+  const parts = [...(errors ? [part(errors, 'error')] : []), ...(warnings ? [part(warnings, 'warning')] : [])]
+  return `${parts.join(' and ') || '0 events'} shown`
+}
+
+/** The link of the heading while events are hidden: "25 other events hidden: Show all". */
+export const hiddenText = (hidden: number): string => `${hidden} other event${hidden === 1 ? '' : 's'} hidden: Show all`

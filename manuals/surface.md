@@ -31,7 +31,7 @@ The window has a title bar with the title of the form, for example **Board**. Th
 
 In a text box, a grey line in italics that starts with **Example:** is a hint. It is not text that you typed. Click the box and type your own text.
 
-When you click a button, it reads **Sending...** and cannot be clicked again. When the agent has your answer, the form says **Sent.** and what the agent answered. The note goes after 3 seconds.
+When you click a button, it reads **Sending...** and cannot be clicked again. When the agent has your answer, the form says **Sent.** and what the agent answered. The note stays under the form until you change a field again.
 
 If you delete the form, the window says that the surface was deleted.
 
@@ -42,7 +42,7 @@ If you delete the form, the window says that the surface was deleted.
 | Agent window | The root of the window. The attribute `data-surface-id` holds the id of the form. | `surface-app` |
 | Form | The drawn form. | `a2ui-surface` |
 | Button | A button that the agent drew. After you click it, it reads **Sending...** until the agent answers. | `a2ui-button` |
-| Sent | A short note that the agent got your answer: **Sent.** and what it answered. It goes after 3 seconds. | `a2ui-sent` |
+| Sent | A short note that the agent got your answer: **Sent.** and what it answered. It stays until you change a field of the form again. | `a2ui-sent` |
 | Text box | A text box that the agent drew. A hint such as **Example: Ann** is grey and in italics. | `a2ui-textbox` |
 | Form row: where | In the chat, the line of a form row that says where the form is, for example **It is in the window 'Board'.** An inline form has no line. | `chat-surface-where` |
 | Option | An option that the agent drew. | `a2ui-checkbox` |

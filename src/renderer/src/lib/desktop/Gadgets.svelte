@@ -7,8 +7,8 @@
   import { toolTitleOr } from '../app/session/toolTitles'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
-  import { NOT_SAVED_NOTE, feedText, type FeedItem } from './activity'
-  import { lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
+  import { NOT_SAVED_NOTE, WAITING_FOR_YOU, feedText, type FeedItem } from './activity'
+  import { lastFinished, lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
   import type { ProtocolEventDto } from '@shared/desktop'
   import type { Agent7Api } from '@shared/ipc'
 
@@ -29,9 +29,11 @@
     /** Where the last warning or error comes from (UX-171); without it the gadget shows the tool calls only. */
     api?: Pick<Agent7Api, 'events' | 'on'>
     desktopId?: number
+    /** What the desktop's chats are doing now ("start the long job", `workingText` of the bar); null when idle. */
+    working?: string | null
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId, working = null }: Props = $props()
 
   const menu = new ContextMenu()
   const menuItems = () => [{ id: 'gadget-activity-menu-event-viewer', testid: 'gadget-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
@@ -39,6 +41,10 @@
   // The newest warning or error, so "Drive E: was removed" shows here and not only in the Event Viewer.
   let events = $state.raw<ProtocolEventDto[]>([])
   const problem = $derived(lastProblem(events))
+  /** The last thing that finished, for a feed with no step: "Nothing has happened yet." is only for a log with no event at all (UX-212). */
+  /** The bar's words: "Working: <what>", or "Waiting for you: ..." as it is. */
+  const workingLine = $derived(working ? (working.startsWith(WAITING_FOR_YOU) ? working : `Working: ${working}`) : null)
+  const finished = $derived(lastFinished(events))
   $effect(() => {
     if (!api || !desktopId) return
     let live = true
@@ -97,10 +103,11 @@
       {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>
         <li class="not-saved" data-testid="gadget-activity-not-saved"><span>{NOT_SAVED_NOTE.before}{#if onopenpermissions}<button type="button" class="open-events inline" data-testid="gadget-activity-open-permissions" onclick={() => onopenpermissions?.()}>{NOT_SAVED_NOTE.link}</button>{:else}{NOT_SAVED_NOTE.link}{/if}{NOT_SAVED_NOTE.after}</span></li>{/if}
       {#if problem}<li class="problem" data-testid="gadget-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
+      {#if workingLine}<li class="working" data-testid="gadget-activity-working"><span class="t" title={workingLine}>{workingLine}</span></li>{/if}
       {#each feed as item (item.key)}
         <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
       {:else}
-        {#if !problem}<li class="muted">Nothing has happened yet.</li>{/if}
+        {#if !problem && !working}<li class="muted" data-testid="gadget-activity-last">{finished ?? 'Nothing has happened yet.'}</li>{/if}
       {/each}
     </ul>
     {#if onopeneventviewer}<button type="button" class="open-events" data-testid="gadget-activity-open-event-viewer" onclick={() => onopeneventviewer?.()}>Event Viewer</button>{/if}
@@ -163,6 +170,9 @@
   .feed li.problem .t {
     -webkit-line-clamp: 3;
     line-clamp: 3;
+  }
+  .feed li.working {
+    font-weight: 700;
   }
   .feed li.control {
     font-weight: 700;

@@ -28,6 +28,16 @@ describe('SurfaceSubmit', () => {
     expect(sentLine('x'.repeat(300)).endsWith('...')).toBe(true)
   })
 
+  it('keeps "Sent." until the form is edited: finishing does not time out (UX-216)', () => {
+    const submit = new SurfaceSubmit()
+    submit.begin('send')
+    submit.finish()
+    submit.finish()
+    expect(submit.phase).toBe('sent')
+    submit.reset() // the person typed in a field
+    expect(submit.phase).toBe('idle')
+  })
+
   it('can be sent again after the agent changed the form', () => {
     const submit = new SurfaceSubmit()
     submit.begin('send')

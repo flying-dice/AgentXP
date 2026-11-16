@@ -30,7 +30,7 @@
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { useAppContext } from '../shared/appContext.svelte'
   import { ViewSync } from '../viewSync'
-  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, EMPTY_TEXT, eventView, filterEvents, findNext, formatDateTime, generalLines, isNotable, logTree, nodeScope, showAllText, summaryOf } from './eventModel'
+  import { ALL_NODE, LEVEL_ICON, LEVEL_LABEL, SOURCE_HINT, SOURCE_LABEL, appendEvents, chatNode, EMPTY_TEXT, eventView, filterEvents, findNext, formatDateTime, generalLines, hiddenText, isNotable, logTree, nodeScope, rawLines, showAllText, shownText, summaryOf, whatHappened, whatToDo } from './eventModel'
 
   let { window: win, host }: AppProps<'event-viewer'> = $props()
 
@@ -166,18 +166,27 @@
   }
 
   const columns: ListColumn[] = [
-    { key: 'level', header: 'Level', width: 116 },
-    { key: 'when', header: 'Date and Time', width: 156 },
+    { key: 'level', header: 'Level', width: 100 },
+    { key: 'when', header: 'Date and Time', width: 140 },
+    { key: 'what', header: 'What happened', width: 250 },
     { key: 'source', header: 'Source', width: 56 },
-    { key: 'name', header: 'Name', width: 190 },
-    { key: 'chat', header: 'Chat' }
+    { key: 'name', header: 'Name', width: 160 },
+    { key: 'chat', header: 'Chat', width: 180, minWidth: 160 }
   ]
   const rows = $derived<ListRow[]>(
-    visible.map((e) => ({ id: String(e.id), testid: 'event-viewer-row', attrs: { 'data-source': e.source, 'data-name': e.name, 'data-level': e.level }, icon: LEVEL_ICON[e.level], level: LEVEL_LABEL[e.level], when: formatDateTime(e.at), source: SOURCE_LABEL[e.source], name: `${e.direction === 'in' ? '←' : '→'} ${e.name}`, chat: chatTitle(e.sessionId) ?? '' }))
+    visible.map((e) => ({ id: String(e.id), testid: 'event-viewer-row', attrs: { 'data-source': e.source, 'data-name': e.name, 'data-level': e.level }, icon: LEVEL_ICON[e.level], level: LEVEL_LABEL[e.level], when: formatDateTime(e.at), what: whatHappened(e), source: SOURCE_LABEL[e.source], name: `${e.direction === 'in' ? '←' : '→'} ${e.name}`, chat: chatTitle(e.sessionId) ?? '' }))
   )
 
   const levelItems = (['all', 'info', 'warning', 'error'] as const).map((l) => ({ value: l, label: l === 'all' ? 'All levels' : LEVEL_LABEL[l] }))
   const filterActive = $derived(level !== 'all' || text.trim() !== '')
+  /** The heading: "1 warning shown." while the list holds problems only, else the number of events. */
+  const countText = $derived(
+    view.latest
+      ? `Number of events: ${visible.length}, the newest ${visible.length}, no warnings or errors`
+      : !showAll && level === 'all' && !filterActive && visible.length > 0 && visible.every(isNotable)
+        ? `${shownText(visible)}.`
+        : `Number of events: ${visible.length}${filterActive ? ' (filtered)' : ''}`
+  )
   const tabs = [
     { id: 'general', title: 'General' },
     { id: 'details', title: 'Details' }
@@ -267,8 +276,8 @@
                 <div class="center">
                   <div class="heading">
                     <strong>{scope.sessionId !== null ? (chatTitle(scope.sessionId) ?? scope.title) : scope.title}</strong>
-                    <span class="count" data-testid="event-viewer-count">Number of events: {visible.length}{filterActive ? ' (filtered)' : ''}{view.latest ? `, the newest ${visible.length}, no warnings or errors` : ''}</span>
-                    {#if hidden > 0}<button type="button" class="link" data-testid="event-viewer-show-hidden" onclick={() => (showAll = true)}>{hidden} more: Show all</button>{/if}
+                    <span class="count" data-testid="event-viewer-count">{countText}</span>
+                    {#if hidden > 0}<button type="button" class="link" data-testid="event-viewer-show-hidden" onclick={() => (showAll = true)}>{hiddenText(hidden)}</button>{/if}
                     <span class="spring"></span>
                     <CheckBox testid="event-viewer-show-all" bind:checked={showAll}>Show all</CheckBox>
                     <CheckBox testid="event-viewer-autoscroll" bind:checked={autoscroll}>Autoscroll</CheckBox>
@@ -287,7 +296,10 @@
                       {#snippet panel(t)}
                         {#if t.id === 'general'}
                           <div class="general w7-scroll">
-                            {#if summaryOf(current.payload)}<p class="summary">{summaryOf(current.payload)}</p>{/if}
+                            {#if isNotable(current)}
+                              <p class="summary" data-testid="event-viewer-what-happened">{whatHappened(current)}</p>
+                              <p class="todo" data-testid="event-viewer-what-to-do"><strong>What to do:</strong> {whatToDo(current)}</p>
+                            {:else if summaryOf(current.payload)}<p class="summary">{summaryOf(current.payload)}</p>{/if}
                             <dl>
                               {#each generalLines(current, chatTitle(current.sessionId)) as [k, v] (k)}
                                 <dt>{k}:</dt>
@@ -296,7 +308,15 @@
                             </dl>
                           </div>
                         {:else}
+                          <div class="rawtab">
+                          <dl class="raw" data-testid="event-viewer-raw">
+                            {#each rawLines(current) as [k, v] (k)}
+                              <dt>{k}:</dt>
+                              <dd>{v}</dd>
+                            {/each}
+                          </dl>
                           <CodeViewer code={current.payload} language="json" label="Event payload" toolbar wordWrap={true} />
+                          </div>
                         {/if}
                       {/snippet}
                     </TabControl>
@@ -452,8 +472,27 @@
     box-sizing: border-box;
   }
   .summary {
-    margin: 0 0 8px;
+    margin: 0 0 4px;
     white-space: pre-wrap;
+    font-weight: 700;
+  }
+  .todo {
+    margin: 0 0 8px;
+  }
+  .rawtab {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .rawtab :global(.w7-codeviewer) {
+    flex: 1;
+    min-height: 0;
+  }
+  .raw {
+    flex: none;
+    padding: 4px 8px;
+    background: var(--w7-window);
   }
   dl {
     display: grid;

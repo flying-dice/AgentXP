@@ -40,7 +40,7 @@ The screen shows the working folder, each command, and its output. It follows th
 
 ### The Status Bar
 
-The status bar says that the shell is read-only. The cursor on the screen is a hollow block that does not blink, a sign that you cannot type. When the window opens, a note shows at the bottom of the screen and stays until you first click on the screen. After that, a click or a key press on the screen shows the note for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
+The status bar says that the shell is read-only. The cursor on the screen is a hollow block that does not blink, a sign that you cannot type. When the window opens, a note shows at the top of the window and stays until you first click on the screen. After that, a click or a key press shows the note for 4 seconds. A key press also lights the note up for 1 second, and the status bar says **Read-only: nothing was typed**. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
 
 ### The Chat Pane
 
@@ -54,7 +54,8 @@ Each Terminal window has a chat pane at its right edge. The pane starts closed, 
 | Terminal | Selects which terminal the screen shows. | `terminal-picker` |
 | Screen | Shows the output. The attribute `data-running` tells if a command runs. | `terminal-output` |
 | Status | Shows Running, the exit code, or No terminals. | `terminal-status` |
-| Read-only note | Shows at the bottom of the screen when the window opens and stays until your first click on the screen. After that it shows for 4 seconds when you click or press a key. | `terminal-readonly-notice` |
+| Read-only note | Shows at the top of the window when the window opens and stays until your first click on the screen. After that it shows for 4 seconds when you click or press a key. A key press also lights it up for 1 second. | `terminal-readonly-notice` |
+| Read-only status | The left part of the status bar. It says **Read-only: nothing was typed** for 1 second after a key press, and says that you can watch but not type the rest of the time. | `terminal-readonly-status` |
 | Locked cursor | The hollow block cursor of the screen. | `console-cursor-locked` |
 
 ### Menu Bar and Context Menu

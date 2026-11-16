@@ -27,7 +27,7 @@ Use Event Viewer to see what an agent sent and received. Read it to find out why
 
 ## 2 - Open It
 
-Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event. The Activity list on the desktop also shows the last warning or error, as one plain sentence, for example **Warning: Drive E: was removed** or **Error: The agent stopped unexpectedly**, above the steps of the agent. The line goes away when the same chat finishes a later turn.
+Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event. The Activity list on the desktop also shows the last warning or error, as one plain sentence, for example **Warning: Drive E: is not plugged in on this desktop.** or **Error: The agent stopped unexpectedly**, above the steps of the agent. An error goes away when the same chat finishes a later turn. A warning stays. While an agent works, the list says **Working:** with what it does. When there is nothing else to say, the list says what finished last, for example **The agent finished its last turn.** It says **Nothing has happened yet.** only on a desktop with no event at all.
 
 ## 3 - The Window
 
@@ -37,11 +37,11 @@ The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **
 
 ### The Event List
 
-The list shows warnings and errors at first. The heading says how many other events are hidden, for example **27 more: Show all**. Click it to see every message. If the log has no warning or error, the list shows the newest events and the heading says so, so the reason a chat stopped is in view. If the log or the chat has events but none match the filter, the list says **Nothing to show with this filter.** and the link **Show all (27)** brings them back. The list has the columns **Level**, **Date and Time**, **Source**, **Name**, and **Chat**. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
+The list shows warnings and errors at first. The heading says what it shows, for example **1 warning shown.**, and how many other events are hidden, for example **25 other events hidden: Show all**. Click the link to see every message. If the log has no warning or error, the list shows the newest events and the heading says so, so the reason a chat stopped is in view. If the log or the chat has events but none match the filter, the list says **Nothing to show with this filter.** and the link **Show all (27)** brings them back. The list has the columns **Level**, **Date and Time**, **What happened**, **Source**, **Name**, and **Chat**. **What happened** has one plain sentence for each warning and error, for example **The agent program stopped before it was ready.** The chat name is wide enough to read. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
 
 ### The Event Details
 
-Select an event to see its details. The **General** tab has a short text and the lines **Log Name**, **Event**, **Direction**, **Level**, and **Logged**. The **Details** tab shows the message as JSON. The lines wrap, so the whole message is in view without scrolling to the side.
+Select an event to see its details. For a warning or an error, the **General** tab starts with the sentence of what happened, then **What to do:** with one step, and then the lines **Level**, **Logged**, **Chat**, and **Event ID**. For other events it has a short text and the lines **Log Name**, **Event**, **Direction**, **Level**, and **Logged**. The **Details** tab shows **Log Name**, **Event**, and **Direction**, then the message as JSON. The lines wrap, so the whole message is in view without scrolling to the side.
 
 ### The Actions Pane
 
@@ -66,12 +66,17 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 |---|---|---|
 | Event Viewer window | The root of the window. | `event-viewer-app` |
 | Logs | The tree of logs and chats. | `event-viewer-logs` |
-| Number of events | Shows the count, with the word filtered while a filter is on. | `event-viewer-count` |
+| Number of events | Shows what the list holds: **1 warning shown.** while only problems show, else the count, with the word filtered while a filter is on. | `event-viewer-count` |
 | Autoscroll | Keeps the newest event in view. | `event-viewer-autoscroll` |
 | Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
-| More: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
+| Other events hidden: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
 | Show all (n) | A link in an empty list. It clears the filter and shows every event. | `event-viewer-empty-show-all` |
-| Last problem | The last warning or error in the Activity list on the desktop, in plain words. It goes away when the same chat finishes a later turn. | `gadget-activity-problem` |
+| Last problem | The last warning or error in the Activity list on the desktop, in plain words. An error goes away when the same chat finishes a later turn. A warning stays. | `gadget-activity-problem` |
+| Working line | The Activity list says **Working:** with what the agent does while it works. | `gadget-activity-working` |
+| Last finished | The Activity list says what finished last when it has nothing else to show. | `gadget-activity-last` |
+| What happened | The plain sentence of the selected warning or error, first line of the General tab. | `event-viewer-what-happened` |
+| What to do | One step to take, under the sentence of the General tab. | `event-viewer-what-to-do` |
+| Raw names | The log, event, and direction of the selected event, on the Details tab. | `event-viewer-raw` |
 | Events | The list of events. | `event-viewer-list` |
 | Event | One row of the list. | `event-viewer-row` |
 | Details | The pane of the selected event. | `event-viewer-detail` |

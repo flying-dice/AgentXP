@@ -37,7 +37,7 @@ The toolbar is at the top. It has the round buttons **Back** and **Forward**, an
 
 ### The Tabs
 
-The tab strip is under the toolbar. Each tab shows the title of its page and has a small x to close it. **New tab** is at the end of the strip. Use the Left and Right arrow keys to move between tabs.
+The tab strip is under the toolbar. Each tab shows the title of its page and has a small x to close it. **New tab** is the plus at the end of the strip. Point to it to read its name. Use the Left and Right arrow keys to move between tabs.
 
 ### The Page
 
@@ -65,11 +65,12 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Tab strip | Holds the tabs. | `browser-tabs` |
 | Tab | One open page. The number is the tab number. A long title is cut at the end; point to the title in the tab to read all of it. | `browser-tab-*` |
 | Close tab | Closes that tab. It sits at the right end of the tab. | `browser-tab-close-*` |
-| New tab | Opens a blank tab. The tooltip says **New tab**. | `browser-tab-new` |
+| New tab | Opens a blank tab. Point to it to read **New tab** in a tooltip. | `browser-tab-new` |
 | Page of a tab | The web page of one tab. | `browser-page-*` |
-| Agent bar | Shows "Agent is using this page" with what the agent does, until the answer of the chat is done (at the latest 20 seconds after the last step). When the agent finished reading the page, it says "The agent read this page." and goes after 5 seconds, unless the agent goes on. After you take over, it says that you have control. It only shows the state: **Resume** is on the top bar. | `browser-agent-bar` |
+| Agent bar | A yellow bar above the page. It shows "Agent is using this page" with what the agent does, until the answer of the chat is done (at the latest 20 seconds after the last step). When the agent finished reading the page, it says "The agent read this page." and goes after 5 seconds, unless the agent goes on. When the agent stops, it says "The agent stopped using this page." for 5 seconds. After you take over, it says "You have the page. The agent waits. Click Give back to let it continue." and stays until you give the page back. The bar sits above the page and covers none of it. | `browser-agent-bar` |
 | Agent bar text | What the agent does ("Reading the page", "Clicking the button 'Send'", "Waiting for the page to change"), or that you have control. The sentence wraps to a second line, so it is never cut. Point to it to see what the agent waits for. | `browser-agent-bar-text` |
-| Take over | Pauses the agent on this page so that you can use it. Its tooltip says **Stop the agent here and use the page yourself.** It stays at the right of the bar and then reads **Taken over**. Every tool asks before it is used again. | `browser-agent-takeover` |
+| Take over | Pauses the agent on this page so that you can use it. Its tooltip says **Stop the agent here and use the page yourself.** It is at the right of the bar while the agent works. Every tool asks before it is used again. | `browser-agent-takeover` |
+| Give back | Shows in the bar instead of **Take over** after you took over. It lets the agent use the page again. **Resume** on the top bar does the same. | `browser-agent-giveback` |
 | Agent status | Says whether the assistant can read the page: can read this page, asks first, cannot read pages, reading, or that the agent read this page. | `browser-assistant-status` |
 | Ask about this page | A button in the toolbar, at the right of the address. It opens the chat pane with the whole text, the page and the question "What does this page say?", ready in the box. It does not send it. It is dimmed on a blank tab. | `browser-ask-page` |
 | Start page | The text of a new tab: type an address above. | `browser-start-page` |
@@ -143,7 +144,7 @@ The agent can use a web app such as a team chat, mail, or documents. Follow the 
 2. Sign in yourself. Agent7 keeps you signed in. The agent never types a password.
 3. Ask the agent to read or send messages.
 
-While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". When the agent finished reading, the bar says "The agent read this page." and goes after 5 seconds. An orange frame shows the item the agent used. The bar stays while the agent works, also when it only reads, and goes when the chat has given its answer. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says that you have control, and the agent stops and asks before it uses the page again. Click **Resume** on the top bar to let the agent go on. You can also click **Pause all agents** on the top bar.
+While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". When the agent finished reading, the bar says "The agent read this page." and goes after 5 seconds. An orange frame shows the item the agent used. The bar sits above the page, so it covers no text of the page. It stays while the agent works, also when it only reads. When the chat has given its answer, it says "The agent stopped using this page." for 5 seconds and goes. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says "You have the page. The agent waits. Click Give back to let it continue." and stays. The agent stops and asks before it uses the page again. Click **Give back** in the bar, or **Resume** on the top bar, to let the agent go on. You can also click **Pause all agents** on the top bar.
 
 The chip **Browser** on the top bar and the part **Agent:** in the status bar of Browser show that the agent can see the page. If the chip is missing, the agent has no Browser to use. Open Browser to give it one. To change what the agent may do, open **Control Center**, click **Permissions**, and set **Browser**.
 

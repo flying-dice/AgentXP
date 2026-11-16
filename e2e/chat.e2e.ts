@@ -171,11 +171,16 @@ describe('chat turn with the fake agent', () => {
     await see.visible(terminal.readOnlyNotice) // it is there from the start, before any click (UX-190)
     await terminal.output.click()
     await ctx.desktopPage.keyboard.type('dir')
+    // UX-215: the key press flashes the note and the status bar says that nothing was typed.
+    await see.attribute(terminal.readOnlyNotice, 'data-flash', 'true')
+    await see.text(terminal.readOnlyStatus, 'Read-only: nothing was typed')
     await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
     await see.text(terminal.readOnlyNotice, 'Ask the agent in Chat to run a command.')
     await see.visible(terminal.frame.getByTestId('console-cursor-locked'))
     // The cursor is a steady block: it says "read only", so it does not blink (UX-132).
     expect(await terminal.frame.getByTestId('console-cursor-locked').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+    await see.attribute(terminal.readOnlyNotice, 'data-flash', 'false') // the highlight lasts one second
+    await see.text(terminal.readOnlyStatus, 'You can watch, not type.')
     await see.gone(terminal.readOnlyNotice) // it goes after a few seconds
   })
 })
