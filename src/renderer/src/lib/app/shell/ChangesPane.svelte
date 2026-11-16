@@ -2,18 +2,27 @@
   /**
    * The Changes pane: the files an agent changed, with a preview of the selected change and Revert. It is the one
    * place to review changes: the chat window and the Code window show this same pane (UX-40).
+   * The list shows the whole file name beside its counts (UX-111, UX-116); a bar between the list and the diff gives the
+   * diff most of the height and remembers where the user put it. Reverted files stay in the list (UX-117).
    */
   import type { FileChangeDto } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
   import DiffViewer from '../../kit/organisms/DiffViewer.svelte'
   import ListView from '../../kit/organisms/ListView.svelte'
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
-  import { REVERTED_KIND, REVERTED_LABEL, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
+  import { localStore } from '../../desktop/chatPane'
+  import { REVERTED_LABEL, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, defaultListHeight, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
 
   interface Props {
     changes: FileChangeDto[]
     /** Id of the selected change. */
     selectedId?: number | null
+    /** Files that were reverted: they stay in the list, grey, with the link to the Recycle Bin (the caller keeps them, see `useRevertedChanges`). */
+    reverted?: RevertedChange[]
+    /** Names the window, so each window remembers its own list height. */
+    layoutKey?: string
     /** Asks the user and reverts (the caller owns the question and the write). Resolves when it is done or declined. */
     onrevert?: (change: FileChangeDto) => void | Promise<void>
     onopeneditor?: (change: FileChangeDto) => void
@@ -21,25 +30,15 @@
     onopenrecyclebin?: () => void
   }
 
-  let { changes, selectedId = $bindable(null), onrevert, onopeneditor, onopenrecyclebin }: Props = $props()
+  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin }: Props = $props()
+  const uid = $props.id()
+  const reasonId = `${uid}-reason`
 
-  // The file column takes what the others leave and shrinks first, so the counts column is always on screen (UX-79, UX-111).
+  // Two columns: the file column takes what the counts leave, so the counts are always on screen (UX-79, UX-111).
   const columns: ListColumn[] = [
-    { key: 'file', header: 'File', minWidth: 60 },
-    { key: 'kind', header: 'Change', width: 72 },
-    { key: 'lines', header: 'Lines', width: 82, align: 'right' }
+    { key: 'file', header: 'File', minWidth: 120 },
+    { key: 'lines', header: 'Lines', width: 84, align: 'right' }
   ]
-
-  /** Reverted changes stay in the list, grey, so nobody wonders where the file went. A change that vanishes from the list was reverted, here or anywhere else (UX-79). */
-  let reverted = $state.raw<FileChangeDto[]>([])
-  let known: FileChangeDto[] = []
-
-  $effect(() => {
-    const now = changes
-    const gone = known.filter((k) => !now.some((c) => c.id === k.id) && !reverted.some((r) => r.id === k.id))
-    known = now
-    if (gone.length > 0) reverted = [...reverted, ...gone]
-  })
 
   const rows = $derived<ListRow[]>([
     ...changes.map((c) => ({
@@ -58,7 +57,7 @@
       testid: 'changes-reverted',
       icon: 'file-code' as const,
       file: c.path,
-      kind: REVERTED_KIND,
+      kind: '',
       lines: -1,
       label: '',
       reverted: true
@@ -66,13 +65,28 @@
   ])
   const selected = $derived(changes.find((c) => c.id === selectedId) ?? null)
 
+  // The list opens with room for its rows; the diff has the rest. A height the user chose for this window wins.
+  // svelte-ignore state_referenced_locally
+  let listHeight = $state(readListSize(localStore(), layoutKey) ?? defaultListHeight(changes.length + reverted.length))
+
+  // A wide, short pane (the Code window's dock) puts the diff beside the list instead of under it, so the diff keeps its height.
+  let paneWidth = $state(0)
+  let paneHeight = $state(0)
+  const beside = $derived(paneWidth >= BESIDE_MIN_WIDTH && paneHeight < BESIDE_MAX_HEIGHT)
+  // svelte-ignore state_referenced_locally
+  let listWidth = $state(readListSize(localStore(), `${layoutKey}-beside`) ?? 260)
+
+  // Why a button is grey, in words (the tooltip and the line beside the buttons).
+  const revertReason = $derived(selected ? null : 'Select a changed file first.')
+  const editorReason = $derived(!selected ? 'Select a changed file first.' : selected.kind === 'deleted' ? 'A deleted file cannot be opened.' : null)
+  const reason = $derived(changes.length === 0 ? null : (revertReason ?? editorReason))
+
   async function revert(): Promise<void> {
     if (selected) await onrevert?.(selected)
   }
 </script>
 
-<div class="changes">
-  <div class="summary" data-testid="changes-summary">{changesSummary(changes)}</div>
+{#snippet listPanel()}
   <div class="list">
     <ListView
       {columns}
@@ -87,14 +101,12 @@
         {#if col.key === 'file'}
           {@const parts = splitChangePath(String(row.file))}
           {@const name = splitForMiddleEllipsis(parts.name)}
-          <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : String(row.file)} data-testid="changes-file">
-            <b class="name"><span class="head">{name.head}</span><span class="tail">{name.tail}</span></b>
-            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text">{REVERTED_LABEL}</span>{:else if parts.dir}<span class="dir">{parts.dir}</span>{/if}
+          <span class="file" class:reverted={row.reverted} title={row.reverted ? `${row.file}. ${REVERTED_LABEL}` : `${row.file} (${String(row.kind).toLowerCase()})`} data-testid="changes-file">
+            <b class="name"><span class="head" data-testid="changes-name-head">{name.head}</span><span class="tail" data-testid="changes-name-tail">{name.tail}</span></b>
+            {#if row.reverted}<span class="dir" data-testid="changes-reverted-text">{REVERTED_LABEL}</span>{:else}<span class="kind">{row.kind}</span>{#if parts.dir}<span class="dir">{parts.dir}</span>{/if}{/if}
           </span>
-        {:else if col.key === 'kind'}
-          <span class="t" class:reverted={row.reverted}>{row.kind}</span>
         {:else}
-          <span class="t" class:reverted={row.reverted}>{row.label}</span>
+          <span class="t" class:reverted={row.reverted} data-testid="changes-lines">{row.label}</span>
         {/if}
       {/snippet}
     </ListView>
@@ -105,6 +117,9 @@
       <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open Recycle Bin</button>
     </div>
   {/if}
+{/snippet}
+
+{#snippet diffPanel()}
   <div class="diff" data-testid="changes-diff">
     {#if selected}
       {#key selected.id}
@@ -114,18 +129,32 @@
       <div class="hint">Select a changed file to view its diff.</div>
     {/if}
   </div>
-  <div class="buttons">
-    <span title={selected ? undefined : 'Select a change to revert.'}>
-      <Button data-testid="changes-revert" disabled={!selected} onclick={() => void revert()}>Revert</Button>
-    </span>
-    <span title={selected ? undefined : 'Select a change to open it.'}>
-      <Button data-testid="changes-open-editor" disabled={!selected || selected.kind === 'deleted'} onclick={() => selected && onopeneditor?.(selected)}>Open in editor</Button>
+{/snippet}
+
+<div class="changes" data-testid="changes-pane" bind:clientWidth={paneWidth} bind:clientHeight={paneHeight}>
+  <div class="split" class:beside>
+    {#if beside}
+      <SplitContainer orientation="vertical" bind:splitterDistance={listWidth} panel1MinSize={LIST_MIN_WIDTH} panel2MinSize={DIFF_MIN_WIDTH} fixedPanel="panel2" splitterLabel="Resize the list of changed files" onchange={(w) => writeListSize(localStore(), `${layoutKey}-beside`, w)} panel1={listPanel} panel2={diffPanel} />
+    {:else}
+      <SplitContainer orientation="horizontal" bind:splitterDistance={listHeight} panel1MinSize={LIST_MIN_HEIGHT} panel2MinSize={DIFF_MIN_HEIGHT} fixedPanel="panel1" splitterLabel="Resize the list of changed files" onchange={(h) => writeListSize(localStore(), layoutKey, h)} panel1={listPanel} panel2={diffPanel} />
+    {/if}
+  </div>
+  {#if reason}<div class="reason" id={reasonId} data-testid="changes-reason">{reason}</div>{/if}
+  <div class="bottom">
+    <span class="summary" data-testid="changes-summary">{changesSummary(changes)}</span>
+    <span class="buttons">
+      <span title={revertReason ?? undefined}>
+        <Button data-testid="changes-revert" disabled={!selected} aria-describedby={revertReason ? reasonId : undefined} onclick={() => void revert()}>Revert</Button>
+      </span>
+      <span title={editorReason ?? undefined}>
+        <Button data-testid="changes-open-editor" disabled={!selected || selected.kind === 'deleted'} aria-describedby={editorReason ? reasonId : undefined} onclick={() => selected && onopeneditor?.(selected)}>Open in editor</Button>
+      </span>
     </span>
   </div>
 </div>
 
 <style>
-  /* A short pane scrolls instead of squeezing the list: the list always shows eight rows. */
+  /* The pane never squeezes the list or the diff: when the window is too short it scrolls as a whole. */
   .changes {
     flex: 1;
     min-height: 0;
@@ -135,14 +164,21 @@
     padding: 6px;
     overflow: auto;
   }
-  .summary {
-    flex: none;
-    color: var(--w7-text-muted);
+  .split {
+    flex: 1;
+    min-height: 240px;
+    display: flex;
   }
-  /* Eight rows of 20 px, the header row and the border. */
+  .split.beside {
+    min-height: 130px;
+  }
+  .split :global(.w7-split) {
+    height: auto;
+    flex: 1;
+  }
   .list {
-    flex: none;
-    height: 190px;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -152,17 +188,17 @@
   }
   .file {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
   }
-  /* The folder shrinks first; then the middle of the name is cut with an ellipsis, never its end or its extension. */
+  /* The name is never cut at its front or its end: the folder and the change word shrink first, then the middle of the stem gets an ellipsis. */
   .name {
     flex: 0 1 auto;
     display: flex;
-    min-width: 40px;
+    min-width: 5em;
     overflow: hidden;
     white-space: nowrap;
   }
@@ -175,6 +211,7 @@
   .tail {
     flex: none;
   }
+  .kind,
   .dir {
     flex: 0 100 auto;
     min-width: 0;
@@ -187,7 +224,8 @@
     color: var(--w7-text-muted);
     font-weight: normal;
   }
-  .note {
+  .note,
+  .reason {
     flex: none;
     color: var(--w7-text-muted);
   }
@@ -201,10 +239,10 @@
     text-decoration: underline;
     cursor: default;
   }
-  /* Room for at least eight lines of the diff (17 px each) before the bar of the preview. */
+  /* The diff has the rest of the height: at least about 12 lines (17 px each) in a window of the default size. */
   .diff {
     flex: 1;
-    min-height: 150px;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -218,10 +256,23 @@
     padding: 8px;
     color: var(--w7-text-muted);
   }
+  .bottom {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .summary {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--w7-text-muted);
+  }
   .buttons {
     flex: none;
     display: flex;
-    justify-content: flex-end;
     gap: 6px;
   }
 </style>

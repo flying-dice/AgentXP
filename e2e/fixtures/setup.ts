@@ -71,6 +71,15 @@ export async function allowTerminal(page: Page): Promise<void> {
   })
 }
 
+/** Lets the agent write files without a prompt (a spec that only looks at the resulting changes). */
+export async function allowFileWrites(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const policy = await api.desktop.policy()
+    await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, 'fs.write': 'allow' } })
+  })
+}
+
 /** The id of the desktop a window shows, read from its URL (`?desktop=<id>`). */
 export const desktopIdOf = (page: Page): number => Number(new URL(page.url()).searchParams.get('desktop'))
 

@@ -20,6 +20,8 @@
 <Story name="NothingSelected" args={{ selectedId: null }}>{#snippet template(args)}{@render frame(args)}{/snippet}</Story>
 <Story name="Empty" args={{ changes: [], selectedId: null }}>{#snippet template(args)}{@render frame(args)}{/snippet}</Story>
 
+<Story name="Reverted" args={{ reverted: [{ id: 9, path: 'E:\\src\\auth\\redirect-handler-with-a-long-name.ts' }], onopenrecyclebin: () => {} }}>{#snippet template(args)}{@render frame(args)}{/snippet}</Story>
+
 <style>
   .frame {
     display: flex;

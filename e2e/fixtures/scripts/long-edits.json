@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "long-edits",
+  "description": "Writes four files with long names (UX-116): the Changes list must show whole names and the counts.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "write",
+      "match": { "any": true },
+      "steps": [
+        { "type": "writeFile", "path": "{{cwd}}/direct.test.ts", "content": "one\ntwo\nthree\n" },
+        { "type": "writeFile", "path": "{{cwd}}/session.ts", "content": "export const session = 1\n" },
+        { "type": "writeFile", "path": "{{cwd}}/src/auth/redirect-handler-with-a-long-name.ts", "content": "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\n" },
+        { "type": "writeFile", "path": "{{cwd}}/notes.txt", "content": "x\ny\n" },
+        { "type": "message", "text": "Wrote four files." }
+      ]
+    }
+  ]
+}

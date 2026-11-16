@@ -35,6 +35,7 @@
   import SurfaceSidebar from './SurfaceSidebar.svelte'
   import { lastReply } from '../surface/lastReply'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
+  import { useRevertedChanges } from '../../app/changes/revertedChanges.svelte'
 
   let { window: win, host, focused }: AppProps<'chat'> = $props()
 
@@ -79,6 +80,13 @@
     chatTitleLabels(chatList.map((c) => (c.id === sessionId ? { id: c.id, title: ownTitle } : { id: c.id, title: c.title }))).get(sessionId) ?? ownTitle
   )
   const changes = $derived(store?.state.changes ?? [])
+  // The files reverted in this chat stay in the list after the pane or the window is closed and opened again (UX-117).
+  const revertedChanges = useRevertedChanges(
+    host.api,
+    () => host.state.desktopId,
+    () => [sessionId],
+    () => changes
+  )
   const tasks = $derived(store?.state.tasks ?? [])
   const models = $derived((info?.models.length ? info.models : session?.models) ?? [])
   const modelId = $derived(info?.currentModelId ?? session?.currentModelId ?? '')
@@ -342,6 +350,8 @@
             {#if tab.id === 'changes'}
               <ChangesPane
                 {changes}
+                reverted={revertedChanges.list}
+                layoutKey={`chat-${sessionId}`}
                 bind:selectedId={selectedChangeId}
                 onrevert={(c) => revert(c)}
                 onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })}
@@ -413,7 +423,7 @@
   }
   .side {
     flex: none;
-    width: 270px;
+    width: 330px;
     min-height: 0;
     display: flex;
     flex-direction: column;

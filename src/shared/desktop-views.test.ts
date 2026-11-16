@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeNewWindow, placeWindow, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -178,6 +178,18 @@ describe('placeNewWindow (UX-88)', () => {
     expect(b.x).toBe(notepadParent.bounds.x + 28)
     expect(b.y).toBe(notepadParent.bounds.y + 28)
     expect(overlap(b, titleStrip(notepadParent.bounds))).toBe(false)
+  })
+
+  it('opens the Review window at 70% of the work area, at least 720 px, against the right edge (UX-129)', () => {
+    const code = { app: 'code' as const, bounds: { x: 80, y: 60, width: 820, height: 560 } }
+    const b = placeNewWindow('code-review', 1, code)
+    expect(b.width).toBe(Math.round(area.width * 0.7))
+    expect(b.width).toBeGreaterThanOrEqual(REVIEW_MIN_WIDTH)
+    expect(b.x + b.width).toBe(area.width)
+    expect(inside(b)).toBe(true)
+    // A small work area still gets the 720 px, never more than the area.
+    expect(placeNewWindow('code-review', 1, code, { width: 900, height: 600 }).width).toBe(720)
+    expect(placeNewWindow('code-review', 1, code, { width: 600, height: 600 }).width).toBe(600)
   })
 
   it('tiles beside a focused chat as before', () => {

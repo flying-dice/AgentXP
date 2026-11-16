@@ -45,6 +45,7 @@
   import SendToChatDialog, { type SendTarget } from './SendToChatDialog.svelte'
   import {
     HEAD_MEANING,
+    addCommentButtonTitle,
     projectNameOf,
     STATUS_LABEL,
     baseLabel,
@@ -126,6 +127,7 @@
   // The window opens on the first file that has a comment (else the first file).
   const selectedPath = $derived(changes.some((c) => c.path === chosenPath) ? chosenPath : openingFile(changes, review.comments))
   const fv = $derived(fileView(file, layout))
+  const canAddComment = $derived(mode === 'expanded' && file !== null && selectedRow !== null)
   const positionLabel = $derived(changePositionLabel(fv.regions, selectedRow))
   const counts = $derived(commentCounts(review.comments))
   const opens = $derived(openCounts(review.comments))
@@ -497,6 +499,7 @@
     <Separator orientation="vertical" />
     <ToolStripButton icon="chevron-up" text="Previous" onclick={() => step(-1)} disabled={changes.length === 0} data-testid="review-prev-change" title="Previous change (Shift+F7)" />
     <ToolStripButton icon="chevron-down" text="Next" onclick={() => step(1)} disabled={changes.length === 0} data-testid="review-next-change" title="Next change (F7)" />
+    <ToolStripButton icon="new" text="Add comment" onclick={() => diff?.commentOnSelected()} disabled={!canAddComment} data-testid="review-add-comment" title={addCommentButtonTitle(mode === 'expanded', selectedRow !== null)} />
     {#if mode === 'all'}
       <ToolStripButton icon="chevron-down" text="Next file" onclick={() => scrollAll(1)} disabled={changes.length === 0} data-testid="review-next-file" title="Go to the next file" />
     {/if}
@@ -753,9 +756,7 @@
   .banner .body {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
   .row {
     flex: 1;

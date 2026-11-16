@@ -19,6 +19,7 @@
   import { HOME_TOPIC, back, forward, markWords, queryWords, resolveSection, searchSections, sectionOfHref, splitTopic, startHistory, topicOfHref, visit, type HelpTopic } from './helpModel'
   import { escapeHtml, renderHelpMarkdown } from './helpMarkdown'
   import { helpTopics } from './helpTopics'
+  import { collapseContents, scrollTopFor } from './contents'
 
   let { window: win, host, focused = false }: AppProps<'help'> = $props()
   const topics: HelpTopic[] = helpTopics
@@ -61,13 +62,20 @@
   /** Scrolls to a heading of the article and marks it; the matched line under it is highlighted for 2 seconds. */
   function goToSection(wanted: string): void {
     if (!article) return
-    for (const old of article.querySelectorAll('.target, .flash')) old.classList.remove('target', 'flash')
+    for (const old of article.querySelectorAll('.target, .flash')) {
+      old.classList.remove('target', 'flash')
+      old.removeAttribute('data-testid')
+    }
     const ids = [...article.querySelectorAll<HTMLElement>('h1[id], h2[id], h3[id], h4[id]')].map((h) => h.id)
     const id = resolveSection(ids, wanted)
     const heading = id ? article.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) : null
     if (!heading) return
     heading.classList.add('target')
-    heading.scrollIntoView({ block: 'start' })
+    heading.setAttribute('data-testid', 'help-target')
+    // The contents shrink to this chapter first, so the heading lands where it will stay; then it goes to the top third (UX-132).
+    collapseContents(article, id)
+    const top = heading.getBoundingClientRect().top - article.getBoundingClientRect().top + article.scrollTop
+    article.scrollTop = scrollTopFor(top, article.clientHeight)
     flashMatch(heading)
   }
 
@@ -108,6 +116,7 @@
     void tick().then(() => {
       if (!article) return
       article.scrollTop = 0
+      collapseContents(article, null)
       if (section) goToSection(section)
       const mark = searching ? article.querySelector('mark') : null
       if (mark && !section) mark.scrollIntoView({ block: 'center' })
@@ -397,6 +406,10 @@
     font-weight: normal;
     color: #003399;
     border-bottom: 1px solid #d5dfee;
+  }
+  /* The chapters of the Table of Contents other than the current one show their title only (UX-132). */
+  .w7-help-md :global(li.toc-collapsed > ul) {
+    display: none;
   }
   .w7-help-md :global(.target) {
     background: #fff3b0;
