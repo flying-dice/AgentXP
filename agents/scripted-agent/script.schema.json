@@ -1,0 +1,1102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent7 scripted agent script",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "agent",
+    "rules"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name"
+            ]
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name"
+            ]
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "hint": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "description"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "stepMode": {
+          "enum": [
+            "auto",
+            "manual"
+          ]
+        },
+        "delayMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chunkSize": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chunkDelayMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "announcePause": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "match": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "any": {
+                    "const": true
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "any"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "equals": {
+                    "type": "string"
+                  },
+                  "ignoreCase": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "equals"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "contains": {
+                    "type": "string"
+                  },
+                  "ignoreCase": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "contains"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "regex": {
+                    "type": "string"
+                  },
+                  "ignoreCase": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "regex"
+                ]
+              }
+            ]
+          },
+          "once": {
+            "type": "boolean"
+          },
+          "steps": {
+            "$ref": "#/$defs/steps"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "match",
+          "steps"
+        ]
+      }
+    },
+    "fallback": {
+      "$ref": "#/$defs/steps"
+    }
+  },
+  "$defs": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "message"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "chunked": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "text"
+          ],
+          "title": "message"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "thought"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "chunked": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "text"
+          ],
+          "title": "thought"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "plan"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed"
+                    ]
+                  },
+                  "priority": {
+                    "enum": [
+                      "high",
+                      "medium",
+                      "low"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "content",
+                  "status",
+                  "priority"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "entries"
+          ],
+          "title": "plan"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "toolCall"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "read",
+                "edit",
+                "delete",
+                "move",
+                "search",
+                "execute",
+                "think",
+                "fetch",
+                "switch_mode",
+                "other"
+              ]
+            },
+            "status": {
+              "enum": [
+                "pending",
+                "in_progress",
+                "completed",
+                "failed"
+              ]
+            },
+            "rawInput": {},
+            "locations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "path"
+                ]
+              }
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "text"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "diff": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "oldText": {
+                            "type": "string"
+                          },
+                          "newText": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "path",
+                          "newText"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "diff"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "title"
+          ],
+          "title": "toolCall"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "toolCallUpdate"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "pending",
+                "in_progress",
+                "completed",
+                "failed"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "text"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "diff": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "oldText": {
+                            "type": "string"
+                          },
+                          "newText": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "path",
+                          "newText"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "diff"
+                    ]
+                  }
+                ]
+              }
+            },
+            "rawOutput": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "title": "toolCallUpdate"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "requestPermission"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "allow_once",
+                      "allow_always",
+                      "reject_once",
+                      "reject_always"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "optionId",
+                  "name",
+                  "kind"
+                ]
+              }
+            },
+            "branches": {
+              "type": "object",
+              "description": "Steps to run per chosen optionId, or \"cancelled\".",
+              "additionalProperties": {
+                "$ref": "#/$defs/steps"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "toolCallId",
+            "options"
+          ],
+          "title": "requestPermission"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "readFile"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "line": {
+              "type": "integer"
+            },
+            "limit": {
+              "type": "integer"
+            },
+            "saveAs": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path"
+          ],
+          "title": "readFile"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "writeFile"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path",
+            "content"
+          ],
+          "title": "writeFile"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "terminal"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "command": {
+              "type": "string"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cwd": {
+              "type": "string"
+            },
+            "waitForExit": {
+              "type": "boolean"
+            },
+            "saveAs": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "command"
+          ],
+          "title": "terminal"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "mcpCall"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "server": {
+              "type": "string"
+            },
+            "tool": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "object"
+            },
+            "saveAs": {
+              "type": "string"
+            },
+            "report": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "server",
+            "tool"
+          ],
+          "title": "mcpCall"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "modeChange"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "modeId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "modeId"
+          ],
+          "title": "modeChange"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "usage"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "used": {
+              "type": "number",
+              "minimum": 0
+            },
+            "size": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "used",
+            "size"
+          ],
+          "title": "usage"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "availableCommands"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "description"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "commands"
+          ],
+          "title": "availableCommands"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "sessionInfo"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "title"
+          ],
+          "title": "sessionInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "wait"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "ms": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "ms"
+          ],
+          "title": "wait"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "expect"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "contains": {
+              "type": "string"
+            },
+            "equals": {
+              "type": "string"
+            },
+            "regex": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "from"
+          ],
+          "title": "expect"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "error"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "code": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "message"
+          ],
+          "title": "error"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "end"
+            },
+            "step": {
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "delayMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "stopReason": {
+              "enum": [
+                "end_turn",
+                "max_tokens",
+                "max_turn_requests",
+                "refusal",
+                "cancelled"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "stopReason"
+          ],
+          "title": "end"
+        }
+      ]
+    }
+  }
+}

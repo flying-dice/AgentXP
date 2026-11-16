@@ -1,0 +1,29 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "desktop",
+  "description": "Desktop tools through the agent7 MCP server: refusal while an app is closed, then open the Terminal and run a command.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "closed-app",
+      "match": { "contains": "closed" },
+      "steps": [
+        { "type": "mcpCall", "server": "agent7", "tool": "terminal_run", "arguments": { "command": "echo nope" }, "saveAs": "refusal" },
+        { "type": "expect", "from": "refusal.isError", "equals": "true" },
+        { "type": "expect", "from": "refusal", "contains": "is closed" },
+        { "type": "message", "text": "Refused as expected: {{refusal}}" }
+      ]
+    },
+    {
+      "id": "open-and-run",
+      "match": { "any": true },
+      "steps": [
+        { "type": "mcpCall", "server": "agent7", "tool": "desktop_open_app", "arguments": { "app": "terminal" }, "saveAs": "opened", "label": "open terminal" },
+        { "type": "expect", "from": "opened", "contains": "Opened" },
+        { "type": "mcpCall", "server": "agent7", "tool": "terminal_run", "arguments": { "command": "echo hello from the scripted agent" }, "saveAs": "ran", "label": "run command" },
+        { "type": "expect", "from": "ran", "contains": "hello from the scripted agent" },
+        { "type": "message", "text": "The terminal printed: {{ran}}" }
+      ]
+    }
+  ]
+}

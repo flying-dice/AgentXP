@@ -13,7 +13,9 @@ export default defineConfig({
         input: {
           index: resolve('src/main/index.ts'),
           // Stdio MCP server the harness hands to agents so they can draw A2UI surfaces.
-          'a2ui-mcp': resolve('src/main/infrastructure/a2ui/mcp-server.ts')
+          'a2ui-mcp': resolve('src/main/infrastructure/a2ui/mcp-server.ts'),
+          // Scripted ACP agent for end-to-end tests (agents/scripted-agent/README.md).
+          'scripted-agent': resolve('agents/scripted-agent/index.ts')
         }
       }
     }
