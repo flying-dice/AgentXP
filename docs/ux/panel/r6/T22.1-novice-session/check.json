@@ -1,0 +1,30 @@
+{
+  "task": "T22.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "no Help window, but the answer gives the tooltip meaning of Plug in a project",
+  "notes": [],
+  "steps": 1,
+  "budget": 8,
+  "answer": "Plug in a project folder as a drive so that the agent can see its files.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:46:24.621Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:46:24.621Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "no Help window, but the answer gives the tooltip meaning of Plug in a project",
+      "steps": 1,
+      "answer": "Plug in a project folder as a drive so that the agent can see its files.",
+      "noAnswer": false
+    }
+  ]
+}

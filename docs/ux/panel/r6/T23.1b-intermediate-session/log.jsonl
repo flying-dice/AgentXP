@@ -1,0 +1,10 @@
+{"ts":"2026-11-16T18:43:17.185Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/001.png","window":"Fix login redirect - Agent7","ok":true,"ms":642}
+{"ts":"2026-11-16T18:43:22.663Z","cmd":"click","args":[172,436],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/002.png","window":"Fix login redirect - Agent7","ok":true,"ms":685}
+{"ts":"2026-11-16T18:43:29.177Z","cmd":"click","args":[460,413],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/003.png","window":"Fix login redirect - Agent7","ok":true,"ms":716}
+{"ts":"2026-11-16T18:43:29.763Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/004.png","window":"Fix login redirect - Agent7","ok":true,"ms":504}
+{"ts":"2026-11-16T18:43:36.261Z","cmd":"click","args":[259,241],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/005.png","window":"Fix login redirect - Agent7","ok":true,"ms":711}
+{"ts":"2026-11-16T18:43:43.416Z","cmd":"click","args":[776,195],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/006.png","window":"Fix login redirect - Agent7","ok":true,"ms":728}
+{"ts":"2026-11-16T18:43:49.882Z","cmd":"click","args":[131,407],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/007.png","window":"Fix login redirect - Agent7","ok":true,"ms":762}
+{"ts":"2026-11-16T18:43:55.978Z","cmd":"click","args":[577,443],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/008.png","window":"Fix login redirect - Agent7","ok":true,"ms":705}
+{"ts":"2026-11-16T18:44:04.261Z","cmd":"wait","args":[5000],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/009.png","window":"Fix login redirect - Agent7","ok":true,"ms":5676}
+{"ts":"2026-11-16T18:44:11.247Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T23.1b-intermediate/shots/010.png","window":"Fix login redirect - Agent7","ok":true,"ms":561}

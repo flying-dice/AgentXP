@@ -1,0 +1,22 @@
+{
+  "task": "T02.1",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-IZ5R5F/ux.sock",
+  "admin": "/tmp/a7ux-IZ5R5F/admin.sock",
+  "pid": 26474,
+  "tmp": "/tmp/a7ux-IZ5R5F",
+  "userData": "/tmp/a7ux-IZ5R5F/user-data",
+  "testPageUrl": "http://127.0.0.1:39123/",
+  "home": "/tmp/a7ux-IZ5R5F/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-IZ5R5F/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-IZ5R5F/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-IZ5R5F/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "empty-folder-picker",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

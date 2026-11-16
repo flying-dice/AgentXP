@@ -1,0 +1,30 @@
+{
+  "task": "T21.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "\"hello\" was sent and the request was answered Allow (the mouse was disabled by the driver)",
+  "notes": [],
+  "steps": 6,
+  "budget": 16,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:46:19.898Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:46:19.898Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "\"hello\" was sent and the request was answered Allow (the mouse was disabled by the driver)",
+      "steps": 6,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

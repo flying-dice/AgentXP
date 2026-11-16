@@ -1,0 +1,30 @@
+{
+  "task": "T08.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "5 agent changes exist; answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 18,
+  "answer": "5 files changed; README.md changed most (+7 / -1): old line 3 removed, new lines 3 to 9 added",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:55:14.013Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:55:14.013Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "5 agent changes exist; answer ok",
+      "steps": 3,
+      "answer": "5 files changed; README.md changed most (+7 / -1): old line 3 removed, new lines 3 to 9 added",
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "task": "T31.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "Help and Support shows the topic notepad (want notepad); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 8,
+  "answer": "Press Ctrl+S to save; for a new file a box asks for the name, and to keep the text under another name choose File, then Save As (Ctrl+Shift+S).",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:48:55.692Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:48:55.692Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Help and Support shows the topic notepad (want notepad); answer ok",
+      "steps": 4,
+      "answer": "Press Ctrl+S to save; for a new file a box asks for the name, and to keep the text under another name choose File, then Save As (Ctrl+Shift+S).",
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "task": "T26.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-lkC74A",
+  "testPagePort": 38189,
+  "testPageUrl": "http://127.0.0.1:38189/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:11:09.565Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Review notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-lkC74A/home/Documents/review-notes"
+  ],
+  "sessionId": 1,
+  "reviewSessionId": 2,
+  "reviewWindowId": 2,
+  "preset": "review-ready",
+  "note": "Code Review open with two reviewer comments; a chat is open"
+}

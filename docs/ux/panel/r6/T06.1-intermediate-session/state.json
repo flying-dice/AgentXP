@@ -1,0 +1,21 @@
+{
+  "task": "T06.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-RIc40g",
+  "testPagePort": 45617,
+  "testPageUrl": "http://127.0.0.1:45617/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:41:57.273Z",
+  "options": {
+    "script": "fix-redirect"
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-RIc40g/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "preset": "pending-approval",
+  "note": null
+}

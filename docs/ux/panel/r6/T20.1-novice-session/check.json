@@ -1,0 +1,30 @@
+{
+  "task": "T20.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "checkerStatus": "PASS",
+  "reason": "the Event Viewer is open; answer ok",
+  "notes": [],
+  "steps": 8,
+  "budget": 20,
+  "answer": "Drive E: is not plugged in on this desktop. login-app was removed.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:06:56.598Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:06:56.598Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Event Viewer is open; answer ok",
+      "steps": 8,
+      "answer": "Drive E: is not plugged in on this desktop. login-app was removed.",
+      "noAnswer": false
+    }
+  ]
+}

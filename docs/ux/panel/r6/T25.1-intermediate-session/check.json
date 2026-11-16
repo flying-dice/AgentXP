@@ -1,0 +1,30 @@
+{
+  "task": "T25.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the Code Review window is still open; answer ok",
+  "notes": [],
+  "steps": 0,
+  "budget": 9,
+  "answer": "The Blocker remark is in notes.txt on line 4 (THREE is shouted in capitals)",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:09:57.825Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:09:57.825Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Code Review window is still open; answer ok",
+      "steps": 0,
+      "answer": "The Blocker remark is in notes.txt on line 4 (THREE is shouted in capitals)",
+      "noAnswer": false
+    }
+  ]
+}

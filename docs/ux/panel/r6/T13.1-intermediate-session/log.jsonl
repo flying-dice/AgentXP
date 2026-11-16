@@ -1,0 +1,11 @@
+{"ts":"2026-11-16T18:59:32.721Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/001.png","window":"Fix login redirect - Agent7","ok":true,"ms":751}
+{"ts":"2026-11-16T18:59:39.007Z","cmd":"click","args":[687,89],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/002.png","window":"Fix login redirect - Agent7","ok":true,"ms":866}
+{"ts":"2026-11-16T18:59:44.855Z","cmd":"click","args":[50,125],"flags":{"double":true},"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/003.png","window":"Fix login redirect - Agent7","ok":true,"ms":884}
+{"ts":"2026-11-16T18:59:49.086Z","cmd":"click","args":[268,185],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/004.png","window":"Fix login redirect - Agent7","ok":true,"ms":768}
+{"ts":"2026-11-16T18:59:53.273Z","cmd":"click","args":[320,238],"flags":{"double":true},"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/005.png","window":"Fix login redirect - Agent7","ok":true,"ms":773}
+{"ts":"2026-11-16T18:59:57.560Z","cmd":"click","args":[1008,165],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/006.png","window":"Fix login redirect - Agent7","ok":true,"ms":789}
+{"ts":"2026-11-16T19:00:02.324Z","cmd":"click","args":[50,125],"flags":{"double":true},"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/007.png","window":"Fix login redirect - Agent7","ok":true,"ms":813}
+{"ts":"2026-11-16T19:00:07.649Z","cmd":"key","args":["Enter"],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/008.png","window":"Fix login redirect - Agent7","ok":true,"ms":745}
+{"ts":"2026-11-16T19:00:10.487Z","cmd":"windows","args":[],"ok":true,"ms":15}
+{"ts":"2026-11-16T19:00:14.797Z","cmd":"click","args":[676,175],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/009.png","window":"Fix login redirect - Agent7","ok":true,"ms":819}
+{"ts":"2026-11-16T19:00:19.809Z","cmd":"shot","args":[],"screenshot":"/tmp/ux-sessions/r6/T13.1-intermediate/shots/010.png","window":"Fix login redirect - Agent7","ok":true,"ms":602}

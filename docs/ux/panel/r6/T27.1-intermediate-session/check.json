@@ -1,0 +1,32 @@
+{
+  "task": "T27.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+  "notes": [
+    "question: Explain lines 1 to 2 of index.ts.\nFile: E:\\index.ts\n\n```ts\nexport const answer = 42\nexport const question = \"what is it?"
+  ],
+  "steps": 3,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:12:09.822Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:12:09.822Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

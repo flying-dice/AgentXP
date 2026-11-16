@@ -1,0 +1,30 @@
+{
+  "task": "T01.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 5,
+  "checkerStatus": "PASS",
+  "reason": "a desktop was created (New desktop)",
+  "notes": [],
+  "steps": 3,
+  "budget": 3,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:50:36.075Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:50:36.075Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a desktop was created (New desktop)",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

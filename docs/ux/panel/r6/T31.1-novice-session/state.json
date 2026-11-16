@@ -1,0 +1,22 @@
+{
+  "task": "T31.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-sIWpWT",
+  "testPagePort": 45641,
+  "testPageUrl": "http://127.0.0.1:45641/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:48:18.892Z",
+  "options": {
+    "open": [
+      "notepad"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-sIWpWT/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

@@ -1,0 +1,24 @@
+{
+  "task": "T08.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-3GdpB5",
+  "testPagePort": 41193,
+  "testPageUrl": "http://127.0.0.1:41193/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:54:36.616Z",
+  "options": {
+    "script": "five-edits",
+    "git": true
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-3GdpB5/home/Documents/git-copies/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 2,
+  "changeCount": 5,
+  "preset": "changes-to-review",
+  "note": null
+}

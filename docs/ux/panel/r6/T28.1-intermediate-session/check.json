@@ -1,0 +1,30 @@
+{
+  "task": "T28.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 9,
+  "answer": "The browser opened 127.0.0.1:4174 by itself and showed a banner 'The agent read this page.' with a Take over button, the status bar said 'The agent read this page', and the agent sent a message and found it in #general (search for Standup, 1 result); chat said it used 28 steps",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:16:09.105Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:16:09.105Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+      "steps": 3,
+      "answer": "The browser opened 127.0.0.1:4174 by itself and showed a banner 'The agent read this page.' with a Take over button, the status bar said 'The agent read this page', and the agent sent a message and found it in #general (search for Standup, 1 result); chat said it used 28 steps",
+      "noAnswer": false
+    }
+  ]
+}

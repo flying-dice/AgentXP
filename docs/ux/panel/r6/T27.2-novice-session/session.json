@@ -1,0 +1,22 @@
+{
+  "task": "T27.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-5eTrfT/ux.sock",
+  "admin": "/tmp/a7ux-5eTrfT/admin.sock",
+  "pid": 1475,
+  "tmp": "/tmp/a7ux-5eTrfT",
+  "userData": "/tmp/a7ux-5eTrfT/user-data",
+  "testPageUrl": "http://127.0.0.1:33853/",
+  "home": "/tmp/a7ux-5eTrfT/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-5eTrfT/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-5eTrfT/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-5eTrfT/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "aside-code",
+  "note": "Code with index.ts, chat pane open",
+  "context": {
+    "previousTasks": []
+  }
+}

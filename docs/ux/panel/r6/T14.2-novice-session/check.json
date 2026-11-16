@@ -1,0 +1,30 @@
+{
+  "task": "T14.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the desktop is called \"Experiments\"; the old name is gone",
+  "notes": [],
+  "steps": 3,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:00:39.953Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:00:39.953Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the desktop is called \"Experiments\"; the old name is gone",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

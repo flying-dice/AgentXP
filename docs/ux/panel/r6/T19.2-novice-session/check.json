@@ -1,0 +1,30 @@
+{
+  "task": "T19.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the Browser window is open; answer ok",
+  "notes": [],
+  "steps": 1,
+  "budget": 12,
+  "answer": "The address uses a port that the Browser blocks; ask whoever gave you the address for another one.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:05:43.946Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:05:43.946Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Browser window is open; answer ok",
+      "steps": 1,
+      "answer": "The address uses a port that the Browser blocks; ask whoever gave you the address for another one.",
+      "noAnswer": false
+    }
+  ]
+}

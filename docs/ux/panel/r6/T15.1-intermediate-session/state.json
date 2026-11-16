@@ -1,0 +1,20 @@
+{
+  "task": "T15.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-nAZ05D",
+  "testPagePort": 40859,
+  "testPageUrl": "http://127.0.0.1:40859/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:00:50.951Z",
+  "options": {
+    "rich": true
+  },
+  "sessionId": 1,
+  "desktopId": 1,
+  "desktopTitle": "Try new ideas",
+  "projectPaths": [
+    "/tmp/a7ux-nAZ05D/home/Documents/login-app"
+  ],
+  "preset": "three-desktops",
+  "note": null
+}

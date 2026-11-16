@@ -1,0 +1,32 @@
+{
+  "task": "T27.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "FAIL",
+  "reason": "not met: the Code window still offers a way to show it again",
+  "notes": [
+    "editor width 792 of window width 800"
+  ],
+  "steps": 1,
+  "budget": 4,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:12:26.794Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:12:26.794Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "not met: the Code window still offers a way to show it again",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

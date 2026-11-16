@@ -1,0 +1,30 @@
+{
+  "task": "T24.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the plain folder start state is in place; answer ok",
+  "notes": [],
+  "steps": 3,
+  "budget": 16,
+  "answer": "This folder is not tracked with Git, so there are no change marks.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:09:06.738Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:09:06.738Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the plain folder start state is in place; answer ok",
+      "steps": 3,
+      "answer": "This folder is not tracked with Git, so there are no change marks.",
+      "noAnswer": false
+    }
+  ]
+}

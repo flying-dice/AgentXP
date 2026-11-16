@@ -1,0 +1,22 @@
+{
+  "task": "T28.1",
+  "level": "novice",
+  "socket": "/tmp/a7ux-OJxXwB/ux.sock",
+  "admin": "/tmp/a7ux-OJxXwB/admin.sock",
+  "pid": 19403,
+  "tmp": "/tmp/a7ux-OJxXwB",
+  "userData": "/tmp/a7ux-OJxXwB/user-data",
+  "testPageUrl": "http://127.0.0.1:42601/",
+  "home": "/tmp/a7ux-OJxXwB/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-OJxXwB/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-OJxXwB/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-OJxXwB/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "web-app-ready",
+  "note": "team chat web app at http://127.0.0.1:4174/",
+  "context": {
+    "previousTasks": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T28.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-Sq1U8B/ux.sock",
+  "admin": "/tmp/a7ux-Sq1U8B/admin.sock",
+  "pid": 22297,
+  "tmp": "/tmp/a7ux-Sq1U8B",
+  "userData": "/tmp/a7ux-Sq1U8B/user-data",
+  "testPageUrl": "http://127.0.0.1:35349/",
+  "home": "/tmp/a7ux-Sq1U8B/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-Sq1U8B/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-Sq1U8B/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-Sq1U8B/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "web-app-busy",
+  "note": "the agent is working in the Browser",
+  "context": {
+    "previousTasks": []
+  }
+}

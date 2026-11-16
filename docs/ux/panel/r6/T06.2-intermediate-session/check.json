@@ -1,0 +1,30 @@
+{
+  "task": "T06.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the request was selected reject (want a denial); the command did not run; the turn ended; no file was written",
+  "notes": [],
+  "steps": 1,
+  "budget": 3,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:43:54.748Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:43:54.748Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the request was selected reject (want a denial); the command did not run; the turn ended; no file was written",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "task": "T27.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+  "notes": [
+    "question: Please explain the first two lines of this file to me: what do they mean?"
+  ],
+  "steps": 4,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:12:14.542Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:12:14.542Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

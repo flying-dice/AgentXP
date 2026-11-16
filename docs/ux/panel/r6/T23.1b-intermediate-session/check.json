@@ -1,0 +1,32 @@
+{
+  "task": "T23.1b",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "checkerStatus": "PASS",
+  "reason": "the start state showed \"It stopped again\"; a turn finished after the second crash (chat 1)",
+  "notes": [
+    "the second-failure box offered \"Start a new chat\""
+  ],
+  "steps": 6,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:44:19.946Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:44:19.946Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the start state showed \"It stopped again\"; a turn finished after the second crash (chat 1)",
+      "steps": 6,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

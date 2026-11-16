@@ -1,0 +1,22 @@
+{
+  "task": "T11.3",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-zewshB",
+  "testPagePort": 41861,
+  "testPageUrl": "http://127.0.0.1:41861/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T18:57:52.487Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-zewshB/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "controlSocket": "/tmp/a7ux-zewshB/ctl-0.sock",
+  "outcomesAtStart": 2,
+  "preset": "paused-desktop",
+  "note": null
+}

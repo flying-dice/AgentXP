@@ -1,0 +1,30 @@
+{
+  "task": "T16.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "the answer says no and gives the reason (Write files / separate)",
+  "notes": [],
+  "steps": 3,
+  "budget": 12,
+  "answer": "No. Turning off Code would not stop writing files with Notepad, because Notepad's row says 'Saving a file uses Write files.' and Code only covers opening files, revealing lines and showing diffs in Code.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:02:24.406Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:02:24.406Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the answer says no and gives the reason (Write files / separate)",
+      "steps": 3,
+      "answer": "No. Turning off Code would not stop writing files with Notepad, because Notepad's row says 'Saving a file uses Write files.' and Code only covers opening files, revealing lines and showing diffs in Code.",
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "task": "T16.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "Write files = ask; Read files = allow",
+  "notes": [],
+  "steps": 5,
+  "budget": 15,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:02:03.478Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:02:03.478Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Write files = ask; Read files = allow",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

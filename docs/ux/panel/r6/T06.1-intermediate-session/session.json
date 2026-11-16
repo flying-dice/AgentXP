@@ -1,0 +1,22 @@
+{
+  "task": "T06.1",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-RIc40g/ux.sock",
+  "admin": "/tmp/a7ux-RIc40g/admin.sock",
+  "pid": 14041,
+  "tmp": "/tmp/a7ux-RIc40g",
+  "userData": "/tmp/a7ux-RIc40g/user-data",
+  "testPageUrl": "http://127.0.0.1:45617/",
+  "home": "/tmp/a7ux-RIc40g/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-RIc40g/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-RIc40g/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-RIc40g/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "pending-approval",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

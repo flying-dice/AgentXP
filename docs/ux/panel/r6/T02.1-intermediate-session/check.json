@@ -1,0 +1,30 @@
+{
+  "task": "T02.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "login-app is plugged in; its window is open",
+  "notes": [],
+  "steps": 7,
+  "budget": 18,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:50:45.873Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:50:45.873Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "login-app is plugged in; its window is open",
+      "steps": 7,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T18.1-window",
+  "level": "novice",
+  "socket": "/tmp/a7ux-2kVzGN/ux.sock",
+  "admin": "/tmp/a7ux-2kVzGN/admin.sock",
+  "pid": 18899,
+  "tmp": "/tmp/a7ux-2kVzGN",
+  "userData": "/tmp/a7ux-2kVzGN/user-data",
+  "testPageUrl": "http://127.0.0.1:44217/",
+  "home": "/tmp/a7ux-2kVzGN/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-2kVzGN/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-2kVzGN/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-2kVzGN/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "a2ui",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

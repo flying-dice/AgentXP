@@ -1,0 +1,30 @@
+{
+  "task": "T15.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "\"Try new ideas\" is deleted; the project folder remains; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 12,
+  "answer": "Lost: its chats, notes and logs. Stays: the project folders.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T19:01:14.394Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T19:01:14.394Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "\"Try new ideas\" is deleted; the project folder remains; answer ok",
+      "steps": 2,
+      "answer": "Lost: its chats, notes and logs. Stays: the project folders.",
+      "noAnswer": false
+    }
+  ]
+}

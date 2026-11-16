@@ -1,0 +1,25 @@
+{
+  "task": "T24.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-TIucET",
+  "testPagePort": 33437,
+  "testPageUrl": "http://127.0.0.1:33437/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:09:44.858Z",
+  "options": {
+    "projects": [
+      "plain"
+    ],
+    "open": [
+      "code"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-TIucET/home/Documents/notes-folder"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

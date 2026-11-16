@@ -1,0 +1,30 @@
+{
+  "task": "T22.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 6,
+  "answer": "It opens the Browse For Folder dialog box and plugs the folder in as a drive, so the agent can see its files",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:48:07.507Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:48:07.507Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a help topic about Explorer is open (topic explorer); answer ok",
+      "steps": 4,
+      "answer": "It opens the Browse For Folder dialog box and plugs the folder in as a drive, so the agent can see its files",
+      "noAnswer": false
+    }
+  ]
+}

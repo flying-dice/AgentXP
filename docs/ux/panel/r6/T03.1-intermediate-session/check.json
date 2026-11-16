@@ -1,0 +1,30 @@
+{
+  "task": "T03.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "docs-site is plugged in; an Explorer window shows its root",
+  "notes": [],
+  "steps": 4,
+  "budget": 15,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:51:54.500Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:51:54.500Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "docs-site is plugged in; an Explorer window shows its root",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

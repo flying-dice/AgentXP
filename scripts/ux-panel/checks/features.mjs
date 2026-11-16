@@ -98,7 +98,7 @@ export const checks = {
   async 'T27.2'(ctx) {
     const page = await desktopPage(ctx)
     const open = await page.locator('[data-testid="window-code"] [data-testid="embedded-chat"][data-collapsed="false"]').count()
-    const edge = await page.locator('[data-testid="window-code"] [data-testid="chat-pane-toggle"], [data-testid="window-code"] [data-testid="embedded-chat"][data-collapsed="true"]').count()
+    const edge = await page.locator('[data-testid="window-code"] [data-testid="chat-pane-toggle"], [data-testid="window-code"] [data-testid="code-focus-chat"], [data-testid="window-code"] [data-testid="embedded-chat"][data-collapsed="true"]').count()
     // H-26: the editor must really fill the window (the pane being hidden is not enough: a fixed editor width leaves a grey area).
     const box = async (sel) => (await page.locator(sel).first().boundingBox().catch(() => null))?.width ?? 0
     const editorWidth = await box('[data-testid="window-code"] [data-testid="code-editor"]')

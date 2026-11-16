@@ -1,0 +1,22 @@
+{
+  "task": "T22.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-WW6Sjh/ux.sock",
+  "admin": "/tmp/a7ux-WW6Sjh/admin.sock",
+  "pid": 22199,
+  "tmp": "/tmp/a7ux-WW6Sjh",
+  "userData": "/tmp/a7ux-WW6Sjh/user-data",
+  "testPageUrl": "http://127.0.0.1:41495/",
+  "home": "/tmp/a7ux-WW6Sjh/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-WW6Sjh/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-WW6Sjh/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-WW6Sjh/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "chat-open",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

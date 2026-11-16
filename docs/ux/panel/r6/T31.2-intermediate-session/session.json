@@ -1,0 +1,22 @@
+{
+  "task": "T31.2",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-2nR6tv/ux.sock",
+  "admin": "/tmp/a7ux-2nR6tv/admin.sock",
+  "pid": 25000,
+  "tmp": "/tmp/a7ux-2nR6tv",
+  "userData": "/tmp/a7ux-2nR6tv/user-data",
+  "testPageUrl": "http://127.0.0.1:37679/",
+  "home": "/tmp/a7ux-2nR6tv/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-2nR6tv/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-2nR6tv/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-2nR6tv/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "project-desktop",
+  "note": "desktop 1",
+  "context": {
+    "previousTasks": []
+  }
+}

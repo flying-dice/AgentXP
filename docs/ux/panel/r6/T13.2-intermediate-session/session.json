@@ -1,0 +1,22 @@
+{
+  "task": "T13.2",
+  "level": "intermediate",
+  "socket": "/tmp/a7ux-wVmBHv/ux.sock",
+  "admin": "/tmp/a7ux-wVmBHv/admin.sock",
+  "pid": 18625,
+  "tmp": "/tmp/a7ux-wVmBHv",
+  "userData": "/tmp/a7ux-wVmBHv/user-data",
+  "testPageUrl": "http://127.0.0.1:39765/",
+  "home": "/tmp/a7ux-wVmBHv/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-wVmBHv/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-wVmBHv/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-wVmBHv/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "disconnected-pending",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

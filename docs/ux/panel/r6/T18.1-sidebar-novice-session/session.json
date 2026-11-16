@@ -1,0 +1,22 @@
+{
+  "task": "T18.1-sidebar",
+  "level": "novice",
+  "socket": "/tmp/a7ux-BthunG/ux.sock",
+  "admin": "/tmp/a7ux-BthunG/admin.sock",
+  "pid": 18323,
+  "tmp": "/tmp/a7ux-BthunG",
+  "userData": "/tmp/a7ux-BthunG/user-data",
+  "testPageUrl": "http://127.0.0.1:45007/",
+  "home": "/tmp/a7ux-BthunG/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-BthunG/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-BthunG/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-BthunG/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "a2ui",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

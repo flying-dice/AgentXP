@@ -1,0 +1,30 @@
+{
+  "task": "T04.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 5,
+  "checkerStatus": "PASS",
+  "reason": "the chat window of the same chat is open; the transcript still has 3 user messages",
+  "notes": [],
+  "steps": 5,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:53:24.519Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:53:24.519Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the chat window of the same chat is open; the transcript still has 3 user messages",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

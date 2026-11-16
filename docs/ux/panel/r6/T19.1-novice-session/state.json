@@ -1,0 +1,20 @@
+{
+  "task": "T19.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-KcJVZ8",
+  "testPagePort": 43015,
+  "testPageUrl": "http://127.0.0.1:43015/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:05:23.873Z",
+  "options": {
+    "script": "browser-agent"
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-KcJVZ8/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

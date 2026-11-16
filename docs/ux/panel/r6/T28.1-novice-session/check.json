@@ -1,0 +1,30 @@
+{
+  "task": "T28.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "checkerStatus": "PASS",
+  "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 12,
+  "answer": "A yellow bar on the page said The agent read this page (004.png), and the chat showed the reply I sent the message and found it in #general (006.png).",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:46:30.586Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:46:30.586Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+      "steps": 4,
+      "answer": "A yellow bar on the page said The agent read this page (004.png), and the chat showed the reply I sent the message and found it in #general (006.png).",
+      "noAnswer": false
+    }
+  ]
+}

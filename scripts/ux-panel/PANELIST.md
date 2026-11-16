@@ -56,10 +56,10 @@ window, pause) and every question it asks (answer it in your report). Look at th
 the result. Do not stop after one look or after two steps because it seems enough. Any hint that came with the scenario
 (an address, a name) is part of the scenario. Stop early only when the budget is used up or you decide you cannot go on.
 
-## Think aloud
+## Step notes
 
-Before each action write one sentence: what you see, what you expect, what you will do. Keep these notes: they are your
-report.
+Before each action write one short note about the screen: what is on it, what you expect, which action you take. These
+notes become the step list of your report.
 
 ## Final report (your last message)
 

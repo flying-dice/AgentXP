@@ -1,0 +1,30 @@
+{
+  "task": "T11.3",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "checkerStatus": "PASS",
+  "reason": "paused is false; a new turn finished (success,cancelled,success)",
+  "notes": [],
+  "steps": 1,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T18:58:07.877Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T18:58:07.877Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "paused is false; a new turn finished (success,cancelled,success)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T23.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-x6gHdc",
+  "testPagePort": 35923,
+  "testPageUrl": "http://127.0.0.1:35923/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:07:28.373Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-x6gHdc/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "crashedPid": 25490,
+  "firstCrashOffersRestartSend": true,
+  "preset": "crashed-agent",
+  "note": null
+}

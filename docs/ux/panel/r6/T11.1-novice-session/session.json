@@ -1,0 +1,22 @@
+{
+  "task": "T11.1",
+  "level": "novice",
+  "socket": "/tmp/a7ux-onUf0b/ux.sock",
+  "admin": "/tmp/a7ux-onUf0b/admin.sock",
+  "pid": 5941,
+  "tmp": "/tmp/a7ux-onUf0b",
+  "userData": "/tmp/a7ux-onUf0b/user-data",
+  "testPageUrl": "http://127.0.0.1:46415/",
+  "home": "/tmp/a7ux-onUf0b/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-onUf0b/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-onUf0b/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-onUf0b/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "agent-running",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

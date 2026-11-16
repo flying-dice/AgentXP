@@ -1,0 +1,18 @@
+{
+  "task": "T16.2",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-UELIDE",
+  "testPagePort": 40407,
+  "testPageUrl": "http://127.0.0.1:40407/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T19:01:47.653Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-UELIDE/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}
