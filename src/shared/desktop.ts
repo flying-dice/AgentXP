@@ -199,7 +199,7 @@ export const TOOL_GROUPS = [
   'events', // events_query
   'snip', // screen_capture
   'recycle', // recycle_list, recycle_restore
-  'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (only for the session that owns a Code Review window)
+  'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
 
@@ -266,8 +266,7 @@ export function enabledToolGroups(openApps: Iterable<AppKind>): ToolGroup[] {
 
 /** The message an agent gets when it uses a tool whose app is closed. */
 export function closedAppMessage(group: Exclude<ToolGroup, 'shell'>): string {
-  // The agent cannot open a review window itself: the user starts a review (Start menu, Code app "Review changes").
-  if (group === 'review') return 'There is no Code Review window on this desktop. The user opens one (Start menu, Code Review) and the review tools only work in the review session that window belongs to.'
+  if (group === 'review') return 'There is no Code Review window on this desktop. Call review_open with the project path to open one (or the user opens it from the Start menu), then use the review tools.'
   const app = TOOL_GROUP_APP[group]
   return `The ${APP_DISPLAY_NAMES[app]} app is closed on this desktop. Call desktop_open_app with app "${app}" to open it.`
 }

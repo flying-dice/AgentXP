@@ -13,6 +13,8 @@ import { ReviewService, parseNameStatus } from '../review/ReviewService'
 import { createVfsFixture } from '../test-helpers'
 import { DesktopToolService } from './DesktopToolService'
 import { createReviewTools } from './reviewTools'
+import { createShellTools } from './shellTools'
+import { ToolPaths } from './ToolPaths'
 import type { ToolResult } from './types'
 
 const git = (cwd: string, ...args: string[]): string =>
@@ -79,7 +81,7 @@ beforeEach(async () => {
   tools = new DesktopToolService({
     states: desktops,
     gate: gateway,
-    handlers: new Proxy({}, { get: (_t, name: string) => (createReviewTools({ reviews }) as Record<string, unknown>)[name] }) as never
+    handlers: { ...createShellTools({ desktops, paths: new ToolPaths(f.vfs, sessions), ask: async () => true }), ...createReviewTools({ reviews }) } as never
   })
   const chat = await desktops.newChat(desktopId, undefined, 'E:\\')
   chatId = chat.view.app === 'chat' ? chat.view.sessionId : 0
@@ -184,28 +186,87 @@ describe('review tools', () => {
   })
 })
 
-describe('session scoping', () => {
-  it('refuses a chat on the same desktop, even though the review group is enabled', async () => {
+describe('review_open', () => {
+  it('opens a Code Review window for the chat\'s project, which enables the review tools; reuses it the second time', async () => {
+    desktops.closeWindow(desktops.state(desktopId).windows.find((w) => w.app === 'code-review')!.id)
+    expect(tools.enabledGroups(desktopId)).not.toContain('review')
+    const first = await call('review_open', {}, chatId)
+    expect(first.isError).toBeFalsy()
+    expect(textOf(first)).toContain('review_add_comment')
+    expect(desktops.state(desktopId).windows.filter((w) => w.app === 'code-review')).toHaveLength(1)
     expect(tools.enabledGroups(desktopId)).toContain('review')
-    for (const [tool, args] of [
-      ['review_list_changes', {}],
-      ['review_read_diff', { path: 'src/a.ts' }],
-      ['review_add_comment', { path: 'src/a.ts', line: 1, body: 'x' }],
-      ['review_submit', { verdict: 'approve', body: '' }]
-    ] as const) {
-      const res = await call(tool, args, chatId)
-      expect(res.isError, tool).toBe(true)
-      expect(textOf(res)).toContain('does not own')
-    }
+    expect(textOf(await call('review_open', { path: 'E:\\' }, chatId))).toContain('Using the open')
+    expect(desktops.state(desktopId).windows.filter((w) => w.app === 'code-review')).toHaveLength(1)
+    expect((await call('review_add_comment', { path: 'src/a.ts', line: 1, body: 'x' }, chatId)).isError).toBeFalsy()
+  })
+
+  it('refuses a bad ref', async () => {
+    expect((await call('review_open', { baseRef: '--bad' }, chatId)).isError).toBe(true)
+  })
+})
+
+describe('session scoping', () => {
+  it('a chat on the same desktop reviews in the Code Review window: comments land under the window\'s review session', async () => {
+    expect(tools.enabledGroups(desktopId)).toContain('review')
+    expect(textOf(await call('review_list_changes', {}, chatId))).toContain('3 changed files')
+    expect(textOf(await call('review_read_diff', { path: 'src/a.ts' }, chatId))).toContain('+ 2 | TWO')
+    const added = await call('review_add_comment', { path: 'src/a.ts', line: 2, severity: 'major', body: 'Shouting' }, chatId)
+    expect(added.isError).toBeFalsy()
+    expect(reviewRepo.listComments(reviewId)).toMatchObject([{ path: 'src/a.ts', lineStart: 2, author: 'agent', body: 'Shouting' }])
     expect(reviewRepo.listComments(chatId)).toEqual([])
+    expect(f.publisher.payloads('review.changed')).toContainEqual({ desktopId, sessionId: reviewId })
+  })
+
+  it('submitting from a chat stores the verdict on the window and hands the verdict and the comments back to that chat', async () => {
+    await call('review_add_comment', { path: 'src/a.ts', line: 2, severity: 'blocker', body: 'Shouting' }, chatId)
+    const text = textOf(await call('review_submit', { verdict: 'request_changes', body: 'One thing' }, chatId))
+    expect(text).toContain('Changes requested. One thing')
+    expect(text).toContain('src/a.ts:2 [blocker] Shouting')
+    expect(text).toContain('here in the chat')
+    expect(reviewRepo.getSummary(reviewId)).toMatchObject({ verdict: 'request_changes', body: 'One thing' })
     expect(reviewRepo.getSummary(chatId)).toBeNull()
+    // The review session itself keeps its terse answer.
+    expect(textOf(await call('review_submit', { verdict: 'approve', body: '' }))).toBe('Review submitted: approve with 1 comment.')
+  })
+
+  it('the chat pane (aside) of a Code window uses the review tools too', async () => {
+    const aside = f.repos.sessions.create({ agentId: f.agentId, desktopId, cwd: 'E:\\', title: 'aside', role: 'aside' })
+    const res = await call('review_add_comment', { path: 'src/a.ts', line: 1, body: 'from the aside' }, aside.id)
+    expect(res.isError).toBeFalsy()
+    expect(reviewRepo.listComments(reviewId).map((c) => c.body)).toEqual(['from the aside'])
+  })
+
+  it('a chat picks the focused review window of its project, and any review window when its project has none', async () => {
+    const other = await desktops.openReview(desktopId, 'E:\\', 'main')
+    const otherSession = other.view.app === 'code-review' ? other.view.sessionId : 0
+    desktops.focusWindow(other.id, 'user')
+    await call('review_add_comment', { path: 'src/a.ts', line: 1, body: 'x' }, chatId)
+    expect(reviewRepo.listComments(otherSession)).toHaveLength(1)
+    expect(reviewRepo.listComments(reviewId)).toEqual([])
+    const elsewhere = f.repos.sessions.create({ agentId: f.agentId, desktopId, cwd: 'C:\\Users\\Agent', title: 'home chat' })
+    expect((await call('review_list_changes', {}, elsewhere.id)).isError).toBeFalsy()
+  })
+
+  it('without a Code Review window the error says to call review_open', async () => {
+    const window = desktops.state(desktopId).windows.find((w) => w.app === 'code-review')!
+    desktops.closeWindow(window.id)
+    const res = await call('review_list_changes', {}, chatId)
+    expect(res.isError).toBe(true)
+    expect(textOf(res)).toContain('review_open')
+    expect(textOf(res)).not.toContain('external tools')
+  })
+
+  it('a chat of another desktop is refused', async () => {
+    const other = f.repos.desktops.create({ agentId: f.agentId, title: 'Other', isOpen: false })
+    const res = await tools.call({ sessionId: chatId, desktopId: other.id }, 'review_list_changes', {})
+    expect(res.isError).toBe(true)
   })
 
   it('refuses another review session that has no window of its own', async () => {
     const orphan = f.repos.sessions.create({ agentId: f.agentId, desktopId, title: 'orphan', role: 'review' })
     const res = await call('review_list_changes', {}, orphan.id)
     expect(res.isError).toBe(true)
-    expect(textOf(res)).toContain('does not own')
+    expect(textOf(res)).toContain('review_open')
   })
 
   it('a review session only works on its own desktop', async () => {
@@ -220,8 +281,8 @@ describe('session scoping', () => {
     expect(tools.enabledGroups(desktopId)).not.toContain('review')
     const res = await call('review_list_changes')
     expect(res.isError).toBe(true)
-    // The window owned the session, so the session is gone with it and the handler's own scoping refuses.
-    expect(textOf(res)).toContain('does not own')
+    // The window owned the session, so the session is gone with it and nothing resolves.
+    expect(textOf(res)).toContain('review_open')
     expect(f.repos.sessions.get(reviewId)).toBeNull()
   })
 })

@@ -3,6 +3,7 @@ import type { DesktopState } from '@shared/desktop'
 import type { Id } from '@shared/models'
 import {
   isSafeRef,
+  sameProject,
   type NewReviewComment,
   type ReviewChangeDto,
   type ReviewChangeStatus,
@@ -35,6 +36,20 @@ export interface ReviewServiceDeps {
 export const MAX_REVIEW_FILE_BYTES = 1_000_000
 const MAX_REVIEW_FILES = 500
 const CONCURRENCY = 8
+
+/** The Code Review window a session's review calls act on (see `requireWindow`). */
+export interface ReviewTarget {
+  windowId: Id
+  desktopId: Id
+  root: VPath
+  baseRef: string
+  /** The review session of the window: the owner of its comments and verdict. */
+  reviewSessionId: Id
+  /** True when the calling session is that review session (false: a chat or chat pane reviewing on the user's behalf). */
+  owner: boolean
+}
+
+export const NO_WINDOW = 'There is no Code Review window on this desktop to review in. Call review_open first (with the project path), then use the review tools.'
 
 const STATUS_BY_LETTER: Record<string, ReviewChangeStatus> = { M: 'modified', A: 'added', D: 'deleted', R: 'renamed', C: 'added', T: 'modified' }
 
@@ -73,7 +88,7 @@ function segmentsOf(path: string): string[] {
 
 /**
  * Code Review: the changed files of a working tree (git CLI, read only), the comments and the verdict of a review
- * session. A review session (role `review`) owns its Code Review window; the `review_*` tools only work for it.
+ * session. A review session (role `review`) owns its Code Review window; the `review_*` tools work for it and for the chats of the same desktop.
  */
 export class ReviewService {
   constructor(private readonly deps: ReviewServiceDeps) {}
@@ -167,34 +182,36 @@ export class ReviewService {
 
   // ---- ownership ---------------------------------------------------------------------------------
 
-  /** True when the session is a review session that owns an open Code Review window on its desktop. */
-  ownsWindow(sessionId: Id): boolean {
-    return this.windowOf(sessionId) !== null
-  }
-
   /**
-   * The Code Review window of the session (`root`, `baseRef`), or a readable error. This is what scopes the
-   * `review_*` tools: any other session (a chat on the same desktop, another review) is refused.
+   * The Code Review window a session's `review_*` calls act on, or a readable error. The review session of a window
+   * acts on its own window. Any other session of the desktop (a chat, the chat pane of an app window) acts on the
+   * Code Review window of its project (the focused one, else the last opened), so "review this" asked in the IDE chat
+   * lands in the window; comments always belong to the review session of that window (`reviewSessionId`).
+   * Sessions of another desktop and sessions without a desktop get nothing.
    */
-  requireWindow(sessionId: Id): { windowId: Id; desktopId: Id; root: VPath; baseRef: string } {
+  requireWindow(sessionId: Id): ReviewTarget {
     const window = this.windowOf(sessionId)
-    if (!window) throw new AppError('The review tools only work in the review session of a Code Review window. This session does not own one.')
+    if (!window) throw new AppError(NO_WINDOW)
     return window
   }
 
-  private windowOf(sessionId: Id): { windowId: Id; desktopId: Id; root: VPath; baseRef: string } | null {
+  private windowOf(sessionId: Id): ReviewTarget | null {
     const session = this.deps.sessions.get(sessionId)
-    if (!session || session.role !== 'review' || session.desktopId == null) return null
+    if (!session || session.desktopId == null) return null
     let state: DesktopState
     try {
       state = this.deps.states.state(session.desktopId)
     } catch {
       return null
     }
-    for (const w of state.windows) {
-      if (w.view.app === 'code-review' && w.view.sessionId === sessionId) return { windowId: w.id, desktopId: session.desktopId, root: w.view.root, baseRef: w.view.baseRef }
-    }
-    return null
+    const reviews = state.windows.flatMap((w) => (w.view.app === 'code-review' ? [{ w, view: w.view }] : []))
+    const own = session.role === 'review'
+    const candidates = own ? reviews.filter((r) => r.view.sessionId === sessionId) : reviews
+    const related = own ? candidates : candidates.filter((r) => sameProject(r.view.root, session.cwd))
+    const pool = related.length > 0 ? related : candidates
+    const found = pool.find((r) => r.w.id === state.focusedWindowId) ?? pool.at(-1)
+    if (!found) return null
+    return { windowId: found.w.id, desktopId: session.desktopId, root: found.view.root, baseRef: found.view.baseRef, reviewSessionId: found.view.sessionId, owner: own }
   }
 
   private requireReviewSession(sessionId: Id): void {
