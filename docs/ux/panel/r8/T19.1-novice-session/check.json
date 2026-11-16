@@ -1,0 +1,39 @@
+{
+  "task": "T19.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 6,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "a Browser window shows the page (http://127.0.0.1:36587/; want 127.0.0.1:36587); the Browser chip is on; the assistant read the page (a browser_read call); answer ok",
+  "notes": [],
+  "steps": 6,
+  "budget": 16,
+  "answer": "The page is titled Fixture page. It says Example Domain.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:42:29.595Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:42:29.595Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a Browser window shows the page (http://127.0.0.1:36587/; want 127.0.0.1:36587); the Browser chip is on; the assistant read the page (a browser_read call); answer ok",
+      "steps": 6,
+      "answer": "The page is titled Fixture page. It says Example Domain.",
+      "noAnswer": false,
+      "stepsToPass": 6
+    }
+  ]
+}

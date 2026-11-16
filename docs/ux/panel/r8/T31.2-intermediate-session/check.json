@@ -1,0 +1,39 @@
+{
+  "task": "T31.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 6,
+  "answer": "The Terminal window is read-only: the agent is the only user of the shell, so you can watch but cannot type",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T22:06:32.574Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T22:06:32.574Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Help and Support shows the topic terminal (want terminal); answer ok",
+      "steps": 4,
+      "answer": "The Terminal window is read-only: the agent is the only user of the shell, so you can watch but cannot type",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

@@ -206,11 +206,19 @@ To send the comments to a chat that fixes the code, follow the steps below:
 
 To compare with another base, type its name in **Base** and press Enter.
 
+To ask for a review from the chat you are working in, follow the steps below:
+
+1. In the chat of the **Code** window (or in any chat), type a request such as "review my changes".
+2. The agent opens a Code Review window for the project, or uses the one that is open. You do not have to open it yourself.
+3. Watch the comments appear in the Code Review window, on the lines they are about. The agent does not list them in the chat as plain text.
+4. When the review ends, the agent tells you the verdict and a short list of the comments in the same chat. Continue there, for example ask it to fix them.
+
 ## 6 - Troubleshooting
 
 - **The outline says No changes.** The files equal the base. Change the base or edit a file.
 - **The window shows an error about git.** The folder is not a git project, or git is missing. Open another project.
 - **The reviewer gives no comments.** Type a request in the chat on the right.
+- **The agent in a chat says it cannot add review comments.** Ask it to open Code Review for the project first. Then ask again.
 - **A comment is under Lost comments.** The line of the comment changed after the review. Read the text and delete it.
 
 ## 7 - Need Help?

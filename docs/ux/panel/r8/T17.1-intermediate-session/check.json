@@ -1,0 +1,39 @@
+{
+  "task": "T17.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 7,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "an agent with command node and my-agent.js exists; it is the default",
+  "notes": [],
+  "steps": 7,
+  "budget": 24,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:38:59.191Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:38:59.191Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "an agent with command node and my-agent.js exists; it is the default",
+      "steps": 7,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 7
+    }
+  ]
+}

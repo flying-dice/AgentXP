@@ -1,0 +1,22 @@
+{
+  "task": "T22.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-sKFtPt",
+  "testPagePort": 34083,
+  "testPageUrl": "http://127.0.0.1:34083/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:44:42.740Z",
+  "options": {
+    "open": [
+      "explorer"
+    ]
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-sKFtPt/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

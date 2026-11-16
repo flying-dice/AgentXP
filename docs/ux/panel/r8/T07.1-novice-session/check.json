@@ -1,0 +1,42 @@
+{
+  "task": "T07.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "both chats had a request; no request is pending (selected | selected)",
+  "notes": [
+    "answer order: 1. chat \"Fix the login redirect bug so that deep…\" (allow); 2. chat \"Trim the user name in src/auth/login.ts…\" (allow)",
+    "seconds from the request to the next entry: \"Fix the login redirect bug so that deep…\" 20; \"Trim the user name in src/auth/login.ts…\" 25 (the researcher compares with the shots: an Allow without reading shows as a very short time)"
+  ],
+  "steps": 5,
+  "budget": 20,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:27:54.140Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:27:54.140Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "both chats had a request; no request is pending (selected | selected)",
+      "steps": 5,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}

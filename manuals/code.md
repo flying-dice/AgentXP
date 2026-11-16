@@ -244,6 +244,8 @@ To review the changes of the agent, follow the steps below:
 2. Double-click a row. The file opens.
 3. Click the mark in the margin. The peek shows the old and the new lines.
 
+To ask the chat of this window for a review, type "review my changes" in the chat pane. The agent opens Code Review, adds its comments there, and tells you the verdict in the chat. Read **[Code Review](code-review.md)** for the steps.
+
 To revert one block, follow the steps below:
 
 1. Click the mark of the block. The peek opens.

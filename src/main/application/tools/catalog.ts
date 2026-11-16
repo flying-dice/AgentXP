@@ -23,9 +23,11 @@ export const DESKTOP_INSTRUCTIONS =
   'UI you draw with a2ui_render appears where you choose with target: inline in the chat (short conversational forms), in a sidebar beside the chat ' +
   '(a companion panel), or in its own window (an app-like UI the user keeps open). Sidebar tabs and windows can be closed and reopened by the user, ' +
   'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window. ' +
-  'If you are asked to do a code review, you are the reviewer of a Code Review window and act as a merge-request reviewer: ' +
-  'review_list_changes lists the changed files, review_read_diff shows one file with line numbers, review_add_comment leaves an inline comment ' +
-  '(a specific line, a severity of blocker, major, minor or nit, and what is wrong and why), and review_submit ends the review with a verdict and a summary. ' +
+  'If you are asked to do a code review (in any chat, also the chat pane of the Code window), do it in a Code Review window and act as a merge-request reviewer: ' +
+  'call review_open with the project path (it opens a Code Review window, or reuses the open one), then review_list_changes lists the changed files, ' +
+  'review_read_diff shows one file with line numbers, review_add_comment leaves an inline comment ' +
+  '(a specific line, a severity of blocker, major, minor or nit, and what is wrong and why) that appears in that window, and review_submit ends the review with a verdict and a summary. ' +
+  'Never list review comments as plain text in the chat instead of adding them. When the review is submitted, tell the user the verdict and a short summary of the comments in the chat they asked in. ' +
   'Comment on real problems (bugs, missing tests, unclear code), not on style you cannot justify, and do not edit files while reviewing; the user passes your comments to a chat to fix. ' +
   'In a chat pane (an aside: the small chat inside an app window, whose prompts carry `appContext` in the desktop state: windowId, app, the open file, the selection, the page) ' +
   'keep your answers short and local to that app context, a few sentences or a short list: "explain this" means the selection or the open file in appContext. ' +
@@ -75,6 +77,15 @@ export const TOOL_DEFS = {
       app,
       path: z.string().optional().describe('explorer, notepad, code, wordpad, paint: virtual path to show (E:\\src, relative to your working directory, ...); an Explorer without a path shows Computer (the drives)'),
       url: z.string().optional().describe('browser: address to load')
+    })
+  },
+  review_open: {
+    group: 'shell',
+    description:
+      'Open a Code Review window for a project folder (or reuse the open one for it) so you can review its uncommitted changes there. Call this first when you are asked for a code review and no Code Review window is open; then use review_list_changes, review_read_diff, review_add_comment and review_submit.',
+    input: z.object({
+      path: z.string().optional().describe('The project folder to review (E:\\, E:\\src, relative to your working directory); default: your working directory'),
+      baseRef: z.string().optional().describe('The git ref to compare with; default HEAD (the working tree against the last commit)')
     })
   },
   desktop_close_app: {
@@ -326,7 +337,7 @@ export const TOOL_DEFS = {
   },
   review_list_changes: {
     group: 'review',
-    description: 'List the changed files of the review (status, added and removed lines, open comments) against the review\'s base ref. Only works in the review session of a Code Review window.',
+    description: 'List the changed files of the review (status, added and removed lines, open comments) against the review\'s base ref. Works in the Code Review window of your project (call review_open first when none is open).',
     input: z.object({})
   },
   review_read_diff: {

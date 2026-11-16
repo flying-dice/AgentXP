@@ -1,0 +1,39 @@
+{
+  "task": "T25.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 0,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Code Review window is still open; answer ok",
+  "notes": [],
+  "steps": 0,
+  "budget": 9,
+  "answer": "The Blocker remark, in notes.txt on line 4",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:49:14.822Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:49:14.822Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Code Review window is still open; answer ok",
+      "steps": 0,
+      "answer": "The Blocker remark, in notes.txt on line 4",
+      "noAnswer": false,
+      "stepsToPass": 0
+    }
+  ]
+}

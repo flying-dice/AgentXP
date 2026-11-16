@@ -1,0 +1,39 @@
+{
+  "task": "T08.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "5 agent changes exist; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 18,
+  "answer": "5 files changed; README.md changed most (+7 / -1); line 3 removed, new lines 3 to 9 added",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:29:10.620Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:29:10.620Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "5 agent changes exist; answer ok",
+      "steps": 2,
+      "answer": "5 files changed; README.md changed most (+7 / -1); line 3 removed, new lines 3 to 9 added",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "task": "T25.1",
+  "level": "novice",
+  "sockDir": "/tmp/a7ux-tdNsiN",
+  "testPagePort": 35841,
+  "testPageUrl": "http://127.0.0.1:35841/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:48:44.796Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Review notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-tdNsiN/home/Documents/review-notes"
+  ],
+  "sessionId": 1,
+  "reviewSessionId": 2,
+  "reviewWindowId": 2,
+  "preset": "review-ready",
+  "note": "Code Review open with two reviewer comments; a chat is open"
+}

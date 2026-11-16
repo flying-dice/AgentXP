@@ -1,0 +1,39 @@
+{
+  "task": "T02.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 6,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "login-app is plugged in; its window is open",
+  "notes": [],
+  "steps": 7,
+  "budget": 18,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:21:55.215Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:21:55.215Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "login-app is plugged in; its window is open",
+      "steps": 7,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 6
+    }
+  ]
+}

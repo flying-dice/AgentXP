@@ -1,0 +1,39 @@
+{
+  "task": "T25.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": null,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 0,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Code Review window is still open; answer ok",
+  "notes": [],
+  "steps": 0,
+  "budget": 12,
+  "answer": "The most serious remark is the Blocker on notes.txt line 4: THREE is shouted in capitals",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:49:01.609Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:49:01.609Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Code Review window is still open; answer ok",
+      "steps": 0,
+      "answer": "The most serious remark is the Blocker on notes.txt line 4: THREE is shouted in capitals",
+      "noAnswer": false,
+      "stepsToPass": 0
+    }
+  ]
+}

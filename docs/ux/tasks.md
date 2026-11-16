@@ -46,7 +46,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T03.1 - Add another folder to a running workspace**
 - Scenario: "Your workspace is open. You also need the assistant to see the folder docs-site. Make that folder available in this workspace, and open it so that you can see the files."
 - Start state: connected desktop with `login-app` plugged in; folder picker answered with `docs-site`.
-- Success check: `docs-site` is plugged in on the desktop, and an Explorer window shows its root.
+- Success check: `docs-site` is plugged in on the desktop, and an Explorer window shows its root or a Code window is open (its Projects tree lists the new project, H-106).
 - Min 5. Budget 15 / 20.
 
 ### J04 Start a chat

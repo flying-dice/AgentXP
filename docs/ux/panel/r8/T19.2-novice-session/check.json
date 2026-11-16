@@ -1,0 +1,39 @@
+{
+  "task": "T19.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Browser window is open; answer ok",
+  "notes": [],
+  "steps": 2,
+  "budget": 12,
+  "answer": "The browser blocks port 9 (ERR_UNSAFE_PORT), so I would ask whoever gave me the address for another one.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:42:24.732Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:42:24.732Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Browser window is open; answer ok",
+      "steps": 2,
+      "answer": "The browser blocks port 9 (ERR_UNSAFE_PORT), so I would ask whoever gave me the address for another one.",
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

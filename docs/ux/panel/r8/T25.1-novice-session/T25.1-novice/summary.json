@@ -1,0 +1,14 @@
+{
+  "commands": 3,
+  "steps": 0,
+  "byCmd": {
+    "windows": 1,
+    "shot": 2
+  },
+  "errors": 0,
+  "seconds": 7,
+  "screenshots": 2,
+  "task": "T25.1",
+  "level": "novice",
+  "archivedAt": "2026-11-16T21:49:17.284Z"
+}

@@ -248,7 +248,7 @@ beforeEach(async () => {
 describe('tool catalog', () => {
   it('groups the tools as documented', () => {
     const byGroup = (g: ToolGroup): string[] => specsForGroups([g]).map((s) => s.name)
-    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'desktop_close_app', 'desktop_focus_app'])
+    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app'])
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
     expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
@@ -277,7 +277,7 @@ describe('tool catalog', () => {
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(47)
+    expect(TOOL_SPECS).toHaveLength(48)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {

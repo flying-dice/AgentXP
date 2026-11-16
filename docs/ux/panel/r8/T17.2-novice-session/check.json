@@ -1,0 +1,59 @@
+{
+  "task": "T17.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 2,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 9,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the app is still the same process (pid 15140, was 15140); answer ok",
+  "notes": [],
+  "steps": 9,
+  "budget": 12,
+  "answer": "Why: the agent My assistant runs the command not-a-real-command, which was not found. What to do: in the Agents page, edit that agent or choose another agent, then start a new chat. In my run Claude Code also failed because npx stopped before it was ready.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:39:23.618Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:39:16.012Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "state ok but the answer lacks: not-a-real-command|not found + agents page|agents|agent manager|settings",
+      "steps": 9,
+      "answer": "The default agent My assistant uses a missing command; Claude Code also failed because npx did not start",
+      "noAnswer": false,
+      "stepsToPass": null
+    },
+    {
+      "checkedAt": "2026-11-16T21:39:19.854Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "state ok but the answer lacks: edit|change|choose another|/set\\s+(?:\\S+\\s+){0,3}as\\s+default/i|/default\\b[^.]{0,40}\\bagent|agent\\b[^.]{0,40}\\bdefault/i|new chat",
+      "steps": 9,
+      "answer": "The agent My assistant runs the command not-a-real-command, which was not found. Check the command in the Agents page; switching to Claude Code still failed because npx stopped before it was ready.",
+      "noAnswer": false,
+      "stepsToPass": null
+    },
+    {
+      "checkedAt": "2026-11-16T21:39:23.618Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the app is still the same process (pid 15140, was 15140); answer ok",
+      "steps": 9,
+      "answer": "Why: the agent My assistant runs the command not-a-real-command, which was not found. What to do: in the Agents page, edit that agent or choose another agent, then start a new chat. In my run Claude Code also failed because npx stopped before it was ready.",
+      "noAnswer": false,
+      "stepsToPass": 9
+    }
+  ]
+}

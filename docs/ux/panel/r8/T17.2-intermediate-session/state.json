@@ -1,0 +1,17 @@
+{
+  "task": "T17.2",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-WCIfJ9",
+  "testPagePort": 38301,
+  "testPageUrl": "http://127.0.0.1:38301/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:38:56.848Z",
+  "options": {},
+  "desktopId": 1,
+  "badAgentId": 3,
+  "helperAgentId": 4,
+  "attempt": "chat opened",
+  "appPid": 16647,
+  "preset": "bad-default-agent",
+  "note": "new chat attempt: chat opened"
+}

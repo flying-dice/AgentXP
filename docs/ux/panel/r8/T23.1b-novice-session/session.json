@@ -1,0 +1,27 @@
+{
+  "task": "T23.1b",
+  "level": "novice",
+  "socket": "/tmp/a7ux-tN6rNt/ux.sock",
+  "admin": "/tmp/a7ux-tN6rNt/admin.sock",
+  "pid": 30105,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "tmp": "/tmp/a7ux-tN6rNt",
+  "userData": "/tmp/a7ux-tN6rNt/user-data",
+  "testPageUrl": "http://127.0.0.1:42117/",
+  "home": "/tmp/a7ux-tN6rNt/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-tN6rNt/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-tN6rNt/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-tN6rNt/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "crashed-agent",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

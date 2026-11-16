@@ -1,0 +1,41 @@
+{
+  "task": "T27.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+  "notes": [
+    "question: Please explain the first two lines of this file: what do they mean?"
+  ],
+  "steps": 4,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:52:13.587Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:52:13.587Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "a question was sent from the pane; the question names index.ts or lines, or carries the selection; the assistant answered in the pane; no separate Chat window was opened",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

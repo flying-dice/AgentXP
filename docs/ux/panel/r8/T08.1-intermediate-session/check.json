@@ -1,0 +1,39 @@
+{
+  "task": "T08.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "redirect.ts on disk equals the original; login.ts keeps the agent edit; one recycled change for redirect.ts (found E:\\src\\auth\\redirect.ts)",
+  "notes": [],
+  "steps": 4,
+  "budget": 15,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T21:29:07.940Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T21:29:07.940Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "redirect.ts on disk equals the original; login.ts keeps the agent edit; one recycled change for redirect.ts (found E:\\src\\auth\\redirect.ts)",
+      "steps": 4,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

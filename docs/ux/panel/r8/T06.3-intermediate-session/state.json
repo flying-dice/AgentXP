@@ -1,0 +1,25 @@
+{
+  "task": "T06.3",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-QfYft1",
+  "testPagePort": 39463,
+  "testPageUrl": "http://127.0.0.1:39463/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:27:01.903Z",
+  "options": {
+    "script": "run-tests",
+    "policy": {
+      "terminal": "allow"
+    }
+  },
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/tmp/a7ux-QfYft1/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 3,
+  "preset": "chat-open",
+  "note": null
+}

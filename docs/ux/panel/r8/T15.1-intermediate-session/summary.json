@@ -1,0 +1,14 @@
+{
+  "commands": 5,
+  "steps": 3,
+  "byCmd": {
+    "shot": 2,
+    "click": 3
+  },
+  "errors": 0,
+  "seconds": 25,
+  "screenshots": 5,
+  "task": "T15.1",
+  "level": "intermediate",
+  "archivedAt": "2026-11-16T21:37:06.373Z"
+}

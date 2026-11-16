@@ -1,0 +1,39 @@
+{
+  "task": "T28.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": true,
+  "seq": 4,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "stepsToPass": 6,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+  "notes": [],
+  "steps": 6,
+  "budget": 12,
+  "answer": "Yellow banner read Agent is using this page: Scrolling top (004.png); it searched #general for Standup (011.png)",
+  "noAnswer": false,
+  "checkedAt": "2026-11-16T22:03:17.114Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-16T22:03:17.114Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the assistant finished the web app job (its last reply says it found the message in #general; H-71); the Browser shows the web app (http://127.0.0.1:4174/); answer ok",
+      "steps": 6,
+      "answer": "Yellow banner read Agent is using this page: Scrolling top (004.png); it searched #general for Standup (011.png)",
+      "noAnswer": false,
+      "stepsToPass": 6
+    }
+  ]
+}

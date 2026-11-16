@@ -1,0 +1,27 @@
+{
+  "task": "T20.2",
+  "level": "novice",
+  "socket": "/tmp/a7ux-n5mtla/ux.sock",
+  "admin": "/tmp/a7ux-n5mtla/admin.sock",
+  "pid": 24178,
+  "build": {
+    "packaged": true,
+    "version": "0.1.0",
+    "commit": "662b12c8ef1bc1d6b2a667f85ffb69c2c54ccc0f"
+  },
+  "tmp": "/tmp/a7ux-n5mtla",
+  "userData": "/tmp/a7ux-n5mtla/user-data",
+  "testPageUrl": "http://127.0.0.1:37473/",
+  "home": "/tmp/a7ux-n5mtla/home",
+  "fixtures": {
+    "loginApp": "/tmp/a7ux-n5mtla/home/Documents/login-app",
+    "docsSite": "/tmp/a7ux-n5mtla/home/Documents/docs-site",
+    "plain": "/tmp/a7ux-n5mtla/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "long-turn-running",
+  "note": null,
+  "context": {
+    "previousTasks": []
+  }
+}

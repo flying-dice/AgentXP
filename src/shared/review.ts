@@ -181,3 +181,23 @@ export function reviewKickoffPrompt(root: string, baseRef: string): string {
     'Review only; do not edit files.'
   )
 }
+
+/** True when two virtual paths belong to the same project: equal, or one inside the other (case-insensitive, `\` or `/`). */
+export function sameProject(a: string, b: string): boolean {
+  const norm = (p: string): string => p.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+  const [x, y] = [norm(a), norm(b)]
+  return x === y || x.startsWith(`${y}/`) || y.startsWith(`${x}/`)
+}
+
+/**
+ * What a chat that did the review itself (not the review session of the window) reads after `review_submit`: the verdict
+ * and the comments, so that it tells the user in the chat they asked from. Replies are left out.
+ */
+export function formatReviewHandback(summary: Pick<ReviewSummaryDto, 'verdict' | 'body'>, comments: readonly ReviewCommentDto[]): string {
+  const roots = sortComments(comments.filter((c) => c.parentId === null))
+  const lines = [`Review submitted in the Code Review window: ${VERDICT_LABELS[summary.verdict]}${summary.body.trim() ? `. ${summary.body.trim()}` : ''}`]
+  lines.push(roots.length === 0 ? 'No inline comments.' : `${roots.length} inline comment${roots.length === 1 ? '' : 's'} (they are in the Code Review window):`)
+  roots.forEach((c, i) => lines.push(`${i + 1}. ${commentLocation(c)} [${c.severity}] ${c.body.trim()}`))
+  lines.push('Now tell the user the verdict and a short summary of these comments here in the chat, and offer to fix them.')
+  return lines.join('\n')
+}

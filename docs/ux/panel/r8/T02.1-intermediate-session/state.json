@@ -1,0 +1,12 @@
+{
+  "task": "T02.1",
+  "level": "intermediate",
+  "sockDir": "/tmp/a7ux-ZrOTwr",
+  "testPagePort": 42173,
+  "testPageUrl": "http://127.0.0.1:42173/",
+  "noMouse": false,
+  "startedAt": "2026-11-16T21:20:43.587Z",
+  "options": {},
+  "preset": "empty-folder-picker",
+  "note": null
+}
