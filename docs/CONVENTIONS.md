@@ -102,7 +102,7 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   is in no manual. A template id is written with its static prefix and `*` (`chat-message-*`). Kit internals
   that need no manual go on the ignore list of the script, with a reason.
 
-**Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled`
+**Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled` | `denied`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry
 `data-window-state` and `data-focused`; `chat-stop-notice` carries `data-reason` (the ACP stop reason of a turn that did not end with
 `end_turn`/`cancelled`); taskbar buttons carry `data-flashing` (an agent-opened window behind the focused chat).

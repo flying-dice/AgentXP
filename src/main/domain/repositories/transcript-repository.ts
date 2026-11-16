@@ -52,6 +52,8 @@ export interface TranscriptRepository {
   appendChunk(sessionId: Id, role: MessageRole, block: ContentBlockDto): ChunkResult
   upsertToolCall(sessionId: Id, input: ToolCallUpsert): UpsertResult
   findToolCall(sessionId: Id, toolCallId: string): ToolCallEntryDto | null
+  /** Deletes the last entry when it is a user message; false when the last entry is anything else. */
+  removeLastUserMessage(sessionId: Id): boolean
   /** Deletes every entry (and their blocks, tool calls, permissions, surfaces) of the session. */
   clear(sessionId: Id): void
 }

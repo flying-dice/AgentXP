@@ -147,7 +147,7 @@ export const presets = {
     ctx.saveState()
   },
 
-  /** Control Centre closed, all permissions Allow except Write files = Ask; no chat (the panelist opens one by keyboard). Mouse disabled. */
+  /** Control Center closed, all permissions Allow except Write files = Ask; no chat (the panelist opens one by keyboard). Mouse disabled. */
   async 'keyboard-only'(ctx) {
     await projectDesktop(ctx, { script: 'keyboard', allowAll: true, policy: { 'fs.write': 'ask' } })
     ctx.state.noMouse = true

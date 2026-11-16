@@ -104,7 +104,7 @@
   <div class="panes" bind:clientWidth={bodyWidth}>
     <section class="pane left" style="width:{leftWidth}px" aria-label="Explorer">{@render left()}</section>
     <Splitter orientation="vertical" value={leftWidth} min={120} max={600} label="Resize the left pane" onresize={resizeLeft} />
-    <section class="pane center" aria-label="Session">{@render center()}</section>
+    <section class="pane center" aria-label="Chat">{@render center()}</section>
     <Splitter orientation="vertical" value={rightWidth} min={120} max={600} label="Resize the right pane" onresize={resizeRight} />
     <section class="pane right" style="width:{rightWidth}px" aria-label="Inspector">{@render right()}</section>
   </div>

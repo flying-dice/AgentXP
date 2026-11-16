@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** Control Centre > Agents: the agents tab of the old Options dialog as a page. */
+  /** Control Center > Agents: the agents tab of the old Options dialog as a page. */
   import { onMount } from 'svelte'
   import type { AgentInput } from '@shared/ipc'
   import type { AgentDto } from '@shared/models'
@@ -37,7 +37,7 @@
     try {
       await action()
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Control Centre', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Control Center', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -56,7 +56,7 @@
   async function remove(): Promise<void> {
     const agent = selectedAgent
     if (!agent) return
-    const answer = await showMessageBox({ text: `Remove the agent "${agent.name}"?`, caption: 'Control Centre', buttons: 'YesNo', icon: 'warning' })
+    const answer = await showMessageBox({ text: `Remove the agent "${agent.name}"?`, caption: 'Control Center', buttons: 'YesNo', icon: 'warning' })
     if (answer === 'yes') await guard(() => agents.remove(agent.id))
   }
 </script>

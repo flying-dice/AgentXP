@@ -8,7 +8,7 @@ Cell format: the score from 1 to 10, or `n/a` (reason below the table). Findings
 
 **Global notes.**
 - A. D10 is 8 everywhere because nothing is measured. No freeze or jank was seen in about 70 driver actions. The rubric needs recorded numbers for 9 or 10.
-- B. D5 stays at 6 or 7 where the axe scan found critical or serious violations in the screens of the journey (F-025 to F-031). Terminal, Snipping Tool, Task Manager, Control Centre and Help had no violations. The manual checklist (zoom, forced colors, screen reader) was not run, so D5 is never above 8.
+- B. D5 stays at 6 or 7 where the axe scan found critical or serious violations in the screens of the journey (F-025 to F-031). Terminal, Snipping Tool, Task Manager, Control Center and Help had no violations. The manual checklist (zoom, forced colors, screen reader) was not run, so D5 is never above 8.
 - C. D11: manuals exist for every app and `check-help-coverage.mjs` reports 391 of 391 ids documented. No procedure was followed word for word yet, so D11 is capped at 8.
 - D. D1 and D2 cannot be 10 until the panel passes (rubric: user panel as a gate).
 
@@ -29,7 +29,7 @@ Cell format: the score from 1 to 10, or `n/a` (reason below the table). Findings
 | J13 Disconnect and reconnect while the agent runs * | 8 | 8 | 8 | 8 | 7 | 9 | 8 | 8 | 8 | 8 | 8 | not yet merged | 0 of 11 |
 | J14 Manage several desktops * | 8 | 8 | 8 | 8 | 6 | 9 | n/a | 8 | 8 | 8 | 7 | not yet merged | 0 of 11 |
 | J15 Delete a desktop * | 8 | 8 | 8 | 8 | 6 | 9 | n/a | 8 | 8 | 8 | 7 | not yet merged | 0 of 11 |
-| J16 Choose permissions (Control Centre) * | 8 | 7 | 8 | 8 | 8 | 9 | 8 | 7 | 8 | 8 | 8 | not yet merged | 0 of 11 |
+| J16 Choose permissions (Control Center) * | 8 | 7 | 8 | 8 | 8 | 9 | 8 | 7 | 8 | 8 | 8 | not yet merged | 0 of 11 |
 | J17 Add and choose agents * | 8 | 8 | 8 | 8 | 8 | 9 | 8 | 7 | 7 | 8 | 8 | not yet merged | 0 of 11 |
 | J18 A2UI surfaces: inline, sidebar, window * | 7 | 7 | 8 | 8 | 7 | 8 | 7 | 8 | 8 | 8 | 8 | not yet merged | 0 of 11 |
 | J19 Browse with the Browser | 7 | 8 | 8 | 6 | 6 | 9 | 7 | 8 | 5 | 8 | 8 | not yet merged | 0 of 11 |
@@ -227,7 +227,7 @@ One line per dimension. "Not walked" means the cell is an estimate (see the `*` 
 - D9 8: Not walked
 - D11 7: F-010
 
-**J16 Choose permissions (Control Centre)**
+**J16 Choose permissions (Control Center)**
 - D1 8: Agents page seen; Permissions not walked
 - D2 7: Not walked
 - D3 8: Not walked

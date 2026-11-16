@@ -20,7 +20,7 @@ By default, the agent can read files without asking. It asks before it writes a 
 
 To approve every action, follow the steps below:
 
-1. Click **Start -> Control Centre**. The Control Centre window opens.
+1. Click **Start -> Control Center**. The Control Center window opens.
 2. Click **Permissions**.
 3. Set each row to **Ask**.
 4. Close the window. The new settings apply at once.
@@ -39,9 +39,9 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 ## 4 - Troubleshooting
 
 - **The agent waits and nothing appears.** Click the flag in the notification area. The request waits there.
-- **Too many requests.** Set the actions that you trust to **Allow** in the Control Centre.
+- **Too many requests.** Set the actions that you trust to **Allow** in the Control Center.
 - **A review never asks.** A reviewer only reads. It cannot change files.
 
 ## 5 - Need Help?
 
-Read **[Using Control Centre](control-centre.md)** to learn all permission settings.
+Read **[Using Control Center](control-centre.md)** to learn all permission settings.

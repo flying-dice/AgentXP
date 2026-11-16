@@ -1,6 +1,6 @@
-# Using Control Centre
+# Using Control Center
 
-This manual describes Control Centre. Control Centre sets the agents, the permissions, and the look of the desktop.
+This manual describes Control Center. Control Center sets the agents, the permissions, and the look of the desktop.
 
 ## Table of Contents
 
@@ -22,21 +22,21 @@ This manual describes Control Centre. Control Centre sets the agents, the permis
 
 ## 1 - What It Is For
 
-Use Control Centre to add an agent, to choose when Agent7 asks you before the agent acts, and to hide the gadgets.
+Use Control Center to add an agent, to choose when Agent7 asks you before the agent acts, and to hide the gadgets.
 
 ## 2 - Open It
 
-- Click **Start -> Control Centre**, or double-click **Control Centre** on the desktop.
-- Click **Open Control Centre** in the Action Center.
-- Right-click the desktop and click **Control Centre**.
+- Click **Start -> Control Center**, or double-click **Control Center** on the desktop.
+- Click **Open Control Center** in the Action Center.
+- Right-click the desktop and click **Control Center**.
 
-Only one Control Centre window exists on a desktop.
+Only one Control Center window exists on a desktop.
 
 ## 3 - The Window
 
 ### The Task List
 
-The list is at the left under the title **Control Centre Home**. It has **Agents**, **Permissions**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
+The list is at the left under the title **Control Center Home**. It has **Agents**, **Permissions**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
 
 ### The Agents Page
 
@@ -72,7 +72,7 @@ To set all rows at once, choose a setting in **Set every permission to** and cli
 
 ### The Appearance Page
 
-The page has the option **Show gadgets on the desktop**. The gadgets are the context meter, the session clock, and the activity list. The theme is Windows 7 Aero Basic. You cannot change it.
+The page has the option **Show gadgets on the desktop**. The gadgets are the context meter, the desktop clock, and the activity list. The theme is Windows 7 Aero Basic. You cannot change it.
 
 ### The About Page
 
@@ -80,13 +80,13 @@ The page shows the version of Agent7. The version is the one in the package, als
 
 ### The Chat Pane
 
-Each Control Centre window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
+Each Control Center window has a chat pane at its right edge. The pane starts closed, as a thin strip. Click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C to open it. The agent sees what the window shows. See **[The Chat Pane](embedded-chat.md)**.
 
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Control Centre window | The root of the window. | `control-centre-app` |
+| Control Center window | The root of the window. | `control-centre-app` |
 | Page button | Opens a page. The name ends with `agents`, `permissions`, `appearance`, or `about`. | `control-centre-page-*` |
 | Heading | Names the page. | `control-centre-heading` |
 | Version | Shows the version of Agent7. | `control-centre-version` |
@@ -125,8 +125,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | Menu: help | Opens the Help window for this app. F1. | `control-centre-menu-help` |
-| Menu: about | Opens the About Control Centre box. | `control-centre-menu-about` |
-| Dialog: about | The About Control Centre box. | `control-centre-about` |
+| Menu: about | Opens the About Control Center box. | `control-centre-menu-about` |
+| Dialog: about | The About Control Center box. | `control-centre-about` |
 | Dialog: about ok | Closes the About box. | `control-centre-about-ok` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `control-centre-menu-chat-pane` |
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |

@@ -94,9 +94,9 @@ To see an older terminal, select it in the **Terminal** list. The list appears w
 
 - **The screen is empty.** No agent ran a command yet. The status bar says **No terminals**.
 - **The agent says that Terminal is closed.** Open this app. The agent can then run commands.
-- **The agent asks before it runs a command.** Terminal is set to **Ask** in **[Control Centre](control-centre.md)**. Answer in the **Action Center**.
+- **The agent asks before it runs a command.** Terminal is set to **Ask** in **[Control Center](control-centre.md)**. Answer in the **Action Center**.
 - **I cannot type.** The window is read-only by design.
 
 ## 7 - Need Help?
 
-Read **[Chat](chat.md)** to talk to the agent. Read **[Control Centre](control-centre.md)** to change the permission for commands.
+Read **[Chat](chat.md)** to talk to the agent. Read **[Control Center](control-centre.md)** to change the permission for commands.

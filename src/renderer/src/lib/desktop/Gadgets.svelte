@@ -4,6 +4,7 @@
   import Gadget from '../kit/molecules/Gadget.svelte'
   import ToolStatusIcon from '../app/session/ToolStatusIcon.svelte'
   import { toolStatusView } from '../app/session/toolStatus'
+  import { toolTitleOr } from '../app/session/toolTitles'
   import type { FeedItem } from './activity'
 
   interface Props {
@@ -41,12 +42,12 @@
       <Gauge value={ratio} label="Context used" />
       <div class="read">
         <div class="big">{Math.round(ratio * 100)}%</div>
-        <div class="muted">{contextSize > 0 ? `${k(contextUsed)} of ${k(contextSize)} tokens` : 'No chat yet'}</div>
+        <div class="muted">{contextSize > 0 ? `${k(contextUsed)} of ${k(contextSize)} tokens` : chatTitle ? 'Nothing sent yet' : 'No chat yet'}</div>
         {#if chatTitle}<div class="muted name" title={chatTitle}>{chatTitle}</div>{/if}
       </div>
     </div>
   </Gadget>
-  <Gadget title="Session clock">
+  <Gadget title="Desktop clock">
     <div class="meter">
       <AnalogClock time={now} />
       <div class="read">
@@ -58,7 +59,7 @@
   <Gadget title="Activity">
     <ul class="feed">
       {#each feed as item (item.key)}
-        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {item.title}">{item.title}</span></li>
+        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {toolTitleOr(item.title)}">{toolTitleOr(item.title)}</span></li>
       {:else}
         <li class="muted">Nothing has happened yet.</li>
       {/each}

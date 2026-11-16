@@ -96,3 +96,24 @@ export function toolArgument(
 
 /** Execute-like tools open their output by default (as the design's Bash card does). */
 export const expandsByDefault = (kind: ToolKind | undefined): boolean => kind === 'execute'
+
+/** The tool's result text for the person: "Error: true. Result: ..." (a raw error flag) reads as a sentence. */
+export function plainToolResult(result: string): string {
+  const match = /^Error:\s*true\.?\s*(?:Result:\s*)?([\s\S]*)$/i.exec(result.trim())
+  if (!match) return result
+  const rest = match[1].trim()
+  return rest ? `The tool reported an error: ${rest}` : 'The tool reported an error.'
+}
+
+/**
+ * The cards that sit right before a request the user denied. They keep their own caption "Earlier step", so a green
+ * "Done" never reads as the answer to the denied one beside it.
+ */
+export function earlierStepRowIds(rows: readonly { id: string; kind: string }[], isDenied: (rowId: string) => boolean): Set<string> {
+  const ids = new Set<string>()
+  rows.forEach((row, i) => {
+    if (row.kind !== 'tool' || !isDenied(row.id)) return
+    for (let j = i - 1; j >= 0 && rows[j]!.kind === 'tool' && !isDenied(rows[j]!.id); j--) ids.add(rows[j]!.id)
+  })
+  return ids
+}

@@ -13,11 +13,11 @@
     /** "Ask before every action": the agent must ask before it reads, writes, runs a command or uses the browser. */
     userInControl: boolean
     tools: ToolGroup[]
-    /** The Control Centre permissions; chips read "(asks)" or "(off)" from them. */
+    /** The Control Center permissions; chips read "(asks)" or "(off)" from them. */
     policy?: ToolPolicyDto | null
     onpause?: () => void
     ontakecontrol?: () => void
-    /** A chip was clicked: open Control Centre at Permissions. */
+    /** A chip was clicked: open Control Center at Permissions. */
     onopenpermissions?: () => void
     /** The OS window is maximised. */
     maximized?: boolean
@@ -25,9 +25,11 @@
     onmaximize?: () => void
     /** Disconnect: closes the window, the agents keep running. */
     ondisconnect?: () => void
+    /** A red chip next to the status when an agent could not start ("Agent: not started"); null = all is well. */
+    agentProblem?: string | null
   }
 
-  let { title, working, paused, userInControl, tools, policy = null, onpause, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect }: Props = $props()
+  let { title, working, paused, userInControl, tools, policy = null, onpause, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
 
@@ -50,19 +52,20 @@
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" class:paused={mode === 'paused'} data-testid="topbar-status" title={status}>{status}</span>
     {#if userInControl}<span class="asking" data-testid="topbar-ask-first-chip">Asking before every action</span>{/if}
+    {#if agentProblem}<span class="problem" data-testid="topbar-agent-problem" title="Open the Control Center, then Agents, to change the command of the agent.">{agentProblem}</span>{/if}
   </ConnectionBar>
   <div class="body">
     <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use" title="The agent can use only what is open here. Closing an app takes its tool away.">
       <span class="lead">Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title="Open Control Centre to change what the agent may use" onclick={() => onopenpermissions?.()}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title="Open Control Center to change what the agent may use" onclick={() => onopenpermissions?.()}>{chip.label}</button>
       {/each}
       {#if nothingOpen}<span class="none" data-testid="topbar-tool-chips-none">Agent can use nothing yet. Open an app to give it a tool.</span>{/if}
     </div>
     <span class="pause-slot">
       <Button data-testid="topbar-pause" title="Stops every agent on this desktop now and keeps them from doing anything until you click Resume." onclick={() => onpause?.()}>{paused ? 'Resume agents' : 'Pause all agents'}</Button>
     </span>
-    <span class="ask-slot" title="The agent must ask you before every action, even reading. Click again to go back to the settings in Control Centre.">
+    <span class="ask-slot" title="The agent must ask you before every action, even reading. Click again to go back to the settings in Control Center.">
       <CheckBox testid="topbar-take-control" label="Ask before every action" checked={userInControl} onchange={() => ontakecontrol?.()} />
     </span>
   </div>
@@ -103,6 +106,16 @@
   .w7-topbar.folded:hover .body,
   .w7-topbar.folded:has(:focus-visible) .body {
     display: flex;
+  }
+  .problem {
+    flex: none;
+    margin-left: 6px;
+    padding: 0 6px;
+    border: 1px solid #a02020;
+    border-radius: 2px;
+    background: #c62828;
+    color: #fff;
+    white-space: nowrap;
   }
   .status {
     flex: 0 1 auto;

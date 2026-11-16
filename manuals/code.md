@@ -173,7 +173,6 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: goto file | Opens the Open dialog box to go to another file. Ctrl+O. | `code-ctx-goto-file` |
 | Context menu: explain | Asks the chat pane to explain the selected text. Dimmed when nothing is selected. | `code-ctx-explain` |
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
-| Context menu: send | Sends the selected text to the chat pane. Dimmed when nothing is selected. | `code-ctx-send` |
 | Context menu: open in Chat window | Starts a full chat with the selected text in a Chat window. Dimmed when nothing is selected. | `code-ctx-open-chat` |
 | Tree menu: open | Opens the file, or opens the folder. | `code-ctx-open` |
 | Tree menu: start a chat | Starts a chat on this project or folder. | `code-ctx-start-chat` |

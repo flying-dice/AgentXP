@@ -26,7 +26,7 @@ This manual describes the Code Review window. Code Review shows the changes of a
 
 Use Code Review to check a change before you keep it. The window compares the files of a project with a base, for example the last commit. A reviewer agent reads the changes and leaves comments on the lines, like the reviewer of a merge request. You can answer the comments, resolve them, and send them to a chat that fixes the code.
 
-Each Code Review window has its own review session with an agent. The session ends when you close the window.
+Each Code Review window has its own review chat with an agent. The chat ends when you close the window.
 
 ## 2 - Open It
 
@@ -75,7 +75,7 @@ The status bar shows the folder, the number of files, the number of open comment
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
+| Code Review window | The root of the window. The attribute `data-session-id` is the id of the review chat. | `code-review-app` |
 | Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |
 | Close (menu) | Closes the window and ends the review. Alt+F4. | `code-review-menu-close` |

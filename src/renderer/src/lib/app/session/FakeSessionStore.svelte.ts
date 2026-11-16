@@ -2,6 +2,7 @@ import type { Interrupt, Message } from '@ag-ui/core'
 import type { A2uiClientEvent } from '@shared/a2ui'
 import type { AguiSessionState } from '@shared/agui-state'
 import { surfacesOf, type SurfaceActivity } from '../../agui/activities'
+import type { FailedSend } from '../../agui/SessionAgentStore.svelte'
 import type { SessionStoreLike } from './SessionStoreLike'
 
 export interface FakeInit {
@@ -10,6 +11,8 @@ export interface FakeInit {
   running?: boolean
   error?: string | null
   interrupt?: Interrupt | null
+  failedSend?: FailedSend | null
+  stoppedByUser?: boolean
 }
 
 /** In-memory stand-in for `SessionAgentStore` (stories): records the calls and reacts minimally. */
@@ -19,6 +22,9 @@ export class FakeSessionStore implements SessionStoreLike {
   running = $state(false)
   error = $state<string | null>(null)
   pendingInterrupt = $state.raw<Interrupt | null>(null)
+  failedSend = $state.raw<FailedSend | null>(null)
+  stoppedByUser = $state(false)
+  deniedToolCalls = $state.raw<ReadonlySet<string>>(new Set())
   activities = $derived<Map<string, SurfaceActivity>>(surfacesOf(this.messages))
   /** Everything the view asked of the store, newest last. */
   calls = $state.raw<string[]>([])
@@ -29,15 +35,35 @@ export class FakeSessionStore implements SessionStoreLike {
     this.running = init.running ?? false
     this.error = init.error ?? null
     this.pendingInterrupt = init.interrupt ?? null
+    this.failedSend = init.failedSend ?? null
+    this.stoppedByUser = init.stoppedByUser ?? false
   }
 
   private log(entry: string): void {
     this.calls = [...this.calls, entry]
   }
 
-  async send(text: string, attachments: string[] = []): Promise<void> {
+  async send(text: string, attachments: string[] = []): Promise<boolean> {
     this.log(`send(${JSON.stringify(text)}, ${JSON.stringify(attachments)})`)
     this.messages = [...this.messages, { id: `u${this.messages.length}`, role: 'user', content: text }]
+    return true
+  }
+
+  async resend(options?: { restart?: boolean }): Promise<boolean> {
+    this.log(`resend(${JSON.stringify(options ?? {})})`)
+    this.failedSend = null
+    return true
+  }
+
+  async takeBack(): Promise<FailedSend | null> {
+    this.log('takeBack()')
+    const failed = this.failedSend
+    this.failedSend = null
+    return failed
+  }
+
+  async reconnect(): Promise<void> {
+    this.log('reconnect()')
   }
 
   async resolveInterrupt(optionId: string | null): Promise<void> {
@@ -52,5 +78,6 @@ export class FakeSessionStore implements SessionStoreLike {
   async cancel(): Promise<void> {
     this.log('cancel()')
     this.running = false
+    this.stoppedByUser = true
   }
 }

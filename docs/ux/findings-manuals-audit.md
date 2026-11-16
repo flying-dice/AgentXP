@@ -4,7 +4,7 @@ Writing a manual for every app showed these gaps. Each is an input to the UX eva
 
 ## Controls without test ids
 - Context and popup menu items in Paint, WordPad, Snipping Tool and Sticky Notes.
-- Control Centre:
+- Control Center:
   - Agents buttons: Add, Edit, Remove and Set as Default.
   - Permission lists, plus Apply and Cancel.
   - The gadgets option.
@@ -30,7 +30,7 @@ Writing a manual for every app showed these gaps. Each is an input to the UX eva
 - Browser: one tab only and no bookmarks. The status bar always shows fixed text.
 
 ## Help access and consistency
-- These apps have no menu bar, so they have no Help entry: Explorer, Terminal, Browser, Event Viewer, Task Manager, Recycle Bin, Snipping Tool, Sticky Notes and Control Centre.
+- These apps have no menu bar, so they have no Help entry: Explorer, Terminal, Browser, Event Viewer, Task Manager, Recycle Bin, Snipping Tool, Sticky Notes and Control Center.
 - There is no Help button on the title bar.
 - The Welcome dialog cannot be closed.
 - On the connection bar, Minimize and Maximize act on the OS window. On an app title bar, they act on the app window.

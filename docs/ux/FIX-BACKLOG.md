@@ -83,7 +83,7 @@ WP1 to WP4 can run in parallel. Their file sets do not overlap except the files 
 - **Severity** 2. **Files** `R/desktop/DesktopSurface.svelte`, `R/desktop/Balloon.svelte`.
 
 ### UX-10 Window placement and default sizes
-- **Problem.** Control Centre 640x460 needs maximizing (T06.3, T11.2, T16.1); Event Viewer cut columns (T20.1); Recycle Bin and Task Manager cut; the Workspace bar covers the chat title buttons (T13.1, T05.2); windows overlap gadgets.
+- **Problem.** Control Center 640x460 needs maximizing (T06.3, T11.2, T16.1); Event Viewer cut columns (T20.1); Recycle Bin and Task Manager cut; the Workspace bar covers the chat title buttons (T13.1, T05.2); windows overlap gadgets.
 - **Decision.** In `DEFAULT_BOUNDS`: control-centre 760x540, event-viewer 980x560, agent-manager 640x440, recycle-bin 680x420, help 800x560, chat 680x560. The cascade keeps every window below the top bar (y at least bar height + 4) and inside `DESKTOP_AREA`. Minimum sizes: 480 x 320 (control-centre 640 x 420). New windows opened by the agent do not cover the front chat.
 - **Acceptance.** T06.3 intermediate/expert under 9 steps without maximizing; T20.1 reads all columns without maximizing; F-038 scroll bar gone.
 - **Severity** 2. **Files** `shared/desktop-views.ts`, `main/application/desktop/DesktopService.ts` (placement only), `R/desktop/WindowLayer.svelte`.
@@ -310,8 +310,8 @@ WP1 to WP4 can run in parallel. Their file sets do not overlap except the files 
 ## Final sweep
 
 ### UX-50 Global wording sweep (after WP1 to WP4)
-- **Decision.** "Control Centre" becomes "Control Center" in UI, manuals, tests and fixtures (F-035); "Chat panel" becomes "chat pane" everywhere (F-033, remaining strings); remaining "session" in user-facing text becomes "chat" (F-016); the semicolon in the Launcher text is gone (F-032); any remaining raw tool name or ACP/AG-UI/MCP outside Details is removed (F-007, F-034).
-- **Acceptance.** `grep -rniE "control centre|chat panel|new session" src manuals e2e` returns nothing user visible.
+- **Decision.** "Control Center" becomes "Control Center" in UI, manuals, tests and fixtures (F-035); "Chat panel" becomes "chat pane" everywhere (F-033, remaining strings); remaining "session" in user-facing text becomes "chat" (F-016); the semicolon in the Launcher text is gone (F-032); any remaining raw tool name or ACP/AG-UI/MCP outside Details is removed (F-007, F-034).
+- **Acceptance.** `grep -rniE "control center|chat panel|new session" src manuals e2e` returns nothing user visible.
 - **Severity** 1 (polish). **Files** all; single developer.
 
 ---

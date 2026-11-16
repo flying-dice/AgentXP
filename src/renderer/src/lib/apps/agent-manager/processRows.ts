@@ -11,7 +11,18 @@ export type ProcessRow = {
   pid: string
   desktop: string
   chats: number
+  memory: string
+  cpu: string
 }
+
+/** `45.1 MB`; `-` when Task Manager cannot read it. */
+export function formatMemory(bytes: number | null): string {
+  if (bytes === null) return '-'
+  const mb = bytes / (1024 * 1024)
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(mb >= 100 ? 0 : 1)} MB`
+}
+
+export const formatCpu = (percent: number | null): string => (percent === null ? '-' : `${percent.toFixed(1)}%`)
 
 export function processRows(processes: readonly AgentProcessDto[], currentDesktopId: number): ProcessRow[] {
   return processes.map((p) => ({
@@ -21,7 +32,9 @@ export function processRows(processes: readonly AgentProcessDto[], currentDeskto
     agent: p.agentName,
     pid: p.pid === null ? '-' : String(p.pid),
     desktop: p.desktopId === currentDesktopId ? 'This desktop' : `Desktop ${p.desktopId}`,
-    chats: p.sessionIds.length
+    chats: p.sessionIds.length,
+    memory: formatMemory(p.memoryBytes ?? null),
+    cpu: formatCpu(p.cpuPercent ?? null)
   }))
 }
 
@@ -37,6 +50,9 @@ export interface ChatRow {
   busy: boolean
 }
 
+/** A chat that is idle has its agent program running: the table says so, because "Idle" next to a process reads like "off". */
+export const chatStatusText = (status: SessionDto['status']): string => (status === 'idle' ? 'Idle (the agent program is still running)' : statusLabel(status))
+
 export function chatRows(sessions: readonly SessionDto[], agents: readonly AgentDto[]): ChatRow[] {
   return sessions.map((s) => {
     const percent = contextPercent(s.contextUsed, s.contextSize)
@@ -44,7 +60,7 @@ export function chatRows(sessions: readonly SessionDto[], agents: readonly Agent
       id: String(s.id),
       title: s.title || 'New chat',
       agent: agents.find((a) => a.id === s.agentId)?.name ?? `Agent ${s.agentId}`,
-      status: statusLabel(s.status),
+      status: chatStatusText(s.status),
       context: s.contextSize > 0 ? `${percent}%` : '-',
       tokens: s.contextSize > 0 ? `${formatTokens(s.contextUsed)} / ${formatTokens(s.contextSize)}` : '-',
       percent,

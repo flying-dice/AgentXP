@@ -74,7 +74,7 @@ button:focus-visible,a:focus-visible{outline:1px dotted #000;outline-offset:-3px
       <span>{{ ic.label }}</span>
     </button>
   </sc-for>
-  <a class="di" href="ControlCentre.dc.html" style="left:10px;top:364px;z-index:1"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="30" rx="3" fill="#e8eef6" stroke="#dfe8f3" stroke-width="2"></rect><rect x="5" y="8" width="38" height="7" rx="3" fill="#3b78c4"></rect><rect x="11" y="26" width="5" height="8" fill="#3fae3f"></rect><rect x="18" y="21" width="5" height="13" fill="#e9a23b"></rect><rect x="25" y="18" width="5" height="16" fill="#3b8fe0"></rect><circle cx="36" cy="32" r="7" fill="#d97757" stroke="#fff" stroke-width="1.5"></circle><circle cx="36" cy="32" r="2.4" fill="#fff"></circle></svg><span>Control Centre</span></a>
+  <a class="di" href="ControlCentre.dc.html" style="left:10px;top:364px;z-index:1"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="30" rx="3" fill="#e8eef6" stroke="#dfe8f3" stroke-width="2"></rect><rect x="5" y="8" width="38" height="7" rx="3" fill="#3b78c4"></rect><rect x="11" y="26" width="5" height="8" fill="#3fae3f"></rect><rect x="18" y="21" width="5" height="13" fill="#e9a23b"></rect><rect x="25" y="18" width="5" height="16" fill="#3b8fe0"></rect><circle cx="36" cy="32" r="7" fill="#d97757" stroke="#fff" stroke-width="1.5"></circle><circle cx="36" cy="32" r="2.4" fill="#fff"></circle></svg><span>Control Center</span></a>
   <a class="di" href="Main.dc.html" style="left:10px;top:444px;z-index:1"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="8" width="40" height="32" rx="3" fill="#fff" stroke="#dfe8f3" stroke-width="2"></rect><rect x="4" y="8" width="40" height="8" rx="3" fill="#8fb4e0"></rect><g stroke="#d97757" stroke-width="3" stroke-linecap="round"><line x1="24" y1="20" x2="24" y2="36"></line><line x1="16" y1="28" x2="32" y2="28"></line><line x1="18.500" y1="22.500" x2="29.500" y2="33.500"></line><line x1="29.500" y1="22.500" x2="18.500" y2="33.500"></line></g></svg><span>Claude Code</span></a>
 
   <!-- ===== Gadgets ===== -->
@@ -435,7 +435,7 @@ button:focus-visible,a:focus-visible{outline:1px dotted #000;outline-offset:-3px
         <div style="padding:6px 10px 2px;color:#1e395b">Messages</div>
         <div style="padding:2px 10px 4px">Context is at {{ ctxPct }}. Claude compacts automatically at 80%.</div>
         <div style="padding:2px 10px 8px">Next scheduled task: Nightly dependency check at 02:00.</div>
-        <div style="padding:8px 10px;border-top:1px solid #e2e8f0;background:#f5f7fa"><a href="ControlCentre.dc.html" style="color:#0066cc">Open Control Centre</a></div>
+        <div style="padding:8px 10px;border-top:1px solid #e2e8f0;background:#f5f7fa"><a href="ControlCentre.dc.html" style="color:#0066cc">Open Control Center</a></div>
       </div>
     </div>
   </sc-if>
@@ -605,7 +605,7 @@ class Component extends DCLogic {
     this.S = {
       sel: null, start: false, allProgs: false, q: '', ac: false, balloon: null, uac: null, uacDetails: false,
       secure: false, shutMenu: false, paused: false, human: false, waiting: false, step: 0, target: 'explorer', ended: false,
-      approvals: [{ id: 'zod', title: 'Install a new package', cmd: 'npm install zod@3.23.8', target: 'package.json and package-lock.json', reason: 'Adding a dependency is set to "Ask" in Control Centre.', lines: ['+ "zod": "^3.23.8"', '1 package added, 0 removed'] }],
+      approvals: [{ id: 'zod', title: 'Install a new package', cmd: 'npm install zod@3.23.8', target: 'package.json and package-lock.json', reason: 'Adding a dependency is set to "Ask" in Control Center.', lines: ['+ "zod": "^3.23.8"', '1 package added, 0 removed'] }],
       ex: { loc: 'auth', hist: ['repo', 'src'], sel: null, note: '' },
       bin: [
         { n: 'redirect.ts (edit at 01:49)', k: 'file', d: T + '01:49', t: 'Reverted edit', s: 'Restorable' },
@@ -835,7 +835,7 @@ class Component extends DCLogic {
         { label: 'Empty Recycle Bin', act: () => { if (S.bin.length) { self.feed('Emptied the Recycle Bin (' + S.bin.length + ' reverted items)'); } S.bin = []; E.sel = null; E.note = 'Recycle Bin emptied'; r(); } },
         { label: 'Restore this item', act: () => { const it = S.bin.filter((b) => b.n === E.sel)[0]; if (!it) { self.stub('Select an item to restore first.'); return; } S.bin = S.bin.filter((b) => b !== it); self.feed('Restored ' + it.n); E.sel = null; E.note = 'Restored ' + it.n; r(); } }
       ],
-      connectors: [{ label: 'Add a connector', act: () => self.stub('Adding connectors happens in Control Centre') }, { label: 'View connection status', act: () => self.stub('All 6 connectors are signed in') }],
+      connectors: [{ label: 'Add a connector', act: () => self.stub('Adding connectors happens in Control Center') }, { label: 'View connection status', act: () => self.stub('All 6 connectors are signed in') }],
       skills: [{ label: 'Add a skill', act: () => self.stub('Adding skills is not wired up in this prototype') }, { label: 'Uninstall', act: () => self.stub('Built-in skills cannot be uninstalled') }],
       computer: [{ label: 'Map network drive', act: () => self.stub('Connect another folder from Jonathan-PC (simulated)') }, { label: 'System properties', act: () => self.stub('Sandbox: Linux, 4 CPUs, 30 GB disk, network allowlist on') }]
     };
@@ -924,7 +924,7 @@ class Component extends DCLogic {
       { btn: true, label: 'Transcripts', act: () => self.exGo('transcripts') },
       { sep: true },
       { btn: true, label: 'Connectors', act: () => self.exGo('connectors') },
-      { link: true, label: 'Control Centre' },
+      { link: true, label: 'Control Center' },
       { btn: true, label: 'Agent Manager', act: () => { self.openWin('agentmgr'); r(); } },
       { link: true, label: 'Scheduled Tasks' },
       { btn: true, label: 'Recycle Bin', act: () => self.exGo('bin') }

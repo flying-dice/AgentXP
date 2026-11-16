@@ -9,7 +9,7 @@
     { id: 'code', label: 'Code', icon: 'file-code' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal' },
     { id: 'browser', label: 'Browser', icon: 'globe' },
-    { id: 'control-centre', label: 'Control Centre', icon: 'options' },
+    { id: 'control-centre', label: 'Control Center', icon: 'options' },
     { id: 'recycle', label: 'Recycle Bin', icon: 'delete' }
   ] as const
 

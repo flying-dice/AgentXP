@@ -55,7 +55,7 @@ describe('desktop: tools follow apps', () => {
     await see.visible(ctx.desktopPage.getByTestId('topbar-tool-chips-none'))
   })
 
-  it('a chip opens Control Centre at Permissions', async () => {
+  it('a chip opens Control Center at Permissions', async () => {
     await ctx.desktop.toolChip('terminal').click()
     await see.visible(ctx.desktop.window('control-centre'))
     await see.text(ctx.desktopPage.getByTestId('control-centre-heading'), 'Permissions')

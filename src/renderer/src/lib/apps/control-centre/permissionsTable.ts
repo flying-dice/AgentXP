@@ -1,4 +1,4 @@
-/** The Control Centre permissions page: the policy as table rows with human names. */
+/** The Control Center permissions page: the policy as table rows with human names. */
 import type { PolicyDecision, ToolGroup, ToolPolicyDto } from '@shared/desktop'
 
 export type PolicyKey = Exclude<ToolGroup, 'shell'> | 'openApps'

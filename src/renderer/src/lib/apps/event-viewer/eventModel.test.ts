@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProtocolEventDto } from '@shared/desktop'
-import { ALL_NODE, appendEvents, chatNode, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
+import { SOURCE_HINT, ALL_NODE, appendEvents, chatNode, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
 
 const ev = (id: number, over: Partial<ProtocolEventDto> = {}): ProtocolEventDto => ({ id, at: '2026-11-16T09:00:00Z', desktopId: 1, sessionId: 1, source: 'acp', direction: 'in', level: 'info', name: `m${id}`, payload: '{}', ...over })
 
@@ -54,5 +54,13 @@ describe('text', () => {
     expect(findNext(list, 'needle', -1)).toBe(1)
     expect(findNext(list, 'needle', 1)).toBe(1)
     expect(findNext(list, 'zzz', 0)).toBe(-1)
+  })
+})
+
+describe('source hints', () => {
+  it('explain the log names in plain words and sit on the tree nodes', () => {
+    expect(SOURCE_HINT.acp).toBe('ACP: how Agent7 talks to the agent')
+    const acp = logTree([]).flatMap((n) => n.children ?? []).flatMap((n) => n.children ?? []).find((n) => n.id === 'source:acp')
+    expect(acp?.title).toBe(SOURCE_HINT.acp)
   })
 })

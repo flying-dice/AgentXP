@@ -30,7 +30,7 @@ describe('scripted agent: tools follow apps (desktop.json)', () => {
     await see.text(chat.agentMessage('Refused as expected'), 'is closed')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.toolCalls, 1)
-    await see.text(chat.toolCalls, 'terminal_run')
+    await see.text(chat.toolCalls, 'Run a command') // the plain title, not the tool name
     await see.attribute(chat.toolCalls, 'data-status', 'failed')
 
     await see.eventually(async () => {

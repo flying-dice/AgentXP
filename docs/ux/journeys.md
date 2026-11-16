@@ -33,7 +33,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J13 | Disconnect and reconnect while the agent runs | P3, P2 |
 | J14 | Manage several desktops | P3 |
 | J15 | Delete a desktop | P3, P4 |
-| J16 | Choose permissions (Control Centre) | P2 |
+| J16 | Choose permissions (Control Center) | P2 |
 | J17 | Add and choose agents | P3 |
 | J18 | A2UI surfaces: inline, sidebar, window | P1, P4 |
 | J19 | Browse with the Browser | P1, P2 |
@@ -146,7 +146,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 
 - **Decision points.** Which entry point. Which drive. Which model and mode.
 - **Failure and edge branches.**
-  - Agent not installed or command fails (ENOENT, `npx` missing): the chat must show an error row with a next step (Control Centre -> Agents) and keep the composer disabled with a reason.
+  - Agent not installed or command fails (ENOENT, `npx` missing): the chat must show an error row with a next step (Control Center -> Agents) and keep the composer disabled with a reason.
   - Agent crashes at start: error with Retry. Check there is a Retry.
   - Not signed in (Claude Code auth, no API key): the agent's message must reach the user in plain words.
   - No network on first `npx` download: progress, then a timeout message.
@@ -196,7 +196,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
 | 1 | Desktop | Is looking elsewhere | Desktop dims; the **User Account Control**-style dialog appears; taskbar flashes; Action Center flag shows a red count; chat shows the request and status "Waiting for permission" | A request is waiting and the agent is blocked |
-| 2 | UAC dialog | Reads question, target and reason | Shows "Do you want to allow the agent to edit src/auth/redirect.ts?" and "Writing files is set to Ask in Control Centre." | Actor, action, target, reason |
+| 2 | UAC dialog | Reads question, target and reason | Shows "Do you want to allow the agent to edit src/auth/redirect.ts?" and "Writing files is set to Ask in Control Center." | Actor, action, target, reason |
 | 3 | UAC dialog | Clicks **Show details** | Diff or command appears | Exactly what will change |
 | 4 | UAC dialog | Clicks **Allow** or **Deny** (agent-supplied labels), or **Not now** | Dialog closes; the agent continues or takes the deny branch; tool card turns Done or Failed | Outcome is visible in the tool card and the Activity gadget |
 | 5 | Chat | Alternatively answers in the chat | Same result; the dialog closes everywhere | One decision, two places, never double-asked |
@@ -230,9 +230,9 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | 2 | Action Center | Clicks **Review** | UAC dialog opens for that request | It is the same request that the row shows |
 | 3 | UAC dialog | Allows or Denies | Row disappears; count drops; popup stays or closes | The count changed |
 | 4 | Action Center | Reads Messages | "Safe to remove" and other notes | Messages are separate from approvals |
-| 5 | Action Center | Clicks **Open Control Centre** | Control Centre opens on Permissions | Link to change the policy |
+| 5 | Action Center | Clicks **Open Control Center** | Control Center opens on Permissions | Link to change the policy |
 
-- **Decision points.** Answer all or one. Open the Control Centre to loosen or tighten a policy.
+- **Decision points.** Answer all or one. Open the Control Center to loosen or tighten a policy.
 - **Failure and edge branches.**
   - Zero requests: empty-state text, not a blank popup.
   - Popup closes on blur while the user reads: it must be easy to reopen; keyboard Esc closes and returns focus to the flag.
@@ -311,7 +311,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | 2 | Start menu | Opens Terminal | Window opens; chip **Terminal** appears at once | A cause and an effect, in one glance |
 | 3 | Terminal window | Closes it | Chip disappears; agent loses terminal tools | The chip goes away |
 | 4 | Chat | Agent tries a closed tool | Refusal: "The Terminal app is closed. Call desktop_open_app..." | The agent is told, and may open the app by itself if **Agent may open apps** allows |
-| 5 | Control Centre | Sets Agent may open apps to Ask or Never | Agent's `desktop_open_app` asks or fails | Link between app and policy |
+| 5 | Control Center | Sets Agent may open apps to Ask or Never | Agent's `desktop_open_app` asks or fails | Link between app and policy |
 
 - **Decision points.** Close an app to take a tool away. Deny or Ask in policy for a stronger guarantee than the window (policy is separate from open apps).
 - **Failure and edge branches.**
@@ -459,7 +459,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **E2E coverage.** `launcher.e2e.ts` ("deletes a desktop after confirming"), `desktop-shell.e2e.ts` ("Delete desktop asks first"). Missing: running agent, default button, failure.
 - **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T15.1 in `tasks.md`.
 
-## J16 - Choose permissions (Control Centre)
+## J16 - Choose permissions (Control Center)
 
 - **Personas.** P2.
 - **Trigger.** The user wants more or less autonomy for the agent.
@@ -468,11 +468,11 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
-| 1 | Start | **Start -> Control Centre** | Window opens on home or last page | Pages: Agents, Permissions, Appearance, About |
+| 1 | Start | **Start -> Control Center** | Window opens on home or last page | Pages: Agents, Permissions, Appearance, About |
 | 2 | Permissions | Reads the table | 13 rows with Setting and "What it covers" | The defaults and what is risky |
 | 3 | Permissions | Changes a Setting | **Apply** and **Cancel** enable | Change is pending, not saved |
 | 4 | Permissions | Clicks **Apply** | Policy saved; takes effect for the next tool call | Applies now? Applies to all desktops? Say so |
-| 5 | Chat | Next agent call | Ask shows UAC with the reason "... is set to Ask in Control Centre" | Reason links back to the setting |
+| 5 | Chat | Next agent call | Ask shows UAC with the reason "... is set to Ask in Control Center" | Reason links back to the setting |
 
 - **Decision points.** Allow, Ask, Deny per group. Whether to trust Read files = Allow (reads all plugged drives silently).
 - **Failure and edge branches.**
@@ -492,11 +492,11 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **Personas.** P3.
 - **Trigger.** The user wants a different agent or model, or a custom ACP agent.
 - **Goal.** Register an agent, make it the default, and use it.
-- **Preconditions.** Control Centre open.
+- **Preconditions.** Control Center open.
 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
-| 1 | Control Centre -> Agents | Clicks **Add...** | **Add Agent** dialog | Fields: Name, Command, Arguments (one per line), Environment (KEY=VALUE) |
+| 1 | Control Center -> Agents | Clicks **Add...** | **Add Agent** dialog | Fields: Name, Command, Arguments (one per line), Environment (KEY=VALUE) |
 | 2 | Add Agent | Fills in, clicks **OK** | Agent listed | Does Agent7 test the command? Show the result |
 | 3 | Agents | Selects, clicks **Set as Default** | Marked default | New desktops use it; existing desktops keep theirs (say so) |
 | 4 | New desktop dialog | Picks the agent (J02) | Agent chosen | |
@@ -639,7 +639,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 |---|---|---|---|---|
 | 1 | Any window | Presses **F1** | Opens help for the focused window (or opens a Help window) | Windows users expect F1. Today the README lists no F1; treat as a gap to check |
 | 2 | Start menu | Looks for Help and Support | An entry such as **Help and Support** or About | The entry exists and opens the guide |
-| 3 | Control Centre -> About | Reads | Version, links, honest limit | Where to report bugs |
+| 3 | Control Center -> About | Reads | Version, links, honest limit | Where to report bugs |
 | 4 | Hover | Hovers over buttons and chips | Tooltips with plain text | Tooltips explain chips like **Agent can use** |
 | 5 | Empty states | Looks at empty Chat, Explorer, Recycle Bin, Event Viewer | Text tells the next step | No blank panes |
 

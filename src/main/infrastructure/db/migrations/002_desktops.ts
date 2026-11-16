@@ -62,7 +62,7 @@ BEGIN
   DELETE FROM app_windows WHERE id = OLD.window_id;
 END;
 
--- Control Centre policy: one row per tool group, plus 'openApps'.
+-- Control Center policy: one row per tool group, plus 'openApps'.
 CREATE TABLE tool_group_policies (
   tool_group TEXT PRIMARY KEY,
   decision   TEXT NOT NULL CHECK (decision IN ('allow', 'ask', 'deny'))

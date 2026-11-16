@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Locator } from 'playwright'
 import { see, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
 
-/** Control Centre: the Permissions page (two blocks, Set all, Apply), the Agents dialog (Test) and the version. */
-describe('control centre', () => {
+/** Control Center: the Permissions page (two blocks, Set all, Apply), the Agents dialog (Test) and the version. */
+describe('control center', () => {
   let ctx: ConnectedDesktop
   let centre: Locator
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** Control Centre > Permissions: Allow / Ask / Deny per thing the agent may do or use, in two blocks. */
+  /** Control Center > Permissions: Allow / Ask / Deny per thing the agent may do or use, in two blocks. */
   import { onDestroy, onMount } from 'svelte'
   import type { PolicyDecision, ToolPolicyDto } from '@shared/desktop'
   import Button from '../../kit/atoms/Button.svelte'
@@ -71,7 +71,7 @@
       saved = draft
       showSaved()
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Control Centre', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Control Center', buttons: 'OK', icon: 'error' })
     } finally {
       busy = false
     }

@@ -56,15 +56,15 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
 - **Status** – Shows Idle, Working, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.**
-- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. A chip says **(asks)** when the agent must ask you first, and **(off)** when the agent cannot use it, because you denied it or because its app is closed. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Centre. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
+- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. A chip says **(asks)** when the agent must ask you first, and **(off)** when the agent cannot use it, because you denied it or because its app is closed. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
 - **Pause all agents or Resume agents** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents**. A step that was stopped stays stopped. After you resume, the Action Center has a message for each chat that was stopped, with a **Continue** button.
-- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The top bar then shows **Asking before every action** in amber. Click the box again to go back to the settings in Control Centre.
+- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The top bar then shows **Asking before every action** in amber. Click the box again to go back to the settings in Control Center.
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Centre, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: talk to the agent**. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: talk to the agent**. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
-Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Centre**.
+Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Center**.
 
 ### The Windows
 
@@ -86,10 +86,10 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 
 - **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser.
 - **Accessories** – A folder with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
-- **System Tools** – A folder with Event Viewer, Task Manager, and Control Centre.
+- **System Tools** – A folder with Event Viewer, Task Manager, and Control Center.
 - **Recent chats** – Lists your latest chats.
 - **Search apps and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
-- **Places** – Lists Computer, Eject a project..., Documents, Control Centre, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
+- **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
 - **Pause all agents or Resume agents** – Stops every agent or lets them work again.
 - **Disconnect** – Closes the window. Its arrow opens **Disconnect**, **Switch desktop...**, and **Delete desktop...**.
 
@@ -104,11 +104,11 @@ The notification area is at the right end of the taskbar. It has these parts:
 
 ### The Action Center
 
-Click the flag to open the Action Center. Point at the flag to see how many requests wait for you. The Action Center lists each request that waits for your approval, in two lines: what the agent wants to do (for example **Change src/auth/redirect.ts**) and which chat asked, with the time the chat started. A chat that waits has the prefix **Waiting:** on its taskbar button. Click **Review** to answer a request. Click **Open Control Centre** to change what the agent can do.
+Click the flag to open the Action Center. Point at the flag to see how many requests wait for you. The Action Center lists each request that waits for your approval, in two lines: what the agent wants to do (for example **Change src/auth/redirect.ts**) and which chat asked, with the time the chat started. A chat that waits has the prefix **Waiting:** on its taskbar button. Click **Review** to answer a request. Click **Open Control Center** to change what the agent can do.
 
 ### Permission Prompts
 
-Agent7 asks before the agent does an action that you set to **Ask** in **[Control Centre](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
+Agent7 asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
 
 - The title asks in plain words if the agent can do the action, for example **Allow the agent to change src/auth/redirect.ts?**
 - The line **Reason:** tells why Agent7 asks, for example that Running commands is set to Ask.
@@ -142,11 +142,12 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
-| Tool chip | Names one tool group, for example Read files. Opens Control Centre at Permissions. | `topbar-tool-chip-*` |
+| Tool chip | Names one tool group, for example Read files. Opens Control Center at Permissions. | `topbar-tool-chip-*` |
 | Nothing yet | Shows that no app gives the agent a tool. | `topbar-tool-chips-none` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
 | Ask before every action | A check box. Makes the agent ask before every action. | `topbar-take-control` |
 | Asking before every action | The amber chip that shows the check box is on. | `topbar-ask-first-chip` |
+| Agent: not started | A red chip. It shows when the agent of a chat could not start. Open that chat to see why. | `topbar-agent-problem` |
 
 ### Icons, windows, and desktop menu
 
@@ -208,7 +209,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Request chat | Names the chat that asked and when it started. | `action-center-approval-chat` |
 | Message | Shows one message. | `action-center-message` |
 | Continue | Asks the chat to carry on after you resumed the agents. | `action-center-continue` |
-| Open Control Centre | Opens Control Centre. | `action-center-open-control-centre` |
+| Open Control Center | Opens Control Center. | `action-center-open-control-centre` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |
 | Permission dialog box | Asks if the agent can do the action. | `uac-dialog` |
 | Question | Asks, in plain words, if the agent can do the action. | `uac-question` |
@@ -285,7 +286,7 @@ To answer a permission request, follow the steps below:
 3. Read the change to the file or the command in the box.
 4. Click **Allow**, or click the button that refuses the action. The focus starts on the refusal.
 
-To make the agent ask before every action, even reading, tick **Ask before every action** in the top bar. Clear the box to go back to the settings in Control Centre.
+To make the agent ask before every action, even reading, tick **Ask before every action** in the top bar. Clear the box to go back to the settings in Control Center.
 
 To eject a USB drive, follow the steps below:
 
@@ -297,11 +298,11 @@ To open the manual of a window, select the window and press F1.
 ## 6 - Troubleshooting
 
 - **The agent cannot use a tool.** Open the app that gives the tool. The top bar lists the tools that are on.
-- **The agent asks for permission each time.** Open **[Control Centre](control-centre.md)**. Change the setting of the action from **Ask** to **Allow**.
+- **The agent asks for permission each time.** Open **[Control Center](control-centre.md)**. Change the setting of the action from **Ask** to **Allow**.
 - **The permission dialog box closed and the agent waits.** Click the flag in the notification area, then click **Review**.
 - **The USB icon is gone.** The icon appears only while a project is plugged in. To plug a project in again, open **Computer** and click **Plug in a project...**.
 - **A window is outside the screen.** Click its taskbar button, then drag the title bar.
 
 ## 7 - Need Help?
 
-Read **[Desktop Connection](launcher.md)** to manage your desktops. Read **[Control Centre](control-centre.md)** to change permissions. Click **Home** to see all topics.
+Read **[Desktop Connection](launcher.md)** to manage your desktops. Read **[Control Center](control-centre.md)** to change permissions. Click **Home** to see all topics.

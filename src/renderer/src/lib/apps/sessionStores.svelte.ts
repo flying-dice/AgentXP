@@ -45,7 +45,7 @@ class LocalStores implements SessionStores {
   open(id: Id): SessionAgentStore {
     let store = this.stores.get(id)
     if (!store) {
-      store = withContext(this.host, new SessionAgentStore(id, this.host.api.agui))
+      store = withContext(this.host, new SessionAgentStore(id, this.host.api.agui, () => this.host.api.sessions))
       this.stores.set(id, store)
       void store.connect()
     }

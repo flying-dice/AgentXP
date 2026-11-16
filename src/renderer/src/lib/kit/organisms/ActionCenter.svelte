@@ -76,7 +76,7 @@
       <p class="quiet">No new messages.</p>
     {/each}
   </section>
-  <div class="foot"><button type="button" class="link" data-testid="action-center-open-control-centre" onclick={() => onopencontrolcentre?.()}>Open Control Centre</button></div>
+  <div class="foot"><button type="button" class="link" data-testid="action-center-open-control-centre" onclick={() => onopencontrolcentre?.()}>Open Control Center</button></div>
 </div>
 
 <style>

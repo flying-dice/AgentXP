@@ -1,8 +1,12 @@
 <script lang="ts">
+  import { onDestroy, untrack } from 'svelte'
   import type { FolderDto, SessionDto } from '@shared/models'
   import type { AppProps } from '../types'
   import { cwdLabel } from '../explorer/explorerModel'
-  import { connectionLabel, contextPercent } from '../../app/sessionStatus'
+  import { chatTitleLabels } from '../../app/chatTitles'
+  import { folderLabel } from '../../app/session/folderLabel'
+  import { connectionLabel, contextPercent, effectiveStatus, isDisconnected } from '../../app/sessionStatus'
+  import { getDesktopContext } from '../../desktop/context'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import EmbeddedChat from '../shared/EmbeddedChat.svelte'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
@@ -28,7 +32,7 @@
   import type { SurfaceControls } from '../../app/session/surfaceRow'
   import SurfaceSidebar from './SurfaceSidebar.svelte'
 
-  let { window: win, host }: AppProps<'chat'> = $props()
+  let { window: win, host, focused }: AppProps<'chat'> = $props()
 
   const sessionId = $derived(win.view.sessionId)
   // The store (created and connected on first use, shared with the other apps of the desktop) and the session row
@@ -37,17 +41,39 @@
   let session = $state.raw<SessionDto | null>(null)
   /** The chat's working directory shown like the old folder (name and path). */
   const folder = $derived<FolderDto | null>(session ? { id: 0, name: cwdLabel(session.cwd, host.state.drives), path: session.cwd, lastOpenedAt: null } : null)
+  /** Where the chat works, as a person says it ("login-app (E:)"); the full path is the tooltip. */
+  const where = $derived(session ? folderLabel(session.cwd, host.state.drives) : '')
   let panelOpen = $state(false)
   let panelTab = $state('changes')
   let selectedChangeId = $state<number | null>(null)
 
   const info = $derived(store?.state.session)
-  const title = $derived(info?.title || session?.title || win.view.title)
+
+  // The chats of this desktop: chats with the same title get " (2)", " (3)" in the title bar and on the taskbar.
+  let chatList = $state.raw<SessionDto[]>([])
+  $effect(() => {
+    let stale = false
+    const load = (): void =>
+      void host.api.sessions.list(host.state.desktopId).then(
+        (list) => !stale && (chatList = list.filter((c) => c.role === 'chat')),
+        () => {}
+      )
+    load()
+    const off = host.api.on('session.changed', load)
+    return () => {
+      stale = true
+      off()
+    }
+  })
+  const ownTitle = $derived(info?.title || session?.title || win.view.title)
+  const title = $derived(
+    chatTitleLabels(chatList.map((c) => (c.id === sessionId ? { id: c.id, title: ownTitle } : { id: c.id, title: c.title }))).get(sessionId) ?? ownTitle
+  )
   const changes = $derived(store?.state.changes ?? [])
   const tasks = $derived(store?.state.tasks ?? [])
   const models = $derived((info?.models.length ? info.models : session?.models) ?? [])
   const modelId = $derived(info?.currentModelId ?? session?.currentModelId ?? '')
-  const status = $derived(info?.status && info.status !== 'closed' ? info.status : (session?.status ?? null))
+  const status = $derived(effectiveStatus(info?.status, session?.status))
   const percent = $derived(contextPercent(info?.contextUsed ?? session?.contextUsed ?? 0, info?.contextSize ?? session?.contextSize ?? 0))
   const codeWindow = $derived(host.state.windows.find((w) => w.view.app === 'code'))
   const openFilePath = $derived(codeWindow?.view.app === 'code' ? codeWindow.view.activePath : null)
@@ -108,6 +134,69 @@
     { id: 'tasks', title: 'Tasks', testid: 'chat-tab-tasks' }
   ])
 
+  // ---- the agent could not start: say so over the chat (the same text stays in the transcript) --------------------
+  let announced = ''
+  $effect(() => {
+    const problem = session?.problem
+    if (problem?.kind !== 'start-failed') return
+    const key = `${session!.id}:${problem.message}`
+    if (announced === key) return
+    announced = key
+    void announceStartFailure(problem.message)
+  })
+
+  async function announceStartFailure(text: string): Promise<void> {
+    const choice = await showMessageBox({
+      text,
+      caption: 'Agent7',
+      icon: 'error',
+      actions: [
+        { id: 'agents', label: 'Open Agents' },
+        { id: 'other', label: 'Choose another agent...' },
+        { id: 'close', label: 'Close' }
+      ]
+    })
+    if (choice === 'close') return
+    const centre = await host.openApp({ app: 'control-centre' })
+    host.updateView(centre.id, { app: 'control-centre', page: 'agents' })
+    // New chats start the default agent: a chat whose agent cannot start has no use once another one is chosen.
+    if (choice === 'other') await host.closeWindow(win.id)
+  }
+
+  // ---- reopening a chat: a one-time line, then the composer takes over -----------------------------------------
+  let reopened = $state<string | null>(null)
+  let reopenChecked = false
+  $effect(() => {
+    const current = store
+    if (!current || reopenChecked) return
+    reopenChecked = true
+    void current.whenConnected().then(() => {
+      if (current.messages.length > 0) reopened = `Reopened '${ownTitle}'. Your earlier messages are kept.`
+    })
+  })
+  $effect(() => {
+    if (store && store.messages.length > 0 && store.running) reopened = null
+  })
+
+  // ---- the caret goes to the message box when the window opens or comes to the front ----------------------------
+  let focusSeq = $state(0)
+  $effect(() => {
+    if (focused) untrack(() => (focusSeq += 1))
+  })
+
+  // ---- closing a chat that still works: it keeps running, and a balloon says where to find it -----------------------
+  const desktopShell = (() => {
+    try {
+      return getDesktopContext().desktop
+    } catch {
+      return null
+    }
+  })()
+  onDestroy(() => {
+    const gone = !host.state.windows.some((w) => w.id === win.id)
+    if (gone && store?.running) desktopShell?.showBalloon({ title: 'Agent7', text: `'${ownTitle}' is still running in the background. Open Chats to see it.`, icon: 'info' })
+  })
+
   // The window title follows the chat title.
   $effect(() => {
     if (title && title !== win.view.title) host.updateView(win.id, { app: 'chat', sessionId, title })
@@ -163,8 +252,10 @@
   function contextItems(target: EventTarget | null): MenuItemDef[] {
     const message = target instanceof Element ? target.closest<HTMLElement>('[data-testid^="chat-message"]') : null
     const pre = target instanceof Element ? target.closest('pre') : null
+    // Only the words of the message: not the author line ("You") above them.
+    const body = message?.querySelector<HTMLElement>('[data-message-body]') ?? message?.querySelector<HTMLElement>('.body')
     return transcriptItems({
-      message: message?.innerText.trim() ?? '',
+      message: (body ?? message)?.innerText.trim() ?? '',
       code: (pre ?? message?.querySelector('pre'))?.textContent?.replace(/\n$/, '') ?? '',
       quote: quoteInReply,
       copy: copyText
@@ -217,7 +308,13 @@
   </div>
   <div class="row">
     <div class="main">
-      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} contained bind:store bind:session />
+      {#if reopened}
+        <div class="reopened" role="status" data-testid="chat-reopened-note">
+          <span>{reopened}</span>
+          <button type="button" class="dismiss" data-testid="chat-reopened-dismiss" aria-label="Dismiss" title="Dismiss" onclick={() => (reopened = null)}>x</button>
+        </div>
+      {/if}
+      <EmbeddedChat {host} {sessionId} role="chat" {openFilePath} {setMode} {pickFiles} {surfaceControls} prefill={{ id: focusSeq }} contained bind:store bind:session />
     </div>
     <SurfaceSidebar
       surfaces={sidebarSurfaces}
@@ -227,6 +324,7 @@
       onselect={(id) => (sidebarSelected = id)}
       onclose={(s) => surfaceControls.close(s)}
       onaction={(event) => void store?.sendA2uiAction(event)}
+      running={store?.running}
     />
     {#if panelOpen}
       <aside class="side" data-testid="chat-side-panel" aria-label="Changes and tasks">
@@ -251,7 +349,7 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Chat" />
   <AppAbout {help} />
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel testid="chat-cwd" text={store?.error ?? folder?.path ?? ''} spring />
+    <StatusStripLabel testid="chat-cwd" spring><span title={folder?.path}>{store?.error ?? where}</span></StatusStripLabel>
     {#if session}
       <StatusStripLabel borders={['left']}>
         <span>Context</span>
@@ -260,6 +358,11 @@
       </StatusStripLabel>
     {/if}
     <StatusStripLabel testid="chat-status" text={connectionLabel(status)} borders={['left']} />
+    {#if isDisconnected(status)}
+      <StatusStripLabel borders={['left']}>
+        <button type="button" class="reconnect" data-testid="chat-reconnect" title="Start the agent again" onclick={() => void store?.reconnect()}>Reconnect</button>
+      </StatusStripLabel>
+    {/if}
   </StatusStrip>
 </div>
 
@@ -306,6 +409,28 @@
     display: flex;
     flex-direction: column;
     padding: 4px 4px 4px 0;
+  }
+  .reopened {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    padding: 2px 6px;
+    color: #1e3287;
+    background: #eef4fc;
+    border: 1px solid #b8cbe6;
+  }
+  .reopened span {
+    flex: 1;
+  }
+  .dismiss,
+  .reconnect {
+    padding: 0 6px;
+    border: 1px solid #9aa9bf;
+    border-radius: 2px;
+    background: linear-gradient(#fdfeff, #e6eef8);
+    font: inherit;
   }
   .pct {
     min-width: 30px;

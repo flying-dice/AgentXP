@@ -87,7 +87,7 @@
       {rows}
       testid="changes-list"
       selected={selected ? [String(selected.id)] : []}
-      emptyText="No pending changes in this session."
+      emptyText="No pending changes in this chat."
       aria-label="Changed files"
       onselect={(ids) => (selectedId = ids[0] && !ids[0].startsWith('reverted-') ? Number(ids[0]) : null)}
     >

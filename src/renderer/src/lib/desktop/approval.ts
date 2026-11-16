@@ -107,6 +107,6 @@ export function approvalReason(kind: ToolKind | null, policy: ToolPolicyDto | nu
   if (userInControl) return 'Ask before every action is on, so every action needs your approval.'
   const group = approvalGroup(kind)
   const decision: PolicyDecision | undefined = group && policy ? policy.groups[group] : undefined
-  if (group && decision === 'ask') return `${GROUP_ACTION[group]} is set to Ask in Control Centre.`
+  if (group && decision === 'ask') return `${GROUP_ACTION[group]} is set to Ask in Control Center.`
   return 'The agent asked for your permission.'
 }

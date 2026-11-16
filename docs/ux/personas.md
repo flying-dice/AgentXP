@@ -35,7 +35,7 @@ Agent7 ships "on disk" like boxed software. A persona who fails on the first run
   - Defaults that allow more than she expects.
   - No evidence of what the agent did after the fact.
   - Agents that bypass the client (the README states this limit honestly).
-- **Behaviors.** Reads every word. Opens Show details every time. Changes Control Centre permissions before the first chat. Checks the Event Viewer when something looks wrong.
+- **Behaviors.** Reads every word. Opens Show details every time. Changes Control Center permissions before the first chat. Checks the Event Viewer when something looks wrong.
 - **Success criteria.**
   1. Sets Write files and Terminal to Ask (or Deny) in under 1 minute and sees the setting take effect.
   2. Every permission dialog names the actor, the action, the target path and the reason.

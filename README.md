@@ -171,7 +171,7 @@ The desktop window looks like Windows 7. It has a top bar for the agent, windows
 The desktop has these parts:
 
 - **Top bar** – Shows what the agent does now and the tools that it can use.
-- **Desktop icons** – Open **Computer**, **Chats**, **Code**, **Terminal**, **Browser**, **Control Centre**, and **Recycle Bin**. Double-click an icon.
+- **Desktop icons** – Open **Computer**, **Chats**, **Code**, **Terminal**, **Browser**, **Control Center**, and **Recycle Bin**. Double-click an icon.
 - **Windows** – Show the apps. You can move, resize, minimize, maximize, and close them. To maximize a window, drag its title bar to the top of the desktop.
 - **Sticky notes** – Stay on the desktop. The agent can read and write them while Sticky Notes is open.
 - **Gadgets** – Show the context meter, the clock, and the activity of the agent on the right side.
@@ -208,10 +208,10 @@ The Start menu has these parts:
 
 - **Programs** – Opens **New chat**, **Explorer**, **Code**, **Terminal**, and **Browser**.
 - **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Snipping Tool**, and **Sticky Notes**.
-- **System Tools** – Opens **Event Viewer**, **Task Manager**, and **Control Centre**.
+- **System Tools** – Opens **Event Viewer**, **Task Manager**, and **Control Center**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
-- **Places** – Opens **Computer**, **Documents**, **Control Centre**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **Agent7 Desktops...**.
+- **Places** – Opens **Computer**, **Documents**, **Control Center**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **Agent7 Desktops...**.
 - **Pause agent** – Pauses the agent. The button changes to **Resume agent**.
 - **Disconnect** – Closes the desktop window. The agents keep running. Click the arrow next to the button for **Disconnect**, **Switch desktop...**, and **Delete desktop...**. **Switch desktop...** shows the **Agent7 Desktop Connection** window. **Delete desktop...** asks you first.
 
@@ -221,7 +221,7 @@ Click the flag in the notification area to open the Action Center. It lists each
 
 ![The Action Center with one request to edit src/auth/redirect.ts](docs/images/action-center.png)
 
-Click **Review** next to a request to answer it. Chapter 7 explains how. The **Messages** list shows notes from Agent7, for example that a USB drive is safe to remove. Click **Open Control Centre** to change the permissions.
+Click **Review** next to a request to answer it. Chapter 7 explains how. The **Messages** list shows notes from Agent7, for example that a USB drive is safe to remove. Click **Open Control Center** to change the permissions.
 
 ### The Gadgets
 
@@ -231,7 +231,7 @@ The gadgets are on the right side of the desktop. They have these parts:
 - **Session clock** – Shows the time and how long the agent runs.
 - **Activity** – Lists the last actions of the agent and their state.
 
-To hide the gadgets, open **Control Centre**, click **Appearance**, and clear **Show gadgets on the desktop**.
+To hide the gadgets, open **Control Center**, click **Appearance**, and clear **Show gadgets on the desktop**.
 
 ## 5 - Getting Started
 
@@ -340,11 +340,11 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
 | Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
 
-The Chat, Control Centre, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
+The Chat, Control Center, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
 
 To take a tool away from the agent, close its app. To give it a tool, open its app. If the agent calls a tool of a closed app, Agent7 refuses the call and tells the agent which app to open.
 
-The control **Agent may open apps** in the Control Centre decides if the agent can open apps itself. Chapter 7 explains how to set it.
+The control **Agent may open apps** in the Control Center decides if the agent can open apps itself. Chapter 7 explains how to set it.
 
 **Note:** Agent7 controls the tools that the agent asks Agent7 to run. An agent can have its own built-in tools, and Agent7 cannot stop those. Claude Code uses Agent7 for files and commands when Agent7 offers them.
 
@@ -363,7 +363,7 @@ Some actions need your permission, for example a file edit or a command. When th
 The dialog box has these parts:
 
 - **Question** – Tells you what the agent wants to do, for example "Do you want to allow the agent to edit src/auth/redirect.ts?"
-- **Reason** – Tells you why Agent7 asks, for example "Writing files is set to Ask in Control Centre."
+- **Reason** – Tells you why Agent7 asks, for example "Writing files is set to Ask in Control Center."
 - **Show details** – Shows the change or the command. Click **Hide details** to close it.
 - **Allow** and **Deny** – Answer the request. The agent supplies the names of these buttons.
 - **Not now** – Closes the dialog box. The request stays in the Action Center.
@@ -384,14 +384,14 @@ The Chat window also shows the request. You can answer in the Chat window instea
 
 ### Choosing When Agent7 Asks
 
-The Control Centre sets what the agent can do without asking. To change it, follow the steps below:
+The Control Center sets what the agent can do without asking. To change it, follow the steps below:
 
-1. Click **Start -> Control Centre**. The **Control Centre** window appears.
+1. Click **Start -> Control Center**. The **Control Center** window appears.
 2. Click **Permissions**.
 3. In the **Setting** column, select **Allow**, **Ask**, or **Deny** for a permission.
 4. Click **Apply**.
 
-![The Permissions page of the Control Centre with the choice for each permission](docs/images/control-centre-permissions.png)
+![The Permissions page of the Control Center with the choice for each permission](docs/images/control-centre-permissions.png)
 
 The **Setting** column has three choices:
 
@@ -464,7 +464,7 @@ The desktop has these apps:
 - **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen.
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
 - **Task Manager** – Lists the chats, the agent processes, the terminals, and the context use. **End process** stops an agent process.
-- **Control Centre** – Sets the agents, the permissions, and the appearance of the desktop.
+- **Control Center** – Sets the agents, the permissions, and the appearance of the desktop.
 - **Help and Support** – Shows the manual of each app. Press F1 to open the manual of the window that has focus. The manuals are in `manuals`.
 
 ### The Chat Pane
@@ -485,7 +485,7 @@ The Event Viewer shows each message between Agent7 and the agent. Select a messa
 
 Agent7 adds Claude Code and the Scripted Agent for you. You can add other agents that speak ACP. To add an agent, follow the steps below:
 
-1. Click **Start -> Control Centre**. The **Control Centre** window appears.
+1. Click **Start -> Control Center**. The **Control Center** window appears.
 2. Click **Agents**, and then click **Add...**. The **Add Agent** dialog box appears.
 3. Type the name of the agent in **Name** and the command that starts it in **Command**.
 4. Type each argument on its own line in **Arguments**.
@@ -638,7 +638,7 @@ This script answers a prompt that contains "fix". It asks for permission and the
 }
 ```
 
-To use a script, edit the **Scripted Agent** in the Control Centre and change its argument to `--script <name or path>`. The folder `agents/scripted-agent/scripts` has samples. The file `agents/scripted-agent/README.md` describes all step types.
+To use a script, edit the **Scripted Agent** in the Control Center and change its argument to `--script <name or path>`. The folder `agents/scripted-agent/scripts` has samples. The file `agents/scripted-agent/README.md` describes all step types.
 
 ### Test Ids
 

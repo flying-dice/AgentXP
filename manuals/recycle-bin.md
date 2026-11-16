@@ -107,7 +107,7 @@ To delete all items for good, follow the steps below:
 
 - **The Recycle Bin is empty.** You have not reverted a change yet. Use **Revert** in **[Chat](chat.md)** or **[Code](code.md)**.
 - **Restore this item is dimmed.** Select an item first.
-- **The agent cannot list the items.** Open this app and make sure that Recycle Bin is **Allow** or **Ask** in **[Control Centre](control-centre.md)**.
+- **The agent cannot list the items.** Open this app and make sure that Recycle Bin is **Allow** or **Ask** in **[Control Center](control-centre.md)**.
 
 ## 7 - Need Help?
 

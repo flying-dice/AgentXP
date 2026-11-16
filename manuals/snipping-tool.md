@@ -31,12 +31,13 @@ Click **Start -> Accessories -> Snipping Tool**.
 
 ### The Toolbar
 
-The toolbar has **New**, the arrow next to it, **Cancel**, **Options**, and **Copy**.
+The toolbar has **New**, the arrow next to it, **Cancel**, **Options**, **Send to chat**, and **Copy**.
 
 - **New** – Takes a rectangular snip.
 - **Arrow** – Opens the snip types: **Rectangular Snip**, **Window Snip**, and **Full-screen Snip**.
 - **Cancel** – Stops a snip that waits for your selection.
 - **Options** – Opens the options dialog box with the delay before the capture: No delay, 1, 3, or 5 seconds.
+- **Send to chat** – Saves the last snip as a picture in **C:\Users\Agent\Pictures\Snips** and attaches it to the chat pane of this window. The status bar tells where the picture is saved.
 - **Copy** – Copies the last snip to the clipboard.
 
 ### The Snip Area
@@ -64,6 +65,7 @@ Each Snipping Tool window has a chat pane at its right edge. The pane starts clo
 | Snip type arrow | Opens the list of snip types. | none |
 | Cancel | Stops the snip. | none |
 | Options | Opens the options dialog box. | none |
+| Send to chat | Saves the snip as a picture on drive C: and sends it to the chat pane. | `snipping-tool-send-chat` |
 | Copy | Copies the snip. | none |
 | Delay | Selects the delay before the capture. | none |
 
@@ -73,6 +75,8 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 | Name | What it does | data-testid |
 |---|---|---|
+| Menu: send to chat | Edit menu. Same as the Send to chat button. | `snipping-tool-menu-send-chat` |
+| Context menu: send to chat | Same as the Send to chat button. | `snipping-tool-ctx-send-chat` |
 | Menu: help | Opens the Help window for this app. F1. | `snipping-tool-menu-help` |
 | Menu: about | Opens the About Snipping Tool box. | `snipping-tool-menu-about` |
 | Dialog: about | The About Snipping Tool box. | `snipping-tool-about` |

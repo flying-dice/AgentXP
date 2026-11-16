@@ -69,10 +69,10 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="cc" data-testid="control-centre-app" oncontextmenu={(e) => ctx.show(e, pageItems('control-centre-ctx'))} onkeydown={(e) => ctx.key(e, () => pageItems('control-centre-ctx'))}>
-  <MenuStrip {menus} aria-label="Control Centre menu" />
+  <MenuStrip {menus} aria-label="Control Center menu" />
   <div class="row">
-  <nav class="tasks" aria-label="Control Centre">
-    <div class="caption">Control Centre Home</div>
+  <nav class="tasks" aria-label="Control Center">
+    <div class="caption">Control Center Home</div>
     <ul>
       {#each pages as p (p.id)}
         <li>
@@ -98,7 +98,7 @@
     </div>
   </main>
   </div>
-  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Control Centre" />
+  <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Control Center" />
   <AppAbout {help} />
 </div>
 

@@ -92,7 +92,7 @@ Weak passes to remember: T06.1 (all three: nobody opened details, the diff is in
 
 - **T02.2 renamed desktop (all levels): PASS.** The scenario asks for the same name and the product refuses duplicates by design, so the task tests whether the user recovers and understands the refusal. All three created a second valid desktop with docs-site and quoted the message "A desktop named 'Fix login redirect' already exists." The checker is wrong to stay MANUAL: it passes `undefined` to `withAnswer` and never reads `--answer` (H-01). Product finding stays: the message appears only after Create, gives no suggestion, never says why names must differ (TH-07).
 - **T08.2 novice: PASS.** The answer "5 files; README changed most (+7 -1)" is correct. "README" was shown truncated ("E:\README....") and the panelist could not know the extension. The checker needs the literal `README.md` (H-02). A user cannot be blamed for a name the product cuts off; the truncation is the finding (TH-05). Caveat: the novice stopped after 2 steps and read the +/- column only, so "look at every line" was not tested.
-- **T10.1 expert: PASS.** State met (no Terminal window, no Terminal chip) and the answer named the "Agent can use" line of the Workspace bar. The keyword group `chip|top bar|tools` does not contain the words the screen uses (H-03). **T10.1 novice and intermediate stay FAIL**: state not met. The intermediate found Terminal = Ask but stopped; Ask is not "cannot run commands". Both ran out of the 4-step budget while searching Control Centre. Note the budget (4) cannot hold the valid alternative route (Control Centre > Permissions > Terminal = Deny > Apply is 6 or more steps), so the budget is part of the problem (H-03).
+- **T10.1 expert: PASS.** State met (no Terminal window, no Terminal chip) and the answer named the "Agent can use" line of the Workspace bar. The keyword group `chip|top bar|tools` does not contain the words the screen uses (H-03). **T10.1 novice and intermediate stay FAIL**: state not met. The intermediate found Terminal = Ask but stopped; Ask is not "cannot run commands". Both ran out of the 4-step budget while searching Control Center. Note the budget (4) cannot hold the valid alternative route (Control Center > Permissions > Terminal = Deny > Apply is 6 or more steps), so the budget is part of the problem (H-03).
 - **T13.1 (all levels): PASS.** The checker compares `entries.length` with `messagesAtStart`, but the long job updates one progress row in place (the text grew from "Progress 1 of 30" to "7 of 30"). The screenshots of all three show new progress and the launcher/Workspace bar still said Working, so the agent kept running. "Close this window" is ambiguous (chat window or desktop window); both readings keep the job alive and both are valid. The researcher note "reopened from the launcher" is not a requirement of the task text. The ambiguity is a product finding (TH-03, TH-13).
 - **T14.1 (all levels): PASS.** The task text asks only to find the waiting workspace and open it. All three connected "Fix login redirect" (the one with "Needs your approval (1)"). The checker also wants the answer to name "Docs site", but the scenario never asks about an error (tasks.md success check has a requirement the scenario does not state). Preset detail: "Docs site" is the broken-agent desktop, and the launcher shows it as Idle, so no user could name it from the screen. That is a real product gap (TH-04, UX-06) and a harness defect (H-05).
 - **T15.1 novice: PASS** (see 2.1). Checker only searches for "chat" (H-06).
@@ -137,7 +137,7 @@ Each theme: what happened, tasks and levels, finding ids, root cause. TH ids are
 - Root cause: errors are swallowed at the IPC boundary or shown as raw protocol text; no shared error pattern (what happened, why, what to do).
 
 ### TH-05 Truncated names and cramped panes
-- Changes list names cut ("E:\src\auth\lo..."), permission diff clipped on the right, Event Viewer opens small, Recycle Bin Chat column cut, diff preview one line tall, Control Centre needs maximizing, Add Agent dialog tight.
+- Changes list names cut ("E:\src\auth\lo..."), permission diff clipped on the right, Event Viewer opens small, Recycle Bin Chat column cut, diff preview one line tall, Control Center needs maximizing, Add Agent dialog tight.
 - Tasks: T05.1, T06.1, T08.1, T08.2 (novice answer), T09.1, T10.1, T20.1, T17.1, T06.3.
 - Findings: F-002, F-003, F-008, F-038, F-039.
 - Root cause: fixed column widths, no tooltips, default window sizes too small, no wrap.
@@ -184,7 +184,7 @@ Each theme: what happened, tasks and levels, finding ids, root cause. TH ids are
 - Root cause: `ElectronFolderPicker` uses `dialog.showOpenDialog` on the focused window; the product has no in-app folder browser.
 
 ### TH-13 Window management
-- Workspace bar covers chat title buttons; two chat windows overlap and look identical; launcher stays in front after Connect; windows cover gadgets; Control Centre and Event Viewer open too small.
+- Workspace bar covers chat title buttons; two chat windows overlap and look identical; launcher stays in front after Connect; windows cover gadgets; Control Center and Event Viewer open too small.
 - Tasks: T01.1, T05.2, T07.1, T13.1, T13.2, T20.1.
 - Root cause: cascade logic ignores the bar; no raise on Connect; same titles.
 
@@ -195,7 +195,7 @@ Each theme: what happened, tasks and levels, finding ids, root cause. TH ids are
 - Root cause: features grown separately.
 
 ### TH-15 Terminology
-- ACP, session, tool names, "Workspace" bar vs "desktop", Control Centre vs Action Center, "Plugged-in project", "USB drives", "Terminal" vs "Running commands", "surface" and "Tool said: ok" (scripted agent text).
+- ACP, session, tool names, "Workspace" bar vs "desktop", Control Center vs Action Center, "Plugged-in project", "USB drives", "Terminal" vs "Running commands", "surface" and "Tool said: ok" (scripted agent text).
 - Tasks: T01.1, T02.1, T14.2, T15.1, T17.1, T17.2, T18.1, T20.1, T23.1.
 - Findings: F-007, F-016, F-033, F-034, F-035.
 - Root cause: no enforced vocabulary table in the UI strings. Note: the bar title "Workspace" in the records is the preset's default title, so part of that naming issue is a harness artefact (H-17).

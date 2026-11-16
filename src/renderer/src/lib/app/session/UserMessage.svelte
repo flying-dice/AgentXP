@@ -1,20 +1,38 @@
 <script lang="ts">
+  import Button from '../../kit/atoms/Button.svelte'
+  import type { SendState } from './chatProblem'
+
   interface Props {
     text: string
     /** File names attached to the message. */
     attachments?: string[]
+    /** `not-sent`: the agent never got it; `stopped`: the agent started on it and then stopped. */
+    state?: SendState
+    /** "Send again" (only for a message that is not sent). */
+    onresend?: () => void
+    /** "Edit": puts the text back in the message box. */
+    onedit?: () => void
   }
 
-  let { text, attachments = [] }: Props = $props()
+  let { text, attachments = [], state = 'sent', onresend, onedit }: Props = $props()
 </script>
 
-<div class="user-message" data-testid="chat-message-user">
+<div class="user-message" class:failed={state !== 'sent'} data-testid="chat-message-user" data-send-state={state}>
   <div class="who">You</div>
-  {#if text}<div class="body">{text}</div>{/if}
+  {#if text}<div class="body" data-message-body>{text}</div>{/if}
   {#if attachments.length > 0}
     <div class="files">
       {#each attachments as name, i (i)}<span class="file">{name}</span>{/each}
     </div>
+  {/if}
+  {#if state === 'not-sent'}
+    <div class="notice" role="status">
+      <span class="label" data-testid="chat-message-not-sent">Not sent</span>
+      <Button data-testid="chat-message-send-again" onclick={() => onresend?.()}>Send again</Button>
+      <Button data-testid="chat-message-edit" onclick={() => onedit?.()}>Edit</Button>
+    </div>
+  {:else if state === 'stopped'}
+    <div class="notice" role="status"><span class="label stopped" data-testid="chat-message-stopped">Stopped</span></div>
   {/if}
 </div>
 
@@ -30,6 +48,9 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+  .failed .body {
+    color: #444;
+  }
   .files {
     display: flex;
     flex-wrap: wrap;
@@ -42,5 +63,22 @@
     background: var(--w7-hot-face);
     color: var(--w7-text-muted);
     line-height: 17px;
+  }
+  .notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .label {
+    font-weight: 700;
+    color: #b00020;
+  }
+  .label.stopped {
+    color: #555;
+  }
+  .notice :global(.w7-btn) {
+    min-width: 0;
+    padding: 0 10px;
   }
 </style>

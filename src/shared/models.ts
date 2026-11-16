@@ -51,6 +51,17 @@ export interface AvailableCommandDto {
  */
 export type SessionRole = 'chat' | 'review' | 'aside'
 
+/**
+ * What is wrong with a chat's agent program right now. It is not stored: it describes the live process and is
+ * cleared by the next successful start. `message` is plain words for the user; `detail` is the technical text
+ * ("Details...").
+ */
+export interface SessionProblemDto {
+  kind: 'start-failed' | 'agent-stopped' | 'agent-ended'
+  message: string
+  detail: string
+}
+
 export interface SessionDto {
   id: Id
   agentId: Id
@@ -70,6 +81,8 @@ export interface SessionDto {
   commands: AvailableCommandDto[]
   contextUsed: number
   contextSize: number
+  /** The agent program could not start or stopped (not stored; absent when all is well). */
+  problem?: SessionProblemDto | null
   createdAt: IsoDate
   updatedAt: IsoDate
 }

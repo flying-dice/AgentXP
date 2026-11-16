@@ -109,7 +109,7 @@ To show the plan of a chat, click **Plan note** and select the chat.
 ## 6 - Troubleshooting
 
 - **The notes are gone from the desktop.** Open Sticky Notes. The notes show only while the app is open.
-- **The agent cannot read my notes.** Open Sticky Notes. Make sure that Notes is **Allow** in **[Control Centre](control-centre.md)**.
+- **The agent cannot read my notes.** Open Sticky Notes. Make sure that Notes is **Allow** in **[Control Center](control-centre.md)**.
 - **A plan note has no tasks.** The text **No tasks yet** appears until the agent lists a plan.
 
 ## 7 - Need Help?

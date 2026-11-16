@@ -3,7 +3,7 @@
   import AppStory from '../AppStory.svelte'
 
   const { Story } = defineMeta({
-    title: 'Apps/Control Centre',
+    title: 'Apps/Control Center',
     parameters: { layout: 'fullscreen' }
   })
 </script>

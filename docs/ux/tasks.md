@@ -94,7 +94,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "You want the assistant to fix a failing test in your project, but it must never run commands without asking you first. Set things up that way, then ask it to run the tests."
 - Start state: Terminal policy = Allow; `demo` script with a terminal step.
 - Success check: Terminal policy = Ask (or Deny) in the saved policy, and a request appeared for the command (the permission broker log shows it).
-- Min 6 (Start, Control Centre, Permissions, change Terminal, Apply, then chat). Budget 18 / 24.
+- Min 6 (Start, Control Center, Permissions, change Terminal, Apply, then chat). Budget 18 / 24.
 
 ### J07 Approve from the Action Center
 
@@ -220,7 +220,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T16.2 - Know what a setting covers**
 - Scenario: "Find out whether turning off 'Code' would also stop the assistant from writing files with Notepad."
-- Start state: Control Centre closed.
+- Start state: Control Center closed.
 - Success check: the answer matches the documented behavior (researcher check; the answer must come from the screen or the manual).
 - Min 4. Budget 12 / 16.
 
@@ -228,7 +228,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 
 **T17.1 - Use a different assistant**
 - Scenario: "A colleague gave you an assistant program. Its start command is `node` with the argument `my-agent.js`. Add it, and use it for new workspaces from now on."
-- Start state: Control Centre closed; the file exists.
+- Start state: Control Center closed; the file exists.
 - Success check: a new agent row with that command and args exists and is the default.
 - Min 8. Budget 24 / 32.
 

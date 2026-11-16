@@ -27,7 +27,7 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
 
 export const groupLabel = (group: GatedToolGroup): string => GROUP_LABELS[group]
 
-/** The decision the Control Centre stored for a group (`deny` / `ask` / `allow`). */
+/** The decision the Control Center stored for a group (`deny` / `ask` / `allow`). */
 export const decisionFor = (policy: ToolPolicyDto, group: ToolGroup): PolicyDecision =>
   group === 'shell' ? 'allow' : policy.groups[group]
 
@@ -45,8 +45,8 @@ export function evaluateToolAccess(input: {
   if (state.paused) return { kind: 'refuse', message: PAUSED_MESSAGE }
   if (!state.tools.includes(group)) return { kind: 'refuse', message: closedAppMessage(group) }
   const decision = decisionFor(policy, group)
-  if (decision === 'deny') return { kind: 'refuse', message: `${groupLabel(group)} is blocked by the permission policy in Control Centre.` }
-  if (decision === 'ask') return { kind: 'ask', reason: `${groupLabel(group)} is set to Ask in Control Centre` }
+  if (decision === 'deny') return { kind: 'refuse', message: `${groupLabel(group)} is blocked by the permission policy in Control Center.` }
+  if (decision === 'ask') return { kind: 'ask', reason: `${groupLabel(group)} is set to Ask in Control Center` }
   if (state.userInControl) return { kind: 'ask', reason: 'You are in control of this desktop' }
   return { kind: 'allow' }
 }

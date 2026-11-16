@@ -48,6 +48,7 @@ import type {
   TextFileSaver
 } from './application/ports'
 import { ProcessService } from './application/ProcessService'
+import { OsProcessUsage } from './infrastructure/process/osProcessUsage'
 import { createBrowserTools } from './application/tools/browserTools'
 import { createEventsTools } from './application/tools/eventsTools'
 import { createNotesTools } from './application/tools/notesTools'
@@ -65,6 +66,7 @@ import { createTerminalTools } from './application/tools/terminalTools'
 import { SessionBroadcaster } from './application/SessionBroadcaster'
 import { SessionEventProjector } from './application/SessionEventProjector'
 import { SessionQueryService } from './application/SessionQueryService'
+import { ProblemAwareSessions, SessionProblems } from './application/SessionProblems'
 import { SessionRuntime } from './application/SessionRuntime'
 import { SessionService } from './application/SessionService'
 import { ShellService } from './application/ShellService'
@@ -171,10 +173,12 @@ export function composeApp(options: ComposeOptions): AppServices {
   const { db } = options
   // Services publish through this; the renderer-facing events go on to `options.publisher`, the rest feed the AG-UI backend.
   const publisher = new FanOutEventPublisher(options.publisher)
+  const problems = new SessionProblems()
   const repos = {
     agents: new SqliteAgentRepository(db),
     folders: new SqliteFolderRepository(db),
-    sessions: new SqliteSessionRepository(db),
+    // Every reader of a session row sees what is wrong with its agent program (could not start, stopped).
+    sessions: new ProblemAwareSessions(new SqliteSessionRepository(db), problems),
     transcripts: new SqliteTranscriptRepository(db),
     tasks: new SqliteTaskRepository(db),
     changes: new SqliteFileChangeRepository(db),
@@ -244,6 +248,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     files: sessionFiles,
     terminals: terminalRecorder,
     broadcaster,
+    problems,
     a2uiMcpConfig,
     toolGate: (sessionId) => gateway.forSession(sessionId),
     protocolTap: (sessionId) => eventLog.acpTap(sessionId)
@@ -263,6 +268,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     runtime,
     broadcaster,
     events: publisher,
+    problems,
     desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
   })
   const desktops = new DesktopService({
@@ -389,7 +395,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     reviews,
     drives,
     launcher,
-    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster),
+    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage()),
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
     directories: options.directories ?? new NodeDirectoryBrowser(),

@@ -68,6 +68,9 @@ export class StoryHost implements DesktopHost {
     return this.api.drives.plugIn(this.current.desktopId, folderId)
   }
 
+  sendFileToChat = async (_windowId: number, _filePath: string, _text: string): Promise<void> => {}
+  hasResumeNote = (_sessionId: number): boolean => false
+  continueChat = async (_sessionId: number): Promise<void> => {}
   startChat = async (cwd: string): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId, undefined, cwd))
 
   /** Records the request (stories show it) and starts a chat like the real desktop, without a prompt. */

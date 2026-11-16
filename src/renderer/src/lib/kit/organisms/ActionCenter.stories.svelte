@@ -17,7 +17,7 @@
       onopencontrolcentre: fn(),
       onclose: fn()
     },
-    argTypes: { onreview: { action: 'review' }, onopencontrolcentre: { action: 'open control centre' }, onclose: { action: 'close' } }
+    argTypes: { onreview: { action: 'review' }, onopencontrolcentre: { action: 'open control center' }, onclose: { action: 'close' } }
   })
 </script>
 

@@ -161,7 +161,7 @@ Each chapter that describes a window has a screenshot of that window.
 | Chapter heading | `##`, number, hyphen, name | `## 4 - The Desktop` |
 | Section heading | `###`, name, no number | `### The Taskbar` |
 | Button, tab, menu, field | Bold, as on screen | **Send** |
-| Menu path | Bold, items joined with `->` | **Start -> Control Centre** |
+| Menu path | Bold, items joined with `->` | **Start -> Control Center** |
 | Key | Plain text, with + between keys | Ctrl+Esc |
 | Text that the reader types | Code | `npm install` |
 | File, folder, command | Code | `docs/images` |

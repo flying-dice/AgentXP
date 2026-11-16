@@ -26,7 +26,7 @@ To start the agent again, follow the steps below:
 
 1. Make sure that the desktop is not paused. If the top bar says **Resume**, click **Resume**.
 2. Look at the status bar of the chat. If it says **Disconnected**, click **Reconnect** or start a new chat.
-3. Click **Start -> Control Centre**, and then click **Agents**. Make sure that the agent is in the list and that its command is right.
+3. Click **Start -> Control Center**, and then click **Agents**. Make sure that the agent is in the list and that its command is right.
 4. Make sure that the project folder is plugged in. An ejected project stops the chats that work on it. See **[Add or Remove a Project](projects.md)**.
 5. Start a new chat. Click **Start -> New chat**.
 
@@ -41,4 +41,4 @@ If the agent still does not start, open **Event Viewer**. The last rows tell wha
 
 ## 4 - Need Help?
 
-Read **[Using Chat](chat.md)** to learn the parts of a chat window. Read **[Using Control Centre](control-centre.md)** to learn how to add an agent.
+Read **[Using Chat](chat.md)** to learn the parts of a chat window. Read **[Using Control Center](control-centre.md)** to learn how to add an agent.

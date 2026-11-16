@@ -73,7 +73,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 
 ### System
 
-- **[Control Centre](control-centre.md)** – Agents, permissions, and appearance.
+- **[Control Center](control-centre.md)** – Agents, permissions, and appearance.
 - **[Help and Support](help.md)** – This app.
 
 ## 4 - Need Help?

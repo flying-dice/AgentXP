@@ -8,7 +8,7 @@
 
   interface Props {
     approval: PendingApproval
-    /** Why the agent is asking ("Writing files is set to Ask in Control Centre."); shown after "Reason:". */
+    /** Why the agent is asking ("Writing files is set to Ask in Control Center."); shown after "Reason:". */
     reason: string
     /** The chosen option id, or null to cancel the turn. */
     onanswer?: (optionId: string | null) => void

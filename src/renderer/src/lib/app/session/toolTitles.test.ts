@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { approvalTitle, toolLabel, toolPredicate } from './toolTitles'
+import { approvalTitle, plainToolTitle, toolLabel, toolPredicate, toolTitleOr } from './toolTitles'
 
 describe('toolTitles', () => {
   it('words changes with the file', () => {
@@ -31,5 +31,27 @@ describe('toolTitles', () => {
     expect(approvalTitle({ title: 'Edit src/a.ts', toolKind: 'edit' })).toBe('Allow the agent to change src/a.ts?')
     expect(approvalTitle({ title: 'Run ls', toolKind: 'execute' }, 'Claude')).toBe('Allow Claude to run a command?')
     expect(toolLabel({ title: 'Edit src/a.ts', toolKind: 'edit' })).toBe('Change src/a.ts')
+  })
+})
+
+
+describe('plainToolTitle', () => {
+  it('names the tools by what they do', () => {
+    expect(plainToolTitle('fs.read_text_file')).toBe('Read a file')
+    expect(plainToolTitle('fs.write_text_file')).toBe('Change a file')
+    expect(plainToolTitle('terminal')).toBe('Run a command')
+    expect(plainToolTitle('agent7.browser_read')).toBe('Read the page')
+    expect(plainToolTitle('agent7.review_add_comment')).toBe('Add a review comment')
+  })
+
+  it('finds the tool behind a server prefix', () => {
+    expect(plainToolTitle('mcp__agent7__browser_click')).toBe('Click on the page')
+    expect(plainToolTitle('other.browser_back')).toBe('Go back one page')
+  })
+
+  it('has no title for names it does not know, and toolTitleOr keeps them', () => {
+    expect(plainToolTitle('Read src/a.ts')).toBeNull()
+    expect(toolTitleOr('Read src/a.ts')).toBe('Read src/a.ts')
+    expect(toolTitleOr('terminal')).toBe('Run a command')
   })
 })

@@ -83,7 +83,7 @@
     { id: 'code', label: 'Code', icon: 'file-code', title: 'Code: read the files of a project' },
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
     { id: 'browser', label: 'Browser', icon: 'globe', title: 'Browser: browse the web together with the agent' },
-    { id: 'control-centre', label: 'Control Centre', icon: 'options', title: 'Control Centre: agents, permissions and settings' },
+    { id: 'control-centre', label: 'Control Center', icon: 'options', title: 'Control Center: agents, permissions and settings' },
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
@@ -105,7 +105,7 @@
     { id: 'computer', title: 'Computer' },
     { id: 'eject', title: 'Eject a project...' },
     { id: 'documents', title: 'Documents' },
-    { id: 'control-centre', title: 'Control Centre' },
+    { id: 'control-centre', title: 'Control Center' },
     { id: 'agent-manager', title: 'Task Manager' },
     { id: 'recycle-bin', title: 'Recycle Bin' },
     { id: 'help', title: 'Help and Support' },
@@ -115,7 +115,7 @@
 
   function runApp(id: string): void {
     const item = programs.find((p) => p.id === id) ?? groups.flatMap((g) => g.items).find((i) => i.id === id)
-    const open = (): Promise<unknown> => (id === 'chat' ? desktop.newChat() : id === 'code-review' ? desktop.openReview() : desktop.openApp({ app: id as AppKind }))
+    const open = (): Promise<unknown> => (id === 'chat' ? desktop.newChatFlow() : id === 'code-review' ? desktop.openReview() : desktop.openApp({ app: id as AppKind }))
     void desktop.openWithFeedback(item?.title ?? id, item?.icon, open)
   }
 
@@ -128,7 +128,7 @@
           return desktop.openApp({ app: 'explorer', path: '' })
         case 'chats': {
           const latest = desktop.chats[0]
-          return latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChat()
+          return latest ? desktop.openApp({ app: 'chat', sessionId: latest.id }) : desktop.newChatFlow()
         }
         case 'recycle':
           return desktop.openApp({ app: 'recycle-bin' })
@@ -221,7 +221,7 @@
       gadgets={desktop.gadgetsVisible}
       onselect={(id) => (desktop.selectedIcon = id)}
       onopen={openIcon}
-      onnewchat={() => void desktop.newChat()}
+      onnewchat={() => void desktop.newChatFlow()}
       onopencomputer={() => void desktop.openApp({ app: 'explorer', path: '' })}
       ontogglegadgets={() => (desktop.gadgetsVisible = !desktop.gadgetsVisible)}
       oncontrolcentre={() => void desktop.openApp({ app: 'control-centre' })}
@@ -237,6 +237,7 @@
       <TopBar
         title={desktop.state.title}
         working={desktop.working}
+        agentProblem={desktop.agentProblem}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
         tools={desktop.state.tools}
@@ -321,6 +322,7 @@
     {#if desktop.newChatDialogOpen}
       <NewChatDialog
         drives={desktop.state.drives}
+        preselect={desktop.lastChatDrive}
         oncancel={() => (desktop.newChatDialogOpen = false)}
         onstart={(cwd) => {
           desktop.newChatDialogOpen = false

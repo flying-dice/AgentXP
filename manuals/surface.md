@@ -29,6 +29,8 @@ A form has three places: in the transcript of the chat, in the sidebar of the ch
 
 The window has a title bar with the title of the form. The client area shows the form. The form has no controls of its own. The agent decides what it shows, for example buttons, text boxes, and check boxes.
 
+When you click a button, it reads **Sending...** and cannot be clicked again. When the agent has your answer, the form says **Sent.**
+
 If you delete the form, the window says that the surface was deleted.
 
 ## 4 - Controls Reference
@@ -37,7 +39,8 @@ If you delete the form, the window says that the surface was deleted.
 |---|---|---|
 | Agent window | The root of the window. The attribute `data-surface-id` holds the id of the form. | `surface-app` |
 | Form | The drawn form. | `a2ui-surface` |
-| Button | A button that the agent drew. | `a2ui-button` |
+| Button | A button that the agent drew. After you click it, it reads **Sending...** until the agent answers. | `a2ui-button` |
+| Sent | A short note that the agent got your answer: **Sent.** | `a2ui-sent` |
 | Text box | A text box that the agent drew. | `a2ui-textbox` |
 | Option | An option that the agent drew. | `a2ui-checkbox` |
 

@@ -123,6 +123,8 @@ export interface HostFiles {
   readText(root: string, relativePath: string): Promise<string>
   /** Creates missing parent directories. */
   writeText(root: string, relativePath: string, text: string): Promise<void>
+  /** Creates missing parent directories. */
+  writeBytes(root: string, relativePath: string, bytes: Uint8Array): Promise<void>
   /** Removes a file; a missing file is not an error. */
   remove(root: string, relativePath: string): Promise<void>
   /** null when nothing exists there. */

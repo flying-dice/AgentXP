@@ -4,7 +4,10 @@
    * The app calls the exported functions and listens to `onpatch`.
    */
   import { BLANK, hostOf } from './address'
+  import ErrorPage from './ErrorPage.svelte'
+  import { describeLoadFailure, isShownFailure, stepZoom, type LoadFailure } from './pageStatus'
   import PlaceholderPage from './PlaceholderPage.svelte'
+  import StartPage from './StartPage.svelte'
   import type { BrowserTabState } from './tabs'
   import type { PageContext, WebviewElement } from './webview'
 
@@ -19,9 +22,11 @@
     onready: (webContentsId: number) => void
     /** Right-click inside the guest page (which swallows it): where, and what was under the pointer. */
     oncontext?: (info: PageContext) => void
+    /** The Help link of the error page. */
+    onhelp?: () => void
   }
 
-  let { initialUrl, electron, active, testId, onpatch, onready, oncontext }: Props = $props()
+  let { initialUrl, electron, active, testId, onpatch, onready, oncontext, onhelp }: Props = $props()
 
   // The webview opens with this address once; later changes go through navigate() (a reactive src would reload the page).
   // svelte-ignore state_referenced_locally
@@ -33,6 +38,10 @@
   // svelte-ignore state_referenced_locally
   let trail = $state.raw<string[]>([initialUrl])
   let at = $state(0)
+  /** Why the page did not load; the error page covers the guest while this is set. */
+  let failure = $state<LoadFailure | null>(null)
+  let failedUrl = ''
+  let zoom = 1
   let timer: ReturnType<typeof setTimeout> | undefined
 
   function history(): { canBack: boolean; canForward: boolean } {
@@ -41,7 +50,7 @@
   }
 
   function report(patch: Partial<BrowserTabState> = {}): void {
-    onpatch({ url, loading, ...history(), ...patch })
+    onpatch({ url, loading, failed: failure !== null, zoom, ...history(), ...patch })
   }
 
   function settle(target: string): void {
@@ -52,6 +61,7 @@
   export function navigate(target: string): void {
     url = target
     loading = true
+    failure = null
     if (electron) {
       if (view && ready) void view.loadURL(target).catch(() => {})
       else if (view) view.src = target
@@ -65,6 +75,7 @@
   }
 
   export function step(delta: -1 | 1): void {
+    failure = null
     if (electron) {
       if (delta < 0) view?.goBack()
       else view?.goForward()
@@ -81,13 +92,25 @@
   }
 
   export function reload(): void {
-    if (electron) view?.reload()
+    failure = null
+    if (electron) {
+      // A page that failed to load has nothing to reload in the guest: load the address again.
+      if (view && ready && failedUrl) void view.loadURL(failedUrl).catch(() => {})
+      else view?.reload()
+    }
     else {
       loading = true
       clearTimeout(timer)
       timer = setTimeout(() => settle(url), 350)
       report()
     }
+  }
+
+  /** Zoom in (1), out (-1) or back to 100% (0). */
+  export function zoomBy(direction: -1 | 0 | 1): void {
+    zoom = stepZoom(zoom, direction)
+    if (electron && view && ready) view.setZoomFactor(zoom)
+    report()
   }
 
   export function stop(): void {
@@ -112,7 +135,9 @@
     if (!el) return
     const onUrl = (event: Event): void => {
       const next = (event as Event & { url?: string }).url
-      if (!next) return
+      if (!next || next.startsWith('chrome-error:')) return // the page of Chromium's own error: ours covers it
+      failure = null
+      failedUrl = ''
       url = next
       report()
     }
@@ -122,8 +147,18 @@
       const box = el.getBoundingClientRect()
       oncontext?.({ x: box.left + params.x, y: box.top + params.y, linkURL: params.linkURL ?? '', selectionText: params.selectionText ?? '' })
     }
+    const onFail = (event: Event): void => {
+      const e = event as Event & { errorCode?: number; errorDescription?: string; validatedURL?: string; isMainFrame?: boolean }
+      if (!isShownFailure(e.errorCode ?? 0, e.isMainFrame ?? true)) return
+      failedUrl = e.validatedURL || url
+      failure = describeLoadFailure(failedUrl, e.errorDescription || '')
+      url = failedUrl
+      loading = false
+      report({ title: '' })
+    }
     const handlers: [string, (event: Event) => void][] = [
       ['context-menu', onContext],
+      ['did-fail-load', onFail],
       ['did-start-loading', () => ((loading = true), report())],
       ['did-stop-loading', () => ((loading = false), report())],
       ['page-title-updated', (event) => report({ title: (event as Event & { title?: string }).title ?? '' })],
@@ -133,6 +168,7 @@
         'dom-ready',
         () => {
           ready = true
+          if (zoom !== 1) el.setZoomFactor(zoom)
           report()
           onready(el.getWebContentsId())
         }
@@ -155,10 +191,16 @@
   {:else}
     <PlaceholderPage {url} {loading} />
   {/if}
+  {#if failure}
+    <ErrorPage {failure} onrefresh={reload} {onhelp} />
+  {:else if url === BLANK}
+    <StartPage />
+  {/if}
 </div>
 
 <style>
   .tabpage {
+    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;

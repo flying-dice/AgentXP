@@ -24,7 +24,7 @@ This manual describes the Chat window. A chat is one conversation with an agent.
 
 ## 1 - What It Is For
 
-Use Chat to tell the agent what to do and to read what the agent does. The transcript shows each message, each tool call, and each plan. You can stop the agent, undo its file changes, and answer its requests.
+Use Chat to tell the agent what to do and to read what the agent does. The transcript shows each message, each step the agent takes, and each plan. You can stop the agent, undo its file changes, and answer its requests.
 
 ## 2 - Open It
 
@@ -45,7 +45,7 @@ The bar below the menu has the **Model** list and the **Tasks and changes** butt
 
 ### The Transcript
 
-The transcript is the large area in the middle. It shows your messages, the messages of the agent, and the reasoning of the agent. Each tool call has a card. A card shows the state of the call: running, waiting, done, failed, or cancelled. If a turn ends in an unusual way, a notice tells why. An error appears as a red row.
+The transcript is the large area in the middle. It shows your messages, the messages of the agent, and the reasoning of the agent. Each step has a card. A card shows the state of the step: running, waiting, done, failed, or cancelled. If a turn ends in an unusual way, a notice tells why. An error appears as a red row.
 
 A drawn form from the agent (an A2UI surface) appears as a row with **Open**, **Close**, **Delete**, and **Move to**. See **[Agent window](surface.md)**.
 
@@ -100,10 +100,29 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Tool call card | One tool call. The attribute `data-status` gives the state. | `tool-call-card` |
 | Show, Hide | Opens or closes the details of a card. | `tool-call-toggle` |
 | Stop notice | Tells why a turn ended. | `chat-stop-notice` |
-| Error | Shows an error. | `chat-error` |
+| Error | Shows an error in plain words. Buttons under it fix the problem. | `chat-error` |
+| Error text | The words of the error. | `chat-error-text` |
+| Error buttons | **Send again**, **Restart**, **Restart and send again**, **Try again**, **Details...**, **Show in Event Viewer**. The name ends with the id of the button. | `chat-error-*` |
+| Not sent | Marks your message that did not reach the agent. | `chat-message-not-sent` |
+| Send again | Sends the message that was not sent. | `chat-message-send-again` |
+| Edit | Takes the message back into the box so that you can change it. | `chat-message-edit` |
+| Stopped | Marks your message that the agent started on and then stopped. | `chat-message-stopped` |
+| New messages | Shows when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
+| Card note | A line under a tool card, for example "Denied by you". | `tool-call-note` |
+| Earlier step | A divider above steps of an earlier request. | `tool-call-earlier` |
+| Paused banner | Shows when the desktop is paused. | `chat-paused-banner` |
+| Starting note | Shows while the agent starts. You can type meanwhile. | `chat-starting` |
+| Reopened note | Tells once that the chat was opened again after the program restarted. | `chat-reopened-note` |
+| Dismiss note | Hides the reopened note. | `chat-reopened-dismiss` |
+| Reconnect | Starts the agent again when it is disconnected. | `chat-reconnect` |
+| Sent | A drawn form says "Sent." after you use a button on it. | `a2ui-sent` |
 | Composer | Holds the controls to write. | `chat-composer` |
 | Message box | The input for your message. | `chat-composer-input` |
-| Mode | Selects the mode. | `chat-mode` |
+| Mode | Opens the list of modes. Each entry has a short description. | `chat-mode` |
+| Mode entry | One mode of the agent. The name ends with the id of the mode. | `chat-mode-*` |
+| Ask before every action | Last entry of the mode list. The agent must ask before it reads, writes, or runs anything. | `chat-mode-ask-first` |
+| Include open file | Adds the file open in Code to your message. | `chat-include-file` |
+| Message box dialog | A question box. Its extra buttons end with the id of the button. | `message-box-action-*` |
 | Attach... | Adds files. | `chat-attach` |
 | Stop | Stops the agent. | `chat-stop` |
 | Send | Sends the message. | `chat-send` |
@@ -121,8 +140,8 @@ If you set an action to **Ask**, a dialog box asks you. It has the question, the
 | Resize bar | Changes the width of the sidebar. | `chat-sidebar-resizer` |
 | Form row | One drawn form in the transcript. | `chat-surface-row` |
 | Form title | Shows the title. | `chat-surface-title` |
-| Form state | Shows if the form is open or closed. | `chat-surface-state` |
-| Open | Shows the form. | `chat-surface-open` |
+| Form state | Shows the title and the place, for example **Board: Open** or **Board: Closed**. | `chat-surface-state` |
+| Open, Show | **Open** opens a closed form. **Show** brings an open form to the front. | `chat-surface-open` |
 | Close | Hides the form. | `chat-surface-close` |
 | Delete | Deletes the form after a question. | `chat-surface-delete` |
 | Move to | Opens the list of places. | `chat-surface-move` |
@@ -189,4 +208,4 @@ To change the model, select another entry in **Model**.
 
 ## 7 - Need Help?
 
-Read **[Event Viewer](event-viewer.md)** for the messages of the agent. Read **[Control Centre](control-centre.md)** to add an agent or to change permissions.
+Read **[Event Viewer](event-viewer.md)** for the messages of the agent. Read **[Control Center](control-centre.md)** to add an agent or to change permissions.

@@ -61,6 +61,7 @@ describe('Browser agent: a local chat web app', () => {
   it('the agent manages tabs and the tab strip follows', async () => {
     const chat = ctx.desktop.chat()
     const browser = ctx.desktop.window('browser')
+    await ctx.desktop.taskbarItem('chat').click() // the Browser window came to the front when the agent first used it
     await chat.send(`Check the tabs at ${web.origin}/`)
     await agentSays(ctx, 'TABS OK')
     await see.attribute(chat.transcript, 'data-running', 'false')
@@ -78,8 +79,24 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(created, 'data-active', 'true')
     await see.attribute(browser.getByTestId('browser-tab-1'), 'data-active', 'false')
     await see.text(created, 'New Tab')
+    await see.text(browser.getByTestId('browser-start-page'), 'Type an address above to open a page.')
     await browser.getByTestId('browser-tab-close-3').click()
     await see.gone(browser.getByTestId('browser-tab-3'))
     await see.attribute(browser.getByTestId('browser-tab-1'), 'data-active', 'true')
+  })
+
+  it('an address that cannot be reached shows the error page with the cause, and Refresh tries again', async () => {
+    const browser = ctx.desktop.window('browser')
+    await browser.getByTestId('browser-address').fill('127.0.0.1:9')
+    await browser.getByTestId('browser-go').click()
+    await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")
+    await see.text(browser.getByTestId('browser-error-cause'), "The address '127.0.0.1:9' could not be reached.")
+    await see.visible(browser.getByTestId('browser-error-help'))
+    await browser.getByTestId('browser-error-refresh').click()
+    await see.text(browser.getByTestId('browser-error-title'), "This page can't be displayed")
+    // A good address clears the error page.
+    await browser.getByTestId('browser-address').fill(`${web.origin}/`)
+    await browser.getByTestId('browser-go').click()
+    await see.gone(browser.getByTestId('browser-error-page'))
   })
 })

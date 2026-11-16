@@ -21,7 +21,7 @@
 
 <div class="surface-app w7-scroll" data-testid="surface-app" data-surface-id={surfaceId}>
   {#if surface}
-    <A2uiSurface messages={surface.messages} {sessionId} onaction={(event) => void store?.sendA2uiAction(event)} />
+    <A2uiSurface messages={surface.messages} {sessionId} busy={store?.running} onaction={(event) => void store?.sendA2uiAction(event)} />
   {:else}
     <div class="blank">{store ? 'This surface was deleted.' : 'Opening the surface...'}</div>
   {/if}

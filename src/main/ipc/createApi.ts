@@ -1,4 +1,6 @@
 import type { InvokeApi } from '../../shared/ipc-channels'
+import type { VPath } from '../../shared/vfs'
+import { parseImageDataUrl } from '../application/tools/dataUrl'
 import type { DirectoryBrowser, FilePicker, ScreenCapturer } from '../application/ports'
 import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
@@ -157,7 +159,16 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: async (id) => s.recycle.remove(id),
       empty: async (desktopId) => s.recycle.empty(desktopId)
     },
-    snip: { capture: (desktopId, region) => s.screen.capture(desktopId, region) },
+    snip: {
+      capture: (desktopId, region) => s.screen.capture(desktopId, region),
+      save: async (desktopId, dataUrl) => {
+        const { data } = parseImageDataUrl(dataUrl)
+        const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
+        const path = `C:\\Users\\Agent\\Pictures\\Snips\\Snip-${stamp}.png` as VPath
+        const filePath = await s.vfs.writeBytes(desktopId, path, Buffer.from(data, 'base64'))
+        return { path, filePath }
+      }
+    },
     processes: { list: async () => s.processes.list(), end: (agentId, desktopId) => s.processes.end(agentId, desktopId) },
     app: {
       version: async () => s.appVersion
@@ -180,6 +191,8 @@ export function createApi(s: ApiServices): InvokeApi {
       respondPermission: async (requestId, optionId) => s.broker.respond(requestId, optionId),
       revertChange: (changeId) => s.reverter.revert(changeId),
       clearTranscript: async (id) => s.sessions.clearTranscript(id),
+      retry: async (id) => s.sessions.retry(id),
+      restartAgent: (id) => s.sessions.restartAgent(id),
       exportTranscript: (id) => s.exporter.export(id)
     },
     a2ui: {

@@ -65,20 +65,21 @@
   })
 
   const procColumns: GridColumn[] = [
-    { key: 'agent', header: 'Agent', width: 200, readOnly: true },
-    { key: 'pid', header: 'PID', width: 90, readOnly: true },
-    { key: 'desktop', header: 'Desktop', width: 150, readOnly: true },
-    { key: 'chats', header: 'Chats', width: 100, readOnly: true }
+    { key: 'agent', header: 'Agent', width: 150, readOnly: true },
+    { key: 'pid', header: 'PID', width: 60, readOnly: true },
+    { key: 'desktop', header: 'Desktop', width: 100, readOnly: true },
+    { key: 'chats', header: 'Chats', width: 56, readOnly: true },
+    { key: 'memory', header: 'Memory', width: 80, readOnly: true },
+    { key: 'cpu', header: 'CPU', width: 60, readOnly: true }
   ]
   const procRows = $derived(processRows(processes, host.state.desktopId))
   const selectedProcess = $derived(procRows[current.row] ?? null)
 
   const chatColumns: ListColumn[] = [
-    { key: 'title', header: 'Chat', width: 210 },
-    { key: 'agent', header: 'Agent', width: 110 },
-    { key: 'status', header: 'Status', width: 110 },
-    { key: 'tokens', header: 'Tokens', width: 110, align: 'right' },
-    { key: 'context', header: 'Context', align: 'right' }
+    { key: 'title', header: 'Chat', width: 140 },
+    { key: 'agent', header: 'Agent', width: 90 },
+    { key: 'status', header: 'Status' },
+    { key: 'context', header: 'Context', width: 70, align: 'right' }
   ]
   const terminalColumns: ListColumn[] = [
     { key: 'chat', header: 'Chat', width: 150 },
@@ -107,7 +108,7 @@
     const proc = selectedProcess
     if (!proc) return
     const answer = await showMessageBox({
-      text: `Do you want to end ${proc.agent}?\n\nIts ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will close and any work in progress is lost.`,
+      text: `End '${proc.agent}'? Its ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will stop and work in progress is lost.`,
       caption: 'Agent7 Task Manager',
       buttons: 'YesNo',
       icon: 'warning'

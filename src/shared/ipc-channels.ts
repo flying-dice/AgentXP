@@ -67,6 +67,8 @@ const INVOKE_METHODS = {
     respondPermission: true,
     revertChange: true,
     clearTranscript: true,
+    retry: true,
+    restartAgent: true,
     exportTranscript: true
   },
   desktop: {
@@ -97,7 +99,7 @@ const INVOKE_METHODS = {
   notes: { list: true, add: true, update: true, remove: true },
   events: { query: true, clear: true },
   recycle: { list: true, restore: true, remove: true, empty: true },
-  snip: { capture: true },
+  snip: { capture: true, save: true },
   processes: { list: true, end: true },
   app: { version: true },
   a2ui: { dispatch: true, deleteSurface: true, moveSurface: true, setSidebarHidden: true },

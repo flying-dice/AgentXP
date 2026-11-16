@@ -17,7 +17,7 @@
     title: 'Desktop/UacDialog',
     component: UacDialog,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
-    args: { approval: edit, reason: 'Writing files is set to Ask in Control Centre.', onanswer: fn(), onclose: fn() },
+    args: { approval: edit, reason: 'Writing files is set to Ask in Control Center.', onanswer: fn(), onclose: fn() },
     argTypes: { reason: { control: 'text' }, onanswer: { action: 'answer' }, onclose: { action: 'close' } }
   })
 </script>
@@ -25,7 +25,7 @@
 <Story name="EditWithDiff">
   {#snippet template(args)}<div class="stage"><UacDialog {...args} /></div>{/snippet}
 </Story>
-<Story name="RunCommand" args={{ approval: run, reason: 'Running commands is set to Ask in Control Centre.' }}>
+<Story name="RunCommand" args={{ approval: run, reason: 'Running commands is set to Ask in Control Center.' }}>
   {#snippet template(args)}<div class="stage"><UacDialog {...args} /></div>{/snippet}
 </Story>
 <Story name="UserInControl" args={{ reason: 'Ask before every action is on, so every action needs your approval.' }}>

@@ -111,7 +111,7 @@ describe('DesktopController', () => {
   it('Resume leaves a Continue message for each chat that Pause stopped, and Continue asks the agent to carry on', async () => {
     const { controller } = await started()
     controller.sessions.items = controller.sessions.items.map((s) => (s.id === 1 ? { ...s, status: 'working' as const } : s))
-    const send = vi.fn(async () => {})
+    const send = vi.fn(async () => true)
     controller.inbox.register(1, { state: emptyAguiState(), pendingInterrupt: null, running: false, resolveInterrupt: async () => {}, send })
     await controller.togglePaused()
     expect(controller.messages).toHaveLength(0)
@@ -133,7 +133,7 @@ describe('DesktopController', () => {
     expect(controller.balloon).toBeNull()
   })
 
-  it('opens Control Centre at a page', async () => {
+  it('opens Control Center at a page', async () => {
     const { api, controller } = await started()
     const spy = vi.spyOn(api.desktop, 'updateView')
     await controller.openControlCentre('permissions')

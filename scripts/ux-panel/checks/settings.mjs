@@ -13,7 +13,7 @@ export const checks = {
   async 'T16.2'(ctx, { answer }) {
     // Free text: always MANUAL (a keyword such as "no" would match almost any answer).
     void ctx
-    return manual("nothing to verify in the app state; researcher must verify the panelist's answer" + (answer ? ` ("${answer}")` : '') + ': no, turning off Code does not stop Notepad from writing files (both provide Write files). The answer must come from the screen or the manual (check the log: Control Centre or Help opened)')
+    return manual("nothing to verify in the app state; researcher must verify the panelist's answer" + (answer ? ` ("${answer}")` : '') + ': no, turning off Code does not stop Notepad from writing files (both provide Write files). The answer must come from the screen or the manual (check the log: Control Center or Help opened)')
   },
 
   async 'T17.1'(ctx) {
