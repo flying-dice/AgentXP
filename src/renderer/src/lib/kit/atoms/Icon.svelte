@@ -12,7 +12,9 @@
 
   let { name, size = 16, title, class: className = '', ...rest }: Props = $props()
 
-  const markup = $derived(iconMarkup(name))
+  // Gradient ids must be unique per icon instance (see `iconMarkup`).
+  const uid = $props.id()
+  const markup = $derived(iconMarkup(name, uid))
 </script>
 
 <svg
