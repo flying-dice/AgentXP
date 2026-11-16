@@ -96,7 +96,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Dialog: about | The About Browser box. | `browser-about` |
 | Dialog: about ok | Closes the About box. | `browser-about-ok` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `browser-menu-chat-pane` |
-| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
+| Chat pane edge | The tab at the right edge with a chat icon and the word Chat. Click it to open the chat pane. | `chat-pane-toggle` |
 | Menu: new tab | File menu: opens a new tab. | `browser-menu-new-tab` |
 | Menu: close tab | File menu: closes the tab. | `browser-menu-close-tab` |
 | Menu: close | Closes the window. Alt+F4. | `browser-menu-close` |

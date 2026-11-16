@@ -3,12 +3,14 @@
    * The chat pane of an app window: the same collapsible right aside in every app (manuals/embedded-chat.md), hosted by the
    * window frame so no app wires it. It starts collapsed as a slim toggle on the frame edge; View > Chat pane and
    * Ctrl+Shift+C open it. The session is the window's `aside` session: created on the first message, deleted by "New
-   * conversation" and when the window closes. The app only registers its context (`host.setContext`).
+   * conversation" and when the window closes. The app only registers its context (`host.setContext`). The collapsed strip is a
+   * tab with the word Chat that pulses while the chat has news; an app in Focus mode hides it (UX-153).
    */
   import { untrack } from 'svelte'
   import type { AppWindowState } from '@shared/desktop'
   import EmbeddedChat from '../apps/shared/EmbeddedChat.svelte'
-  import Icon from '../kit/atoms/Icon.svelte'
+  import ChatStrip from '../apps/shared/ChatStrip.svelte'
+  import { chatStripHidden } from './chatStrip.svelte'
   import { chatAboutTitle } from '../app/session/folderLabel'
   import { OPEN_PANE_TIP } from '../app/session/chatPaneText'
   import { PANE_MIN_WIDTH, suggestionsFor } from './chatPane'
@@ -40,6 +42,14 @@
   })
   const sessionId = $derived(local ?? w.asideSessionId ?? 0)
 
+  // News: the chat changed while the pane was closed.
+  const live = $derived(sessionId > 0 ? desktop.sessions.byId(sessionId) : null)
+  let seenAt = $state<string | null>(null)
+  $effect(() => {
+    if (!pane.collapsed || seenAt === null) seenAt = live?.updatedAt ?? ''
+  })
+  const news = $derived(pane.collapsed && live !== null && seenAt !== null && live.updatedAt > seenAt)
+
   // What is selected in the app is not reactive state: the chips ask again when the selection changes or the pointer comes to the pane.
   let seen = $state(0)
   $effect(() => {
@@ -65,10 +75,9 @@
 </script>
 
 {#if pane.collapsed}
-  <button type="button" class="edge" data-testid="chat-pane-toggle" aria-label="Open the chat pane" title="{OPEN_PANE_TIP} (Ctrl+Shift+C)" onclick={() => desktop.setChatPane(w.id, true)}>
-    <Icon name="chevron-left" size={14} />
-    <span class="label">Chat</span>
-  </button>
+  {#if !chatStripHidden.has(w.id)}
+    <ChatStrip testid="chat-pane-toggle" {news} title="{OPEN_PANE_TIP} (Ctrl+Shift+C)" onopen={() => desktop.setChatPane(w.id, true)} />
+  {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="pane" data-testid="chat-pane" data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++}>
@@ -101,27 +110,5 @@
     min-width: 0;
     min-height: 0;
     border-left: 1px solid #9aa9bf;
-  }
-  .edge {
-    flex: none;
-    width: 28px;
-    min-width: 28px;
-    padding: 6px 0 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    background: linear-gradient(90deg, #f9fbfd, #e4ecf6);
-    border: 0;
-    border-left: 1px solid #9aa9bf;
-    border-radius: 0;
-    cursor: pointer;
-  }
-  .label {
-    writing-mode: vertical-rl;
-    color: var(--w7-text-muted);
-  }
-  .edge:hover {
-    background: var(--w7-btn-hover-face);
   }
 </style>

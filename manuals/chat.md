@@ -168,7 +168,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Open in editor | Shows the selected file in Code. | `changes-open-editor` |
 | Reverted row | A change that was reverted stays in the list, in grey, with the words "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
 | Reverted text | The words on a reverted row. | `changes-reverted-text` |
-| Open Recycle Bin | The link under the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
+| Open Recycle Bin | The link in the one line above the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
 | Changes pane | The whole pane: the list, the diff and the buttons. | `changes-pane` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
 | Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |

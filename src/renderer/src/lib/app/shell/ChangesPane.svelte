@@ -2,8 +2,9 @@
   /**
    * The Changes pane: the files an agent changed, with a preview of the selected change and Revert. It is the one
    * place to review changes: the chat window and the Code window show this same pane (UX-40).
-   * The list shows the whole file name beside its counts (UX-111, UX-116); a bar between the list and the diff gives the
-   * diff most of the height and remembers where the user put it. Reverted files stay in the list (UX-117).
+   * The list shows the whole file name beside its counts (UX-111, UX-116); it takes at least half of the pane and room for six
+   * rows (UX-151), and a bar between the list and the diff remembers where the user put it. Reverted files stay in the list
+   * (UX-117); the notice about them is one line above the list, so it never takes height from the list.
    */
   import type { FileChangeDto } from '@shared/models'
   import Button from '../../kit/atoms/Button.svelte'
@@ -12,8 +13,8 @@
   import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
   import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
   import { localStore } from '../../desktop/chatPane'
-  import { REVERTED_LABEL, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
-  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, defaultListHeight, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
+  import { REVERTED_LABEL, REVERTED_NOTE, changeKindLabel, changesSummary, fileChangeCounts, linesLabel, splitChangePath, splitForMiddleEllipsis } from '../changes/changeFormat'
+  import { BESIDE_MAX_HEIGHT, BESIDE_MIN_WIDTH, DIFF_MIN_HEIGHT, DIFF_MIN_WIDTH, LIST_MIN_HEIGHT, LIST_MIN_WIDTH, SPLITTER, defaultListHeight, listHeightFor, readListSize, writeListSize, type RevertedChange } from '../changes/changesLayout'
 
   interface Props {
     changes: FileChangeDto[]
@@ -28,9 +29,13 @@
     onopeneditor?: (change: FileChangeDto) => void
     /** The link under a reverted row; without it the link is not shown. */
     onopenrecyclebin?: () => void
+    /** How many files Git lists as changed. When the agent changed nothing but this is more than 0, the pane says so (UX-152). */
+    gitCount?: number
+    /** The link beside that sentence; without it the link is not shown. */
+    onopengit?: () => void
   }
 
-  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin }: Props = $props()
+  let { changes, selectedId = $bindable(null), reverted = [], layoutKey = 'default', onrevert, onopeneditor, onopenrecyclebin, gitCount = 0, onopengit }: Props = $props()
   const uid = $props.id()
   const reasonId = `${uid}-reason`
 
@@ -65,9 +70,19 @@
   ])
   const selected = $derived(changes.find((c) => c.id === selectedId) ?? null)
 
-  // The list opens with room for its rows; the diff has the rest. A height the user chose for this window wins.
+  // The list opens with at least half of the room and six rows; the diff has the rest. A height the user chose for this window wins.
   // svelte-ignore state_referenced_locally
-  let listHeight = $state(readListSize(localStore(), layoutKey) ?? defaultListHeight(changes.length + reverted.length))
+  const chosenHeight = readListSize(localStore(), layoutKey)
+  let splitHeight = $state(0)
+  let listHeight = $state(chosenHeight ?? 0)
+  let autoHeight = 0
+  $effect(() => {
+    if (chosenHeight !== null || splitHeight <= 0) return
+    // Only the room and the number of rows move it; the user's drag (a value other than the automatic one) is kept after that.
+    const next = defaultListHeight(rows.length, splitHeight)
+    // It grows with the room and never shrinks by itself: a notice above the list takes height from the diff, not from the list.
+    if (listHeight === 0 || (listHeight === autoHeight && next > listHeight)) listHeight = autoHeight = next
+  })
 
   // A wide, short pane (the Code window's dock) puts the diff beside the list instead of under it, so the diff keeps its height.
   let paneWidth = $state(0)
@@ -79,6 +94,9 @@
   // Why a button is grey, in words (the tooltip and the line beside the buttons).
   const revertReason = $derived(selected ? null : 'Select a changed file first.')
   const editorReason = $derived(!selected ? 'Select a changed file first.' : selected.kind === 'deleted' ? 'A deleted file cannot be opened.' : null)
+  // Git lists files but the agent changed none: say so, with the way to Git (UX-152).
+  const gitOnly = $derived(changes.length === 0 && reverted.length === 0 && gitCount > 0)
+  const gitSentence = $derived(`The agent changed nothing in this chat. Git shows ${gitCount} changed ${gitCount === 1 ? 'file' : 'files'}.`)
   const reason = $derived(changes.length === 0 ? null : (revertReason ?? editorReason))
 
   async function revert(): Promise<void> {
@@ -93,7 +111,7 @@
       {rows}
       testid="changes-list"
       selected={selected ? [String(selected.id)] : []}
-      emptyText="No pending changes in this chat."
+      emptyText={gitOnly ? 'The agent changed nothing in this chat.' : 'No pending changes in this chat.'}
       aria-label="Changed files"
       onselect={(ids) => (selectedId = ids[0] && !ids[0].startsWith('reverted-') ? Number(ids[0]) : null)}
     >
@@ -111,12 +129,6 @@
       {/snippet}
     </ListView>
   </div>
-  {#if reverted.length > 0 && onopenrecyclebin}
-    <div class="note" data-testid="changes-reverted-note">
-      {REVERTED_LABEL}.
-      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open Recycle Bin</button>
-    </div>
-  {/if}
 {/snippet}
 
 {#snippet diffPanel()}
@@ -132,11 +144,24 @@
 {/snippet}
 
 <div class="changes" data-testid="changes-pane" bind:clientWidth={paneWidth} bind:clientHeight={paneHeight}>
-  <div class="split" class:beside>
+  {#if gitOnly}
+    <div class="note" data-testid="changes-git-note">
+      {gitSentence}
+      {#if onopengit}<button type="button" class="link" data-testid="changes-open-git" onclick={onopengit}>Open Git</button>{/if}
+    </div>
+  {/if}
+  {#if reverted.length > 0 && onopenrecyclebin}
+    <div class="note line" data-testid="changes-reverted-note">
+      <span class="text">{REVERTED_NOTE}</span>
+      <button type="button" class="link" data-testid="changes-open-recycle-bin" onclick={onopenrecyclebin}>Open Recycle Bin</button>
+    </div>
+  {/if}
+  <!-- The split never gets less than its list and the diff's least height: the pane scrolls as a whole instead (UX-151). -->
+  <div class="split" class:beside bind:clientHeight={splitHeight} style:min-height={beside ? undefined : `${Math.max(listHeight, listHeightFor(6)) + SPLITTER + DIFF_MIN_HEIGHT}px`}>
     {#if beside}
       <SplitContainer orientation="vertical" bind:splitterDistance={listWidth} panel1MinSize={LIST_MIN_WIDTH} panel2MinSize={DIFF_MIN_WIDTH} fixedPanel="panel2" splitterLabel="Resize the list of changed files" onchange={(w) => writeListSize(localStore(), `${layoutKey}-beside`, w)} panel1={listPanel} panel2={diffPanel} />
-    {:else}
-      <SplitContainer orientation="horizontal" bind:splitterDistance={listHeight} panel1MinSize={LIST_MIN_HEIGHT} panel2MinSize={DIFF_MIN_HEIGHT} fixedPanel="panel1" splitterLabel="Resize the list of changed files" onchange={(h) => writeListSize(localStore(), layoutKey, h)} panel1={listPanel} panel2={diffPanel} />
+    {:else if listHeight > 0}
+      <SplitContainer orientation="horizontal" bind:splitterDistance={listHeight} panel1MinSize={LIST_MIN_HEIGHT} panel2MinSize={DIFF_MIN_HEIGHT} fixedPanel="panel1" splitterLabel="Resize the list of changed files" onchange={(h) => h !== autoHeight && writeListSize(localStore(), layoutKey, h)} panel1={listPanel} panel2={diffPanel} />
     {/if}
   </div>
   {#if reason}<div class="reason" id={reasonId} data-testid="changes-reason">{reason}</div>{/if}
@@ -228,6 +253,21 @@
   .reason {
     flex: none;
     color: var(--w7-text-muted);
+  }
+  /* One line: the words give way (ellipsis), the link stays. */
+  .note.line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .note.line .text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note.line .link {
+    flex: none;
   }
   .link {
     min-height: 24px;
