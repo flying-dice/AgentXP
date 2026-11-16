@@ -1,0 +1,66 @@
+/*
+ * Windows 7 (Aero Basic / WinForms) design tokens, taken from docs/design.
+ * Kit components read these variables; never hard-code colours in components
+ * when a token exists.
+ */
+:root {
+  --xp-font: 12px/1.35 'Segoe UI', 'Noto Sans', Tahoma, sans-serif;
+  --xp-font-mono: 12px/17px Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+
+  --xp-text: #000;
+  --xp-text-disabled: #6d6d6d;
+  --xp-text-muted: #555;
+  --xp-face: #f0f0f0;
+  --xp-window: #fff;
+  --xp-desktop: #1e5aa8;
+
+  --xp-border: #707070;
+  --xp-border-light: #d5d5d5;
+  --xp-border-disabled: #adb2b5;
+  --xp-input-border: #abadb3;
+  --xp-input-border-top: #8e9097;
+  --xp-group-border: #d5dfe5;
+  --xp-panel-border: #898c95;
+
+  --xp-btn-face: linear-gradient(#f2f2f2 0, #ebebeb 49%, #ddd 50%, #cfcfcf 100%);
+  --xp-btn-hover-border: #3c7fb1;
+  --xp-btn-hover-face: linear-gradient(#eaf6fd 0, #d9f0fc 49%, #bee6fd 50%, #a7d9f5 100%);
+  --xp-btn-active-border: #2c628b;
+  --xp-btn-active-face: linear-gradient(#e5f4fc 0, #c4e5f6 49%, #98d1ef 50%, #68b3db 100%);
+  --xp-btn-default-border: #3399ff;
+
+  --xp-hot-border: #b8d6fb;
+  --xp-hot-face: linear-gradient(#fafbfd, #ebf3fd);
+  --xp-select-border: #7da2ce;
+  --xp-select-face: linear-gradient(#dcebfc, #c1dbfc);
+  --xp-select-inactive-face: linear-gradient(#f8f8f8, #e5e5e5);
+
+  --xp-toolbar-hover-border: #98b8e0;
+  --xp-toolbar-hover-face: linear-gradient(#fbfcfe, #e3ecf8 49%, #d3e1f4 50%, #e0ebf9);
+  --xp-toolbar-face: linear-gradient(#fdfeff, #e8eff8 50%, #dce6f4 51%, #e6eef9);
+
+  --xp-menu-face: #f7f7f7;
+  --xp-menu-border: #979797;
+  --xp-menu-hot-border: #a8d8eb;
+  --xp-menu-hot-face: linear-gradient(#f4fafe, #d6ebf9);
+  --xp-menubar-hot-border: #a8c4e6;
+  --xp-menubar-hot-face: linear-gradient(#f6faff, #dbe9f9);
+
+  --xp-tab-accent: #f0a43c;
+  --xp-progress-fill: linear-gradient(#bff2b4 0, #4fd34e 45%, #1fa71f 50%, #5de35c 100%);
+
+  --xp-focus-outline: 1px dotted #000;
+  --xp-shadow-popup: 3px 3px 4px rgba(0, 0, 0, 0.3);
+
+  --xp-diff-hunk-bg: #eef3fb;
+  --xp-diff-hunk-fg: #1c3d6e;
+  --xp-diff-del-bg: #ffe3e3;
+  --xp-diff-del-fg: #7a0000;
+  --xp-diff-add-bg: #e1f7e1;
+  --xp-diff-add-fg: #0b4d0b;
+  --xp-console-bg: #0c0c0c;
+  --xp-console-fg: #cccccc;
+
+  --xp-accent-claude: #c15f3c;
+  --xp-link: #0066cc;
+}

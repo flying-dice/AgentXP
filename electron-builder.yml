@@ -1,0 +1,19 @@
+appId: com.flyingdice.agentxp
+productName: AgentXP
+directories:
+  buildResources: resources
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!.storybook/*'
+  - '!{electron.vite.config.ts,tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
+asarUnpack:
+  - resources/**
+  - node_modules/better-sqlite3/**
+win:
+  target: nsis
+linux:
+  target: AppImage
+mac:
+  target: dmg

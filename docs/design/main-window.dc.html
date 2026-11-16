@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Claude Code main window</title>
+<script src="68fe3152-0dc5-40c8-a9b4-67dc441d31dd"></script>
+<meta name="hz:slide-selector" content="[data-canvas-width]"><meta name="hz:canvas-width" content="1280"><meta name="hz:canvas-height" content="800"></head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+.btn{min-width:75px;height:23px;padding:0 10px;border:1px solid #707070;border-radius:3px;background:linear-gradient(#f2f2f2 0,#ebebeb 49%,#ddd 50%,#cfcfcf 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8);color:#000;cursor:default;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn:hover{border-color:#3c7fb1;background:linear-gradient(#eaf6fd 0,#d9f0fc 49%,#bee6fd 50%,#a7d9f5 100%)}
+.btn:active{border-color:#2c628b;background:linear-gradient(#e5f4fc 0,#c4e5f6 49%,#98d1ef 50%,#68b3db 100%)}
+.btn.def{border-color:#3399ff;box-shadow:inset 0 0 0 1px #bfe3ff,0 0 3px rgba(51,153,255,.7)}
+.btn:disabled{border-color:#adb2b5;background:#f4f4f4;box-shadow:none;color:#6d6d6d}
+.btn:focus-visible,.tb:focus-visible,.mb:focus-visible,.mi:focus-visible,.tab:focus-visible,.tlabel:focus-visible,.lvr:focus-visible,.cmd:focus-visible{outline:1px dotted #000;outline-offset:-3px}
+.tb{height:28px;padding:0 7px;border:1px solid transparent;border-radius:3px;background:transparent;display:inline-flex;align-items:center;gap:5px;color:#000;cursor:default;white-space:nowrap}
+.tb:hover{border-color:#98b8e0;background:linear-gradient(#fbfcfe,#e3ecf8 49%,#d3e1f4 50%,#e0ebf9)}
+.tb:active{border-color:#6d94c9;background:linear-gradient(#d4e2f4,#c1d5ee)}
+.tb:disabled{color:#6d6d6d}
+.tb:disabled svg{opacity:.45}
+.tsep{width:1px;height:22px;margin:0 4px;background:#b5c2d6;border-right:1px solid #fff}
+.mb{height:22px;padding:0 8px;border:1px solid transparent;background:transparent;color:#000;cursor:default}
+.mb:hover{border-color:#a8c4e6;background:linear-gradient(#f6faff,#dbe9f9)}
+.menu{position:absolute;left:0;top:21px;min-width:230px;padding:2px;background:#f7f7f7;border:1px solid #979797;box-shadow:3px 3px 4px rgba(0,0,0,.3)}
+.mi{width:100%;height:23px;padding:0 6px 0 28px;border:1px solid transparent;background:transparent;display:flex;align-items:center;justify-content:space-between;gap:24px;text-align:left;color:#000;cursor:default}
+.mi:hover{border-color:#a8d8eb;background:linear-gradient(#f4fafe,#d6ebf9);border-radius:2px}
+.mi:disabled{color:#6d6d6d}
+.mk{color:#444}
+.msep{height:1px;margin:3px 2px 3px 26px;background:#d7d7d7;border-bottom:1px solid #fff}
+.tab{height:22px;padding:0 12px;border:1px solid #898c95;border-bottom:0;border-radius:3px 3px 0 0;background:linear-gradient(#f6f6f6,#e4e4e4);color:#000;cursor:default;margin-right:-1px}
+.tab:hover{background:linear-gradient(#f2fafe,#d4ecfa);border-color:#7eb4ea}
+.trow{display:flex;align-items:center;height:22px}
+.tarrow{width:16px;height:20px;padding:0;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:default}
+.tlabel{height:20px;padding:0 4px;border:1px solid transparent;border-radius:2px;background:transparent;display:inline-flex;align-items:center;gap:4px;color:#000;cursor:default;white-space:nowrap}
+.tlabel:hover{border-color:#b8d6fb;background:linear-gradient(#fafbfd,#ebf3fd)}
+.lvh{height:20px;padding:0 6px;border:0;border-right:1px solid #d5d5d5;background:linear-gradient(#fff,#f1f1f1 90%,#e6e6e6);text-align:left;color:#000}
+.lvr{width:100%;display:flex;height:20px;align-items:center;padding:0;border:1px solid transparent;background:transparent;text-align:left;color:#000;cursor:default}
+.lvr:hover{border-color:#b8d6fb;background:linear-gradient(#fafbfd,#ebf3fd)}
+.dl{display:block;padding:0 6px;white-space:pre;font:12px/17px Consolas,"DejaVu Sans Mono","Liberation Mono",monospace}
+.in{border:1px solid #abadb3;border-top-color:#8e9097;background:#fff;color:#000}
+.cb{height:21px;border:1px solid #7a7a7a;border-radius:2px;background:linear-gradient(#fff,#ececec);padding:0 3px}
+.pb{height:14px;border:1px solid #bcbcbc;background:#e6e6e6;border-radius:2px;overflow:hidden;position:relative}
+.pbf{height:100%;background:linear-gradient(#bff2b4 0,#4fd34e 45%,#1fa71f 50%,#5de35c 100%)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid #b9d3ee;border-top-color:#2a6ebb;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes marq{0%{left:-35%}100%{left:100%}}
+.marq{position:absolute;top:0;height:100%;width:35%;background:linear-gradient(#bff2b4 0,#4fd34e 45%,#1fa71f 50%,#5de35c 100%);animation:marq 1.6s linear infinite}
+.cmd{width:100%;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid transparent;border-radius:3px;background:transparent;text-align:left;cursor:default}
+.cmd:hover{border-color:#b6d7ee;background:linear-gradient(#fbfdff,#e3f2fc)}
+.cmd:active{background:linear-gradient(#e0f1fb,#c5e4f6)}
+.sb{overflow:auto;scrollbar-width:auto}
+.sb::-webkit-scrollbar{width:17px;height:17px}
+.sb::-webkit-scrollbar-track{background:#f0f0f0;border-left:1px solid #e2e2e2}
+.sb::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#f4f4f4,#dcdcdc 50%,#cfcfcf);border:1px solid #979797;border-radius:2px}
+.sb::-webkit-scrollbar-corner{background:#f0f0f0}
+.pgr{display:flex;align-items:center;min-height:23px;border-bottom:1px solid #ededed}
+</style>
+</helmet>
+
+<div style="position:relative;width:1280px;height:800px;overflow:hidden;font:12px/1.3 'Segoe UI',Tahoma,'Noto Sans','DejaVu Sans',Arial,sans-serif;color:#000;background:radial-gradient(ellipse at 72% 22%,rgba(150,215,250,.9) 0,rgba(150,215,250,0) 46%),radial-gradient(ellipse at 15% 90%,rgba(8,52,120,.85) 0,rgba(8,52,120,0) 55%),linear-gradient(160deg,#134b8a 0,#2a86c8 55%,#7cc4ee 100%)" data-canvas-width="1280" data-canvas-height="800" data-document-role="page" data-label="Main window (interactive)">
+
+<!-- ===== Application window ===== -->
+<div style="position:absolute;left:40px;top:22px;width:1200px;height:710px;display:flex;flex-direction:column;padding:0 7px 7px;border:1px solid #27405f;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(214,230,250,.97) 0,rgba(170,200,238,.95) 34px,rgba(184,208,240,.96) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),0 10px 36px rgba(0,0,0,.55)">
+
+  <!-- title bar -->
+  <div style="flex:none;height:30px;display:flex;align-items:center;gap:7px;padding-left:2px">
+    <svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><g stroke="#d97757" stroke-width="1.7" stroke-linecap="round"><line x1="8" y1="1.5" x2="8" y2="14.5"></line><line x1="1.5" y1="8" x2="14.5" y2="8"></line><line x1="3.4" y1="3.4" x2="12.6" y2="12.6"></line><line x1="12.6" y1="3.4" x2="3.4" y2="12.6"></line></g></svg>
+    <span style="flex:1;font-size:12px;color:#000;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">{{ windowTitle }}</span>
+    <div style="display:flex;align-self:flex-start;margin-top:-1px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)">
+      <button aria-label="Minimize" style="width:29px;height:19px;border:0;border-right:1px solid #3a4f6e;background:linear-gradient(#e6eef9 0,#c3d4ea 48%,#a9c0de 50%,#c3d6ee 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="10" height="8" sc-camel-view-box="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8"></rect></svg></button>
+      <button aria-label="Maximize" style="width:29px;height:19px;border:0;border-right:1px solid #3a4f6e;background:linear-gradient(#e6eef9 0,#c3d4ea 48%,#a9c0de 50%,#c3d6ee 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="10" height="9" sc-camel-view-box="0 0 10 9" aria-hidden="true"><rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.6"></rect><rect x="1" y="1" width="8" height="2" fill="#fff" stroke="#3a4f6e" stroke-width=".6"></rect></svg></button>
+      <button aria-label="Close" style="width:47px;height:19px;border:0;background:linear-gradient(#e9a79f 0,#d4695d 48%,#bb2f1f 50%,#d8584a 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="12" height="10" sc-camel-view-box="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.4" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5"></line><line x1="10" y1="1.5" x2="2" y2="8.5"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5"></line><line x1="10" y1="1.5" x2="2" y2="8.5"></line></g></svg></button>
+    </div>
+  </div>
+
+  <!-- client area -->
+  <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:#f0f0f0;border:1px solid #5d6c82">
+
+    <!-- menu strip -->
+    <div style="position:relative;z-index:50;flex:none;height:22px;display:flex;align-items:center;padding:0 2px;background:linear-gradient(#fdfefe,#e3ebf6);border-bottom:1px solid #b4bfcf">
+      <sc-for list="{{ menus }}" as="m" hint-placeholder-count="6">
+        <div style="position:relative">
+          <button class="mb" style="{{ m.style }}" sc-camel-on-click="{{ m.toggle }}" sc-camel-on-mouse-enter="{{ m.hover }}">{{ m.label }}</button>
+          <sc-if value="{{ m.open }}" hint-placeholder-val="{{ false }}">
+            <div class="menu">
+              <sc-for list="{{ m.items }}" as="it" hint-placeholder-count="3">
+                <sc-if value="{{ it.sep }}" hint-placeholder-val="{{ false }}"><div class="msep"></div></sc-if>
+                <sc-if value="{{ it.isBtn }}" hint-placeholder-val="{{ true }}"><button class="mi" sc-camel-on-click="{{ it.act }}"><span>{{ it.label }}</span><span class="mk">{{ it.key }}</span></button></sc-if>
+                <sc-if value="{{ it.isLink }}" hint-placeholder-val="{{ false }}"><a class="mi" href="Settings.dc.html"><span>{{ it.label }}</span><span class="mk">{{ it.key }}</span></a></sc-if>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- tool strip -->
+    <div style="position:relative;z-index:10;flex:none;height:34px;display:flex;align-items:center;gap:1px;padding:0 4px;background:linear-gradient(#fafcfe,#dce6f4);border-bottom:1px solid #aab7cb">
+      <button class="tb" sc-camel-on-click="{{ newSession }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#3f8be0" stroke="#1d5fae"></circle><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"></path></svg>New session</button>
+      <button class="tb" sc-camel-on-click="{{ openFolder }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg>Open folder</button>
+      <button class="tb" sc-camel-on-click="{{ saveTranscript }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M2 2h10l2 2v10H2z" fill="#6b86a8" stroke="#34506f"></path><rect x="4" y="2" width="7" height="4" fill="#eef3f9"></rect><rect x="4" y="9" width="8" height="5" fill="#fff"></rect></svg>Save</button>
+      <span class="tsep"></span>
+      <button class="tb" sc-camel-on-click="{{ undoLast }}" disabled="{{ noChanges }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M3 7h7a3.5 3.5 0 010 7H6" fill="none" stroke="#2f6db5" stroke-width="2"></path><path d="M6 3L2 7l4 4z" fill="#2f6db5"></path></svg>Undo edit</button>
+      <button class="tb" sc-camel-on-click="{{ compact }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M8 1v5M5 4l3 3 3-3M8 15v-5M5 12l3-3 3 3" fill="none" stroke="#4d7a2b" stroke-width="1.8"></path></svg>Compact</button>
+      <span class="tsep"></span>
+      <button class="tb" sc-camel-on-click="{{ stop }}" disabled="{{ notBusy }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2" fill="#d9403a" stroke="#8f1d18"></rect></svg>Stop</button>
+      <span style="flex:1"></span>
+      <a class="tb" href="Settings.dc.html"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4" fill="none" stroke="#56606d" stroke-width="1.6"></circle><g stroke="#56606d" stroke-width="2.2"><line x1="8" y1="1" x2="8" y2="3.2"></line><line x1="8" y1="12.8" x2="8" y2="15"></line><line x1="1" y1="8" x2="3.2" y2="8"></line><line x1="12.8" y1="8" x2="15" y2="8"></line><line x1="3" y1="3" x2="4.5" y2="4.5"></line><line x1="11.5" y1="11.5" x2="13" y2="13"></line><line x1="13" y1="3" x2="11.5" y2="4.5"></line><line x1="4.5" y1="11.5" x2="3" y2="13"></line></g></svg>Options</a>
+    </div>
+
+    <!-- content row -->
+    <div style="flex:1;min-height:0;display:flex;padding:4px;gap:0">
+
+      <!-- LEFT: explorer -->
+      <div style="flex:none;width:250px;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:none;display:flex;padding-left:3px">
+          <button class="tab" style="{{ tabSessions }}" sc-camel-on-click="{{ showSessions }}">Sessions</button>
+          <button class="tab" style="{{ tabFiles }}" sc-camel-on-click="{{ showFiles }}">Files</button>
+        </div>
+        <div class="sb" style="flex:1;min-height:0;background:#fff;border:1px solid #898c95;padding:3px 2px">
+          <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="6">
+            <div class="trow">
+              <span style="{{ n.pad }}"></span>
+              <sc-if value="{{ n.hasKids }}" hint-placeholder-val="{{ true }}">
+                <button class="tarrow" aria-label="Expand or collapse" sc-camel-on-click="{{ n.toggle }}">
+                  <sc-if value="{{ n.open }}" hint-placeholder-val="{{ false }}"><svg width="10" height="10" sc-camel-view-box="0 0 10 10" aria-hidden="true"><path d="M8.5 2L8.5 8.5L2 8.5z" fill="#404040" stroke="#404040"></path></svg></sc-if>
+                  <sc-if value="{{ n.closed }}" hint-placeholder-val="{{ true }}"><svg width="10" height="10" sc-camel-view-box="0 0 10 10" aria-hidden="true"><path d="M3 1.5L7 5L3 8.5z" fill="#fff" stroke="#6e6e6e"></path></svg></sc-if>
+                </button>
+              </sc-if>
+              <sc-if value="{{ n.noKids }}" hint-placeholder-val="{{ false }}"><span style="width:16px;flex:none"></span></sc-if>
+              <button class="tlabel" style="{{ n.selStyle }}" sc-camel-on-click="{{ n.select }}">
+                <sc-if value="{{ n.isFolder }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg></sc-if>
+                <sc-if value="{{ n.isSession }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2z" fill="#d7e9fb" stroke="#4a7fb8"></path></svg></sc-if>
+                <sc-if value="{{ n.isFile }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6l4 4v9H3z" fill="#fff" stroke="#6b7886"></path><path d="M9 1.5v4h4" fill="#e3eaf2" stroke="#6b7886"></path></svg></sc-if>
+                <span style="{{ n.textStyle }}">{{ n.label }}</span>
+                <span style="color:#8a4b00;font-weight:700">{{ n.badge }}</span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex:none;width:5px"></div>
+
+      <!-- CENTER: conversation -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:none;height:22px;display:flex;align-items:center;gap:8px;padding:0 6px;background:linear-gradient(#f9fbfd,#e4ecf6);border:1px solid #9aa9bf;border-bottom:0">
+          <svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2z" fill="#d7e9fb" stroke="#4a7fb8"></path></svg>
+          <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ activeTitle }}</span>
+          <span style="color:#444;white-space:nowrap">C:\Users\jonathan\source\claude-code-win</span>
+        </div>
+        <div class="sb" style="flex:1;min-height:0;display:flex;flex-direction:column-reverse;background:#fff;border:1px solid #898c95">
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+              <div style="padding:7px 10px 8px;border-bottom:1px solid #eef1f5">
+                <sc-if value="{{ r.isUser }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-weight:700;color:#1b3f8b;margin-bottom:2px">You</div>
+                  <div style="font-size:13px;line-height:1.45;white-space:pre-wrap">{{ r.text }}</div>
+                </sc-if>
+                <sc-if value="{{ r.isClaude }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-weight:700;color:#a8441f;margin-bottom:2px;display:flex;align-items:center;gap:5px"><svg width="12" height="12" sc-camel-view-box="0 0 16 16" aria-hidden="true"><g stroke="#d97757" stroke-width="2" stroke-linecap="round"><line x1="8" y1="1.5" x2="8" y2="14.5"></line><line x1="1.5" y1="8" x2="14.5" y2="8"></line><line x1="3.4" y1="3.4" x2="12.6" y2="12.6"></line><line x1="12.6" y1="3.4" x2="3.4" y2="12.6"></line></g></svg>Claude</div>
+                  <div style="font-size:13px;line-height:1.45;white-space:pre-wrap">{{ r.text }}</div>
+                </sc-if>
+                <sc-if value="{{ r.isTool }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid #c5d1e1;border-radius:3px;background:#f7f9fc;overflow:hidden">
+                    <div style="display:flex;align-items:center;gap:7px;min-height:26px;padding:3px 7px">
+                      <span style="width:16px;height:16px;flex:none;display:inline-flex;align-items:center;justify-content:center">
+                        <sc-if value="{{ r.isRun }}" hint-placeholder-val="{{ false }}"><span class="spin"></span></sc-if>
+                        <sc-if value="{{ r.isOk }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#3fae3f" stroke="#237a23"></circle><path d="M4.5 8.2l2.4 2.4 4.6-4.8" fill="none" stroke="#fff" stroke-width="2"></path></svg></sc-if>
+                        <sc-if value="{{ r.isWait }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M8 1L14 3.4v4.4c0 3.2-2.4 5.9-6 7.2-3.6-1.300-6-4-6-7.200V3.400z" fill="#4a90e2" stroke="#1d5fae"></path><path d="M8 4.5v4.300M8 10.300v1.300" stroke="#fff" stroke-width="1.800"></path></svg></sc-if>
+                        <sc-if value="{{ r.isBad }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#d9403a" stroke="#8f1d18"></circle><path d="M5 5l6 6M11 5l-6 6" stroke="#fff" stroke-width="2"></path></svg></sc-if>
+                      </span>
+                      <span style="font-weight:700">{{ r.tool }}</span>
+                      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:12px Consolas,'DejaVu Sans Mono',monospace;color:#222">{{ r.arg }}</span>
+                      <span style="color:#444;white-space:nowrap">{{ r.statusLabel }}</span>
+                      <sc-if value="{{ r.canToggle }}" hint-placeholder-val="{{ false }}"><button class="btn" style="min-width:0;height:19px;padding:0 7px" sc-camel-on-click="{{ r.toggle }}">{{ r.toggleLabel }}</button></sc-if>
+                    </div>
+                    <sc-if value="{{ r.showResult }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ r.resultStyle }}">{{ r.result }}</div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:8px 10px;display:flex;align-items:center;gap:10px;color:#333">
+                <span>Claude is working…</span>
+                <div class="pb" style="width:160px"><div class="marq"></div></div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- composer -->
+        <div style="flex:none;margin-top:4px;padding:6px;background:linear-gradient(#f7f9fc,#e8eef7);border:1px solid #9aa9bf">
+          <label for="msg" style="display:block;margin-bottom:3px">Message to Claude <span style="color:#444">(Enter to send, Shift+Enter for a new line)</span></label>
+          <textarea id="msg" class="in" style="display:block;width:100%;height:58px;padding:4px 6px;resize:none;font-size:13px;line-height:1.4" value="{{ draft }}" sc-camel-on-change="{{ onDraft }}" sc-camel-on-key-down="{{ onKey }}"></textarea>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+            <label for="mode" style="color:#000">Mode:</label>
+            <sc-raw-select id="mode" class="cb" style="width:170px" value="{{ mode }}" sc-camel-on-change="{{ onMode }}">
+              <option value="ask">Ask before edits</option>
+              <option value="auto">Auto-accept edits</option>
+              <option value="plan">Plan mode (read-only)</option>
+            </sc-raw-select>
+            <label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" checked="{{ includeFile }}" sc-camel-on-change="{{ onInclude }}">Include open file</label>
+            <span style="flex:1"></span>
+            <button class="btn" sc-camel-on-click="{{ attach }}">Attach…</button>
+            <button class="btn" sc-camel-on-click="{{ stop }}" disabled="{{ notBusy }}">Stop</button>
+            <button class="btn def" sc-camel-on-click="{{ send }}" disabled="{{ sendDisabled }}">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:none;width:5px"></div>
+
+      <!-- RIGHT: inspector -->
+      <div style="flex:none;width:330px;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:none;display:flex;padding-left:3px">
+          <button class="tab" style="{{ tabChanges }}" sc-camel-on-click="{{ showChanges }}">Changes{{ changeCount }}</button>
+          <button class="tab" style="{{ tabTasks }}" sc-camel-on-click="{{ showTasks }}">Tasks</button>
+          <button class="tab" style="{{ tabProps }}" sc-camel-on-click="{{ showProps }}">Properties</button>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#fff;border:1px solid #898c95">
+
+          <!-- Changes -->
+          <sc-if value="{{ isChanges }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:6px;gap:6px">
+              <div style="flex:none;height:124px;display:flex;flex-direction:column;border:1px solid #828790;background:#fff">
+                <div style="flex:none;display:flex;border-bottom:1px solid #d5d5d5">
+                  <span class="lvh" style="flex:1">File</span><span class="lvh" style="width:68px">Change</span><span class="lvh" style="width:62px;border-right:0">Lines</span>
+                </div>
+                <div class="sb" style="flex:1;min-height:0">
+                  <sc-for list="{{ changeRows }}" as="c" hint-placeholder-count="1">
+                    <button class="lvr" style="{{ c.style }}" sc-camel-on-click="{{ c.select }}">
+                      <span style="flex:1;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.path }}</span><span style="width:68px;padding:0 6px">{{ c.kind }}</span><span style="width:62px;padding:0 6px">{{ c.delta }}</span>
+                    </button>
+                  </sc-for>
+                  <sc-if value="{{ noChanges }}" hint-placeholder-val="{{ false }}"><div style="padding:8px;color:#555">No pending changes in this session.</div></sc-if>
+                </div>
+              </div>
+              <div class="sb" style="flex:1;min-height:0;border:1px solid #828790;background:#fff">
+                <sc-for list="{{ diffRows }}" as="d" hint-placeholder-count="4">
+                  <span class="dl" style="{{ d.style }}">{{ d.text }}</span>
+                </sc-for>
+                <sc-if value="{{ noChanges }}" hint-placeholder-val="{{ false }}"><div style="padding:8px;color:#555">Select a changed file to view its diff.</div></sc-if>
+              </div>
+              <div style="flex:none;display:flex;justify-content:flex-end;gap:6px">
+                <button class="btn" sc-camel-on-click="{{ undoLast }}" disabled="{{ noChanges }}">Revert</button>
+                <button class="btn" sc-camel-on-click="{{ openEditor }}" disabled="{{ noChanges }}">Open in editor</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Tasks -->
+          <sc-if value="{{ isTasks }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:6px;gap:6px">
+              <div style="flex:none;color:#000">Plan for this request</div>
+              <div class="sb" style="flex:1;min-height:0;border:1px solid #828790;background:#fff;padding:2px">
+                <sc-for list="{{ taskRows }}" as="t" hint-placeholder-count="3">
+                  <label style="display:flex;align-items:center;gap:6px;min-height:22px;padding:0 4px"><input type="checkbox" checked="{{ t.done }}" sc-camel-on-change="{{ t.toggle }}"><span style="{{ t.style }}">{{ t.text }}</span></label>
+                </sc-for>
+                <sc-if value="{{ noTasks }}" hint-placeholder-val="{{ true }}"><div style="padding:6px;color:#555">No tasks yet. Claude lists its plan here once it starts working.</div></sc-if>
+              </div>
+              <div style="flex:none;display:flex;align-items:center;gap:8px">
+                <div class="pb" style="flex:1"><div class="pbf" style="{{ taskBar }}"></div></div>
+                <span style="width:64px;text-align:right">{{ taskSummary }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Properties -->
+          <sc-if value="{{ isProps }}" hint-placeholder-val="{{ false }}">
+            <div class="sb" style="flex:1;min-height:0;padding:6px">
+              <div style="padding:2px 6px;font-weight:700;background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c9c9c9">Session</div>
+              <div class="pgr"><label for="pmodel" style="width:120px;padding-left:6px">Model</label><sc-raw-select id="pmodel" class="cb" style="flex:1;margin-right:4px" value="{{ model }}" sc-camel-on-change="{{ onModel }}"><option value="sonnet">Claude Sonnet 5.5</option><option value="opus">Claude Opus 5.5</option><option value="haiku">Claude Haiku 5.5</option></sc-raw-select></div>
+              <div class="pgr"><label for="pmode" style="width:120px;padding-left:6px">Permission mode</label><sc-raw-select id="pmode" class="cb" style="flex:1;margin-right:4px" value="{{ mode }}" sc-camel-on-change="{{ onMode }}"><option value="ask">Ask before edits</option><option value="auto">Auto-accept edits</option><option value="plan">Plan mode</option></sc-raw-select></div>
+              <div class="pgr"><span style="width:120px;padding-left:6px">Extended thinking</span><label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" checked="{{ thinking }}" sc-camel-on-change="{{ onThinking }}">Enabled</label></div>
+              <div style="margin-top:8px;padding:2px 6px;font-weight:700;background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c9c9c9">Workspace</div>
+              <div class="pgr"><span style="width:120px;padding-left:6px">Folder</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">claude-code-win</span></div>
+              <div class="pgr"><span style="width:120px;padding-left:6px">Git branch</span><span style="flex:1">main</span></div>
+              <div class="pgr"><span style="width:120px;padding-left:6px">Uncommitted files</span><span style="flex:1">{{ dirtyCount }}</span></div>
+              <div style="margin-top:8px;padding:2px 6px;font-weight:700;background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c9c9c9">Context</div>
+              <div class="pgr"><span style="width:120px;padding-left:6px">Tokens used</span><span style="flex:1">{{ tokenText }}</span></div>
+              <div style="padding:6px 6px 2px"><div class="pb"><div class="pbf" style="{{ ctxBar }}"></div></div></div>
+              <div style="padding:6px 6px 0;color:#333">Mode and model apply to the next message in this session.</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- status strip -->
+    <div style="flex:none;height:24px;display:flex;align-items:center;background:linear-gradient(#f5f7fa,#dbe4f1);border-top:1px solid #a9b6c9">
+      <span style="flex:1;min-width:0;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ status }}</span>
+      <span style="padding:0 10px;border-left:1px solid #b5c2d6">Branch: main</span>
+      <span style="padding:0 10px;border-left:1px solid #b5c2d6">{{ modelName }}</span>
+      <span style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #b5c2d6"><span>Context</span><span class="pb" style="width:90px;height:12px"><span class="pbf" style="{{ ctxBar }};display:block"></span></span><span style="width:30px;text-align:right">{{ ctxPct }}</span></span>
+      <span style="padding:0 10px;border-left:1px solid #b5c2d6">Connected</span>
+      <svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true" style="margin:0 2px 0 4px"><g stroke="#9a9a9a" stroke-width="2"><line x1="14" y1="4" x2="4" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line><line x1="14" y1="12" x2="12" y2="14"></line></g></svg>
+    </div>
+
+    <!-- menu click-away -->
+    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;top:0;right:0;bottom:0;z-index:40" sc-camel-on-click="{{ closeMenu }}"></div></sc-if>
+  </div>
+
+  <!-- ===== Permission task dialog (modal) ===== -->
+  <sc-if value="{{ permOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;top:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(20,40,70,.12)">
+      <div role="dialog" aria-label="Permission required" style="width:560px;display:flex;flex-direction:column;padding:0 7px 7px;border:1px solid #27405f;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(214,230,250,.98) 0,rgba(170,200,238,.97) 34px,rgba(184,208,240,.98) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),0 10px 36px rgba(0,0,0,.6)">
+        <div style="height:30px;display:flex;align-items:center;gap:7px;padding-left:2px">
+          <svg width="16" height="16" sc-camel-view-box="0 0 16 16" aria-hidden="true"><path d="M8 1L14 3.4v4.4c0 3.2-2.4 5.9-6 7.2-3.6-1.3-6-4-6-7.2V3.4z" fill="#4a90e2" stroke="#1d5fae"></path><path d="M8 4.5v4.3M8 10.3v1.3" stroke="#fff" stroke-width="1.8"></path></svg>
+          <span style="flex:1;text-shadow:0 0 9px #fff,0 0 5px #fff,0 0 2px #fff">Claude Code</span>
+          <button aria-label="Close and deny" sc-camel-on-click="{{ deny }}" style="align-self:flex-start;margin-top:-1px;width:47px;height:19px;border:1px solid #3a4f6e;border-top:0;border-radius:0 0 5px 5px;background:linear-gradient(#e9a79f 0,#d4695d 48%,#bb2f1f 50%,#d8584a 100%);display:flex;align-items:center;justify-content:center;padding:0"><svg width="12" height="10" sc-camel-view-box="0 0 12 10" aria-hidden="true"><g stroke="#5a1710" stroke-width="3.4" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5"></line><line x1="10" y1="1.5" x2="2" y2="8.5"></line></g><g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5"></line><line x1="10" y1="1.5" x2="2" y2="8.5"></line></g></svg></button>
+        </div>
+        <div style="border:1px solid #5d6c82;background:#f0f0f0">
+          <div style="display:flex;gap:14px;padding:18px 18px 16px;background:#fff">
+            <svg width="40" height="40" sc-camel-view-box="0 0 16 16" aria-hidden="true" style="flex:none"><path d="M8 1L14 3.4v4.4c0 3.2-2.4 5.9-6 7.2-3.6-1.3-6-4-6-7.2V3.4z" fill="#4a90e2" stroke="#1d5fae"></path><path d="M8 4.5v4.3M8 10.3v1.3" stroke="#fff" stroke-width="1.8"></path></svg>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:17px;color:#003399;line-height:1.25">Allow Claude to edit src\auth\redirect.ts?</div>
+              <div style="margin-top:6px;color:#000">Claude wants to replace the hard-coded redirect with a validated returnUrl. Review the change below.</div>
+              <div style="margin-top:10px;border:1px solid #828790;background:#fff;padding:3px 0">
+                <sc-for list="{{ permDiff }}" as="d" hint-placeholder-count="5">
+                  <span class="dl" style="{{ d.style }}">{{ d.text }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 14px 6px;background:#fff">
+            <button class="cmd" sc-camel-on-click="{{ allow }}"><svg width="20" height="20" sc-camel-view-box="0 0 20 20" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="10" cy="10" r="9" fill="#3fae3f" stroke="#237a23"></circle><path d="M5 10h8M10 6l4 4-4 4" fill="none" stroke="#fff" stroke-width="2"></path></svg><span><span style="display:block;font-size:14px;color:#003399">Allow this edit</span><span style="display:block;color:#333">Claude changes the file, then keeps going.</span></span></button>
+            <button class="cmd" sc-camel-on-click="{{ deny }}"><svg width="20" height="20" sc-camel-view-box="0 0 20 20" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="10" cy="10" r="9" fill="#d9403a" stroke="#8f1d18"></circle><path d="M6.500 6.500l7 7M13.500 6.500l-7 7" stroke="#fff" stroke-width="2"></path></svg><span><span style="display:block;font-size:14px;color:#003399">Deny</span><span style="display:block;color:#333">No files change. You can tell Claude what to do instead.</span></span></button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f0f0f0;border-top:1px solid #dfdfdf">
+            <label style="display:inline-flex;align-items:center;gap:5px"><input type="checkbox" checked="{{ remember }}" sc-camel-on-change="{{ onRemember }}">Always allow edits in this session</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+<!-- ===== Taskbar ===== -->
+<div style="position:absolute;left:0;right:0;bottom:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 8px 0 6px;background:linear-gradient(180deg,rgba(150,185,225,.82) 0,rgba(60,100,155,.9) 48%,rgba(25,55,100,.94) 50%,rgba(40,80,130,.96) 100%);border-top:1px solid rgba(255,255,255,.55)">
+  <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 50% 22%,#c4e8ff 0,#4a9be6 38%,#14509a 70%,#0a2f66 100%);border:1px solid #0a2a58;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 6px rgba(120,190,255,.6)"></div>
+  <div aria-hidden="true" style="width:46px;height:34px;border-radius:3px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(rgba(255,255,255,.14),rgba(255,255,255,.04));display:flex;align-items:center;justify-content:center"><svg width="22" height="22" sc-camel-view-box="0 0 16 16"><path d="M1 3.5h5l1.5 1.5H15v8H1z" fill="#f4cf6a" stroke="#b8902c"></path></svg></div>
+  <div aria-hidden="true" style="width:130px;height:34px;border-radius:3px;border:1px solid rgba(255,255,255,.65);background:linear-gradient(rgba(255,255,255,.55),rgba(190,220,250,.28) 50%,rgba(150,190,235,.25));display:flex;align-items:center;gap:7px;padding:0 9px;color:#000;font-size:12px"><svg width="18" height="18" sc-camel-view-box="0 0 16 16"><g stroke="#d97757" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="1.5" x2="8" y2="14.5"></line><line x1="1.5" y1="8" x2="14.5" y2="8"></line><line x1="3.4" y1="3.4" x2="12.6" y2="12.6"></line><line x1="12.6" y1="3.4" x2="3.4" y2="12.6"></line></g></svg>Claude Code</div>
+  <span style="flex:1"></span>
+  <div style="text-align:center;color:#fff;font-size:12px;line-height:1.25;text-shadow:0 0 4px rgba(0,0,0,.7)">01:47<br>16/11/2026</div>
+</div>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  init() {
+    this.uid = 10; this.timers = []; this.tick = 0;
+    this.S = {
+      active: 's1', leftTab: 'sessions', rightTab: 'changes', menu: null,
+      open: { W: true, P: true, D: false, F: true, 'f:src': true, 'f:auth': true },
+      fileSel: '', draft: 'Fix the login redirect so deep links survive sign-in',
+      busy: false, status: 'Ready', mode: 'ask', thinking: true, includeFile: true, model: 'sonnet',
+      perm: null, remember: false, alwaysAllow: false,
+      sessions: [
+        { id: 's1', title: 'Fix login redirect bug' },
+        { id: 's2', title: 'Add parser unit tests' },
+        { id: 's3', title: 'Refactor config loader' }
+      ],
+      convos: {
+        s1: [{ id: 'm1', kind: 'claude', text: 'Ready in claude-code-win on branch main. What would you like to work on?' }],
+        s2: [
+          { id: 'm2', kind: 'user', text: 'Add unit tests for the parseConfig edge cases.' },
+          { id: 'm3', kind: 'claude', text: 'I added six cases to tests/parser.test.ts covering empty input, trailing commas and nested arrays.' },
+          { id: 'm4', kind: 'tool', tool: 'Bash', arg: 'npm test -- parser', state: 'ok', result: 'PASS  tests/parser.test.ts\n  parseConfig\n    6 passed, 6 total\nTime:  1.8 s' }
+        ],
+        s3: [
+          { id: 'm5', kind: 'user', text: 'Refactor the config loader to use async file reads.' },
+          { id: 'm6', kind: 'claude', text: 'I will start by reading src/config/loader.ts.' },
+          { id: 'm7', kind: 'tool', tool: 'Read', arg: 'src/config/loader.ts', state: 'ok', result: 'Read 88 lines' }
+        ]
+      },
+      expanded: { m4: true },
+      changes: [], selChange: 0, tasks: [], tokens: 12430
+    };
+  }
+  r() { this.tick += 1; this.setState({ t: this.tick }); }
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(ms, fn) { this.timers.push(setTimeout(fn, ms)); }
+  push(sid, m) {
+    const S = this.S; m.id = 'm' + (++this.uid);
+    if (m.tool === 'Bash') S.expanded[m.id] = true;
+    S.convos[sid] = (S.convos[sid] || []).concat([m]); this.r(); return m.id;
+  }
+  patch(sid, id, p) {
+    const S = this.S;
+    S.convos[sid] = S.convos[sid].map((m) => (m.id === id ? Object.assign({}, m, p) : m)); this.r();
+  }
+  newSession() {
+    const S = this.S; const id = 's' + (++this.uid);
+    S.sessions = S.sessions.concat([{ id, title: 'New session' }]);
+    S.convos[id] = [{ id: 'g' + id, kind: 'claude', text: 'New session started. What would you like to work on?' }];
+    S.active = id; S.open.P = true; S.leftTab = 'sessions'; S.draft = ''; S.status = 'New session created'; S.menu = null; this.r();
+  }
+  stub(t) { const S = this.S; S.menu = null; S.status = t; this.r(); }
+  send() {
+    const S = this.S; const text = S.draft.trim(); if (!text || S.busy) return;
+    const sid = S.active; S.draft = ''; S.busy = true; S.status = 'Claude is working…';
+    if (S.sessions.filter((s) => s.id === sid)[0].title === 'New session') {
+      S.sessions = S.sessions.map((s) => (s.id === sid ? { id: s.id, title: text.length > 28 ? text.slice(0, 27) + '…' : text } : s));
+    }
+    this.push(sid, { kind: 'user', text });
+    this.flow(sid);
+  }
+  flow(sid) {
+    const S = this.S; let rid, gid;
+    this.later(500, () => this.push(sid, { kind: 'claude', text: 'Let me look at how sign-in redirects are handled today.' }));
+    this.later(700, () => {
+      S.tasks = [
+        { t: 'Find where sign-in redirects', done: false }, { t: 'Preserve returnUrl through sign-in', done: false },
+        { t: 'Run the test suite', done: false }
+      ];
+      S.rightTab = 'tasks'; this.r();
+    });
+    this.later(1100, () => { rid = this.push(sid, { kind: 'tool', tool: 'Read', arg: 'src/auth/redirect.ts', state: 'run' }); });
+    this.later(1900, () => { this.patch(sid, rid, { state: 'ok', result: 'Read 142 lines' }); S.tasks[0].done = true; this.r(); });
+    this.later(2100, () => { gid = this.push(sid, { kind: 'tool', tool: 'Grep', arg: '"returnUrl"  in src/', state: 'run' }); });
+    this.later(2900, () => this.patch(sid, gid, { state: 'ok', result: '7 matches in 3 files' }));
+    this.later(3200, () => this.push(sid, { kind: 'claude', text: 'Found the cause: handleSignIn always redirects to /home and ignores the returnUrl query parameter. I will validate it as a same-origin path and use it instead.' }));
+    this.later(4100, () => {
+      if (S.mode === 'plan') { this.finishPlan(sid); } else { this.askEdit(sid); }
+    });
+  }
+  finishPlan(sid) {
+    const S = this.S;
+    this.push(sid, { kind: 'claude', text: 'Plan (nothing has been changed):\n1. Add sanitizeReturnUrl() to src/auth/redirect.ts so only same-origin paths pass.\n2. Redirect to the validated returnUrl, falling back to /home.\n3. Add tests for deep links and for rejected external URLs.\nSwitch Mode to "Ask before edits" and send a message to apply it.' });
+    S.busy = false; S.status = 'Plan ready'; S.tokens += 3100; this.r();
+  }
+  askEdit(sid) {
+    const S = this.S;
+    const auto = S.mode === 'auto' || S.alwaysAllow;
+    const id = this.push(sid, { kind: 'tool', tool: 'Edit', arg: 'src/auth/redirect.ts', state: auto ? 'run' : 'wait' });
+    if (auto) { S.status = 'Editing src/auth/redirect.ts…'; this.later(600, () => this.applyEdit(sid, id)); }
+    else { S.perm = { sid, id }; S.status = 'Waiting for your permission…'; this.r(); }
+  }
+  applyEdit(sid, id) {
+    const S = this.S;
+    this.patch(sid, id, { state: 'ok', result: '+4 −1 lines in src/auth/redirect.ts' });
+    S.changes = S.changes.concat([{ path: 'src\\auth\\redirect.ts', kind: 'Modified', add: 4, del: 1 }]);
+    S.selChange = S.changes.length - 1; S.rightTab = 'changes'; S.tasks[1].done = true; S.status = 'Claude is working…'; this.r();
+    let bid;
+    this.later(700, () => this.push(sid, { kind: 'claude', text: 'Now I will run the tests to make sure nothing broke.' }));
+    this.later(1300, () => { bid = this.push(sid, { kind: 'tool', tool: 'Bash', arg: 'npm test', state: 'run' }); });
+    this.later(2700, () => {
+      this.patch(sid, bid, { state: 'ok', result: 'PASS  tests/auth.test.ts\nPASS  tests/redirect.test.ts\n\nTests:  12 passed, 12 total\nTime:   2.4 s' });
+      S.tasks[2].done = true; this.r();
+    });
+    this.later(3200, () => {
+      this.push(sid, { kind: 'claude', text: 'Deep links now survive sign-in. I changed src/auth/redirect.ts (+4 −1) and all 12 tests pass. You can review the diff in the Changes pane.' });
+      S.busy = false; S.status = 'Done. 1 file changed'; S.tokens += 6200; this.r();
+    });
+  }
+  allow() {
+    const S = this.S; const p = S.perm; if (!p) return;
+    if (S.remember) S.alwaysAllow = true;
+    S.perm = null; S.status = 'Editing src/auth/redirect.ts…';
+    this.patch(p.sid, p.id, { state: 'run' });
+    this.later(600, () => this.applyEdit(p.sid, p.id));
+  }
+  deny() {
+    const S = this.S; const p = S.perm; if (!p) return;
+    S.perm = null; this.patch(p.sid, p.id, { state: 'denied', result: 'Permission denied. No files were changed.' });
+    this.later(500, () => {
+      this.push(p.sid, { kind: 'claude', text: 'Understood. I have not changed any files. Tell me if you would like a different approach.' });
+      S.busy = false; S.status = 'Ready'; this.r();
+    });
+  }
+  stop() {
+    const S = this.S; if (!S.busy) return;
+    this.timers.forEach(clearTimeout); this.timers = [];
+    Object.keys(S.convos).forEach((k) => {
+      S.convos[k] = S.convos[k].map((m) => (m.kind === 'tool' && (m.state === 'run' || m.state === 'wait') ? Object.assign({}, m, { state: 'stop' }) : m));
+    });
+    S.perm = null; S.busy = false; S.status = 'Stopped'; this.r();
+  }
+  undoLast() {
+    const S = this.S; S.menu = null;
+    if (!S.changes.length) { S.status = 'Nothing to undo'; this.r(); return; }
+    const c = S.changes[Math.min(S.selChange, S.changes.length - 1)];
+    S.changes = S.changes.filter((x) => x !== c); S.selChange = 0; S.status = 'Reverted ' + c.path; this.r();
+  }
+  renderVals() {
+    if (!this.S) this.init();
+    const S = this.S; const self = this; const r = () => self.r();
+    const conv = S.convos[S.active] || [];
+    const sess = S.sessions.filter((s) => s.id === S.active)[0] || S.sessions[0];
+    const tabStyle = (on) => (on ? 'background:#fff;border-top:2px solid #f0a43c;height:24px;margin-top:-2px;position:relative;z-index:2;margin-bottom:-1px;height:25px' : 'margin-top:1px;height:22px');
+    const modelNames = { sonnet: 'Claude Sonnet 5.5', opus: 'Claude Opus 5.5', haiku: 'Claude Haiku 5.5' };
+
+    const go = (fn) => () => { S.menu = null; fn(); r(); };
+    const defs = [
+      { id: 'file', label: 'File', items: [
+        { label: 'New Session', key: 'Ctrl+N', act: () => self.newSession() },
+        { label: 'Open Folder…', key: 'Ctrl+O', act: () => self.stub('Open Folder is not wired up in this prototype') },
+        { label: 'Save Transcript…', key: 'Ctrl+S', act: () => self.stub('Save Transcript is not wired up in this prototype') },
+        { sep: true },
+        { label: 'Exit', key: 'Alt+F4', act: () => self.stub('Exit is disabled in this prototype') } ] },
+      { id: 'edit', label: 'Edit', items: [
+        { label: 'Undo Last Edit', key: 'Ctrl+Z', act: go(() => self.undoLast()) },
+        { label: 'Copy Last Response', key: 'Ctrl+Shift+C', act: () => self.stub('Copy is not wired up in this prototype') },
+        { sep: true },
+        { label: 'Clear Transcript', key: '', act: go(() => { S.convos[S.active] = []; S.status = 'Transcript cleared'; }) } ] },
+      { id: 'view', label: 'View', items: [
+        { label: 'Sessions', key: 'Ctrl+1', act: go(() => { S.leftTab = 'sessions'; }) },
+        { label: 'Files', key: 'Ctrl+2', act: go(() => { S.leftTab = 'files'; }) },
+        { sep: true },
+        { label: 'Changes', key: 'Ctrl+3', act: go(() => { S.rightTab = 'changes'; }) },
+        { label: 'Tasks', key: 'Ctrl+4', act: go(() => { S.rightTab = 'tasks'; }) },
+        { label: 'Properties', key: 'Ctrl+5', act: go(() => { S.rightTab = 'props'; }) } ] },
+      { id: 'session', label: 'Session', items: [
+        { label: 'New Session', key: 'Ctrl+N', act: () => self.newSession() },
+        { label: 'Stop', key: 'Esc', act: go(() => self.stop()) },
+        { sep: true },
+        { label: 'Compact Conversation', key: '/compact', act: () => self.stub('Conversation compacted (simulated)') },
+        { label: 'Rewind to Checkpoint…', key: '', act: () => self.stub('Rewind is not wired up in this prototype') } ] },
+      { id: 'tools', label: 'Tools', items: [
+        { label: 'Options…', key: 'Ctrl+,', href: 'Settings.dc.html' },
+        { label: 'MCP Servers…', key: '', act: () => self.stub('MCP Servers is not wired up in this prototype') },
+        { label: 'Hooks…', key: '', act: () => self.stub('Hooks is not wired up in this prototype') } ] },
+      { id: 'help', label: 'Help', items: [
+        { label: 'Claude Code Help', key: 'F1', act: () => self.stub('Help is not wired up in this prototype') },
+        { label: 'Keyboard Shortcuts', key: '', act: () => self.stub('Shortcuts is not wired up in this prototype') },
+        { sep: true },
+        { label: 'About Claude Code', key: '', act: () => self.stub('Claude Code prototype, Windows 7 style') } ] }
+    ];
+    const menus = defs.map((m) => ({
+      label: m.label, open: S.menu === m.id,
+      style: S.menu === m.id ? 'background:linear-gradient(#e4f1fb,#c4def4);border-color:#7fa3cc' : '',
+      toggle: () => { S.menu = S.menu === m.id ? null : m.id; r(); },
+      hover: () => { if (S.menu && S.menu !== m.id) { S.menu = m.id; r(); } },
+      items: m.items.map((it) => ({ sep: !!it.sep, isBtn: !it.sep && !it.href, isLink: !!it.href, label: it.label || '', key: it.key || '', act: it.act }))
+    }));
+
+    // trees
+    const flat = (items, depth, out, mk) => {
+      items.forEach((n) => {
+        const has = !!(n.children && n.children.length); const open = !!S.open[n.id];
+        out.push(mk(n, depth, has, open));
+        if (has && open) flat(n.children, depth + 1, out, mk);
+      });
+    };
+    const fileLeaf = (p) => ({ id: 'p:' + p, label: p.split('/').pop(), kind: 'file', path: p });
+    const treeFiles = [{ id: 'F', label: 'claude-code-win', kind: 'folder', children: [
+      { id: 'f:src', label: 'src', kind: 'folder', children: [
+        { id: 'f:auth', label: 'auth', kind: 'folder', children: [fileLeaf('src/auth/redirect.ts'), fileLeaf('src/auth/session.ts')] },
+        { id: 'f:cfg', label: 'config', kind: 'folder', children: [fileLeaf('src/config/loader.ts')] },
+        fileLeaf('src/parser.ts')] },
+      { id: 'f:tests', label: 'tests', kind: 'folder', children: [fileLeaf('tests/auth.test.ts'), fileLeaf('tests/parser.test.ts')] },
+      fileLeaf('package.json'), fileLeaf('README.md')] }];
+    const treeSessions = [{ id: 'W', label: 'Workspaces', kind: 'folder', children: [
+      { id: 'P', label: 'claude-code-win', kind: 'folder', children: S.sessions.map((s) => ({ id: s.id, label: s.title, kind: 'session' })) },
+      { id: 'D', label: 'dotfiles', kind: 'folder', children: [{ id: 'd1', label: 'Tidy shell aliases', kind: 'session' }, { id: 'd2', label: 'Add PowerShell profile', kind: 'session' }] }] }];
+    const isSessions = S.leftTab === 'sessions';
+    const dirtyPaths = S.changes.map((c) => c.path.replace(/\\/g, '/'));
+    const nodes = [];
+    flat(isSessions ? treeSessions : treeFiles, 0, nodes, (n, depth, has, open) => {
+      const sel = isSessions ? (n.kind === 'session' && n.id === S.active) : (n.kind === 'file' && n.id === S.fileSel);
+      const toggle = () => { S.open[n.id] = !S.open[n.id]; r(); };
+      return {
+        label: n.label, badge: (n.kind === 'file' && dirtyPaths.indexOf(n.path) >= 0) ? 'M' : '',
+        pad: 'width:' + (depth * 14) + 'px;flex:none', hasKids: has, noKids: !has, open: has && open, closed: has && !open,
+        isFolder: n.kind === 'folder', isSession: n.kind === 'session', isFile: n.kind === 'file',
+        selStyle: sel ? 'background:linear-gradient(#dcebfc,#c1dbfc);border-color:#7da2ce' : '',
+        textStyle: (isSessions && n.kind === 'session' && n.id === S.active) ? 'font-weight:700' : '',
+        toggle,
+        select: () => {
+          if (n.kind === 'folder') { toggle(); return; }
+          if (n.kind === 'session') {
+            if (S.convos[n.id]) { S.active = n.id; S.status = 'Switched to "' + n.label + '"'; }
+            else { S.status = 'Archived session: ' + n.label; }
+          } else { S.fileSel = n.id; S.status = n.path; }
+          r();
+        }
+      };
+    });
+
+    // transcript
+    const rows = conv.map((m) => {
+      const isTool = m.kind === 'tool'; const has = isTool && !!m.result && m.state !== 'run' && m.state !== 'wait';
+      const open = !!S.expanded[m.id]; const bash = m.tool === 'Bash';
+      const labels = { run: 'Running…', ok: 'Done', wait: 'Waiting for permission', denied: 'Denied', stop: 'Cancelled' };
+      return {
+        isUser: m.kind === 'user', isClaude: m.kind === 'claude', isTool, text: m.text || '', tool: m.tool || '', arg: m.arg || '',
+        isRun: m.state === 'run', isOk: m.state === 'ok', isWait: m.state === 'wait', isBad: m.state === 'denied' || m.state === 'stop',
+        statusLabel: labels[m.state] || '', canToggle: has, toggleLabel: open ? 'Hide' : 'Show',
+        showResult: has && open, result: m.result || '',
+        resultStyle: bash
+          ? 'background:#0c0c0c;color:#cccccc;border-top:1px solid #c5d1e1;padding:6px 8px;white-space:pre-wrap;font:12px/1.4 Consolas,"DejaVu Sans Mono",monospace'
+          : 'background:#fff;color:#222;border-top:1px solid #c5d1e1;padding:6px 8px;white-space:pre-wrap',
+        toggle: () => { S.expanded[m.id] = !S.expanded[m.id]; r(); }
+      };
+    });
+
+    // right pane
+    const diffLines = [
+      { t: '@@ -18,7 +18,10 @@ export async function handleSignIn(req, res) {', k: 'h' },
+      { t: '   const user = await authenticate(req.body);', k: 'c' },
+      { t: "-  res.redirect('/home');", k: 'd' },
+      { t: '+  const returnUrl = sanitizeReturnUrl(req.query.returnUrl);', k: 'a' },
+      { t: '+  // Only same-origin paths are allowed, to avoid open redirects.', k: 'a' },
+      { t: "+  const target = returnUrl ?? '/home';", k: 'a' },
+      { t: '+  res.redirect(target);', k: 'a' },
+      { t: '   return user;', k: 'c' }
+    ];
+    const dstyle = { h: 'background:#eef3fb;color:#1c3d6e', c: 'color:#222', d: 'background:#ffe3e3;color:#7a0000', a: 'background:#e1f7e1;color:#0b4d0b' };
+    const mkDiff = () => diffLines.map((l) => ({ text: l.t, style: dstyle[l.k] }));
+    const changeRows = S.changes.map((c, i) => ({
+      path: c.path, kind: c.kind, delta: '+' + c.add + ' −' + c.del,
+      style: i === Math.min(S.selChange, S.changes.length - 1) ? 'background:linear-gradient(#dcebfc,#c1dbfc);border-color:#7da2ce' : '',
+      select: () => { S.selChange = i; r(); }
+    }));
+    const taskRows = S.tasks.map((t) => ({
+      text: t.t, done: t.done, style: t.done ? 'color:#555;text-decoration:line-through' : '',
+      toggle: () => { t.done = !t.done; r(); }
+    }));
+    const doneN = S.tasks.filter((t) => t.done).length;
+    const pct = Math.min(100, Math.round(S.tokens / 2000) / 1);
+    const ctxPctNum = Math.round((S.tokens / 200000) * 100);
+
+    return {
+      windowTitle: sess.title + ' - Claude Code', activeTitle: sess.title,
+      menus, menuOpen: !!S.menu, closeMenu: () => { S.menu = null; r(); },
+      newSession: () => self.newSession(),
+      openFolder: () => self.stub('Open Folder is not wired up in this prototype'),
+      saveTranscript: () => self.stub('Save Transcript is not wired up in this prototype'),
+      compact: () => self.stub('Conversation compacted (simulated)'),
+      attach: () => self.stub('Attach is not wired up in this prototype'),
+      openEditor: () => self.stub('Open in editor is not wired up in this prototype'),
+      undoLast: () => self.undoLast(), stop: () => self.stop(),
+      noChanges: S.changes.length === 0, notBusy: !S.busy, busy: S.busy,
+      tabSessions: tabStyle(isSessions), tabFiles: tabStyle(!isSessions),
+      showSessions: () => { S.leftTab = 'sessions'; r(); }, showFiles: () => { S.leftTab = 'files'; r(); },
+      nodes, rows,
+      draft: S.draft, onDraft: (e) => { S.draft = e.target.value; r(); },
+      onKey: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.send(); } },
+      send: () => self.send(), sendDisabled: S.busy || !S.draft.trim(),
+      mode: S.mode, onMode: (e) => { S.mode = e.target.value; r(); },
+      model: S.model, onModel: (e) => { S.model = e.target.value; r(); },
+      includeFile: S.includeFile, onInclude: (e) => { S.includeFile = e.target.checked; r(); },
+      thinking: S.thinking, onThinking: (e) => { S.thinking = e.target.checked; r(); },
+      isChanges: S.rightTab === 'changes', isTasks: S.rightTab === 'tasks', isProps: S.rightTab === 'props',
+      tabChanges: tabStyle(S.rightTab === 'changes'), tabTasks: tabStyle(S.rightTab === 'tasks'), tabProps: tabStyle(S.rightTab === 'props'),
+      showChanges: () => { S.rightTab = 'changes'; r(); }, showTasks: () => { S.rightTab = 'tasks'; r(); }, showProps: () => { S.rightTab = 'props'; r(); },
+      changeCount: S.changes.length ? ' (' + S.changes.length + ')' : '',
+      changeRows, diffRows: S.changes.length ? mkDiff() : [],
+      taskRows, noTasks: S.tasks.length === 0,
+      taskBar: 'width:' + (S.tasks.length ? Math.round((doneN / S.tasks.length) * 100) : 0) + '%',
+      taskSummary: doneN + ' of ' + S.tasks.length,
+      dirtyCount: String(S.changes.length),
+      tokenText: S.tokens.toLocaleString('en-GB') + ' / 200,000',
+      ctxBar: 'width:' + Math.max(2, ctxPctNum) + '%', ctxPct: ctxPctNum + '%',
+      status: S.status, modelName: modelNames[S.model],
+      permOpen: !!S.perm, permDiff: mkDiff(),
+      allow: () => self.allow(), deny: () => self.deny(),
+      remember: S.remember, onRemember: (e) => { S.remember = e.target.checked; r(); }
+    };
+  }
+}
+</script>
+
+
+</body></html>

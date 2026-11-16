@@ -1,0 +1,19 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": ["src/renderer/src/**/*", "src/renderer/src/**/*.svelte", "src/preload/*.d.ts", "src/shared/**/*", ".storybook/**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "useDefineForClassFields": true,
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/shared/*"],
+      "$lib": ["src/renderer/src/lib"],
+      "$lib/*": ["src/renderer/src/lib/*"]
+    }
+  }
+}

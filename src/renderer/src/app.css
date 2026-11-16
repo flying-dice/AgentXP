@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+@import './lib/kit/tokens.css';
+
+@source './**/*.{svelte,ts}';
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font: var(--xp-font);
+  color: var(--xp-text);
+  background: var(--xp-face);
+  user-select: none;
+  cursor: default;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
