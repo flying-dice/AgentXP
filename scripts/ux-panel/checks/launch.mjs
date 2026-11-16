@@ -30,7 +30,7 @@ export const checks = {
         [Boolean(second?.drives.some((x) => x.label === 'docs-site')), 'the second desktop has docs-site plugged in']
       ]),
       answer,
-      { keywords: [['already', 'exists', 'same name', 'own name', 'different', 'unique']], expect: 'the panelist states why the first name was refused (the name is already used)' }
+      { keywords: [['already', 'exists', 'same name', 'own name', 'unique', 'in use', 'taken']], expect: 'the panelist states why the first name was refused (the name is already used)' }
     )
   },
 

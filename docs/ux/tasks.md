@@ -83,7 +83,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T06.1 - Allow after reading**
 - Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts. Tell me which lines it changes."
 - Start state: `demo` script; Write files = Ask.
-- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the answer must name lines 1, 3 and 4, or +3 and -3, H-74; the diff is inline; opening the details is optional; answer check, H-44).
+- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the answer must name lines 1, 3 and 4 as written, or +3 and -3, H-74; a range such as "lines 1 to 5" is not expanded and an answer that says it could not tell fails, H-77; the diff is inline; opening the details is optional; answer check, H-44).
 - Answer: which lines of redirect.ts change.
 - Min 1 (Allow). Budget 3 / 4.
 
@@ -102,9 +102,9 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J07 Approve from the Action Center
 
 **T07.1 - Answer what is waiting**
-- Scenario: "You were reading something else. The assistant says it is waiting for you somewhere. Find out what it wants and answer it."
+- Scenario: "You were reading something else. Two of your chats say they are waiting for you somewhere. Find out what each one wants and answer both."
 - Start state: two chats, each with one pending write request, the dialog dismissed with Not now.
-- Success check: both requests answered by the panelist (any answer), no request pending.
+- Success check: both requests answered by the panelist (any answer; either chat may be answered first, H-85), no request pending. `check.json.notes` logs the order of the two answers and the seconds from each request to its answer, so the researcher can tell a read-and-allow from an Allow clicked without reading.
 - Min 5. Budget 15 / 20.
 
 ### J08 Review and revert changes
@@ -441,9 +441,10 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 ### J31 Help from inside an app
 
 **T31.1 - How do I save?**
-- Scenario: "You do not know how to save a file in Notepad. Use the help of the program to find out."
+- Scenario: "You do not know how to save a file in Notepad. Use the help of the program to find out, and tell me how to save."
 - Start state: Notepad open, nothing else.
-- Success check: Help and Support is open on the Notepad topic.
+- Success check: Help and Support is open on the Notepad topic and the answer names the shortcut Ctrl+S (keyword check, H-84; the panelist quotes only what a shot shows).
+- Answer: how to save a file in Notepad (Ctrl+S).
 - Min 2. Budget 6 / 8.
 
 **T31.2 - Why can I not type here?**

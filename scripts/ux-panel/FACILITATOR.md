@@ -12,7 +12,31 @@ npx electron-vite build          # the driver launches the BUILT app (out/main/i
 On a headless machine the scripts use `xvfb-run` themselves (needs the `xvfb-run` binary). The facilitator tools use the
 repo's Playwright (`_electron`) and the built-in Scripted Agent; nothing else to install.
 
-## One task, one level
+## One fresh panelist per task (H-80)
+
+Every task is run by its own new panelist agent. A panelist that has seen the Start menu, Help or an approval box knows things
+that the next task is meant to test (R4: both T21.1 panelists pressed Ctrl+N because they had seen it in T20.1; R5 had batches of
+10 tasks in one context, so 104 records may carry knowledge silently). Spawn one agent per task and level, and never reuse it.
+
+The easy way: `session.mjs brief` prints the complete, self-contained prompt for ONE such agent, to paste as it is:
+
+```
+node scripts/ux-panel/session.mjs brief --task T06.1 --level novice --round r6      # --out <dir> overrides /tmp/ux-sessions/<round>/<task>-<level>
+```
+
+The prompt tells the agent to (1) `start` the task (facilitator notes hidden), (2) act as the panelist (the whole PANELIST.md is in
+the prompt, LEVEL filled in), (3) only after its final report is written run `check` (with `--answer` for an answer task), (4) write
+the record `docs/ux/panel/<round>/<task>-<level>.md` from the template, (5) `stop` with `--record` and copy the folder. Its last
+message is the record path and the Result line. The orchestrator runs `brief` once per task and level, and starts the agents in
+parallel if it likes (each session is isolated, see below). The agent must not change what it reported because of the verdict;
+if you need a stricter separation (the final gate), use the manual flow below with a panelist that never sees `check`.
+
+`start` and `brief` take `--previous T20.1,T22.1`: the tasks that the context of the panelist already ran. They refuse T21.1 after
+T05.x, T06.x, T07.1, T13.1, T20.x, T22.x, T30.2 or T31.x (they show the Start menu, Help or the approval hints), and T22.x and T31.x
+after T13.1, T20.x, T22.x, T30.2 or T31.x. The list is written to `session.json` and `check.json` as `context.previousTasks`
+(`[]` for a fresh panelist, the normal case); the record template has a `Context:` line for it. A refused task needs a new agent.
+
+## One task, one level (manual flow)
 
 ```
 R=docs/ux/panel/<round>                       # e.g. docs/ux/panel/r1
@@ -71,6 +95,15 @@ node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with 
 - Compare the SEQ with the frustrations list: a SEQ that differs by 3 or more from what the report says (for example SEQ 2 after a
   two-step pass) is rating noise; flag it in the record and report the measured values (H-36).
 
+- An answer task ends in MANUAL when `check` is run with `--no-answer` (H-82). `stop` then refuses (`the last check of this answer task had no answer`)
+  until you run `check --answer "<text>"` with the panelist's answer; pass `--accept-no-answer` only when the panelist really gave none
+  (the record says so). Keyword checks (case-insensitive substrings): T02.2 (already, exists, same name, own name, unique, in use, taken),
+  T10.1 (chip, top bar, workspace bar, agent can use, closed, deny, never), T16.2 (no and Write files), T31.1 (Ctrl+S, H-84).
+- Line numbers (H-77, T06.1, T24.1): the answer must name 1, 3 and 4 as written (or +3 and -3 for T06.1). A range such as "lines 1 to 5" is
+  not expanded; an answer that says it could not tell (could not say, cannot tell, no idea, unclear) fails with that reason.
+- `stop --record <file>` adds "Steps: N of M" to the record's Result line when the panelist left it out (H-83).
+- T07.1 (H-85): either chat may be answered first. `check.json.notes` gets the answer order and the seconds from each request to its
+  answer; a very short time next to "the record says it did not read it" is an Allow without reading.
 - `PASS` / `FAIL` is decided from app state (database through the app API, files on disk, desktop state), never from
   what the panelist says. Exceeding the step budget turns the verdict into FAIL (printed). A PASS within +25 percent of
   the budget prints "within +25 percent: review" and sets `nearMiss` in check.json, so the researcher can flag a near miss.
@@ -95,6 +128,7 @@ Record template:
 ```
 # <task> <title> - <level>
 - Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
+- Context: fresh panelist, previous tasks: none
 - SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
 - Check runs (all runs of check.json.runs and why they differ; "one run" if only one): ...
 - Errors (wrong clicks, undo, dead ends, error messages seen): ...
@@ -130,9 +164,9 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 - `start` is idempotent (H-66): the same task and level on a folder whose session is ready and alive prints the panelist block again.
   A start state that throws closes the app, frees the folder (`session.json` becomes `session.failed-<time>.json`) and keeps `server.log`;
   start again with the same `--out`.
-- T23.1-twice is T23.1b in `tasks.md` (H-65) and needs product fix UX-123 (the failure count survives a restart until a turn completes).
+- T23.1b (the second crash; H-86: one id in the folders, the records and `tasks.mjs`, `T23.1-twice` is accepted only as an alias on the command line) needs product fix UX-123 (the failure count survives a restart until a turn completes). Records of rounds 4 and 5 keep the old file names.
 - T14.1 (H-73): the preset selects the idle "Scratch pad" row; the waiting row is not preselected.
-- The last reply of the Browser script `browser-agent` is plain: "I sent the message and found it in #general." (H-71).
+- The last reply of the Browser script `browser-agent` is plain: "I sent the message and found it in #general." (H-71); its reply to "what does the page say" is "The page is titled Fixture page. It says Example Domain." (H-79).
 - Mouse-less task T21.1: the driver refuses `click/move/drag/scroll` for that session.
 - Fixtures (H-32): every session starts the app with a sandbox home (`HOME` and `USERPROFILE` = `<tmp>/home`) and creates the
   projects under `<tmp>/home/Documents` (`login-app`, `docs-site`, `notes-folder`, ...), so the in-app Browse For Folder
@@ -140,8 +174,9 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
   sandbox. The path is in `session.json` (`home`, `fixtures`); never give it to a panelist.
 - Presets that change the desktop act through the UI (H-35): `eject-mid-job` uses the taskbar's Safely Remove Hardware menu and
   answers Yes; `paused-desktop` presses Pause all agents on the top bar. `recycled-change` reloads the desktop window after the revert (H-34).
+- `ux scroll <x> <y> <dy>` takes raw pixels (H-78): 100 is one wheel notch, 200 to 300 about a page. The output says how far the content moved and warns under 20. Every action prints "Step N" (H-81), counted like the budget; the budget stays secret.
 - `ux move` waits 800 ms before its screenshot (H-52), because tooltips appear after 500 ms.
-- T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1-twice` is the second failure ("It stopped again", plain Restart) as its own task.
+- T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1b` is the second failure ("It stopped again", plain Restart) as its own task.
 - `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
 - T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".
 - Folder pickers: the start states stub the native folder dialog (answers docs-site; login-app in launcher states). The stub

@@ -46,6 +46,8 @@ export const revertConfirmText = (path: string): string =>
 
 /** What a reverted row says in place of its change kind (UX-79). */
 export const REVERTED_LABEL = 'Reverted. Restore from the Recycle Bin'
+/** The one line above the list when a file was reverted; the link beside it opens the Recycle Bin (UX-151). */
+export const REVERTED_NOTE = 'Reverted files are in the Recycle Bin.'
 
 /** The short word in the Change column of a reverted row. */
 export const REVERTED_KIND = 'Reverted'

@@ -5,7 +5,7 @@ import type { PermissionOptionDto, ToolKind } from '@shared/models'
 import type { PolicyDecision, ToolGroup, ToolPolicyDto } from '@shared/desktop'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { permissionMetadata } from '../app/session/permissionOptions'
-import { approvalTitle, toolLabel, type ToolTitleInput } from '../app/session/toolTitles'
+import { approvalTitle, toolLabel, toolPredicate, type ToolTitleInput } from '../app/session/toolTitles'
 
 export interface PendingApproval {
   /** `<sessionId>:<interruptId>`, unique across the desktop. */
@@ -53,9 +53,11 @@ export const approvalLabel = (approval: PendingApproval): string => toolLabel(ti
 
 const SHORT_TITLE = 28
 
+const shortTitle = (chatTitle: string): string => (chatTitle.length > SHORT_TITLE ? `${chatTitle.slice(0, SHORT_TITLE).trimEnd()}...` : chatTitle)
+
 /** "In chat 'Fix the login redirect bug...' (started 10:42)": the second line of an Action Center row. */
 export function approvalOrigin(chatTitle: string, startedAt?: string): string {
-  const title = chatTitle.length > SHORT_TITLE ? `${chatTitle.slice(0, SHORT_TITLE).trimEnd()}...` : chatTitle
+  const title = shortTitle(chatTitle)
   const date = startedAt ? new Date(startedAt) : null
   const time = date && !Number.isNaN(date.getTime()) ? ` (started ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')})` : ''
   return `In chat '${title}'${time}`
@@ -94,4 +96,33 @@ export function approvalReason(kind: ToolKind | null, policy: ToolPolicyDto | nu
   const decision: PolicyDecision | undefined = group && policy ? policy.groups[group] : undefined
   if (group && decision === 'ask') return `${PERMISSION_NAMES[group]} is set to Ask in Control Center.`
   return 'The agent asked for your permission.'
+}
+
+// ---- the queue of waiting requests (UX-138) ---------------------------------------------------------------------
+
+/** The requests in the order the user answers them: the oldest first (`pending` lists the newest chat first). */
+export const oldestFirst = (pending: readonly PendingApproval[]): PendingApproval[] => [...pending].reverse()
+
+/** The request the "waiting" link opens: the oldest one, or null when nothing waits. */
+export const nextApproval = (pending: readonly PendingApproval[]): PendingApproval | null => pending.at(-1) ?? null
+
+/** Where the request of a chat stands among the waiting ones, or null when that chat has none or it is the only one. */
+export function waitingPosition(pending: readonly PendingApproval[], sessionId: number): { position: number; total: number } | null {
+  const queue = oldestFirst(pending)
+  const at = queue.findIndex((a) => a.sessionId === sessionId)
+  return at < 0 || queue.length < 2 ? null : { position: at + 1, total: queue.length }
+}
+
+/** "1 of 2 waiting": the line in the approval box when more than one request waits. */
+export const waitingOfText = ({ position, total }: { position: number; total: number }): string => `${position} of ${total} waiting`
+
+/**
+ * The words of the "waiting" link of the top bar, with the chat named: "Fix login redirect is waiting: run a command",
+ * and "(1 of 2 waiting)" after it when more than one request waits. Null when nothing waits.
+ */
+export function waitingLinkText(pending: readonly PendingApproval[]): string | null {
+  const next = nextApproval(pending)
+  if (!next) return null
+  const line = `${shortTitle(next.chatTitle)} is waiting: ${toolPredicate(titleInput(next))}`
+  return pending.length > 1 ? `${line} (${waitingOfText({ position: 1, total: pending.length })})` : line
 }

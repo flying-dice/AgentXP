@@ -110,7 +110,7 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Base | The name that the files are compared with. | `review-base-ref` |
 | Refresh | Reads the changes again. | `review-refresh` |
 | File | Selects the file to show in the expanded view. | `review-file-select` |
-| Comments | Shows or hides the comments pane. | `review-comments-toggle` |
+| Comments | Shows or hides the comments pane. The number is the number of all comments, the same as in the banner. | `review-comments-toggle` |
 | Verdict | The verdict of the reviewer. The attribute `data-verdict` gives it. | `review-verdict` |
 | No verdict yet | Shows until the reviewer gives a verdict. | `review-banner` |
 | Error | Shows a problem, for example that git is missing. | `review-error` |

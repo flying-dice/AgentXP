@@ -79,7 +79,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Dialog: about | The About Task Manager box. | `agent-manager-about` |
 | Dialog: about ok | Closes the About box. | `agent-manager-about-ok` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `agent-manager-menu-chat-pane` |
-| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
+| Chat pane edge | The tab at the right edge with a chat icon and the word Chat. Click it to open the chat pane. | `chat-pane-toggle` |
 | Menu: switch | File menu: opens the selected chat. | `agent-manager-menu-switch` |
 | Menu: close | Closes the window. Alt+F4. | `agent-manager-menu-close` |
 | Menu: refresh | View menu: refreshes the lists. F5. | `agent-manager-menu-refresh` |

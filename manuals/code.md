@@ -108,7 +108,7 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | View Help | Opens the Code Help window. F1. | `code-menu-help` |
 | About Code | Shows the About box. | `code-menu-about` |
 | New | Always dimmed. The agent creates files. | `code-new` |
-| Open file | Opens a file. | `code-open` |
+| Open a file | Opens a file from your disk. The tooltip says "Open a file". Use **Plug in a folder** to add a whole project. | `code-open` |
 | Save | Always dimmed. The agent edits files. | `code-save` |
 | Save all | Always dimmed. | `code-save-all` |
 | Undo | Always dimmed. | `code-undo` |
@@ -117,6 +117,7 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Next change | Goes to the next block. | `code-next-change` |
 | Revert hunk (toolbar) | Reverts the open block or the block under the caret. | `code-toolbar-revert-hunk` |
 | Ask about selection | Opens the chat pane with a question about the selected lines. It is dimmed until you select lines. | `code-ask-selection` |
+| Chat (Focus mode) | In Focus mode, beside **Show panes**: brings back the chat pane. | `code-focus-chat` |
 | Focus on the file | At the right end of the toolbar: hides the chat, Management, and Changes and Git panes. Then it reads **Show panes**, and a click brings them back. F11. | `code-focus-toggle` |
 | Refresh git status | Reads the git status again. | `code-refresh` |
 | Management (button) | Shows or hides the left pane. | `code-management-toggle` |
@@ -156,8 +157,11 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Diff | The diff of the selected change. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the file in the editor. | `changes-open-editor` |
-| Open Recycle Bin | The link under the list after a revert. It opens the Recycle Bin. A reverted file stays in the list, in grey, after you close and open the pane or the window. | `changes-open-recycle-bin` |
-| Changes pane | The whole pane: the list, the diff and the buttons. In a wide, short pane the diff is beside the list. | `changes-pane` |
+| Open Recycle Bin | The link in the one line above the list after a revert. It opens the Recycle Bin. A reverted file stays in the list, in grey, after you close and open the pane or the window. | `changes-open-recycle-bin` |
+| Changes pane | The whole pane: the list, the diff and the buttons. The list has at least half of the height and shows six rows. In a wide, short pane the diff is beside the list. | `changes-pane` |
+| Nothing changed note | The line above the list when the agent changed nothing in this chat but Git shows changed files. | `changes-git-note` |
+| Open Git | The link in that line. It shows the Git tab. | `changes-open-git` |
+| Reverted note | One line above the list after a revert, with the link to the Recycle Bin. | `changes-reverted-note` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
 | Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
 | Why a button is dimmed | The line above the buttons that says what to do first. | `changes-reason` |
@@ -178,7 +182,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Dialog: about | The About Code box. | `code-about` |
 | Dialog: about ok | Closes the About box. | `code-about-ok` |
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `code-menu-chat-pane` |
-| Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
+| Chat pane edge | The tab at the right edge with a chat icon and the word Chat. It pulses when the chat has news. Click it to open the chat (Ctrl+Shift+C). Focus mode hides it. | `chat-pane-toggle` |
 | Menu: close | Closes the window. Alt+F4. | `code-menu-close` |
 | Context menu: cut | Cut. Dimmed: the editor is read only. | `code-ctx-cut` |
 | Context menu: copy | Copies the selected code. | `code-ctx-copy` |
@@ -190,6 +194,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: ask | Opens the chat pane with a draft about the text or the file. You type the question. | `code-ctx-ask` |
 | Tree menu: open | Opens the file, or opens the folder. | `code-ctx-open` |
 | New chat here | Above the tree: starts a chat in the selected project or folder. | `code-tree-new-chat` |
+| Plug in a folder | Above the tree: adds a folder from your computer as a project. | `code-tree-plug-in` |
 | Remove from desktop | Above the tree: takes the selected project off the desktop. Its folder stays on your disk. | `code-tree-remove` |
 | Tree menu: new chat here | Starts a chat on this project or folder. | `code-ctx-start-chat` |
 | Tree menu: open in Explorer | Shows the folder in Explorer. | `code-ctx-open-explorer` |
@@ -200,7 +205,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Tree menu: plug in | Plugs in a project. | `code-ctx-plug-in` |
 | Project tree | The folders and files of the project. | `code-tree` |
 | Menu: remove project | File menu: takes the open project off the desktop. | `code-menu-eject` |
-| Menu: plug in | Plugs in a project. | `code-menu-plug-in` |
+| Menu: plug in | Plugs in a folder as a project. | `code-menu-plug-in` |
+| No project note | Under the tree buttons when no project is plugged in. | `code-tree-empty` |
+| Plug in a folder (note) | The link in that note. | `code-tree-empty-plug-in` |
 | Turn on Git here | Asks first, then turns on Git in this folder, so changes can be tracked. | `code-git-init` |
 | Git: not tracked | Explains that this folder is not tracked with Git and what turning it on does. | `code-git-not-repo` |
 | Turn on (question) | Turns on Git. | `message-box-action-turn-on` |
@@ -252,7 +259,7 @@ To see what changed in a file that Git lists, follow the steps below:
 ## 6 - Troubleshooting
 
 - **The editor is empty.** The window says to open a file from the tree. Click **Open file**.
-- **The tree is empty.** Plug in a project in **[Explorer](explorer.md)**. Without a project, the tree shows the home folder of the agent.
+- **The tree is empty.** Click **Plug in a folder** above the tree, or in the note under it. Without a project, the tree shows the home folder of the agent.
 - **The Git tab says that the folder is not tracked with Git.** The project has no .git folder. Click **Turn on Git here** if you want change marks.
 - **The file is in a narrow column.** Click **Focus on the file** in the toolbar, or press F11.
 - **Revert hunk is dimmed.** Move the caret to a changed block, or open its peek.

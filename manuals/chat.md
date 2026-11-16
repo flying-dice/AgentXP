@@ -47,7 +47,7 @@ The bar below the menu has the **Model** list and the **Tasks and changes** butt
 
 The transcript is the large area in the middle. It shows your messages and the answer of the agent. Everything the agent does on the way, such as its messages between tool calls, its reasoning, and its tool calls, is folded into one **Thinking** line. Click the line to open it, or choose **View -> Show thinking and tool details** to open all of them. A permission request opens its line by itself. Each tool call has a card. A card shows the state of the call: running, waiting, done, failed, or cancelled. If a turn ends in an unusual way, a notice tells why. An error appears as a red row.
 
-If the agent only worked in the Browser, the Thinking line reads **Used 28 steps in the browser (read, clicked, typed)**. Point at the line to see how many steps of each kind there were. A line under it names the first and the last step in plain words, for example **First: Opened localhost:3000/chat. Last: Typed on the page.** Open the line to see every step in plain words. Names of tools and numbers of page elements show only under **Show**.
+If the agent only worked in the Browser, the Thinking line reads **Used 28 steps in the browser (read, clicked, typed)**. Point at the line to see how many steps of each kind there were. A line under it names the first and the last step in plain words, for example **First: Opened localhost:3000/chat. Last: Typed in 'Message #general'.** A click or typing names the button, link, or box that the agent used, for example **Clicked the button 'Send'**. Open the line to see every step in plain words. Names of tools and numbers of page elements show only under **Show**.
 
 If the agent stops while you read older messages, the button **Newer messages below. Click to see them.** shows above the message box. It never covers a message. After you send a message, after an answer ends, and after a restart, the transcript scrolls to the end by itself, unless you scrolled up.
 
@@ -83,9 +83,9 @@ The status bar shows the working folder, the use of the context window, and the 
 
 ### Permission Requests
 
-If you set an action to **Ask**, a dialog box asks you. It has the question, the command or the diff, and two choices. Click the first choice to allow the action. Click the second to refuse it. Select **Don't ask again for this kind of action** to save your answer for the next time.
+If you set an action to **Ask**, a box above the message box asks you. It is a part of the chat: it does not cover the messages, and it scrolls when the request is long. It has the question, the command or the diff, and two choices. Click the first choice to allow the action. Click the second to refuse it. When more than one request waits, the box says, for example, **1 of 2 waiting**. Select **Don't ask again for this kind of action** to save your answer for the next time.
 
-The focus starts on **Deny**, because Deny is the safe answer. You can answer with the keyboard: press Alt+A to allow or Alt+D to deny. Hold Alt to see the letters underlined. The Left and Right arrow keys move between the two choices. The line under the choices says the same. After you answer, a line in the chat tells what you chose, for example **You allowed: Change NOTE.md.** or **You denied: Run a command.**
+The focus starts on **Deny**, because Deny is the safe answer. You can answer with the keyboard: Enter denies, and A allows. Alt+A and Alt+D work too. The Left and Right arrow keys move between the two choices. The line beside the choices says the same. After you answer, a line in the chat tells what you chose, for example **You allowed: Change NOTE.md.** or **You denied: Run a command.**
 
 ### When the Agent Does Not Start
 
@@ -96,7 +96,7 @@ If the agent cannot start, a red row in the chat says why and names the program.
 - **Choose another agent** – Opens Control Center at **Agents**. Make another agent the default, come back, and click **Try again**.
 - **Details...** – Shows the technical text under the buttons. Click **Hide details** to close it.
 
-While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found. Show in Event Viewer shows the details.** The button **Start a new chat** replaces **Restart and send again**, so that you do not send your message into the same failure again. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
+While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found. Show in Event Viewer shows the details.** The button **Start a new chat (your text is kept in the box)** replaces **Restart and send again**, so that you do not send your message into the same failure again. Your text stays in the message box of the chat. After **Restart**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
 
 ## 4 - Controls Reference
 
@@ -139,7 +139,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Newer messages | Shows above the message box when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
 | Card note | A line under a tool card, for example "Denied by you" or "The agent could not finish this step." | `tool-call-note` |
 | Show in Event Viewer (step) | A link under a failed step. It opens Event Viewer on the event of that step. | `tool-call-show-event` |
-| Restarted note | The line "Restarted. Press Send to try again." It shows after **Restart** put your last message back in the message box. | `chat-restarted-note` |
+| Restarted note | The line "Agent7 restarted. Your last request was not sent again:" with your text. It shows after **Restart** when your last request did not go through. | `chat-restarted-note` |
+| Restarted text | Your last request, on one line, in the restarted note. | `chat-restarted-text` |
+| Send it again | Sends your last request again, in one click. | `chat-restarted-resend` |
+| Sender | The name above a message: **You**, or **Agent7 (automatic)** for the message that Resume sends. | `chat-message-sender` |
 | Earlier step | A divider above steps of an earlier request. | `tool-call-earlier` |
 | Paused banner | Shows when the desktop is paused. It says if Pause stopped a step of this chat. | `chat-paused-banner` |
 | Resumed note | Shows above the message that Resume sent: Resumed. Continuing where you stopped. | `chat-resume-note` |
@@ -168,7 +171,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Open in editor | Shows the selected file in Code. | `changes-open-editor` |
 | Reverted row | A change that was reverted stays in the list, in grey, with the words "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
 | Reverted text | The words on a reverted row. | `changes-reverted-text` |
-| Open Recycle Bin | The link under the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
+| Open Recycle Bin | The link in the one line above the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
 | Changes pane | The whole pane: the list, the diff and the buttons. | `changes-pane` |
 | File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
 | Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
@@ -189,9 +192,11 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Working folder | Shows the folder of the chat. | `chat-cwd` |
 | Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, for example "The agent stopped. Click Restart, then send your message again." | `chat-problem-line` |
 | Connection state | Shows the state of the connection. | `chat-status` |
-| Permission dialog box | Asks if the agent can act. | `permission-dialog` |
-| Allow or refuse | The two choices. The name ends with the id of the choice. Alt+A allows and Alt+D denies. | `permission-option-*` |
-| Keys line | Tells which keys answer: Alt+A and Alt+D. | `permission-hint` |
+| Permission box | Asks if the agent can act. It is a part of the chat, above the message box. It scrolls when the request is long, and the two choices stay in the window. | `permission-dialog` |
+| Allow or refuse | The two choices. The name ends with the id of the choice. A allows. Enter denies, because Deny has the focus. | `permission-option-*` |
+| Keys line | Tells which keys answer: Enter denies, A allows. | `permission-hint` |
+| Waiting count | Says **1 of 2 waiting** when more than one request waits on the desktop. | `permission-queue` |
+| Setting line | The setting that made Agent7 ask, under the command. | `permission-detail-setting` |
 | Don't ask again for this kind of action | Saves your answer. | `permission-remember` |
 | Project tree | The tree of files, shown in Code. | `file-tree` |
 

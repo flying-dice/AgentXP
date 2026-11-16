@@ -15,6 +15,12 @@
     return { width: r?.width ?? 1200, height: r?.height ?? 700, top: r?.top ?? 0 }
   }
 
+  // The controller pulls a new Help window inside this area (UX-148).
+  $effect(() => {
+    desktop.workArea = () => area()
+    return () => (desktop.workArea = null)
+  })
+
   // Stable DOM order (by id) so reordering never remounts an app; stacking is done with z-index.
   const windows = $derived(desktop.state.windows)
   const byId = $derived([...windows].sort((a, b) => a.id - b.id))

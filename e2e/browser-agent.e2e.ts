@@ -62,16 +62,23 @@ describe('Browser agent: a local chat web app', () => {
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
 
-    // The bar stays 20 seconds after a step that is not a read (a finished read says "The agent read this page." for 5 seconds: unit-tested).
+    // The turn ended: the yellow bar is gone at once, not 20 seconds later (UX-156).
+    await see.gone(browser.getByTestId('browser-agent-bar'))
+
+    // A second job: one click on Take over while the agent works. The bar says the user has control, Take over reads "Taken over",
+    // and the desktop is in the user's control.
+    await chat.send(`Use the chat app at ${web.origin}/ again`)
     await see.visible(browser.getByTestId('browser-agent-bar'))
     expect(await browser.getByTestId('browser-agent-bar-text').innerText()).not.toMatch(/\[\d+\]/)
-
-    // One click on Take over: the bar says the user has control, Take over reads "Taken over", and the desktop is in the user's control.
     await browser.getByTestId('browser-agent-takeover').click()
     await see.text(browser.getByTestId('browser-agent-takeover'), 'Taken over')
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'You have control of this page')
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'true')
-    // Give control back is one button, on the top bar; the page bar only shows the state.
+    // UX-143: the sentence says what the click did to every tool, in the tooltip of the button and on the top bar, with a Resume button.
+    await see.attribute(browser.getByTestId('browser-agent-takeover'), 'title', 'You are in control. All tools ask first until you resume.')
+    await see.text(ctx.desktop.status, 'You are in control. All tools ask first until you resume.')
+    await see.text(ctx.desktopPage.getByTestId('topbar-give-back'), 'Resume')
+    // Resume is one button, on the top bar; the page bar only shows the state.
     await see.count(browser.getByTestId('browser-agent-giveback'), 0)
     await ctx.desktopPage.getByTestId('topbar-give-back').click()
     await see.attribute(ctx.desktopPage.getByTestId('topbar-take-control'), 'aria-checked', 'false')

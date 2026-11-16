@@ -1,6 +1,6 @@
 /**
  * What the agent did in the Browser, in plain words. A turn that only used `browser_*` tools folds into one line
- * ("Used 28 steps in the browser (read, clicked, typed)") with its first and last step ("Opened the chat page", "Typed on the page"), so a
+ * ("Used 28 steps in the browser (read, clicked, typed)") with its first and last step ("Opened the chat page", "Typed in 'Message'"), so a
  * person can answer "what did it do there" without opening Details. Tool names and element numbers stay in Details.
  */
 import type { WorkRow } from './transcriptRows'
@@ -40,8 +40,17 @@ function pageOf(url: string): string {
   }
 }
 
-/** One step of the Browser in the past tense ("Read the page"), or null for a tool that is not a Browser tool. */
-export function browserStep(name: string, rawInput: string | null): string | null {
+/**
+ * What the tool result names as the target: "Clicked the button 'Send' [6]." gives "the button 'Send'", "Typed into 'Message' [7]."
+ * gives "'Message'". Null when the result names none (an old result, a failed call, or an element with no name).
+ */
+export function resultTarget(result: string | null | undefined, verbs: string): string | null {
+  const target = new RegExp(`^(?:${verbs}) (.+?) \\[\\d+\\]`).exec(result?.trim() ?? '')?.[1]
+  return target && target !== 'an item on the page' ? target : null
+}
+
+/** One step of the Browser in the past tense ("Read the page"), or null for a tool that is not a Browser tool. `result` is the text the tool gave back; it names the target of a click or of typing. */
+export function browserStep(name: string, rawInput: string | null, result: string | null = null): string | null {
   const tool = browserToolName(name)
   if (!tool) return null
   const input = parse(rawInput)
@@ -58,10 +67,14 @@ export function browserStep(name: string, rawInput: string | null): string | nul
     }
     case 'browser_screenshot':
       return 'Took a picture of the page'
-    case 'browser_click':
-      return 'Clicked on the page'
-    case 'browser_type':
-      return 'Typed on the page'
+    case 'browser_click': {
+      const target = resultTarget(result, 'Clicked|Double-clicked')
+      return target ? `Clicked ${target}` : 'Clicked on the page'
+    }
+    case 'browser_type': {
+      const target = resultTarget(result, 'Typed into')
+      return target ? `Typed in ${target}` : 'Typed on the page'
+    }
     case 'browser_press': {
       const key = str(input.key)
       return key ? `Pressed ${key}` : 'Pressed a key on the page'
@@ -141,7 +154,7 @@ export function browserWork(rows: readonly WorkRow[]): BrowserWork | null {
   if (tools.length === 0) return null
   const steps: string[] = []
   for (const tool of tools) {
-    const step = browserStep(tool.name, tool.rawInput)
+    const step = browserStep(tool.name, tool.rawInput, tool.result)
     if (step === null) return null
     steps.push(step)
   }

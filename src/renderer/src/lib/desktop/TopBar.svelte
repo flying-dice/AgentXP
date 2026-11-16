@@ -2,7 +2,7 @@
   import Button from '../kit/atoms/Button.svelte'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
   import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
-  import { RESUME_BUTTON, barStatus, closedAppNames, toolChips, toolsLine } from './activity'
+  import { RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, barStatus, chipAriaLabel, closedAppNames, toolChips, toolsLine } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
@@ -11,6 +11,8 @@
     working: string | null
     /** Requests that wait for the user's answer; the status then reads "Waiting for you: n requests to approve" as a link. */
     waiting?: number
+    /** The words of the link when it names the chat that waits ("Fix login is waiting: run a command (1 of 2 waiting)"); else the count is said. */
+    waitingFor?: string | null
     /** Chat windows that are open: an open chat is something the agent can use. */
     chatsOpen?: number
     paused: boolean
@@ -24,7 +26,7 @@
     onpause?: () => void
     /** The "Waiting for you" link: opens the next request. */
     onopenrequest?: () => void
-    /** The "Ask before every action" check box and the "Give control back" button: switches the flag. */
+    /** The "Ask before every action" check box and the "Resume" button: switches the flag. */
     ontakecontrol?: () => void
     /** A chip was clicked: open Control Center at Permissions. */
     onopenpermissions?: () => void
@@ -38,14 +40,14 @@
     agentProblem?: string | null
   }
 
-  let { title, working, waiting = 0, chatsOpen = 0, paused, userInControl, tools, policy = null, notice = null, onpause, onopenrequest, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
+  let { title, working, waiting = 0, waitingFor = null, chatsOpen = 0, paused, userInControl, tools, policy = null, notice = null, onpause, onopenrequest, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
 
   const chips = $derived(toolChips(tools, policy, userInControl))
   const toolsNote = $derived(toolsLine(tools, chatsOpen))
   // One derivation for the text, the dot and `data-state`, so they cannot disagree.
-  const view = $derived(barStatus({ paused, userInControl, working, waiting, notice, closedApps: closedAppNames(chips) }))
+  const view = $derived(barStatus({ paused, userInControl, working, waiting, waitingFor, notice, closedApps: closedAppNames(chips) }))
   const status = $derived(view.text)
   const mode = $derived(view.state)
 </script>
@@ -54,10 +56,10 @@
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} class:control={mode === 'control'} class:waiting={mode === 'waiting'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
-      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Open the next request." onclick={() => onopenrequest?.()}>{status}</button>{:else}{status}{/if}
+      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else}{status}{/if}
     </span>
     {#if userInControl && !paused}
-      <button type="button" class="give-back" data-testid="topbar-give-back" title="The agent goes back to the settings in Control Center and no longer asks before every action." onclick={() => ontakecontrol?.()}>Give control back</button>
+      <button type="button" class="give-back" data-testid="topbar-give-back" title={RESUME_CONTROL_TIP} onclick={() => ontakecontrol?.()}>{RESUME_CONTROL_BUTTON}</button>
     {/if}
     {#if agentProblem}<span class="problem" data-testid="topbar-agent-problem" title="Open the Control Center, then Agents, to change the command of the agent.">{agentProblem}</span>{/if}
   </ConnectionBar>
@@ -65,7 +67,7 @@
     <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use" title="The agent can use only what is open here. Closing an app takes its tool away.">
       <span class="lead">Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} onclick={() => onopenpermissions?.()}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" title={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.()}>{chip.label}</button>
       {/each}
       {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
@@ -169,7 +171,7 @@
   .none {
     color: var(--w7-text-muted);
   }
-  /* Flat labels that read as state, not raised buttons: a click opens Permissions. */
+  /* Buttons that show the state: a border and a hover face say they can be clicked, and a click opens Permissions (UX-142). */
   .chip {
     box-sizing: border-box;
     /* 24 x 24 px at least (WCAG 2.5.8 target size). */
@@ -179,25 +181,30 @@
     margin: 0 0 -3px;
     padding: 0 6px;
     line-height: 20px;
-    border: 1px solid #b9c7da;
+    border: 1px solid #8fa3c0;
     border-radius: 8px;
-    background: #f4f7fb;
+    background: linear-gradient(#fdfeff, #e3ecf8);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
     color: #1d3a63;
     font: inherit;
     font-size: 11px;
     cursor: pointer;
   }
   .chip:hover {
+    background: var(--w7-btn-hover-face, #eaf6fd);
     text-decoration: underline;
+  }
+  .chip:active {
+    background: var(--w7-select-face, #c4e5f6);
   }
   .chip[data-state='asks'] {
     border-color: #d9b44a;
-    background: #fff4cf;
+    background: linear-gradient(#fffbea, #fff0c2);
     color: #5f4300;
   }
   .chip[data-state='off'] {
     border-style: dashed;
-    background: transparent;
+    background: #f7f9fc;
     color: #4b5666;
   }
   .chip:hover {

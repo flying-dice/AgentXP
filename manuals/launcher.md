@@ -160,7 +160,7 @@ To rename a desktop, follow the steps below:
 To delete a desktop, follow the steps below:
 
 1. Select the desktop and click **Delete...**. A question appears.
-2. Read the warning. Agent7 removes your files (C:), the chats, the notes, and the logs of the desktop. Projects are removed from this desktop. The folders and files stay on your disk.
+2. Read the warning. The question says: **Deletes this desktop: its chats, notes and logs. Your project folders stay where they are.**
 3. Click **Yes**.
 
 ## 6 - Troubleshooting

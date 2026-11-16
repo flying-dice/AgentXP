@@ -40,17 +40,11 @@ export const slugOf = (text: string): string =>
     .replace(/[\s-]+/g, '-')
 
 /**
- * The section each app's manual opens at when F1 or View Help asks for it: the heading of the section (its slug, with or
- * without the number the manuals put in front). An app without an entry opens at the top of its manual. Every app manual
- * has "Common Tasks", the section that answers "how do I...", so that is where F1 lands.
+ * The topic F1 and View Help open for the focused window: the app's topic at its top, so the title is the first line
+ * (UX-148). A desktop without a focused window gets the keyboard topic.
  */
-export const HELP_ANCHORS: Partial<Record<AppKind, string>> = Object.fromEntries(APP_KINDS.map((kind) => [kind, 'common-tasks']))
-
-/** The topic F1 opens for the focused window, with the app's help anchor ("notepad#common-tasks"); a desktop without a focused window gets the keyboard topic. */
 export function topicForApp(app: AppKind | null | undefined): string {
-  if (!app) return KEYBOARD_TOPIC
-  const anchor = HELP_ANCHORS[app]
-  return anchor ? `${app}#${anchor}` : app
+  return app ?? KEYBOARD_TOPIC
 }
 
 /**

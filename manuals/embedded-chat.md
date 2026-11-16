@@ -100,7 +100,7 @@ The context menus of the apps have a group of chat items.
 |---|---|---|
 | Panel | The root of the panel. The attributes `data-role` (`aside` for the chat pane), `data-session-id`, and `data-collapsed` describe it. | `embedded-chat` |
 | Chat pane | The holder of the pane in an app window. | `chat-pane` |
-| Edge toggle | The strip at the right edge, with the word Chat. Click it to open the pane. | `chat-pane-toggle` |
+| Edge toggle | The tab at the right edge, with a chat icon and the word Chat. It pulses when the chat has news. Click it to open the pane. | `chat-pane-toggle` |
 | Open as a chat window | The link under the title bar. It starts a chat in its own window on the same folder. | `embedded-chat-open-window` |
 | Open or close | Hides the pane. In Code Review it shows or hides the panel. | `embedded-chat-toggle` |
 | Title | The name of the chat. | `embedded-chat-title` |

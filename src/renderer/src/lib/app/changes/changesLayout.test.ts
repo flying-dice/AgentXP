@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { RecycledChangeDto } from '@shared/desktop'
-import { DIFF_MIN_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, readListSize, revertedRows, writeListSize } from './changesLayout'
+import { DIFF_MIN_HEIGHT, LIST_MIN_HEIGHT, defaultListHeight, listHeightFor, readListSize, revertedRows, writeListSize } from './changesLayout'
 
 const entry = (id: number, path: string, sessionId: number | null, revertedAt = `2026-11-16T10:0${id}:00Z`): RecycledChangeDto => ({
   id,
@@ -12,12 +12,19 @@ const entry = (id: number, path: string, sessionId: number | null, revertedAt = 
   revertedAt
 })
 
-describe('the height of the list (UX-116)', () => {
-  it('has room for two to four rows and leaves the rest to the diff', () => {
-    expect(defaultListHeight(0)).toBe(defaultListHeight(2))
-    expect(defaultListHeight(3)).toBeGreaterThan(defaultListHeight(2))
-    expect(defaultListHeight(30)).toBe(defaultListHeight(4))
-    expect(DIFF_MIN_HEIGHT).toBeGreaterThanOrEqual(8 * 17)
+describe('the height of the list (UX-151)', () => {
+  it('takes at least half of the room and six rows, and leaves the diff its least height', () => {
+    // A roomy pane: half of it.
+    expect(defaultListHeight(2, 500)).toBe(250)
+    // A short pane: six rows win over half.
+    expect(defaultListHeight(5, 240)).toBe(listHeightFor(6))
+    expect(defaultListHeight(5, 240)).toBeGreaterThanOrEqual(240 / 2)
+    // Many rows grow the list up to ten rows.
+    expect(defaultListHeight(30, 800)).toBe(400)
+    expect(defaultListHeight(8, 300)).toBe(listHeightFor(8))
+    // A tiny pane still gives the list its six rows (the pane scrolls).
+    expect(defaultListHeight(5, 50)).toBe(listHeightFor(6))
+    expect(DIFF_MIN_HEIGHT).toBeGreaterThanOrEqual(5 * 17)
   })
 
   it('remembers the height the user chose for a window, and survives a store that fails', () => {

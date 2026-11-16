@@ -1,9 +1,32 @@
 // J05-J07, J11: prompts, permissions, stopping, pausing.
 import { REDIRECT_FIXED } from '../lib/fixtures.mjs'
-import { agentMessages, all, fail, manual, missingNumbers, pass, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
+import { agentMessages, all, fail, manual, missingNumbers, pass, saysCouldNotTell, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
 
 /** H-74: the lines of redirect.ts that change (REDIRECT_BUG against REDIRECT_FIXED). */
 export const REDIRECT_CHANGED_LINES = [1, 3, 4]
+
+/**
+ * H-85: the order of the answers to the pending requests and the seconds from the request to the answer. A transcript has no
+ * "answered at" time; the answer is the first entry after the request (the agent continues when the box is answered).
+ * `chats` = [{ label, entries }]. Returns notes for check.json; a read-and-allow shows as many seconds, a click without reading as one or two.
+ */
+export function answerOrderNotes(chats) {
+  const rows = []
+  for (const { label, entries } of chats) {
+    const request = permissions(entries).at(0)
+    if (!request) continue
+    const next = entries.filter((e) => e.seq > request.seq && e.createdAt).sort((a, b) => a.seq - b.seq).at(0)
+    const raised = Date.parse(request.createdAt)
+    const answered = next ? Date.parse(next.createdAt) : NaN
+    rows.push({ label, option: request.permission.selectedOptionId ?? request.permission.outcome, answered, seconds: Number.isFinite(answered) && Number.isFinite(raised) ? Math.max(0, Math.round((answered - raised) / 1000)) : null })
+  }
+  rows.sort((a, b) => (a.answered || Infinity) - (b.answered || Infinity))
+  if (!rows.length) return []
+  return [
+    `answer order: ${rows.map((r, i) => `${i + 1}. chat "${r.label}" (${r.option})`).join('; ')}`,
+    `seconds from the request to the next entry: ${rows.map((r) => `"${r.label}" ${r.seconds ?? 'unknown'}`).join('; ')} (the researcher compares with the shots: an Allow without reading shows as a very short time)`
+  ]
+}
 
 const permissions = (entries) => entries.filter((e) => e.kind === 'tool_call' && e.permission)
 
@@ -70,7 +93,10 @@ export const checks = {
     if (result.status !== 'PASS' || !answer) return result
     const plusMinus = /\+\s*3\b/.test(answer) && /[-\u2212\u2013]\s*3\b/.test(answer)
     const missing = missingNumbers(answer, REDIRECT_CHANGED_LINES)
-    return plusMinus || !missing.length ? result : fail(`state ok but the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${REDIRECT_CHANGED_LINES.join(', ')}, or +3 and -3)`, result.notes)
+    if (plusMinus || !missing.length) return result
+    // H-77: ranges are not expanded ("lines 1 to 5" is 1 and 5), and an answer that says it could not tell fails with that reason.
+    const why = saysCouldNotTell(answer) ? 'the answer says that the panelist could not tell which lines change; ' : ''
+    return fail(`state ok but ${why}the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${REDIRECT_CHANGED_LINES.join(', ')} as written, or +3 and -3; a range such as "1 to 5" does not count)`, result.notes)
   },
 
   async 'T06.2'(ctx) {
@@ -99,11 +125,21 @@ export const checks = {
 
   async 'T07.1'(ctx) {
     const results = []
-    for (const id of ctx.state.sessionIds) results.push(permissions(await ctx.transcript(id)).map((e) => e.permission.outcome))
-    return all([
-      [results.every((r) => r.length > 0), 'both chats had a request'],
-      [results.flat().every((o) => o !== 'pending'), `no request is pending (${results.map((r) => r.join('/')).join(' | ')})`]
-    ])
+    const chats = []
+    for (const id of ctx.state.sessionIds) {
+      const entries = await ctx.transcript(id)
+      results.push(permissions(entries).map((e) => e.permission.outcome))
+      const title = (await ctx.sessions?.().catch(() => []))?.find?.((s) => s.id === id)?.title
+      chats.push({ label: title ?? id, entries })
+    }
+    // H-85: either chat may be answered first (the scenario says so); the order and the seconds between the request and the answer go to the notes.
+    return all(
+      [
+        [results.every((r) => r.length > 0), 'both chats had a request'],
+        [results.flat().every((o) => o !== 'pending'), `no request is pending (${results.map((r) => r.join('/')).join(' | ')})`]
+      ],
+      answerOrderNotes(chats)
+    )
   },
 
   async 'T11.1'(ctx) {

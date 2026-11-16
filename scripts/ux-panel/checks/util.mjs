@@ -77,15 +77,18 @@ const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'sev
 export const countWords = (n) => [String(n), ...(NUMBER_WORDS[n] ? [NUMBER_WORDS[n]] : [])]
 
 /**
- * H-60: the whole numbers of a text, with ranges expanded ("1, 3 and 4" -> 1 3 4; "lines 1-4" or "1 to 4" -> 1 2 3 4).
- * A digit inside a longer number or a decimal ("13", "1.5") is not a line number.
+ * H-60: the whole numbers of a text ("1, 3 and 4" -> 1 3 4). A digit inside a longer number or a decimal ("13", "1.5") is not a
+ * line number. With `{ ranges: true }` a range is expanded too ("lines 1-4" or "1 to 4" -> 1 2 3 4); the default does NOT expand
+ * ranges (H-77): "lines 1 to 5" names 1 and 5 only, so an answer that merely lists the whole file does not get credit for 3 and 4.
  */
-export function numbersIn(text) {
+export function numbersIn(text, { ranges = false } = {}) {
   const found = new Set()
   const t = String(text ?? '')
-  for (const m of t.matchAll(/(?<![\d.])(\d+)\s*(?:-|\u2013|to|through)\s*(\d+)(?![\d.])/gi)) {
-    const [a, b] = [Number(m[1]), Number(m[2])]
-    if (b >= a && b - a <= 200) for (let n = a; n <= b; n++) found.add(n)
+  if (ranges) {
+    for (const m of t.matchAll(/(?<![\d.])(\d+)\s*(?:-|\u2013|to|through)\s*(\d+)(?![\d.])/gi)) {
+      const [a, b] = [Number(m[1]), Number(m[2])]
+      if (b >= a && b - a <= 200) for (let n = a; n <= b; n++) found.add(n)
+    }
   }
   for (const m of t.matchAll(/(?<![\d.])\d+(?![\d]|\.\d)/g)) found.add(Number(m[0]))
   NUMBER_WORDS.forEach((word, n) => {
@@ -94,8 +97,11 @@ export function numbersIn(text) {
   return found
 }
 
-/** H-60: the wanted numbers that the text does not name. */
+/** H-60/H-77: the wanted numbers that the text does not name as written (no range expansion). */
 export const missingNumbers = (text, wanted) => wanted.filter((n) => !numbersIn(text).has(n))
+
+/** H-77: the answer says that the panelist could not tell ("could not say which lines", "cannot tell", "no idea", "unclear"). */
+export const saysCouldNotTell = (text) => /\b(?:cannot|can't|could\s?not|couldn't|unable to|not able to)\s+(?:\w+\s+)?(?:tell|say|see|find|know|show)\b|\bno idea\b|\bunclear\b|\bnot sure\b/i.test(String(text ?? ''))
 
 /** Keyword group for a file path: the base name with and without the extension ("README.md", "README"). */
 export function nameWords(path) {

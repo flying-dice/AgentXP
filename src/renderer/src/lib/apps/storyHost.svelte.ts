@@ -84,6 +84,7 @@ export class StoryHost implements DesktopHost {
 
   sendFileToChat = async (_windowId: number, _filePath: string, _text: string): Promise<void> => {}
   stoppedByPause = (_sessionId: number): boolean => false
+  readonly agentBusy = false
   startDefaultChat = async (): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId))
   startChat = async (cwd: string): Promise<void> => void (await this.api.desktop.newChat(this.current.desktopId, undefined, cwd))
 

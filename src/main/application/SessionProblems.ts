@@ -9,6 +9,9 @@ import type {
 } from '@shared/models'
 import type { NewSession, SessionRepository } from '../domain/repositories/session-repository'
 
+/** The kinds that report the agent program going away mid-use; two of them in a row, with no start between, are one failure. */
+const STOPS: ReadonlySet<SessionProblemDto['kind']> = new Set(['agent-stopped', 'agent-ended'])
+
 /**
  * What is wrong with a chat's agent right now (could not start, stopped, ended), by session. In memory on purpose:
  * a problem describes the live agent program, and the next successful start clears it. `ProblemAwareSessions` lets
@@ -26,12 +29,14 @@ export class SessionProblems {
 
   /** Records a failure; the problem carries how many times in a row this chat failed (`failures`). */
   set(sessionId: Id, problem: SessionProblemDto): void {
-    // One crash is reported twice (the connection closes, then the running turn fails): while the problem is still open it counts once.
+    // One crash (or one end in Task Manager) is reported twice (the connection closes, then the running turn fails): while the
+    // problem is still open, no start has come after the earlier report, so it counts once. The user's own end wins the wording.
     const open = this.problems.get(sessionId)
-    const again = open?.kind === problem.kind && problem.kind === 'agent-stopped'
+    const again = open !== undefined && STOPS.has(open.kind) && STOPS.has(problem.kind)
     const failures = again ? (open?.failures ?? 1) : (this.failures.get(sessionId) ?? 0) + 1
     this.failures.set(sessionId, failures)
-    this.problems.set(sessionId, { ...problem, failures })
+    const keep = again && open.kind === 'agent-ended' ? open : problem
+    this.problems.set(sessionId, { ...keep, failures })
   }
 
   /** Takes the problem away (a restart is about to try again); the count of failures in a row stays. */

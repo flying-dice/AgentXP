@@ -38,6 +38,7 @@
   import { ViewSync } from '../viewSync'
   import { closeTab, focusKey, isFocused, openTab, readLayout, reconcileTabs, sameRange, scrollTopForLine, toggleFocus, visibleRange, writeLayout, type Panes } from './codeModel'
   import { localStore } from '../../desktop/chatPane'
+  import { chatStripHidden } from '../../desktop/chatStrip.svelte'
   import { treeMenu, treeToolbar, type TreeMenuTarget } from './codeContext'
   import DockPane from './DockPane.svelte'
   import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitRowTooltip, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
@@ -54,6 +55,8 @@
     const usb = sortDrives(host.state.drives).filter((d) => d.kind === 'removable')
     return usb.length > 0 ? usb.map((d) => ({ path: driveRoot(d.letter), name: driveTitle(d) })) : [{ path: host.state.home, name: vpathName(host.state.home) }]
   })
+  /** At least one project is plugged in: with none the tree shows only the agent's home. */
+  const hasProject = $derived(host.state.drives.some((d) => d.kind === 'removable'))
   const rootsKey = $derived(roots.map((r) => r.path).join('|'))
 
   let tabs = $state<string[]>([])
@@ -451,6 +454,15 @@
     showLogs = next.logs
     if (next.chat !== host.chatPaneOpen(win.id)) host.toggleChatPane(win.id)
   }
+  // Focus mode hides the collapsed chat strip too; the Focus-mode bar has the way back to the chat (UX-153).
+  $effect(() => {
+    const id = win.id
+    if (focusMode) chatStripHidden.add(id)
+    else chatStripHidden.delete(id)
+    return () => void chatStripHidden.delete(id)
+  })
+  /** Focus mode, "Chat": opens the chat pane, which ends Focus mode. */
+  const openChatFromFocus = (): void => host.toggleChatPane(win.id)
   function toggleFocusOnFile(): void {
     const next = toggleFocus(panes, restorePanes)
     restorePanes = next.remembered
@@ -514,6 +526,15 @@
     } catch (error) {
       await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
     }
+  }
+
+  /** One click on a Git row opens its diff (UX-152). A double click is a click and an activation: the same row opens once. */
+  let lastReview = { path: '', at: 0 }
+  function reviewRow(id: string): void {
+    const path = rowReviewPath(gitRows, id)
+    if (!path || (path === lastReview.path && Date.now() - lastReview.at < 800)) return
+    lastReview = { path, at: Date.now() }
+    void showChanges(path)
   }
 
   async function plugIn(): Promise<void> {
@@ -656,7 +677,7 @@
         { separator: true },
         { id: 'code-open', label: '&Open...', icon: 'open-folder', shortcut: 'Ctrl+O', action: () => (openDialog = true) },
         { separator: true },
-        { id: 'code-plug-in', testid: 'code-menu-plug-in', label: '&Plug in a project...', icon: 'plus', action: () => void plugIn() },
+        { id: 'code-plug-in', testid: 'code-menu-plug-in', label: '&Plug in a folder...', icon: 'plus', action: () => void plugIn() },
         { id: 'code-eject', testid: 'code-menu-eject', label: 'Remo&ve project from desktop...', icon: 'usb', disabled: ejectable === null, action: () => ejectable && void host.ejectDrive(ejectable) },
         { separator: true },
         { id: 'code-close-file', label: '&Close file', disabled: active === null, action: () => active && close(active) },
@@ -795,11 +816,11 @@
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Code" />
   <AppAbout {help} />
   <ToolStrip aria-label="Code toolbar" class="cb-tools">
-    <ToolStripButton data-testid="code-open" icon="open-folder" title="Open file (Ctrl+O)" onclick={() => (openDialog = true)} />
+    <ToolStripButton data-testid="code-open" icon="open-folder" title="Open a file (Ctrl+O)" aria-label="Open a file" onclick={() => (openDialog = true)} />
     <Separator orientation="vertical" />
-    <ToolStripButton data-testid="code-prev-change" icon="chevron-up" title="Previous change (Shift+Alt+F5)" aria-label="Previous change" disabled={lineChanges.length === 0} onclick={() => step(-1)} />
-    <ToolStripButton data-testid="code-next-change" icon="chevron-down" title="Next change (Alt+F5)" aria-label="Next change" disabled={lineChanges.length === 0} onclick={() => step(1)} />
-    <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title="Revert hunk" aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
+    <ToolStripButton data-testid="code-prev-change" icon="chevron-up" aria-label="Previous change" title={lineChanges.length === 0 ? 'The open file has no changes to step through.' : 'Previous change (Shift+Alt+F5)'} disabled={lineChanges.length === 0} onclick={() => step(-1)} />
+    <ToolStripButton data-testid="code-next-change" icon="chevron-down" aria-label="Next change" title={lineChanges.length === 0 ? 'The open file has no changes to step through.' : 'Next change (Alt+F5)'} disabled={lineChanges.length === 0} onclick={() => step(1)} />
+    <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title={revertTarget === null ? 'Select a changed line in the file first.' : 'Revert hunk'} aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-ask-selection" icon="session" text="Ask about selection" title={selection ? 'Ask the chat about the lines you selected' : 'Select some lines of the file first'} disabled={active === null || selection === null} onclick={() => ask('ask', selectedText() || linesOf(text, selection))} />
     <Separator orientation="vertical" />
@@ -808,6 +829,9 @@
     <ToolStripButton text="Management" icon="folder" bind:checked={showManagement} checkOnClick data-testid="code-management-toggle" title="Show or hide the Management pane" />
     <ToolStripButton text={changes.length > 0 ? `Changes and Git (${changes.length})` : 'Changes and Git'} icon="changes" bind:checked={showLogs} checkOnClick data-testid="code-changes-toggle" title="Show or hide the Changes and Git pane" />
     {#snippet trailing()}
+      {#if focusMode}
+        <ToolStripButton data-testid="code-focus-chat" icon="session" text="Chat" title="Bring back the chat pane (Ctrl+Shift+C)" onclick={openChatFromFocus} />
+      {/if}
       {#if editing}
         <span class="editing" data-testid="code-editing" role="status"><Icon name="edit" /> Agent is editing {active ? vpathName(active) : ''}</span>
       {/if}
@@ -829,8 +853,15 @@
             {#if tab.id === 'projects'}
               <ToolStrip aria-label="Project tools" class="tree-tools">
                 <ToolStripButton data-testid="code-tree-new-chat" icon="session" text="New chat here" title="Start a chat that works in the selected project or folder" onclick={newChatHere} />
+                <ToolStripButton data-testid="code-tree-plug-in" icon="plus" text="Plug in a folder" title="Plug in a folder from your computer as a project" onclick={() => void plugIn()} />
                 <ToolStripButton data-testid="code-tree-remove" icon="usb" text="Remove from desktop" disabled={!treeBar.removable} title={treeBar.removable ? 'Take the selected project off the desktop. Its folder stays on your disk.' : 'Select a project in the tree to take it off the desktop.'} onclick={removeSelectedProject} />
               </ToolStrip>
+              {#if !hasProject}
+                <div class="plug-hint" data-testid="code-tree-empty">
+                  No project is plugged in yet.
+                  <button type="button" class="plug-link" data-testid="code-tree-empty-plug-in" onclick={() => void plugIn()}>Plug in a folder</button>
+                </div>
+              {/if}
               <div class="tree" data-testid="code-tree" role="presentation" oncontextmenu={(e) => treeContext(e, null)}>
                 {#key rootsKey}
                   <FileTree bind:this={tree} bind:selectedTarget={treeTarget} {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} oncontextmenu={(target, e) => treeContext(e, target)} />
@@ -916,7 +947,7 @@
           {#snippet panel(tab)}
             {#if tab.id === 'changes'}
               <div class="changes" data-testid="code-changes">
-                <ChangesPane {changes} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
+                <ChangesPane {changes} gitCount={gitEntries.length} onopengit={() => (logsTab = 'git')} reverted={revertedChanges.list} layoutKey={`code-${win.id}`} bind:selectedId={selectedChangeId} onrevert={(c) => revert(c)} onopeneditor={(c) => show(c.path)} onopenrecyclebin={() => void host.openApp({ app: 'recycle-bin' })} />
               </div>
             {:else}
               <div class="gitpane" data-testid="code-git-pane">
@@ -935,10 +966,8 @@
                   testid="code-git-list"
                   emptyText={activeStatus ? 'Nothing to commit.' : ''}
                   aria-label="Git status"
-                  onactivate={(row) => {
-                    const path = rowReviewPath(gitRows, row.id)
-                    if (path) void showChanges(path)
-                  }}
+                  onselect={(ids) => ids[0] && reviewRow(ids[0])}
+                  onactivate={(row) => reviewRow(row.id)}
                   oncontextmenu={gitRowMenu}
                 />
               </div>
@@ -1034,6 +1063,23 @@
     height: auto;
     min-height: 26px;
     flex-wrap: wrap;
+  }
+  .plug-hint {
+    flex: none;
+    padding: 4px 6px;
+    color: var(--w7-text-muted);
+    background: var(--w7-window);
+    border-bottom: 1px solid var(--w7-list-border);
+  }
+  .plug-link {
+    min-height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--w7-link);
+    font: inherit;
+    text-decoration: underline;
+    cursor: default;
   }
   .tree {
     flex: 1;

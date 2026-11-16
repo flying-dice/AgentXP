@@ -19,20 +19,20 @@ import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
-import { closeChatBalloon } from './closeChat'
+import { closeChatBalloon, isTurnRunning } from './closeChat'
 import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, pluggedBalloonText, projectQuoted, removeProjectText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
-import { isBusy } from '../app/sessionStatus'
+import { effectiveStatus, isBusy } from '../app/sessionStatus'
 import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE, resumedLine, stoppedLine } from '../app/session/resumeNote'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
 import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
-import type { PendingApproval } from './approval'
+import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import type { BarRect } from './geometry'
+import { fitInsideWorkArea, type BarRect } from './geometry'
 import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
 import { ICON_HINT, takeIconHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
@@ -53,6 +53,8 @@ export interface Balloon {
   title: string
   text: string
   icon: 'usb-safe' | 'info'
+  /** A button under the text; clicking it runs `run` and hides the balloon. */
+  action?: { label: string; run: () => void }
 }
 
 export const BALLOON_MS = 9000
@@ -169,7 +171,8 @@ export class DesktopController implements DesktopHost {
   get activityInputs(): ChatActivityInput[] {
     return this.allSessions.flatMap((s): ChatActivityInput[] => {
       const store = this.inbox.stores.get(s.id)
-      return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: store.state.session.status === 'closed' ? s.status : store.state.session.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
+      // The status inside the chat's own state can be old (UX-145): `effectiveStatus` prefers the session row for connecting and error.
+      return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: effectiveStatus(store.state.session.status, s.status) ?? s.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
   }
   /** A chat was busy when the user took control: the Activity gadget says "Stopped: you took control". */
@@ -182,10 +185,23 @@ export class DesktopController implements DesktopHost {
   get chatsOpen(): number {
     return this.state.windows.filter((w) => w.view.app === 'chat').length
   }
+  /** True while a turn of any chat of this desktop runs or waits for an answer. */
+  get agentBusy(): boolean {
+    return this.allSessions.some((s) => isTurnRunning(s.status))
+  }
   /** "Waiting for you: 2 requests to approve", "Read src/a.ts" or null (idle). */
   get working(): string | null {
     const inputs = this.activityInputs
-    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })), this.waitingCount)
+    return workingText(inputs.length ? inputs : this.allSessions.map((s) => ({ sessionId: s.id, title: s.title, status: s.status, toolCalls: {} })), this.waitingCount, this.focusedChatId)
+  }
+  /** The chat the user works in: the focused chat window, else null (the status text then follows every working chat). */
+  get focusedChatId(): number | null {
+    const view = this.focusedWindow?.view
+    return view?.app === 'chat' ? view.sessionId : null
+  }
+  /** The words of the "waiting" link of the bar: the chat that waits longest, named ("Fix login is waiting: run a command"). */
+  get waitingLinkText(): string | null {
+    return waitingLinkText(this.inbox.pending)
   }
   /** "Agent: not started" while a chat of this desktop has an agent that could not start (the red chip of the bar); else null. */
   get agentProblem(): string | null {
@@ -356,7 +372,26 @@ export class DesktopController implements DesktopHost {
       await this.raiseWindow(existing.id)
       return this.windowById(existing.id) ?? existing
     }
-    return this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
+    const opened = await this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
+    if (input.app === 'help') {
+      this.dismissBalloon() // the welcome balloon would cover the Help window's footer (UX-148)
+      return this.fitToWorkArea(opened)
+    }
+    return opened
+  }
+
+  /** The size of the area windows live in (the window layer sets it); null until the layer is shown. */
+  workArea: (() => { width: number; height: number }) | null = null
+
+  /** Main places windows for a default desktop size; a window that sticks out of the real one is pulled in and sent back to main. */
+  private async fitToWorkArea(win: AppWindowState): Promise<AppWindowState> {
+    const area = this.workArea?.()
+    if (!area || area.width <= 0 || area.height <= 0) return win
+    const bounds = fitInsideWorkArea(win.bounds, area, this.barRect?.height ?? 0)
+    if (bounds.x === win.bounds.x && bounds.y === win.bounds.y && bounds.width === win.bounds.width && bounds.height === win.bounds.height) return win
+    this.patch(win.id, { bounds })
+    await this.api.desktop.setBounds(win.id, bounds)
+    return { ...win, bounds }
   }
 
   /**
@@ -374,7 +409,10 @@ export class DesktopController implements DesktopHost {
     // A chat that closes while its turn runs: the agent goes on, and the user is told where to find it (UX-136).
     const view = this.current?.windows.find((w) => w.id === windowId)?.view
     const notice = closeChatBalloon(view, view?.app === 'chat' ? this.sessions.byId(view.sessionId)?.status : undefined)
-    if (notice) this.showBalloon({ ...notice, icon: 'info' })
+    if (notice) {
+      const { action, ...text } = notice
+      this.showBalloon({ ...text, icon: 'info', action: { label: action, run: () => void this.openApp({ app: 'agent-manager' }) } })
+    }
     if (this.current) {
       const windows = this.current.windows.filter((w) => w.id !== windowId)
       this.current = { ...this.current, windows, focusedWindowId: this.current.focusedWindowId === windowId ? nextFocus(windows) : this.current.focusedWindowId }
@@ -559,7 +597,7 @@ export class DesktopController implements DesktopHost {
   }
 
   /**
-   * "Ask before every action" and "Give control back". Taking control stops the running steps in main; the bar then reads
+   * "Ask before every action" and "Resume". Taking control stops the running steps in main; the bar then reads
    * "You are in control" and the chats read "Waiting for you" instead of "Working".
    */
   async toggleUserInControl(): Promise<void> {
@@ -1007,10 +1045,15 @@ export class DesktopController implements DesktopHost {
     }
   }
 
-  /** The "Waiting for you" link of the bar: opens the next request of the inbox. */
+  /**
+   * The "waiting" link of the bar: goes to the chat of the oldest request, where the box with Allow and Deny is (UX-138).
+   * A request of a session without a chat window (a reviewer) opens the Action Center dialog instead.
+   */
   async openNextRequest(): Promise<void> {
-    const next = this.inbox.pending[0]
-    if (next) await this.review(next)
+    const next = nextApproval(this.inbox.pending)
+    if (!next) return
+    if (this.sessions.byId(next.sessionId)?.role === 'chat') await this.openApp({ app: 'chat', sessionId: next.sessionId })
+    else await this.review(next)
   }
 
   /** The reviewed approval answered (option id) or dismissed without answering (undefined). */

@@ -161,5 +161,8 @@ describe('Code Review', () => {
       const states = await review.threads.evaluateAll((els) => els.map((e) => e.getAttribute('data-state')))
       expect(states).toEqual(['sent', 'sent'])
     })
+    // After Send the count in the tab is the count in the banner: both say 2, none says 0 (UX-155).
+    await see.text(review.frame.getByTestId('review-comments-toggle'), 'Comments (2)')
+    await see.text(review.frame.getByTestId('review-banner-comments'), '2 comments')
   })
 })

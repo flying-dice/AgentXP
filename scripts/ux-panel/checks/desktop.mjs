@@ -18,7 +18,7 @@ export const checks = {
     const closed = windowsOf(state, 'terminal').length === 0 && !state.tools.includes('terminal')
     const stateResult = denied ? pass('Terminal policy is Deny (Permissions route)') : closed ? pass('no Terminal window is open and the terminal tool is off (closing route)') : fail('Terminal is still usable: a Terminal window is open or its tool is on, and the policy is not Deny')
     return withAnswer(stateResult, answer, {
-      keywords: [['chip', 'top bar', 'tools', 'workspace bar', 'agent can use', 'closed', 'deny', 'denied']],
+      keywords: [['chip', 'top bar', 'tools', 'workspace bar', 'agent can use', 'closed', 'deny', 'denied', 'never', 'no terminal']],
       expect: 'the panelist names the chip list (Workspace bar / Agent can use), the closed Terminal or the Deny policy as the proof'
     })
   },

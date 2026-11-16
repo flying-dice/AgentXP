@@ -16,6 +16,7 @@
    * "New conversation" (`onnew`), suggestion chips and `prefill` (fills and focuses the composer).
    */
   import { untrack } from 'svelte'
+  import ChatStrip from './ChatStrip.svelte'
   import { DESKTOP_CONTEXT_DESCRIPTION } from '@shared/desktop'
   import type { AgentDto, FolderDto, SessionDto, SessionRole } from '@shared/models'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
@@ -268,10 +269,7 @@
 
 {#if collapsible && collapsed}
   <aside class="strip" data-testid="embedded-chat" data-role={role} data-session-id={sessionId} data-collapsed="true" aria-label="Chat pane (collapsed)">
-    <button type="button" class="expand" data-testid="embedded-chat-toggle" aria-label="Show chat" title={OPEN_PANE_TIP} onclick={() => (collapsed = false)}>
-      <Icon name="chevron-left" />
-    </button>
-    <span class="vertical">{heading}</span>
+    <ChatStrip testid="embedded-chat-toggle" title={OPEN_PANE_TIP} onopen={() => (collapsed = false)} />
   </aside>
 {:else}
   {#if resizable}
@@ -379,8 +377,7 @@
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
   }
-  .collapse,
-  .expand {
+  .collapse {
     flex: none;
     width: 24px;
     height: 24px;
@@ -392,8 +389,7 @@
     border: 1px solid transparent;
     border-radius: 3px;
   }
-  .collapse:hover,
-  .expand:hover {
+  .collapse:hover {
     border-color: var(--w7-btn-hover-border);
     background: var(--w7-btn-hover-face);
   }
@@ -421,22 +417,7 @@
   }
   .strip {
     flex: none;
-    width: 28px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding-top: 4px;
-    background: linear-gradient(90deg, #f9fbfd, #e4ecf6);
-    border-left: 1px solid #9aa9bf;
-  }
-  .vertical {
-    writing-mode: vertical-rl;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 260px;
-    color: var(--w7-text-muted);
   }
   /* A 24 px wide hit area (WCAG 2.5.8) that takes the room of 5 px; only the middle 5 px is painted. */
   .resizer {

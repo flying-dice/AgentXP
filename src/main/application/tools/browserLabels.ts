@@ -21,14 +21,23 @@ const tidy = (name: string): string => {
 const TEXT_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'textarea', 'spinbutton'])
 const NAMED_ROLES: Record<string, string> = { button: 'button', link: 'link', checkbox: 'check box', radio: 'option', tab: 'tab', menuitem: 'menu item', switch: 'switch' }
 
-/** "Clicking the button 'Send'", "Clicking the link 'More'", "Clicking an item on the page" when it has no name. */
-export function clickLabel(element: ElementName | undefined, double = false): string {
-  const verb = double ? 'Double-clicking' : 'Clicking'
+/** What a click lands on, in words: "the button 'Send'", "the link 'More'", "'Send'" for an unknown kind, "an item on the page" without a name. */
+export function clickTarget(element: ElementName | undefined): string {
   const name = element ? tidy(element.name) : ''
   const kind = element ? NAMED_ROLES[element.role] : undefined
-  if (name && kind) return `${verb} the ${kind} '${name}'`
-  if (name) return `${verb} '${name}'`
-  return kind ? `${verb} a ${kind}` : `${verb} an item on the page`
+  if (name && kind) return `the ${kind} '${name}'`
+  if (name) return `'${name}'`
+  return kind ? `a ${kind}` : 'an item on the page'
+}
+
+/** "Clicking the button 'Send'", "Clicking the link 'More'", "Clicking an item on the page" when it has no name. */
+export const clickLabel = (element: ElementName | undefined, double = false): string => `${double ? 'Double-clicking' : 'Clicking'} ${clickTarget(element)}`
+
+/** The box a person typed into: "'Message #general'", or "a text box" when it has no name; null when the element is not known. */
+export function typeTarget(element: ElementName | undefined): string | null {
+  if (!element) return null
+  const name = tidy(element.name)
+  return name ? `'${name}'` : 'a text box'
 }
 
 /** "Typing into the message box" for a box named Message; "Typing into a text box" when it has no name. */

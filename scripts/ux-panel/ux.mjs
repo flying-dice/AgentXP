@@ -13,12 +13,13 @@ const USAGE = `ux commands:
   click <x> <y> [--double|--right]
   move <x> <y>                    move the mouse (hover)
   drag <x1> <y1> <x2> <y2>
-  scroll <x> <y> <dy>             positive dy scrolls down
+  scroll <x> <y> <dy>             dy is in pixels, positive = down: 100 is one wheel notch, 200 to 300 is about a page
+                                  (under 20 barely moves anything); the output says how far the content moved
   type "<text>"                   type text where the keyboard focus is
   key <combo>                     Enter, Escape, Tab, Shift+Tab, Control+N, Alt+F4, F1 ...
   wait <ms>                       wait up to 10000 ms
   find "<visible text>"           where does this text appear on screen?
-Coordinates are pixels in the current window (screenshots are 1280x800). Every action prints a new screenshot path.`
+Coordinates are pixels in the current window (screenshots are 1280x800). Every action prints a new screenshot path and "Step N", the number of actions you have done (click, move, drag, scroll, type and key each count one).`
 
 let argv = process.argv.slice(2)
 let sessionDir = process.env.UX_SESSION

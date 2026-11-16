@@ -56,19 +56,19 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
 - **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
-- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, for example **Run commands: Ask**. When no app that gives the agent this tool is open, the chip adds it, for example **Run commands: Ask (no Terminal open)**. Point to a chip to read what it means. Chips of other apps appear while the app is open. Click a chip to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
+- **Agent can use** – Always has the chips **Read files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, for example **Run commands: Ask**. When no app that gives the agent this tool is open, the chip adds it, for example **Run commands: Ask (no Terminal open)**. Point to a chip to read what it means. Chips of other apps appear while the app is open. Each chip is a button with a border. Click it to open the Permissions page of Control Center. If no app is open, the bar adds **Agent can use nothing yet. Open an app to give it a tool.**
 - **Pause all agents or Resume agents and continue** – Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents and continue**. Then each chat that was stopped gets the message **Please continue where you stopped.** and carries on. The Action Center has a line for each chat that was stopped.
-- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads, for example, **You are in control. Tools that need an app ask first. Terminal and Browser are not open.** and the button **Give control back** shows. Click the button, or clear the box, to go back to the settings in Control Center.
+- **Ask before every action** – A check box. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads **You are in control. All tools ask first until you resume.** and the button **Resume** shows. Click the button, or clear the box, to go back to the settings in Control Center.
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: talk to the agent**. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens Task Manager, where **Switch to chat** opens one. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
 Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Center**.
 
 ### The Windows
 
-Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from the Task Manager.** A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
+Each app opens in a window with a title bar. The title bar has the name of the window and three buttons: **Minimize**, **Maximize**, and **Close**. Drag the title bar to move the window. Drag an edge to change the size. Drag a window to the top edge to maximize it. When you close a chat window while the agent works, a balloon says **The agent keeps working. Open it again from Chats on the desktop.** The balloon has a button, **Open Task Manager**. A chat that you start from the Browser opens beside the Browser, in the half of the desktop that the Browser does not use.
 
 If the agent opened a window, the label **opened by agent** appears at its edge. The taskbar button of a window that the agent opened behind your chat flashes until you select it.
 
@@ -143,12 +143,12 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
-| Tool chip | Names one tool group, for example Read files. Opens Control Center at Permissions. | `topbar-tool-chip-*` |
+| Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask**. Its tooltip is **Open Control Center.** A click opens Control Center at Permissions. | `topbar-tool-chip-*` |
 | Nothing yet | Shows that no app and no chat is open, or that only chats are. | `topbar-tool-chips-none` |
-| Waiting for you | The status while requests wait, for example "Waiting for you: 2 requests to approve". Click it to open the next request. | `topbar-waiting-link` |
+| Waiting link | The status while requests wait. It names the chat, for example "Fix login redirect is waiting: run a command (1 of 2 waiting)". Click it to go to the chat with the oldest request. | `topbar-waiting-link` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
 | Ask before every action | A check box. Makes the agent ask before every action. | `topbar-take-control` |
-| Give control back | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
+| Resume | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
 | Agent: not started | A red chip. It shows when the agent of a chat could not start. Open that chat to see why. | `topbar-agent-problem` |
 
 ### Icons, windows, and desktop menu
@@ -182,6 +182,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Balloon title | Shows the title of the message. | `balloon-title` |
 | Balloon text | Shows the text of the message. | `balloon-text` |
 | Balloon close | Closes the balloon. | `balloon-close` |
+| Balloon button | Runs the action that the balloon offers, for example Open Task Manager. | `balloon-action` |
 
 ### Start menu
 

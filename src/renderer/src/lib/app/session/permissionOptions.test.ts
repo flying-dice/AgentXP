@@ -48,10 +48,13 @@ it('lowercases a verb title for the sentence', () => {
 })
 
 describe('keys and announcement', () => {
-  it('maps Alt+A and Alt+D to the two answers and ignores everything else', () => {
+  it('maps A, Alt+A and Alt+D to the answers and ignores everything else (Enter belongs to the focused Deny)', () => {
     expect(decisionForKey({ key: 'a', altKey: true })).toBe('allow')
     expect(decisionForKey({ key: 'D', altKey: true })).toBe('deny')
-    expect(decisionForKey({ key: 'a', altKey: false })).toBeNull()
+    expect(decisionForKey({ key: 'a', altKey: false })).toBe('allow')
+    expect(decisionForKey({ key: 'd', altKey: false })).toBeNull()
+    expect(decisionForKey({ key: 'Enter', altKey: false })).toBeNull()
+    expect(decisionForKey({ key: 'A', altKey: false, shiftKey: true })).toBeNull()
     expect(decisionForKey({ key: 'a', altKey: true, ctrlKey: true })).toBeNull()
     expect(decisionForKey({ key: 'x', altKey: true })).toBeNull()
   })

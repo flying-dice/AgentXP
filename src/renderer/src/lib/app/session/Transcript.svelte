@@ -4,6 +4,7 @@
   import type { A2uiClientEvent } from '@shared/a2ui'
   import type { AguiSessionState } from '@shared/agui-state'
   import type { SurfaceActivity } from '../../agui/activities'
+  import Button from '../../kit/atoms/Button.svelte'
   import ProgressBar from '../../kit/atoms/ProgressBar.svelte'
   import type { ChatProblem, ProblemActionId, SendState } from './chatProblem'
   import A2uiActivity from './A2uiActivity.svelte'
@@ -17,6 +18,7 @@
   import ToolCallItem from './ToolCallItem.svelte'
   import VirtualList from '../../kit/organisms/VirtualList.svelte'
   import UserMessage from './UserMessage.svelte'
+  import { RESTARTED_LEAD, RESTARTED_RESEND, quotedRequest } from './resumeNote'
   import ActivityGroup from './ActivityGroup.svelte'
   import { transcriptDetail } from './transcriptDetail.svelte'
   import { browserWork } from './browserSteps'
@@ -38,6 +40,9 @@
     problemDetails?: string | null
     /** A restart of the agent: `working` shows "Restarting the agent..." with progress, `done` "The agent is running again.". */
     restart?: 'working' | 'done' | null
+    /** The request that was not sent again after a restart (the line with "Send it again"); null when there is none. */
+    restartedRequest?: string | null
+    onresendrestarted?: () => void
     /** The send state of a user message by message id (`not-sent`, `stopped`); a message not in it was sent. */
     sendStates?: ReadonlyMap<string, SendState>
     /** "Send again" and "Edit" of a message that was not sent. */
@@ -69,6 +74,8 @@
     onproblem,
     problemDetails = null,
     restart = null,
+    restartedRequest = null,
+    onresendrestarted,
     sendStates = new Map(),
     onresend,
     onedit,
@@ -292,6 +299,13 @@
         {/if}
       </div>
     {/if}
+    {#if restartedRequest !== null && !problem && !running && restart !== 'working'}
+      <div class="row restarted" role="status" data-testid="chat-restarted-note">
+        <span>{RESTARTED_LEAD}</span>
+        <q class="quote" data-testid="chat-restarted-text">{quotedRequest(restartedRequest)}</q>
+        <Button data-testid="chat-restarted-resend" onclick={() => onresendrestarted?.()}>{RESTARTED_RESEND}</Button>
+      </div>
+    {/if}
     {#if running}
       <div class="busy">
         <span>{agentName} is working…</span>
@@ -331,6 +345,19 @@
     align-items: center;
     gap: 10px;
     color: #333;
+  }
+  .restarted {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    background: #f4f7fb;
+    color: #1d3a63;
+  }
+  .restarted .quote {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-style: italic;
   }
   .more:hover {
     border-color: var(--w7-btn-hover-border);

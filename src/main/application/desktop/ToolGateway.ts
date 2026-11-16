@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { DesktopState, ToolPolicyDto } from '@shared/desktop'
 import type { Id } from '@shared/models'
+import { gateRawInput } from '@shared/gateReason'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { PermissionDecision, PermissionPrompt } from '../../domain/agent/PermissionPrompter'
 import { ToolRefusedError, type ToolGate, type ToolGateRequest } from '../../domain/agent/ToolGate'
@@ -65,10 +66,10 @@ export class ToolGateway {
     this.deps.events.publish(sessionId, {
       type: 'tool_call_created',
       toolCallId,
-      title: `${title} (${reason})`,
+      title,
       toolKind: 'other',
       status: 'pending',
-      rawInput: null,
+      rawInput: gateRawInput(reason),
       rawOutput: null,
       locations: [],
       contents: []

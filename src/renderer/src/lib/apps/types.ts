@@ -59,6 +59,8 @@ export interface DesktopHost {
   sendFileToChat(windowId: Id, filePath: string, text: string): Promise<void>
   /** True while the desktop is paused and Pause stopped a step of this chat: the chat says it continues on Resume. */
   stoppedByPause(sessionId: Id): boolean
+  /** True while any chat of this desktop has a turn that runs or waits for an answer (the Browser clears its yellow bar when it ends). */
+  readonly agentBusy: boolean
 }
 
 export interface AppProps<K extends AppKind = AppKind> {

@@ -181,6 +181,10 @@ export class DesktopPage {
     return this.page.getByTestId('balloon-title')
   }
 
+  get balloonAction(): Locator {
+    return this.page.getByTestId('balloon-action')
+  }
+
   get balloonText(): Locator {
     return this.page.getByTestId('balloon-text')
   }

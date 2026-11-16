@@ -104,7 +104,8 @@ describe('ToolGateway', () => {
     expect(broker.prompts).toHaveLength(1)
     expect(broker.prompts[0]?.options.map((o) => o.kind)).toEqual(['allow_once', 'reject_once'])
     expect(events.map((e) => e.type)).toEqual(['tool_call_created', 'tool_call_updated'])
-    expect(events[0]).toMatchObject({ title: expect.stringContaining('Writing files is set to Ask') })
+    expect(events[0]).toMatchObject({ title: 'Do it', rawInput: expect.stringContaining('Writing files is set to Ask') })
+    expect((events[0] as { title: string }).title).not.toMatch(/Control Center/)
     expect(events[1]).toMatchObject({ patch: { status: 'completed' } })
   })
 
