@@ -12,6 +12,7 @@ import { SessionEventBus } from '../SessionEventBus'
 import { SessionQueryService } from '../SessionQueryService'
 import type { PromptTurnInput } from '../SessionService'
 import { createAppFixture } from '../test-helpers'
+import { ToolCallDiffs } from '../vfs/ToolCallDiffs'
 import { AguiRunCoordinator } from './AguiRunCoordinator'
 import { collect, expectValidStream, RunnerAgent, types } from './test-helpers'
 
@@ -38,7 +39,14 @@ beforeEach(() => {
   bus = new SessionEventBus()
   fan = new FanOutEventPublisher(f.publisher)
   broadcaster = new SessionBroadcaster(f.repos.sessions, fan)
-  broker = new PermissionBroker(f.repos.permissions, f.repos.transcripts, fan, broadcaster)
+  broker = new PermissionBroker(
+    f.repos.permissions,
+    f.repos.transcripts,
+    fan,
+    broadcaster,
+    (_id, toolCall) => toolCall,
+    new ToolCallDiffs({ stat: async () => ({ kind: 'file' }) as never, readFile: async () => 'old\n' }, () => 1)
+  )
   counter = 0
   dispatched = []
   cancelled = []
@@ -328,6 +336,22 @@ describe('AguiRunCoordinator: permission interrupts', () => {
     )
     expect(types(stale)).toContain(EventType.MESSAGES_SNAPSHOT)
     expect(ofType(stale, EventType.RUN_FINISHED)[0]?.outcome).toEqual({ type: 'success' })
+  })
+
+  it('UX-114: the state the permission box reads has the old text the broker read (the agent sent the diff without it, then asked with a title only)', async () => {
+    script = async () => {
+      const contents = [{ kind: 'diff' as const, path: 'E:\\a.txt', oldText: null, newText: 'new\n' }]
+      f.repos.transcripts.upsertToolCall(f.sessionId, { toolCallId: 't1', title: 'Write file', toolKind: 'edit', contents })
+      emit(toolCall({ contents }))
+      await askPermission()
+      return 'end_turn'
+    }
+    const agent = new RunnerAgent(coordinator, threadId())
+    agent.addMessage(user('go'))
+    await agent.runAgent()
+    expect(agent.pendingInterrupts).toHaveLength(1)
+    const diff = (agent.state as AguiSessionState).toolCalls['t1']?.contents[0]
+    expect(diff).toMatchObject({ kind: 'diff', oldText: 'old\n', newText: 'new\n' })
   })
 
   it('a real AG-UI client agent applies prompt, interrupt and resume to its messages and state', async () => {
