@@ -88,7 +88,7 @@ export interface CommandRunner {
 /** What the tools need from `DesktopService`. */
 export type DesktopOps = Pick<
   DesktopService,
-  'state' | 'openWindow' | 'closeWindow' | 'focusWindow' | 'updateView' | 'policy'
+  'state' | 'openWindow' | 'openReview' | 'closeWindow' | 'focusWindow' | 'updateView' | 'policy'
 >
 
 /** Asks an app window in the renderer (see `AppRequestBroker`). Rejects with a readable message on timeout. */

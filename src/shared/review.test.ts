@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { commentLocation, formatReviewPrompt, isSafeRef, reviewKickoffPrompt, sortComments, threadsOf, type ReviewCommentDto, type ReviewSummaryDto } from './review'
+import { commentLocation, formatReviewHandback, formatReviewPrompt, isSafeRef, sameProject, reviewKickoffPrompt, sortComments, threadsOf, type ReviewCommentDto, type ReviewSummaryDto } from './review'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -15,6 +15,33 @@ const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   parentId: null,
   createdAt: '2026-11-16T09:00:00.000Z',
   ...over
+})
+
+describe('sameProject', () => {
+  it('matches a path with its drive or folder, ignoring case and slash style', () => {
+    expect(sameProject('E:\\', 'E:\\src\\a.ts')).toBe(true)
+    expect(sameProject('e:/app', 'E:\\APP\\')).toBe(true)
+    expect(sameProject('E:\\app', 'E:\\app2')).toBe(false)
+    expect(sameProject('E:\\', 'F:\\')).toBe(false)
+  })
+})
+
+describe('formatReviewHandback', () => {
+  it('names the verdict and lists the thread roots, worst first', () => {
+    const text = formatReviewHandback({ verdict: 'request_changes', body: 'Two things' }, [
+      comment({ id: 1, severity: 'nit', body: 'Rename' }),
+      comment({ id: 2, severity: 'blocker', lineStart: 9, lineEnd: 9, body: 'Crash' }),
+      comment({ id: 3, parentId: 2, body: 'a reply' })
+    ])
+    expect(text).toContain('Changes requested. Two things')
+    expect(text).toContain('2 inline comments')
+    expect(text.indexOf('Crash')).toBeLessThan(text.indexOf('Rename'))
+    expect(text).not.toContain('a reply')
+    expect(text).toContain('here in the chat')
+  })
+  it('says so when there are no comments', () => {
+    expect(formatReviewHandback({ verdict: 'approve', body: '' }, [])).toContain('No inline comments.')
+  })
 })
 
 describe('isSafeRef', () => {

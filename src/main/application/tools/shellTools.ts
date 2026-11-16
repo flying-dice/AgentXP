@@ -1,9 +1,10 @@
+import { isSafeRef } from '@shared/review'
 import { APP_DISPLAY_NAMES, type AppKind, type AppWindowState } from '@shared/desktop'
 import { AppError } from '../errors'
 import type { ToolPaths } from './ToolPaths'
 import type { ToolHandlers } from './catalog'
 import type { DesktopOps } from './ports'
-import { attempt, errorResult, textResult } from './types'
+import { attempt, errorResult, textResult, type ToolContext, type ToolResult } from './types'
 import { isOpenable } from './windows'
 
 export interface ShellToolsDeps {
@@ -16,7 +17,7 @@ export interface ShellToolsDeps {
 const describe = (w: AppWindowState): string => `${APP_DISPLAY_NAMES[w.app]} window ${w.id} ("${w.title}")`
 
 /** desktop_*: always available. Opening apps follows the Control Center policy "Agent may open apps". */
-export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): ToolHandlers<'desktop_state' | 'drives_list' | 'desktop_open_app' | 'desktop_close_app' | 'desktop_focus_app'> {
+export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): ToolHandlers<'desktop_state' | 'drives_list' | 'desktop_open_app' | 'desktop_close_app' | 'desktop_focus_app' | 'review_open'> {
   /** The windows a close/focus call means; only apps the agent may handle. */
   const targets = (desktopId: number, args: { window?: number; app?: AppKind }): AppWindowState[] => {
     const windows = desktops.state(desktopId).windows
@@ -32,6 +33,16 @@ export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): Tool
     return matching
   }
 
+  /** The Control Center policy "Agent may open apps": null when allowed, else the refusal to return. */
+  const mayOpen = async (context: ToolContext, app: AppKind): Promise<ToolResult | null> => {
+    const decision = desktops.policy().openApps
+    if (decision === 'deny') return errorResult('Opening apps is blocked by the permission policy in Control Center.')
+    if (decision === 'ask' && !(await ask(context.sessionId, `Open the ${APP_DISPLAY_NAMES[app]} app`, 'Agent may open apps is set to Ask in Control Center'))) {
+      return errorResult(`The user declined to open the ${APP_DISPLAY_NAMES[app]} app.`)
+    }
+    return null
+  }
+
   return {
     desktop_state: async (_args, { desktopId }) => textResult(JSON.stringify(desktops.state(desktopId), null, 1)),
 
@@ -45,17 +56,31 @@ export function createShellTools({ desktops, paths, ask }: ShellToolsDeps): Tool
     },
 
     desktop_open_app: async (args, context) => {
-      const { desktopId, sessionId } = context
-      const decision = desktops.policy().openApps
-      if (decision === 'deny') return errorResult('Opening apps is blocked by the permission policy in Control Center.')
-      if (decision === 'ask') {
-        const allowed = await ask(sessionId, `Open the ${APP_DISPLAY_NAMES[args.app]} app`, 'Agent may open apps is set to Ask in Control Center')
-        if (!allowed) return errorResult(`The user declined to open the ${APP_DISPLAY_NAMES[args.app]} app.`)
-      }
+      const { desktopId } = context
+      const refused = await mayOpen(context, args.app)
+      if (refused) return refused
       return attempt(() => {
         const path = args.path === undefined || args.path.trim() === '' ? undefined : paths.resolve(context, args.path)
         const window = desktops.openWindow({ desktopId, app: args.app, path, url: args.url }, 'agent')
         return textResult(`Opened ${describe(window)}. Its tools are available now; the tool list updates.`)
+      })
+    },
+
+    review_open: async (args, context) => {
+      const { desktopId } = context
+      const refused = await mayOpen(context, 'code-review')
+      if (refused) return refused
+      return attempt(async () => {
+        const root = paths.resolve(context, args.path)
+        const baseRef = args.baseRef?.trim() || 'HEAD'
+        if (!isSafeRef(baseRef)) throw new AppError(`Not a valid git ref: ${baseRef}`)
+        const open = desktops.state(desktopId).windows.find((w) => w.view.app === 'code-review' && w.view.root === root && w.view.baseRef === baseRef)
+        const window = open ?? (await desktops.openReview(desktopId, root, baseRef))
+        desktops.focusWindow(window.id, 'agent')
+        return textResult(
+          `${open ? 'Using the open' : 'Opened a'} Code Review window ${window.id} for ${root} against ${baseRef}. Its tools are available now (the tool list updates): ` +
+            'review_list_changes, review_read_diff, review_add_comment (your comments appear in that window) and review_submit. Review only; do not edit files.'
+        )
       })
     },
 

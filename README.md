@@ -338,7 +338,7 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Event Viewer | Search the messages of the desktop | `events_query` |
 | Snipping Tool | Take a picture of the desktop or of one window | `screen_capture` |
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
-| Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
+| Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_open` (any time), `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
 
 The Chat, Control Center, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
 
