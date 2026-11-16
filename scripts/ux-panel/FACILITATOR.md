@@ -67,7 +67,7 @@ scenario they read. `session.mjs task --task T05.2 --level novice` prints the pa
 #    names (haiku, sonnet and opus are accepted as aliases); any other name is refused.
 ```
 
-The panelist finishes with its final report (think-aloud, SEQ, frustrations). A panelist that stops before the scenario
+The panelist finishes with its final report (outcome, numbered steps, stuck points, SEQ, frustrations). A panelist that stops before the scenario
 is complete (early stop) is a harness defect to note in the record, not a FAIL by itself: re-read the scenario part it
 skipped; PANELIST.md has the rule "finish the whole scenario". If it is stuck without progress, the only
 allowed sentence is "Continue when you are ready"; a task that needed it is recorded as failed at that moment.
@@ -95,6 +95,17 @@ node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with 
 - Compare the SEQ with the frustrations list: a SEQ that differs by 3 or more from what the report says (for example SEQ 2 after a
   two-step pass) is rating noise; flag it in the record and report the measured values (H-36).
 
+- H-90: for an answer task `check --no-answer` alone is refused; pass `--no-answer --accept-no-answer` only when the panelist really gave
+  none. `stop` also refuses a record without an `- Answer:` line for such a task (unless `--accept-no-answer`).
+- H-92: `check.json.stepsToPass` is the number of steps when the check first held (the first run with a PASS from the checker, or
+  `--steps-to-pass <n>` read from the log). The budget and the weak rule use it, so steps spent after the goal (a scenario with a
+  second clause, T01.1) do not turn a pass into a weak pass.
+- H-93: `stop --rerun "<reason>"` writes `check.json.rerun` (a session repeated after a harness defect or a stopped panelist), and
+  `stop --finished-by-facilitator` writes `finishedByFacilitator: true` (the facilitator wrote or completed the record), so the
+  synthesis can count them.
+- H-94: `session.json.build` is `{packaged, version, commit}` and `stop` adds a `- Build:` line under the record title and into
+  `check.json.build`. `packaged` is true only when the app was started from the packaged executable (`UX_PACKAGED_EXE=<path>`); a round
+  counts for the release gate only when `packaged` is true in every session (`lib/build.mjs` `gateProblem`).
 - An answer task ends in MANUAL when `check` is run with `--no-answer` (H-82). `stop` then refuses (`the last check of this answer task had no answer`)
   until you run `check --answer "<text>"` with the panelist's answer; pass `--accept-no-answer` only when the panelist really gave none
   (the record says so). Keyword checks (case-insensitive substrings): T02.2 (already, exists, same name, own name, unique, in use, taken),
@@ -127,13 +138,15 @@ Record template:
 
 ```
 # <task> <title> - <level>
+- Build: <packaged|unpackaged build, version, commit; `stop` adds it>
 - Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
 - Context: fresh panelist, previous tasks: none
+- Answer: <the text after 'Answer:' in the final report; tasks without a question: not asked>
 - SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
 - Check runs (all runs of check.json.runs and why they differ; "one run" if only one): ...
 - Errors (wrong clicks, undo, dead ends, error messages seen): ...
 - Help used (F1, Help topics): ...
-- Think-aloud (verbatim, from the panelist's final report): ...
+- Steps (the numbered step list of the final report): ...
 - Frustrations / what they would change: ...
 - Evidence: <session folder copy>/shots/NNN.png, log.jsonl
 - Researcher notes (answer checks, MANUAL decisions): ...

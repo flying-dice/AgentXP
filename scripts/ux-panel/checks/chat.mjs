@@ -6,6 +6,18 @@ import { agentMessages, all, fail, manual, missingNumbers, pass, saysCouldNotTel
 export const REDIRECT_CHANGED_LINES = [1, 3, 4]
 
 /**
+ * H-88: the answer gives the counts of the change (3 added, 3 removed) in any spelling: "+3 and -3", "+3 / -3",
+ * "3 added and 3 removed", "3 lines added, 3 removed", "added 3 lines", "removed 3". The lines themselves are not required
+ * when the counts are right (the box prints the counts); ranges and "could not tell" never reach this test.
+ */
+export function countsThreeAndThree(text) {
+  const t = String(text ?? '')
+  const added = /\+\s*3\b|\b3\s+(?:new\s+)?(?:lines?\s+)?(?:were\s+|was\s+)?(?:added|additions?|insertions?)\b|\badded\s+3\b|\b3\s+(?:new\s+)?lines?\s+(?:were\s+)?added\b/i.test(t)
+  const removed = /[-\u2212\u2013]\s*3\b|\b3\s+(?:old\s+)?(?:lines?\s+)?(?:were\s+|was\s+)?(?:removed|deleted|deletions?)\b|\b(?:removed|deleted)\s+3\b|\b3\s+(?:old\s+)?lines?\s+(?:were\s+)?(?:removed|deleted)\b/i.test(t)
+  return added && removed
+}
+
+/**
  * H-85: the order of the answers to the pending requests and the seconds from the request to the answer. A transcript has no
  * "answered at" time; the answer is the first entry after the request (the agent continues when the box is answered).
  * `chats` = [{ label, entries }]. Returns notes for check.json; a read-and-allow shows as many seconds, a click without reading as one or two.
@@ -88,15 +100,17 @@ export const checks = {
       ['opening the details is optional because the diff is inline']
     )
     // H-44: the scenario asks which lines change; the answer must say so.
+    // H-88: the counts alone ("3 added, 3 removed" in any spelling) answer the question; the keyword group is for line lists.
+    if (state.status === 'PASS' && answer && countsThreeAndThree(answer) && !saysCouldNotTell(answer)) return pass(`${state.reason}; answer gives the counts (3 added, 3 removed)`, state.notes)
     const result = withAnswer(state, answer, { keywords: [['line', 'searchparams', 'next']], expect: 'the answer says which lines of redirect.ts change (lines 1, 3 and 4, or +3 and -3)' })
     // H-74: the change is +3 / -3 on lines 1, 3 and 4 of redirect.ts. A partial answer ("line 1 ...") no longer passes.
     if (result.status !== 'PASS' || !answer) return result
-    const plusMinus = /\+\s*3\b/.test(answer) && /[-\u2212\u2013]\s*3\b/.test(answer)
+    const plusMinus = countsThreeAndThree(answer)
     const missing = missingNumbers(answer, REDIRECT_CHANGED_LINES)
     if (plusMinus || !missing.length) return result
     // H-77: ranges are not expanded ("lines 1 to 5" is 1 and 5), and an answer that says it could not tell fails with that reason.
     const why = saysCouldNotTell(answer) ? 'the answer says that the panelist could not tell which lines change; ' : ''
-    return fail(`state ok but ${why}the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${REDIRECT_CHANGED_LINES.join(', ')} as written, or +3 and -3; a range such as "1 to 5" does not count)`, result.notes)
+    return fail(`state ok but ${why}the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${REDIRECT_CHANGED_LINES.join(', ')} as written, or the counts "3 added" and "3 removed" in any spelling; a range such as "1 to 5" does not count)`, result.notes)
   },
 
   async 'T06.2'(ctx) {

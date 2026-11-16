@@ -31,7 +31,7 @@ export function treeMenu(target: TreeMenuTarget, ops: TreeMenuOps, state: { canE
         item('start-chat', '&New chat here', ops.startChat, { icon: 'session' }),
         item('open-explorer', 'Open in &Explorer', ops.openInExplorer, { icon: 'folder' }),
         { separator: true },
-        item('eject', '&Remove from desktop', ops.eject, { icon: 'usb', disabled: !state.canEject, title: 'Remove this project from the desktop. Its folder stays on your disk.' })
+        item('eject', '&Remove from desktop', ops.eject, { icon: 'usb', disabled: !state.canEject, title: state.canEject ? 'Remove this project from the desktop. Its folder stays on your disk.' : 'Select a project that you plugged in first. The home folder of the agent cannot be removed.' })
       ]
     case 'folder':
       return [

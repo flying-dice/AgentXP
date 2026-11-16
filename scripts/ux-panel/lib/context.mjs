@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { packagedExecutable } from './build.mjs'
 import { connectControl } from './control.mjs'
 
 const require = createRequire(import.meta.url)
@@ -15,9 +16,11 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 /** `home` is a sandbox home (HOME and USERPROFILE), so the in-app Browse For Folder dialog shows the fixtures under Home and Documents (H-32). */
 export async function launchApp({ userData, home }) {
+  // H-94: UX_PACKAGED_EXE runs the packaged build (the release gate); otherwise the unpackaged build from out/main.
+  const packaged = packagedExecutable()
   const app = await electron.launch({
-    executablePath: require('electron'),
-    args: [join(repoRoot, 'out/main/index.js'), '--no-sandbox'],
+    executablePath: packaged ?? require('electron'),
+    args: [...(packaged ? [] : [join(repoRoot, 'out/main/index.js')]), '--no-sandbox'],
     cwd: repoRoot,
     env: { ...process.env, AGENT7_USER_DATA: userData, ...(home ? { HOME: home, USERPROFILE: home } : {}) }
   })

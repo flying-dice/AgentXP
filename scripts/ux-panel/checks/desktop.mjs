@@ -57,13 +57,16 @@ export const checks = {
     const toolCalls = entries.filter((e) => e.kind === 'tool_call').length
     const runState = (await ctx.launcherList()).find((d) => d.id === ctx.state.desktopId)?.runState ?? 'unknown'
     const chatOpen = windowsOf(state, 'chat').some((w) => w.view.sessionId === ctx.state.sessionId)
-    return all(
+    const result = all(
       [
         [Boolean(state), 'the desktop is connected again'],
         [progress > (ctx.state.progressAtStart ?? 0) || toolCalls > (ctx.state.toolCallsAtStart ?? 0), `the chat shows new progress (last "N of 30" is ${progress}, was ${ctx.state.progressAtStart ?? 0} at the start; ${toolCalls} tool calls, was ${ctx.state.toolCallsAtStart ?? 0})`]
       ],
-      [`run state at reconnect: ${runState}`, `chat window ${chatOpen ? 'is open' : 'is not open'}`, 'researcher: the session log should show the chat window or the desktop was closed (disconnect) and later reopened from the launcher']
+      [`run state at reconnect: ${runState}`, `chat window ${chatOpen ? 'is open' : 'is not open'}`, `reopened: ${chatOpen}`]
     )
+    // H-91: progress is state, not proof that the person came back. A window of the original chat (same session id) must be open after the close; else the verdict is MANUAL.
+    if (result.status === 'PASS' && !chatOpen) return manual('state ok (the chat made progress) but no window of the original chat is open (reopened: false); researcher: decide from the log whether the panelist went back to the same chat', result.notes)
+    return result
   },
 
   async 'T13.2'(ctx) {
