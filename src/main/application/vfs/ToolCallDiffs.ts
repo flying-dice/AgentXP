@@ -10,7 +10,8 @@ const isOpenDiff = (c: ToolCallContentDto): c is DiffContent => c.kind === 'diff
  * Gives a permission request the real change. An agent that proposes a new text for a file without saying what it
  * replaces would otherwise show "all lines added" for a file that exists. Before the request is stored, the current
  * text of that file is read and becomes the diff's old text. A file that does not exist yet gets an empty old text
- * (a new file); a file that cannot be read keeps `null` ("replaces the whole file").
+ * (a new file). A file that cannot be read keeps `null` and carries the error kind (`oldTextError`), so the box says
+ * that it cannot show the change instead of claiming a whole-file replacement.
  */
 export class ToolCallDiffs {
   constructor(
@@ -34,10 +35,10 @@ export class ToolCallDiffs {
     try {
       const entry = await this.vfs.stat(desktopId, diff.path)
       if (!entry) return { ...diff, oldText: '' }
-      if (entry.kind === 'directory') return diff
+      if (entry.kind === 'directory') return { ...diff, oldTextError: 'unreadable' }
       return { ...diff, oldText: await this.vfs.readFile(desktopId, diff.path) }
     } catch {
-      return diff
+      return { ...diff, oldTextError: 'unreadable' }
     }
   }
 }

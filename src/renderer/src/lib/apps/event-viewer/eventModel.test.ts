@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import type { ProtocolEventDto } from '@shared/desktop'
-import { SOURCE_HINT, ALL_NODE, appendEvents, chatNode, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
+import { SOURCE_HINT, ALL_NODE, appendEvents, chatNode, eventForToolCall, filterEvents, findNext, generalLines, logTree, noFilter, nodeScope, sourceNode, summaryOf } from './eventModel'
 
 const ev = (id: number, over: Partial<ProtocolEventDto> = {}): ProtocolEventDto => ({ id, at: '2026-11-16T09:00:00Z', desktopId: 1, sessionId: 1, source: 'acp', direction: 'in', level: 'info', name: `m${id}`, payload: '{}', ...over })
+
+describe('eventForToolCall', () => {
+  const list = [ev(1, { payload: '{"toolCallId":"t1"}' }), ev(2, { payload: '{"toolCallId":"t2"}' }), ev(3, { level: 'error', payload: '{"toolCallId":"t1","status":"failed"}' }), ev(4, { payload: '{"toolCallId":"t1"}' })]
+  it('prefers the error of the call, else the newest event that names it', () => {
+    expect(eventForToolCall(list, 't1')?.id).toBe(3)
+    expect(eventForToolCall(list, 't2')?.id).toBe(2)
+  })
+  it('is null when no event names the call', () => {
+    expect(eventForToolCall(list, 'nope')).toBeNull()
+    expect(eventForToolCall([], 't1')).toBeNull()
+  })
+})
 
 describe('filterEvents', () => {
   const list = [ev(1), ev(2, { source: 'mcp', level: 'error', payload: '{"x":"Boom"}' }), ev(3, { sessionId: 2, source: 'ag-ui' })]

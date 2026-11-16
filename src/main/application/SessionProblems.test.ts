@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createFixture } from '../infrastructure/db/test-helpers'
 import { SqliteSessionRepository } from '../infrastructure/db/sqlite-session-repository'
+import { stoppedUnexpectedly } from './agentProblems'
 import { ProblemAwareSessions, SessionProblems } from './SessionProblems'
 
 const problem = { kind: 'start-failed', message: 'The agent could not start.', detail: 'x' } as const
@@ -12,6 +13,21 @@ beforeEach(() => {
   f = createFixture()
   problems = new SessionProblems()
   sessions = new ProblemAwareSessions(new SqliteSessionRepository(f.db), problems)
+})
+
+describe('one crash mid-turn', () => {
+  it('is reported by the closed connection and by the failed turn but counts once, so the first-crash buttons (Restart and send again) show', () => {
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('ACP connection closed')))
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('ACP connection closed')))
+    const crash = problems.get(f.sessionId)!
+    expect(crash.failures).toBe(1)
+  })
+  it('a second crash after a restart is the second failure', () => {
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('x')))
+    problems.clear(f.sessionId)
+    problems.set(f.sessionId, stoppedUnexpectedly(new Error('x')))
+    expect(problems.get(f.sessionId)?.failures).toBe(2)
+  })
 })
 
 describe('ProblemAwareSessions', () => {

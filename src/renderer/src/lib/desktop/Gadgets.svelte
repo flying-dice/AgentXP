@@ -12,7 +12,7 @@
     contextUsed: number
     contextSize: number
     feed: FeedItem[]
-    /** "Stopped: you took control" while the user is in control (the running step was stopped); null otherwise. */
+    /** `controlNote` of the feed: "Stopped: you took control" or "You are in control..." while the user is in control; null otherwise. */
     controlNote?: string | null
     /** Session start for the running-time line; defaults to when the gadgets appeared. */
     since?: Date

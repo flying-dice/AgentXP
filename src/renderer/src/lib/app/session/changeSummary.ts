@@ -1,21 +1,22 @@
 /** The size of a proposed change to a file, in words ("5 lines added, 2 removed"), for the approval dialogs. */
-import { computeDiff, countLineChanges } from '@shared/diff'
+import { computeDiff } from '@shared/diff'
+import { changeCounts, changeCountsText, type ChangeKind } from '@shared/lineCounts'
 
 export interface ChangeSummary {
   added: number
   removed: number
-  /** The agent did not say what the file holds now, so the preview cannot show what is replaced. */
-  replacesWholeFile: boolean
-  /** "5 lines added, 2 removed" */
+  /** The kind of change (see `changeCounts`); `unknown` when the current text of the file could not be read. */
+  kind: ChangeKind
+  /** The current file could not be read, so the box shows no preview of what changes. */
+  unreadable: boolean
+  /** "5 lines added, 2 removed", plus "This replaces the whole file." only for a rewrite of every line; the "could not read" sentence when unknown. */
   text: string
   /** Rows the preview shows (changed lines plus a little context). */
   rows: number
 }
 
-const lines = (n: number): string => `${n} ${n === 1 ? 'line' : 'lines'}`
-
 export function changeSummary(oldText: string | null, newText: string): ChangeSummary {
-  const { additions, deletions } = countLineChanges(oldText, newText)
-  const rows = computeDiff(oldText ?? '', newText).reduce((n, hunk) => n + hunk.lines.length, 0)
-  return { added: additions, removed: deletions, replacesWholeFile: oldText === null, text: `${lines(additions)} added, ${deletions} removed`, rows }
+  const counts = changeCounts(oldText, newText)
+  const rows = counts.kind === 'unknown' ? 0 : computeDiff(oldText ?? '', newText).reduce((n, hunk) => n + hunk.lines.length, 0)
+  return { added: counts.additions, removed: counts.deletions, kind: counts.kind, unreadable: counts.kind === 'unknown', text: changeCountsText(counts), rows }
 }

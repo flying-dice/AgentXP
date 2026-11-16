@@ -105,7 +105,7 @@ To stop a chat that does not respond, follow the steps below:
 To end an agent program, follow the steps below:
 
 1. Open the **Processes** tab and select the agent.
-2. Click **End process**. A question appears, for example: End 'Claude Code'? Its 1 chat will stop and work in progress is lost.
+2. Click **End process**. A question appears, for example: End 'Claude Code'? Its 1 chat will stop and work in progress is lost. The chats and their messages stay.
 3. Click **Yes**.
 
 ## 6 - Troubleshooting

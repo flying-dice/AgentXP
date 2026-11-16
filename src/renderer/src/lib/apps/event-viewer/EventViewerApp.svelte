@@ -84,6 +84,16 @@
     })
   })
 
+  // "Show in Event Viewer" on a window that is open already: select the event it names and stop following the newest row.
+  $effect(() => {
+    const id = win.view.selectedEventId
+    untrack(() => {
+      if (id === null || String(id) === selected[0]) return
+      selected = [String(id)]
+      autoscroll = false
+    })
+  })
+
   async function refresh(): Promise<void> {
     try {
       const [list2, sess] = await Promise.all([host.api.events.query({ desktopId, limit: 1000 }), host.api.sessions.list(host.state.desktopId)])

@@ -136,7 +136,9 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Edit | Takes the message back into the box so that you can change it. | `chat-message-edit` |
 | Stopped | Marks your message that the agent started on and then stopped. | `chat-message-stopped` |
 | Newer messages | Shows above the message box when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
-| Card note | A line under a tool card, for example "Denied by you". | `tool-call-note` |
+| Card note | A line under a tool card, for example "Denied by you" or "The agent could not finish this step." | `tool-call-note` |
+| Show in Event Viewer (step) | A link under a failed step. It opens Event Viewer on the event of that step. | `tool-call-show-event` |
+| Restarted note | The line "Restarted. Press Send to try again." It shows after **Restart** put your last message back in the message box. | `chat-restarted-note` |
 | Earlier step | A divider above steps of an earlier request. | `tool-call-earlier` |
 | Paused banner | Shows when the desktop is paused. It says if Pause stopped a step of this chat. | `chat-paused-banner` |
 | Resumed note | Shows above the message that Resume sent: Resumed. Continuing where you stopped. | `chat-resume-note` |
@@ -180,6 +182,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Move to | Opens the list of places. | `chat-surface-move` |
 | Move to Inline, Sidebar, Window | Moves the form. | `chat-surface-move-*` |
 | Working folder | Shows the folder of the chat. | `chat-cwd` |
+| Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, for example "The agent stopped. Click Restart, then send your message again." | `chat-problem-line` |
 | Connection state | Shows the state of the connection. | `chat-status` |
 | Permission dialog box | Asks if the agent can act. | `permission-dialog` |
 | Allow or refuse | The two choices. The name ends with the id of the choice. Alt+A allows and Alt+D denies. | `permission-option-*` |

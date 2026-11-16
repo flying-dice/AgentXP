@@ -26,7 +26,10 @@ export class SessionProblems {
 
   /** Records a failure; the problem carries how many times in a row this chat failed (`failures`). */
   set(sessionId: Id, problem: SessionProblemDto): void {
-    const failures = (this.failures.get(sessionId) ?? 0) + 1
+    // One crash is reported twice (the connection closes, then the running turn fails): while the problem is still open it counts once.
+    const open = this.problems.get(sessionId)
+    const again = open?.kind === problem.kind && problem.kind === 'agent-stopped'
+    const failures = again ? (open?.failures ?? 1) : (this.failures.get(sessionId) ?? 0) + 1
     this.failures.set(sessionId, failures)
     this.problems.set(sessionId, { ...problem, failures })
   }

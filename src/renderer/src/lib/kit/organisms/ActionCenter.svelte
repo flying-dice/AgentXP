@@ -25,12 +25,14 @@
     /** The Continue button of a message (a chat whose step Pause stopped). */
     oncontinue?: (id: number) => void
     onopencontrolcentre?: () => void
+    /** "Open Event Viewer": the list of what happened. */
+    onopeneventviewer?: () => void
     onclose?: () => void
     /** Tray button element: presses on it are not "outside". */
     ignore?: HTMLElement | null
   }
 
-  let { approvals = [], messages = [], onreview, oncontinue, onopencontrolcentre, onclose, ignore = null }: Props = $props()
+  let { approvals = [], messages = [], onreview, oncontinue, onopencontrolcentre, onopeneventviewer, onclose, ignore = null }: Props = $props()
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -76,7 +78,10 @@
       <p class="quiet">No new messages.</p>
     {/each}
   </section>
-  <div class="foot"><button type="button" class="link" data-testid="action-center-open-control-centre" onclick={() => onopencontrolcentre?.()}>Open Control Center</button></div>
+  <div class="foot">
+    <button type="button" class="link" data-testid="action-center-open-control-centre" onclick={() => onopencontrolcentre?.()}>Open Control Center</button>
+    {#if onopeneventviewer}<button type="button" class="link" data-testid="action-center-open-event-viewer" onclick={() => onopeneventviewer?.()}>Open Event Viewer</button>{/if}
+  </div>
 </div>
 
 <style>
@@ -146,6 +151,9 @@
     padding: 8px 12px 10px;
     border-top: 1px solid #e3e8ef;
     background: #f7f9fc;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
   }
   .link {
     padding: 0;

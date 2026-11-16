@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import Button from '../../kit/atoms/Button.svelte'
   import ToolStatusIcon from './ToolStatusIcon.svelte'
-  import type { ToolStatusView } from './toolStatus'
+  import { SHOW_EVENT_LABEL, offersEventLink, type ToolStatusView } from './toolStatus'
 
   interface Props {
     /** Bold tool name: Read, Edit, Bash... */
@@ -16,13 +16,15 @@
     onopenchange?: (open: boolean) => void
     /** A line under the head (the explanation of "Denied by you"). */
     note?: string
+    /** "Show in Event Viewer": opens the viewer on the event of this step; shown under a failed step. */
+    onshowevent?: () => void
     /** The card belongs to an earlier step: a separator line "Earlier step" comes first. */
     earlier?: boolean
     /** The body (result, diff, console). */
     children?: Snippet
   }
 
-  let { name, argument, status, expandable = false, open = false, onopenchange, note, earlier = false, children }: Props = $props()
+  let { name, argument, status, expandable = false, open = false, onopenchange, note, onshowevent, earlier = false, children }: Props = $props()
 </script>
 
 {#if earlier}<div class="earlier" data-testid="tool-call-earlier">Earlier step</div>{/if}
@@ -37,6 +39,9 @@
     {/if}
   </div>
   {#if note}<div class="note" data-testid="tool-call-note">{note}</div>{/if}
+  {#if onshowevent && offersEventLink(status.kind)}
+    <div class="note"><button type="button" class="link" data-testid="tool-call-show-event" onclick={onshowevent}>{SHOW_EVENT_LABEL}</button></div>
+  {/if}
   {#if expandable && open}<div class="body">{@render children?.()}</div>{/if}
 </div>
 
@@ -78,6 +83,15 @@
   .note {
     padding: 0 7px 4px 30px;
     color: #444;
+  }
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--w7-link, #0066cc);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
   .earlier {
     display: flex;

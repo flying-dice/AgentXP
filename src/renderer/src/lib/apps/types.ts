@@ -17,6 +17,8 @@ export interface DesktopHost {
   readonly state: DesktopState
   readonly api: Agent7Api
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
+  /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event ("Show in Event Viewer"). */
+  openEventViewer(scope?: { sessionId?: Id | null; selectedEventId?: number | null }): Promise<void>
   /** The root to review or work on for a path: its plugged-in project drive, else the first project drive, else home. */
   projectRootOf(path?: string | null): VPath
   /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */

@@ -53,6 +53,8 @@
     /** What the surface rows can do (open, close, delete, move); the Chat app provides it. */
     surfaceControls?: SurfaceControls
     onlink?: (href: string) => void
+    /** "Show in Event Viewer" under a failed step; gets the id of the tool call. */
+    onshowtoolevent?: (toolCallId: string) => void
   }
 
   let {
@@ -75,7 +77,8 @@
     deniedToolCalls = new Set(),
     onaction,
     surfaceControls = noSurfaceControls,
-    onlink
+    onlink,
+    onshowtoolevent
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
@@ -209,6 +212,7 @@
       waiting={waitingToolCallId === row.toolCallId}
       denied={deniedToolCalls.has(row.toolCallId)}
       earlier={earlier.has(row.id)}
+      onshowevent={onshowtoolevent}
     />
   {:else if row.kind === 'stop'}
     <StopNotice reason={row.reason} />
@@ -262,7 +266,7 @@
   {/snippet}
   {#snippet empty()}
     <div class="row">
-      <AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />
+      {#if !problem}<AgentMessage testid="chat-welcome" {agentName} text="Ready in {folderName}. What would you like to work on?" />{/if}
     </div>
   {/snippet}
   {#snippet tail()}

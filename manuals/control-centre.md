@@ -70,7 +70,7 @@ Other agents can have other modes. You can type the id of a mode in the box. If 
 
 The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
 
-- **What the agent may do** – Read files, Write files, and Run commands (Terminal).
+- **What the agent may do** – Read files, Write files, and Run commands. Point at **Run commands** to see "Run commands (Terminal)".
 - **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Events, Screen capture, Recycle Bin, Code review, and Agent may open apps.
 
 Each row has two lines. The first line shows the name and the setting. The second line tells what the row covers. The table has no sideways scroll, so you can read every line at the default size of the window.
@@ -123,6 +123,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Permission block | The heading of a block. | `permissions-group` |
 | Permission row | One permission. | `permissions-row` |
 | What it covers | The second line of a row. It tells what the permission covers. | `permissions-covers` |
+| What the setting does | The third line of a row. **Allow** runs without asking, **Ask** asks you each time, **Deny** never runs. | `permissions-mode` |
 | Permission list | Sets Allow, Ask, or Deny for one row. The name ends with the row, for example `fs-read`. | `permissions-setting-*` |
 | Permission list entry | One choice of a list. The name ends with the row and the choice, for example `fs-read-option-deny`. | `permissions-setting-*-option-*` |
 | Set every permission to | Chooses a setting for Set all. | `permissions-set-all-value` |
