@@ -36,6 +36,8 @@ export function buildSessionState(
     tasks: queries.tasksOf(sessionId),
     changes: queries.changesOf(sessionId),
     toolCalls,
-    terminals: Object.fromEntries(queries.terminalsOf(sessionId).map((t) => [t.terminalId, terminalStateOf(t)]))
+    terminals: Object.fromEntries(queries.terminalsOf(sessionId).map((t) => [t.terminalId, terminalStateOf(t)])),
+    // TODO(desktop backend): fill from DesktopService.
+    desktop: null
   }
 }

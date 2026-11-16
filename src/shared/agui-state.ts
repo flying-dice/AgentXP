@@ -22,6 +22,7 @@ import type {
   ToolCallStatus,
   ToolKind
 } from './models'
+import type { DesktopState } from './desktop'
 
 /** The slice of the session row the UI keeps live (title, status, modes, usage...). */
 export interface AguiSessionInfo {
@@ -65,6 +66,8 @@ export interface AguiSessionState {
   toolCalls: Record<string, AguiToolCallState>
   /** Keyed by the ACP terminal id (referenced by `toolCalls[*].contents`). */
   terminals: Record<string, AguiTerminalState>
+  /** The desktop this chat runs on (null before the desktop is known). */
+  desktop: DesktopState | null
 }
 
 /** `ActivityMessage.activityType` of an A2UI surface. */
@@ -112,5 +115,6 @@ export const emptyAguiState = (): AguiSessionState => ({
   tasks: [],
   changes: [],
   toolCalls: {},
-  terminals: {}
+  terminals: {},
+  desktop: null
 })

@@ -31,7 +31,8 @@ const RENDERER_EVENTS = {
   'session.changed': true,
   'session.removed': true,
   'folders.changed': true,
-  'status.message': true
+  'status.message': true,
+  'desktop.changed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -60,6 +61,26 @@ const INVOKE_METHODS = {
     clearTranscript: true,
     exportTranscript: true
   },
+  desktop: {
+    list: true,
+    current: true,
+    create: true,
+    open: true,
+    rename: true,
+    remove: true,
+    openWindow: true,
+    closeWindow: true,
+    focusWindow: true,
+    setBounds: true,
+    setWindowState: true,
+    updateView: true,
+    setPaused: true,
+    setUserInControl: true,
+    newChat: true,
+    policy: true,
+    setPolicy: true
+  },
+  processes: { list: true, end: true },
   app: { version: true },
   a2ui: { dispatch: true },
   shell: { openPath: true },

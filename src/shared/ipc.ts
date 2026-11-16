@@ -17,6 +17,7 @@ import type {
   TranscriptEntryDto
 } from './models'
 import type { A2uiClientEvent, A2uiSurfaceDto } from './a2ui'
+import type { AgentProcessDto, DesktopApi, DesktopEvents } from './desktop'
 
 export interface PromptInput {
   sessionId: Id
@@ -117,6 +118,13 @@ export interface Agent7Api {
     /** Shows the native open-file dialog (multi-select); resolves to the chosen absolute paths, empty when cancelled. */
     pickFiles(): Promise<string[]>
   }
+  desktop: DesktopApi
+  processes: {
+    /** Running agent processes across all desktops (Agent Manager). */
+    list(): Promise<AgentProcessDto[]>
+    /** Ends the agent process; its chats close. */
+    end(agentId: Id, desktopId: Id): Promise<void>
+  }
   app: {
     /** The application version (package.json). */
     version(): Promise<string>
@@ -131,7 +139,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events {
+export interface Agent7Events extends DesktopEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

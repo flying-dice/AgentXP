@@ -24,6 +24,10 @@ export interface ApiServices {
   appVersion: string
 }
 
+const notYet = (): never => {
+  throw new Error('Not implemented yet')
+}
+
 /** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
 export function createApi(s: ApiServices): InvokeApi {
   return {
@@ -43,6 +47,13 @@ export function createApi(s: ApiServices): InvokeApi {
       readFile: (folderId, relativePath) => s.folders.readFile(folderId, relativePath),
       gitBranch: (folderId) => s.folders.gitBranch(folderId)
     },
+    // TODO(desktop backend): replace with DesktopService.
+    desktop: {
+      list: notYet, current: notYet, create: notYet, open: notYet, rename: notYet, remove: notYet,
+      openWindow: notYet, closeWindow: notYet, focusWindow: notYet, setBounds: notYet, setWindowState: notYet,
+      updateView: notYet, setPaused: notYet, setUserInControl: notYet, newChat: notYet, policy: notYet, setPolicy: notYet
+    },
+    processes: { list: notYet, end: notYet },
     app: {
       version: async () => s.appVersion
     },

@@ -1,5 +1,6 @@
 /** An in-memory `Agent7Api` for Storybook: the "Fix login redirect bug" session of the design. */
 import { EventType, type BaseEvent, type RunAgentInput } from '@ag-ui/core'
+import { createFakeDesktop } from './fakeDesktop'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
@@ -175,6 +176,11 @@ export function createFakeApi(options: { empty?: boolean } = {}): Agent7Api {
       revertChange: async () => {},
       clearTranscript: async () => {},
       exportTranscript: async () => 'C:\\Users\\jonathan\\Documents\\transcript.md'
+    },
+    desktop: createFakeDesktop({ windows: options.empty ? [] : ['chat'], onChange: (state) => emit('desktop.changed', state) }),
+    processes: {
+      list: async () => [{ agentId: 1, agentName: 'Claude Code', desktopId: 1, pid: 4312, sessionIds: sessions.map((s) => s.id) }],
+      end: async () => {}
     },
     a2ui: { dispatch: async () => {} },
     dialogs: { pickFiles: async () => [] },
