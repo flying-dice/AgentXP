@@ -131,8 +131,9 @@ describe('chat turn with the fake agent', () => {
     await ctx.desktop.closeWindow('chat') // it is tiled over part of the other windows
     await ctx.desktop.closeWindow('event-viewer')
     await ctx.desktop.closeWindow('code')
-    await ctx.desktop.taskbarItem('terminal').click()
     const terminal = ctx.desktop.terminal()
+    // Closing Code can leave the Terminal active already; a taskbar click would then minimise it.
+    if (!(await terminal.output.isVisible())) await ctx.desktop.taskbarItem('terminal').click()
     await terminal.output.click()
     await ctx.desktopPage.keyboard.type('dir')
     await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
