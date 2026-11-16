@@ -117,7 +117,7 @@ export const presets = {
    * Crash: the first turn hangs ("Working on it..." in the `crash-recovery` script), then the agent process is killed. The agent
    * is then pointed at `crash-recovered`, so the retry after the restart ends in under 5 s with "Done. The slow job is finished." (H-31).
    * H-58: the start state records whether the red box offers "Restart and send again" (state.firstCrashOffersRestartSend; the option
-   * `strict` throws when it does not). The option `twice` is the second-failure task (T23.1-twice): "It stopped again", plain Restart.
+   * `strict` throws when it does not). The option `twice` is the second-failure task (T23.1b): "It stopped again", plain Restart.
    * H-65: the second failure needs UX-123 (the failure count is reset when a turn completes, not when the agent starts). With it, a
    * crash of the restarted agent before its turn completes is failure 2: the box says "It stopped again", offers Restart and "Start
    * a new chat" (state.secondFailureOffersNewChat). Without it the box never says so and the preset throws on that line (SETUP FAIL).

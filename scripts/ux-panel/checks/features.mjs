@@ -164,10 +164,11 @@ export const checks = {
     return withAnswer(state.status === 'FAIL' && answer ? pass('the About dialog was closed; judge by the answer') : state, answer, { expect: 'the answer gives the version number that the About dialog shows' })
   },
 
-  async 'T31.1'(ctx) {
+  async 'T31.1'(ctx, { answer }) {
     const page = await desktopPage(ctx)
     const topic = await page.getByTestId('help-article').getAttribute('data-topic').catch(() => null)
-    return all([[topic === 'notepad', `Help and Support shows the topic ${topic ?? 'none'} (want notepad)`]])
+    // H-84: the answer names the shortcut (Ctrl+S); a clause that the panelist did not see on screen does not count as evidence.
+    return withAnswer(all([[topic === 'notepad', `Help and Support shows the topic ${topic ?? 'none'} (want notepad)`]]), answer, { keywords: [['ctrl+s', 'ctrl + s', 'control+s', 'control + s', 'ctrl-s']], expect: 'the answer names Ctrl+S (read from the Notepad topic in a shot)' })
   },
 
   async 'T31.2'(ctx, { answer }) {

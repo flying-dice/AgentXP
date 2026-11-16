@@ -7,10 +7,10 @@ import { createServer } from 'node:http'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { normalizeKey, parseArgs } from './lib/args.mjs'
+import { ACTION_COMMANDS, normalizeKey, parseArgs, scrollReport, scrollWarning } from './lib/args.mjs'
 import { launchApp, makeContext, sleep } from './lib/context.mjs'
 import { createDocsSite, createLoginApp, createPlainFolder, TEST_PAGE_HTML, TEST_PAGE_SECOND_HTML, TEST_PAGE_PORT, testPageUrl } from './lib/fixtures.mjs'
-import { createLog } from './lib/log.mjs'
+import { countSteps, createLog, readLog } from './lib/log.mjs'
 import { serve } from './lib/rpc.mjs'
 import { runCheck } from './checks/index.mjs'
 import { runPreset } from './presets/index.mjs'
@@ -22,6 +22,8 @@ const tmp = mkdtempSync(join(tmpdir(), 'a7ux-'))
 const socketPath = flags.socket ?? join(tmp, 'ux.sock')
 const adminPath = flags.admin ?? join(tmp, 'admin.sock')
 const log = createLog(join(sessionDir, 'log.jsonl'))
+// H-81: the running count of actions (the same count as the budget: successful click, move, drag, scroll, type, key). The budget itself stays secret.
+let stepCount = countSteps(readLog(join(sessionDir, 'log.jsonl')))
 const WIDTH = 1280
 const HEIGHT = 800
 
@@ -165,6 +167,16 @@ const FIND_SOURCE = (needle) => {
   return found.slice(0, 15)
 }
 
+/** H-78: the scroll position of the nearest scrollable area under the point (null when there is none). Runs in the page. */
+const SCROLL_POSITION_SOURCE = ({ x, y }) => {
+  for (let el = document.elementFromPoint(x, y); el; el = el.parentElement) {
+    const style = getComputedStyle(el)
+    if (/(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight) return { top: el.scrollTop, max: el.scrollHeight - el.clientHeight }
+  }
+  const root = document.scrollingElement
+  return root && root.scrollHeight > root.clientHeight ? { top: root.scrollTop, max: root.scrollHeight - root.clientHeight } : null
+}
+
 // ---------------------------------------------------------------- panelist commands
 const HOVER_WAIT_MS = 800
 const MOUSE_CMDS = new Set(['click', 'move', 'drag', 'scroll'])
@@ -176,6 +188,7 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
     if (state.noMouse && MOUSE_CMDS.has(cmd)) throw new Error('The mouse is not working. Use the keyboard.')
     let text = ''
     let page
+    let scrollBefore = null
     if (cmd === 'windows') {
       text = ['Windows:', ...(await windowList())].join('\n')
     } else if (cmd === 'switch') {
@@ -213,6 +226,7 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
         await page.mouse.up()
       } else if (cmd === 'scroll') {
         await page.mouse.move(args[0], args[1])
+        scrollBefore = await page.evaluate(SCROLL_POSITION_SOURCE, { x: args[0], y: args[1] }).catch(() => null)
         await page.mouse.wheel(0, args[2])
       } else if (cmd === 'type') {
         await page.keyboard.type(args[0], { delay: 10 })
@@ -228,6 +242,14 @@ async function handleUx({ cmd, args = [], flags: f = {} }) {
       page = await currentPage().catch(() => null)
     }
     const lines = [text]
+    if (cmd === 'scroll' && page) {
+      // H-78: say what the scroll did (the unit is raw pixels) and warn about a tiny one.
+      const after = await page.evaluate(SCROLL_POSITION_SOURCE, { x: args[0], y: args[1] }).catch(() => null)
+      lines.push(scrollReport(args[2], scrollBefore?.top, after?.top, after?.max ?? scrollBefore?.max))
+      const warning = scrollWarning(args[2])
+      if (warning) lines.push(warning)
+    }
+    if (ACTION_COMMANDS.includes(cmd)) lines.push(`Step ${++stepCount} (actions so far)`)
     if (page) {
       const file = await shoot(page, cmd === 'shot' ? f.out : undefined)
       entry.screenshot = file

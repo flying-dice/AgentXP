@@ -4,11 +4,15 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { normalizeKey, parseArgs, parseCommand } from './lib/args.mjs'
 import { countSteps, createLog, readLog, summarize } from './lib/log.mjs'
+import { buildBrief, RECORD_TEMPLATE } from './lib/brief.mjs'
+import { scrollReport, scrollWarning } from './lib/args.mjs'
+import { answerOrderNotes } from './checks/chat.mjs'
+import { canonicalTaskId, contextConflicts, contextProblem, parsePrevious, withStepsLine } from './lib/tasktext.mjs'
 import { answerProblem, asksQuestion, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, parseTasks, scenarioText, seqFromRecord, withSeq, answerTooShort, seqProblem, startDecision, syncSeq } from './lib/tasktext.mjs'
 import { CHECKS } from './checks/index.mjs'
 import { barChipConflicts } from './checks/chat.mjs'
 import { T162_NO, T162_WHY } from './checks/settings.mjs'
-import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, userText } from './checks/util.mjs'
+import { countWords, helpInfo, lastProgress, missingNumbers, nameWords, numbersIn, resourceText, saysCouldNotTell, userText } from './checks/util.mjs'
 import { fillsWindow, judgeTabs, readTabs, staleTabNotes } from './checks/features.mjs'
 import { LOGIN_ORIGINAL, REDIRECT_BUG, REDIRECT_FIXED } from './lib/fixtures.mjs'
 import { TASKS } from './tasks.mjs'
@@ -688,7 +692,7 @@ describe('H-53 the rating comes from the record, H-59 answer tasks need --answer
     expect(answerProblem(tasks['T07.1'], {})).toBe(null)
   })
   it('every task whose checker reads the answer has an Answer: line in tasks.md, and the other tasks have none', () => {
-    const withChecker = ['T02.2', 'T05.1', 'T06.1', 'T08.2', 'T10.1', 'T10.2', 'T12.2', 'T14.1', 'T15.1', 'T16.2', 'T17.2', 'T18.1', 'T19.1', 'T19.2', 'T20.1', 'T22.1', 'T22.2', 'T24.1', 'T24.2', 'T25.1', 'T25.2', 'T28.1', 'T30.2', 'T31.2']
+    const withChecker = ['T02.2', 'T05.1', 'T06.1', 'T08.2', 'T10.1', 'T10.2', 'T12.2', 'T14.1', 'T15.1', 'T16.2', 'T17.2', 'T18.1', 'T19.1', 'T19.2', 'T20.1', 'T22.1', 'T22.2', 'T24.1', 'T24.2', 'T25.1', 'T25.2', 'T28.1', 'T30.2', 'T31.1', 'T31.2']
     const tasks = loadTasks()
     for (const id of withChecker) expect(asksQuestion(tasks[id]), id).toBe(true)
     const rest = Object.keys(tasks).filter((id) => !withChecker.includes(id))
@@ -738,7 +742,8 @@ describe('H-57 H-58 H-63 presets', () => {
     expect(src).toContain('chat-error-restart-send')
     expect(src).toContain('options.twice')
     expect(TASKS['T23.1']).toEqual({ preset: 'crashed-agent' })
-    expect(TASKS['T23.1-twice']).toMatchObject({ preset: 'crashed-agent', options: { twice: true } })
+    expect(TASKS['T23.1b']).toMatchObject({ preset: 'crashed-agent', options: { twice: true } })
+    expect(TASKS['T23.1-twice']).toBeUndefined() // H-86
     expect(baseTaskId('T23.1-twice')).toBe('T23.1b')
     expect(CHECKS['T23.1b']).toBeTypeOf('function')
     expect(CHECKS['T23.1']).toBeTypeOf('function')
@@ -766,13 +771,14 @@ describe('H-60 T24.1 needs the lines 1, 3 and 4', () => {
   const files = 'redirect.ts, login.ts and session.ts changed'
   it('numbersIn expands ranges and ignores digits inside longer numbers', () => {
     expect([...numbersIn('lines 1, 3 and 4')].sort()).toEqual([1, 3, 4])
-    expect([...numbersIn('lines 1-4')].sort()).toEqual([1, 2, 3, 4])
+    expect([...numbersIn('lines 1-4', { ranges: true })].sort()).toEqual([1, 2, 3, 4])
+    expect([...numbersIn('lines 1-4')].sort()).toEqual([1, 4]) // H-77: no range expansion by default
     expect(numbersIn('line 13 and 1.5').has(1)).toBe(false)
     expect(missingNumbers('3 and 4', [1, 3, 4])).toEqual([1])
   })
   it('passes with all three lines, fails with a lone 3 or two lines', async () => {
     expect((await run('T24.1', fakeCtx(), `${files}; new lines 1, 3 and 4 of redirect.ts`)).status).toBe('PASS')
-    expect((await run('T24.1', fakeCtx(), `${files}; lines 1 to 4 of redirect.ts`)).status).toBe('PASS')
+    expect((await run('T24.1', fakeCtx(), `${files}; lines 1 to 4 of redirect.ts`)).status).toBe('FAIL') // H-77: a range is not expanded
     const noLine = await run('T24.1', fakeCtx(), `${files}; line 3`)
     expect(noLine.status).toBe('FAIL')
     expect(noLine.reason).toContain('1, 4')
@@ -1000,5 +1006,224 @@ describe('H-75 timing claims name a shot', () => {
   it('PANELIST.md asks for the shot number of every timing claim', () => {
     expect(source('PANELIST.md')).toContain('names the')
     expect(source('PANELIST.md')).toContain('Timing claims (H-75)')
+  })
+})
+
+// ---------------------------------------------------------------- round 5 harness defects H-77 .. H-86
+describe('H-77 no range expansion in the line answers', () => {
+  const R5_ANSWER = 'The box could not say which lines change ... It only showed the new code, lines 1 to 5'
+  const ctxFor = () => {
+    const root = mkdtempSync(join(tmpdir(), 'ux-h77-'))
+    mkdirSync(join(root, 'src/auth'), { recursive: true })
+    writeFileSync(join(root, 'src/auth/redirect.ts'), REDIRECT_FIXED)
+    const ctx = fakeCtx({ entries: [{ kind: 'tool_call', permission: { outcome: 'selected', selectedOptionId: 'allow' } }] })
+    ctx.fixtures = { loginApp: root }
+    return ctx
+  }
+  it('numbersIn keeps ranges apart unless asked', () => {
+    expect([...numbersIn('lines 1 to 5')].sort()).toEqual([1, 5])
+    expect(missingNumbers('lines 1 to 5', [1, 3, 4])).toEqual([3, 4])
+    expect(missingNumbers('lines 1, 3 and 4', [1, 3, 4])).toEqual([])
+    expect(numbersIn('lines 1 to 5', { ranges: true }).has(3)).toBe(true)
+  })
+  it('saysCouldNotTell finds the give-up phrases and not a plain answer', () => {
+    expect(saysCouldNotTell(R5_ANSWER)).toBe(true)
+    for (const t of ['I cannot tell', "can't tell which", 'no idea', 'it was unclear', 'not sure']) expect(saysCouldNotTell(t), t).toBe(true)
+    expect(saysCouldNotTell('lines 1, 3 and 4 change')).toBe(false)
+    expect(saysCouldNotTell('it adds +3 and removes -3 lines')).toBe(false)
+  })
+  it('T06.1: the R5 intermediate answer fails, with the reason', async () => {
+    const result = await run('T06.1', ctxFor(), R5_ANSWER)
+    expect(result.status).toBe('FAIL')
+    expect(result.reason).toContain('could not tell')
+    expect(result.reason).toContain('3, 4')
+    expect((await run('T06.1', ctxFor(), 'It changes the new code in lines 1 to 4 of redirect.ts')).status).toBe('FAIL')
+    expect((await run('T06.1', ctxFor(), 'The box could not say, but in the Changes tab it is lines 1, 3 and 4')).status).toBe('PASS')
+    expect((await run('T06.1', ctxFor(), '+3 and -3, lines 1, 3 and 4')).status).toBe('PASS')
+  })
+  it('T24.1: the R5 style answer fails too', async () => {
+    const result = await run('T24.1', fakeCtx(), `redirect.ts, login.ts, session.ts. ${R5_ANSWER}`)
+    expect(result.status).toBe('FAIL')
+    expect(result.reason).toContain('could not tell')
+  })
+})
+
+describe('H-78 scroll unit, position change and warning', () => {
+  it('warns under 20 pixels only', () => {
+    expect(scrollWarning(5)).toContain('100 is one wheel notch')
+    expect(scrollWarning(-10)).toContain('10 pixels')
+    expect(scrollWarning(19)).not.toBeNull()
+    expect(scrollWarning(20)).toBeNull()
+    expect(scrollWarning(300)).toBeNull()
+  })
+  it('reports the position change, nothing moved and an unknown area', () => {
+    expect(scrollReport(200, 0, 200, 640)).toBe('Scrolled 200: the content moved 200 px down (position 0 -> 200 of 640 px).')
+    expect(scrollReport(-100, 300, 200, 640)).toContain('moved 100 px up')
+    expect(scrollReport(200, 640, 640, 640)).toContain('nothing moved')
+    expect(scrollReport(200, null, null, undefined)).toContain('no scrollable area')
+  })
+  it('the help text, PANELIST.md and the server say it', () => {
+    expect(source('ux.mjs')).toContain('100 is one wheel notch')
+    expect(source('PANELIST.md')).toContain('100 is one wheel notch')
+    expect(source('server.mjs')).toContain('scrollReport')
+  })
+})
+
+describe('H-79 the browser reply is one plain sentence', () => {
+  it('browser-agent.json does not echo the tool result', () => {
+    const rule = JSON.parse(source('scripts/browser-agent.json')).rules.find((r) => r.id === 'read-page')
+    const text = rule.steps.filter((s) => s.type === 'message').at(-1).text
+    expect(text).toBe('The page is titled Fixture page. It says Example Domain.')
+    expect(text).not.toContain('{{page}}')
+  })
+})
+
+describe('H-80 one fresh panelist per task', () => {
+  it('refuses T21.1, T22.x and T31.x after the tasks that teach them', () => {
+    expect(contextProblem('T21.1', ['T20.1'])).toContain('FRESH panelist')
+    expect(contextProblem('T21.1', ['T22.2'])).not.toBeNull()
+    expect(contextProblem('T21.1', ['T06.1'])).not.toBeNull()
+    expect(contextProblem('T22.1', ['T20.2'])).not.toBeNull()
+    expect(contextProblem('T22.2', ['T22.1'])).not.toBeNull()
+    expect(contextProblem('T31.1', ['T22.1'])).not.toBeNull()
+    expect(contextProblem('T31.2', ['T31.1'])).not.toBeNull()
+    expect(contextConflicts('T21.1', ['T01.1', 'T20.1'])).toEqual(['T20.1'])
+  })
+  it('allows a fresh context and unrelated tasks', () => {
+    expect(contextProblem('T21.1', [])).toBeNull()
+    expect(contextProblem('T21.1', ['T01.1', 'T04.1'])).toBeNull()
+    expect(contextProblem('T01.1', ['T20.1'])).toBeNull()
+    expect(parsePrevious('T20.1, T22.1')).toEqual(['T20.1', 'T22.1'])
+    expect(parsePrevious('')).toEqual([])
+  })
+  it('start and check write the context; brief is a command', () => {
+    const src = source('session.mjs')
+    expect(src).toContain('context: { previousTasks: previous }')
+    expect(src).toContain('context: info.context')
+    expect(src).toContain("command === 'brief'")
+  })
+  it('brief prints the whole one-task prompt: start, act, check, record, stop', () => {
+    const task = loadTasks()['T06.1']
+    const text = buildBrief({ task: 'T06.1', level: 'novice', taskInfo: task, panelist: source('PANELIST.md'), round: 'r6' })
+    for (const part of ['## 1. Start', '## 2. Act', '## 3. Check', '## 4. Record', '## 5. Stop']) expect(text).toContain(part)
+    expect(text).toContain('session.mjs start --task T06.1 --level novice --out /tmp/ux-sessions/r6/T06.1-novice 2>/dev/null')
+    expect(text).toContain('check --out /tmp/ux-sessions/r6/T06.1-novice --answer')
+    expect(text).toContain('stop --out /tmp/ux-sessions/r6/T06.1-novice --record docs/ux/panel/r6/T06.1-novice.md')
+    expect(text).toContain('# T06.1 Allow after reading - novice')
+    expect(text).toContain('**novice**')
+    expect(text).not.toContain('**LEVEL**')
+  })
+  it('brief for a task without a question has no --answer', () => {
+    const text = buildBrief({ task: 'T04.2', level: 'intermediate', taskInfo: loadTasks()['T04.2'], panelist: 'LEVEL', round: 'r6' })
+    expect(text).not.toContain('--answer')
+    expect(text).toContain('check --out /tmp/ux-sessions/r6/T04.2-intermediate\n')
+  })
+  it('FACILITATOR.md documents brief and --previous', () => {
+    const text = source('FACILITATOR.md')
+    expect(text).toContain('session.mjs brief --task')
+    expect(text).toContain('--previous')
+    expect(RECORD_TEMPLATE).toContain('Context:')
+  })
+})
+
+describe('H-81 the step number', () => {
+  it('the server prints "Step N" for action commands and counts from the log', () => {
+    const src = source('server.mjs')
+    expect(src).toContain('Step ${++stepCount}')
+    expect(src).toContain('countSteps(readLog(')
+  })
+  it('the number is the budget count: successful actions only', () => {
+    const entries = [{ cmd: 'click', ok: true }, { cmd: 'shot', ok: true }, { cmd: 'scroll', ok: true }, { cmd: 'key', ok: false }, { cmd: 'wait', ok: true }]
+    expect(countSteps(entries)).toBe(2)
+  })
+})
+
+describe('H-82 answer tasks need an answer; keyword checks', () => {
+  it('stop refuses a no-answer check of an answer task unless accepted', () => {
+    const src = source('session.mjs')
+    expect(src).toContain("'accept-no-answer'")
+    expect(src).toContain('the last check of this answer task had no answer')
+  })
+  it('T02.2 keywords: the reason', async () => {
+    const list = [{ id: 'a', title: 'Fix login redirect', drives: [] }, { id: 'b', title: 'Docs', drives: [{ label: 'docs-site' }] }]
+    const ctx = fakeCtx({ state: { desktopId: 'a' }, list })
+    for (const ok of ['The name already exists', 'it is the same name', 'each workspace needs its own name', 'the name is taken']) expect((await run('T02.2', ctx, ok)).status, ok).toBe('PASS')
+    expect((await run('T02.2', ctx, 'it was refused')).status).toBe('FAIL')
+    expect((await run('T02.2', ctx, 'I chose a different name')).status).toBe('FAIL')
+  })
+  it('T10.1 keywords include Deny and never', async () => {
+    const desktop = { windows: [], tools: ['fs.read'] }
+    const ctx = fakeCtx({ desktop, policy: { groups: { terminal: 'deny' } } })
+    expect((await run('T10.1', ctx, 'Terminal is set to Deny in Permissions')).status).toBe('PASS')
+    expect((await run('T10.1', ctx, 'it will never run commands')).status).toBe('PASS')
+    expect((await run('T10.1', ctx, 'I just looked')).status).toBe('FAIL')
+  })
+})
+
+describe('H-83 the Result line gets "Steps: N of M"', () => {
+  it('adds the line when it is missing and leaves a complete one alone', () => {
+    const record = '# T19.1 x - intermediate\n- Result: PASS (a; b)   Time: 3\n- SEQ: 6 - ok'
+    const fixed = withStepsLine(record, 5, 12)
+    expect(fixed).toContain('- Result: PASS (a; b)   Time: 3   Steps: 5 of 12')
+    expect(withStepsLine(fixed, 9, 12)).toBe(fixed)
+    expect(withStepsLine('no result line', 5, 12)).toBe('no result line')
+    expect(withStepsLine('- Result: FAIL (x)', 3, null)).toBe('- Result: FAIL (x)   Steps: 3')
+  })
+  it('stop writes it', () => {
+    expect(source('session.mjs')).toContain('withStepsLine(text, last.steps, last.budget)')
+  })
+})
+
+describe('H-84 quote the screen; T31.1 keyword', () => {
+  const page = (topic) => ({ getByTestId: () => ({ getAttribute: async () => topic }) })
+  it('T31.1 needs Ctrl+S in the answer', async () => {
+    const desktop = { windows: [win('notepad')], tools: [] }
+    const ctx = fakeCtx({ desktop, page: page('notepad') })
+    expect((await run('T31.1', ctx, 'Press Ctrl+S to save the file')).status).toBe('PASS')
+    expect((await run('T31.1', ctx, 'File then Save As')).status).toBe('FAIL')
+    expect((await run('T31.1', ctx)).status).toBe('MANUAL')
+    expect(asksQuestion(loadTasks()['T31.1'])).toBe(true)
+  })
+  it('PANELIST.md quotes only text in a shot, with the shot number', () => {
+    expect(source('PANELIST.md')).toContain('H-84')
+    expect(source('PANELIST.md')).toContain('each clause of your Answer:')
+    expect(source('PANELIST.md')).toContain('cut off')
+  })
+})
+
+describe('H-85 T07.1 logs the order and the time of the two answers', () => {
+  const chat = (label, raised, answered) => ({
+    label,
+    entries: [
+      { kind: 'tool_call', seq: 2, createdAt: raised, permission: { outcome: 'selected', selectedOptionId: 'allow' } },
+      { kind: 'message', seq: 3, role: 'agent', createdAt: answered, blocks: [] }
+    ]
+  })
+  it('names the chat answered first and the seconds', () => {
+    const notes = answerOrderNotes([chat('Fix redirect', '2026-01-01T10:00:00Z', '2026-01-01T10:00:40Z'), chat('Trim name', '2026-01-01T10:00:00Z', '2026-01-01T10:00:15Z')])
+    expect(notes[0]).toContain('1. chat "Trim name"')
+    expect(notes[0]).toContain('2. chat "Fix redirect"')
+    expect(notes[1]).toContain('"Trim name" 15')
+    expect(notes[1]).toContain('"Fix redirect" 40')
+    expect(answerOrderNotes([{ label: 'x', entries: [] }])).toEqual([])
+  })
+  it('the checker passes with the notes; tasks.md says either chat may be first', async () => {
+    const entries = [{ kind: 'tool_call', seq: 1, createdAt: '2026-01-01T10:00:00Z', permission: { outcome: 'selected', selectedOptionId: 'allow' } }, { kind: 'message', seq: 2, createdAt: '2026-01-01T10:00:02Z', role: 'agent', blocks: [] }]
+    const result = await run('T07.1', fakeCtx({ state: { sessionIds: ['a', 'b'] }, entries, sessions: [{ id: 'a', title: 'Chat A' }, { id: 'b', title: 'Chat B' }] }))
+    expect(result.status).toBe('PASS')
+    expect(result.notes.join(' ')).toContain('answer order')
+    expect(readFileSync(join(hereDir, '../../docs/ux/tasks.md'), 'utf8')).toContain('either chat may be answered first')
+    expect(loadTasks()['T07.1'].scenario).toContain('answer both')
+  })
+})
+
+describe('H-86 one id for the second crash', () => {
+  it('T23.1b everywhere; the old name is only an alias', () => {
+    expect(canonicalTaskId('T23.1-twice')).toBe('T23.1b')
+    expect(canonicalTaskId('T23.1')).toBe('T23.1')
+    expect(Object.keys(TASKS)).toContain('T23.1b')
+    expect(Object.keys(TASKS)).not.toContain('T23.1-twice')
+    expect(source('session.mjs')).toContain('canonicalTaskId(flags.task)')
+    expect(loadTasks()['T23.1b']).toBeTruthy()
   })
 })

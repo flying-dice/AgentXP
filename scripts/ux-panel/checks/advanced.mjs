@@ -1,5 +1,5 @@
 // J18, J21, J23, J24.
-import { agentMessages, all, fail, missingNumbers, pass, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
+import { agentMessages, all, fail, missingNumbers, pass, saysCouldNotTell, textOf, userMessages, userText, windowsOf, withAnswer } from './util.mjs'
 
 /** H-60: the new lines of redirect.ts in the diff. */
 export const GIT_NEW_LINES = [1, 3, 4]
@@ -88,7 +88,9 @@ export const checks = {
     const result = withAnswer(pass('the Git project start state is in place'), answer, { keywords: ['redirect.ts', 'login.ts', 'session.ts'], expect: 'names redirect.ts and login.ts (modified) and session.ts (new), and the new lines of redirect.ts (lines 1, 3 and 4 of the diff; line 3 is the one with searchParams)' })
     if (result.status !== 'PASS' || !answer) return result
     const missing = missingNumbers(answer, GIT_NEW_LINES)
-    return missing.length ? fail(`state ok but the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${GIT_NEW_LINES.join(', ')})`, result.notes) : result
+    // H-77: no range expansion ("lines 1 to 5" is 1 and 5); an answer that could not tell fails.
+    const why = saysCouldNotTell(answer) ? 'the answer says that the panelist could not tell which lines are new; ' : ''
+    return missing.length ? fail(`state ok but ${why}the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${GIT_NEW_LINES.join(', ')} as written; a range such as "1 to 5" does not count)`, result.notes) : result
   },
 
   async 'T24.2'(ctx, { answer }) {

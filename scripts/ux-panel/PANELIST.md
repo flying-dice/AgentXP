@@ -23,13 +23,13 @@ UX_SESSION=<session folder> node scripts/ux-panel/ux.mjs <command>
 | `click <x> <y>` (`--double`, `--right`) | click at a pixel position of the screenshot |
 | `move <x> <y>` | hover (tooltips; the screenshot is taken after a short wait, so a tooltip is in it. If you expect one and do not see it, look again with `shot`) |
 | `drag <x1> <y1> <x2> <y2>` | drag with the mouse |
-| `scroll <x> <y> <dy>` | scroll (positive = down) |
+| `scroll <x> <y> <dy>` | scroll with the mouse wheel at that position. `dy` is in pixels, positive = down: **100 is one wheel notch, 200 to 300 moves about a page**. A `dy` under 20 barely moves anything (the output warns). The output says how far the content moved |
 | `type "<text>"` | type text where the keyboard focus is |
 | `key <combo>` | `Enter`, `Escape`, `Tab`, `Shift+Tab`, `Control+N`, `Alt+F4`, `F1`, ... |
 | `wait <ms>` | wait up to 10000 ms |
 | `find "<text>"` | where does this text appear on the screen? (like asking a screen reader) |
 
-Every action prints the path of a new screenshot. **One step = one action + look at its screenshot.** Screenshots are
+Every action prints the path of a new screenshot and "Step N", the number of actions you have done so far (a scroll is one step like a click; you do not need to count yourself). **One step = one action + look at its screenshot.** Screenshots are
 1280x800 pixels; coordinates are pixels in the screenshot. A new window can open (the output says so); use `windows` and
 `switch` to look at it. Press **F1** if you want help from the program itself, like a person would.
 
@@ -45,7 +45,7 @@ Every action prints the path of a new screenshot. **One step = one action + look
 ## Budget
 
 The facilitator tells you a **step budget** (actions only; `shot`, `windows`, `find`, `wait` and `switch` do not count)
-and a time limit of 10 minutes. Count your actions. When the budget is used up, or you decide you cannot continue,
+and a time limit of 10 minutes. The output of every action shows "Step N" (your count). When the budget is used up, or you decide you cannot continue,
 **stop** and report that you failed. Giving up is allowed and is a result, not a mistake.
 
 ## Finish the whole scenario
@@ -73,10 +73,10 @@ report.
    with it (the facilitator refuses a record where they do not, H-72).
 6. **Frustrations** and what you would change (a short list).
 
-Quote the screen, not your memory (H-61): every piece of text from the program that you quote (a button, a message, an address)
-must be copied from a screenshot, with the number of that screenshot (for example "Plug in again" in 004.png). Do not write a
+Quote the screen, not your memory (H-61, H-84): every piece of text from the program that you quote (a button, a message, an address, a shortcut,
+each clause of your Answer:) must be copied from a screenshot, with the number of that screenshot (for example "Plug in again" in 004.png). Do not write a
 text that you did not see. Before the final report, take one more `shot` and say in one line what that last screenshot shows;
-do not describe a screen that you did not look at. If you did not see something, write "I did not see it".
+do not describe a screen that you did not look at. If you did not see something, write "I did not see it". If a text is cut off at the edge of a shot, quote only the part you can read, say that it is cut off, and scroll to read the rest before you put it in your Answer:.
 
 Timing claims (H-75): every claim about *when* something happened ("the error appeared only after I picked the folder", "the
 box showed at once") names the screenshot that shows it (for example "see 003.png"). Look at the numbered shots again before you

@@ -6,7 +6,9 @@
 //   node scripts/ux-panel/session.mjs stop  --out <dir> [--record <record.md>]   (reads "- SEQ: n" from the record)
 //   node scripts/ux-panel/session.mjs seq   --out <dir> --record <record.md> [--seq-confirmed]   (copies the record's SEQ into a stopped session's check.json)
 //   node scripts/ux-panel/session.mjs seq   --records <records dir> --sessions <sessions dir>     (the same for every <name>.md with a <name>/check.json)
+//   node scripts/ux-panel/session.mjs brief --task T01.1 --level novice [--round r6] [--out <dir>]   (H-80: the complete prompt of ONE fresh panelist agent for ONE task: start, act, check, record, stop)
 //   node scripts/ux-panel/session.mjs list
+// start also takes --previous T20.1,T22.1 (the tasks that the panelist's context already ran; T21.1, T22.x and T31.x are refused after tasks that teach them, H-80).
 import { spawn, spawnSync } from 'node:child_process'
 import { createServer } from 'node:net'
 import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
@@ -15,12 +17,15 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from './lib/args.mjs'
 import { countSteps, readLog, summarize } from './lib/log.mjs'
 import { request } from './lib/rpc.mjs'
-import { answerProblem, answerTooShort, baseTaskId, budgetFor, budgetVerdict, loadTasks, normalizeLevel, scenarioText, startDecision, syncSeq } from './lib/tasktext.mjs'
+import { buildBrief } from './lib/brief.mjs'
+import { answerProblem, answerTooShort, asksQuestion, baseTaskId, budgetFor, budgetVerdict, canonicalTaskId, contextProblem, loadTasks, normalizeLevel, parsePrevious, scenarioText, startDecision, syncSeq, withStepsLine } from './lib/tasktext.mjs'
 import { TASKS, TASK_NOTES } from './tasks.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const [command, ...rest] = process.argv.slice(2)
-const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string' })
+const { flags } = parseArgs(rest, { task: 'string', level: 'string', out: 'string', answer: 'string', 'no-answer': 'bool', record: 'string', 'no-check': 'bool', 'no-xvfb': 'bool', timeout: 'string', port: 'string', facilitator: 'bool', 'seq-confirmed': 'bool', records: 'string', sessions: 'string', previous: 'string', round: 'string', 'accept-no-answer': 'bool' })
+// H-86: one id for the second crash (T23.1b); the old name is only accepted here.
+if (flags.task) flags.task = canonicalTaskId(flags.task)
 const outDir = () => resolve(flags.out ?? process.env.UX_SESSION ?? '.')
 const sessionInfo = () => {
   const file = join(outDir(), 'session.json')
@@ -69,6 +74,10 @@ async function start() {
   const out = outDir()
   if (!flags.out) throw new Error('--out <dir> required')
   const level = normalizeLevel(flags.level ?? 'intermediate') // H-48: unknown level names are refused
+  // H-80: one fresh panelist per task. `--previous` lists the tasks that this panelist's context already ran; a task that an earlier one teaches is refused.
+  const previous = parsePrevious(flags.previous)
+  const refused = contextProblem(flags.task, previous)
+  if (refused) throw new Error(refused)
   // H-66: start is idempotent for the same task and level; a failed or dead session releases the folder (its session.json is kept aside as session.failed-<time>.json, server.log stays).
   const existingFile = join(out, 'session.json')
   const existing = existsSync(existingFile) ? JSON.parse(readFileSync(existingFile, 'utf8')) : null
@@ -114,13 +123,16 @@ async function start() {
     }
     if (Date.now() > deadline) throw new Error(`the session did not become ready (see ${join(out, 'server.log')})`)
   }
+  // H-80: the context of the panelist is part of the session (and of check.json and the record).
+  const file = join(out, 'session.json')
+  writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, 'utf8')), context: { previousTasks: previous } }, null, 2))
   announce(out, level, sessionInfo())
 }
 
 /** Prints the facilitator notes (stderr) and the panelist block (stdout). */
 function announce(out, level, info) {
   // stdout is the panelist block only; facilitator notes go to stderr (or to stdout with --facilitator).
-  const facilitator = [`Session ready: ${out}`, `Level ${level}`, ...facilitatorLines(flags.task, level, info), 'Spawn a FRESH panelist for this task (H-69): no memory of any earlier task, not even of the same journey.', `Test page: ${info.testPageUrl}`]
+  const facilitator = [`Session ready: ${out}`, `Level ${level}`, ...facilitatorLines(flags.task, level, info), 'Spawn a FRESH panelist for this task (H-69, H-80): no memory of any earlier task, not even of the same journey. `session.mjs brief` prints the whole prompt.', `Test page: ${info.testPageUrl}`]
   const note = facilitator.map((l) => `[facilitator] ${l}`).join('\n')
   if (flags.facilitator) console.log(`${note}\n`)
   else console.error(note)
@@ -154,7 +166,7 @@ async function check() {
   const checkedAt = new Date().toISOString()
   const run = { checkedAt, status, checkerStatus: result.status, reason: result.reason, steps, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']) }
   const runs = [...(previous?.runs ?? (previous ? [{ checkedAt: previous.checkedAt, status: previous.status, checkerStatus: previous.checkerStatus, reason: previous.reason, steps: previous.steps, answer: previous.answer, noAnswer: previous.noAnswer }] : [])), run]
-  const next = { task, level, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: previous?.seq ?? null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), checkedAt, runs }
+  const next = { task, level, context: info.context ?? { previousTasks: [] }, status, nearMiss: verdict.nearMiss, weak: verdict.weak, seq: previous?.seq ?? null, checkerStatus: result.status, reason: result.reason, notes: result.notes, steps, budget, answer: flags.answer ?? null, noAnswer: Boolean(flags['no-answer']), checkedAt, runs }
   writeFileSync(file, JSON.stringify(next.seq === null ? next : withSeqKeep(next), null, 2))
   if (runs.length > 1) console.log(`this is run ${runs.length} of this session; check.json keeps all runs (${runs.map((r) => r.status).join(', ')}); the record must explain the earlier ones`)
   process.exitCode = status === 'PASS' ? 0 : status === 'FAIL' ? 1 : 2
@@ -197,6 +209,23 @@ async function stop() {
     }
   } else if (!existsSync(join(out, 'check.json')) && !flags['no-check']) {
     throw new Error(`no check.json in ${out}: run \`check\` first (or pass --no-check to archive without a verdict)`)
+  }
+  // H-82: an answer task whose last check had no answer is not a final verdict (MANUAL); ask for the answer or confirm that there was none.
+  if (!flags['no-check'] && existsSync(join(out, 'check.json'))) {
+    const last = JSON.parse(readFileSync(join(out, 'check.json'), 'utf8'))
+    if (asksQuestion(loadTasks()[baseTaskId(last.task ?? info.task)]) && !last.answer && !flags['accept-no-answer']) {
+      throw new Error('the last check of this answer task had no answer (--no-answer): run `check --answer "<text after Answer:>"` with the panelist\'s answer, or pass --accept-no-answer to stop when the panelist really gave none')
+    }
+  }
+  // H-83: the Result line of the record always has "Steps: N of M" (from check.json) when the panelist left it out.
+  if (flags.record && existsSync(join(out, 'check.json')) && existsSync(resolve(flags.record))) {
+    const last = JSON.parse(readFileSync(join(out, 'check.json'), 'utf8'))
+    const text = readFileSync(resolve(flags.record), 'utf8')
+    const fixed = withStepsLine(text, last.steps, last.budget)
+    if (fixed !== text) {
+      writeFileSync(resolve(flags.record), fixed)
+      console.log(`added "Steps: ${last.steps}${last.budget ? ` of ${last.budget}` : ''}" to the Result line of ${flags.record}`)
+    }
   }
   // H-53/H-72: the rating comes from the record (`- SEQ: n`), never from a command line option; the scale guard refuses a record whose rating contradicts its text.
   if (flags.record) {
@@ -255,6 +284,13 @@ try {
       if (!flags.record) throw new Error('seq needs --record <record.md> (with --out <session folder>) or --records <dir> --sessions <dir>')
       console.log(applyRecord(join(outDir(), 'check.json'), flags.record) ?? 'no check.json in the session folder')
     }
+  } else if (command === 'brief') {
+    // H-80: the whole prompt of one fresh panelist agent for one task.
+    if (!flags.task || !TASKS[flags.task]) throw new Error(`--task <id> required; known: ${Object.keys(TASKS).join(', ')}`)
+    const level = normalizeLevel(flags.level ?? 'intermediate')
+    const refused = contextProblem(flags.task, parsePrevious(flags.previous))
+    if (refused) throw new Error(refused)
+    console.log(buildBrief({ task: flags.task, level, taskInfo: loadTasks()[baseTaskId(flags.task)], panelist: readFileSync(join(here, 'PANELIST.md'), 'utf8'), round: flags.round ?? 'r1', out: flags.out }))
   } else if (command === 'task') {
     const info = existsSync(join(outDir(), 'session.json')) ? sessionInfo() : {}
     console.log(panelistBlock(flags.task, flags.level, { testPageUrl: info.testPageUrl, out: flags.out ?? '<session folder>' }).join('\n'))
@@ -264,7 +300,7 @@ try {
     const tasks = loadTasks()
     for (const id of Object.keys(TASKS)) console.log(`${id}\t${TASKS[id].preset}\t${tasks[baseTaskId(id)]?.title ?? ''}`)
   } else {
-    console.log('usage: session.mjs start|check|stop|task|list (see FACILITATOR.md)')
+    console.log('usage: session.mjs start|brief|check|stop|task|list (see FACILITATOR.md)')
     process.exitCode = 64
   }
 } catch (error) {

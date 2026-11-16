@@ -41,7 +41,48 @@ export const budgetFor = (task, level) => {
 }
 
 /** `T18.1-inline` -> `T18.1`: the id of tasks.md (variant suffixes belong to tasks.mjs only). */
-export const baseTaskId = (id) => (id === 'T23.1-twice' ? 'T23.1b' : String(id).replace(/-(inline|sidebar|window)$/, ''))
+export const baseTaskId = (id) => String(id).replace(/^T23\.1-twice$/, 'T23.1b').replace(/-(inline|sidebar|window)$/, '')
+
+/** H-86: the one id of the second-crash task is T23.1b; the old name T23.1-twice is only accepted on the command line. */
+export const canonicalTaskId = (id) => (id === 'T23.1-twice' ? 'T23.1b' : id)
+
+/**
+ * H-80: what a task teaches the next one. A panelist context that ran one of the `teachers` must not run the task (T21.1 tests whether
+ * a person finds Ctrl+N and Alt+A; T22.x and T31.x test whether a person finds Help). Patterns match the id of a task (variants too).
+ */
+const START_MENU_OR_HELP = ['T13.1', 'T20.*', 'T22.*', 'T30.2', 'T31.*']
+const APPROVAL_HINTS = ['T05.*', 'T06.*', 'T07.1']
+export const CONTEXT_RULES = {
+  'T21.1': { teachers: [...START_MENU_OR_HELP, ...APPROVAL_HINTS], why: 'they show the Start menu, Help or the approval hints (Ctrl+N, Alt+A)' },
+  'T22.*': { teachers: START_MENU_OR_HELP, why: 'they show Help or the Start menu' },
+  'T31.*': { teachers: START_MENU_OR_HELP, why: 'they show Help or the Start menu' }
+}
+const matchesId = (pattern, id) => (pattern.endsWith('*') ? baseTaskId(id).startsWith(pattern.slice(0, -1)) : baseTaskId(id) === pattern)
+
+/** H-80: the earlier tasks of a panelist context that make `task` invalid (empty = fine). */
+export function contextConflicts(task, previous = []) {
+  const rule = Object.entries(CONTEXT_RULES).find(([pattern]) => matchesId(pattern, task))?.[1]
+  if (!rule) return []
+  return previous.filter((p) => rule.teachers.some((t) => matchesId(t, p)))
+}
+
+/** H-80: `--previous T20.1,T22.1` -> ['T20.1', 'T22.1'] (canonical ids). */
+export const parsePrevious = (text) => String(text ?? '').split(/[\s,]+/).filter(Boolean).map(canonicalTaskId)
+
+/** H-80: the refusal text, or null. `task` must be run by a fresh panelist, so the previous tasks of the context must not teach it. */
+export function contextProblem(task, previous = []) {
+  const bad = contextConflicts(task, previous)
+  if (!bad.length) return null
+  const rule = Object.entries(CONTEXT_RULES).find(([pattern]) => matchesId(pattern, task))[1]
+  return `${task} cannot run in a context that already ran ${bad.join(', ')} (${rule.why}). Spawn a FRESH panelist for ${task} (one panelist per task, H-80) and start it without --previous.`
+}
+
+/** H-83: the Result line of a record gets "Steps: N of M" when the panelist left it out. Returns the new text (unchanged when present or no Result line). */
+export function withStepsLine(text, steps, budget) {
+  if (/Steps:\s*\d+\s+of\s+\d+/i.test(text)) return text
+  const line = `Steps: ${steps}${budget ? ` of ${budget}` : ''}`
+  return text.replace(/^(- Result:.*)$/m, (m) => `${m.replace(/\s+$/, '')}   ${line}`)
+}
 
 /** H-54: a task asks a question when its tasks.md entry has an `Answer:` line (the scenario wording is not guessed). */
 export const asksQuestion = (task) => Boolean(task?.answer)

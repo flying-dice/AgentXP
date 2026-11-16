@@ -832,7 +832,7 @@
         },
         {
           "type": "message",
-          "text": "I can read the page that is open in the Browser. It says: {{page}}"
+          "text": "The page is titled Fixture page. It says Example Domain."
         }
       ]
     }

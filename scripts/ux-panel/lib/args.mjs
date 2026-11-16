@@ -20,6 +20,22 @@ export const COMMAND_SPECS = {
   find: { positional: ['text'], flags: {} }
 }
 
+/** H-78: `scroll` takes raw pixels (the wheel event's deltaY): 100 is one wheel notch, 200 to 300 is about a page. Below this a scroll moves "a few pixels". */
+export const MIN_SCROLL_DY = 20
+
+/** H-78: the warning for a tiny scroll, or null. */
+export const scrollWarning = (dy) =>
+  Math.abs(dy) < MIN_SCROLL_DY ? `Warning: ${dy} is only ${Math.abs(dy)} pixels (100 is one wheel notch; use 200 to 300 to move about a page). The content moves very little.` : null
+
+/** H-78: what the scroll did, from the scroll position (px) of the scrolled area before and after; `null` when no scrollable area was under the pointer. */
+export function scrollReport(dy, before, after, max) {
+  if (before === null || before === undefined || after === null || after === undefined) return `Scrolled ${dy}: no scrollable area under the pointer (or the content does not scroll there); the position is not known.`
+  const moved = after - before
+  const where = `position ${Math.round(before)} -> ${Math.round(after)} of ${Math.round(max)} px`
+  if (moved === 0) return `Scrolled ${dy}: nothing moved (${where}; ${dy > 0 ? 'already at the end' : 'already at the start'}).`
+  return `Scrolled ${dy}: the content moved ${Math.abs(Math.round(moved))} px ${moved > 0 ? 'down' : 'up'} (${where}).`
+}
+
 const isNumberToken = (t) => /^-?\d+(\.\d+)?$/.test(t)
 
 /**
