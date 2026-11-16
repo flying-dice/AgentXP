@@ -226,8 +226,8 @@
     const centre = await host.openApp({ app: 'control-centre' })
     host.updateView(centre.id, { app: 'control-centre', page: 'agents' })
   }
-  /** "Start a new chat" after a second failure: a chat on the same folder with the current default agent. */
-  const startNewChat = (): void => void (session ? host.startChat(session.cwd) : undefined)
+  /** "Start a new chat" of the error row: a chat on the same folder with the current default agent; `text` (the failed message) is in its message box. */
+  const startNewChat = (text?: string): void => void (session ? host.startChat(session.cwd, text) : undefined)
   /** "Show in Event Viewer" of the error row: the viewer on this chat, on its newest error. */
   async function showInEventViewer(): Promise<void> {
     const events = await host.api.events.query({ desktopId: host.state.desktopId, sessionId, level: 'error', limit: 50 }).catch(() => [])

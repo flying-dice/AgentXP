@@ -77,7 +77,7 @@ Each row has two lines. The first line shows the name and the setting. The secon
 
 Each row is separate. **Write files** covers changing files in any app. **Code** and **Notepad** cover only what their rows list. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
 
-The top bar shows chips with the same names, for example **Run commands: Ask**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, the same word as the row. When no app that gives the agent this tool is open, the chip adds that, for example **Run commands: Ask (no Terminal open)**, and looks paler. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason. Click a chip to open this page.
+The top bar shows chips with the same names, for example **Run commands: Ask**. Each chip reads *Name*: *Allow*, *Ask*, or *Deny*, the same word as the row. When no app that gives the agent this tool is open, the chip adds that, for example **Run commands: Ask (Terminal is closed)**, and looks paler. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason. Click a chip to open this page.
 
 - **Allow** – The agent acts without a question.
 - **Ask** – A request appears in the Action Center.

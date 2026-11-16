@@ -22,6 +22,8 @@ export class SessionProblems {
   private readonly problems = new Map<Id, SessionProblemDto>()
   /** Failures in a row per chat: a restart or a start that worked clears the problem but not this, only a completed turn does. */
   private readonly failures = new Map<Id, number>()
+  /** The agent whose start failed last, per chat: a start failure of another agent after it means the default agent was changed (UX-174). */
+  private readonly startAgents = new Map<Id, string>()
 
   get(sessionId: Id): SessionProblemDto | null {
     return this.problems.get(sessionId) ?? null
@@ -36,7 +38,15 @@ export class SessionProblems {
     const failures = again ? (open?.failures ?? 1) : (this.failures.get(sessionId) ?? 0) + 1
     this.failures.set(sessionId, failures)
     const keep = again && open.kind === 'agent-ended' ? open : problem
-    this.problems.set(sessionId, { ...keep, failures })
+    this.problems.set(sessionId, { ...keep, failures, ...this.agentChange(sessionId, keep) })
+  }
+
+  /** `agentChanged` for a start failure of an agent other than the one that failed before; nothing for any other problem. */
+  private agentChange(sessionId: Id, problem: SessionProblemDto): Pick<SessionProblemDto, 'agentChanged'> {
+    if (problem.kind !== 'start-failed' || !problem.agentName) return {}
+    const before = this.startAgents.get(sessionId)
+    this.startAgents.set(sessionId, problem.agentName)
+    return before !== undefined && before !== problem.agentName ? { agentChanged: true } : {}
   }
 
   /** Takes the problem away (a restart is about to try again); the count of failures in a row stays. */
@@ -48,6 +58,7 @@ export class SessionProblems {
   recovered(sessionId: Id): void {
     this.problems.delete(sessionId)
     this.failures.delete(sessionId)
+    this.startAgents.delete(sessionId)
   }
 
   /** The row with its problem attached (the row itself when there is none). */

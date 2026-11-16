@@ -66,7 +66,7 @@
 
 <svelte:window onkeydown={onkeydown} onkeyup={alt.keyup} onblur={alt.reset} />
 
-<!-- Part of the chat layout, above the message box: it takes what the preview needs up to 55% of the window (the transcript shrinks first) and does not scroll itself; only the preview scrolls. Allow and Deny stay in view. -->
+<!-- Part of the chat layout, above the message box: it takes what the preview needs and the transcript shrinks first, to one row and never to zero (UX-177). It does not scroll itself; only the preview scrolls. Allow and Deny stay in view. -->
 <section class="permission" class:expanded bind:this={box} use:focusDeny role="alertdialog" aria-label={question} data-testid="permission-dialog">
   <div class="scroll">
     <div class="body">
@@ -109,19 +109,15 @@
 
 <style>
   .permission {
-    flex: none;
+    /* Takes the room it needs and gives way only when the window is too small: the preview shrinks and scrolls alone, the two answers stay in the window. */
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    /* A part of the chat's height: the preview scrolls alone, the two answers stay in the window. */
-    max-height: 62%;
     margin-top: 4px;
     border: 1px solid #1c3a64;
     background: var(--w7-window);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-  }
-  .permission.expanded {
-    max-height: 90%;
   }
   /* No scroll bar of its own: the preview inside is the only scroll area. */
   .scroll {

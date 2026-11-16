@@ -55,8 +55,8 @@
     onshowtoolevent?: (toolCallId: string) => void
     /** "Open Agents" and "Choose another agent" of the error row: Control Center at Agents. */
     onopenagents?: () => void
-    /** "Start a new chat" after a second failure in a row. */
-    onnewchat?: () => void
+    /** "Start a new chat" of the error row: the host opens a chat on the same folder and puts `text` (the message that failed) in its message box. */
+    onnewchat?: (text?: string) => void
     /** The name of the desktop's default agent when the chat's own agent is another one: "Try again with <name>". */
     newDefaultAgent?: string | null
   }
@@ -150,7 +150,7 @@
     else if (id === 'restart') void restartThen()
     else if (id === 'details') void toggleDetails()
     else if (id === 'open-agents' || id === 'choose-agent') onopenagents?.()
-    else if (id === 'new-chat') void keepTextThen(onnewchat)
+    else if (id === 'new-chat') startNewChat()
     else onshowevents?.()
   }
 
@@ -176,11 +176,19 @@
     void resendFailed()
   }
 
-  /** "Start a new chat": the text of the failed message stays in this chat's message box first ("your text is kept in the box"). */
-  async function keepTextThen(then?: () => void): Promise<void> {
-    const failed = store.failedSend
-    if (failed && !(await editFailed())) edit = { id: --editSeq, text: failed.text }
-    then?.()
+  /**
+   * "Start a new chat": the text of the failed message goes to the message box of the new chat, so that Enter sends it there (UX-175),
+   * and this chat's box is emptied when it still holds that text. This chat keeps its error and says "Continued in a new chat".
+   */
+  let continued = $state(false)
+  $effect(() => {
+    if (store.running) untrack(() => (continued = false))
+  })
+  function startNewChat(): void {
+    const text = store.failedSend?.text
+    if (text !== undefined) edit = { id: --editSeq, clearIf: text }
+    continued = true
+    onnewchat?.(text)
   }
 
   /** "Edit" on a message that was not sent: the text goes back into the message box. */
@@ -195,7 +203,8 @@
 </script>
 
 <section class="session-view" aria-label={title}>
-  {#if !compact}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
+  <!-- While a request waits, the box gets the room of the title row: the window title already names the chat (UX-177). -->
+  {#if !compact && !request}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
   <Transcript
     messages={store.messages}
     agentState={store.state}
@@ -229,6 +238,9 @@
   {/if}
   {#if store.lastDecision}
     <div class="decision" role="status" data-testid="chat-permission-result" data-allowed={store.lastDecision.allowed}>{store.lastDecision.text}</div>
+  {/if}
+  {#if continued}
+    <div class="decision" role="status" data-testid="chat-continued-note">Continued in a new chat.</div>
   {/if}
   {#if paused}
     <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>

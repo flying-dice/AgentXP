@@ -9,6 +9,8 @@ export type ProblemActionId = 'send-again' | 'restart-send' | 'restart' | 'detai
 export interface ProblemAction {
   id: ProblemActionId
   label: string
+  /** The row highlights this button, whatever the list order (UX-174: "Choose another agent" for a program that is not there). */
+  primary?: boolean
 }
 
 /** What the chat shows when something went wrong: plain words, the buttons that fix it, the technical text behind "Details...". */
@@ -58,13 +60,30 @@ const EVENT_VIEWER: ProblemAction = { id: 'event-viewer', label: 'Event Viewer' 
 /** The recovery that works: the answer a crash box highlights (the default button), never Details or Event Viewer. */
 const RECOVERY: readonly ProblemActionId[] = ['send-again', 'restart-send', 'restart']
 
-/** The action the row highlights: the first recovery of the list; null when there is none (a plain agent error with no way to retry). */
-export const defaultActionId = (actions: readonly ProblemAction[]): ProblemActionId | null => actions.find((a) => RECOVERY.includes(a.id))?.id ?? null
+/** The action the row highlights: the one marked `primary`, else the first recovery of the list; null when there is none (a plain agent error with no way to retry). */
+export const defaultActionId = (actions: readonly ProblemAction[]): ProblemActionId | null => (actions.find((a) => a.primary) ?? actions.find((a) => RECOVERY.includes(a.id)))?.id ?? null
 /** Both open Control Center > Agents: one to correct the command of the agent, one to pick another agent as the default. */
 const OPEN_AGENTS: ProblemAction = { id: 'open-agents', label: 'Open Agents' }
 const CHOOSE_AGENT: ProblemAction = { id: 'choose-agent', label: 'Choose another agent' }
-/** With a message that was not answered, the button says its text stays in the message box. */
-const newChat = (failed: unknown): ProblemAction => ({ id: 'new-chat', label: failed ? 'Start a new chat (your text is kept in the box)' : 'Start a new chat' })
+/** With a message that was not answered, the button says its text goes with the user: the new chat opens with it in its message box (UX-175). */
+const newChat = (failed: unknown): ProblemAction => ({ id: 'new-chat', label: failed ? 'Start a new chat with your text' : 'Start a new chat' })
+
+/** The sentence under a failed start that says what to do next, by cause (UX-174); empty for a cause that has no better advice. */
+export function startNextStep(problem: Pick<SessionProblemDto, 'cause' | 'message'>): string {
+  const cause = problem.cause ?? problem.message
+  if (/was not found/i.test(cause)) return 'Check the command in Agents, or choose another agent.'
+  if (/stopped before it was ready/i.test(cause)) return 'Check that it is installed, or choose another agent.'
+  return ''
+}
+
+/** A program that is not there is not fixed by trying again, and neither is any start that failed twice: then "Choose another agent" is the default (UX-174). */
+export const chooseAgentFirst = (problem: Pick<SessionProblemDto, 'cause' | 'message' | 'failures'>): boolean => /was not found/i.test(problem.cause ?? problem.message) || (problem.failures ?? 1) >= 2
+
+/** The technical text for "Details...": the plain sentence of the box first, so it never starts with "Internal error" (UX-174). */
+export function detailWithLead(text: string, detail: string | null): string | null {
+  const lead = text.split('\n')[0]
+  return detail === null || detail === lead ? detail : `${lead}\n\n${detail}`
+}
 
 export interface ProblemInput {
   /** The error of the last run (technical text), or null. */
@@ -119,40 +138,50 @@ function statusOf(result: Raw, { problem, error, agentName }: ProblemInput): str
     case 'agent-ended':
       return again ? 'The agent program was ended again. Click Restart, or start a new chat.' : 'The agent program was ended. Click Restart, then send your message again.'
     case 'start-failed':
-      return `${namedStartFailure(problem.message, agentName).split('\n')[0].replace(/ Your message was not sent\.$/, '')} Click ${first?.label ?? 'Try again'}, or open Agents to change the command.`
+      return `${startHeadline(problem, agentName)} ${startNextStep(problem) || 'Open Agents to change the command, or choose another agent.'}`
     default:
       return error ?? ''
   }
 }
 
+/** The first sentence of a failed start: "My assistant could not start: the program 'x' was not found.", or after a change of the default agent. */
+function startHeadline(problem: SessionProblemDto, agentName: string | null | undefined): string {
+  if (problem.agentChanged && problem.agentName) return `The default agent is now ${problem.agentName}. It could not start either.`
+  return namedStartFailure(problem.message, agentName)
+}
+
 function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName = null }: ProblemInput): Raw | null {
   if (problem) {
-    const detail = problem.detail || error
     const again = (problem.failures ?? 1) >= 2
-    const tail = again ? `\n${repeatLine(problem)}` : ''
+    const tail = again && !problem.agentChanged ? `\n${repeatLine(problem)}` : ''
+    const withLead = (text: string): { text: string; detail: string | null } => ({ text, detail: detailWithLead(text, problem.detail || error) })
     switch (problem.kind) {
       case 'start-failed': {
         const retry: ProblemAction = failed ? { id: 'send-again', label: 'Send again' } : { id: 'restart', label: newDefaultAgent ? `Try again with ${newDefaultAgent}` : 'Try again' }
+        const choose: ProblemAction = chooseAgentFirst(problem) ? { ...CHOOSE_AGENT, primary: true } : CHOOSE_AGENT
+        const extra = again ? [newChat(failed), EVENT_VIEWER] : []
+        const cause = problem.agentChanged && problem.cause ? ` ${problem.cause}` : ''
+        const next = startNextStep(problem)
+        const sentence = `${startHeadline(problem, agentName)}${cause}${next ? ` ${next}` : ''}${failed ? ' Your message was not sent.' : ''}${tail}`
         return {
-          text: `${failed ? `${namedStartFailure(problem.message, agentName)} Your message was not sent.` : namedStartFailure(problem.message, agentName)}${tail}`,
-          detail,
-          actions: [retry, OPEN_AGENTS, CHOOSE_AGENT, ...(again ? [newChat(failed), EVENT_VIEWER] : []), DETAILS]
+          ...withLead(sentence),
+          actions: choose.primary ? [choose, retry, OPEN_AGENTS, ...extra, DETAILS] : [retry, OPEN_AGENTS, choose, ...extra, DETAILS]
         }
       }
       case 'agent-stopped': {
         const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
-        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [newChat(failed)] : []), DETAILS, EVENT_VIEWER] }
+        return { ...withLead(`${problem.message}${tail}`), actions: [restart, ...(again ? [newChat(failed)] : []), DETAILS, EVENT_VIEWER] }
       }
       case 'agent-ended': {
         const restart: ProblemAction = again ? { id: 'restart', label: 'Restart' } : { id: failed ? 'restart-send' : 'restart', label: failed ? 'Restart and send again' : 'Restart' }
-        return { text: `${problem.message}${tail}`, detail, actions: [restart, ...(again ? [newChat(failed), EVENT_VIEWER] : [])] }
+        return { ...withLead(`${problem.message}${tail}`), actions: [restart, ...(again ? [newChat(failed), EVENT_VIEWER] : [])] }
       }
     }
   }
   if (error === null) return null
   const resend: ProblemAction[] = failed?.unanswered ? [{ id: 'send-again', label: 'Send again' }] : []
   const plain = plainError(error, !!failed?.unanswered)
-  if (plain) return { ...plain, detail: error, actions: [...resend, DETAILS] }
+  if (plain) return { ...plain, detail: detailWithLead(plain.text, error), actions: [...resend, DETAILS] }
   // An error the agent reported itself in plain words: as it came; an unanswered message can still be sent again.
   return { text: error, detail: null, actions: resend, status: error }
 }

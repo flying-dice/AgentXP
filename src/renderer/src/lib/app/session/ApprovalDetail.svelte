@@ -48,6 +48,9 @@
     <div class="head">
       <span class="path" data-testid="{testid}-detail-path">{diff.path}</span>
       <span class="summary" data-testid="{testid}-detail-summary">{summary.text}</span>
+      {#if clipped}
+        <button type="button" class="more" data-testid="{testid}-detail-more" aria-expanded={expanded} onclick={() => (expanded = !expanded)}>{expanded ? 'Show fewer lines' : tight ? 'Show the whole change' : `Show all ${summary.rows} lines`}</button>
+      {/if}
     </div>
     {#if summary.unreadable}
       <CodeViewer code={diff.newText} language="text" wordWrap maxHeight="140px" label="New text of the file" />
@@ -55,9 +58,6 @@
       <div class="view" style:height="{viewport}px" use:measure data-testid="{testid}-detail-view">
         <DiffViewer oldText={diff.oldText ?? ''} newText={diff.newText} fileName={diff.path} toolbar={false} wrap label="Change preview" />
       </div>
-    {/if}
-    {#if clipped}
-      <button type="button" class="more" data-testid="{testid}-detail-more" aria-expanded={expanded} onclick={() => (expanded = !expanded)}>{expanded ? 'Show fewer lines' : tight ? 'Show the whole change' : `Show all ${summary.rows} lines`}</button>
     {/if}
   </div>
 {:else if argument}
@@ -105,9 +105,9 @@
     font-size: 11px;
     color: var(--w7-text-muted);
   }
+  /* On the line of the file and the size of the change, so the preview gets the height (UX-177). */
   .more {
-    align-self: flex-start;
-    margin-top: 4px;
+    margin-left: auto;
     padding: 0;
     border: 0;
     background: none;

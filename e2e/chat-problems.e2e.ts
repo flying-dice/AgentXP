@@ -17,9 +17,13 @@ describe('chat: the agent cannot start', () => {
     await see.text(chat.errors, "Broken agent could not start: the program 'not-a-real-command' was not found.")
     expect(await chat.errors.innerText()).not.toMatch(/ACP|ENOENT|JSON/)
     await see.count(ctx.desktopPage.getByTestId('message-box'), 0)
+    await see.text(chat.errors, 'Check the command in Agents, or choose another agent.')
     await see.text(chat.frame.getByTestId('chat-error-restart'), 'Try again')
     await see.visible(chat.frame.getByTestId('chat-error-open-agents'))
     await see.visible(chat.frame.getByTestId('chat-error-choose-agent'))
+    // UX-174: a retry cannot find a program that is not there, so "Choose another agent" is the highlighted button and "Try again" is second.
+    expect(await chat.frame.getByTestId('chat-error-choose-agent').getAttribute('class')).toMatch(/\bdef\b/)
+    expect(await chat.frame.getByTestId('chat-error-restart').getAttribute('class')).not.toMatch(/\bdef\b/)
     await see.visible(chat.frame.getByTestId('chat-error-details'))
     await see.text(chat.frame.getByTestId('chat-status'), 'Disconnected')
     await see.visible(ctx.desktopPage.getByTestId('topbar-agent-problem'))
@@ -29,6 +33,8 @@ describe('chat: the agent cannot start', () => {
     const chat = ctx.desktop.chat()
     await chat.frame.getByTestId('chat-error-details').click()
     await see.text(chat.frame.getByTestId('chat-error-details-text'), 'ENOENT')
+    // UX-174: the first line is the plain sentence of the box, never "Internal error".
+    expect(await chat.frame.getByTestId('chat-error-details-text').innerText()).toMatch(/^Broken agent could not start/)
     await see.text(chat.frame.getByTestId('chat-error-details'), 'Hide details')
     await chat.frame.getByTestId('chat-error-details').click()
     await see.gone(chat.frame.getByTestId('chat-error-details-text'))

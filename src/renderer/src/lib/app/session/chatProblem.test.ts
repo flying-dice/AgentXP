@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultActionId, describeProblem, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
+import { chooseAgentFirst, defaultActionId, describeProblem, detailWithLead, startNextStep, logLines, plainError, problemDetails, sendStateOf } from './chatProblem'
 
 const stopped = { kind: 'agent-stopped', message: 'The agent stopped unexpectedly. Your request was not finished.', detail: 'ACP connection closed' } as const
 const notFound = { kind: 'start-failed', message: "The agent could not start. The program 'not-a-real-command' was not found.", detail: 'spawn not-a-real-command ENOENT' } as const
@@ -14,7 +14,7 @@ describe('describeProblem', () => {
     expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.')
     expect(result.text).not.toMatch(/ACP/)
     expect(result.actions.map((a) => a.label)).toEqual(['Restart and send again', 'Details...', 'Event Viewer'])
-    expect(result.detail).toBe('ACP connection closed')
+    expect(result.detail).toBe('The agent stopped unexpectedly. Your request was not finished.\n\nACP connection closed')
   })
 
   it('an agent that stopped with nothing to send again offers Restart', () => {
@@ -25,19 +25,43 @@ describe('describeProblem', () => {
     const result = describeProblem({ error: 'spawn x ENOENT', problem: notFound, failed: { unanswered: true } })!
     expect(result.text).toContain("'not-a-real-command' was not found")
     expect(result.text).toContain('Your message was not sent.')
-    expect(result.actions.map((a) => a.id)).toEqual(['send-again', 'open-agents', 'choose-agent', 'details'])
+    expect(result.actions.map((a) => a.id)).toEqual(['choose-agent', 'send-again', 'open-agents', 'details'])
   })
 
-  it('an agent that cannot start offers Try again, Open Agents and Choose another agent, and names the new default agent', () => {
-    expect(describeProblem({ error: null, problem: notFound, failed: null })!.actions.map((a) => a.label)).toEqual(['Try again', 'Open Agents', 'Choose another agent', 'Details...'])
-    expect(describeProblem({ error: null, problem: notFound, failed: null, newDefaultAgent: 'Claude Code' })!.actions[0]).toEqual({ id: 'restart', label: 'Try again with Claude Code' })
+  it('a program that is not there offers Choose another agent first (highlighted), then Try again, and names the new default agent', () => {
+    expect(describeProblem({ error: null, problem: notFound, failed: null })!.actions.map((a) => a.label)).toEqual(['Choose another agent', 'Try again', 'Open Agents', 'Details...'])
+    expect(describeProblem({ error: null, problem: notFound, failed: null, newDefaultAgent: 'Claude Code' })!.actions[1]).toEqual({ id: 'restart', label: 'Try again with Claude Code' })
+  })
+
+  it('a program that stops at once keeps Try again first until the second failure', () => {
+    const early = { kind: 'start-failed', message: "The agent could not start. The program 'npx' stopped before it was ready.", detail: 'Query closed before response received', cause: "The program 'npx' stopped before it was ready." } as const
+    expect(describeProblem({ error: null, problem: early, failed: null })!.actions.map((a) => a.id)).toEqual(['restart', 'open-agents', 'choose-agent', 'details'])
+    expect(describeProblem({ error: null, problem: { ...early, failures: 2 }, failed: null })!.actions.map((a) => a.id)).toEqual(['choose-agent', 'restart', 'open-agents', 'new-chat', 'event-viewer', 'details'])
+  })
+
+  it('names the next step by cause, and Details starts with the plain sentence, never Internal error (UX-174)', () => {
+    const early = { kind: 'start-failed', message: "The agent could not start. The program 'npx' stopped before it was ready.", detail: 'Internal error\nQuery closed before response received', cause: "The program 'npx' stopped before it was ready." } as const
+    expect(describeProblem({ error: null, problem: notFound, failed: null })!.text).toBe("The agent could not start. The program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent.")
+    const shown = describeProblem({ error: null, problem: early, failed: null })!
+    expect(shown.text).toBe("The agent could not start. The program 'npx' stopped before it was ready. Check that it is installed, or choose another agent.")
+    expect(shown.detail?.startsWith('The agent could not start.')).toBe(true)
+    expect(shown.detail).toContain('Internal error')
+    expect(shown.detail).not.toMatch(/^Internal error/)
+    expect(startNextStep({ message: 'The agent could not start. The folder is gone.' })).toBe('')
+  })
+
+  it('after the default agent changed the box says so and keeps Choose another agent highlighted', () => {
+    const changed = { ...notFound, kind: 'start-failed', message: "The agent could not start. The program 'npx' stopped before it was ready.", cause: "The program 'npx' stopped before it was ready.", failures: 2, agentName: 'Claude Code', agentChanged: true } as const
+    const shown = describeProblem({ error: null, problem: changed, failed: null, agentName: 'Claude Code' })!
+    expect(shown.text).toBe("The default agent is now Claude Code. It could not start either. The program 'npx' stopped before it was ready. Check that it is installed, or choose another agent.")
+    expect(defaultActionId(shown.actions)).toBe('choose-agent')
   })
 
   it('a second failure in a row adds the cause and swaps Restart and send again for Start a new chat', () => {
     const again = { ...stopped, failures: 2, cause: 'The agent program closed the connection.' }
     const result = describeProblem({ error: null, problem: again, failed: { unanswered: true } })!
     expect(result.text).toBe('The agent stopped unexpectedly. Your request was not finished.\nIt stopped again: the agent program closed the connection.')
-    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat (your text is kept in the box)', 'Details...', 'Event Viewer'])
+    expect(result.actions.map((a) => a.label)).toEqual(['Restart', 'Start a new chat with your text', 'Details...', 'Event Viewer'])
     expect(describeProblem({ error: null, problem: again, failed: null })!.actions.map((a) => a.label)).toContain('Start a new chat')
     const first = describeProblem({ error: null, problem: { ...again, failures: 1 }, failed: { unanswered: true } })!
     expect(first.text).not.toMatch(/stopped again/)
@@ -47,7 +71,7 @@ describe('describeProblem', () => {
   it('a second start failure names the plain cause and offers a new chat', () => {
     const result = describeProblem({ error: null, problem: { ...notFound, failures: 2, cause: "The program 'x' was not found." }, failed: null })!
     expect(result.text).toContain("It stopped again: the program 'x' was not found.")
-    expect(result.actions.map((a) => a.id)).toEqual(['restart', 'open-agents', 'choose-agent', 'new-chat', 'event-viewer', 'details'])
+    expect(result.actions.map((a) => a.id)).toEqual(['choose-agent', 'restart', 'open-agents', 'new-chat', 'event-viewer', 'details'])
   })
 
   it('an agent ended from Task Manager says so and offers Restart', () => {
@@ -76,16 +100,16 @@ describe('describeProblem', () => {
 
   it('a program that does not start (spawn error) says so with the next step', () => {
     const result = describeProblem({ error: null, problem: notFound, failed: null })!
-    expect(result.status).toBe("The agent could not start. The program 'not-a-real-command' was not found. Click Try again, or open Agents to change the command.")
+    expect(result.status).toBe("The agent could not start. The program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent.")
     const raw = describeProblem({ error: 'spawn x ENOENT', problem: null, failed: null })!
-    expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'spawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
+    expect(raw).toMatchObject({ text: 'The agent could not start.', detail: 'The agent could not start.\n\nspawn x ENOENT', status: 'The agent could not start. Open Agents to check its command.' })
   })
 
   it('names the agent in the start failure: "My assistant could not start: the program x was not found."', () => {
     const result = describeProblem({ error: null, problem: notFound, failed: null, agentName: 'My assistant' })!
-    expect(result.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found.")
-    expect(result.status).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Click Try again, or open Agents to change the command.")
-    expect(describeProblem({ error: null, problem: notFound, failed: { unanswered: true }, agentName: 'My assistant' })!.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Your message was not sent.")
+    expect(result.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent.")
+    expect(result.status).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent.")
+    expect(describeProblem({ error: null, problem: notFound, failed: { unanswered: true }, agentName: 'My assistant' })!.text).toBe("My assistant could not start: the program 'not-a-real-command' was not found. Check the command in Agents, or choose another agent. Your message was not sent.")
     expect(`${result.text} ${result.status}`).not.toMatch(/ERR_|ENOENT/)
   })
 
@@ -101,7 +125,7 @@ describe('describeProblem', () => {
   })
 
   it('other technical text is replaced by one sentence and kept behind Details', () => {
-    expect(describeProblem({ error: 'JSON-RPC error -32603', problem: null, failed: null })).toMatchObject({ text: 'Something went wrong while the agent worked.', detail: 'JSON-RPC error -32603' })
+    expect(describeProblem({ error: 'JSON-RPC error -32603', problem: null, failed: null })).toMatchObject({ text: 'Something went wrong while the agent worked.', detail: 'Something went wrong while the agent worked.\n\nJSON-RPC error -32603' })
   })
 })
 
@@ -154,6 +178,16 @@ describe('defaultActionId (UX-160)', () => {
     expect(id({ error: null, problem: { ...stopped, failures: 2 }, failed: { unanswered: true } })).toBe('restart')
     expect(id({ error: null, problem: { ...stopped, kind: 'agent-ended', failures: 2 }, failed: null })).toBe('restart')
     expect(id({ error: 'Request timed out', problem: null, failed: { unanswered: true } })).toBe('send-again')
+  })
+  it('is Choose another agent for a program that is not there, and for any start that failed twice (UX-174)', () => {
+    expect(id({ error: null, problem: notFound, failed: null })).toBe('choose-agent')
+    expect(id({ error: null, problem: { ...notFound, failures: 1 }, failed: { unanswered: true } })).toBe('choose-agent')
+    const early = { kind: 'start-failed', message: "The agent could not start. The program 'npx' stopped before it was ready.", detail: 'x' } as const
+    expect(id({ error: null, problem: early, failed: null })).toBe('restart')
+    expect(id({ error: null, problem: { ...early, failures: 2 }, failed: null })).toBe('choose-agent')
+    expect(chooseAgentFirst({ message: 'The agent could not start. The folder is gone.', failures: 3 })).toBe(true)
+    expect(detailWithLead('One.\nTwo.', 'tech')).toBe('One.\n\ntech')
+    expect(detailWithLead('One.', null)).toBeNull()
   })
   it('is none when there is nothing to retry', () => {
     expect(id({ error: 'Rate limit', problem: null, failed: null })).toBeNull()
