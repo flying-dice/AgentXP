@@ -1,5 +1,6 @@
 import type { Locator, Page } from 'playwright'
 import { ChatWindow } from './ChatWindow'
+import { CodeReviewWindow } from './CodeReviewWindow'
 import { CodeWindow } from './CodeWindow'
 import { ExplorerWindow } from './ExplorerWindow'
 import { TerminalWindow } from './TerminalWindow'
@@ -8,6 +9,7 @@ export type AppId =
   | 'chat'
   | 'explorer'
   | 'code'
+  | 'code-review'
   | 'terminal'
   | 'browser'
   | 'notepad'
@@ -114,6 +116,10 @@ export class DesktopPage {
 
   code(index = 0): CodeWindow {
     return new CodeWindow(this.window('code', index))
+  }
+
+  codeReview(index = 0): CodeReviewWindow {
+    return new CodeReviewWindow(this.window('code-review', index))
   }
 
   terminal(index = 0): TerminalWindow {

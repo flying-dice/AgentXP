@@ -17,6 +17,7 @@ describe('permissionsTable', () => {
       'Events',
       'Screen capture',
       'Recycle Bin',
+      'Code review',
       'Agent may open apps'
     ])
   })

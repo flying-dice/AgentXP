@@ -1,0 +1,808 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "browser-agent",
+  "description": "Uses a local chat web app through the browser_* tools: tree, find, click, scroll, type into a contenteditable, press Enter, iframe, shadow DOM, tabs. The prompt carries the address (\"... chat app at <url>\").",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "tabs",
+      "match": {
+        "regex": "tabs at (http\\S+)"
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_navigate",
+          "arguments": {
+            "url": "{{match.1}}"
+          },
+          "saveAs": "nav",
+          "label": "open the fixture"
+        },
+        {
+          "type": "expect",
+          "from": "nav.isError",
+          "equals": "false",
+          "message": "browser_navigate failed: {{nav}}"
+        },
+        {
+          "type": "expect",
+          "from": "nav",
+          "contains": "Loaded"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_tabs",
+          "arguments": {
+            "action": "new",
+            "url": "{{match.1}}?second"
+          },
+          "saveAs": "n",
+          "label": "open a second tab"
+        },
+        {
+          "type": "expect",
+          "from": "n.isError",
+          "equals": "false",
+          "message": "browser_tabs failed: {{n}}"
+        },
+        {
+          "type": "expect",
+          "from": "n",
+          "contains": "tab 2"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_tabs",
+          "arguments": {
+            "action": "list"
+          },
+          "saveAs": "l",
+          "label": "list tabs"
+        },
+        {
+          "type": "expect",
+          "from": "l.isError",
+          "equals": "false",
+          "message": "browser_tabs failed: {{l}}"
+        },
+        {
+          "type": "expect",
+          "from": "l",
+          "contains": "tab 1"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_tabs",
+          "arguments": {
+            "action": "switch",
+            "tab": 1
+          },
+          "saveAs": "sw",
+          "label": "switch to tab 1"
+        },
+        {
+          "type": "expect",
+          "from": "sw.isError",
+          "equals": "false",
+          "message": "browser_tabs failed: {{sw}}"
+        },
+        {
+          "type": "expect",
+          "from": "sw",
+          "contains": "Switched to tab 1"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_tabs",
+          "arguments": {
+            "action": "close",
+            "tab": 2
+          },
+          "saveAs": "cl",
+          "label": "close tab 2"
+        },
+        {
+          "type": "expect",
+          "from": "cl.isError",
+          "equals": "false",
+          "message": "browser_tabs failed: {{cl}}"
+        },
+        {
+          "type": "expect",
+          "from": "cl",
+          "contains": "Closed tab 2"
+        },
+        {
+          "type": "expect",
+          "from": "cl",
+          "regex": "^(?![\\s\\S]*tab 2:)",
+          "message": "tab 2 is still listed: {{cl}}"
+        },
+        {
+          "type": "message",
+          "text": "TABS OK {{cl}}"
+        }
+      ]
+    },
+    {
+      "id": "chat-app",
+      "match": {
+        "regex": "chat app at (http\\S+)"
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_navigate",
+          "arguments": {
+            "url": "{{match.1}}"
+          },
+          "saveAs": "nav",
+          "label": "open the fixture"
+        },
+        {
+          "type": "expect",
+          "from": "nav.isError",
+          "equals": "false",
+          "message": "browser_navigate failed: {{nav}}"
+        },
+        {
+          "type": "expect",
+          "from": "nav",
+          "contains": "Loaded"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "tree"
+          },
+          "saveAs": "tree",
+          "label": "read the tree"
+        },
+        {
+          "type": "expect",
+          "from": "tree.isError",
+          "equals": "false",
+          "message": "browser_read failed: {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "heading \"#general\"",
+          "message": "tree misses heading \"#general\": {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "textbox \"Message composer\"",
+          "message": "tree misses textbox \"Message composer\": {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "iframe \"Search\"",
+          "message": "tree misses iframe \"Search\": {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "searchbox \"Search messages\"",
+          "message": "tree misses searchbox \"Search messages\": {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "button \"Add reaction\"",
+          "message": "tree misses button \"Add reaction\": {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "Message 200 from",
+          "message": "tree misses Message 200 from: {{tree}}"
+        },
+        {
+          "type": "expect",
+          "from": "tree",
+          "contains": "button \"random\"",
+          "message": "tree misses button \"random\": {{tree}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "text",
+            "limit": 20
+          },
+          "saveAs": "text",
+          "label": "read as text"
+        },
+        {
+          "type": "expect",
+          "from": "text.isError",
+          "equals": "false",
+          "message": "browser_read failed: {{text}}"
+        },
+        {
+          "type": "expect",
+          "from": "text",
+          "contains": "Message 200 from"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "button",
+            "name": "random"
+          },
+          "saveAs": "f1",
+          "label": "find channel random"
+        },
+        {
+          "type": "expect",
+          "from": "f1.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f1}}"
+        },
+        {
+          "type": "expect",
+          "from": "f1",
+          "contains": "random"
+        },
+        {
+          "type": "extract",
+          "from": "f1",
+          "regex": "\\[(\\d+)\\] button \\\"random\\\"",
+          "saveAs": "random"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_click",
+          "arguments": {
+            "ref": "{{random|number}}"
+          },
+          "saveAs": "c1",
+          "label": "click random"
+        },
+        {
+          "type": "expect",
+          "from": "c1.isError",
+          "equals": "false",
+          "message": "browser_click failed: {{c1}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Welcome to random"
+          },
+          "saveAs": "w1",
+          "label": "wait for random"
+        },
+        {
+          "type": "expect",
+          "from": "w1.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w1}}"
+        },
+        {
+          "type": "expect",
+          "from": "w1",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_read",
+          "arguments": {
+            "mode": "text"
+          },
+          "saveAs": "t2",
+          "label": "read random"
+        },
+        {
+          "type": "expect",
+          "from": "t2.isError",
+          "equals": "false",
+          "message": "browser_read failed: {{t2}}"
+        },
+        {
+          "type": "expect",
+          "from": "t2",
+          "contains": "Coffee machine is fixed"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "button",
+            "name": "general"
+          },
+          "saveAs": "f2",
+          "label": "find channel general"
+        },
+        {
+          "type": "expect",
+          "from": "f2.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f2}}"
+        },
+        {
+          "type": "expect",
+          "from": "f2",
+          "contains": "general"
+        },
+        {
+          "type": "extract",
+          "from": "f2",
+          "regex": "\\[(\\d+)\\] button \\\"general\\\"",
+          "saveAs": "general"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_click",
+          "arguments": {
+            "ref": "{{general|number}}"
+          },
+          "saveAs": "c2",
+          "label": "back to general"
+        },
+        {
+          "type": "expect",
+          "from": "c2.isError",
+          "equals": "false",
+          "message": "browser_click failed: {{c2}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Message 200 from"
+          },
+          "saveAs": "w2",
+          "label": "wait for general"
+        },
+        {
+          "type": "expect",
+          "from": "w2.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w2}}"
+        },
+        {
+          "type": "expect",
+          "from": "w2",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "list",
+            "name": "Messages"
+          },
+          "saveAs": "f3",
+          "label": "find the message list"
+        },
+        {
+          "type": "expect",
+          "from": "f3.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f3}}"
+        },
+        {
+          "type": "expect",
+          "from": "f3",
+          "contains": "Messages"
+        },
+        {
+          "type": "extract",
+          "from": "f3",
+          "regex": "\\[(\\d+)\\] list \\\"Messages\\\"",
+          "saveAs": "list"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "ref": "{{list|number}}",
+            "direction": "top"
+          },
+          "saveAs": "s1",
+          "label": "scroll up (1)"
+        },
+        {
+          "type": "expect",
+          "from": "s1.isError",
+          "equals": "false",
+          "message": "browser_scroll failed: {{s1}}"
+        },
+        {
+          "type": "expect",
+          "from": "s1",
+          "contains": "Scrolled"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Message 121 from"
+          },
+          "saveAs": "w3",
+          "label": "older messages load (1)"
+        },
+        {
+          "type": "expect",
+          "from": "w3.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w3}}"
+        },
+        {
+          "type": "expect",
+          "from": "w3",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_scroll",
+          "arguments": {
+            "ref": "{{list|number}}",
+            "direction": "top"
+          },
+          "saveAs": "s2",
+          "label": "scroll up (2)"
+        },
+        {
+          "type": "expect",
+          "from": "s2.isError",
+          "equals": "false",
+          "message": "browser_scroll failed: {{s2}}"
+        },
+        {
+          "type": "expect",
+          "from": "s2",
+          "contains": "Scrolled"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Standup notes"
+          },
+          "saveAs": "w4",
+          "label": "older messages load (2)"
+        },
+        {
+          "type": "expect",
+          "from": "w4.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w4}}"
+        },
+        {
+          "type": "expect",
+          "from": "w4",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "text": "Standup notes"
+          },
+          "saveAs": "old",
+          "label": "find the old message"
+        },
+        {
+          "type": "expect",
+          "from": "old.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{old}}"
+        },
+        {
+          "type": "expect",
+          "from": "old",
+          "contains": "release moves to Friday"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "textbox",
+            "name": "Message composer"
+          },
+          "saveAs": "f4",
+          "label": "find the composer"
+        },
+        {
+          "type": "expect",
+          "from": "f4.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f4}}"
+        },
+        {
+          "type": "expect",
+          "from": "f4",
+          "contains": "Message composer"
+        },
+        {
+          "type": "extract",
+          "from": "f4",
+          "regex": "\\[(\\d+)\\] textbox \\\"Message composer\\\"",
+          "saveAs": "composer"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_type",
+          "arguments": {
+            "ref": "{{composer|number}}",
+            "text": "Hello from the agent"
+          },
+          "saveAs": "ty1",
+          "label": "type into the contenteditable"
+        },
+        {
+          "type": "expect",
+          "from": "ty1.isError",
+          "equals": "false",
+          "message": "browser_type failed: {{ty1}}"
+        },
+        {
+          "type": "expect",
+          "from": "ty1",
+          "contains": "Typed into"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_press",
+          "arguments": {
+            "keys": "Enter"
+          },
+          "saveAs": "pr1",
+          "label": "press Enter to send"
+        },
+        {
+          "type": "expect",
+          "from": "pr1.isError",
+          "equals": "false",
+          "message": "browser_press failed: {{pr1}}"
+        },
+        {
+          "type": "expect",
+          "from": "pr1",
+          "contains": "Pressed Enter"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Hello from the agent"
+          },
+          "saveAs": "w5",
+          "label": "wait for my message"
+        },
+        {
+          "type": "expect",
+          "from": "w5.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w5}}"
+        },
+        {
+          "type": "expect",
+          "from": "w5",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_type",
+          "arguments": {
+            "ref": "{{composer|number}}",
+            "text": "Second message via submit",
+            "submit": true
+          },
+          "saveAs": "ty2",
+          "label": "type with submit"
+        },
+        {
+          "type": "expect",
+          "from": "ty2.isError",
+          "equals": "false",
+          "message": "browser_type failed: {{ty2}}"
+        },
+        {
+          "type": "expect",
+          "from": "ty2",
+          "contains": "pressed Enter"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "text": "Second message via submit"
+          },
+          "saveAs": "mine",
+          "label": "find my message"
+        },
+        {
+          "type": "expect",
+          "from": "mine.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{mine}}"
+        },
+        {
+          "type": "expect",
+          "from": "mine",
+          "contains": "You Second message via submit"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "searchbox",
+            "name": "Search messages"
+          },
+          "saveAs": "f5",
+          "label": "find the search box in the iframe"
+        },
+        {
+          "type": "expect",
+          "from": "f5.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f5}}"
+        },
+        {
+          "type": "expect",
+          "from": "f5",
+          "contains": "Search messages"
+        },
+        {
+          "type": "extract",
+          "from": "f5",
+          "regex": "\\[(\\d+)\\] searchbox",
+          "saveAs": "search"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_type",
+          "arguments": {
+            "ref": "{{search|number}}",
+            "text": "Standup",
+            "submit": true
+          },
+          "saveAs": "ty3",
+          "label": "search in the iframe"
+        },
+        {
+          "type": "expect",
+          "from": "ty3.isError",
+          "equals": "false",
+          "message": "browser_type failed: {{ty3}}"
+        },
+        {
+          "type": "expect",
+          "from": "ty3",
+          "contains": "Typed into"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "1 results for \"Standup\""
+          },
+          "saveAs": "w6",
+          "label": "search result shows"
+        },
+        {
+          "type": "expect",
+          "from": "w6.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w6}}"
+        },
+        {
+          "type": "expect",
+          "from": "w6",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_find",
+          "arguments": {
+            "text": "Add reaction"
+          },
+          "saveAs": "f6",
+          "label": "find the shadow button"
+        },
+        {
+          "type": "expect",
+          "from": "f6.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f6}}"
+        },
+        {
+          "type": "expect",
+          "from": "f6",
+          "contains": "Add reaction"
+        },
+        {
+          "type": "extract",
+          "from": "f6",
+          "regex": "\\[(\\d+)\\] button",
+          "saveAs": "react"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_click",
+          "arguments": {
+            "ref": "{{react|number}}"
+          },
+          "saveAs": "c3",
+          "label": "click the shadow button"
+        },
+        {
+          "type": "expect",
+          "from": "c3.isError",
+          "equals": "false",
+          "message": "browser_click failed: {{c3}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agent7",
+          "tool": "browser_wait",
+          "arguments": {
+            "text": "Reacted (1)"
+          },
+          "saveAs": "w7",
+          "label": "reaction shows"
+        },
+        {
+          "type": "expect",
+          "from": "w7.isError",
+          "equals": "false",
+          "message": "browser_wait failed: {{w7}}"
+        },
+        {
+          "type": "expect",
+          "from": "w7",
+          "contains": "Done waiting"
+        },
+        {
+          "type": "message",
+          "text": "DONE {{mine}}"
+        }
+      ]
+    }
+  ]
+}

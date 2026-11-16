@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Team Chat Fixture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      A generic team chat for the Browser agent e2e spec. No real product names or branding.
+      - channel list (buttons), a long virtualised message list (only a window of messages is in the DOM; older ones
+        load when the list is scrolled to the top),
+      - a contenteditable composer that sends on Enter (Shift+Enter makes a line break),
+      - a search box inside an iframe (srcdoc),
+      - one button inside a shadow root.
+    -->
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font: 14px/1.4 system-ui, sans-serif; height: 100vh; display: grid; grid-template-columns: 180px 1fr; }
+      nav { background: #2b2d42; color: #fff; padding: 12px; overflow: auto; }
+      nav h2 { font-size: 12px; text-transform: uppercase; margin: 0 0 8px; opacity: 0.7; }
+      nav ul { list-style: none; margin: 0; padding: 0; }
+      nav button { width: 100%; text-align: left; background: none; border: 0; color: inherit; padding: 6px 8px; border-radius: 4px; cursor: pointer; font: inherit; }
+      nav button[aria-current='true'] { background: #5c5f8a; font-weight: 600; }
+      main { display: grid; grid-template-rows: auto auto 1fr auto; min-width: 0; height: 100vh; }
+      header { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #ddd; }
+      header h1 { font-size: 16px; margin: 0; flex: 1; }
+      iframe { width: 230px; height: 34px; border: 1px solid #ccc; border-radius: 4px; }
+      #search-status { padding: 2px 12px; min-height: 22px; color: #555; font-size: 12px; }
+      #messages { overflow-y: auto; padding: 8px 12px; margin: 0; list-style: none; }
+      #messages li { padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+      #messages .author { font-weight: 600; margin-right: 6px; }
+      #loading { color: #888; font-size: 12px; padding: 4px 0; }
+      footer { padding: 8px 12px; border-top: 1px solid #ddd; display: grid; gap: 6px; }
+      #composer { min-height: 38px; max-height: 120px; overflow: auto; border: 1px solid #aaa; border-radius: 4px; padding: 8px; }
+      #composer:empty::before { content: attr(data-placeholder); color: #999; }
+      .row { display: flex; align-items: center; gap: 12px; }
+      .hint { color: #777; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <nav aria-label="Channels">
+      <h2>Channels</h2>
+      <ul id="channels"></ul>
+    </nav>
+    <main>
+      <header>
+        <h1 id="channel-title">#general</h1>
+        <iframe
+          title="Search"
+          srcdoc='<!doctype html><meta charset="utf-8"><style>body{margin:0;font:14px system-ui}input{width:100%;height:32px;border:0;padding:0 8px;outline:none}</style><input type="search" aria-label="Search messages" placeholder="Search messages" id="q" /><script>
+            document.getElementById("q").addEventListener("keydown", function (e) {
+              if (e.key === "Enter") parent.postMessage({ type: "search", query: e.target.value }, "*");
+            });
+          </script>'
+        ></iframe>
+      </header>
+      <div id="search-status" role="status" aria-live="polite"></div>
+      <ol id="messages" aria-label="Messages" tabindex="0"></ol>
+      <footer>
+        <div id="composer" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Message composer" data-placeholder="Write a message"></div>
+        <div class="row">
+          <span class="hint">Enter sends, Shift+Enter adds a line.</span>
+          <reaction-button></reaction-button>
+        </div>
+      </footer>
+    </main>
+    <script>
+      // ---- data: a few channels; #general has 200 messages, so most of them are not in the DOM at first --------
+      const PEOPLE = ['Ann', 'Bo', 'Cy', 'Di']
+      const make = (count, special) =>
+        Array.from({ length: count }, (_, i) => {
+          const n = i + 1
+          return { id: n, author: PEOPLE[n % PEOPLE.length], text: special[n] || `Message ${n} from ${PEOPLE[n % PEOPLE.length]}` }
+        })
+      const channels = {
+        general: make(200, { 120: 'Standup notes: the release moves to Friday' }),
+        random: make(3, { 1: 'Welcome to random', 2: 'Share anything fun here', 3: 'Coffee machine is fixed' }),
+        design: make(2, { 1: 'Design review is on Thursday', 2: 'Icons are in the shared folder' })
+      }
+      const WINDOW = 40
+      let current = 'general'
+      let start = 0 // index of the first message in the DOM
+      let loading = false
+
+      const $ = (id) => document.getElementById(id)
+      const list = $('messages')
+
+      function renderChannels() {
+        $('channels').innerHTML = ''
+        for (const name of Object.keys(channels)) {
+          const li = document.createElement('li')
+          const b = document.createElement('button')
+          b.textContent = name
+          b.setAttribute('aria-current', String(name === current))
+          b.addEventListener('click', () => switchTo(name))
+          li.appendChild(b)
+          $('channels').appendChild(li)
+        }
+      }
+
+      function item(m) {
+        const li = document.createElement('li')
+        li.dataset.id = m.id
+        const a = document.createElement('span')
+        a.className = 'author'
+        a.textContent = m.author
+        const t = document.createElement('span')
+        t.textContent = m.text
+        li.append(a, t)
+        return li
+      }
+
+      function renderWindow(scrollToEnd) {
+        const msgs = channels[current]
+        list.innerHTML = ''
+        if (start > 0) {
+          const li = document.createElement('li')
+          li.id = 'loading'
+          li.setAttribute('aria-hidden', 'true')
+          li.textContent = 'Scroll up to load older messages'
+          list.appendChild(li)
+        }
+        for (const m of msgs.slice(start)) list.appendChild(item(m))
+        if (scrollToEnd) list.scrollTop = list.scrollHeight
+      }
+
+      function switchTo(name) {
+        current = name
+        start = Math.max(0, channels[name].length - WINDOW)
+        $('channel-title').textContent = '#' + name
+        $('composer').setAttribute('aria-label', 'Message #' + name)
+        $('search-status').textContent = ''
+        renderChannels()
+        renderWindow(true)
+      }
+
+      // Older messages load when the list is scrolled to the top (after a short delay, like a network call).
+      list.addEventListener('scroll', () => {
+        if (loading || start === 0 || list.scrollTop > 40) return
+        loading = true
+        $('search-status').textContent = 'Loading older messages...'
+        setTimeout(() => {
+          const before = list.scrollHeight
+          start = Math.max(0, start - WINDOW)
+          renderWindow(false)
+          list.scrollTop = list.scrollHeight - before + 41 // keep the reader where they were
+          $('search-status').textContent = start === 0 ? 'Beginning of the channel' : ''
+          loading = false
+        }, 150)
+      })
+
+      // ---- composer: contenteditable, Enter sends --------------------------------------------------------------
+      $('composer').addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.shiftKey) return
+        e.preventDefault()
+        const text = $('composer').innerText.trim()
+        if (!text) return
+        const msgs = channels[current]
+        msgs.push({ id: msgs.length + 1, author: 'You', text })
+        $('composer').textContent = ''
+        renderWindow(true)
+      })
+
+      // ---- search in the iframe posts the query up --------------------------------------------------------------
+      window.addEventListener('message', (e) => {
+        if (!e.data || e.data.type !== 'search') return
+        const q = String(e.data.query).toLowerCase()
+        const hits = channels[current].filter((m) => m.text.toLowerCase().includes(q)).length
+        $('search-status').textContent = `${hits} results for "${e.data.query}" in #${current}`
+      })
+
+      // ---- a button inside a shadow root ------------------------------------------------------------------------
+      class ReactionButton extends HTMLElement {
+        constructor() {
+          super()
+          const root = this.attachShadow({ mode: 'open' })
+          let count = 0
+          const b = document.createElement('button')
+          b.textContent = 'Add reaction'
+          b.addEventListener('click', () => {
+            count++
+            b.textContent = `Reacted (${count})`
+          })
+          root.appendChild(b)
+        }
+      }
+      customElements.define('reaction-button', ReactionButton)
+
+      renderChannels()
+      switchTo('general')
+    </script>
+  </body>
+</html>

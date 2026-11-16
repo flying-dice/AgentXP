@@ -180,6 +180,13 @@ describe('failures', () => {
     expect(await h.prompt('x')).toBe('end_turn')
   })
 
+  it('extract picks group 1 of a regex into a variable and fails when nothing matches', async () => {
+    const steps = [{ type: 'terminal' as const, command: 'x', saveAs: 'o' }, { type: 'extract' as const, from: 'o', regex: '\\[(\\d+)\\] button "Send"', saveAs: 'ref' }]
+    const h = await start(script({ rules: [{ id: 'r', match: { any: true }, steps: [...steps, { type: 'expect', from: 'ref', equals: '12' }, { type: 'message', text: 'ref {{ref}}' }] }] }), { terminalOutput: 'x\n[12] button "Send"' })
+    expect(await h.prompt('x')).toBe('end_turn')
+    await fails(steps, /extract failed: .* does not match variable "o"/, { terminalOutput: 'nothing here' })
+  })
+
   it('fails the turn on an unknown template variable', async () => {
     await fails([{ type: 'message', text: 'Hello {{nobody}}' }], /Unknown template variable \{\{nobody\}\}/)
   })

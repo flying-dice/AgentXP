@@ -24,3 +24,14 @@ describe('renderDeep', () => {
     expect(renderDeep(value, vars, ['branches'])).toEqual({ a: ['hi', 1, { b: '/w/x' }], '{{prompt}}': true, branches: { k: '{{unknown}}' } })
   })
 })
+
+describe('renderDeep numbers', () => {
+  const vars = new Map([['ref', '12'], ['word', 'x']])
+  it('turns a whole-string {{name|number}} into a JSON number', () => {
+    expect(renderDeep({ ref: '{{ref|number}}', text: 'ref {{ref}}', list: ['{{ref|number}}'] }, vars)).toEqual({ ref: 12, text: 'ref 12', list: [12] })
+  })
+  it('refuses a variable that is not a number or is unknown', () => {
+    expect(() => renderDeep({ ref: '{{word|number}}' }, vars)).toThrow(/not a number/)
+    expect(() => renderDeep({ ref: '{{nope|number}}' }, vars)).toThrow(TemplateError)
+  })
+})

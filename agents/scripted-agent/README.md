@@ -82,6 +82,7 @@ Every step is `{ "type": ..., ...fields }` plus optional `step` (`auto`|`manual`
 | `availableCommands` | `commands[{name,description,hint?}]` | `available_commands_update` |
 | `sessionInfo` | `title` | `session_info_update` |
 | `wait` | `ms` | sleep (cancellable) |
+| `extract` | `from`, `regex`, `saveAs`, `flags?` | stores group 1 (else the whole match) of the regex on variable `from` in `saveAs`; fails the turn when nothing matches. Use it to pick a `[ref]` out of a tool result (`browser_find`) and pass it to the next `mcpCall` as `{{ref}}` |
 | `expect` | `from`, one of `contains`/`equals`/`regex`, `message?` | fails the turn with a JSON-RPC error when the variable does not satisfy it |
 | `error` | `message`, `code?` | rejects the prompt with a JSON-RPC error (default -32603) |
 | `end` | `stopReason` | ends the turn now (`end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`); a turn that runs out of steps ends with `end_turn` |
@@ -91,7 +92,7 @@ Every step is `{ "type": ..., ...fields }` plus optional `step` (`auto`|`manual`
 `{{name}}` in any string of a step (including nested `arguments`/`rawInput`) is replaced just before the
 step runs; an unknown name fails the turn (so typos are loud). Variables: `prompt`, `cwd`, `desktop`,
 `sessionId`, regex captures `match.0`, `match.1`, `match.<groupName>`, `permission`, and everything stored
-with `saveAs`. Only `branches` is rendered later, when a branch actually runs.
+with `saveAs`. A string that is only `{{name|number}}` becomes a JSON number (for numeric tool arguments such as a browser `ref`; a non-number fails the turn). Only `branches` is rendered later, when a branch actually runs.
 
 For `readFile` and `terminal`, a failing client request is captured when `saveAs` is set (text becomes the
 error message, `<saveAs>.isError` is `true`) and fails the turn otherwise. That lets a script assert on
@@ -104,6 +105,7 @@ refusals such as an ejected drive.
 | `demo.json` | greeting rule; plan, read README, edit proposal with allow/deny/cancelled branches, `npm test` in a terminal, usage, done |
 | `a2ui.json` | `agent7.a2ui_render` with a small WinForms form; the prompt picks the `target`: "window" (own desktop window), "sidebar" (beside the chat), "update" (changes the window surface, reports the tool's note about a closed window), anything else inline. `expect` on the `ok` answer |
 | `desktop.json` | `desktop_open_app` then `terminal_run`; a prompt containing "closed" calls `terminal_run` with the Terminal closed and expects `is closed` |
+| `review.json` | the Code Review reviewer: a prompt with "code review of the changes" calls `agent7.review_add_comment` twice (`notes.txt` lines 1 and 4) and `review_submit`; a prompt with "fix the following code review comments" (what Send to chat sends) is answered with a message |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |
 
