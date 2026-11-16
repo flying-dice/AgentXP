@@ -149,15 +149,19 @@ export function projectNameOf(path: string, drives: readonly { letter: string; l
   return drives.find((d) => d.letter === drive)?.label || null
 }
 
-/**
- * A chat in the Send dialog has the name of its window: its title ("Fix the login..."); a chat without words yet is
- * "New chat (review-notes)", with the project it works in.
- */
-export function chatLabel(chat: { title?: string | null }, projectName: string | null = null): string {
-  const title = chat.title?.trim() ?? ''
-  if (title && title !== 'New session' && title !== 'New chat') return title
-  return projectName ? `New chat (${projectName})` : 'New chat'
+/** The line of the dialog for an open chat: "Chat: review-notes (in E:\)". An untitled chat is named after its project. */
+export function chatChoiceLabel(chat: { title?: string | null; cwd: string }, projectName: string | null = null): string {
+  const name = chat.title?.trim() ?? ''
+  const own = name && name !== 'New session' && name !== 'New chat' ? name : (projectName ?? 'New chat')
+  return `Chat: ${own} (in ${chat.cwd})`
 }
+
+/** The words of the choice that starts a chat of its own. */
+export const NEW_CHAT_FOR_COMMENTS = 'Start a new chat for these comments'
+
+/** Why the toolbar's "Add comment" is grey, or what it does. */
+export const addCommentButtonTitle = (expanded: boolean, lineSelected: boolean): string =>
+  !expanded ? 'Show one file (Expanded) and select a line first.' : !lineSelected ? 'Select a line first: click its number or its text.' : 'Add a comment on the selected line'
 
 const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
 
@@ -170,9 +174,12 @@ export function verdictLine(verdict: ReviewVerdict, comments: readonly Pick<Revi
   return `${VERDICT_LABELS[verdict]}. ${plural(roots.length, 'comment', 'comments')}${tail}.`
 }
 
-/** The status bar: "2 files changed", and "2 files changed, 1 shown" when one file is open (UX-77). */
+/**
+ * The status bar: "2 files changed", and "2 files changed. Showing 1 (the one you opened)." when one of several files is
+ * open (UX-77, UX-131). With a single changed file there is nothing to explain.
+ */
 export const filesStatusLabel = (total: number, shown: number): string =>
-  `${plural(total, 'file', 'files')} changed${shown > 0 && total > 0 ? `, ${shown} shown` : ''}`
+  `${plural(total, 'file', 'files')} changed${shown > 0 && total > shown ? `. Showing ${shown} (the one you opened).` : ''}`
 
 /** The words under the severity list of the comment box (UX-76). */
 export const SEVERITY_HELP = 'Minor is the usual choice for a suggestion. Use Blocker only when the change must not be accepted as it is.'

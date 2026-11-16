@@ -10,7 +10,7 @@
     /** Follow new output unless the user scrolled up. */
     autoScroll?: boolean
     maxHeight?: string
-    /** A hollow block cursor that is always there: the console cannot be typed into (it blinks while `running`). */
+    /** A hollow block cursor that is always there: the console cannot be typed into (a steady block: it never blinks, because a blinking cursor says "type here"). */
     lockedCursor?: boolean
     label?: string
     class?: string
@@ -54,7 +54,7 @@
           style:font-weight={s.bold ? 'bold' : undefined}
           style:opacity={s.dim ? 0.6 : undefined}
           style:text-decoration={s.underline ? 'underline' : undefined}>{s.text}</span
-        >{/each}{#if lockedCursor}<span class="cursor locked" class:blink={running} aria-hidden="true" data-testid="console-cursor-locked"></span>{:else if running}<span class="cursor blink" aria-hidden="true"></span>{/if}</pre>
+        >{/each}{#if lockedCursor}<span class="cursor locked" aria-hidden="true" data-testid="console-cursor-locked"></span>{:else if running}<span class="cursor blink" aria-hidden="true"></span>{/if}</pre>
   </div>
 </div>
 

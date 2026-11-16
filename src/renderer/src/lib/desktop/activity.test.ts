@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
 import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
-import { CONTROL_IDLE_NOTE, CONTROL_NOTE, barStatus, controlNote, feedText, noToolsOpen, recentToolCalls, toolChips, toolsLine, waitingText, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import { CONTROL_IDLE_NOTE, CONTROL_NOTE, barStatus, closedAppNames, controlNote, controlText, feedText, noToolsOpen, recentToolCalls, toolChips, toolsLine, waitingText, workingText, type ChatActivityInput, type FeedItem } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -23,6 +23,18 @@ describe('workingText', () => {
     expect(workingText([running, chat(2, { status: 'awaiting_permission' }), chat(3, { status: 'awaiting_permission' })])).toBe('Waiting for you: 2 requests to approve')
     expect(workingText([running], 2)).toBe('Waiting for you: 2 requests to approve')
     expect(workingText([running])).toBe('Change src/auth/redirect.ts')
+  })
+})
+
+describe('workingText while a chat starts (UX-125)', () => {
+  it('reads Starting the agent only while no chat is ready for input', () => {
+    expect(workingText([chat(1, { status: 'connecting' })])).toBe('Starting the agent...')
+  })
+  it('is idle when one chat is connected and ready while another is still connecting', () => {
+    expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'connecting' })])).toBeNull()
+  })
+  it('still shows a working chat next to a ready one', () => {
+    expect(workingText([chat(1, { status: 'idle' }), chat(2, { status: 'working' })])).toBe('Chat 2')
   })
 })
 
@@ -58,7 +70,8 @@ describe('barStatus', () => {
   })
   it('Paused wins over You are in control, which wins over Working; a notice never hides them', () => {
     const busy = { ...base, working: 'Read a.ts', notice: 'x' }
-    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. Browser and all other tools are set to Ask until you resume.' })
+    expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. Every tool asks first until you resume.' })
+    expect(barStatus({ ...busy, userInControl: true, closedApps: ['Terminal', 'Browser'] }).text).toBe('You are in control. Tools that need an app ask first. Terminal and Browser are not open.')
     expect(barStatus({ ...busy, userInControl: true, paused: true })).toEqual({ state: 'paused', text: 'Paused: no agent will act until you resume.' })
   })
 })
@@ -94,7 +107,7 @@ describe('toolChips', () => {
   const policy = (over: Partial<ToolPolicyDto['groups']>): ToolPolicyDto => ({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, ...over } })
 
   it('always shows the three headline chips, in one pattern, and hides the shell group', () => {
-    expect(toolChips([]).map((c) => c.label)).toEqual(['Read files: Off', 'Run commands: Off', 'Browser: Off'])
+    expect(toolChips([]).map((c) => c.label)).toEqual(['Read files: Allow (no app open)', 'Run commands: Allow (no Terminal open)', 'Browser: Allow (no Browser open)'])
     expect(toolChips(['shell']).map((c) => c.group)).toEqual(['fs.read', 'terminal', 'browser'])
     expect(noToolsOpen(['shell'])).toBe(true)
     expect(noToolsOpen(['shell', 'code'])).toBe(false)
@@ -103,13 +116,27 @@ describe('toolChips', () => {
     const chips = toolChips(['shell', 'fs.read', 'terminal', 'browser'], policy({ terminal: 'ask', browser: 'deny' }))
     expect(chips.map((c) => [c.label, c.state])).toEqual([['Read files: Allow', 'on'], ['Run commands: Ask', 'asks'], ['Browser: Deny', 'off']])
   })
-  it('reads Off only while no app that gives the tool is open, and the tooltip says which and what the setting is', () => {
-    const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({}))
-    expect(read.tooltip).toBe('Read files: Allow. Click to change this in Control Center.')
-    expect(run.label).toBe('Run commands: Off')
-    expect(run.tooltip).toBe('Run commands is Off because no Terminal is open. The setting is Ask. Click to change it.')
-    expect(browser.tooltip).toBe('Browser is Off because no Browser is open. The setting is Allow. Click to change it.')
-    expect(toolChips([], policy({}))[0].tooltip).toBe('Read files is Off because no Explorer, Code or Code Review is open. The setting is Allow. Click to change it.')
+  it('keeps the setting word while no app that gives the tool is open, and the tooltip names the setting and the reason', () => {
+    const [read, run, browser] = toolChips(['shell', 'fs.read'], policy({ terminal: 'ask' }))
+    expect(read.tooltip).toBe('Read files is set to Allow. Click to change it in Control Center.')
+    expect(run).toMatchObject({ label: 'Run commands: Ask (no Terminal open)', word: 'Ask', closed: true, state: 'off' })
+    expect(run.tooltip).toBe('Run commands is set to Ask. The agent cannot use it yet because no Terminal is open. Click to change it in Control Center.')
+    expect(browser.tooltip).toBe('Browser is set to Allow. The agent cannot use it yet because no Browser is open. Click to change it in Control Center.')
+    expect(toolChips([], policy({}))[0].tooltip).toBe('Read files is set to Allow. The agent cannot use it yet because no Explorer, Code or Code Review is open. Click to change it in Control Center.')
+  })
+  it('never reads Off, and never says Off against an Ask or Deny setting', () => {
+    for (const askFirst of [false, true]) for (const setting of ['allow', 'ask', 'deny'] as const) {
+      const chips = toolChips([], policy({ terminal: setting, browser: setting, 'fs.read': setting }), askFirst)
+      expect(chips.every((c) => !/\bOff\b/.test(c.label) && !/\bOff\b/.test(c.tooltip))).toBe(true)
+    }
+  })
+  it('names the closed apps for the take-over text, so the bar and the chips agree', () => {
+    const chips = toolChips(['shell', 'fs.read'], policy({}), true)
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask', 'Run commands: Ask (no Terminal open)', 'Browser: Ask (no Browser open)'])
+    expect(closedAppNames(chips)).toEqual(['Terminal', 'Browser'])
+    expect(controlText(closedAppNames(chips))).toBe('You are in control. Tools that need an app ask first. Terminal and Browser are not open.')
+    expect(controlText(['Terminal'])).toBe('You are in control. Tools that need an app ask first. Terminal is not open.')
+    expect(closedAppNames(toolChips([], policy({ terminal: 'deny' })))).toEqual(['Browser'])
   })
   it('a Deny setting reads Deny even when its app is closed', () => {
     expect(toolChips([], policy({ terminal: 'deny' }))[1]).toMatchObject({ label: 'Run commands: Deny', state: 'off' })
@@ -119,10 +146,10 @@ describe('toolChips', () => {
   })
   it('adds the other open apps after the headline chips', () => {
     const chips = toolChips(['shell', 'fs.read', 'fs.write', 'code', 'notepad'], policy({}))
-    expect(chips.map((c) => c.label)).toEqual(['Read files: Allow', 'Run commands: Off', 'Browser: Off', 'Write files: Ask', 'Code: Allow', 'Notepad: Allow'])
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Allow', 'Run commands: Ask (no Terminal open)', 'Browser: Allow (no Browser open)', 'Write files: Ask', 'Code: Allow', 'Notepad: Allow'])
   })
   it('reads Ask on everything that is on while Ask before every action is on', () => {
     const chips = toolChips(['fs.read', 'code'], policy({}), true)
-    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask', 'Run commands: Off', 'Browser: Off', 'Code: Ask'])
+    expect(chips.map((c) => c.label)).toEqual(['Read files: Ask', 'Run commands: Ask (no Terminal open)', 'Browser: Ask (no Browser open)', 'Code: Ask'])
   })
 })

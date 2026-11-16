@@ -108,6 +108,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |
+| Event Viewer (menu) | Opens Event Viewer on the events of this chat. | `chat-menu-event-viewer` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
 | Tasks and changes (menu) | Shows or hides the pane. | `chat-menu-panel` |
 | Close | Closes the window. The agent keeps working. (Tooltip: "Close this window. The agent keeps working.") | `chat-menu-close` |
@@ -168,6 +169,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Reverted row | A change that was reverted stays in the list, in grey, with the words "Reverted. Restore from the Recycle Bin". | `changes-reverted` |
 | Reverted text | The words on a reverted row. | `changes-reverted-text` |
 | Open Recycle Bin | The link under the list. It opens the Recycle Bin, where you restore the file. | `changes-open-recycle-bin` |
+| Changes pane | The whole pane: the list, the diff and the buttons. | `changes-pane` |
+| File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
+| Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
+| Why a button is dimmed | The line above the buttons that says what to do first. | `changes-reason` |
 | Task | One task of the plan. | `tasks-item` |
 | Sidebar | The pane for drawn forms. | `chat-sidebar` |
 | Sidebar tab | One drawn form. | `chat-sidebar-tab` |

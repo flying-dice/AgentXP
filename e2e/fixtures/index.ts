@@ -1,5 +1,5 @@
 export { launchAgent7, WAIT_MS, type Agent7Instance } from './launch'
-export { addProject, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, type Workspace } from './setup'
+export { addProject, allowFileWrites, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, type Workspace } from './setup'
 export { AsidePane } from './pages/AsidePane'
 export { ChatWindow } from './pages/ChatWindow'
 export { CodeReviewWindow } from './pages/CodeReviewWindow'

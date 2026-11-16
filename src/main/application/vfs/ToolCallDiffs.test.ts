@@ -51,4 +51,12 @@ describe('ToolCallDiffs', () => {
     expect(diff).toMatchObject({ oldText: 'a\nb\nc\nd\ne\n' })
     expect(diff && diff.kind === 'diff' ? changeCounts(diff.oldText, diff.newText) : null).toEqual({ kind: 'partial', additions: 3, deletions: 3 })
   })
+
+  it('joins the change of the stored call when the request has none, and lets a diff in the request win', () => {
+    const stored = edit('E:\\a.ts')
+    expect(diffs.withStoredChange({ title: 'Edit a.ts' }, stored).contents).toEqual(stored.contents)
+    expect(diffs.withStoredChange({ title: 'Edit' }, { contents: [] })).toEqual({ title: 'Edit' })
+    const own = edit('E:\\b.ts')
+    expect(diffs.withStoredChange(own, stored)).toBe(own)
+  })
 })

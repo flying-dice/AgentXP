@@ -70,9 +70,20 @@ export interface ProblemInput {
   failed: Pick<FailedSend, 'unanswered'> | null
   /** The name of the desktop's default agent when it is not the agent of this chat ("Try again with Claude Code"); else null. */
   newDefaultAgent?: string | null
+  /** The name of this chat's agent ("My assistant"): the start failure names it instead of "The agent". */
+  agentName?: string | null
 }
 
 const lowerFirst = (text: string): string => (/^[A-Z][a-z]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text)
+
+const START_LEAD = 'The agent could not start. '
+
+/** "The agent could not start. The program 'x' was not found." as "My assistant could not start: the program 'x' was not found." */
+export function namedStartFailure(message: string, agentName: string | null | undefined): string {
+  const name = agentName?.trim()
+  if (!name || !message.startsWith(START_LEAD)) return message
+  return `${name} could not start: ${lowerFirst(message.slice(START_LEAD.length))}`
+}
 
 /** The line a second failure in a row adds: "It stopped again: the program 'x' was not found. Show in Event Viewer shows the details." */
 export function repeatLine(problem: SessionProblemDto): string {
@@ -94,7 +105,7 @@ export function describeProblem(input: ProblemInput): ChatProblem | null {
 type Raw = Omit<ChatProblem, 'status'> & { status?: string }
 
 /** The status bar sentence of a problem of the agent program: what happened, then the first button as the next step. */
-function statusOf(result: Raw, { problem, error }: ProblemInput): string {
+function statusOf(result: Raw, { problem, error, agentName }: ProblemInput): string {
   const first = result.actions[0]
   const again = (problem?.failures ?? 1) >= 2
   switch (problem?.kind) {
@@ -103,13 +114,13 @@ function statusOf(result: Raw, { problem, error }: ProblemInput): string {
     case 'agent-ended':
       return again ? 'The agent program was ended again. Click Restart, or start a new chat.' : 'The agent program was ended. Click Restart, then send your message again.'
     case 'start-failed':
-      return `${problem.message.split('\n')[0].replace(/ Your message was not sent\.$/, '')} Click ${first?.label ?? 'Try again'}, or open Agents to change the command.`
+      return `${namedStartFailure(problem.message, agentName).split('\n')[0].replace(/ Your message was not sent\.$/, '')} Click ${first?.label ?? 'Try again'}, or open Agents to change the command.`
     default:
       return error ?? ''
   }
 }
 
-function describeRaw({ error, problem, failed, newDefaultAgent = null }: ProblemInput): Raw | null {
+function describeRaw({ error, problem, failed, newDefaultAgent = null, agentName = null }: ProblemInput): Raw | null {
   if (problem) {
     const detail = problem.detail || error
     const again = (problem.failures ?? 1) >= 2
@@ -118,7 +129,7 @@ function describeRaw({ error, problem, failed, newDefaultAgent = null }: Problem
       case 'start-failed': {
         const retry: ProblemAction = failed ? { id: 'send-again', label: 'Send again' } : { id: 'restart', label: newDefaultAgent ? `Try again with ${newDefaultAgent}` : 'Try again' }
         return {
-          text: `${failed ? `${problem.message} Your message was not sent.` : problem.message}${tail}`,
+          text: `${failed ? `${namedStartFailure(problem.message, agentName)} Your message was not sent.` : namedStartFailure(problem.message, agentName)}${tail}`,
           detail,
           actions: [retry, OPEN_AGENTS, CHOOSE_AGENT, ...(again ? [NEW_CHAT, EVENT_VIEWER] : []), DETAILS]
         }

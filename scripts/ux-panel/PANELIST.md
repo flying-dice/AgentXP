@@ -67,10 +67,22 @@ report.
 2. **Steps**: a numbered list, per step: what you saw, what you expected, what you did, what happened.
 3. **Stuck points**: where you hesitated or went the wrong way, and why (wording, icon, position, missing feedback).
 4. **Help**: whether you used F1 or Help, and what you found.
-5. **Single Ease Question** (1 = very difficult ... 7 = very easy): "Overall, how easy or difficult was this task?" Give one number and one sentence on why.
+5. **Single Ease Question**: "Overall, how easy or difficult was this task?" Write the line exactly as `- SEQ: <number> - <one sentence on why>`.
+   **The scale: 1 = very difficult, 7 = very easy. A HIGH number means EASY, a LOW number means HARD.** A task with no stuck points
+   and no errors is a 6 or 7, never a 1 or 2. Before you write the number, read your own stuck points and sentence: they must agree
+   with it (the facilitator refuses a record where they do not, H-72).
 6. **Frustrations** and what you would change (a short list).
 
 Quote the screen, not your memory (H-61): every piece of text from the program that you quote (a button, a message, an address)
 must be copied from a screenshot, with the number of that screenshot (for example "Plug in again" in 004.png). Do not write a
 text that you did not see. Before the final report, take one more `shot` and say in one line what that last screenshot shows;
 do not describe a screen that you did not look at. If you did not see something, write "I did not see it".
+
+Timing claims (H-75): every claim about *when* something happened ("the error appeared only after I picked the folder", "the
+box showed at once") names the screenshot that shows it (for example "see 003.png"). Look at the numbered shots again before you
+write such a claim; do not rely on memory. A timing claim without a shot number is not evidence. The researcher checks one claim
+of every record against its shots.
+
+You are a fresh panelist (H-69): you have done no other task of this study and you know nothing about this program beyond the
+scenario. If you catch yourself using a shortcut, a menu or a name that you did not see in a screenshot of THIS session, say so in
+the report ("I knew this from before") instead of hiding it.

@@ -83,7 +83,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T06.1 - Allow after reading**
 - Scenario: "You asked the assistant to fix the redirect bug. A box appears asking for something. Read it and let the assistant make the change only if it changes the file src/auth/redirect.ts. Tell me which lines it changes."
 - Start state: `demo` script; Write files = Ask.
-- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the word "line", "searchParams" or "next"; the diff is inline; opening the details is optional; answer check, H-44).
+- Success check: the request was answered Allow, the file on disk contains the fix, and the panelist's answer says which lines change (the answer must name lines 1, 3 and 4, or +3 and -3, H-74; the diff is inline; opening the details is optional; answer check, H-44).
 - Answer: which lines of redirect.ts change.
 - Min 1 (Allow). Budget 3 / 4.
 
@@ -200,7 +200,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T14.1 - Which one needs me?**
 - Scenario: "You have four workspaces running. Find the one that is waiting for you and open it, and tell me which workspace has a problem."
 - Start state: four desktops, one with a pending request, one with an error, two idle.
-- Success check: the desktop with the pending request is connected. The answer names the error desktop (H-39; the launcher row shows the amber text "Agent problem: ..." with data-state error since UX-87); the researcher records whether the waiting row was preselected.
+- Success check: the desktop with the pending request is connected (H-73: the preset selects the "Scratch pad" row, so the waiting row is not preselected; the panelist has to find it by reading the rows). The answer names the error desktop (H-39; the launcher row shows the amber text "Agent problem: ..." with data-state error since UX-87); the researcher records whether the waiting row was preselected.
 - Answer: the workspace that has a problem ("Docs site").
 - Min 2. Budget 6 / 8.
 
@@ -230,7 +230,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T16.2 - Know what a setting covers**
 - Scenario: "Find out whether turning off 'Code' would also stop the assistant from writing files with Notepad."
 - Start state: Control Center closed.
-- Success check: the answer matches the documented behavior (researcher check; the answer must come from the screen or the manual).
+- Success check: the answer says no and gives the reason (keyword check, H-68: no / not / does not stop, and Write files, separate, both or Notepad); the answer must come from the screen or the manual (researcher: Control Center or Help opened in the log).
 - Answer: whether turning off Code also stops Notepad from writing files.
 - Min 4. Budget 12 / 16.
 
@@ -301,7 +301,8 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Scenario: "Your mouse is broken. Open a new conversation, send 'hello', and answer a request from the assistant with Allow."
 - Start state: desktop open; `demo`; Write files = Ask. Driver mouse actions are disabled.
 - Success check: message sent, request answered Allow, using keys only.
-- Min 6 (Ctrl+N starts the chat, UX-57). Budget 18 / 18.
+- Fresh panelist (H-69): this task tests whether a person finds Ctrl+N and Alt+A. The panelist must not have run T20.1, T22.x or any task that shows the Start menu or the approval hints in the same context.
+- Min 4 (Ctrl+N, type "hello", Enter, Alt+A). Budget 12 / 16.
 
 ### J22 Help and discoverability
 
@@ -326,6 +327,12 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Start state: `errors` script with a crash; the process exits mid-turn.
 - Success check: a new turn finished after the crash; no message was lost.
 - Min 4. Budget 12 / 16.
+
+**T23.1b - It crashed again**
+- Scenario: "The assistant stopped halfway, you restarted it and sent your request again, and it stopped again. Get it working and make it finish your request."
+- Start state: `crashed-agent` with option `twice`: the first crash, "Restart and send again", and a second crash before the turn completes (needs UX-123, so that the failure count survives the restart). The box says "It stopped again" and offers Restart and "Start a new chat".
+- Success check: a turn finished after the second crash (in the same chat after Restart, or in a new chat) and the assistant answered; the first message was not sent again into the same failure. The checker notes whether the second failure offered "Start a new chat".
+- Min 3. Budget 9 / 12.
 
 **T23.2 - The connection dropped**
 - Scenario: "You were typing a long message to the assistant and an error says it could not send. Get your message to the assistant."
@@ -398,7 +405,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 **T28.1 - The assistant reads a web page**
 - Scenario: "Ask the assistant: 'Use the chat app at http://127.0.0.1:4174/'. While it works, watch the web page. Then tell me how you could see that the assistant was using the page, and what it did there."
 - Start state: Browser and an idle chat open; `browser-agent` script (the local team chat page, no network).
-- Success check: the assistant finished (DONE), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
+- Success check: the assistant finished (its last reply: "I sent the message and found it in #general.", H-71), the Browser shows the page, and the answer mentions the assistant and the page or bar (researcher check).
 - Answer: what was posted in the chat app.
 - Min 3. Budget 9 / 12.
 
@@ -472,7 +479,7 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 | J20 | T20.1, T20.2 |
 | J21 | T21.1 |
 | J22 | T22.1, T22.2 |
-| J23 | T23.1, T23.2 |
+| J23 | T23.1, T23.1b, T23.2 |
 | J24 | T24.1, T24.2 |
 | J25 | T25.1, T25.2 |
 | J26 | T26.1, T26.2 |

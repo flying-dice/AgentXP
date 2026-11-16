@@ -1,8 +1,33 @@
 // J05-J07, J11: prompts, permissions, stopping, pausing.
 import { REDIRECT_FIXED } from '../lib/fixtures.mjs'
-import { agentMessages, all, fail, manual, pass, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
+import { agentMessages, all, fail, manual, missingNumbers, pass, projectRoot, readText, userMessages, userText, withAnswer } from './util.mjs'
+
+/** H-74: the lines of redirect.ts that change (REDIRECT_BUG against REDIRECT_FIXED). */
+export const REDIRECT_CHANGED_LINES = [1, 3, 4]
 
 const permissions = (entries) => entries.filter((e) => e.kind === 'tool_call' && e.permission)
+
+/**
+ * H-70: the bar banner against the chips. While the user is in control the banner says the tools "are set to Ask"; a chip that
+ * reads Off, Deny or Allow beside it contradicts the banner (UX-118). Returns the chips that disagree (empty = consistent).
+ */
+export const barChipConflicts = (banner, chipLabels) => {
+  if (!/\bAsk\b/.test(banner ?? '')) return []
+  return chipLabels.filter((label) => /:\s*(Off|Deny|Allow)\s*$/.test(label.trim()))
+}
+
+/** The banner and the chip labels of the desktop's top bar; null when the page cannot be read. */
+async function readBarAndChips(ctx) {
+  try {
+    const page = await ctx.desktopPage(ctx.state.desktopId)
+    if (!page) return null
+    const banner = (await page.getByTestId('topbar-status').first().textContent({ timeout: 2000 }))?.trim() ?? ''
+    const chips = (await page.getByTestId('topbar-tool-chips').locator('button.chip').allTextContents()).map((t) => t.trim())
+    return { banner, chips }
+  } catch {
+    return null
+  }
+}
 
 export const checks = {
   async 'T05.1'(ctx, { answer }) {
@@ -40,7 +65,12 @@ export const checks = {
       ['opening the details is optional because the diff is inline']
     )
     // H-44: the scenario asks which lines change; the answer must say so.
-    return withAnswer(state, answer, { keywords: [['line', 'searchparams', 'next']], expect: 'the answer says which lines of redirect.ts change (the "next" address is read from the URL instead of dropped)' })
+    const result = withAnswer(state, answer, { keywords: [['line', 'searchparams', 'next']], expect: 'the answer says which lines of redirect.ts change (lines 1, 3 and 4, or +3 and -3)' })
+    // H-74: the change is +3 / -3 on lines 1, 3 and 4 of redirect.ts. A partial answer ("line 1 ...") no longer passes.
+    if (result.status !== 'PASS' || !answer) return result
+    const plusMinus = /\+\s*3\b/.test(answer) && /[-\u2212\u2013]\s*3\b/.test(answer)
+    const missing = missingNumbers(answer, REDIRECT_CHANGED_LINES)
+    return plusMinus || !missing.length ? result : fail(`state ok but the answer lacks the line number(s) ${missing.join(', ')} of redirect.ts (want ${REDIRECT_CHANGED_LINES.join(', ')}, or +3 and -3)`, result.notes)
   },
 
   async 'T06.2'(ctx) {
@@ -97,9 +127,16 @@ export const checks = {
     const groups = Object.values(policy.groups ?? {})
     const allAsk = groups.length > 0 && groups.every((g) => g === 'ask')
     const raised = permissions(entries).length > 0
+    // H-70: take over sets userInControl (an overlay), not the policy groups; the groups line only matters for the Set all route.
+    const route = state?.userInControl === true ? 'take over: userInControl true' : allAsk ? 'set all: all permission groups Ask' : `take over: userInControl ${state?.userInControl}; Set all: not all groups Ask`
+    const bar = await readBarAndChips(ctx)
+    const conflicts = bar ? barChipConflicts(bar.banner, bar.chips) : []
     return all(
-      [[state?.userInControl === true || allAsk, `userInControl is ${state?.userInControl}; all permission groups Ask: ${allAsk}`]],
-      [raised ? 'a request was raised for a call (optional proof)' : 'no prompt was sent, so no request was raised (optional: the scenario does not ask for a prompt)']
+      [[state?.userInControl === true || allAsk, route]],
+      [
+        raised ? 'a request was raised for a call (optional proof)' : 'no prompt was sent, so no request was raised (optional: the scenario does not ask for a prompt)',
+        ...(bar ? [conflicts.length ? `banner against chips: the bar says "${bar.banner}" but ${conflicts.map((c) => `"${c}"`).join(', ')} disagree(s): researcher, record it as a product defect (UX-118)` : 'banner against chips: consistent'] : [])
+      ]
     )
   },
 

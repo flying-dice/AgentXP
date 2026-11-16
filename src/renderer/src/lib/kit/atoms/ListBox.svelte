@@ -132,6 +132,7 @@
       id="{uid}-{i}"
       role="option"
       data-testid={item.testid}
+      title={item.title}
       tabindex="-1"
       aria-selected={isSel}
       aria-disabled={item.disabled}

@@ -20,7 +20,7 @@
   let all = $state(false)
 
   const diff = $derived(toolCall?.contents.find((c) => c.kind === 'diff'))
-  const summary = $derived(diff?.kind === 'diff' ? changeSummary(diff.oldText, diff.newText) : null)
+  const summary = $derived(diff?.kind === 'diff' ? changeSummary(diff.oldText, diff.newText, { path: diff.path, error: diff.oldTextError }) : null)
   const argument = $derived(toolCall ? toolArgument(toolCall.kind, toolCall.rawInput, toolCall.locations, toolCall.title) : '')
   const clipped = $derived(!!summary && summary.rows > CLIP_ROWS)
 </script>

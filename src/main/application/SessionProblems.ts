@@ -17,7 +17,7 @@ import type { NewSession, SessionRepository } from '../domain/repositories/sessi
  */
 export class SessionProblems {
   private readonly problems = new Map<Id, SessionProblemDto>()
-  /** Failures in a row per chat: a restart clears the problem but not this, only a start that worked does. */
+  /** Failures in a row per chat: a restart or a start that worked clears the problem but not this, only a completed turn does. */
   private readonly failures = new Map<Id, number>()
 
   get(sessionId: Id): SessionProblemDto | null {
@@ -39,7 +39,7 @@ export class SessionProblems {
     this.problems.delete(sessionId)
   }
 
-  /** The agent started and works: no problem, and the next failure is the first again. */
+  /** A turn completed without a failure (not merely a start): no problem, and the next failure is the first again. */
   recovered(sessionId: Id): void {
     this.problems.delete(sessionId)
     this.failures.delete(sessionId)

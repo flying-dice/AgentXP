@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewChangeDto, ReviewCommentDto, ReviewStateDto } from '@shared/review'
-import { SEVERITY_HELP, addCommentTitle, baseLabel, filesStatusLabel, verdictLine, chatLabel, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
+import { SEVERITY_HELP, addCommentTitle, addCommentButtonTitle, chatChoiceLabel, NEW_CHAT_FOR_COMMENTS, baseLabel, filesStatusLabel, verdictLine, projectNameOf, changePosition, changePositionLabel, changeTotals, commentCounts, fileView, neighbourFile, openCounts, openingFile, placeThreads, selectForSend, splitAnchor, STATUS_LABEL, unifiedAnchor } from './reviewModel'
 
 const comment = (over: Partial<ReviewCommentDto>): ReviewCommentDto => ({
   id: 1,
@@ -139,14 +139,6 @@ describe('opening file, change position and totals (UX-41, UX-42)', () => {
     expect(STATUS_LABEL.untracked).toBe('New file')
   })
 
-  it('names a chat as its window does: the title, or New chat with the project', () => {
-    expect(chatLabel({ title: 'Fix the login...' }, 'review-notes')).toBe('Fix the login...')
-    expect(chatLabel({ title: 'New session' }, 'review-notes')).toBe('New chat (review-notes)')
-    expect(chatLabel({ title: 'New chat' }, 'review-notes')).toBe('New chat (review-notes)')
-    expect(chatLabel({ title: '' }, 'review-notes')).toBe('New chat (review-notes)')
-    expect(chatLabel({ title: null })).toBe('New chat')
-  })
-
   it('finds the project of a path by the label of its drive', () => {
     const drives = [{ letter: 'C', label: 'Agent home' }, { letter: 'E', label: 'review-notes' }]
     expect(projectNameOf('E:\\', drives)).toBe('review-notes')
@@ -165,9 +157,9 @@ describe('numbers in digits (UX-77)', () => {
     expect(verdictLine('approve', [])).toBe('Approved.')
   })
   it('says how many files changed and how many are shown', () => {
-    expect(filesStatusLabel(2, 1)).toBe('2 files changed, 1 shown')
+    expect(filesStatusLabel(2, 1)).toBe('2 files changed. Showing 1 (the one you opened).')
     expect(filesStatusLabel(2, 0)).toBe('2 files changed')
-    expect(filesStatusLabel(1, 1)).toBe('1 file changed, 1 shown')
+    expect(filesStatusLabel(1, 1)).toBe('1 file changed')
     expect(filesStatusLabel(0, 0)).toBe('0 files changed')
   })
 })
@@ -177,5 +169,19 @@ describe('adding a comment (UX-76)', () => {
     expect(SEVERITY_HELP).toContain('Minor is the usual choice')
     expect(addCommentTitle(2)).toBe('Add a comment on this line')
     expect(addCommentTitle(undefined)).toContain('no line')
+  })
+})
+
+describe('the send dialog and the Add comment button (UX-122)', () => {
+  it('names the open chat with its project folder and the other choice for what it does', () => {
+    expect(chatChoiceLabel({ title: 'Fix the login', cwd: 'E:\\' }, 'review-notes')).toBe('Chat: Fix the login (in E:\\)')
+    expect(chatChoiceLabel({ title: 'New session', cwd: 'E:\\' }, 'review-notes')).toBe('Chat: review-notes (in E:\\)')
+    expect(chatChoiceLabel({ title: null, cwd: 'E:\\' })).toBe('Chat: New chat (in E:\\)')
+    expect(NEW_CHAT_FOR_COMMENTS).toBe('Start a new chat for these comments')
+  })
+  it('says why Add comment is grey', () => {
+    expect(addCommentButtonTitle(false, false)).toMatch(/Expanded/)
+    expect(addCommentButtonTitle(true, false)).toMatch(/Select a line/)
+    expect(addCommentButtonTitle(true, true)).toBe('Add a comment on the selected line')
   })
 })

@@ -5,6 +5,8 @@
   import ToolStatusIcon from '../app/session/ToolStatusIcon.svelte'
   import { toolStatusView } from '../app/session/toolStatus'
   import { toolTitleOr } from '../app/session/toolTitles'
+  import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
+  import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
   import { feedText, type FeedItem } from './activity'
 
   interface Props {
@@ -17,9 +19,14 @@
     /** Session start for the running-time line; defaults to when the gadgets appeared. */
     since?: Date
     now?: Date
+    /** Opens the Event Viewer: the link under the Activity list, a double-click on the gadget and its right-click menu. */
+    onopeneventviewer?: () => void
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer }: Props = $props()
+
+  const menu = new ContextMenu()
+  const menuItems = () => [{ id: 'gadget-activity-menu-event-viewer', testid: 'gadget-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
 
   let tick = $state(new Date())
   $effect(() => {
@@ -59,6 +66,8 @@
     </div>
   </Gadget>
   <Gadget title="Activity">
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div class="activity" role="group" aria-label="Activity" data-testid="gadget-activity" title={onopeneventviewer ? 'Double-click to open the Event Viewer.' : undefined} ondblclick={() => onopeneventviewer?.()} oncontextmenu={(e) => onopeneventviewer && menu.show(e, menuItems())}>
     <ul class="feed">
       {#if controlNote}<li class="control" data-testid="gadget-activity-control">{controlNote}</li>{/if}
       {#each feed as item (item.key)}
@@ -67,8 +76,11 @@
         <li class="muted">Nothing has happened yet.</li>
       {/each}
     </ul>
+    {#if onopeneventviewer}<button type="button" class="open-events" data-testid="gadget-activity-open-event-viewer" onclick={() => onopeneventviewer?.()}>Event Viewer</button>{/if}
+    </div>
   </Gadget>
 </aside>
+<ContextMenuStrip bind:open={menu.open} x={menu.x} y={menu.y} items={menu.items} label="Activity" />
 
 <style>
   .gadgets {
@@ -120,6 +132,20 @@
   }
   .feed li.control {
     font-weight: 700;
+  }
+  .open-events {
+    margin: 6px 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 11px;
+    color: var(--w7-gadget-text);
+    text-decoration: underline;
+    cursor: default;
+  }
+  .open-events:focus-visible {
+    outline: var(--w7-focus-outline);
   }
   .t {
     min-width: 0;

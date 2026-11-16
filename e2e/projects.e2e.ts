@@ -26,7 +26,7 @@ describe('plug in and eject a project', () => {
   it('Computer says how many projects are plugged in, and has tooltips on the command bar', async () => {
     const explorer = await ctx.desktop.openComputer()
     await see.text(explorer.itemCount, '1 project plugged in')
-    await see.text(explorer.drive('e'), 'Project folder (plugged in)')
+    await see.text(explorer.drive('e'), 'Project')
   })
 
   it('the tray icon says how many projects are plugged in', async () => {

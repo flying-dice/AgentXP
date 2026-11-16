@@ -3,6 +3,7 @@ import type {
   ContentBlockDto,
   Id,
   MessageRole,
+  ReadErrorKind,
   ToolCallContentDto,
   ToolCallLocationDto,
   ToolCallStatus,
@@ -45,6 +46,7 @@ interface ContentRow {
   path: string | null
   old_text: string | null
   new_text: string | null
+  old_text_error: ReadErrorKind | null
   terminal_id: string | null
 }
 interface SurfaceRow {
@@ -99,7 +101,7 @@ export class TranscriptReader {
        WHERE tool_call_id IN ${IN_IDS} ORDER BY tool_call_id, position`
     )
     this.contents = prepare(db, 
-      `SELECT id, tool_call_id, kind, path, old_text, new_text, terminal_id FROM tool_call_contents
+      `SELECT id, tool_call_id, kind, path, old_text, new_text, old_text_error, terminal_id FROM tool_call_contents
        WHERE tool_call_id IN ${IN_IDS} ORDER BY tool_call_id, position`
     )
     this.contentBlocks = prepare(db, 
@@ -171,7 +173,7 @@ export class TranscriptReader {
   private contentToDto(row: ContentRow, related: Related): ToolCallContentDto {
     switch (row.kind) {
       case 'diff':
-        return { kind: 'diff', path: row.path ?? '', oldText: row.old_text, newText: row.new_text ?? '' }
+        return { kind: 'diff', path: row.path ?? '', oldText: row.old_text, newText: row.new_text ?? '', ...(row.old_text_error ? { oldTextError: row.old_text_error } : {}) }
       case 'terminal':
         return { kind: 'terminal', terminalId: row.terminal_id ?? '' }
       case 'content': {

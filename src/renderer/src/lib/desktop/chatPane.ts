@@ -8,7 +8,8 @@ import { askChatPrompt } from '../apps/askChat'
 import { SELECT_FIRST_TIP, type ChatSuggestion } from '../app/session/chatPaneText'
 import type { Id } from '@shared/models'
 
-export const PANE_DEFAULT_WIDTH = 340
+/** A new chat pane is 420 px wide (the window keeps it under 60% of its width), so a question and its answer do not wrap at every word (UX-126). */
+export const PANE_DEFAULT_WIDTH = 420
 export const PANE_MIN_WIDTH = 260
 export const PANE_MAX_WIDTH = 720
 

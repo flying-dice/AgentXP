@@ -27,7 +27,7 @@ Use Event Viewer to see what an agent sent and received. Read it to find out why
 
 ## 2 - Open It
 
-Click **Start -> Event Viewer**. You can also click the flag in the taskbar and then **Open Event Viewer**.
+Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in a chat, click **Event Viewer** in the Activity list on the desktop (or double-click the list), or click the flag in the taskbar and then **Open Event Viewer**. A link **Show in Event Viewer** under a failed step opens it on that event.
 
 ## 3 - The Window
 
@@ -37,7 +37,7 @@ The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **
 
 ### The Event List
 
-The list has the columns **Level**, **Date and Time**, **Source**, **Name**, and **Chat**. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
+The list shows warnings and errors at first. Select **Show all** to see every message. The list has the columns **Level**, **Date and Time**, **Source**, **Name**, and **Chat**. The heading shows the number of events. **Autoscroll** keeps the newest event in view.
 
 ### The Event Details
 
@@ -68,6 +68,7 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 | Logs | The tree of logs and chats. | `event-viewer-logs` |
 | Number of events | Shows the count, with the word filtered while a filter is on. | `event-viewer-count` |
 | Autoscroll | Keeps the newest event in view. | `event-viewer-autoscroll` |
+| Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
 | Events | The list of events. | `event-viewer-list` |
 | Event | One row of the list. | `event-viewer-row` |
 | Details | The pane of the selected event. | `event-viewer-detail` |
@@ -104,6 +105,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: filter | View menu: opens the filter box. | `event-viewer-menu-filter` |
 | Menu: clear filter | View menu: removes the filter. | `event-viewer-menu-clear-filter` |
 | Menu: autoscroll | View menu: follows the newest event. | `event-viewer-menu-autoscroll` |
+| Menu: show all | View menu: shows or hides the other events. | `event-viewer-menu-show-all` |
 | Context menu: copy | Copies the selected event. | `event-viewer-ctx-copy` |
 | Context menu: find | Finds text in the events. | `event-viewer-ctx-find` |
 | Context menu: filter | Opens the filter box. | `event-viewer-ctx-filter` |

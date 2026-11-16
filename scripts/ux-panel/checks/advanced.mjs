@@ -50,6 +50,25 @@ export const checks = {
     ], crashNotes(ctx.state))
   },
 
+  /** H-65: the second failure. The turn must finish after "It stopped again", in the same chat (Restart) or in a new chat. */
+  async 'T23.1b'(ctx) {
+    const { desktopId } = ctx.state
+    const sessions = await ctx.sessions(desktopId)
+    let finished = null
+    for (const s of sessions) {
+      const outcomes = await ctx.runOutcomes(desktopId, s.id)
+      const entries = await ctx.transcript(s.id)
+      if (outcomes.at(-1) === 'success' && agentMessages(entries).length > 0 && s.status === 'idle') finished = s
+    }
+    return all(
+      [
+        [ctx.state.secondFailure === true, 'the start state showed "It stopped again"'],
+        [Boolean(finished), finished ? `a turn finished after the second crash (chat ${finished.id})` : 'no chat has a finished turn with an answer and is idle']
+      ],
+      [ctx.state.secondFailureOffersNewChat === true ? 'the second-failure box offered "Start a new chat"' : 'note: the second-failure box did not offer "Start a new chat": researcher, record it as a product defect (UX-123)']
+    )
+  },
+
   async 'T23.2'(ctx) {
     const entries = await ctx.transcript(ctx.state.sessionId)
     const session = (await ctx.sessions()).find((s) => s.id === ctx.state.sessionId)

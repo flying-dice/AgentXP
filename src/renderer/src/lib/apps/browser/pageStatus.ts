@@ -15,7 +15,7 @@ const CAUSES: [RegExp, string][] = [
   [/NAME_NOT_RESOLVED|NAME_RESOLUTION|DNS/i, 'The name of the website was not found.'],
   [/INTERNET_DISCONNECTED|NETWORK_CHANGED|NETWORK_IO|ADDRESS_UNREACHABLE/i, 'The computer is not connected to the internet.'],
   [/TIMED_OUT/i, 'The website took too long to answer.'],
-  [/UNSAFE_PORT/i, 'The address uses a port that the Browser blocks.'],
+  [/UNSAFE_PORT/i, 'The address uses a port that the Browser blocks (the number after the colon).'],
   [/CONNECTION_REFUSED/i, 'Nothing answered at this address.'],
   [/CERT|SSL|SECURE/i, 'The security certificate of the website is not valid.']
 ]
@@ -31,7 +31,7 @@ export const isShownFailure = (errorCode: number, isMainFrame: boolean): boolean
 
 /** What to try for each error Chromium reports, matched on its name (`ERR_CONNECTION_REFUSED`...). The first match wins. */
 const FAILURE_HINTS: [RegExp, string][] = [
-  [/UNSAFE_PORT/i, 'This address uses a port that the Browser blocks. Check the number after the colon in the address (here :{port}), or ask whoever gave you the address for another one.'],
+  [/UNSAFE_PORT/i, 'Check the port (here :{port}), or ask whoever gave you the address for another one.'],
   [/CONNECTION_REFUSED/i, 'Nothing is listening at this address. Check the address, or start the program that serves it. Refresh will only work after that.'],
   [/NAME_NOT_RESOLVED|NAME_RESOLUTION|DNS/i, 'The name of the website was not found. Check the spelling, then check your network.'],
   [/INTERNET_DISCONNECTED|NETWORK_CHANGED|NETWORK_IO|ADDRESS_UNREACHABLE|TIMED_OUT/i, 'Check that your computer is online, then click Refresh.'],
@@ -89,3 +89,13 @@ export function stepZoom(zoom: number, direction: -1 | 0 | 1): number {
 }
 
 export const zoomText = (zoom: number): string => `${Math.round(zoom * 100)}%`
+
+/** How long "The agent read this page." stays in the yellow bar after the read is done (UX-128). */
+export const READ_DONE_MS = 5000
+
+/** What the yellow bar over the page says: that the user has control, that the agent finished reading, or what the agent does now. */
+export function agentBarText({ userInControl, readDone, activity }: { userInControl: boolean; readDone: boolean; activity: string | null }): string {
+  if (userInControl) return 'You have control of this page. The agent stops and asks before it uses the page again. Click Give control back at the top to let it go on.'
+  if (readDone) return 'The agent read this page.'
+  return `Agent is using this page: ${activity ?? 'working'}`
+}

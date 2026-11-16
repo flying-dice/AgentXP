@@ -70,7 +70,7 @@ describe('driveItems', () => {
   it('describes a project drive and counts projects', () => {
     const text = driveProperties({ label: 'login-app', letter: 'E', kind: 'removable', pluggedAt: null })
     expect(text).toContain('login-app (E:)')
-    expect(text).toContain('Type: Project folder (plugged in)')
+    expect(text).toContain('Type: Project')
     expect(text).toContain('The folder and its files stay on your disk.')
     expect(projectCountText(0)).toBe('No projects plugged in')
     expect(projectCountText(1)).toBe('1 project plugged in')

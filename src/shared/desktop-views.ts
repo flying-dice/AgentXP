@@ -12,7 +12,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   chat: { x: 40, y: 40, width: 680, height: 560 },
   explorer: { x: 120, y: 80, width: 620, height: 420 },
   notepad: { x: 200, y: 120, width: 520, height: 380 },
-  code: { x: 80, y: 60, width: 820, height: 560 },
+  code: { x: 80, y: 60, width: 820, height: 640 },
   terminal: { x: 160, y: 300, width: 640, height: 300 },
   browser: { x: 100, y: 50, width: 860, height: 600 },
   'control-centre': { x: 180, y: 90, width: 760, height: 540 },
@@ -80,6 +80,13 @@ export const DESKTOP_AREA = { width: 1280, height: 730 } as const
 const PLACEMENT_GAP = 8
 /** Smallest size a new window is squeezed to when it is tiled into the space beside another window. */
 const MIN_TILE = { width: 360, height: 220 }
+/**
+ * Windows that are never squeezed narrower than this when tiled beside another window: Control Center keeps its list, header and
+ * buttons apart from 640 px (UX-115), Event Viewer its Level and Date and Time columns whole from 720 px (UX-121). Without that
+ * much room they take their default size and cascade over the other window instead.
+ */
+const TILE_MIN_WIDTH: Partial<Record<AppKind, number>> = { 'control-centre': 640, 'event-viewer': 720 }
+const tileMinWidth = (app: AppKind): number => TILE_MIN_WIDTH[app] ?? MIN_TILE.width
 
 const overlaps = (a: Bounds, b: Bounds): boolean =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -123,7 +130,7 @@ export function placeWindow(
   const fits = exact.find((b) => b.x >= 0 && b.y >= minY && b.x + b.width <= area.width && b.y + b.height <= area.height)
   if (fits) return fits
   const roomRight = area.width - rightX
-  if (roomRight >= MIN_TILE.width) return { x: rightX, y: top, width: roomRight, height }
+  if (roomRight >= tileMinWidth(app)) return { x: rightX, y: top, width: roomRight, height }
   const roomBelow = area.height - belowY
   if (roomBelow >= MIN_TILE.height) return { x: left, y: belowY, width, height: roomBelow }
   return base
@@ -134,6 +141,19 @@ export const PARENT_OFFSET = 28
 
 /** Tools that open beside the window that asked for them (on the side with more free width) instead of on top of it. */
 const SIDE_APPS: ReadonlySet<AppKind> = new Set<AppKind>(['help', 'event-viewer', 'snipping-tool', 'agent-manager'])
+
+/** The Review window opens this wide at least, and this share of the work area wide when that is more (UX-129). */
+export const REVIEW_MIN_WIDTH = 720
+const REVIEW_WIDTH_SHARE = 0.7
+
+/**
+ * The Review window next to a window that is not a chat: wide enough for whole code lines (70% of the work area, at least
+ * 720 px), against the right edge so the window it came from stays visible on the left.
+ */
+function placeReview(base: Bounds, parent: Bounds, area: { width: number; height: number }, minY: number): Bounds {
+  const width = Math.min(area.width, Math.max(REVIEW_MIN_WIDTH, Math.round(area.width * REVIEW_WIDTH_SHARE)))
+  return within({ ...base, x: area.width - width, y: Math.max(parent.y, minY), width }, area, minY)
+}
 
 /** The window that has the focus when a new one opens. */
 export interface PlacementParent {
@@ -161,12 +181,13 @@ export function placeNewWindow(
   if (parent.app === 'chat') return placeWindow(app, openCount, parent.bounds, area, size, minY)
   const base = within(cascadedBounds(app, openCount, size), area, minY)
   const p = parent.bounds
+  if (app === 'code-review') return placeReview(base, p, area, minY)
   if (SIDE_APPS.has(app)) {
     const left = p.x
     const right = area.width - (p.x + p.width)
     const onRight = right >= left
     const room = (onRight ? right : left) - PLACEMENT_GAP
-    if (room >= MIN_TILE.width) {
+    if (room >= tileMinWidth(app)) {
       const width = Math.min(base.width, room)
       const x = onRight ? p.x + p.width + PLACEMENT_GAP : p.x - PLACEMENT_GAP - width
       return within({ ...base, x, y: Math.max(p.y, minY), width }, area, minY)
@@ -179,6 +200,29 @@ export function placeNewWindow(
   // No room to cascade: keep the title bar of the focused window free (tile beside it when the default spot would cover it).
   const titleStrip: Bounds = { x: p.x, y: p.y, width: p.width, height: PARENT_OFFSET }
   return overlaps(base, titleStrip) ? placeWindow(app, openCount, p, area, size, minY) : base
+}
+
+/** Smallest share of a Browser that a chat opened from it may cover (UX-120): none beyond a sliver. */
+export const BROWSER_OVERLAP_LIMIT = 0.1
+
+/**
+ * A chat started from a Browser task opens beside the Browser, in the half of the work area the Browser does not use,
+ * so the user can watch the page while the agent works (UX-120). The Browser keeps its side and is narrowed to its own
+ * half when it is wider than that. `browser` is null when it already leaves enough room (it stays as it is).
+ */
+export function placeChatBesideBrowser(
+  browser: Bounds,
+  area: { width: number; height: number } = DESKTOP_AREA,
+  minY: number = WINDOW_MIN_Y
+): { chat: Bounds; browser: Bounds | null } {
+  const half = Math.floor((area.width - PLACEMENT_GAP) / 2)
+  const browserOnLeft = browser.x + browser.width / 2 <= area.width / 2
+  const chatX = browserOnLeft ? area.width - half : 0
+  const chat: Bounds = { x: chatX, y: Math.max(browser.y, minY), width: half, height: Math.min(DEFAULT_BOUNDS.chat.height, Math.max(1, area.height - Math.max(browser.y, minY))) }
+  const covered = Math.max(0, Math.min(browser.x + browser.width, chat.x + chat.width) - Math.max(browser.x, chat.x)) / browser.width
+  if (covered <= BROWSER_OVERLAP_LIMIT) return { chat, browser: null }
+  const narrowed: Bounds = browserOnLeft ? { ...browser, x: 0, width: half } : { ...browser, x: area.width - half, width: half }
+  return { chat, browser: narrowed }
 }
 
 export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath'>, title = 'Chat'): AppView {
@@ -241,8 +285,8 @@ export function helpWindowTitle(topic: string): string {
 /** "Review - review-notes": the Code Review window is named after the project, like the chats of that project. */
 export const reviewWindowTitle = (projectName: string): string => `Review - ${projectName}`
 
-/** The title of the window of an agent's form: "<title> - from the agent". */
-export const surfaceWindowTitle = (title: string): string => `${title} - from the agent`
+/** The title of the window of an agent's form: the same name as its chat row (UX-135). */
+export const surfaceWindowTitle = (title: string): string => title
 
 /**
  * The title of a window. `projectName` is the name of the project a Code Review window shows (the label of its drive,

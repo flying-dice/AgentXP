@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { A2UI_CATALOG_ID, type A2uiServerMessage } from '@shared/a2ui'
-import { surfaceCaption, surfaceDisplayTitle, surfacePurpose, surfaceRowModel } from './surfaceRow'
+import { surfaceCaption, surfaceDisplayTitle, surfacePurpose, surfaceRowModel, surfaceTabLabels } from './surfaceRow'
 
 const messages = (title?: string): A2uiServerMessage[] => [
   { version: 'v0.9', createSurface: { surfaceId: 's', catalogId: A2UI_CATALOG_ID, ...(title ? { theme: { title } } : {}) } }
@@ -52,13 +52,26 @@ describe('what a surface says about itself', () => {
   it('names the surface by purpose and says where it is', () => {
     expect(surfaceRowModel(form('window'), true)).toMatchObject({
       intro: 'The agent opened a form: Your name.',
-      where: "It is in the window 'Your name - from the agent'."
+      where: "It is in the window 'Your name'."
     })
     expect(surfaceRowModel(form('sidebar'), false).where).toBe("It is in the sidebar 'Your name'.")
-    expect(surfaceRowModel(form('window'), false).where).toBe("It is closed. It was in the window 'Your name - from the agent'.")
+    expect(surfaceRowModel(form('window'), false).where).toBe("It is closed. It was in the window 'Your name'.")
   })
 
   it('needs no line for an inline surface', () => {
     expect(surfaceRowModel(form('inline'), false).where).toBe('')
+  })
+})
+
+describe('surfaceTabLabels (UX-135)', () => {
+  const input: A2uiServerMessage = { version: 'v0.9', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'TextBox' }] } } as never
+  it('calls a form "Form" (numbered when there are several) and keeps the title as tooltip', () => {
+    const form = { surfaceId: 'a', messages: [...messages('Notes'), input] }
+    const panel = { surfaceId: 'b', messages: messages('Board') }
+    const one = surfaceTabLabels([form, panel])
+    expect(one.get('a')).toEqual({ label: 'Form', tooltip: 'Notes' })
+    expect(one.get('b')).toEqual({ label: 'Board', tooltip: 'Board' })
+    const two = surfaceTabLabels([form, { ...form, surfaceId: 'c' }])
+    expect([two.get('a')?.label, two.get('c')?.label]).toEqual(['Form 1', 'Form 2'])
   })
 })

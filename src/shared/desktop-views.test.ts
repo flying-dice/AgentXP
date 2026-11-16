@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeNewWindow, placeWindow, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -180,6 +180,18 @@ describe('placeNewWindow (UX-88)', () => {
     expect(overlap(b, titleStrip(notepadParent.bounds))).toBe(false)
   })
 
+  it('opens the Review window at 70% of the work area, at least 720 px, against the right edge (UX-129)', () => {
+    const code = { app: 'code' as const, bounds: { x: 80, y: 60, width: 820, height: 560 } }
+    const b = placeNewWindow('code-review', 1, code)
+    expect(b.width).toBe(Math.round(area.width * 0.7))
+    expect(b.width).toBeGreaterThanOrEqual(REVIEW_MIN_WIDTH)
+    expect(b.x + b.width).toBe(area.width)
+    expect(inside(b)).toBe(true)
+    // A small work area still gets the 720 px, never more than the area.
+    expect(placeNewWindow('code-review', 1, code, { width: 900, height: 600 }).width).toBe(720)
+    expect(placeNewWindow('code-review', 1, code, { width: 600, height: 600 }).width).toBe(600)
+  })
+
   it('tiles beside a focused chat as before', () => {
     const b = placeNewWindow('notepad', 1, { app: 'chat', bounds: chat })
     expect(overlap(b, chat)).toBe(false)
@@ -187,7 +199,7 @@ describe('placeNewWindow (UX-88)', () => {
 
   it('Help opens on the side with more free width and does not cover the window that asked for it', () => {
     const left = { app: 'notepad' as const, bounds: { x: 20, y: 100, width: 420, height: 380 } }
-    const right = { app: 'notepad' as const, bounds: { x: 700, y: 100, width: 420, height: 380 } }
+    const right = { app: 'notepad' as const, bounds: { x: 760, y: 100, width: 420, height: 380 } }
     const a = placeNewWindow('help', 1, left)
     expect(overlap(a, left.bounds)).toBe(false)
     expect(a.x).toBeGreaterThanOrEqual(left.bounds.x + left.bounds.width)
@@ -195,6 +207,14 @@ describe('placeNewWindow (UX-88)', () => {
     expect(overlap(c, right.bounds)).toBe(false)
     expect(c.x + c.width).toBeLessThanOrEqual(right.bounds.x)
     expect(inside(a) && inside(c)).toBe(true)
+  })
+
+  it('never squeezes Control Center below 640 px or Event Viewer below 720 px beside the chat (UX-115, UX-121)', () => {
+    const chat = { x: 20, y: 80, width: 680, height: 560 }
+    for (const [app, min] of [['control-centre', 640], ['event-viewer', 720]] as const) {
+      expect(placeWindow(app, 1, chat).width).toBeGreaterThanOrEqual(min)
+      expect(placeNewWindow(app, 1, { app: 'chat', bounds: chat }).width).toBeGreaterThanOrEqual(min)
+    }
   })
 
   it('Help falls back to the cascade when neither side has room, still below the parent title bar', () => {
@@ -212,5 +232,25 @@ describe('Code Review window title (UX-109)', () => {
   it('names the drive or the folder without a project name', () => {
     expect(windowTitle(view)).toBe('Review - E:\\')
     expect(windowTitle({ ...view, root: 'E:\\src\\app' })).toBe('Review - app')
+  })
+})
+
+describe('placeChatBesideBrowser (UX-120)', () => {
+  it('puts the chat in the free half and narrows a wide Browser to its own half', () => {
+    const { chat: c, browser } = placeChatBesideBrowser(DEFAULT_BOUNDS.browser)
+    expect(browser).not.toBeNull()
+    expect(overlap(c, browser!)).toBe(false)
+    expect(inside(c) && inside(browser!)).toBe(true)
+    expect(c.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
+  })
+
+  it('leaves a Browser that already leaves room as it is, and mirrors for a Browser on the right', () => {
+    const small = { x: 20, y: 80, width: 500, height: 400 }
+    const left = placeChatBesideBrowser(small)
+    expect(left.browser).toBeNull()
+    expect(overlap(left.chat, small)).toBe(false)
+    const right = placeChatBesideBrowser({ x: 700, y: 80, width: 560, height: 400 })
+    expect(right.chat.x).toBe(0)
+    expect(overlap(right.chat, { x: 700, y: 80, width: 560, height: 400 })).toBe(false)
   })
 })

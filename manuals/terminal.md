@@ -40,7 +40,7 @@ The screen shows the working folder, each command, and its output. It follows th
 
 ### The Status Bar
 
-The status bar says that the shell is read-only. The cursor on the screen is a hollow block, a sign that you cannot type. If you press a key on the screen, a note appears at the bottom of the screen for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
+The status bar says that the shell is read-only. The cursor on the screen is a hollow block that does not blink, a sign that you cannot type. If you press a key on the screen, a note appears at the bottom of the screen for 4 seconds. It says that the agent runs the commands here, that you can watch but not type, and that you can ask the agent in Chat to run a command. The status bar also shows **Running**, **Exit code** with a number, or **No terminals**.
 
 ### The Chat Pane
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DriveDto } from '@shared/vfs'
-import { accessKeyCommand, connectLabel, DELETE_WARNING, drivesLine, initialSelection, desktopWindowTitle, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, lastUsedText, nameSuggestion, projectSuggestion, READY_TEXT, rowStatus, shortCause, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
+import { accessKeyCommand, connectLabel, connectTip, DELETE_WARNING, drivesLine, initialSelection, desktopWindowTitle, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, lastUsedText, nameSuggestion, projectSuggestion, READY_TEXT, rowStatus, shortCause, sortDesktops, stateLabel, stateTone, suggestDesktopName, validateDesktopName } from './launcherModel'
 
 const usb = (letter: string, label: string): DriveDto => ({ letter, label, kind: 'removable', folderId: 1, pluggedAt: null })
 const system: DriveDto = { letter: 'C', label: 'Local Disk', kind: 'system', folderId: null, pluggedAt: null }
@@ -100,6 +100,8 @@ describe('launcherModel', () => {
     expect(['n', 'C', 'r', 'D', 'x'].map(accessKeyCommand)).toEqual(['new', 'connect', 'rename', 'delete', null])
     expect(connectLabel(false)).toBe('&Connect')
     expect(connectLabel(true)).toBe('Show desktop')
+    expect(connectTip(false)).toContain('Alt+C')
+    expect(connectTip(true)).toContain('front')
   })
 })
 

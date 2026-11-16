@@ -283,7 +283,7 @@ describe('SessionService: starting in the background and problems', () => {
     expect(status(session.id)).toBe('idle')
   })
 
-  it('counts failures in a row: a restart keeps the count, a start that works resets it', async () => {
+  it('counts failures in a row: a restart keeps the count, and a start that works alone does not reset it', async () => {
     connector.openError = new Error('boom')
     const session = await service.create(f.desktop.id, undefined, undefined, undefined, { background: true })
     await vi.waitFor(() => expect(problems.get(session.id)?.failures).toBe(1))
@@ -295,7 +295,30 @@ describe('SessionService: starting in the background and problems', () => {
     expect(problems.get(session.id)).toBeNull()
     connector.openError = new Error('boom')
     await service.restartAgent(session.id)
-    expect(problems.get(session.id)?.failures).toBe(1)
+    expect(problems.get(session.id)?.failures).toBe(3)
+  })
+
+  it('a crash loop reaches failure 2: start, crash, restart, crash', async () => {
+    const session = await service.create(f.desktop.id)
+    connector.connections[0]!.promptError = new Error('ACP connection closed')
+    await expect(service.prompt({ sessionId: session.id, text: 'slow job', attachments: [] })).rejects.toThrow()
+    expect(problems.get(session.id)).toMatchObject({ kind: 'agent-stopped', failures: 1 })
+    await service.restartAgent(session.id)
+    expect(problems.get(session.id)).toBeNull()
+    connector.connections.at(-1)!.promptError = new Error('ACP connection closed')
+    await expect(service.prompt({ sessionId: session.id, text: 'slow job', attachments: [] })).rejects.toThrow()
+    expect(problems.get(session.id)).toMatchObject({ kind: 'agent-stopped', failures: 2 })
+  })
+
+  it('a turn that completes resets the count: start, turn, crash is failure 1', async () => {
+    const session = await service.create(f.desktop.id)
+    connector.connections[0]!.promptError = new Error('ACP connection closed')
+    await expect(service.prompt({ sessionId: session.id, text: 'one', attachments: [] })).rejects.toThrow()
+    await service.restartAgent(session.id)
+    await service.prompt({ sessionId: session.id, text: 'two', attachments: [] })
+    connector.connections.at(-1)!.promptError = new Error('ACP connection closed')
+    await expect(service.prompt({ sessionId: session.id, text: 'three', attachments: [] })).rejects.toThrow()
+    expect(problems.get(session.id)).toMatchObject({ kind: 'agent-stopped', failures: 1 })
   })
 
   it('Try again moves a chat whose agent could not start to the current default agent', async () => {

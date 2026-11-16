@@ -19,6 +19,7 @@ import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
 import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { chooseFolder } from '../apps/shared/chooseFolder'
+import { closeChatBalloon } from './closeChat'
 import { addRemoved, EJECT_BALLOON_TITLE, ejectBalloonText, pluggedBalloonText, projectQuoted, removeProjectText, RECENTLY_REMOVED_MAX, type RemovedProject } from './projectDrives'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
@@ -370,6 +371,10 @@ export class DesktopController implements DesktopHost {
 
   async closeWindow(windowId: Id): Promise<void> {
     this.views.cancel(windowId)
+    // A chat that closes while its turn runs: the agent goes on, and the user is told where to find it (UX-136).
+    const view = this.current?.windows.find((w) => w.id === windowId)?.view
+    const notice = closeChatBalloon(view, view?.app === 'chat' ? this.sessions.byId(view.sessionId)?.status : undefined)
+    if (notice) this.showBalloon({ ...notice, icon: 'info' })
     if (this.current) {
       const windows = this.current.windows.filter((w) => w.id !== windowId)
       this.current = { ...this.current, windows, focusedWindowId: this.current.focusedWindowId === windowId ? nextFocus(windows) : this.current.focusedWindowId }

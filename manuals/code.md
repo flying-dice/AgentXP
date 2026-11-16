@@ -42,7 +42,7 @@ The menu bar has the menus **File**, **Edit**, **View**, **Search**, **Tools**, 
 
 ### The Toolbar
 
-The toolbar has the buttons for files, for changes, for the panes, and for the chat. **Ask about selection** opens the chat pane with a question about the lines that you selected in the file. At the right end, **Focus on the file** gives the file the whole window. Some buttons are always dimmed because the agent writes the files.
+The toolbar has the buttons for files, for changes, for the panes, and for the chat. **Ask about selection** opens the chat pane (420 pixels wide) with a question about the lines that you selected in the file. The lines stay marked in the file while you write in the chat pane. At the right end, **Focus on the file** gives the file the whole window. Some buttons are always dimmed because the agent writes the files.
 
 ### The Management Pane
 
@@ -156,7 +156,11 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Diff | The diff of the selected change. | `changes-diff` |
 | Revert | Undoes the selected change. | `changes-revert` |
 | Open in editor | Shows the file in the editor. | `changes-open-editor` |
-| Open Recycle Bin | The link under the list after a revert. It opens the Recycle Bin. | `changes-open-recycle-bin` |
+| Open Recycle Bin | The link under the list after a revert. It opens the Recycle Bin. A reverted file stays in the list, in grey, after you close and open the pane or the window. | `changes-open-recycle-bin` |
+| Changes pane | The whole pane: the list, the diff and the buttons. In a wide, short pane the diff is beside the list. | `changes-pane` |
+| File name end | The last letters of a file name and its type. A long name is cut in the middle, never at the end. | `changes-name-tail` |
+| Lines | The lines added and removed in a file, for example +16 / -0. | `changes-lines` |
+| Why a button is dimmed | The line above the buttons that says what to do first. | `changes-reason` |
 | Path | Shows the active file. | `code-status-path` |
 | Agent editing | Shows that the agent writes. | `code-status-editing` |
 | Caret | Shows the line and the column. | `code-status-caret` |

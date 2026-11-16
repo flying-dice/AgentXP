@@ -33,7 +33,7 @@
     { id: 'removable', title: 'Devices with Removable Storage', items: groups.removable }
   ].filter((s) => s.items.length > 0))
 
-  const caption = (d: DriveDto): string => (d.kind === 'system' ? 'Private to this desktop' : 'Project folder (plugged in)')
+  const caption = (d: DriveDto): string => (d.kind === 'system' ? 'Your files (C:)' : 'Project')
 </script>
 
 <div class="computer {className}" data-testid="explorer-computer" role="listbox" aria-label="Computer" tabindex="-1">

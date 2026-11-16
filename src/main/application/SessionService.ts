@@ -223,6 +223,8 @@ export class SessionService {
       broadcaster.setStatus(sessionId, 'working')
       const stopReason = await live.connection.prompt(live.acpSessionId, blocks)
       sessions.touch(sessionId)
+      // The agent answered without a failure: the next failure is the first again.
+      this.deps.problems?.recovered(sessionId)
       broadcaster.setStatus(sessionId, 'idle')
       return stopReason
     } catch (error) {

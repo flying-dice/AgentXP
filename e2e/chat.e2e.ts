@@ -108,8 +108,12 @@ describe('chat turn with the fake agent', () => {
 
   it('the Event Viewer logged the traffic of the turn', async () => {
     const viewer = await ctx.desktop.openApp('event-viewer')
-    await see.visible(viewer.getByTestId('event-viewer-row'))
+    // The list shows warnings and errors at first; Show all brings the traffic of the turn (UX-121).
+    await viewer.getByTestId('event-viewer-show-all').click()
+    await see.visible(viewer.getByTestId('event-viewer-row').first())
     await see.visible(viewer.getByTestId('event-viewer-count'))
+    // It opens over the chat now that it keeps its full width; the next steps work in the chat.
+    await ctx.desktop.closeWindow('event-viewer')
   })
 
   it('a revert shows "Reverted" in the chat and in Code, and the change stays out of the list of changes (UX-79)', async () => {
@@ -129,7 +133,6 @@ describe('chat turn with the fake agent', () => {
 
   it('typing in the Terminal says it is read-only and what to do instead', async () => {
     await ctx.desktop.closeWindow('chat') // it is tiled over part of the other windows
-    await ctx.desktop.closeWindow('event-viewer')
     await ctx.desktop.closeWindow('code')
     const terminal = ctx.desktop.terminal()
     // Closing Code can leave the Terminal active already; a taskbar click would then minimise it.
@@ -139,6 +142,8 @@ describe('chat turn with the fake agent', () => {
     await see.text(terminal.readOnlyNotice, 'Read-only: the agent runs the commands here. You can watch but not type.')
     await see.text(terminal.readOnlyNotice, 'Ask the agent in Chat to run a command.')
     await see.visible(terminal.frame.getByTestId('console-cursor-locked'))
+    // The cursor is a steady block: it says "read only", so it does not blink (UX-132).
+    expect(await terminal.frame.getByTestId('console-cursor-locked').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
     await see.gone(terminal.readOnlyNotice) // it goes after a few seconds
   })
 })

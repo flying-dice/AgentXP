@@ -31,7 +31,11 @@ scenario they read. `session.mjs task --task T05.2 --level novice` prints the pa
 `T18.1-window` work); `session.mjs list` lists every task and its preset.
 
 ```
-# 2. Spawn a fresh panelist agent (no memory of earlier sessions, Bash tool only).
+# 2. Spawn a fresh panelist agent (no memory of earlier sessions, Bash tool only). H-69: ONE FRESH PANELIST PER TASK. Never
+#    reuse an agent or a context for a second task, not even a task of the same journey: knowledge carries over (R4: both T21.1
+#    panelists pressed Ctrl+N because they had seen it in the Start menu in T20.1). If a journey is run by one panelist (only
+#    for a journey test, not for a task result), order the tasks so that no task teaches the next one; T21.1 must never follow
+#    T20.1 or T22.x in the same context. `start` reminds you on stderr.
 #    Prompt = contents of scripts/ux-panel/PANELIST.md with LEVEL replaced
 #             + the panelist block printed by `start` (session folder, step budget, scenario)
 #    Nothing else: no task id, no preset, no repository hints.
@@ -55,6 +59,15 @@ node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with 
 - There is no `--seq` option (H-53). The rating is read from the record: write the record (step 4) with its `- SEQ: <1-7>` line
   first, then `stop --record <file>` copies the rating into check.json and recomputes the weak flag. A PASS at the budget limit, or
   with SEQ below 5, is a weak pass (`weak: true`, H-46).
+- SEQ scale guard (H-72): the scale is 1 = very difficult ... 7 = very easy (the panelist template says so beside the field, and the
+  record template below repeats it). `stop --record` (and `seq`) refuses a SEQ of 1 to 3 when the record calls the task easy or lists
+  no stuck points or errors, a SEQ of 5 to 7 when it says "very difficult" or "gave up", a SEQ outside 1 to 7 and a record without a
+  `- SEQ:` line. Ask the panelist (or re-read the record); if the number is right, pass `--seq-confirmed`.
+- `session.mjs seq --out $S --record <file>` does the same for a session that is already stopped; `session.mjs seq --records $R
+  --sessions /tmp/ux-sessions/<round>` regenerates the SEQ and the weak flag of every check.json from its record.
+- `check` may be run again (H-67): every run is appended to `check.json.runs` (the top level is the last run). The record must
+  list all runs and say why the earlier ones differ. An answer of fewer than 5 words is refused (a placeholder such as "x"); pass
+  the whole text after "Answer:" or `--no-answer`.
 - Compare the SEQ with the frustrations list: a SEQ that differs by 3 or more from what the report says (for example SEQ 2 after a
   two-step pass) is rating noise; flag it in the record and report the measured values (H-36).
 
@@ -82,7 +95,8 @@ Record template:
 ```
 # <task> <title> - <level>
 - Result: PASS|FAIL|MANUAL (<reason from check>)   Steps: <n> of <budget>   Time: <min>
-- SEQ: <1-7>
+- SEQ: <1-7> - <one sentence>   (1 = very difficult, 7 = very easy; a high number means EASY)
+- Check runs (all runs of check.json.runs and why they differ; "one run" if only one): ...
 - Errors (wrong clicks, undo, dead ends, error messages seen): ...
 - Help used (F1, Help topics): ...
 - Think-aloud (verbatim, from the panelist's final report): ...
@@ -113,6 +127,12 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 
 ## Notes
 
+- `start` is idempotent (H-66): the same task and level on a folder whose session is ready and alive prints the panelist block again.
+  A start state that throws closes the app, frees the folder (`session.json` becomes `session.failed-<time>.json`) and keeps `server.log`;
+  start again with the same `--out`.
+- T23.1-twice is T23.1b in `tasks.md` (H-65) and needs product fix UX-123 (the failure count survives a restart until a turn completes).
+- T14.1 (H-73): the preset selects the idle "Scratch pad" row; the waiting row is not preselected.
+- The last reply of the Browser script `browser-agent` is plain: "I sent the message and found it in #general." (H-71).
 - Mouse-less task T21.1: the driver refuses `click/move/drag/scroll` for that session.
 - Fixtures (H-32): every session starts the app with a sandbox home (`HOME` and `USERPROFILE` = `<tmp>/home`) and creates the
   projects under `<tmp>/home/Documents` (`login-app`, `docs-site`, `notes-folder`, ...), so the in-app Browse For Folder

@@ -143,6 +143,23 @@ describe('Code app git awareness', () => {
     await ctx.desktop.closeWindow('chat')
   })
 
+  it('Ask about selection keeps the selected lines marked and opens a chat pane at least 420 px wide (UX-126)', async () => {
+    const code = ctx.desktop.code()
+    await code.openFile('notes.txt')
+    const lines = code.frame.getByTestId('code-line')
+    await see.visible(lines.nth(1))
+    await lines.nth(0).dragTo(lines.nth(1))
+    await see.eventually(async () => expect(await code.frame.getByTestId('code-ask-selection').isEnabled()).toBe(true))
+    await code.frame.getByTestId('code-ask-selection').click()
+    const pane = ctx.desktop.aside('code')
+    await see.visible(pane.panel)
+    // The focus moved to the chat pane; the two lines are still marked on screen.
+    await see.eventually(async () => expect(await lines.evaluateAll((els) => els.filter((e) => e.getAttribute('data-selected') === 'true').length)).toBe(2))
+    const box = await pane.panel.boundingBox()
+    expect(box!.width).toBeGreaterThanOrEqual(420)
+    await pane.hide.click()
+  })
+
   it('the Git list shows the lines of each file and double-click opens the file that was clicked (UX-78)', async () => {
     const code = ctx.desktop.code()
     await code.frame.getByTestId('code-logs-tab-git').click()
@@ -159,6 +176,11 @@ describe('Code app git awareness', () => {
     const review = ctx.desktop.codeReview()
     await see.visible(review.app)
     await see.text(review.frame.getByTestId('review-file-head'), 'fresh.txt')
+    // The Review window is wide enough for whole code lines: 70% of the work area, at least 720 px (UX-129).
+    const win = await ctx.desktop.window('code-review').boundingBox()
+    const viewport = ctx.desktopPage.viewportSize()
+    expect(win!.width).toBeGreaterThanOrEqual(720)
+    expect(win!.width).toBeGreaterThanOrEqual((viewport?.width ?? 1280) * 0.65)
     await ctx.desktop.closeWindow('code-review')
     // The other row opens its own file, not the first one of the review (UX-107).
     await rows.filter({ hasText: 'notes.txt' }).dblclick()

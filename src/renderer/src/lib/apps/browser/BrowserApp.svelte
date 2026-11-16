@@ -2,6 +2,7 @@
   import { untrack } from 'svelte'
   import type { AppProps } from '../types'
   import { registerAppRequestHandler } from '../appRequests'
+  import Button from '../../kit/atoms/Button.svelte'
   import Icon from '../../kit/atoms/Icon.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
   import { closeItems, menuBar } from '../../kit/molecules/standardMenu'
@@ -18,7 +19,7 @@
   import { BLANK, inElectron, isSecure, normalizeAddress } from './address'
   import BrowserTabPage from './BrowserTab.svelte'
   import type { PageContext } from './webview'
-  import { ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, zoomText } from './pageStatus'
+  import { agentBarText, ASK_ABOUT_PAGE_QUESTION, ASSISTANT_TOOLTIP, assistantStatus, pageStatus, READ_DONE_MS, zoomText } from './pageStatus'
   import { closeTab, newTabState, parseTabsRequest, tabInfos, tabLabel, type BrowserTabState } from './tabs'
 
   let { window: win, host }: AppProps<'browser'> = $props()
@@ -56,6 +57,8 @@
   let reading = $state(false)
   /** What the agent is waiting for, for the tooltip of the bar ("Waiting for the text ... to show on the page."). */
   let activityDetail = $state<string | null>(null)
+  /** The agent finished reading the page: the bar says "The agent read this page." until it goes. */
+  let readDone = $state(false)
   /** The address of the page that the agent read (the status bar says so while that page is open). */
   let readUrl = $state<string | null>(null)
   /** The user took control while the agent worked: the bar stays, with Give control back, until the user gives it back. */
@@ -178,9 +181,11 @@
       reading = p.reading === true
       activityDetail = p.detail ?? null
       if (p.read === true) readUrl = active.url
+      // A finished read says so and goes after a few seconds, unless the agent starts another step (UX-128).
+      readDone = p.read === true
       engaged = true
       clearTimeout(activityTimer)
-      activityTimer = setTimeout(() => ((activity = null), (reading = false), (activityDetail = null)), ACTIVITY_MS)
+      activityTimer = setTimeout(() => ((activity = null), (reading = false), (activityDetail = null), (readDone = false)), readDone ? READ_DONE_MS : ACTIVITY_MS)
       if (p.box) {
         ring = p.box
         clearTimeout(ringTimer)
@@ -319,6 +324,7 @@
         <button class="mini" data-testid="browser-refresh" type="button" aria-label="Refresh" title="Refresh" onclick={() => pages[activeId]?.reload()}><Icon name="refresh" size={14} /></button>
       {/if}
     </form>
+    <Button data-testid="browser-ask-page" icon="session" disabled={active.url === BLANK} title="Open the chat and ask the agent about this page." onclick={() => askAboutPage()}>Ask about this page</Button>
   </div>
   <div class="tabrow">
     <div class="tabs">
@@ -336,7 +342,7 @@
             onclick={() => void select(tab.id)}
           >
             <Icon name="globe" />
-            <span class="label">{tabLabel(tab)}</span>
+            <span class="label" title={tabLabel(tab)}>{tabLabel(tab)}</span>
           </button>
         {/each}
       </div>
@@ -369,11 +375,8 @@
       <div class="agentbar" data-testid="browser-agent-bar" data-taken-over={userInControl} role="status">
         <Icon name="shield" size={12} />
         <span data-testid="browser-agent-bar-text" title={activityDetail ?? undefined}
-          >{userInControl ? 'You have control of this page. The agent stops and asks before it uses the page again.' : `Agent is using this page: ${activity ?? 'working'}`}</span
+          >{agentBarText({ userInControl, readDone, activity })}</span
         >
-        {#if userInControl}
-          <button class="bar-button" data-testid="browser-agent-giveback" title="Let the agent use this page again. It will ask before it does." onclick={() => setControl(false)}>Give control back</button>
-        {/if}
         <button
           class="bar-button takeover"
           data-testid="browser-agent-takeover"
@@ -396,9 +399,6 @@
     <StatusStripLabel testid="browser-assistant-status" borders={['left']} width={190}>
       <span class="t" title={ASSISTANT_TOOLTIP}>{assistant}</span>
     </StatusStripLabel>
-    <StatusStripLabel borders={['left']} width={118}>
-      <button class="ask" type="button" data-testid="browser-ask-page" disabled={active.url === BLANK} title="Open the chat and ask the assistant about this page." onclick={() => askAboutPage()}>Ask about this page</button>
-    </StatusStripLabel>
     <StatusStripLabel text={zoomText(active.zoom)} borders={['left']} width={56} textAlign="right" />
   </StatusStrip>
 </div>
@@ -411,21 +411,15 @@
     flex-direction: column;
     background: var(--w7-face);
   }
-  .ask {
-    font: inherit;
-    font-size: 11px;
-    height: 18px;
-    padding: 0 6px;
-    margin: 0;
-    white-space: nowrap;
-  }
   .chrome {
     flex: none;
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 8px;
+    flex-wrap: wrap;
+    gap: 3px 8px;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 3px 8px;
     background: linear-gradient(#e9f0fa, #cbd9ee);
     border-bottom: 1px solid #8ea4c4;
   }
@@ -452,8 +446,8 @@
     filter: grayscale(0.6);
   }
   .address {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 160px;
+    min-width: 120px;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -522,7 +516,8 @@
   .tab,
   .slot {
     flex: 0 1 170px;
-    min-width: 60px;
+    /* Room for 14 characters beside the icon and the close button: a short title is never cut (UX-135). */
+    min-width: 150px;
     box-sizing: border-box;
   }
   .tab {

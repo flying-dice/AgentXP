@@ -1,5 +1,5 @@
 import { prepare, type Database, type Statement } from './sql'
-import type { Id, ToolCallContentDto, ToolCallLocationDto } from '@shared/models'
+import type { Id, ReadErrorKind, ToolCallContentDto, ToolCallLocationDto } from '@shared/models'
 import type { ToolCallUpsert } from '../../domain/repositories/transcript-repository'
 import { BlockWriter } from './block-writer'
 
@@ -21,12 +21,13 @@ interface ContentParams {
   path: string | null
   oldText: string | null
   newText: string | null
+  oldTextError: ReadErrorKind | null
   terminalId: string | null
 }
 
 function contentParams(toolCallId: Id, position: number, c: ToolCallContentDto): ContentParams {
-  const base = { toolCallId, position, kind: c.kind, path: null, oldText: null, newText: null, terminalId: null }
-  if (c.kind === 'diff') return { ...base, path: c.path, oldText: c.oldText, newText: c.newText }
+  const base = { toolCallId, position, kind: c.kind, path: null, oldText: null, newText: null, oldTextError: null, terminalId: null }
+  if (c.kind === 'diff') return { ...base, path: c.path, oldText: c.oldText, newText: c.newText, oldTextError: c.oldTextError ?? null }
   if (c.kind === 'terminal') return { ...base, terminalId: c.terminalId }
   return base
 }
@@ -62,8 +63,8 @@ export class ToolCallWriter {
     )
     this.deleteContents = prepare(db, 'DELETE FROM tool_call_contents WHERE tool_call_id = ?')
     this.insertContent = prepare(db, 
-      `INSERT INTO tool_call_contents (tool_call_id, position, kind, path, old_text, new_text, terminal_id)
-       VALUES (@toolCallId, @position, @kind, @path, @oldText, @newText, @terminalId)`
+      `INSERT INTO tool_call_contents (tool_call_id, position, kind, path, old_text, new_text, old_text_error, terminal_id)
+       VALUES (@toolCallId, @position, @kind, @path, @oldText, @newText, @oldTextError, @terminalId)`
     )
   }
 
