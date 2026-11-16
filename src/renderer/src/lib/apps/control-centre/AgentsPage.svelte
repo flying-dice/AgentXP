@@ -26,10 +26,11 @@
   const columns: ListColumn[] = [
     { key: 'name', header: 'Name', width: 130 },
     { key: 'command', header: 'Command' },
+    { key: 'mode', header: 'Start mode', width: 120 },
     { key: 'isDefault', header: 'Default', width: 60 }
   ]
   const rows = $derived<ListRow[]>(
-    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, command: [a.command, ...a.args].join(' '), isDefault: a.isDefault ? 'Yes' : '' }))
+    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, command: [a.command, ...a.args].join(' '), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
   )
   const selectedAgent = $derived(agents.items.find((a) => String(a.id) === selected[0]) ?? null)
 

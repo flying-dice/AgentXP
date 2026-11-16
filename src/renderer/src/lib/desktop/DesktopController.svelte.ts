@@ -15,7 +15,7 @@ import {
 import { parseVPath, type DriveDto, type DriveLetter, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
-import { driveRoot, driveTitle } from '../apps/explorer/explorerModel'
+import { driveRoot, driveTitle, projectRootOf } from '../apps/explorer/explorerModel'
 import { showMessageBox } from '../kit/organisms/messageBox'
 import type { DesktopHost } from '../apps/types'
 import { DELETE_WARNING } from '../launcher/launcherModel'
@@ -92,6 +92,8 @@ export class DesktopController implements DesktopHost {
   startOpen = $state(false)
   /** The "New chat on..." dialog (pick the working drive). */
   newChatDialogOpen = $state(false)
+  /** The "Code Review" dialog (pick the project and the ref), with the drive root to preselect. */
+  reviewDialog = $state.raw<{ root?: VPath } | null>(null)
   actionCenterOpen = $state(false)
   gadgetsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
@@ -665,11 +667,20 @@ export class DesktopController implements DesktopHost {
     return this.api.desktop.openReview(this.state.desktopId, root ?? this.defaultReviewRoot(), baseRef)
   }
 
+  /** Asks what to review (project and ref) instead of opening Code Review at once. `path` preselects its project drive. */
+  chooseReview(path?: string | null): void {
+    this.startOpen = false
+    this.reviewDialog = { root: this.projectRootOf(path ?? this.defaultReviewRoot()) }
+  }
+
   defaultReviewRoot(): VPath {
     const code = this.state.windows.find((w) => w.view.app === 'code' && w.id === this.state.focusedWindowId) ?? this.state.windows.find((w) => w.view.app === 'code')
     const active = code?.view.app === 'code' ? code.view.activePath : null
-    const drive = (active && parseVPath(active)?.drive) || this.state.drives.find((d) => d.kind === 'removable')?.letter
-    return drive ? driveRoot(drive) : this.state.home
+    return this.projectRootOf(active)
+  }
+
+  projectRootOf(path?: string | null): VPath {
+    return projectRootOf(this.state.drives, this.state.home, path)
   }
 
   /** Opens the UAC-style dialog for an approval (loads the policy for the reason line). */

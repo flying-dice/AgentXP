@@ -40,15 +40,28 @@ export interface AgentFormValues {
   command: string
   args: string
   env: string
+  /** An ACP session mode id, '' for the agent's own default. */
+  defaultModeId: string
 }
 
-export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '' })
+/** The session modes Claude Code offers; other agents may name their own (the field is editable). */
+export const COMMON_MODES: { value: string; label: string }[] = [
+  { value: '', label: 'Agent default' },
+  { value: 'default', label: 'Default (asks before risky actions)' },
+  { value: 'acceptEdits', label: 'Accept Edits (no prompts for file edits)' },
+  { value: 'plan', label: 'Plan (no tool execution)' },
+  { value: 'dontAsk', label: "Don't Ask (deny what is not pre-approved)" },
+  { value: 'bypassPermissions', label: 'Bypass Permissions (no prompts at all)' }
+]
+
+export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '', defaultModeId: '' })
 
 export const formFromAgent = (agent: AgentDto): AgentFormValues => ({
   name: agent.name,
   command: agent.command,
   args: formatArgs(agent.args),
-  env: formatEnv(agent.env)
+  env: formatEnv(agent.env),
+  defaultModeId: agent.defaultModeId ?? ''
 })
 
 /** Validation message, or null when the form can be submitted. */
@@ -63,5 +76,6 @@ export const inputFromForm = (values: AgentFormValues): AgentInput => ({
   name: values.name.trim(),
   command: values.command.trim(),
   args: parseArgs(values.args),
-  env: parseEnv(values.env).env
+  env: parseEnv(values.env).env,
+  defaultModeId: values.defaultModeId.trim() || null
 })

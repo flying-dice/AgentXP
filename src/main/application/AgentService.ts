@@ -8,7 +8,8 @@ const clean = (input: AgentInput): AgentInput => {
   const command = input.command.trim()
   if (!name) throw new AppError('The agent needs a name')
   if (!command) throw new AppError('The agent needs a command')
-  return { name, command, args: input.args, env: input.env }
+  const defaultModeId = input.defaultModeId?.trim() || null
+  return { name, command, args: input.args, env: input.env, defaultModeId }
 }
 
 export class AgentService {

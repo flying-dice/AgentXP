@@ -30,8 +30,15 @@ Each Code Review window has its own review session with an agent. The session en
 
 ## 2 - Open It
 
-- Click **Start -> Code Review**. The window opens on the plugged-in project.
+- Click **Start -> Code Review**.
 - In **[Code](code.md)**, click **Review changes** or choose **Tools -> Review changes**.
+- In **[Chat](chat.md)**, choose **Tools -> Review changes**.
+
+Each of these first opens the **Code Review** box. It asks what to review:
+
+1. Click the project. The project of the file you have open is already selected. The private system disk (C:) is in the list, but it is not a git repository.
+2. In **Compare against**, choose what to compare with: **Uncommitted changes (HEAD)**, the last commit, or type a branch, tag or commit.
+3. Click **Review**.
 
 When the window opens, Agent7 sends the first message to the reviewer by itself.
 
@@ -75,6 +82,11 @@ The status bar shows the folder, the number of files, the number of open comment
 
 | Name | What it does | data-testid |
 |---|---|---|
+| Code Review box | The box that asks what to review before the window opens. | `new-review-dialog` |
+| Project | One row for each drive. Double-click a row to start the review. | `new-review-drive-*` |
+| Compare against | The branch, tag or commit to compare with. You can type in it. | `new-review-ref` |
+| Review | Opens the Code Review window for the chosen project and ref. | `new-review-start` |
+| Cancel | Closes the box without a review. | `new-review-cancel` |
 | Code Review window | The root of the window. The attribute `data-session-id` is the review session. | `code-review-app` |
 | Send all open comments... (menu) | Sends the open comments to a chat. | `review-menu-send-all` |
 | Refresh (menu) | Reads the changes again. | `review-menu-refresh` |

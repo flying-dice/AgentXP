@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS } from './migrations'
 import { openRaw } from './sql'
-import { SqliteAgentRepository } from './sqlite-agent-repository'
 import { SqliteAppWindowRepository } from './sqlite-app-window-repository'
 import { SqliteDesktopRepository } from './sqlite-desktop-repository'
 import { SqliteSessionRepository } from './sqlite-session-repository'
@@ -105,7 +104,7 @@ describe('migration 002 on an existing database', () => {
     const db = openRaw(':memory:')
     db.exec('PRAGMA foreign_keys = ON')
     migrate(db, [MIGRATIONS[0]!])
-    const agentId = new SqliteAgentRepository(db).getDefault()!.id
+    const agentId = (db.prepare('SELECT id FROM agents WHERE is_default = 1').get() as { id: number }).id
     db.exec(`
       INSERT INTO folders (path, name) VALUES ('/a', 'a'), ('/b', 'b'), ('/empty', 'empty');
       INSERT INTO sessions (folder_id, agent_id, title, updated_at) VALUES

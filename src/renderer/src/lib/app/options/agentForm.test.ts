@@ -12,8 +12,8 @@ describe('agentForm', () => {
   })
 
   it('validates and builds the input', () => {
-    expect(validateAgentForm({ name: '', command: 'x', args: '', env: '' })).toMatch(/name/)
-    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad' })).toMatch(/KEY=VALUE/)
-    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' } })
+    expect(validateAgentForm({ name: '', command: 'x', args: '', env: '', defaultModeId: '' })).toMatch(/name/)
+    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad', defaultModeId: '' })).toMatch(/KEY=VALUE/)
+    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1', defaultModeId: ' acceptEdits ' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' }, defaultModeId: 'acceptEdits' })
   })
 })

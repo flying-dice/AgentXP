@@ -25,6 +25,8 @@
   import TrayFlag from '../desktop/TrayFlag.svelte'
   import UacDialog from '../desktop/UacDialog.svelte'
   import NewChatDialog from '../desktop/NewChatDialog.svelte'
+  import NewReviewDialog from '../desktop/NewReviewDialog.svelte'
+  import { showMessageBox } from '../kit/organisms/messageBox'
   import WelcomeDialog from '../desktop/WelcomeDialog.svelte'
   import WindowLayer from '../desktop/WindowLayer.svelte'
   import { taskbarItems } from '../desktop/windowOrder'
@@ -109,7 +111,7 @@
 
   function runApp(id: string): void {
     if (id === 'chat') void desktop.newChat()
-    else if (id === 'code-review') void desktop.openReview()
+    else if (id === 'code-review') desktop.chooseReview()
     else void desktop.openApp({ app: id as AppKind })
   }
 
@@ -280,6 +282,17 @@
         onstart={(cwd) => {
           desktop.newChatDialogOpen = false
           void desktop.newChatIn(cwd)
+        }}
+      />
+    {/if}
+    {#if desktop.reviewDialog}
+      <NewReviewDialog
+        drives={desktop.state.drives}
+        root={desktop.reviewDialog.root}
+        oncancel={() => (desktop.reviewDialog = null)}
+        onstart={(root, baseRef) => {
+          desktop.reviewDialog = null
+          void desktop.openReview(root, baseRef).catch((error) => showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Code Review', buttons: 'OK', icon: 'error' }))
         }}
       />
     {/if}

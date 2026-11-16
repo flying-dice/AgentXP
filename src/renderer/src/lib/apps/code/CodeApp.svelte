@@ -411,15 +411,9 @@
 
   // ---- menu, lists -------------------------------------------------------------------------------
 
-  /** Review changes: Code Review for the drive of the open file (else the first project), against HEAD. */
-  async function reviewChanges(): Promise<void> {
-    const drive = active ? parseVPath(active)?.drive : undefined
-    const root = drive ? driveRoot(drive) : (roots[0]?.path ?? host.state.home)
-    try {
-      await host.api.desktop.openReview(desktopId, root)
-    } catch (error) {
-      await showMessageBox({ text: errorText(error), caption: 'Code', buttons: 'OK', icon: 'error' })
-    }
+  /** Review changes: asks what to review, with the project of the open file preselected. */
+  function reviewChanges(): void {
+    host.chooseReview(active)
   }
 
   // svelte-ignore state_referenced_locally
@@ -516,7 +510,7 @@
       label: '&Tools',
       items: [
         { id: 'code-refresh', label: '&Refresh git status', icon: 'refresh', action: () => void refreshGit() },
-        { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: () => void reviewChanges() }
+        { id: 'code-review-changes', testid: 'code-menu-review', label: 'Re&view changes', icon: 'changes', action: reviewChanges }
       ]
     },
     help.menu()
@@ -609,7 +603,7 @@
     <ToolStripButton data-testid="code-toolbar-revert-hunk" icon="recycle" title="Revert hunk" aria-label="Revert hunk" disabled={revertTarget === null} onclick={() => void revertHunk(revertTarget)} />
     <Separator orientation="vertical" />
     <ToolStripButton data-testid="code-refresh" icon="refresh" title="Refresh git status" aria-label="Refresh git status" onclick={() => void refreshGit()} />
-    <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Open Code Review for this project" onclick={() => void reviewChanges()} />
+    <ToolStripButton data-testid="code-review-changes" icon="changes" text="Review changes" title="Open Code Review for this project" onclick={reviewChanges} />
     <ToolStripButton text="Management" icon="folder" bind:checked={showManagement} checkOnClick data-testid="code-management-toggle" title="Show or hide the Management pane" />
     <ToolStripButton text={changes.length > 0 ? `Logs (${changes.length})` : 'Logs'} icon="changes" bind:checked={showLogs} checkOnClick data-testid="code-changes-toggle" title="Show or hide the Logs & others pane" />
     {#snippet trailing()}

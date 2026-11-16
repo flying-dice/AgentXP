@@ -12,7 +12,7 @@ export const modes = [
   { id: 'plan', name: 'Plan mode (read-only)', description: null }
 ]
 
-export const agent: AgentDto = { id: 1, name: 'Claude Code', command: 'npx', args: [], env: {}, isDefault: true }
+export const agent: AgentDto = { id: 1, name: 'Claude Code', command: 'npx', args: [], env: {}, isDefault: true, defaultModeId: null }
 
 export const folder: FolderDto = { id: 1, name: 'claude-code-win', path: 'C:\\Users\\jonathan\\source\\claude-code-win', lastOpenedAt: null }
 

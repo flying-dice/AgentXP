@@ -170,6 +170,9 @@
     })
   }
 
+  /** Review changes: asks what to review, with the project drive of this chat preselected. */
+  const reviewChanges = (): void => host.chooseReview(session?.cwd)
+
   const menus = $derived<MenuDef[]>(
     menuBar([
       {
@@ -180,6 +183,13 @@
         ]
       },
       { label: '&Edit', items: editItems('chat-menu', { copy: () => void document.execCommand('copy'), selectAll: () => void document.execCommand('selectAll') }, { hasSelection: true }) },
+      {
+        label: '&Tools',
+        items: [
+          { id: 'chat-review', testid: 'chat-menu-review', label: '&Review changes', icon: 'changes', action: reviewChanges },
+          { id: 'chat-code', testid: 'chat-menu-code', label: 'Open in &Code', action: () => void host.openApp({ app: 'code', path: host.projectRootOf(session?.cwd) }) }
+        ]
+      },
       { label: '&View', items: [{ id: 'chat-panel', testid: 'chat-menu-panel', label: 'Tasks and &changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
       help.menu()
     ])
