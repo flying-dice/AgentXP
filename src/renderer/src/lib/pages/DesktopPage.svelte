@@ -378,7 +378,8 @@
     {#if desktop.autoPlay}
       <AutoPlayDialog drive={desktop.autoPlay} onchoose={(c) => void desktop.autoPlayChoose(c)} />
     {/if}
-    {#if desktop.balloon}
+    <!-- The Action Center lists every notice: no balloon on top of it while it is open. -->
+    {#if desktop.balloon && !desktop.actionCenterOpen}
       <div class="balloon">
         {#key desktop.balloon}
           <Balloon

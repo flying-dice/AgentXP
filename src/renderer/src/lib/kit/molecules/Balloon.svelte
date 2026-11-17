@@ -4,6 +4,7 @@
    * agent shows the agent's colour swatch beside the title (the name is in the text, never colour alone), at most one
    * button, and "2 more" when other balloons wait their turn.
    */
+  import Button from '../atoms/Button.svelte'
   import Icon from '../atoms/Icon.svelte'
   import type { IconName } from '../atoms/icons'
 
@@ -51,7 +52,7 @@
   <p data-testid="balloon-text">{text}</p>
   {#if action || more}
     <div class="foot">
-      {#if action}<button type="button" class="act" data-testid="balloon-action" onclick={action.onclick}>{action.label}</button>{/if}
+      {#if action}<Button data-testid="balloon-action" onclick={action.onclick}>{action.label}</Button>{/if}
       {#if more}<span class="more" data-testid="balloon-more">{more}</span>{/if}
     </div>
   {/if}
@@ -124,11 +125,6 @@
     align-items: center;
     gap: 8px;
     margin: 8px 0 0 22px;
-  }
-  .act {
-    padding: 2px 10px;
-    font: var(--xp-font);
-    cursor: default;
   }
   .more {
     margin-left: auto;

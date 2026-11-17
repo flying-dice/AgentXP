@@ -97,7 +97,7 @@
     background: var(--xp-change-cue-face);
   }
   .thread.selected {
-    box-shadow: 0 0 0 1px #316ac5;
+    box-shadow: 0 0 0 2px #316ac5;
   }
   .thread.resolved {
     opacity: 0.65;

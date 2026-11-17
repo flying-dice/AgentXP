@@ -1,0 +1,79 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "notices",
+  "description": "Output and turn summaries for e2e/notices.e2e.ts (the project is a git repository at E:\\ with a changed notes.txt). \"quick hello\" answers at once. \"background job\" pauses before its last message (the test moves the focus away), then ends: a turn summary. \"plan the sprint\" pauses, then creates the board Sprint with the card 'Login bug' and writes E:\\PLAN.md: a board notice and a summary that queue. \"move the login card\" moves 'Login bug' to Done. The Code Review prompt (\"code review of the changes\") waits 3 seconds (the review session has its own agent process, so no control socket: the test moves the focus meanwhile), then leaves two comments on notes.txt (lines 1 and 4).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "quick",
+      "match": { "contains": "quick hello", "ignoreCase": true },
+      "steps": [{ "type": "message", "text": "Hello." }]
+    },
+    {
+      "id": "background",
+      "match": { "contains": "background job", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Starting the job.\n" },
+        { "type": "message", "text": "Job done.", "step": "manual", "label": "finish" }
+      ]
+    },
+    {
+      "id": "plan",
+      "match": { "contains": "plan the sprint", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Planning.\n", "step": "manual", "label": "plan" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "board_create", "arguments": { "name": "Sprint" }, "saveAs": "board" },
+        { "type": "expect", "from": "board.isError", "equals": "false" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "board_add_card", "arguments": { "board": "Sprint", "column": "To do", "title": "Login bug" }, "saveAs": "card" },
+        { "type": "expect", "from": "card.isError", "equals": "false" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_write", "arguments": { "path": "E:\\PLAN.md", "text": "# Sprint plan\n\n- Login bug\n" }, "saveAs": "written" },
+        { "type": "expect", "from": "written.isError", "equals": "false" },
+        { "type": "message", "text": "Planned." }
+      ]
+    },
+    {
+      "id": "move",
+      "match": { "contains": "move the login card", "ignoreCase": true },
+      "steps": [
+        { "type": "mcpCall", "server": "agentxp", "tool": "board_get", "arguments": { "board": "Sprint" }, "saveAs": "board" },
+        { "type": "extract", "from": "board", "regex": "Card \\[(\\d+)\\] Login bug", "saveAs": "cardId" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "board_move_card", "arguments": { "card": "{{cardId|number}}", "column": "Done" }, "saveAs": "moved" },
+        { "type": "expect", "from": "moved.isError", "equals": "false" },
+        { "type": "message", "text": "Moved." }
+      ]
+    },
+    {
+      "id": "review",
+      "match": { "contains": "code review of the changes", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Reviewing the changes.\n" },
+        { "type": "wait", "ms": 3000, "label": "review" },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "saveAs": "first",
+          "arguments": { "path": "notes.txt", "line": 1, "severity": "minor", "body": "A stray zero line was added at the top. Is it needed?" }
+        },
+        { "type": "expect", "from": "first.isError", "equals": "false" },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "saveAs": "second",
+          "arguments": { "path": "notes.txt", "line": 4, "severity": "blocker", "body": "THREE is shouted in capitals." }
+        },
+        { "type": "expect", "from": "second.isError", "equals": "false" },
+        { "type": "message", "text": "Review done: 2 comments." }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": { "any": true },
+      "steps": [{ "type": "message", "text": "Nothing to do." }]
+    }
+  ]
+}
