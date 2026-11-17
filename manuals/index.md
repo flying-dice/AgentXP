@@ -51,6 +51,8 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 
 - **[Chat](chat.md)** – Talk to the agent and follow its work.
 - **[Agent window](surface.md)** – A window that the agent draws with A2UI.
+- **[Teams](teams.md)** – Profiles and teams of agents, and their chat rooms.
+- **[Team Chat](team-chat.md)** – A chat room where a team of agents answers under its own names.
 - **[Task Manager](agent-manager.md)** – Chats, agent processes, terminals, and context use.
 - **[Event Viewer](event-viewer.md)** – The messages between Agent7 and the agent, as they happen.
 
@@ -74,7 +76,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 
 ### System
 
-- **[Control Center](control-centre.md)** – Agents, permissions, and appearance.
+- **[Control Center](control-centre.md)** – Agents, permissions, skills, MCP servers, and appearance.
 - **[Help and Support](help.md)** – This app.
 
 ## 4 - Need Help?
