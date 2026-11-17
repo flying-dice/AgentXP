@@ -249,12 +249,15 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Cancel | Closes the dialog box. | `new-chat-cancel` |
 | Open file | Lets you select a file. | `open-file-dialog` |
 | Open file: a file or folder | Double-click a folder to open it. Double-click a file to open the file. | `open-file-item` |
+| Open file: up | Goes to the folder above. | `open-file-up` |
 | Save as | Asks for the name of the file to save. | `save-as-dialog` |
 | Save as: file name | The name of the file. | `save-as-name` |
 | Message box | Asks a question. | `message-box` |
 | Dialog button | One button of a dialog box, for example `dialog-button-ok`. | `dialog-button-*` |
 | Menu bar button | One menu of an app, for example `menubar-file`. | `menubar-*` |
 | Menu item | One menu item. The name follows the item, for example `menu-item-save`. | `menu-item-*` |
+| Open menu | The open menu of a menu bar button, for example `menubar-file-menu`. A submenu adds `-sub`. | `menubar-*-menu` |
+| Context menu | The open right-click menu. | `context-menu` |
 
 ### Taskbar Button Menu
 

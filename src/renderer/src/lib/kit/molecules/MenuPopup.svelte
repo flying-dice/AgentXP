@@ -32,6 +32,8 @@
     maxHeight?: number
     /** Fixed placement beside this item rect (a submenu of a scrolling menu). */
     anchor?: DOMRect
+    /** `data-testid` of the menu box (its submenus get `<testid>-sub`). */
+    testid?: string
   }
 
   let {
@@ -48,7 +50,8 @@
     onnavigate,
     element = $bindable(null),
     maxHeight,
-    anchor
+    anchor,
+    testid
   }: Props = $props()
 
   const uid = $props.id()
@@ -191,6 +194,7 @@
 
 <div
   bind:this={element}
+  data-testid={testid}
   class="menu {className}"
   class:flipped
   class:submenu
@@ -224,6 +228,7 @@
         <MenuPopup
           submenu
           anchor={subAnchor}
+          testid={testid ? `${testid}-sub` : undefined}
           items={item.items}
           {showMnemonics}
           autofocus={subFocus}

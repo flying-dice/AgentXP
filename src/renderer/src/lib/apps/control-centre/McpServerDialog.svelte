@@ -67,8 +67,8 @@
     </LabeledField>
     <LabeledField label="Type:" labelWidth={90}>
       <RadioButtonGroup bind:value={form.transport} orientation="horizontal" aria-label="Type of server" onchange={() => (testResult = '')}>
-        <RadioButton value="stdio" label="Program" />
-        <RadioButton value="http" label="Web address" />
+        <RadioButton testid="mcp-server-type-stdio" value="stdio" label="Program" />
+        <RadioButton testid="mcp-server-type-http" value="http" label="Web address" />
       </RadioButtonGroup>
     </LabeledField>
     {#if form.transport === 'stdio'}

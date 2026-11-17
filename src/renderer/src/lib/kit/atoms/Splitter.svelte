@@ -1,5 +1,7 @@
 <script lang="ts">
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** 'vertical' is a vertical bar that resizes horizontally (left/right panes). */
     orientation?: 'vertical' | 'horizontal'
     /** Pixels moved per arrow key press. */
@@ -16,6 +18,7 @@
     class?: string
   }
   let {
+    testid,
     orientation = 'vertical',
     step = 10,
     disabled = false,
@@ -63,7 +66,7 @@
 
 <!-- A focusable separator is the WAI-ARIA "window splitter" widget; svelte-check only knows it as static. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-<div
+<div data-testid={testid}
   role="separator"
   tabindex={disabled ? -1 : 0}
   aria-orientation={orientation}

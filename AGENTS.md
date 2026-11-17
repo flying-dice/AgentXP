@@ -13,7 +13,7 @@ Start with `README.md`, `docs/ARCHITECTURE.md` and `docs/CONVENTIONS.md`.
    (normal, maximized, small window, near an edge, keyboard, agent-driven where it applies), how it was checked, and
    the screenshots. Name anything you could not check.
 3. **Run the local gates** and fix every failure: `npm run typecheck`, `npm test`, `npm run help:coverage`,
-   `npm run app:pillars`, `node scripts/check-e2e-selectors.mjs`, and the e2e specs for the change
+   `npm run app:pillars`, `npm run testids`, `node scripts/check-e2e-selectors.mjs`, and the e2e specs for the change
    (`npm run test:e2e -- e2e/<spec>.e2e.ts`). GitHub Actions results are not a substitute.
 4. **Screenshots in the PR description** for any UI change.
 
@@ -24,6 +24,9 @@ missing or the screenshots do not show the change working.
 
 - New app or bringing an app up to standard: `.claude/skills/new-agentxp-app/SKILL.md` (UI, backend, agent API,
   e2e, docs; every app is chat-native).
-- Every interactive element has a stable `data-testid` (`<area>-<thing>`, see `docs/CONVENTIONS.md`), so agents and
-  e2e specs can find it; document it in the app's manual (Controls Reference).
+- Every interactive element has a stable `data-testid` (`<area>-<thing>`, see `docs/CONVENTIONS.md` "Test ids"), so
+  agents can validate changes with tools and e2e specs can find it: native controls, kit controls (they take a
+  `testid` or `data-testid` prop), anything clickable, and every menu item (`testid:` or `id:`). Open menus are
+  findable too (`menubar-<menu>-menu`, `<button>-menu`, `context-menu`). `npm run testids` fails when one is
+  missing; document each id in the app's manual (Controls Reference, `npm run help:coverage`).
 - Design language: hard XP Luna. No Vista/Win7 glass, no rounded modern cards, no emoji.

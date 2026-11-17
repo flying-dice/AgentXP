@@ -3,6 +3,8 @@
   import Splitter from '../atoms/Splitter.svelte'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** `vertical`: splitter is a vertical bar, panels side by side. `horizontal`: stacked. */
     orientation?: 'vertical' | 'horizontal'
     /** Size of panel 1 in px. */
@@ -20,6 +22,7 @@
   }
 
   let {
+    testid,
     orientation = 'vertical',
     splitterDistance = $bindable(200),
     panel1MinSize = 25,
@@ -66,7 +69,7 @@
   })
 </script>
 
-<div class="xp-split {orientation} {className}" bind:clientWidth={width} bind:clientHeight={height}>
+<div data-testid={testid} class="xp-split {orientation} {className}" bind:clientWidth={width} bind:clientHeight={height}>
   <div class="p1" style={orientation === 'vertical' ? `width:${splitterDistance}px` : `height:${splitterDistance}px`}>
     {@render panel1()}
   </div>

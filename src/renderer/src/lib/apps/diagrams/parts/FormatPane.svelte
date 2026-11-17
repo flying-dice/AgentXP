@@ -117,14 +117,14 @@
       {#if shapes.length === 1}
         <TaskPanel title="Size & Position" testid="diagrams-format-size">
           <div class="pair">
-            <LabeledField label="X" labelWidth={14}><span class="num" data-testid="diagrams-format-x"><NumericUpDown value={round(shape.x)} min={-100000} max={100000} decimalPlaces={0} aria-label="X" onchange={(v) => editor.updateShapes(ids, { x: v }, 'Move')} /></span></LabeledField>
-            <LabeledField label="Y" labelWidth={14}><span class="num" data-testid="diagrams-format-y"><NumericUpDown value={round(shape.y)} min={-100000} max={100000} decimalPlaces={0} aria-label="Y" onchange={(v) => editor.updateShapes(ids, { y: v }, 'Move')} /></span></LabeledField>
+            <LabeledField label="X" labelWidth={14}><span class="num" data-testid="diagrams-format-x"><NumericUpDown testid="diagrams-format-x" value={round(shape.x)} min={-100000} max={100000} decimalPlaces={0} aria-label="X" onchange={(v) => editor.updateShapes(ids, { x: v }, 'Move')} /></span></LabeledField>
+            <LabeledField label="Y" labelWidth={14}><span class="num" data-testid="diagrams-format-y"><NumericUpDown testid="diagrams-format-y" value={round(shape.y)} min={-100000} max={100000} decimalPlaces={0} aria-label="Y" onchange={(v) => editor.updateShapes(ids, { y: v }, 'Move')} /></span></LabeledField>
           </div>
           <div class="pair">
-            <LabeledField label="W" labelWidth={14}><span class="num" data-testid="diagrams-format-w"><NumericUpDown value={round(shape.w)} min={4} max={20000} decimalPlaces={0} aria-label="Width" onchange={(v) => editor.updateShapes(ids, { w: v }, 'Resize')} /></span></LabeledField>
-            <LabeledField label="H" labelWidth={14}><span class="num" data-testid="diagrams-format-h"><NumericUpDown value={round(shape.h)} min={4} max={20000} decimalPlaces={0} aria-label="Height" onchange={(v) => editor.updateShapes(ids, { h: v }, 'Resize')} /></span></LabeledField>
+            <LabeledField label="W" labelWidth={14}><span class="num" data-testid="diagrams-format-w"><NumericUpDown testid="diagrams-format-width" value={round(shape.w)} min={4} max={20000} decimalPlaces={0} aria-label="Width" onchange={(v) => editor.updateShapes(ids, { w: v }, 'Resize')} /></span></LabeledField>
+            <LabeledField label="H" labelWidth={14}><span class="num" data-testid="diagrams-format-h"><NumericUpDown testid="diagrams-format-height" value={round(shape.h)} min={4} max={20000} decimalPlaces={0} aria-label="Height" onchange={(v) => editor.updateShapes(ids, { h: v }, 'Resize')} /></span></LabeledField>
           </div>
-          <LabeledField label="Angle" labelWidth={40}><span class="num" data-testid="diagrams-format-angle"><NumericUpDown value={shape.rotation} min={-360} max={360} step={15} aria-label="Angle" onchange={(v) => editor.updateShapes(ids, { rotation: v }, 'Rotate')} /></span></LabeledField>
+          <LabeledField label="Angle" labelWidth={40}><span class="num" data-testid="diagrams-format-angle"><NumericUpDown testid="diagrams-format-angle" value={shape.rotation} min={-360} max={360} step={15} aria-label="Angle" onchange={(v) => editor.updateShapes(ids, { rotation: v }, 'Rotate')} /></span></LabeledField>
           <CheckBox label="Lock position and size" checked={!!shape.locked} testid="diagrams-format-lock" onchange={(c) => editor.updateShapes(ids, { locked: c }, c ? 'Lock' : 'Unlock')} />
         </TaskPanel>
       {/if}
@@ -136,7 +136,7 @@
         </div>
         <LabeledField label="Weight" labelWidth={52}><ComboBox items={WEIGHTS} value={String(st.strokeWidth)} testid="diagrams-format-weight" aria-label="Line weight" onchange={(v) => style({ strokeWidth: Number(v) })} /></LabeledField>
         <LabeledField label="Pattern" labelWidth={52}><ComboBox items={DASHES} value={st.dash} testid="diagrams-format-dash" aria-label="Line pattern" onchange={(v) => style({ dash: v as DashStyle })} /></LabeledField>
-        <LabeledField label="Opacity" labelWidth={52}><span class="num"><NumericUpDown value={Math.round(st.opacity * 100)} min={0} max={100} step={10} aria-label="Opacity percent" onchange={(v) => style({ opacity: v / 100 })} /></span></LabeledField>
+        <LabeledField label="Opacity" labelWidth={52}><span class="num"><NumericUpDown testid="diagrams-format-opacity" value={Math.round(st.opacity * 100)} min={0} max={100} step={10} aria-label="Opacity percent" onchange={(v) => style({ opacity: v / 100 })} /></span></LabeledField>
         <div class="flags">
           <CheckBox label="Gradient" checked={st.gradient} testid="diagrams-format-gradient" onchange={(c) => style({ gradient: c })} />
           <CheckBox label="Shadow" checked={st.shadow} testid="diagrams-format-shadow" onchange={(c) => style({ shadow: c })} />
@@ -150,13 +150,13 @@
           <span class="well"><ToolStripColorButton value={st.fontColor} glyph={letter} title="Font Color" testid="diagrams-format-font-color" onpick={(c) => style({ fontColor: c })} /></span>
         </div>
         <div class="flags">
-          <CheckBox label="Bold" checked={st.bold} onchange={(c) => style({ bold: c })} />
-          <CheckBox label="Italic" checked={st.italic} onchange={(c) => style({ italic: c })} />
-          <CheckBox label="Underline" checked={st.underline} onchange={(c) => style({ underline: c })} />
+          <CheckBox testid="diagrams-format-bold" label="Bold" checked={st.bold} onchange={(c) => style({ bold: c })} />
+          <CheckBox testid="diagrams-format-italic" label="Italic" checked={st.italic} onchange={(c) => style({ italic: c })} />
+          <CheckBox testid="diagrams-format-underline" label="Underline" checked={st.underline} onchange={(c) => style({ underline: c })} />
         </div>
         <LabeledField label="Align" labelWidth={36}>
-          <ComboBox items={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]} value={st.textAlign} aria-label="Horizontal alignment" onchange={(v) => style({ textAlign: v as ShapeStyle['textAlign'] })} />
-          <ComboBox items={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]} value={st.verticalAlign} aria-label="Vertical alignment" onchange={(v) => style({ verticalAlign: v as ShapeStyle['verticalAlign'] })} />
+          <ComboBox testid="diagrams-format-align" items={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]} value={st.textAlign} aria-label="Horizontal alignment" onchange={(v) => style({ textAlign: v as ShapeStyle['textAlign'] })} />
+          <ComboBox testid="diagrams-format-valign" items={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]} value={st.verticalAlign} aria-label="Vertical alignment" onchange={(v) => style({ verticalAlign: v as ShapeStyle['verticalAlign'] })} />
         </LabeledField>
       </TaskPanel>
 
@@ -189,14 +189,14 @@
       <TaskPanel title="Line & Ends" testid="diagrams-format-line">
         <div class="wells">
           <span class="well">Line <ToolStripColorButton value={cst.stroke} glyph={pen} title="Line Color" testid="diagrams-format-connector-color" onpick={(c) => editor.styleSelection({ stroke: c })} /></span>
-          <span class="well">Text <ToolStripColorButton value={cst.fontColor} glyph={letter} title="Font Color" onpick={(c) => editor.styleSelection({ fontColor: c })} /></span>
+          <span class="well">Text <ToolStripColorButton testid="diagrams-format-connector-font-color" value={cst.fontColor} glyph={letter} title="Font Color" onpick={(c) => editor.styleSelection({ fontColor: c })} /></span>
         </div>
-        <LabeledField label="Weight" labelWidth={52}><ComboBox items={WEIGHTS} value={String(cst.strokeWidth)} aria-label="Line weight" onchange={(v) => editor.styleSelection({ strokeWidth: Number(v) })} /></LabeledField>
-        <LabeledField label="Pattern" labelWidth={52}><ComboBox items={DASHES} value={cst.dash} aria-label="Line pattern" onchange={(v) => editor.styleSelection({ dash: v })} /></LabeledField>
+        <LabeledField label="Weight" labelWidth={52}><ComboBox testid="diagrams-format-line-weight" items={WEIGHTS} value={String(cst.strokeWidth)} aria-label="Line weight" onchange={(v) => editor.styleSelection({ strokeWidth: Number(v) })} /></LabeledField>
+        <LabeledField label="Pattern" labelWidth={52}><ComboBox testid="diagrams-format-line-pattern" items={DASHES} value={cst.dash} aria-label="Line pattern" onchange={(v) => editor.styleSelection({ dash: v })} /></LabeledField>
         <LabeledField label="Begin" labelWidth={52}><ComboBox items={MARKERS} value={cst.startMarker} testid="diagrams-format-start-marker" aria-label="Begin end" onchange={(v) => editor.styleSelection({ startMarker: v })} /></LabeledField>
         <LabeledField label="End" labelWidth={52}><ComboBox items={MARKERS} value={cst.endMarker} testid="diagrams-format-end-marker" aria-label="End" onchange={(v) => editor.styleSelection({ endMarker: v })} /></LabeledField>
-        <LabeledField label="Text size" labelWidth={52}><ComboBox items={SIZES} value={String(cst.fontSize)} aria-label="Text size" onchange={(v) => editor.styleSelection({ fontSize: Number(v) })} /></LabeledField>
-        <CheckBox label="Rounded corners" checked={cst.rounded} onchange={(c) => editor.styleSelection({ rounded: c })} />
+        <LabeledField label="Text size" labelWidth={52}><ComboBox testid="diagrams-format-text-size" items={SIZES} value={String(cst.fontSize)} aria-label="Text size" onchange={(v) => editor.styleSelection({ fontSize: Number(v) })} /></LabeledField>
+        <CheckBox testid="diagrams-format-rounded" label="Rounded corners" checked={cst.rounded} onchange={(c) => editor.styleSelection({ rounded: c })} />
       </TaskPanel>
     {:else}
       {@const p = editor.page}
@@ -205,15 +205,15 @@
         <LabeledField label="Name" labelWidth={52}><TextBox data-testid="diagrams-format-page-name" value={p.name} onchange={(e: Event) => editor.renamePage(editor.pageIndex, (e.currentTarget as HTMLInputElement).value)} /></LabeledField>
         <LabeledField label="Size" labelWidth={52}><ComboBox items={SIZES_PAGE} value={sizeId} testid="diagrams-format-page-size" aria-label="Page size" onchange={(v) => v !== 'custom' && editor.updatePage({ width: PAGE_SIZES[v as keyof typeof PAGE_SIZES].width, height: PAGE_SIZES[v as keyof typeof PAGE_SIZES].height })} /></LabeledField>
         <div class="pair">
-          <LabeledField label="W" labelWidth={14}><span class="num"><NumericUpDown value={p.width} min={100} max={20000} step={10} aria-label="Page width" onchange={(v) => editor.updatePage({ width: v })} /></span></LabeledField>
-          <LabeledField label="H" labelWidth={14}><span class="num"><NumericUpDown value={p.height} min={100} max={20000} step={10} aria-label="Page height" onchange={(v) => editor.updatePage({ height: v })} /></span></LabeledField>
+          <LabeledField label="W" labelWidth={14}><span class="num"><NumericUpDown testid="diagrams-format-page-width" value={p.width} min={100} max={20000} step={10} aria-label="Page width" onchange={(v) => editor.updatePage({ width: v })} /></span></LabeledField>
+          <LabeledField label="H" labelWidth={14}><span class="num"><NumericUpDown testid="diagrams-format-page-height" value={p.height} min={100} max={20000} step={10} aria-label="Page height" onchange={(v) => editor.updatePage({ height: v })} /></span></LabeledField>
         </div>
         <CheckBox label="Grow the page to fit the drawing" checked={p.autoSize} testid="diagrams-format-autosize" onchange={(c) => editor.updatePage({ autoSize: c })} />
         <div class="wells">
           <span class="well">Background <ToolStripColorButton value={p.background} glyph={bucket} title="Page Color" testid="diagrams-format-page-color" onpick={(c) => c !== 'none' && editor.updatePage({ background: c })} /></span>
         </div>
-        <LabeledField label="Grid" labelWidth={52}><span class="num"><NumericUpDown value={p.gridSize} min={2} max={200} step={5} aria-label="Grid size" onchange={(v) => editor.updatePage({ gridSize: v })} /></span></LabeledField>
-        <CheckBox label="Show the grid on this page" checked={p.showGrid} onchange={(c) => editor.updatePage({ showGrid: c })} />
+        <LabeledField label="Grid" labelWidth={52}><span class="num"><NumericUpDown testid="diagrams-format-grid-size" value={p.gridSize} min={2} max={200} step={5} aria-label="Grid size" onchange={(v) => editor.updatePage({ gridSize: v })} /></span></LabeledField>
+        <CheckBox testid="diagrams-format-show-grid" label="Show the grid on this page" checked={p.showGrid} onchange={(c) => editor.updatePage({ showGrid: c })} />
       </TaskPanel>
       <TaskPanel title="Drawing" testid="diagrams-format-drawing">
         <LabeledField label="Title" labelWidth={52}><TextBox data-testid="diagrams-format-title" value={editor.doc.title} onchange={(e: Event) => editor.setTitle((e.currentTarget as HTMLInputElement).value)} /></LabeledField>

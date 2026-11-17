@@ -476,7 +476,7 @@
         </div>
       {/if}
       {#if textBox}
-        <input
+        <input data-testid="paint-text-input"
           class="textbox"
           bind:this={textInput}
           bind:value={textBox.value}
@@ -494,17 +494,17 @@
         />
       {/if}
       {#if resizing}<div class="outline" style:width="{resizing.width}px" style:height="{resizing.height}px"></div>{/if}
-      <div class="grip" role="separator" aria-label="Resize canvas" aria-orientation="horizontal" onpointerdown={gripDown}></div>
+      <div data-testid="paint-canvas-grip" class="grip" role="separator" aria-label="Resize canvas" aria-orientation="horizontal" onpointerdown={gripDown}></div>
     </div>
   </div>
 
     <div class="colorbar" role="group" aria-label="Colors">
       <div class="body">
         <div class="current">
-          <button type="button" class="cur" class:on={selecting === 1} aria-label="Color 1" aria-pressed={selecting === 1} onclick={() => (selecting = 1)}>
+          <button data-testid="paint-color-1" type="button" class="cur" class:on={selecting === 1} aria-label="Color 1" aria-pressed={selecting === 1} onclick={() => (selecting = 1)}>
             <i style:background={color1}></i><span>Color 1</span>
           </button>
-          <button type="button" class="cur" class:on={selecting === 2} aria-label="Color 2" aria-pressed={selecting === 2} onclick={() => (selecting = 2)}>
+          <button data-testid="paint-color-2" type="button" class="cur" class:on={selecting === 2} aria-label="Color 2" aria-pressed={selecting === 2} onclick={() => (selecting = 2)}>
             <i style:background={color2}></i><span>Color 2</span>
           </button>
         </div>

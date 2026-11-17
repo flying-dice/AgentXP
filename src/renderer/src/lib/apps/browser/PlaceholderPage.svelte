@@ -20,7 +20,7 @@
     <div class="example">
       <h1>Example Domain</h1>
       <p>This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission.</p>
-      <p><a href={url} onclick={(e) => e.preventDefault()}>More information...</a></p>
+      <p><a data-testid="browser-placeholder-link" href={url} onclick={(e) => e.preventDefault()}>More information...</a></p>
     </div>
   {:else}
     <div class="generic">

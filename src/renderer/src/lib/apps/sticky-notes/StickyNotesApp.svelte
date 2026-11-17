@@ -51,7 +51,7 @@
 
   const colorItems = $derived<MenuItemDef[]>(STICKY_COLORS.map((c) => ({ testid: `sticky-color-${c}`, label: NOTE_THEME[c].label, radio: true, checked: color === c, action: () => (color = c) })))
   const planItems = $derived<MenuItemDef[]>(
-    sessions.length === 0 ? [{ label: '(no chats yet)', disabled: true }] : sessions.map((s) => ({ label: s.title || 'New chat', icon: 'tasks', action: () => void addPlan(s) }))
+    sessions.length === 0 ? [{ label: '(no chats yet)', disabled: true }] : sessions.map((s) => ({ testid: `sticky-plan-${s.id}`, label: s.title || 'New chat', icon: 'tasks', action: () => void addPlan(s) }))
   )
 
   // svelte-ignore state_referenced_locally
@@ -102,12 +102,12 @@
   <div class="list xp-scroll" role={notes.length > 0 ? 'list' : undefined} aria-label={notes.length > 0 ? 'Notes' : undefined}>
     {#each notes as note (note.id)}
       <div class="row" role="listitem" class:sel={selected === note.id} oncontextmenu={(e) => ((selected = note.id), ctx.show(e, contextItems()))}>
-        <button type="button" class="pick" onclick={() => (selected = note.id)}>
+        <button data-testid="sticky-notes-item" type="button" class="pick" onclick={() => (selected = note.id)}>
           <span class="swatch" style:background={NOTE_THEME[note.color].paper} style:border-color={NOTE_THEME[note.color].border}></span>
           <span class="title">{noteTitle(note, chatTitle(note.planSessionId))}</span>
           {#if note.author === 'agent'}<span class="by">AgentXP</span>{/if}
         </button>
-        <button type="button" class="del" aria-label="Delete note" title="Delete note" onclick={() => void host.api.notes.remove(note.id)}>×</button>
+        <button data-testid="sticky-notes-item-delete" type="button" class="del" aria-label="Delete note" title="Delete note" onclick={() => void host.api.notes.remove(note.id)}>×</button>
       </div>
     {:else}
       <p class="empty">There are no notes. Choose New note to stick one on the desktop.</p>

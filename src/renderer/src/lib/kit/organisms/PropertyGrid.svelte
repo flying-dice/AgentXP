@@ -9,6 +9,8 @@
   import { buildEntries, formatValue, propertyName, type PropertyDef } from './PropertyGrid'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     properties: PropertyDef[]
     values: Record<string, unknown>
     sort?: 'categorized' | 'alphabetical'
@@ -23,6 +25,7 @@
   }
 
   let {
+    testid,
     properties,
     values = $bindable(),
     sort = $bindable('categorized'),
@@ -120,7 +123,7 @@
   </svg>
 {/snippet}
 
-<div class="xp-propgrid {className}">
+<div data-testid={testid} class="xp-propgrid {className}">
   <ToolStrip class="pgtools" aria-label="Property grid tools">
     <ToolStripButton glyph={catGlyph} title="Categorized" checked={categorized} onclick={() => (sort = 'categorized')} />
     <ToolStripButton glyph={azGlyph} title="Alphabetical" checked={!categorized} onclick={() => (sort = 'alphabetical')} />

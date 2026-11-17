@@ -201,6 +201,9 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Apply | Saves the permissions. | `permissions-apply` |
 | Cancel | Drops the changes. | `permissions-cancel` |
 | Show infopanels on the desktop | Shows or hides the infopanels. | none |
+| Show infopanels | Shows or hides the infopanels on the desktop. | `control-centre-show-infopanels` |
+| Server type: program | MCP server dialog: the server is a program on this computer. | `mcp-server-type-stdio` |
+| Server type: web address | MCP server dialog: the server is at a web address. | `mcp-server-type-http` |
 
 ### Menu Bar and Context Menu
 

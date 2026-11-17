@@ -307,17 +307,17 @@
     <ToolStripButton data-testid="wordpad-mode-read" text="Read" checked={mode === 'read'} onclick={() => setMode('read')} title="Show the formatted document" />
     <ToolStripButton data-testid="wordpad-mode-edit" text="Edit" checked={mode === 'edit'} onclick={() => setMode('edit')} title="Edit the markdown source" />
     <span class="sep"></span>
-    <ToolStripButton text="B" class="bold" disabled={!editing} title="Bold (Ctrl+B)" aria-label="Bold" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '**'))} />
-    <ToolStripButton text="I" class="italic" disabled={!editing} title="Italic (Ctrl+I)" aria-label="Italic" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '_'))} />
+    <ToolStripButton data-testid="wordpad-format-bold" text="B" class="bold" disabled={!editing} title="Bold (Ctrl+B)" aria-label="Bold" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '**'))} />
+    <ToolStripButton data-testid="wordpad-format-italic" text="I" class="italic" disabled={!editing} title="Italic (Ctrl+I)" aria-label="Italic" onclick={() => format((t, s, e) => wrapSelection(t, s, e, '_'))} />
     <span class="sep"></span>
-    <ToolStripButton text="H1" disabled={!editing} title="Heading 1" aria-label="H1 Heading 1" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 1))} />
-    <ToolStripButton text="H2" disabled={!editing} title="Heading 2" aria-label="H2 Heading 2" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 2))} />
+    <ToolStripButton data-testid="wordpad-format-h1" text="H1" disabled={!editing} title="Heading 1" aria-label="H1 Heading 1" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 1))} />
+    <ToolStripButton data-testid="wordpad-format-h2" text="H2" disabled={!editing} title="Heading 2" aria-label="H2 Heading 2" onclick={() => format((t, s, e) => toggleHeading(t, s, e, 2))} />
     <span class="sep"></span>
-    <ToolStripButton text="• List" disabled={!editing} title="Bulleted list" aria-label="Bulleted list" onclick={() => format(toggleBullets)} />
-    <ToolStripButton text="1. List" disabled={!editing} title="Numbered list" aria-label="1. List, numbered list" onclick={() => format(toggleNumbers)} />
+    <ToolStripButton data-testid="wordpad-format-bullets" text="• List" disabled={!editing} title="Bulleted list" aria-label="Bulleted list" onclick={() => format(toggleBullets)} />
+    <ToolStripButton data-testid="wordpad-format-numbers" text="1. List" disabled={!editing} title="Numbered list" aria-label="1. List, numbered list" onclick={() => format(toggleNumbers)} />
     <span class="sep"></span>
-    <ToolStripButton text="Code" disabled={!editing} title="Code" aria-label="Code" onclick={() => format(toggleCode)} />
-    <ToolStripButton text="Link" disabled={!editing} title="Insert link" aria-label="Link" onclick={() => format(insertLink)} />
+    <ToolStripButton data-testid="wordpad-format-code" text="Code" disabled={!editing} title="Code" aria-label="Code" onclick={() => format(toggleCode)} />
+    <ToolStripButton data-testid="wordpad-format-link" text="Link" disabled={!editing} title="Insert link" aria-label="Link" onclick={() => format(insertLink)} />
   </ToolStrip>
 
   <div class="page">

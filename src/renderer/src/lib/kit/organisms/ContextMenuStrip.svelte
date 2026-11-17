@@ -13,9 +13,11 @@
     onselect?: (item: MenuItemDef) => void
     onclose?: () => void
     label?: string
+    /** `data-testid` of the menu box. */
+    testid?: string
   }
 
-  let { items, open = $bindable(false), x = 0, y = 0, onselect, onclose, label = 'Context menu' }: Props = $props()
+  let { items, open = $bindable(false), x = 0, y = 0, onselect, onclose, label = 'Context menu', testid = 'context-menu' }: Props = $props()
 
   let element = $state<HTMLElement | null>(null)
   let left = $state(0)
@@ -59,6 +61,7 @@
   <div class="cms" use:clickOutside={{ handler: close }}>
     <MenuPopup
       bind:element
+      {testid}
       {items}
       {label}
       autofocus

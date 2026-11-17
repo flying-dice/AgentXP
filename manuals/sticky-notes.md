@@ -66,6 +66,12 @@ Each Sticky Notes window has a chat pane at its right edge. The pane starts clos
 | New note (note) | Adds a note. | `notes-sticky-add` |
 | Delete note (note) | Deletes the note. | `notes-sticky-delete` |
 | Note text | The text of the note. | `notes-sticky-text` |
+| Note in the list | Selects the note. | `sticky-notes-item` |
+| Delete in the list | Deletes the note. | `sticky-notes-item-delete` |
+| Plan note: chat * | Plan note list: makes a plan note from this chat. | `sticky-plan-*` |
+| Note title bar | Sticky note on the desktop: drag it to move the note. | `notes-sticky-bar` |
+| Note grip | Sticky note on the desktop: drag it to resize the note. | `notes-sticky-grip` |
+| Plan item box | Plan note on the desktop: shows if the step is done. | `notes-plan-item-check` |
 
 ### Menu Bar and Context Menu
 

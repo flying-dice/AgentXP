@@ -15,7 +15,7 @@
 <section class="dock" data-testid={testid} aria-label={title}>
   <header>
     <span class="title">{title}</span>
-    {#if onclose}<button class="x" type="button" aria-label="Close {title}" title="Close" onclick={onclose}>&times;</button>{/if}
+    {#if onclose}<button data-testid="{testid}-close" class="x" type="button" aria-label="Close {title}" title="Close" onclick={onclose}>&times;</button>{/if}
   </header>
   <div class="body">{@render children()}</div>
 </section>
