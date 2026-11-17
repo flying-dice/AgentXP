@@ -15,6 +15,8 @@ import {
 } from '@shared/schedule'
 import {
   actionProblem,
+  capabilitiesSummary,
+  CAPABILITIES_LABEL,
   DEFAULT_CONDITIONS,
   DEFAULT_SETTINGS,
   IF_RUNNING_LABEL,
@@ -24,7 +26,10 @@ import {
   TASK_RESULT_LABEL,
   TASK_START_LABEL,
   TASK_STATUS_LABEL,
+  type ActionCapabilitiesDto,
   type AgentActionDto,
+  type CapabilitiesMode,
+  type CapabilityRef,
   type ScheduledTaskDto,
   type ScheduledTaskInput,
   type TaskActionDto,
@@ -33,8 +38,10 @@ import {
   type TaskSettingsDto,
   type TaskStatus
 } from '@shared/scheduler'
+import type { McpServerDto, ProfileDto, SkillDto, TeamDto } from '@shared/teams'
 import { AGENT_HOME, type DriveDto, type VPath } from '@shared/vfs'
 import type { IconName } from '../../kit/atoms/icons'
+import type { ListBoxItem } from '../../kit/atoms/ListBox'
 import type { ListColumn, ListRow } from '../../kit/organisms/ListView'
 import { driveRoot, driveTitle } from '../explorer/explorerModel'
 import { formatDateTime } from '../shared/dates'
@@ -58,7 +65,7 @@ export const LIBRARY_COLUMNS: ListColumn[] = [
   { key: 'triggers', header: 'Triggers', minWidth: 150 },
   { key: 'next', header: 'Next Run Time', width: 128 },
   { key: 'last', header: 'Last Run Time', width: 128 },
-  { key: 'result', header: 'Last Run Result', minWidth: 100 }
+  { key: 'result', header: 'Last Run Result', width: 108 }
 ]
 
 export const HISTORY_COLUMNS: ListColumn[] = [
@@ -219,12 +226,101 @@ export interface ActionContext {
   agents: readonly AgentDto[]
   drives: readonly DriveDto[]
   sessions: readonly Pick<SessionDto, 'id' | 'title' | 'role'>[]
+  /** Names of the profiles and teams that an action may use (the summary shows the name). */
+  profiles?: readonly Pick<ProfileDto, 'id' | 'name'>[]
+  teams?: readonly Pick<TeamDto, 'id' | 'name'>[]
+}
+
+/** The skills, MCP servers, profiles and teams that an action can choose from (Control Center and Teams hold them). */
+export interface CapabilityChoices {
+  skills: readonly SkillDto[]
+  servers: readonly McpServerDto[]
+  profiles: readonly ProfileDto[]
+  teams: readonly TeamDto[]
+}
+
+export const NO_CHOICES: CapabilityChoices = { skills: [], servers: [], profiles: [], teams: [] }
+
+/** The skills and tools of an action in a few words: "Profile: Reviewer", "2 skills, 1 MCP server". */
+export function actionCapabilities(action: TaskActionDto, ctx: Pick<ActionContext, 'profiles' | 'teams'>): string {
+  const c = action.capabilities
+  return capabilitiesSummary(c, { profile: ctx.profiles?.find((p) => p.id === c.profileId)?.name ?? null, team: ctx.teams?.find((t) => t.id === c.teamId)?.name ?? null })
 }
 
 /** The Actions tab and the summary: "Run Claude Code in Project (E:), new chat: Review the changes…". */
 export function actionSummary(action: TaskActionDto, ctx: ActionContext): string {
   const where = action.session === 'new' ? 'a new chat' : `the chat "${ctx.sessions.find((s) => s.id === action.sessionId)?.title || 'that was removed'}"`
   return `Ask ${agentNameOf(action.agentId, ctx.agents)} in ${projectNameOf(action.cwd, ctx.drives)}, in ${where}: ${clip(action.prompt)}`
+}
+
+/** What the Actions list says in its "Skills and tools" column: an existing chat keeps its own. */
+export const actionToolsText = (action: TaskActionDto, ctx: Pick<ActionContext, 'profiles' | 'teams'>): string =>
+  action.session === 'existing' ? 'Kept by the chat' : actionCapabilities(action, ctx)
+
+// ---------------------------------------------------------------- skills and tools of an action
+
+export const CAPABILITY_MODES: { value: CapabilitiesMode; label: string }[] = (['inherit', 'profile', 'team', 'custom'] as const).map((value) => ({ value, label: CAPABILITIES_LABEL[value] }))
+
+/** The mode changes: a profile or team is preselected when there is one, so the choice is never empty by accident. */
+export function withCapabilitiesMode(c: ActionCapabilitiesDto, mode: CapabilitiesMode, choices: CapabilityChoices): ActionCapabilitiesDto {
+  return {
+    ...c,
+    mode,
+    profileId: mode === 'profile' ? (c.profileId ?? choices.profiles[0]?.id ?? null) : c.profileId,
+    teamId: mode === 'team' ? (c.teamId ?? choices.teams[0]?.id ?? null) : c.teamId
+  }
+}
+
+/** A list of skills or servers to check: every one of the registry, and the ones that the task names but that are gone ("(removed)", checked, so the user can clear them). */
+export function refChoices(refs: readonly CapabilityRef[], all: readonly { id: Id; name: string; description?: string; enabled: boolean }[], goneText: string, testid?: string): { items: ListBoxItem<string>[]; checked: string[] } {
+  const items: ListBoxItem<string>[] = all.map((x) => ({ value: String(x.id), label: x.enabled ? x.name : `${x.name} (switched off)`, title: x.description || undefined, testid: testid ? `${testid}-${x.id}` : undefined }))
+  const checked = refs.flatMap((r) => (r.id !== null && all.some((x) => x.id === r.id) ? [String(r.id)] : []))
+  refs.forEach((r, i) => {
+    if (r.id !== null && all.some((x) => x.id === r.id)) return
+    items.push({ value: `gone-${i}`, label: `${r.name} (${goneText})`, testid: testid ? `${testid}-gone-${i}` : undefined })
+    checked.push(`gone-${i}`)
+  })
+  return { items, checked }
+}
+
+/** The names of the registry after the user checked or cleared items. */
+export function refsFromChecked(checked: readonly string[], previous: readonly CapabilityRef[], all: readonly { id: Id; name: string }[]): CapabilityRef[] {
+  const refs: CapabilityRef[] = []
+  for (const value of checked) {
+    if (value.startsWith('gone-')) {
+      const old = previous[Number(value.slice(5))]
+      if (old) refs.push(old)
+      continue
+    }
+    const found = all.find((x) => String(x.id) === value)
+    if (found) refs.push({ id: found.id, name: found.name })
+  }
+  return refs
+}
+
+const toolValue = (serverId: Id, tool: string): string => `${serverId}|${tool}`
+
+/** The tools of the chosen servers that the last test found and that are switched on, each to check (checked = the run gets it). */
+export function toolChoices(c: ActionCapabilitiesDto, servers: readonly McpServerDto[], testid?: string): { items: ListBoxItem<string>[]; checked: string[] } {
+  const items: ListBoxItem<string>[] = []
+  for (const ref of c.servers) {
+    const server = servers.find((s) => s.id === ref.id)
+    for (const tool of server?.tools ?? []) if (tool.enabled) items.push({ value: toolValue(server!.id, tool.name), label: `${server!.name}: ${tool.name}`, title: tool.description || undefined, testid: testid ? `${testid}-${server!.id}-${tool.name}` : undefined })
+  }
+  const hidden = new Set(c.hiddenTools.map((h) => toolValue(h.serverId, h.tool)))
+  return { items, checked: items.filter((i) => !hidden.has(i.value)).map((i) => i.value) }
+}
+
+/** The hidden tools after the user checked or cleared tools: the ones that are listed and cleared, and the ones that were hidden before but are not listed (kept). */
+export function hiddenFromChecked(c: ActionCapabilitiesDto, servers: readonly McpServerDto[], checked: readonly string[]): ActionCapabilitiesDto['hiddenTools'] {
+  const { items } = toolChoices(c, servers)
+  const listed = new Set(items.map((i) => i.value))
+  const kept = c.hiddenTools.filter((h) => !listed.has(toolValue(h.serverId, h.tool)))
+  const cleared = items.filter((i) => !checked.includes(i.value)).map((i) => {
+    const at = i.value.indexOf('|')
+    return { serverId: Number(i.value.slice(0, at)), tool: i.value.slice(at + 1) }
+  })
+  return [...kept, ...cleared]
 }
 
 // ---------------------------------------------------------------- texts of the detail tabs
@@ -289,7 +385,8 @@ export const actionRow = (a: TaskActionDto, index: number, ctx: ActionContext): 
   testid: 'task-editor-action-row',
   icon: 'session',
   action: 'Run an agent',
-  details: actionSummary(a, ctx)
+  details: actionSummary(a, ctx),
+  tools: actionToolsText(a, ctx)
 })
 
 // ---------------------------------------------------------------- Create Basic Task wizard
@@ -376,6 +473,7 @@ export function wizardSummary(draft: WizardDraft, ctx: ActionContext): [string, 
     ['Name', draft.name.trim()],
     ['Description', draft.description.trim() || '(none)'],
     ['Trigger', describeTrigger(draft.trigger)],
-    ['Action', actionSummary(draft.action, ctx)]
+    ['Action', actionSummary(draft.action, ctx)],
+    ['Skills and tools', actionToolsText(draft.action, ctx)]
   ]
 }

@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { newTrigger, type TriggerDto } from '@shared/schedule'
-import { newAgentAction, newTaskInput, type ScheduledTaskInput } from '@shared/scheduler'
+import { INHERIT_CAPABILITIES, newAgentAction, newTaskInput, type AgentActionDto, type ScheduledTaskInput } from '@shared/scheduler'
 import { SqliteAppWindowRepository } from './sqlite-app-window-repository'
 import { SqliteDesktopRepository } from './sqlite-desktop-repository'
 import { SqliteScheduledTaskRepository, fromMask, toMask } from './sqlite-scheduled-task-repository'
 import { SqliteSessionRepository } from './sqlite-session-repository'
+import { SqliteSessionScopeRepository } from './sqlite-session-scope-repository'
+import { SqliteMcpServerRepository } from './sqlite-mcp-server-repository'
+import { SqliteSkillRepository } from './sqlite-skill-repository'
+import { SqliteProfileRepository, SqliteTeamRepository } from './sqlite-team-repositories'
+import { migrate } from './migrate'
+import { MIGRATIONS } from './migrations'
+import { openRaw } from './sql'
 import { SqliteTaskRunRepository } from './sqlite-task-run-repository'
 import { count, createFixture } from './test-helpers'
 import { SqliteAgentRepository } from './sqlite-agent-repository'
@@ -70,8 +77,8 @@ describe('SqliteScheduledTaskRepository', () => {
     const chat = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })
     const task = input({
       actions: [
-        { kind: 'agent', agentId, cwd: 'E:\\', session: 'existing', sessionId: chat.id, prompt: 'One' },
-        { kind: 'agent', agentId: null, cwd: 'C:\\Users\\Agent', session: 'new', sessionId: null, prompt: 'Two' }
+        { kind: 'agent', agentId, cwd: 'E:\\', session: 'existing', sessionId: chat.id, prompt: 'One', capabilities: INHERIT_CAPABILITIES },
+        { kind: 'agent', agentId: null, cwd: 'C:\\Users\\Agent', session: 'new', sessionId: null, prompt: 'Two', capabilities: INHERIT_CAPABILITIES }
       ],
       conditions: { onlyIfNoOtherTaskRuns: true, onlyIfAgentIdle: true, onlyIfNotPaused: false },
       settings: { allowOnDemand: false, runMissed: true, stopIfRunsLonger: false, stopAfterMinutes: 30, restartOnFailure: true, restartIntervalMinutes: 10, restartAttempts: 4, ifRunning: 'queue' }
@@ -134,7 +141,7 @@ describe('SqliteScheduledTaskRepository', () => {
   it('unlinks a deleted agent and a deleted chat from an action', () => {
     const { db, tasks, desktop, sessions, agentId } = setup()
     const chat = sessions.create({ agentId, desktopId: desktop.id, title: 'chat' })
-    const saved = tasks.create(desktop.id, input({ actions: [{ kind: 'agent', agentId, cwd: 'E:\\', session: 'existing', sessionId: chat.id, prompt: 'x' }] }), 0)
+    const saved = tasks.create(desktop.id, input({ actions: [{ kind: 'agent', agentId, cwd: 'E:\\', session: 'existing', sessionId: chat.id, prompt: 'x', capabilities: INHERIT_CAPABILITIES }] }), 0)
     sessions.remove(chat.id)
     expect(tasks.get(saved.id)?.actions[0]).toMatchObject({ sessionId: null, session: 'existing' })
     const agents = new SqliteAgentRepository(db)
@@ -207,5 +214,88 @@ describe('SqliteTaskRunRepository', () => {
     expect(runs.failUnfinished('2026-11-18T00:00:00.000Z', 'AgentXP closed.')).toBe(1)
     expect(runs.list(task.id).find((r) => r.id === open.id)).toMatchObject({ result: 'failed', message: 'AgentXP closed.', endedAt: '2026-11-18T00:00:00.000Z' })
     expect(runs.list(task.id).find((r) => r.id === done.id)?.result).toBe('success')
+  })
+})
+
+describe('migration 016 and the skills and tools of an action', () => {
+  it('adds the tables on top of a database at version 15', () => {
+    const db = openRaw(':memory:')
+    db.exec('PRAGMA foreign_keys = ON')
+    migrate(db, MIGRATIONS.filter((m) => m.version < 16))
+    migrate(db)
+    const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[]).map((t) => t.name)
+    for (const name of ['scheduled_action_skills', 'scheduled_action_servers', 'scheduled_action_hidden_tools', 'session_scopes', 'session_scope_skills', 'session_scope_servers', 'session_scope_hidden_tools']) expect(tables).toContain(name)
+    const columns = (db.prepare('PRAGMA table_info(scheduled_task_actions)').all() as { name: string }[]).map((c) => c.name)
+    expect(columns).toEqual(expect.arrayContaining(['capabilities', 'profile_id', 'team_id']))
+  })
+
+  function registry() {
+    const f = setup()
+    const skills = new SqliteSkillRepository(f.db)
+    const servers = new SqliteMcpServerRepository(f.db)
+    const profiles = new SqliteProfileRepository(f.db)
+    const teams = new SqliteTeamRepository(f.db)
+    const skill = skills.add({ name: 'pdf', description: 'PDFs', path: '/s/pdf' })
+    const server = servers.create({ name: 'github', transport: 'stdio', command: 'npx', args: [], url: '', vars: [] })
+    const profile = profiles.create({ name: 'Reviewer', instructions: 'Review.', agentId: null, model: null, skillIds: [skill.id], mcpServerIds: [server.id], color: '#333' })
+    const team = teams.create({ name: 'Core', instructions: '', skillIds: [], memberIds: [profile.id], boardRef: null })
+    return { ...f, skills, servers, profiles, teams, skill, server, profile, team }
+  }
+
+  const withCapabilities = (capabilities: AgentActionDto['capabilities']): ScheduledTaskInput => input({ actions: [{ ...newAgentAction('E:\\'), prompt: 'Go.', capabilities }] })
+
+  it('saves and reads back a profile, a team and a custom choice', () => {
+    const r = registry()
+    const custom = { mode: 'custom' as const, profileId: null, teamId: null, skills: [{ id: r.skill.id, name: 'pdf' }], servers: [{ id: r.server.id, name: 'github' }], hiddenTools: [{ serverId: r.server.id, tool: 'delete_repo' }] }
+    for (const c of [{ ...INHERIT_CAPABILITIES, mode: 'profile' as const, profileId: r.profile.id }, { ...INHERIT_CAPABILITIES, mode: 'team' as const, teamId: r.team.id }, custom]) {
+      const saved = r.tasks.create(r.desktop.id, withCapabilities(c), 0)
+      expect(saved.actions[0].capabilities).toEqual(c)
+      expect(r.tasks.get(saved.id)).toEqual(saved)
+    }
+  })
+
+  it('drops the choice of an action that uses an existing chat', () => {
+    const r = registry()
+    const chat = r.sessions.create({ agentId: r.agentId, desktopId: r.desktop.id, title: 'chat' })
+    const task = input({ actions: [{ ...newAgentAction('E:\\'), prompt: 'Go.', session: 'existing', sessionId: chat.id, capabilities: { ...INHERIT_CAPABILITIES, mode: 'profile', profileId: r.profile.id } }] })
+    expect(r.tasks.create(r.desktop.id, task, 0).actions[0].capabilities).toEqual(INHERIT_CAPABILITIES)
+  })
+
+  it('keeps the name of a removed skill or server, with a null id, and forgets a removed profile or team', () => {
+    const r = registry()
+    const custom = { mode: 'custom' as const, profileId: null, teamId: null, skills: [{ id: r.skill.id, name: 'pdf' }], servers: [{ id: r.server.id, name: 'github' }], hiddenTools: [{ serverId: r.server.id, tool: 'x' }] }
+    const a = r.tasks.create(r.desktop.id, withCapabilities(custom), 0)
+    const b = r.tasks.create(r.desktop.id, withCapabilities({ ...INHERIT_CAPABILITIES, mode: 'profile', profileId: r.profile.id }), 0)
+    const c = r.tasks.create(r.desktop.id, withCapabilities({ ...INHERIT_CAPABILITIES, mode: 'team', teamId: r.team.id }), 0)
+    r.skills.remove(r.skill.id)
+    r.servers.remove(r.server.id)
+    r.teams.remove(r.team.id)
+    r.profiles.remove(r.profile.id)
+    expect(r.tasks.get(a.id)?.actions[0].capabilities).toMatchObject({ mode: 'custom', skills: [{ id: null, name: 'pdf' }], servers: [{ id: null, name: 'github' }], hiddenTools: [] })
+    expect(r.tasks.get(b.id)?.actions[0].capabilities).toMatchObject({ mode: 'profile', profileId: null })
+    expect(r.tasks.get(c.id)?.actions[0].capabilities).toMatchObject({ mode: 'team', teamId: null })
+  })
+
+  it('replaces the choice when the task is saved again and deletes it with the task', () => {
+    const r = registry()
+    const saved = r.tasks.create(r.desktop.id, withCapabilities({ mode: 'custom', profileId: null, teamId: null, skills: [{ id: r.skill.id, name: 'pdf' }], servers: [], hiddenTools: [] }), 0)
+    r.tasks.update(saved.id, withCapabilities(INHERIT_CAPABILITIES), 0)
+    expect(count(r.db, 'scheduled_action_skills')).toBe(0)
+    const again = r.tasks.create(r.desktop.id, withCapabilities({ mode: 'custom', profileId: null, teamId: null, skills: [{ id: r.skill.id, name: 'pdf' }], servers: [], hiddenTools: [] }), 0)
+    r.tasks.remove(again.id)
+    expect(count(r.db, 'scheduled_action_skills')).toBe(0)
+  })
+
+  it('keeps the scope of a chat and replaces it', () => {
+    const r = registry()
+    const scopes = new SqliteSessionScopeRepository(r.db)
+    const chat = r.sessions.create({ agentId: r.agentId, desktopId: r.desktop.id, title: 'chat' })
+    expect(scopes.get(chat.id)).toBeNull()
+    scopes.set(chat.id, { instructions: 'Be brief.', skillIds: [r.skill.id], serverIds: [r.server.id], hiddenTools: [{ serverId: r.server.id, tool: 'x' }] })
+    expect(scopes.get(chat.id)).toEqual({ instructions: 'Be brief.', skillIds: [r.skill.id], serverIds: [r.server.id], hiddenTools: [{ serverId: r.server.id, tool: 'x' }] })
+    scopes.set(chat.id, { instructions: '', skillIds: [], serverIds: [], hiddenTools: [] })
+    expect(scopes.get(chat.id)).toEqual({ instructions: '', skillIds: [], serverIds: [], hiddenTools: [] })
+    r.sessions.remove(chat.id)
+    expect(count(r.db, 'session_scopes')).toBe(0)
   })
 })

@@ -12,6 +12,12 @@ How agents get capabilities and how a team works in a chat room. Types live in `
 - When tools of a server are switched off, the server is launched behind a stdio filtering proxy
   (`infrastructure/mcp/proxy-entry.ts`, Electron in node mode, env `AGENTXP_MCP_TARGET` and `AGENTXP_MCP_HIDE`).
 
+## Skills and tools of a scheduled run
+
+A Task Scheduler action can start its chat with a profile, a team or a hand-picked set of skills, servers and tools. The run saves the
+result as the *scope* of the new chat (`session_scopes`, migration 016); `AgentCapabilities` uses the scope in place of the plain-chat rule.
+A team runs as its first member with the team skills and instructions (no room is created). See `application/scheduler/ActionScope.ts`.
+
 ## Profiles and teams
 
 A profile is a name, instructions (the role lives there), an optional agent and model, and its own skills and servers.

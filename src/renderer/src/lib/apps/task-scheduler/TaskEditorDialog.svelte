@@ -15,7 +15,7 @@
   import TabControl from '../../kit/organisms/TabControl.svelte'
   import ConditionsForm from './ConditionsForm.svelte'
   import SettingsForm from './SettingsForm.svelte'
-  import { actionRow, triggerRow, type ActionContext } from './taskModel'
+  import { actionRow, NO_CHOICES, triggerRow, type ActionContext, type CapabilityChoices } from './taskModel'
 
   interface Props {
     /** The task being edited; the window keeps it, so the dialogs for a trigger and an action can change it. */
@@ -25,6 +25,7 @@
     agents: readonly AgentDto[]
     drives: readonly DriveDto[]
     sessions: readonly Pick<SessionDto, 'id' | 'title' | 'role'>[]
+    choices?: CapabilityChoices
     /** Why the task was not saved: a problem of the input or the answer of main. */
     problem: string
     tab: string
@@ -33,7 +34,7 @@
     onresult: (result: 'ok' | 'cancel') => void
   }
 
-  let { draft = $bindable(), existing, agents, drives, sessions, problem, tab = $bindable('general'), onedittrigger, oneditaction, onresult }: Props = $props()
+  let { draft = $bindable(), existing, agents, drives, sessions, choices = NO_CHOICES, problem, tab = $bindable('general'), onedittrigger, oneditaction, onresult }: Props = $props()
 
   const tabs = [
     { id: 'general', title: 'General', testid: 'task-editor-tab-general' },
@@ -43,7 +44,7 @@
     { id: 'settings', title: 'Settings', testid: 'task-editor-tab-settings' }
   ]
 
-  const ctx = $derived<ActionContext>({ agents, drives, sessions })
+  const ctx = $derived<ActionContext>({ agents, drives, sessions, profiles: choices.profiles, teams: choices.teams })
   const triggerColumns: ListColumn[] = [
     { key: 'kind', header: 'Trigger', width: 110 },
     { key: 'details', header: 'Details', minWidth: 160 },
@@ -51,7 +52,8 @@
   ]
   const actionColumns: ListColumn[] = [
     { key: 'action', header: 'Action', width: 100 },
-    { key: 'details', header: 'Details', minWidth: 200 }
+    { key: 'details', header: 'Details', minWidth: 160 },
+    { key: 'tools', header: 'Skills and tools', width: 170 }
   ]
   let triggerSelected = $state<string[]>([])
   let actionSelected = $state<string[]>([])

@@ -496,7 +496,7 @@ The Event Viewer shows each message between AgentXP and the agent. Select a mess
 
 Task Scheduler runs an agent on a schedule. Open it from **Start -> System Tools -> Task Scheduler**, or double-click its icon on the desktop. To make a task, click **Create Basic Task** in the task pane. The wizard asks for a name, a trigger, a project, and a prompt. Use **Create Task** when you need more than one trigger, or the conditions and settings.
 
-A task runs only while AgentXP is open. When AgentXP was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
+The action can also choose the skills and the MCP servers of the run: everything that is switched on, a profile, a team, or the skills, servers, and tools that you check. A task runs only while AgentXP is open. When AgentXP was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
 
 ![The Task Scheduler window with four tasks and the History tab of the Morning review task](docs/images/task-scheduler-history.png)
 

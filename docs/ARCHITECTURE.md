@@ -185,7 +185,7 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   most 10, stop the existing run), the time limit, and restart on failure. `AgentActionRunner` sends the prompt through the chat
   services. `SchedulerService` is the use case that the IPC handlers call (`scheduler.*`); `scheduler.changed` goes to the
   windows of the desktop. Four tables (`scheduled_tasks`, `scheduled_task_triggers`, `scheduled_task_actions`,
-  `scheduled_task_runs`, migration 015) hold the tasks and the last 100 runs of each. `ProtocolSchedulerLog` writes the
+  `scheduled_task_runs`, migration 015) hold the tasks and the last 100 runs of each. `ActionScope` (`resolveScope`, `checkCapabilities`) works out the skills and tools of a run from the registry: `AgentActionRunner` stores the result for the new chat (`session_scopes` and its child tables, migration 016) before the agent connects, and `AgentCapabilities` reads it when it builds `mcpServers` and the briefing. A skill, server, profile or team that is gone fails the run with a sentence. `ProtocolSchedulerLog` writes the
   `scheduler` source of the Event Viewer. Limitation: tasks run only while the app is open; there is no OS-level wake-up.
 - **Event Viewer.** `ProtocolEventLog` (application/events) keeps a ring buffer of 5,000 events per desktop in memory (payload =
   pretty JSON cut at 64 KB) and pushes `events.appended` in 250 ms batches. Three taps feed it: (a) ACP JSON-RPC in both

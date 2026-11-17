@@ -98,6 +98,7 @@ import { SqliteSessionRepository } from './infrastructure/db/sqlite-session-repo
 import { SqliteRecycledChangeRepository } from './infrastructure/db/sqlite-recycled-change-repository'
 import { SqliteStickyNoteRepository } from './infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteScheduledTaskRepository } from './infrastructure/db/sqlite-scheduled-task-repository'
+import { SqliteSessionScopeRepository } from './infrastructure/db/sqlite-session-scope-repository'
 import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository'
 import { SqliteTaskRunRepository } from './infrastructure/db/sqlite-task-run-repository'
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
@@ -236,6 +237,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     teams: new SqliteTeamRepository(db),
     rooms: new SqliteRoomRepository(db),
     scheduledTasks: new SqliteScheduledTaskRepository(db),
+    sessionScopes: new SqliteSessionScopeRepository(db),
     taskRuns: new SqliteTaskRunRepository(db)
   }
   const capabilities = new AgentCapabilities({
@@ -245,6 +247,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     teams: repos.teams,
     rooms: repos.rooms,
     sessions: repos.sessions,
+    scopes: repos.sessionScopes,
     boards: repos.kanban,
     proxy: options.mcpProxy
   })
@@ -382,10 +385,11 @@ export function composeApp(options: ComposeOptions): AppServices {
   })
   // The Task Scheduler runs for every desktop, connected or not, while AgentXP runs.
   const schedulerLog = new ProtocolSchedulerLog(eventLog)
+  const capabilityRegistry = { skills: repos.skills, servers: repos.mcpServers, profiles: repos.profiles, teams: repos.teams }
   const taskEngine = new TaskEngine({
     tasks: repos.scheduledTasks,
     runs: repos.taskRuns,
-    runner: new AgentActionRunner({ chats: sessions, sessions: repos.sessions, agents: repos.agents }),
+    runner: new AgentActionRunner({ chats: sessions, sessions: repos.sessions, agents: repos.agents, registry: capabilityRegistry, scopes: repos.sessionScopes }),
     world: {
       isPaused: (desktopId) => repos.desktops.get(desktopId)?.paused ?? false,
       agentBusy: (desktopId) => repos.sessions.list(desktopId).some((s) => s.status === 'working' || s.status === 'awaiting_permission')
@@ -399,6 +403,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     desktops: repos.desktops,
     agents: repos.agents,
     sessions: repos.sessions,
+    registry: capabilityRegistry,
     events: publisher,
     log: schedulerLog
   })

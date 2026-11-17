@@ -389,7 +389,25 @@ async function main() {
 
     const now = new Date()
     const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    const agentAction = (prompt) => ({ kind: 'agent', agentId: null, cwd: 'E:\\', session: 'new', sessionId: null, prompt })
+    // A skill, an MCP server with three tools and a profile, to choose from in the action of a task.
+    const skillRoot = join(parent, 'skills')
+    for (const [name, description] of [['pdf', 'Read and fill in PDF files.'], ['code-review', 'Review a change and write short comments.']]) {
+      await mkdir(join(skillRoot, name), { recursive: true })
+      await writeFile(join(skillRoot, name, 'SKILL.md'), `---\nname: ${name}\ndescription: ${description}\n---\n\n${description}\n`)
+    }
+    const registry = await api2(
+      async ({ skillRoot, demoServer }) => {
+        const a = window.agentxp
+        const pdf = await a.skills.install(`${skillRoot}/pdf`)
+        const review = await a.skills.install(`${skillRoot}/code-review`)
+        const server = await a.mcp.add({ name: 'GitHub', transport: 'stdio', command: 'node', args: [demoServer], url: '', vars: [] })
+        await a.mcp.test(server.id)
+        const profile = await a.profiles.create({ name: 'Reviewer', instructions: 'Review the change and write short comments.', agentId: null, model: null, skillIds: [review.id], mcpServerIds: [server.id] })
+        return { pdf: pdf.id, review: review.id, server: server.id, profile: profile.id }
+      },
+      { skillRoot, demoServer: join(root, 'scripts/docs-screenshots/demo-mcp.mjs') }
+    )
+    const agentAction = (prompt, capabilities = { mode: 'inherit', profileId: null, teamId: null, skills: [], servers: [], hiddenTools: [] }) => ({ kind: 'agent', agentId: null, cwd: 'E:\\', session: 'new', sessionId: null, prompt, capabilities })
     const conditions = { onlyIfNoOtherTaskRuns: false, onlyIfAgentIdle: false, onlyIfNotPaused: true }
     const settings = { allowOnDemand: true, runMissed: false, stopIfRunsLonger: true, stopAfterMinutes: 60, restartOnFailure: false, restartIntervalMinutes: 5, restartAttempts: 3, ifRunning: 'ignore' }
     const tasks = [
@@ -407,7 +425,16 @@ async function main() {
         description: 'Look for outdated packages twice a week.',
         enabled: true,
         triggers: [{ kind: 'weekly', enabled: true, startAt: `${day}T08:30`, expiresAt: null, everyWeeks: 1, daysOfWeek: [1, 5] }],
-        actions: [agentAction('Run the dependency check and list the packages that are out of date.')],
+        actions: [
+          agentAction('Run the dependency check and list the packages that are out of date.', {
+            mode: 'custom',
+            profileId: null,
+            teamId: null,
+            skills: [{ id: registry.pdf, name: 'pdf' }],
+            servers: [{ id: registry.server, name: 'GitHub' }],
+            hiddenTools: [{ serverId: registry.server, tool: 'delete_branch' }]
+          })
+        ],
         conditions,
         settings: { ...settings, runMissed: true, restartOnFailure: true, restartIntervalMinutes: 10, restartAttempts: 2, ifRunning: 'queue' }
       },
@@ -416,7 +443,7 @@ async function main() {
         description: 'Read the open tasks when AgentXP starts.',
         enabled: true,
         triggers: [{ kind: 'startup', enabled: true, delayMinutes: 2 }],
-        actions: [agentAction('List the open tasks of this project.')],
+        actions: [agentAction('List the open tasks of this project.', { mode: 'profile', profileId: registry.profile, teamId: null, skills: [], servers: [], hiddenTools: [] })],
         conditions,
         settings
       },
@@ -503,6 +530,20 @@ async function main() {
     await triggerDialog.waitFor({ state: 'detached' })
     await pause(500)
     await shot('task-scheduler-create-task', editor, { margin: 40 })
+    await editor.getByTestId('dialog-button-cancel').click()
+
+    // The action of the Dependency check task: its own skills, MCP server and tools.
+    await ts.getByTestId('task-scheduler-row').filter({ hasText: 'Dependency check' }).dblclick()
+    await editor.waitFor()
+    await editor.getByTestId('task-editor-tab-actions').click()
+    await editor.getByTestId('task-editor-action-row').first().click()
+    await editor.getByTestId('task-editor-action-edit').click()
+    const actionDialog = page2.getByTestId('action-dialog')
+    await actionDialog.waitFor()
+    await actionDialog.getByTestId(`action-dialog-tool-${registry.server}-delete_branch`).waitFor()
+    await pause(500)
+    await shot('task-scheduler-action-tools', actionDialog, { margin: 40 })
+    await actionDialog.getByTestId('dialog-button-cancel').click()
     await editor.getByTestId('dialog-button-cancel').click()
   } catch (error) {
     // Keep a picture of every window, to see what the script was waiting for.

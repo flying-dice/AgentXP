@@ -1,6 +1,6 @@
 import type { Id } from '@shared/models'
 import type { DayOfWeek, TriggerDto } from '@shared/schedule'
-import { DEFAULT_CONDITIONS, DEFAULT_SETTINGS, type IfRunning, type ScheduledTaskInput, type TaskActionDto } from '@shared/scheduler'
+import { DEFAULT_CONDITIONS, DEFAULT_SETTINGS, INHERIT_CAPABILITIES, type ActionCapabilitiesDto, type IfRunning, type ScheduledTaskInput, type TaskActionDto } from '@shared/scheduler'
 import type { ScheduledTaskRecord, ScheduledTaskRepository } from '../../domain/repositories/scheduled-task-repository'
 import { prepare, transaction, type Database, type Statement } from './sql'
 
@@ -52,7 +52,11 @@ interface TriggerRow {
 }
 
 interface ActionRow {
+  id: number
   task_id: number
+  capabilities: ActionCapabilitiesDto['mode']
+  profile_id: number | null
+  team_id: number | null
   agent_id: number | null
   cwd: string
   session_mode: 'new' | 'existing'
@@ -62,6 +66,8 @@ interface ActionRow {
 
 const TASK_COLUMNS =
   'id, desktop_id, name, description, enabled, only_if_no_other_task, only_if_agent_idle, only_if_not_paused, allow_on_demand, run_missed, stop_if_runs_longer, stop_after_minutes, restart_on_failure, restart_interval_minutes, restart_attempts, if_running, handled_until, created_at'
+
+const INHERIT = INHERIT_CAPABILITIES
 
 const flag = (value: boolean): number => (value ? 1 : 0)
 
@@ -81,7 +87,6 @@ function toTrigger(row: TriggerRow): TriggerDto {
   }
 }
 
-const toAction = (row: ActionRow): TaskActionDto => ({ kind: 'agent', agentId: row.agent_id, cwd: row.cwd, session: row.session_mode, sessionId: row.session_id, prompt: row.prompt })
 
 /** The rows of the triggers, as the columns of `scheduled_task_triggers` after `task_id` and `position`. */
 function triggerColumns(t: TriggerDto): [string, number, string | null, string | null, number, number, number, number, number, number] {
@@ -109,6 +114,12 @@ export class SqliteScheduledTaskRepository implements ScheduledTaskRepository {
   private readonly updateTask: Statement<unknown[]>
   private readonly insertTrigger: Statement<unknown[]>
   private readonly insertAction: Statement<unknown[]>
+  private readonly selectSkills: Statement<[Id], { skill_id: number | null; skill_name: string }>
+  private readonly selectServers: Statement<[Id], { server_id: number | null; server_name: string }>
+  private readonly selectHidden: Statement<[Id], { server_id: number; tool: string }>
+  private readonly insertSkill: Statement<unknown[]>
+  private readonly insertServer: Statement<unknown[]>
+  private readonly insertHidden: Statement<unknown[]>
   private readonly deleteTriggers: Statement<[Id]>
   private readonly deleteActions: Statement<[Id]>
   private readonly updateEnabled: Statement<[number, number, Id]>
@@ -120,7 +131,13 @@ export class SqliteScheduledTaskRepository implements ScheduledTaskRepository {
     this.selectByDesktop = prepare(db, `SELECT ${TASK_COLUMNS} FROM scheduled_tasks WHERE desktop_id = ? ORDER BY id`)
     this.selectById = prepare(db, `SELECT ${TASK_COLUMNS} FROM scheduled_tasks WHERE id = ?`)
     this.selectTriggers = prepare(db, 'SELECT task_id, kind, enabled, start_at, expires_at, repeat_every, delay_minutes, days_of_week, months, days_of_month, last_day FROM scheduled_task_triggers WHERE task_id = ? ORDER BY position')
-    this.selectActions = prepare(db, 'SELECT task_id, agent_id, cwd, session_mode, session_id, prompt FROM scheduled_task_actions WHERE task_id = ? ORDER BY position')
+    this.selectActions = prepare(db, 'SELECT id, task_id, capabilities, profile_id, team_id, agent_id, cwd, session_mode, session_id, prompt FROM scheduled_task_actions WHERE task_id = ? ORDER BY position')
+    this.selectSkills = prepare(db, 'SELECT skill_id, skill_name FROM scheduled_action_skills WHERE action_id = ? ORDER BY position')
+    this.selectServers = prepare(db, 'SELECT server_id, server_name FROM scheduled_action_servers WHERE action_id = ? ORDER BY position')
+    this.selectHidden = prepare(db, 'SELECT server_id, tool FROM scheduled_action_hidden_tools WHERE action_id = ? ORDER BY server_id, tool')
+    this.insertSkill = prepare(db, 'INSERT INTO scheduled_action_skills (action_id, position, skill_id, skill_name) VALUES (?, ?, ?, ?)')
+    this.insertServer = prepare(db, 'INSERT INTO scheduled_action_servers (action_id, position, server_id, server_name) VALUES (?, ?, ?, ?)')
+    this.insertHidden = prepare(db, 'INSERT OR IGNORE INTO scheduled_action_hidden_tools (action_id, server_id, tool) VALUES (?, ?, ?)')
     this.insertTask = prepare(
       db,
       'INSERT INTO scheduled_tasks (desktop_id, name, description, enabled, only_if_no_other_task, only_if_agent_idle, only_if_not_paused, allow_on_demand, run_missed, stop_if_runs_longer, stop_after_minutes, restart_on_failure, restart_interval_minutes, restart_attempts, if_running, handled_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -133,7 +150,7 @@ export class SqliteScheduledTaskRepository implements ScheduledTaskRepository {
       db,
       'INSERT INTO scheduled_task_triggers (task_id, position, kind, enabled, start_at, expires_at, repeat_every, delay_minutes, days_of_week, months, days_of_month, last_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
-    this.insertAction = prepare(db, 'INSERT INTO scheduled_task_actions (task_id, position, agent_id, cwd, session_mode, session_id, prompt) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    this.insertAction = prepare(db, 'INSERT INTO scheduled_task_actions (task_id, position, agent_id, cwd, session_mode, session_id, prompt, capabilities, profile_id, team_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     this.deleteTriggers = prepare(db, 'DELETE FROM scheduled_task_triggers WHERE task_id = ?')
     this.deleteActions = prepare(db, 'DELETE FROM scheduled_task_actions WHERE task_id = ?')
     this.updateEnabled = prepare(db, 'UPDATE scheduled_tasks SET enabled = ?, handled_until = ? WHERE id = ?')
@@ -192,7 +209,37 @@ export class SqliteScheduledTaskRepository implements ScheduledTaskRepository {
 
   private writeChildren(taskId: Id, input: ScheduledTaskInput): void {
     input.triggers.forEach((t, position) => this.insertTrigger.run(taskId, position, ...triggerColumns(t)))
-    input.actions.forEach((a, position) => this.insertAction.run(taskId, position, a.agentId, a.cwd, a.session, a.session === 'existing' ? a.sessionId : null, a.prompt))
+    input.actions.forEach((a, position) => {
+      // Only a new chat has its own skills and tools; the row of an existing chat is a plain `inherit`.
+      const c = a.session === 'new' ? a.capabilities : INHERIT
+      const actionId = Number(
+        this.insertAction.run(taskId, position, a.agentId, a.cwd, a.session, a.session === 'existing' ? a.sessionId : null, a.prompt, c.mode, c.mode === 'profile' ? c.profileId : null, c.mode === 'team' ? c.teamId : null).lastInsertRowid
+      )
+      if (c.mode !== 'custom') return
+      c.skills.forEach((x, i) => this.insertSkill.run(actionId, i, x.id, x.name))
+      c.servers.forEach((x, i) => this.insertServer.run(actionId, i, x.id, x.name))
+      for (const t of c.hiddenTools) this.insertHidden.run(actionId, t.serverId, t.tool)
+    })
+  }
+
+  private toAction(row: ActionRow): TaskActionDto {
+    const custom = row.capabilities === 'custom'
+    return {
+      kind: 'agent',
+      agentId: row.agent_id,
+      cwd: row.cwd,
+      session: row.session_mode,
+      sessionId: row.session_id,
+      prompt: row.prompt,
+      capabilities: {
+        mode: row.capabilities,
+        profileId: row.profile_id,
+        teamId: row.team_id,
+        skills: custom ? this.selectSkills.all(row.id).map((r) => ({ id: r.skill_id, name: r.skill_name })) : [],
+        servers: custom ? this.selectServers.all(row.id).map((r) => ({ id: r.server_id, name: r.server_name })) : [],
+        hiddenTools: custom ? this.selectHidden.all(row.id).map((r) => ({ serverId: r.server_id, tool: r.tool })) : []
+      }
+    }
   }
 
   private toRecord(row: TaskRow): ScheduledTaskRecord {
@@ -203,7 +250,7 @@ export class SqliteScheduledTaskRepository implements ScheduledTaskRepository {
       description: row.description,
       enabled: row.enabled === 1,
       triggers: this.selectTriggers.all(row.id).map(toTrigger),
-      actions: this.selectActions.all(row.id).map(toAction),
+      actions: this.selectActions.all(row.id).map((a) => this.toAction(a)),
       conditions: {
         ...DEFAULT_CONDITIONS,
         onlyIfNoOtherTaskRuns: row.only_if_no_other_task === 1,

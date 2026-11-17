@@ -28,7 +28,7 @@
   import TaskDetail from './TaskDetail.svelte'
   import TaskEditorDialog from './TaskEditorDialog.svelte'
   import TriggerDialog from './TriggerDialog.svelte'
-  import { blankTask, commandsFor, countText, defaultProject, formatWhen, inputOf, lastResultText, LIBRARY_COLUMNS, overview, statusText, taskRows } from './taskModel'
+  import { blankTask, commandsFor, countText, defaultProject, formatWhen, inputOf, lastResultText, LIBRARY_COLUMNS, NO_CHOICES, overview, statusText, taskRows, type CapabilityChoices } from './taskModel'
 
   let { window: win, host }: AppProps<'task-scheduler'> = $props()
 
@@ -36,6 +36,7 @@
   let agents = $state.raw<AgentDto[]>([])
   let sessions = $state.raw<SessionDto[]>([])
   let runs = $state.raw<TaskRunDto[]>([])
+  let choices = $state.raw<CapabilityChoices>(NO_CHOICES)
   // svelte-ignore state_referenced_locally
   let selected = $state<string[]>(win.view.selectedTaskId !== null ? [String(win.view.selectedTaskId)] : [])
   // svelte-ignore state_referenced_locally
@@ -52,16 +53,25 @@
   const commands = $derived(commandsFor(current))
   const rows = $derived(taskRows(tasks))
   const summary = $derived(overview(tasks))
-  const ctx = $derived({ agents, drives, sessions })
+  const ctx = $derived({ agents, drives, sessions, profiles: choices.profiles, teams: choices.teams })
 
   // ---- load and follow -----------------------------------------------------------------------------
 
   async function refresh(): Promise<void> {
     try {
-      const [list, agentList, sessionList] = await Promise.all([host.api.scheduler.list(desktopId), host.api.agents.list(), host.api.sessions.list(desktopId)])
+      const [list, agentList, sessionList, skills, servers, profiles, teams] = await Promise.all([
+        host.api.scheduler.list(desktopId),
+        host.api.agents.list(),
+        host.api.sessions.list(desktopId),
+        host.api.skills.list(),
+        host.api.mcp.list(),
+        host.api.profiles.list(),
+        host.api.teams.list()
+      ])
       tasks = list
       agents = agentList
       sessions = sessionList
+      choices = { skills, servers, profiles, teams }
       error = null
     } catch (e) {
       error = e instanceof Error ? e.message : String(e)
@@ -139,10 +149,23 @@
 
   const openChat = (sessionId: number): void => void host.openApp({ app: 'chat', sessionId })
 
+  /** The chats and the skills, servers, profiles and teams as they are now: a dialog that opens shows what exists. */
+  async function reloadChoices(): Promise<void> {
+    const [chatList, skills, servers, profiles, teams] = await Promise.all([
+      host.api.sessions.list(desktopId).catch(() => sessions),
+      host.api.skills.list().catch(() => choices.skills),
+      host.api.mcp.list().catch(() => choices.servers),
+      host.api.profiles.list().catch(() => choices.profiles),
+      host.api.teams.list().catch(() => choices.teams)
+    ])
+    sessions = chatList
+    choices = { skills, servers, profiles, teams }
+  }
+
   // ---- Create Task and Properties -------------------------------------------------------------------
 
   async function openEditor(task: ScheduledTaskDto | null): Promise<void> {
-    sessions = await host.api.sessions.list(desktopId).catch(() => sessions)
+    await reloadChoices()
     editor = { taskId: task?.id ?? null, draft: task ? inputOf(task) : blankTask(defaultProject(drives)), tab: 'general', problem: '' }
   }
 
@@ -188,7 +211,7 @@
   // ---- Create Basic Task ----------------------------------------------------------------------------
 
   async function openWizard(): Promise<void> {
-    sessions = await host.api.sessions.list(desktopId).catch(() => sessions)
+    await reloadChoices()
     wizard = true
   }
 
@@ -340,7 +363,7 @@
   <ContextMenuStrip bind:open={ctxMenu.open} x={ctxMenu.x} y={ctxMenu.y} items={ctxMenu.items} label="Task Scheduler" />
   <AppAbout {help} />
   {#if wizard}
-    <BasicTaskWizard {agents} {drives} {sessions} onfinish={finishWizard} oncancel={() => (wizard = false)} />
+    <BasicTaskWizard {agents} {drives} {sessions} {choices} onfinish={finishWizard} oncancel={() => (wizard = false)} />
   {/if}
   {#if editor}
     <TaskEditorDialog
@@ -350,6 +373,7 @@
       {agents}
       {drives}
       {sessions}
+      {choices}
       problem={editor.problem}
       onedittrigger={(index) => (triggerEdit = { index })}
       oneditaction={(index) => (actionEdit = { index })}
@@ -363,7 +387,7 @@
   {/if}
   {#if actionEdit && editor}
     {#key actionEdit}
-      <ActionDialog initial={actionInitial} {agents} {drives} {sessions} onsave={saveAction} oncancel={() => (actionEdit = null)} />
+      <ActionDialog initial={actionInitial} {agents} {drives} {sessions} {choices} onsave={saveAction} oncancel={() => (actionEdit = null)} />
     {/key}
   {/if}
 </div>

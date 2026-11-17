@@ -162,6 +162,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Maximize | Makes the window fill the desktop. | `window-maximize` |
 | Close | Closes the window. | `window-close` |
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
+| Activity list | The infopanel that says what the agent does now, the last problem, and what finished. The Event Viewer button and the right-click item open the Event Viewer. | `infopanel-activity`, `infopanel-activity-control`, `infopanel-activity-not-saved`, `infopanel-activity-problem`, `infopanel-activity-working`, `infopanel-activity-last`, `infopanel-activity-open-event-viewer`, `infopanel-activity-open-permissions`, `infopanel-activity-menu-event-viewer` |
 | Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |
 
 ### Taskbar

@@ -26,6 +26,8 @@
     WIZARD_STEPS,
     WIZARD_TITLE,
     WIZARD_TRIGGERS,
+    NO_CHOICES,
+    type CapabilityChoices,
     type WizardStep
   } from './taskModel'
 
@@ -33,12 +35,13 @@
     agents: readonly AgentDto[]
     drives: readonly DriveDto[]
     sessions: readonly Pick<SessionDto, 'id' | 'title' | 'role'>[]
+    choices?: CapabilityChoices
     /** Saves the task. Resolves null when it is saved, or the reason it was not. */
     onfinish: (input: ScheduledTaskInput, openProperties: boolean) => Promise<string | null>
     oncancel: () => void
   }
 
-  let { agents, drives, sessions, onfinish, oncancel }: Props = $props()
+  let { agents, drives, sessions, choices = NO_CHOICES, onfinish, oncancel }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let draft = $state(newWizardDraft(defaultProject(drives)))
@@ -48,7 +51,7 @@
 
   const index = $derived(WIZARD_STEPS.indexOf(step))
   const last = $derived(step === 'finish')
-  const summary = $derived(wizardSummary(draft, { agents, drives, sessions }))
+  const summary = $derived(wizardSummary(draft, { agents, drives, sessions, profiles: choices.profiles, teams: choices.teams }))
 
   function next(): void {
     const text = wizardProblem(step, draft)
@@ -114,7 +117,7 @@
         {:else if step === 'details'}
           <TriggerFields bind:trigger={draft.trigger} prefix="basic-wizard-trigger" />
         {:else if step === 'action'}
-          <ActionFields bind:action={draft.action} {agents} {drives} {sessions} prefix="basic-wizard-action" />
+          <ActionFields bind:action={draft.action} {agents} {drives} {sessions} {choices} prefix="basic-wizard-action" />
         {:else}
           <dl class="summary" data-testid="basic-wizard-summary">
             {#each summary as [k, v] (k)}

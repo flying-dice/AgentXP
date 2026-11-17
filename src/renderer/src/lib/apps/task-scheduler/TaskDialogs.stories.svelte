@@ -13,7 +13,9 @@
   import ConditionsForm from './ConditionsForm.svelte'
   import SettingsForm from './SettingsForm.svelte'
   import { newTrigger, type TriggerDto } from '@shared/schedule'
-  import { newAgentAction } from '@shared/scheduler'
+  import { INHERIT_CAPABILITIES, newAgentAction } from '@shared/scheduler'
+  import { sampleMcpServers, sampleProfiles, sampleSkills, sampleTeams } from '../../app/fakeTeams'
+  import CapabilitiesFields from './CapabilitiesFields.svelte'
 
   const { Story } = defineMeta({
     title: 'Apps/Task Scheduler/Dialogs',
@@ -25,6 +27,7 @@
     { letter: 'E', kind: 'removable', label: 'claude-code-win', folderId: 1, path: 'C:\\Users\\jonathan\\source\\claude-code-win' }
   ] as unknown as DriveDto[]
   const sessions = sampleSessions
+  const choices = { skills: sampleSkills, servers: sampleMcpServers, profiles: sampleProfiles, teams: sampleTeams }
   const noop = (): void => {}
 </script>
 
@@ -34,13 +37,17 @@
   let trigger = $state<TriggerDto>(newTrigger('monthly', '2026-11-17T09:00'))
   let weekly = $state<TriggerDto>(newTrigger('weekly', '2026-11-17T09:00'))
   let action = $state(newAgentAction('E:\\'))
+  let inherit = $state({ ...INHERIT_CAPABILITIES })
+  let profile = $state({ ...INHERIT_CAPABILITIES, mode: 'profile' as const, profileId: sampleProfiles[0].id })
+  let team = $state({ ...INHERIT_CAPABILITIES, mode: 'team' as const, teamId: sampleTeams[0].id })
+  let custom = $state({ ...INHERIT_CAPABILITIES, mode: 'custom' as const, skills: [{ id: sampleSkills[0].id, name: sampleSkills[0].name }, { id: 99, name: 'old-skill' }], servers: [{ id: sampleMcpServers[0].id, name: sampleMcpServers[0].name }], hiddenTools: [] })
   let conditions = $state(structuredClone(sampleTaskInputs[1].conditions))
   let settings = $state(structuredClone(sampleTaskInputs[1].settings))
 </script>
 
 <Story name="CreateBasicTaskWizard" asChild>
   <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
-    <BasicTaskWizard agents={sampleAgents} {drives} {sessions} onfinish={async () => null} oncancel={noop} />
+    <BasicTaskWizard agents={sampleAgents} {drives} {sessions} {choices} onfinish={async () => null} oncancel={noop} />
   </div>
 </Story>
 
@@ -64,7 +71,7 @@
 
 <Story name="NewAction" asChild>
   <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
-    <ActionDialog initial={null} agents={sampleAgents} {drives} {sessions} onsave={noop} oncancel={noop} />
+    <ActionDialog initial={null} agents={sampleAgents} {drives} {sessions} {choices} onsave={noop} oncancel={noop} />
   </div>
 </Story>
 
@@ -84,5 +91,35 @@
   <div style="width:560px;display:flex;flex-direction:column;gap:8px;background:var(--xp-face)">
     <ConditionsForm bind:conditions prefix="story" />
     <SettingsForm bind:settings prefix="story" />
+  </div>
+</Story>
+
+<Story name="SkillsAndToolsEverything" asChild>
+  <div style="width:560px;padding:12px;background:var(--xp-face)">
+    <CapabilitiesFields bind:capabilities={inherit} existingChat={false} {choices} prefix="story-inherit" />
+  </div>
+</Story>
+
+<Story name="SkillsAndToolsProfile" asChild>
+  <div style="width:560px;padding:12px;background:var(--xp-face)">
+    <CapabilitiesFields bind:capabilities={profile} existingChat={false} {choices} prefix="story-profile" />
+  </div>
+</Story>
+
+<Story name="SkillsAndToolsTeam" asChild>
+  <div style="width:560px;padding:12px;background:var(--xp-face)">
+    <CapabilitiesFields bind:capabilities={team} existingChat={false} {choices} prefix="story-team" />
+  </div>
+</Story>
+
+<Story name="SkillsAndToolsCustom" asChild>
+  <div style="width:560px;padding:12px;background:var(--xp-face)">
+    <CapabilitiesFields bind:capabilities={custom} existingChat={false} {choices} prefix="story-custom" />
+  </div>
+</Story>
+
+<Story name="SkillsAndToolsExistingChat" asChild>
+  <div style="width:560px;padding:12px;background:var(--xp-face)">
+    <CapabilitiesFields bind:capabilities={inherit} existingChat {choices} prefix="story-existing" />
   </div>
 </Story>

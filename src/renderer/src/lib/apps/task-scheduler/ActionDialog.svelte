@@ -7,7 +7,7 @@
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
   import Dialog from '../../kit/organisms/Dialog.svelte'
   import ActionFields from './ActionFields.svelte'
-  import { defaultProject } from './taskModel'
+  import { defaultProject, NO_CHOICES, type CapabilityChoices } from './taskModel'
 
   interface Props {
     /** The action to edit; null starts a new one. */
@@ -15,11 +15,12 @@
     agents: readonly AgentDto[]
     drives: readonly DriveDto[]
     sessions: readonly Pick<SessionDto, 'id' | 'title' | 'role'>[]
+    choices?: CapabilityChoices
     onsave: (action: AgentActionDto) => void
     oncancel: () => void
   }
 
-  let { initial, agents, drives, sessions, onsave, oncancel }: Props = $props()
+  let { initial, agents, drives, sessions, choices = NO_CHOICES, onsave, oncancel }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let draft = $state<AgentActionDto>(initial ? structuredClone($state.snapshot(initial)) : newAgentAction(defaultProject(drives)))
@@ -33,10 +34,10 @@
   }
 </script>
 
-<Dialog testid="action-dialog" title={initial ? 'Edit Action' : 'New Action'} iconName="session" width="520px" contained onclose={oncancel}>
+<Dialog testid="action-dialog" title={initial ? 'Edit Action' : 'New Action'} iconName="session" width="560px" contained onclose={oncancel}>
   <div class="form">
     <p class="kind">Action: <strong>Run an agent</strong></p>
-    <ActionFields bind:action={draft} {agents} {drives} {sessions} prefix="action-dialog" />
+    <ActionFields bind:action={draft} {agents} {drives} {sessions} {choices} prefix="action-dialog" />
     <div class="problem" role="alert" data-testid="action-dialog-problem">{problem}</div>
   </div>
   {#snippet buttons()}

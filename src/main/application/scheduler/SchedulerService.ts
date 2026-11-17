@@ -1,5 +1,6 @@
 import type { Id } from '@shared/models'
 import { normaliseVPath } from '@shared/vfs'
+import { checkCapabilities, type CapabilityRegistry } from './ActionScope'
 import { taskProblem, type ScheduledTaskDto, type ScheduledTaskInput, type TaskActionDto, type TaskRunDto, type TaskStatus } from '@shared/scheduler'
 import type { AgentRepository } from '../../domain/repositories/agent-repository'
 import type { DesktopRepository } from '../../domain/repositories/desktop-repository'
@@ -18,6 +19,8 @@ export interface SchedulerServiceDeps {
   desktops: Pick<DesktopRepository, 'get'>
   agents: Pick<AgentRepository, 'get'>
   sessions: Pick<SessionRepository, 'get'>
+  /** Skills, servers, profiles and teams that an action may choose. */
+  registry: CapabilityRegistry
   events: EventPublisher
   log: SchedulerLog
   clock?: SchedulerClock
@@ -101,10 +104,13 @@ export class SchedulerService {
     const clean: ScheduledTaskInput = { ...input, name: input.name.trim(), actions }
     const problem = taskProblem(clean)
     if (problem) throw new AppError(problem)
-    for (const action of actions) {
+    clean.actions = actions.map((action) => {
       if (action.agentId !== null && !this.deps.agents.get(action.agentId)) throw new AppError('Choose an agent that exists.')
       if (action.sessionId !== null && this.deps.sessions.get(action.sessionId)?.desktopId !== desktopId) throw new AppError('Choose a chat of this desktop.')
-    }
+      const checked = checkCapabilities(action.capabilities, this.deps.registry)
+      if ('problem' in checked) throw new AppError(checked.problem)
+      return { ...action, capabilities: checked.value }
+    })
     return clean
   }
 

@@ -154,3 +154,13 @@
   --xp-title-height: 30px;
   --xp-tray-face: linear-gradient(180deg, #0c59b9 0, #139ee9 8%, #18b5f2 50%, #139ee9 90%, #1042af 100%);
 }
+
+/* Task pane: the blue side panel of Explorer-style windows (TaskPane, TaskPaneSection, TaskPaneLink). */
+:root {
+  --xp-taskpane-face: linear-gradient(#7ba2e7, #6375d6);
+  --xp-taskpane-head: linear-gradient(to right, #fff, #c6d3f7);
+  --xp-taskpane-body: #d6dff7;
+  --xp-taskpane-title: #215dc6;
+  --xp-taskpane-link: #215dc6;
+  --xp-taskpane-link-hot: #428eff;
+}
