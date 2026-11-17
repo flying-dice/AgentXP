@@ -188,7 +188,8 @@
     position: relative;
     box-sizing: border-box;
     width: 380px;
-    height: 520px;
+    /* Tall enough for the programs and at least five recent chats, never taller than the screen above the taskbar. */
+    height: min(640px, calc(100vh - 40px));
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 54px 1fr 38px;
@@ -244,8 +245,11 @@
     margin: 0;
     padding: 0;
   }
+  /* The programs give way (and scroll) before the recent chats do: a closed chat must stay reachable from here. */
   .programs {
-    flex: none;
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: auto;
   }
   .entry {
     width: 100%;
@@ -340,8 +344,9 @@
     transform: rotate(90deg);
   }
   .recent {
-    flex: 1;
-    min-height: 0;
+    flex: 1 0 auto;
+    min-height: 44px;
+    max-height: 200px;
     overflow: auto;
   }
   .none {

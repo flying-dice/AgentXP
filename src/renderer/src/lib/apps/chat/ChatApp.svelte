@@ -4,6 +4,7 @@
   import type { AppProps } from '../types'
   import { cwdLabel } from '../explorer/explorerModel'
   import { chatTitleLabels } from '../../app/chatTitles'
+  import { recentChatItems } from '../../app/recentChats'
   import { describeProblem } from '../../app/session/chatProblem'
   import { folderLabel } from '../../app/session/folderLabel'
   import { NOT_RESPONDING_LINK, NOT_RESPONDING_MS, NOT_RESPONDING_TIP, showNotResponding } from '../../app/session/notResponding'
@@ -323,6 +324,13 @@
         label: '&File',
         items: [
           { id: 'chat-new', testid: 'chat-menu-new', label: 'New &chat', shortcut: 'Ctrl+N', action: () => void newChat() },
+          {
+            id: 'chat-recent',
+            testid: 'chat-menu-recent',
+            label: 'Open &Recent',
+            title: 'Open a chat again with its history. Closed chats are kept.',
+            items: recentChatItems(chatList, sessionId, (id) => void host.openApp({ app: 'chat', sessionId: id }), () => void host.openTaskManager('chats'))
+          },
           { id: 'chat-end-agent', testid: 'chat-menu-end-agent', label: '&End the agent program...', title: 'Open Task Manager on Processes, where you can end the agent program', disabled: sessionId <= 0, action: openProcesses },
           { separator: true },
           { id: 'chat-clear', testid: 'chat-menu-clear', label: 'Clear &transcript...', disabled: sessionId <= 0, action: () => void clearTranscript() },

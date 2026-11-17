@@ -38,6 +38,7 @@ beforeEach(async () => {
     notes: new SqliteStickyNoteRepository(f.db),
     surfaces: f.repos.surfaces,
     chats: {
+      keepAsChat: () => false,
       create: async () => ({}) as SessionDto,
       cancel: async () => {},
       remove: async () => {}

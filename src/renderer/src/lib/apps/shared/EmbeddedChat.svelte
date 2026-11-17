@@ -54,7 +54,7 @@
     resizable?: boolean
     /** Header text; default: the session title. */
     title?: string
-    /** "Open as a chat window" under the header (the chat pane): starts a chat of its own on the same folder. */
+    /** "Open as a chat window" under the header (the chat pane): moves the conversation to a Chat window (or starts one on the same folder). */
     onopenwindow?: () => void
     /** The text of the empty pane (no session yet); the chat pane says what it is and what to use for a lasting chat. */
     blankText?: string
@@ -77,7 +77,7 @@
      * (resolves with its id) and is sent to it. Without `onstart` the panel just says there is no session yet.
      */
     onstart?: () => Promise<number>
-    /** "New conversation" in the header (only with a session): the host deletes the session, the panel goes blank. */
+    /** "New conversation" in the header (only with a session): the host keeps the session as a chat, the panel goes blank. */
     onnew?: () => void | Promise<void>
     /** Chips above the composer; clicking one sends its text. */
     suggestions?: readonly ChatSuggestion[]
@@ -285,7 +285,7 @@
           <button type="button" class="reconnect" data-testid="embedded-chat-reconnect" title="Start the agent again" onclick={reconnect}>Reconnect</button>
         {/if}
         {#if onnew && sessionId > 0}
-          <button type="button" class="collapse" data-testid="embedded-chat-new" aria-label="New conversation" title="New conversation: deletes this one" onclick={() => void onnew?.()}>
+          <button type="button" class="collapse" data-testid="embedded-chat-new" aria-label="New conversation" title="New conversation: this one is kept under Start > Recent chats" onclick={() => void onnew?.()}>
             <Icon name="refresh" />
           </button>
         {/if}
@@ -295,7 +295,7 @@
       </div>
       {#if onopenwindow}
         <div class="sub">
-          <button type="button" class="link" data-testid="embedded-chat-open-window" title="Start a chat in its own window on the same folder. You can come back to it later." onclick={() => onopenwindow?.()}>Open as a chat window</button>
+          <button type="button" class="link" data-testid="embedded-chat-open-window" title={sessionId > 0 ? 'Move this conversation to a Chat window of its own' : 'Start a chat in its own window on the same folder. You can come back to it later.'} onclick={() => onopenwindow?.()}>Open as a chat window</button>
         </div>
       {/if}
     {/if}

@@ -3,8 +3,8 @@
 /** The tooltip of the collapsed strip. */
 export const OPEN_PANE_TIP = 'Open the chat pane: ask about what you are looking at'
 
-/** The empty pane: what it is, how long it lasts, and how to start a chat that stays. */
-export const PANE_EMPTY_TEXT = 'Ask about what you are looking at. This is a quick pane: it ends when you close the window. For a chat that you can come back to, use Start > New chat.'
+/** The empty pane: what it is, and where its conversation goes when the window closes. */
+export const PANE_EMPTY_TEXT = 'Ask about what you are looking at. When you close the window, the conversation is kept: open it again from Start > Recent chats.'
 
 /** A button above the message box: clicking it sends `text`; a disabled one says in `tip` what is missing. */
 export interface ChatSuggestion {

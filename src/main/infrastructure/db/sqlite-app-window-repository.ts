@@ -63,6 +63,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
   private readonly upsertUrl: Statement<[Id, string]>
   private readonly updateBaseRef: Statement<[string, Id]>
   private readonly upsertAside: Statement<[Id, Id]>
+  private readonly deleteAside: Statement<[Id]>
   private readonly deletePath: Statement<[Id]>
   private readonly deleteWindow: Statement<[Id]>
   private readonly updateBounds: Statement<[number, number, number, number, Id]>
@@ -99,6 +100,7 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
       db,
       'INSERT INTO aside_windows (window_id, session_id) VALUES (?, ?) ON CONFLICT (window_id) DO UPDATE SET session_id = excluded.session_id'
     )
+    this.deleteAside = prepare(db, 'DELETE FROM aside_windows WHERE window_id = ?')
     this.deletePath = prepare(db, 'DELETE FROM path_windows WHERE window_id = ?')
     this.deleteWindow = prepare(db, 'DELETE FROM app_windows WHERE id = ?')
     this.updateBounds = prepare(db, 'UPDATE app_windows SET x = ?, y = ?, width = ?, height = ? WHERE id = ?')
@@ -181,5 +183,9 @@ export class SqliteAppWindowRepository implements AppWindowRepository {
 
   setAside(id: Id, sessionId: Id): void {
     this.upsertAside.run(id, sessionId)
+  }
+
+  clearAside(id: Id): void {
+    this.deleteAside.run(id)
   }
 }

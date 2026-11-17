@@ -473,7 +473,19 @@ export class DesktopController implements DesktopHost {
       const windows = this.current.windows.filter((w) => w.id !== windowId)
       this.current = { ...this.current, windows, focusedWindowId: this.current.focusedWindowId === windowId ? nextFocus(windows) : this.current.focusedWindowId }
     }
+    this.forgetPane(windowId)
     await this.api.desktop.closeWindow(windowId)
+  }
+
+  /** A closed window's pane state goes with it: a later window may get the same id and must start collapsed. */
+  private forgetPane(windowId: Id): void {
+    const { [windowId]: _gone, ...rest } = this.panes
+    this.panes = rest
+    try {
+      localStore()?.removeItem(paneKey(this.state.desktopId, windowId))
+    } catch {
+      // storage blocked: nothing was remembered either
+    }
   }
 
   async focusWindow(windowId: Id): Promise<void> {
@@ -799,9 +811,18 @@ export class DesktopController implements DesktopHost {
     return id
   }
 
-  /** "New conversation": the aside session is deleted (its window keeps the pane, blank). */
+  /** "New conversation": the pane starts blank; a conversation with a message in it is kept as a chat (Recent chats). */
   async closeAside(windowId: Id): Promise<void> {
     await this.api.desktop.closeAside(windowId)
+  }
+
+  /**
+   * "Open as a chat window": the pane's conversation moves to a Chat window of its own (the pane starts blank); a pane
+   * with no conversation yet starts a new chat on `cwd`.
+   */
+  async openAsideAsChat(windowId: Id, cwd: VPath): Promise<void> {
+    const moved = await this.api.desktop.openAsideAsChat(windowId)
+    if (!moved) await this.startChat(cwd)
   }
 
   paneOf(windowId: Id): PaneState {

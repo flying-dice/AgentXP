@@ -54,8 +54,18 @@ export interface RuntimeDeps {
 /** Brings a session's agent online (also after an app restart) and keeps the session row in sync. */
 export class SessionRuntime {
   private readonly connecting = new Map<Id, Promise<LiveSession>>()
+  /** Chats whose agent started a fresh ACP session in place of their old one (it remembers nothing of the chat yet). */
+  private readonly forgotten = new Set<Id>()
 
   constructor(private readonly deps: RuntimeDeps) {}
+
+  /**
+   * True once after the chat's agent came back without its memory of the chat (it cannot load the old ACP session, or
+   * no longer has it): the next turn tells the agent the conversation so far (see `SessionService.runTurn`).
+   */
+  takeForgotten(sessionId: Id): boolean {
+    return this.forgotten.delete(sessionId)
+  }
 
   /** The live connection of the session, connecting (or reconnecting) when needed. */
   ensureConnected(sessionId: Id): Promise<LiveSession> {
@@ -135,10 +145,18 @@ export class SessionRuntime {
       if (session.acpSessionId && connection.canLoadSession) {
         const acpSessionId = session.acpSessionId
         sink.muted = true
-        const state = await connection.loadSession(acpSessionId, cwd, mcpServers).finally(() => (sink.muted = false))
-        this.storeState(session.id, state)
-        return { connection, acpSessionId }
+        const state = await connection.loadSession(acpSessionId, cwd, mcpServers).then(
+          (loaded) => loaded,
+          () => null // the agent no longer has that session: start a fresh one below, and tell it the history
+        ).finally(() => (sink.muted = false))
+        if (state) {
+          this.forgotten.delete(session.id)
+          this.storeState(session.id, state)
+          return { connection, acpSessionId }
+        }
       }
+      // A chat that had an ACP session and cannot get it back talks to an agent that remembers nothing of it.
+      if (session.acpSessionId) this.forgotten.add(session.id)
       const opened = await connection.newSession(cwd, mcpServers)
       this.deps.sessions.setAcpSessionId(session.id, opened.acpSessionId)
       this.storeState(session.id, await this.applyDefaultMode(connection, opened, defaultModeId))

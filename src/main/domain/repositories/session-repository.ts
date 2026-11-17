@@ -27,6 +27,8 @@ export interface SessionRepository {
   listByDesktop(desktopId: Id): SessionDto[]
   create(input: NewSession): SessionDto
   rename(id: Id, title: string): void
+  /** Changes what the session is for: a chat pane conversation that is kept becomes a `chat` (it outlives its window). */
+  setRole(id: Id, role: SessionRole): void
   setStatus(id: Id, status: SessionStatus): void
   /** Moves the chat to another agent program ("Try again with <agent>"): the old agent's ACP session, mode and model are forgotten. */
   setAgent(id: Id, agentId: Id): void

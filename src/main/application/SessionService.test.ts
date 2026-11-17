@@ -11,6 +11,8 @@ import { SessionProblems } from './SessionProblems'
 import { SessionRuntime } from './SessionRuntime'
 import { DEFAULT_SESSION_TITLE, SessionService, titleFromPrompt, type SessionServiceDeps } from './SessionService'
 import { TerminalRecorder } from './TerminalRecorder'
+import { HISTORY_RESOURCE_URI } from './historyBlock'
+import type { ContentBlockDto } from '@shared/models'
 import { SessionFiles } from './SessionFiles'
 import { createVfsFixture, FakeConnector } from './test-helpers'
 
@@ -228,6 +230,70 @@ describe('SessionService reconnect', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(status(session.id)).toBe('closed')
     expect(pool.get(session.id)).toBeUndefined()
+  })
+})
+
+describe('SessionService reopening a chat', () => {
+  const historyOf = (blocks: ContentBlockDto[] | undefined): { text?: string } | undefined => blocks?.find((b) => b.kind === 'resource' && b.uri === HISTORY_RESOURCE_URI) as { text?: string } | undefined
+
+  /** A chat with one answered turn, then an app restart (the agent programs are gone). */
+  async function chatAfterRestart(): Promise<number> {
+    const session = await service.create(f.desktop.id)
+    await service.prompt({ sessionId: session.id, text: 'Fix the login form', attachments: [] })
+    f.repos.transcripts.appendMessage(session.id, 'agent', [{ kind: 'text', text: 'Done: the form validates now.' }])
+    await pool.disposeAll()
+    service.recoverAfterRestart()
+    return session.id
+  }
+
+  it('tells an agent that cannot load the old session the conversation so far, once, without storing it', async () => {
+    const id = await chatAfterRestart()
+    await service.prompt({ sessionId: id, text: 'And the tests?', attachments: [] })
+    const sent = connector.connections[1]!.prompts[0]!
+    const history = historyOf(sent)
+    expect(history?.text).toContain('Fix the login form')
+    expect(history?.text).toContain('Done: the form validates now.')
+    expect(history?.text).not.toContain('And the tests?')
+    expect(f.repos.transcripts.list(id).flatMap((e) => (e.kind === 'message' ? e.blocks : [])).some((b) => b.kind === 'resource' && b.uri === HISTORY_RESOURCE_URI)).toBe(false)
+    await service.prompt({ sessionId: id, text: 'Thanks', attachments: [] })
+    expect(historyOf(connector.connections[1]!.prompts[1])).toBeUndefined()
+  })
+
+  it('sends no history to an agent that loaded its session (it remembers)', async () => {
+    connector.canLoadSession = true
+    const id = await chatAfterRestart()
+    await service.prompt({ sessionId: id, text: 'And the tests?', attachments: [] })
+    expect(connector.connections[1]!.calls[0]).toBe('loadSession:acp-1')
+    expect(historyOf(connector.connections[1]!.prompts[0])).toBeUndefined()
+  })
+
+  it('starts a fresh session with the history when the agent no longer has the old one', async () => {
+    connector.canLoadSession = true
+    const id = await chatAfterRestart()
+    connector.loadError = new Error('Session not found')
+    await service.prompt({ sessionId: id, text: 'And the tests?', attachments: [] })
+    expect(connector.connections[1]!.calls).toEqual(['loadSession:acp-1', 'newSession', 'prompt'])
+    expect(f.repos.sessions.get(id)?.acpSessionId).toBe('acp-2')
+    expect(historyOf(connector.connections[1]!.prompts[0])?.text).toContain('Fix the login form')
+  })
+})
+
+describe('SessionService.keepAsChat', () => {
+  it('keeps a pane chat the user wrote in as a chat, and not an empty one', async () => {
+    const pane = await service.create(f.desktop.id, undefined, undefined, 'aside')
+    expect(service.keepAsChat(pane.id)).toBe(false)
+    expect(f.repos.sessions.get(pane.id)?.role).toBe('aside')
+    await service.prompt({ sessionId: pane.id, text: 'Explain this', attachments: [] })
+    expect(service.keepAsChat(pane.id)).toBe(true)
+    expect(f.repos.sessions.get(pane.id)).toMatchObject({ role: 'chat', title: 'Explain this' })
+    expect(f.publisher.payloads('session.changed').at(-1)).toMatchObject({ id: pane.id, role: 'chat' })
+  })
+
+  it('never turns a review into a chat', async () => {
+    const review = await service.create(f.desktop.id, undefined, undefined, 'review')
+    await service.prompt({ sessionId: review.id, text: 'Review', attachments: [] })
+    expect(service.keepAsChat(review.id)).toBe(false)
+    expect(service.keepAsChat(99_999)).toBe(false)
   })
 })
 

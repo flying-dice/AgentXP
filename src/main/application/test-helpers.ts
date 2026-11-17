@@ -113,6 +113,8 @@ export async function createVfsFixture(options: { plugProject?: boolean } = {}) 
 
 export class FakeLiveConnection implements LiveAgentConnection {
   canLoadSession = false
+  /** `session/load` fails with this (the agent no longer has the session). */
+  loadError: Error | null = null
   readonly calls: string[] = []
   readonly prompts: ContentBlockDto[][] = []
   mcpServers: McpServerConfig[] = []
@@ -143,6 +145,7 @@ export class FakeLiveConnection implements LiveAgentConnection {
   async loadSession(acpSessionId: string, _cwd: string, mcpServers: McpServerConfig[]): Promise<AcpSessionState> {
     this.calls.push(`loadSession:${acpSessionId}`)
     this.mcpServers = mcpServers
+    if (this.loadError) throw this.loadError
     return { modes: [], models: [], currentModeId: null, currentModelId: null }
   }
 
@@ -181,6 +184,7 @@ export class FakeConnector implements AgentConnector {
   readonly launches: AgentLaunch[] = []
   readonly connections: FakeLiveConnection[] = []
   canLoadSession = false
+  loadError: Error | null = null
   openError: Error | null = null
 
   async open(launch: AgentLaunch): Promise<LiveAgentConnection> {
@@ -188,6 +192,7 @@ export class FakeConnector implements AgentConnector {
     this.launches.push(launch)
     const connection = new FakeLiveConnection(`acp-${this.connections.length + 1}`)
     connection.canLoadSession = this.canLoadSession
+    connection.loadError = this.loadError
     this.connections.push(connection)
     return connection
   }

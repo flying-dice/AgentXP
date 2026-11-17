@@ -55,4 +55,6 @@ export interface AppWindowRepository {
   setBaseRef(id: Id, baseRef: string): void
   /** Links the window to its aside session (replaces an earlier link). */
   setAside(id: Id, sessionId: Id): void
+  /** Unlinks the window from its aside session (the session stays: it was kept as a chat). */
+  clearAside(id: Id): void
 }

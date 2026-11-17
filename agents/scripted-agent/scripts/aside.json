@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "aside",
-  "description": "The chat pane of an app window (e2e/aside.e2e.ts). A prompt containing \"explain this\" proves the app context arrived: the desktop state of the prompt must carry `appContext` with the open file and the selection, and the short answer names the file. A prompt containing \"summarise\" answers for the Browser pane. Anything else gets a one-line answer.",
+  "description": "The chat pane of an app window (e2e/aside.e2e.ts). A prompt containing \"explain this\" proves the app context arrived: the desktop state of the prompt must carry `appContext` with the open file and the selection, and the short answer names the file. A prompt containing \"summarise\" answers for the Browser pane. Anything else gets a one-line answer. \"list my chats\" calls chats_list; \"reopen the first chat\" reads chat 1 with chat_read and opens it with chat_open (the agent API of Recent chats).",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -9,22 +9,128 @@
   "rules": [
     {
       "id": "explain",
-      "match": { "contains": "explain this", "ignoreCase": true },
+      "match": {
+        "contains": "explain this",
+        "ignoreCase": true
+      },
       "steps": [
-        { "type": "expect", "from": "desktop", "contains": "\"appContext\"", "message": "the prompt carries no appContext" },
-        { "type": "expect", "from": "desktop", "contains": "\"selection\"", "message": "the appContext has no selection" },
-        { "type": "extract", "from": "desktop", "regex": "\"openFile\":\"[^\"]*?([A-Za-z0-9_-]+\\.[a-z]+)\"", "saveAs": "file" },
-        { "type": "message", "text": "Short answer: {{file}} exports a small constant and a function that returns it." }
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"appContext\"",
+          "message": "the prompt carries no appContext"
+        },
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"selection\"",
+          "message": "the appContext has no selection"
+        },
+        {
+          "type": "extract",
+          "from": "desktop",
+          "regex": "\"openFile\":\"[^\"]*?([A-Za-z0-9_-]+\\.[a-z]+)\"",
+          "saveAs": "file"
+        },
+        {
+          "type": "message",
+          "text": "Short answer: {{file}} exports a small constant and a function that returns it."
+        }
       ]
     },
     {
       "id": "summarise",
-      "match": { "contains": "summarise", "ignoreCase": true },
+      "match": {
+        "contains": "summarise",
+        "ignoreCase": true
+      },
       "steps": [
-        { "type": "expect", "from": "desktop", "contains": "\"appContext\"", "message": "the prompt carries no appContext" },
-        { "type": "message", "text": "Short answer: a short summary of the page in view." }
+        {
+          "type": "expect",
+          "from": "desktop",
+          "contains": "\"appContext\"",
+          "message": "the prompt carries no appContext"
+        },
+        {
+          "type": "message",
+          "text": "Short answer: a short summary of the page in view."
+        }
+      ]
+    },
+    {
+      "id": "list-chats",
+      "match": {
+        "contains": "list my chats",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "chats_list",
+          "arguments": {},
+          "saveAs": "chats",
+          "label": "list chats"
+        },
+        {
+          "type": "expect",
+          "from": "chats.isError",
+          "equals": "false"
+        },
+        {
+          "type": "message",
+          "text": "Your chats: {{chats}}"
+        }
+      ]
+    },
+    {
+      "id": "reopen-chat",
+      "match": {
+        "contains": "reopen the first chat",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "chat_read",
+          "arguments": {
+            "chat": 1
+          },
+          "saveAs": "read",
+          "label": "read chat"
+        },
+        {
+          "type": "expect",
+          "from": "read.isError",
+          "equals": "false"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "chat_open",
+          "arguments": {
+            "chat": 1
+          },
+          "saveAs": "opened",
+          "label": "open chat"
+        },
+        {
+          "type": "expect",
+          "from": "opened.isError",
+          "equals": "false"
+        },
+        {
+          "type": "message",
+          "text": "Reopened: {{opened}} It said: {{read}}"
+        }
       ]
     }
   ],
-  "fallback": [{ "type": "message", "text": "Short answer: {{prompt}}" }]
+  "fallback": [
+    {
+      "type": "message",
+      "text": "Short answer: {{prompt}}"
+    }
+  ]
 }

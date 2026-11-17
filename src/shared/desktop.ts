@@ -429,8 +429,16 @@ export interface DesktopApi {
    * window: closing the window deletes it.
    */
   openAside(desktopId: Id, windowId: Id, agentId?: Id): Promise<Id>
-  /** "New conversation": deletes the window's aside session (its transcript goes too); the next `openAside` starts a fresh one. */
+  /**
+   * "New conversation": the pane starts blank; the next `openAside` starts a fresh session. The conversation it had is
+   * kept as a chat (Start > Recent chats) when the user wrote in it, else deleted.
+   */
   closeAside(windowId: Id): Promise<void>
+  /**
+   * "Open as a chat window": moves the pane's conversation to a Chat window of its own (kept as a chat; the pane starts
+   * blank). Null when the pane has no conversation yet.
+   */
+  openAsideAsChat(windowId: Id): Promise<AppWindowState | null>
   policy(): Promise<ToolPolicyDto>
   setPolicy(policy: ToolPolicyDto): Promise<void>
   /**

@@ -32,6 +32,7 @@ export const DESKTOP_INSTRUCTIONS =
   'In a chat pane (an aside: the small chat inside an app window, whose prompts carry `appContext` in the desktop state: windowId, app, the open file, the selection, the page) ' +
   'keep your answers short and local to that app context, a few sentences or a short list: "explain this" means the selection or the open file in appContext. ' +
   'Do not start side projects there; act only when asked, and pass `window` = appContext.windowId to tools that take a window (the browser_* tools drive that Browser window). ' +
+  'Chats outlive their windows: chats_list lists the chats of this desktop (what Start > Recent chats shows), chat_read reads one\'s transcript and chat_open opens one again in a Chat window with its history. ' +
   'Work tracking: the board_* tools (always available, the Kanban window need not be open) read and write the desktop\'s Kanban boards. Teams share a board: ' +
   'look at it (board_get) before you start, take or create a card for your work (assignee = your own name), move it to "Doing" when you start and to "Done" when you finish, and keep descriptions short. ' +
   'Using web apps (chat, mail, docs) in the Browser: the user signs in themselves in the Browser window and the session persists; you never type passwords or secrets. ' +
@@ -163,6 +164,30 @@ export const TOOL_DEFS = {
     group: 'shell',
     description: 'Bring an app window to the front (restores it when minimised).',
     input: z.object({ window: z.number().int().optional().describe('Window id'), app: app.optional() })
+  },
+  chats_list: {
+    group: 'shell',
+    description:
+      'List the chats of this desktop, latest activity first (what Start > Recent chats shows): id, title, status, working directory, last activity, and whether a Chat window shows it. Closed chats keep their history and can be opened again with chat_open.',
+    input: z.object({
+      limit: z.number().int().min(1).max(100).optional().describe('Maximum chats (default 20)'),
+      query: z.string().optional().describe('Only chats whose title contains this text (case-insensitive)')
+    })
+  },
+  chat_read: {
+    group: 'shell',
+    description:
+      'Read the transcript of a chat of this desktop as Markdown (the messages and tool calls the user sees). Long transcripts are cut at the start; pass maxChars for more.',
+    input: z.object({
+      chat: z.number().int().describe('Chat id from chats_list'),
+      maxChars: z.number().int().min(500).max(200_000).optional().describe('Most characters to return, counted from the end (default 20000)')
+    })
+  },
+  chat_open: {
+    group: 'shell',
+    description:
+      'Open a chat of this desktop again in a Chat window with its whole history (or bring its open window forward). Follows the Control Center policy "Agent may open apps".',
+    input: z.object({ chat: z.number().int().describe('Chat id from chats_list') })
   },
   fs_list: {
     group: 'fs.read',

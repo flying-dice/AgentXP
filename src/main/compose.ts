@@ -71,6 +71,7 @@ import { createFsTools } from './application/tools/fsTools'
 import { createNotepadTools } from './application/tools/notepadTools'
 import type { CommandRunner } from './application/tools/ports'
 import { createShellTools } from './application/tools/shellTools'
+import { createChatTools } from './application/tools/chatTools'
 import { createTerminalTools } from './application/tools/terminalTools'
 import { SessionBroadcaster } from './application/SessionBroadcaster'
 import { SessionEventProjector } from './application/SessionEventProjector'
@@ -434,6 +435,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     gate: gateway,
     handlers: {
       ...createShellTools({ desktops, paths: toolPaths, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
+      ...createChatTools({ desktops, sessions: repos.sessions, transcripts: repos.transcripts, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
       ...createFsTools({ vfs, paths: toolPaths }),
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
       ...createCodeTools({ desktops, changes: repos.changes, paths: toolPaths }),

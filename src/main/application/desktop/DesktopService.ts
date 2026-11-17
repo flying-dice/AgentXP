@@ -37,6 +37,8 @@ export interface ChatLifecycle {
   create(desktopId: Id, agentId: Id | undefined, cwd: VPath | undefined, role?: SessionRole, options?: { background?: boolean }): Promise<SessionDto>
   cancel(sessionId: Id): Promise<void>
   remove(sessionId: Id): Promise<void>
+  /** Keeps a chat pane conversation as a chat (true), or says there is nothing to keep (false: no message yet). */
+  keepAsChat(sessionId: Id): boolean
 }
 
 export interface DesktopServiceDeps {
@@ -211,10 +213,14 @@ export class DesktopService implements DesktopStates {
     if (record.asideSessionId !== null) this.removeOwnedSession(record.asideSessionId)
   }
 
-  /** A review or aside session lives and dies with its window (its comments go with it); a chat outlives its window. */
+  /**
+   * A review session lives and dies with its window (its comments go with it); a chat outlives its window. A chat pane
+   * conversation is kept as a chat once the user wrote in it (Start > Recent chats opens it again); an empty one goes.
+   */
   private removeOwnedSession(sessionId: Id): void {
     const session = this.deps.sessions.get(sessionId)
     if (!session || session.role === 'chat') return
+    if (session.role === 'aside' && this.deps.chats.keepAsChat(sessionId)) return
     void this.deps.chats.remove(sessionId).catch(() => {})
   }
 
@@ -394,14 +400,31 @@ export class DesktopService implements DesktopStates {
     return session.id
   }
 
-  /** "New conversation": the window's aside session is deleted; the window keeps its (now blank) pane. */
+  /**
+   * "New conversation": the window's pane starts blank. The conversation it had is kept as a chat (under Recent chats)
+   * when the user wrote in it, else deleted.
+   */
   async closeAside(windowId: Id): Promise<void> {
     const record = this.windowRecord(windowId)
     const sessionId = record.asideSessionId
     if (sessionId === null) return
     const session = this.deps.sessions.get(sessionId)
-    if (session?.role === 'aside') await this.deps.chats.remove(sessionId)
+    if (session?.role === 'aside' && this.deps.chats.keepAsChat(sessionId)) this.deps.windows.clearAside(windowId)
+    else if (session?.role === 'aside') await this.deps.chats.remove(sessionId)
     this.emit(record.desktopId)
+  }
+
+  /**
+   * "Open as a chat window" with a conversation in the pane: the conversation moves to a Chat window of its own (it is
+   * kept as a chat) and the pane starts blank. Null when the pane has nothing to move (the caller starts a new chat).
+   */
+  openAsideAsChat(windowId: Id): AppWindowState | null {
+    const record = this.windowRecord(windowId)
+    const sessionId = record.asideSessionId
+    if (sessionId === null || this.deps.sessions.get(sessionId)?.role !== 'aside') return null
+    if (!this.deps.chats.keepAsChat(sessionId)) return null
+    this.deps.windows.clearAside(windowId)
+    return this.openWindow({ desktopId: record.desktopId, app: 'chat', sessionId })
   }
 
   /** A chat was renamed: its window title follows. */

@@ -154,6 +154,13 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
       delete find(windowId).asideSessionId
       changed()
     },
+    openAsideAsChat: async (windowId) => {
+      const w = find(windowId)
+      const sessionId = w.asideSessionId
+      if (sessionId === undefined) return null
+      delete w.asideSessionId
+      return api.openWindow({ desktopId: desktop.id, app: 'chat', sessionId })
+    },
     policy: async () => structuredClone(policy),
     setPolicy: async (p) => void (policy = structuredClone(p)),
     attachBrowser: async () => {},
