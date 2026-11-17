@@ -20,6 +20,7 @@ export type AppId =
   | 'diagrams'
   | 'snipping-tool'
   | 'sticky-notes'
+  | 'kanban'
   | 'event-viewer'
   | 'agent-manager'
   | 'control-centre'
@@ -36,6 +37,7 @@ const START_GROUP: Partial<Record<AppId, string>> = {
   diagrams: 'accessories',
   'snipping-tool': 'accessories',
   'sticky-notes': 'accessories',
+  kanban: 'accessories',
   'agent-manager': 'system-tools',
   'control-centre': 'system-tools',
   'task-scheduler': 'system-tools'
