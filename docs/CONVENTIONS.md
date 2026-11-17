@@ -4,6 +4,11 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 (`desktop.png`, `start.png`, `tray.png` screenshots, `Desktop.dc.html` markup + behaviour of the mockup, its README),
 `docs/design/XP_DESIGN_LANGUAGE.md` (the Luna rules). Tokens: `src/renderer/src/lib/kit/tokens.css`.
 
+## Every app has five pillars
+
+UI, backend, agent API (agentxp MCP tools), e2e and docs. `docs/APP_PILLARS.md` explains them and shows the state of
+each app; `npm run app:pillars` enforces them in CI. To add an app, follow `.claude/skills/new-agentxp-app/SKILL.md`.
+
 ## Svelte / kit
 
 - Svelte 5 runes only. Props via `let { ..., class: className = '', ...rest } = $props()`.
