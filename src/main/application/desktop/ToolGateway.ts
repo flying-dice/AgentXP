@@ -55,6 +55,11 @@ export class ToolGateway {
     if (!state) return
     const access = evaluateToolAccess({ state, group: request.group, policy: this.deps.desktops.policy() })
     if (access.kind === 'refuse') throw new ToolRefusedError(access.message)
+    if (request.force) {
+      const reason = access.kind === 'ask' ? access.reason : 'A change to AgentXP itself always asks you'
+      if (!(await this.ask(sessionId, request.title, reason))) throw new ToolRefusedError(`The user declined: ${request.title}.`)
+      return
+    }
     if (access.kind === 'allow' || request.askUser === false) return
     if (this.consumeApproval(sessionId)) return
     if (!(await this.ask(sessionId, request.title, access.reason))) throw new ToolRefusedError(`The user declined: ${request.title}.`)

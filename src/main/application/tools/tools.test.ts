@@ -1,3 +1,5 @@
+/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
+const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -11,7 +13,8 @@ import { DesktopService } from '../desktop/DesktopService'
 import { PAUSED_MESSAGE } from '../desktop/AppToolPolicy'
 import { ToolGateway } from '../desktop/ToolGateway'
 import { createVfsFixture } from '../test-helpers'
-import { TOOL_SPECS, specsForGroups } from './catalog'
+import { TOOL_SPECS, specsForGroups, type ToolHandlers } from './catalog'
+import { ADMIN_TOOL_DEFS } from './adminCatalog'
 import { createBrowserTools, formatRead, formatTabs, normalizeUrl } from './browserTools'
 import { createCodeTools } from './codeTools'
 import { DesktopToolService } from './DesktopToolService'
@@ -36,7 +39,10 @@ import { createChatTools } from './chatTools'
 import { createTerminalTools } from './terminalTools'
 import { ToolPaths } from './ToolPaths'
 import type { TerminalActivity } from '../ports'
-import type { ToolResult } from './types'
+import { textResult, type ToolResult } from './types'
+
+/** The admin tools (Task Scheduler, Teams, ...) are exercised in adminTools.test.ts; here they only fill the handler map. */
+const adminStubs = Object.fromEntries(Object.keys(ADMIN_TOOL_DEFS).map((name) => [name, async () => textResult('stub')])) as unknown as ToolHandlers<keyof typeof ADMIN_TOOL_DEFS>
 
 const textOf = (r: ToolResult): string => r.content.map((c) => (c.type === 'text' ? c.text : `<${c.type}>`)).join('\n')
 
@@ -255,7 +261,8 @@ beforeEach(async () => {
         }
       }),
       ...createRecycleTools({ recycle: recycle as never }),
-      ...createReviewTools({ reviews: {} as never }) // exercised in reviewTools.test.ts
+      ...createReviewTools({ reviews: {} as never }), // exercised in reviewTools.test.ts
+      ...adminStubs
     }
   })
 })
@@ -308,13 +315,19 @@ describe('tool catalog', () => {
       'diagram_open'
     ])
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(76)
+    expect(byGroup('scheduler')).toEqual(['scheduler_list', 'scheduler_get', 'scheduler_create', 'scheduler_update', 'scheduler_delete', 'scheduler_enable', 'scheduler_run', 'scheduler_end', 'scheduler_clear_history'])
+    expect(byGroup('teams')).toEqual(['profile_list', 'profile_create', 'profile_update', 'profile_delete', 'team_list', 'team_create', 'team_update', 'team_delete'])
+    expect(byGroup('rooms')).toEqual(['room_list', 'room_read', 'room_create', 'room_rename', 'room_delete', 'room_post', 'room_stop'])
+    expect(byGroup('settings')).toHaveLength(18)
+    expect(byGroup('taskmgr')).toEqual(['taskmgr_chats', 'taskmgr_processes', 'taskmgr_terminals', 'taskmgr_open_chat', 'taskmgr_end_task', 'taskmgr_end_process'])
+    expect(byGroup('help')).toEqual(['help_search', 'help_read'])
+    expect(TOOL_SPECS).toHaveLength(126)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'board'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'board', ...ADMIN_GROUPS])
     desktops.openWindow({ desktopId, app: 'browser' })
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'browser', 'board'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'browser', 'board', ...ADMIN_GROUPS])
     expect(tools.enabledGroups(999)).toEqual(['shell'])
   })
 })
@@ -936,6 +949,23 @@ describe('board tools', () => {
     expect((await run('board_delete', { board: 'nope' })).isError).toBe(true)
     expect(textOf(await run('board_delete', { board: 'A' }))).toMatch(/Deleted board/)
     expect(textOf(await run('board_list'))).toBe('No boards.')
+  })
+
+  it('rename a board, add, rename and delete columns, and delete cards', async () => {
+    await run('board_create', { name: 'Sprint', columns: ['To do'] })
+    expect(textOf(await run('board_rename', { board: 'Sprint', name: 'Sprint 2' }))).toContain('Sprint 2')
+    expect((await run('board_rename', { board: 'Sprint', name: 'x' })).isError).toBe(true)
+    const added = textOf(await run('board_add_column', { board: 'Sprint 2', name: 'Review' }))
+    const columnId = Number(/Column \[(\d+)\] Review/.exec(added)![1])
+    expect(textOf(await run('board_rename_column', { column: columnId, name: 'QA' }))).toMatch(/Column \[\d+\] QA \(0\)/)
+    await run('board_add_card', { column: 'QA', title: 'Check it' })
+    await run('board_add_card', { column: 'To do', title: 'Keep me' })
+    const cardId = Number(/Card \[(\d+)\] Keep me/.exec(textOf(await run('board_get')))![1])
+    expect(textOf(await run('board_delete_column', { column: columnId }))).not.toContain('Check it')
+    expect(textOf(await run('board_delete_card', { card: cardId }))).toMatch(/Deleted|To do \(0\)/)
+    expect(textOf(await run('board_get'))).not.toContain('Keep me')
+    expect((await run('board_delete_card', { card: cardId })).isError).toBe(true)
+    expect((await run('board_rename_column', { column: 999999, name: 'x' })).isError).toBe(true)
   })
 
   it('obeys the Control Center policy', async () => {

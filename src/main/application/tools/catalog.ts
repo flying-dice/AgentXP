@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { AGENT_OPENABLE_APPS, type ToolGroup } from '@shared/desktop'
 import { REVIEW_SEVERITIES, REVIEW_VERDICTS } from '@shared/review'
 import type { ToolContext, ToolResult } from './types'
+import { ADMIN_TOOL_DEFS } from './adminCatalog'
 
 const app = z.enum(AGENT_OPENABLE_APPS)
 const windowId = z.number().int().optional().describe('Window id from desktop_state; default: the focused window of this app')
@@ -37,7 +38,10 @@ export const DESKTOP_INSTRUCTIONS =
   'look at it (board_get) before you start, take or create a card for your work (assignee = your own name), move it to "Doing" when you start and to "Done" when you finish, and keep descriptions short. ' +
   'Using web apps (chat, mail, docs) in the Browser: the user signs in themselves in the Browser window and the session persists; you never type passwords or secrets. ' +
   'Loop: browser_read (tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. browser_read pages through the whole document (follow nextOffset), ' +
-  'refs reset when the page navigates, and long lists load more when you browser_scroll, then read again.'
+  'refs reset when the page navigates, and long lists load more when you browser_scroll, then read again. ' +
+  'Everything a person can do in the AgentXP apps you can do with tools, no window needed: scheduler_* (Task Scheduler), profile_* and team_* (Teams), ' +
+  'room_* (team chat rooms), settings_*, agent_*, skill_* and mcp_* (Control Center), taskmgr_* (Task Manager) and help_search / help_read (the manuals: ' +
+  'use them to answer questions about AgentXP). Changes to Control Center and ending an agent program always ask the user first.'
 
 const BOARD_REF = z.union([z.number().int(), z.string()]).describe('Board id, or its name')
 
@@ -123,6 +127,12 @@ export interface ToolDefinition {
   group: ToolGroup
   description: string
   input: z.ZodObject
+  /**
+   * `read`: only reads; it never asks, also when the group is set to Ask (Deny still blocks it).
+   * `confirm`: changes AgentXP itself; it always asks the user, also when the group is set to Allow.
+   * Default: the group's policy decides.
+   */
+  access?: 'read' | 'confirm'
 }
 
 export const TOOL_DEFS = {
@@ -625,7 +635,8 @@ export const TOOL_DEFS = {
     group: 'review',
     description: 'Finish the review with a verdict and a short summary. The user sees it as the banner of the Code Review window. Submitting again replaces the verdict.',
     input: z.object({ verdict: z.enum(REVIEW_VERDICTS), body: z.string().describe('A short summary of the review') })
-  }
+  },
+  ...ADMIN_TOOL_DEFS
 } as const satisfies Record<string, ToolDefinition>
 
 export type ToolName = keyof typeof TOOL_DEFS

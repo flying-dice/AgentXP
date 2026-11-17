@@ -169,6 +169,12 @@ export class VirtualFileSystem {
     return this.deps.host.readText(mount.root, relativePath)
   }
 
+  /** Reads a binary file (a picture for Paint). */
+  async readBytes(desktopId: Id, path: VPath): Promise<Uint8Array> {
+    const { mount, relativePath } = this.locate(desktopId, path)
+    return this.deps.host.readBytes(mount.root, relativePath)
+  }
+
   /** Writes a file (not recorded as an agent change). */
   async writeFile(desktopId: Id, path: VPath, text: string): Promise<void> {
     const { mount, relativePath } = this.locate(desktopId, path)

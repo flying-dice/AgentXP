@@ -32,3 +32,16 @@ export async function startConnectedDesktop(options: { title?: string; workspace
   await desktop.taskbar.waitFor()
   return { app, launcherPage, launcher, desktopPage, desktop, desktopId }
 }
+
+/** Starts AgentXP again on the same user data and reconnects to the desktop `title` (for "it is still there after a restart"). */
+export async function reconnectDesktop(userData: string, title: string): Promise<ConnectedDesktop> {
+  const app = await launchAgentXP({ userData })
+  const launcherPage = await app.launcherWindow()
+  const launcher = new LauncherPage(launcherPage)
+  await launcher.connect(title)
+  const desktopId = await desktopIdByTitle(launcherPage, title)
+  const desktopPage = await app.desktopWindow(desktopId)
+  const desktop = new DesktopPage(desktopPage)
+  await desktop.taskbar.waitFor()
+  return { app, launcherPage, launcher, desktopPage, desktop, desktopId }
+}

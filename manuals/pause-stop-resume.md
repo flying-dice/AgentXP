@@ -61,10 +61,10 @@ The tool chips show one pattern, for example **Read files: Allow**, **Write file
 | Name | What it does | data-testid |
 |---|---|---|
 | Resume | Hands control back to the agent. It shows while you are in control. | `topbar-give-back` |
-| You are in control | The first line of the Activity list while you are in control. It says that the agent asks first. | `taskpane-activity-control` |
-| Activity list | The list of what the agent did. Double-click it to open Event Viewer. | `taskpane-activity` |
-| Event Viewer (link) | Opens Event Viewer. | `taskpane-activity-open-event-viewer` |
-| Event Viewer (menu) | Right-click the Activity list, then click Event Viewer. | `taskpane-activity-menu-event-viewer` |
+| You are in control | The first line of the Activity list while you are in control. It says that the agent asks first. | `infopanel-activity-control` |
+| Activity list | The list of what the agent did. Double-click it to open Event Viewer. | `infopanel-activity` |
+| Event Viewer (link) | Opens Event Viewer. | `infopanel-activity-open-event-viewer` |
+| Event Viewer (menu) | Right-click the Activity list, then click Event Viewer. | `infopanel-activity-menu-event-viewer` |
 | Resumed note | The note above the message that Resume sent. | `chat-resume-note` |
 | Paused banner | Tells in the chat that the desktop is paused, and whether Pause stopped a step of this chat. | `chat-paused-banner` |
 

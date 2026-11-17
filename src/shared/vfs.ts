@@ -142,6 +142,10 @@ export interface VfsApi {
   /** A user save (Notepad, WordPad): not recorded as an agent change. */
   writeFile(desktopId: Id, path: VPath, text: string): Promise<void>
   stat(desktopId: Id, path: VPath): Promise<VfsEntryDto | null>
+  /** A binary file (Paint opens a picture). */
+  readBytes(desktopId: Id, path: VPath): Promise<Uint8Array>
+  /** A user save of a binary file (Paint saves a picture). */
+  writeBytes(desktopId: Id, path: VPath, bytes: Uint8Array): Promise<void>
 }
 
 export interface DrivesApi {

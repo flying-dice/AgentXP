@@ -13,6 +13,7 @@ This manual describes Teams. Teams holds the profiles and the teams of agents, a
   - The Profile Dialog Box
   - The Team Dialog Box
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -108,9 +109,25 @@ The dialog box has these parts:
 | Team name | The name of the team. | `team-dialog-name` |
 | Team instructions | The instructions of every member. | `team-dialog-instructions` |
 | Team members | The profiles of the team. | `team-dialog-members` |
+| Team member | One profile in the list; its box adds it to the team (`team-dialog-member-check`). | `team-dialog-member` |
 | Team skills | The skills of every member. | `team-dialog-skills` |
 | Team board | The Kanban board of the team. | `team-dialog-board` |
 | Team problem | Says what is missing. | `team-dialog-problem` |
+
+### What the Agent Can Do
+
+The agent can use the tools below at any time. The Teams window does not need to be open. The permission **Teams** in **Control Center** controls them. It is set to **Ask** at first. Reads run without a question. An open Teams window shows the changes at once.
+
+| Tool | What it does |
+|---|---|
+| `profile_list` | Lists the profiles, with their agent, model, skills, and MCP servers. |
+| `profile_create` | Creates a profile. |
+| `profile_update` | Changes a profile. |
+| `profile_delete` | Deletes a profile. |
+| `team_list` | Lists the teams, with their members and their Kanban board. |
+| `team_create` | Creates a team from profiles. |
+| `team_update` | Changes a team. A new member list replaces the old one. |
+| `team_delete` | Deletes a team. |
 
 ## 5 - Common Tasks
 

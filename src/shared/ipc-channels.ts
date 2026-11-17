@@ -44,7 +44,8 @@ const RENDERER_EVENTS = {
   'review.changed': true,
   'room.changed': true,
   'room.removed': true,
-  'scheduler.changed': true
+  'scheduler.changed': true,
+  'config.changed': true
 } as const satisfies Record<AgentXPEventName, true>
 
 export const isRendererEvent = (name: string): name is AgentXPEventName => name in RENDERER_EVENTS
@@ -99,7 +100,7 @@ const INVOKE_METHODS = {
     raiseWindow: true,
     userActive: true
   },
-  vfs: { readDir: true, readFile: true, writeFile: true, stat: true },
+  vfs: { readDir: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },
   scheduler: { list: true, create: true, update: true, remove: true, setEnabled: true, run: true, end: true, history: true, clearHistory: true },
   review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },

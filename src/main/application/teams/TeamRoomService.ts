@@ -70,15 +70,15 @@ export class TeamRoomService {
     await Promise.all(sessionIds.map((id) => this.deps.sessions.remove(id).catch(() => {})))
   }
 
-  /** The user speaks. Stored at once; the members called answer on their own. */
-  async say(roomId: Id, text: string): Promise<void> {
+  /** The user speaks (or an agent from another chat, under `author`). Stored at once; the members called answer on their own. */
+  async say(roomId: Id, text: string, author = 'You'): Promise<void> {
     const body = text.trim()
     if (!body) throw new AppError('Nothing to send')
     const room = required(this.deps.rooms.get(roomId), 'Room')
     const members = this.membersOf(required(this.deps.teams.get(room.teamId), 'Team'))
     const called = mentionedMembers(body, members)
     const target = called.length > 0 ? called : this.defaultMember(roomId, members)
-    this.post(room, null, 'You', body)
+    this.post(room, null, author, body)
     for (const member of target) this.call(room, member)
   }
 

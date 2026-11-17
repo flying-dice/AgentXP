@@ -14,6 +14,7 @@ This manual describes Task Manager. Task Manager shows the chats, the agent proc
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -102,6 +103,19 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent can use the tools below at any time. The permission **Task Manager** in **Control Center** controls them. **End process** always shows a request first.
+
+| Tool | What it does |
+|---|---|
+| `taskmgr_chats` | Lists the chats of the desktop, like the **Chats** tab. |
+| `taskmgr_processes` | Lists the agent programs, like the **Processes** tab. |
+| `taskmgr_terminals` | Lists the terminals, like the **Terminals** tab. |
+| `taskmgr_open_chat` | Opens the window of a chat. |
+| `taskmgr_end_task` | Stops the turn of another chat, like **End Task**. An agent cannot end its own chat. |
+| `taskmgr_end_process` | Ends an agent program, like **End process**. |
 
 ## 5 - Common Tasks
 

@@ -134,10 +134,10 @@ describe('chat: the agent program is stopped from Task Manager', () => {
     await viewer.getByTestId('event-viewer-show-all').click()
     await see.attribute(viewer.getByTestId('event-viewer-show-all'), 'aria-checked', 'true')
     await ctx.desktop.closeWindow('event-viewer')
-    await ctx.desktopPage.getByTestId('taskpane-activity-open-event-viewer').click()
+    await ctx.desktopPage.getByTestId('infopanel-activity-open-event-viewer').click()
     await see.visible(ctx.desktop.window('event-viewer'))
     await ctx.desktop.closeWindow('event-viewer')
-    await ctx.desktopPage.getByTestId('taskpane-activity').dblclick()
+    await ctx.desktopPage.getByTestId('infopanel-activity').dblclick()
     await see.visible(ctx.desktop.window('event-viewer'))
   })
 

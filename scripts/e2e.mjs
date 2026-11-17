@@ -21,5 +21,7 @@ const env = { ...process.env }
 delete env.ELECTRON_RUN_AS_NODE
 const specs = [vitest, 'run', '-c', 'vitest.e2e.config.ts', ...process.argv.slice(2)]
 const headless = process.platform === 'linux' && !process.env.DISPLAY
-if (headless) run('xvfb-run', ['-a', '--server-args=-screen 0 1600x1000x24', process.execPath, ...specs], env)
+// A7_E2E_SCALE=2 (screenshots for people) needs a screen that many times larger, so windows keep their normal size.
+const scale = Number(process.env.A7_E2E_SCALE) || 1
+if (headless) run('xvfb-run', ['-a', `--server-args=-screen 0 ${1600 * scale}x${1000 * scale}x24`, process.execPath, ...specs], env)
 else run(process.execPath, specs, env)

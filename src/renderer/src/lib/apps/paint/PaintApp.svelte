@@ -14,6 +14,10 @@
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import { registerAppRequestHandler } from '../appRequests'
+  import OpenFileDialog from '../shared/OpenFileDialog.svelte'
+  import SaveAsDialog from '../shared/SaveAsDialog.svelte'
+  import { errorText } from '../shared/listing'
+  import { joinVPath, vpathName, vpathParent, type VPath } from '@shared/vfs'
   import { applyOp, fillAt, resizeCanvas } from './paintCanvas'
   import { PALETTE, STROKE_SIZES, boxOf, clampSize, opAnchor, parseColor, parseDrawParams, parseResizeParams, toHex } from './paintOps'
 
@@ -46,6 +50,12 @@
   // svelte-ignore state_referenced_locally
   let height = $state(win.view.height)
   let dirty = $state(false)
+  /** The picture file on the desktop's disks, once saved or opened. */
+  // svelte-ignore state_referenced_locally
+  let path = $state<VPath | null>(win.view.path)
+  let picking = $state(false)
+  let saveAs = $state<string | null>(null)
+  let message = $state('')
   let pointer = $state<{ x: number; y: number } | null>(null)
   let canvas = $state<HTMLCanvasElement | null>(null)
   let agentDrawing = $state(false)
@@ -71,6 +81,8 @@
 
   onMount(() => {
     blank()
+    // A window that showed a saved picture shows it again (closed and reopened, or after a restart).
+    if (path) void load(path, { quiet: true })
   })
 
   function snapshot(): void {
@@ -86,9 +98,14 @@
     ctx().putImageData(last, 0, 0)
   }
 
+  // A new stroke replaces the "Saved" note with the file name and (modified).
+  $effect(() => {
+    if (dirty) untrack(() => (message = ''))
+  })
+
   // ---- reporting --------------------------------------------------------------------------------
   $effect(() => {
-    const view = { app: 'paint' as const, path: null, width, height, tool, color: color1, dirty }
+    const view = { app: 'paint' as const, path, width, height, tool, color: color1, dirty }
     untrack(() => host.updateView(win.id, view))
   })
 
@@ -243,11 +260,11 @@
 
   /** Ctrl+N works wherever the focus is inside the focused Paint window (not while typing text on the canvas). */
   function onWindowKey(event: KeyboardEvent): void {
-    if (!focused || textBox || !event.ctrlKey || event.altKey || event.shiftKey) return
+    if (!focused || textBox || picking || saveAs !== null || !event.ctrlKey || event.altKey || event.shiftKey) return
     const key = event.key.toLowerCase()
     if (key !== 'n' && key !== 'o' && key !== 's') return
     event.preventDefault()
-    void (key === 'n' ? newImage() : key === 'o' ? chooseOpen() : savePng())
+    void (key === 'n' ? newImage() : key === 'o' ? chooseOpen() : save())
   }
 
   // ---- canvas resize handle ---------------------------------------------------------------------
@@ -286,31 +303,45 @@
     snapshot()
     blank()
     dirty = false
+    path = null
+    message = ''
   }
 
-  let fileInput = $state<HTMLInputElement | null>(null)
+  const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']
+  const MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp' }
+  const extensionOf = (p: string): string => p.slice(p.lastIndexOf('.') + 1).toLowerCase()
 
-  /** File > Save as PNG...: the picture goes to the Downloads folder of this computer, named Picture.png. */
-  async function savePng(): Promise<void> {
+  /** File > Save (Ctrl+S): writes the picture to its file; a new picture asks for a name in Documents first. */
+  async function save(): Promise<void> {
+    if (path === null) {
+      saveAs = 'Picture.png'
+      return
+    }
     try {
-      const blob = await new Promise<Blob | null>((r) => canvas!.toBlob(r, 'image/png'))
-      if (!blob) throw new Error('empty')
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = 'Picture.png'
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+      const type = MIME[extensionOf(path)] ?? 'image/png'
+      const blob = await new Promise<Blob | null>((r) => canvas!.toBlob(r, type))
+      if (!blob) throw new Error('The canvas is empty.')
+      await host.api.vfs.writeBytes(host.state.desktopId, path, new Uint8Array(await blob.arrayBuffer()))
       dirty = false
-    } catch {
-      await showMessageBox({ text: 'The picture could not be saved.', caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
+      message = `Saved ${vpathName(path)}`
+    } catch (error) {
+      await showMessageBox({ text: `The picture could not be saved. ${errorText(error)}`, caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
     }
   }
 
-  /** File > Open...: shows a picture from this computer on the canvas. */
-  async function openPicture(file: File | undefined): Promise<void> {
-    if (!file) return
+  /** A name without a picture extension is saved as PNG, so File > Open lists it. */
+  function finishSaveAs(name: string): void {
+    saveAs = null
+    const file = IMAGE_EXTENSIONS.includes(extensionOf(name)) && name.includes('.') ? name : `${name}.png`
+    path = joinVPath(host.state.home, 'Documents', file)
+    void save()
+  }
+
+  /** Shows a picture file of the desktop on the canvas. */
+  async function load(target: VPath, { quiet = false } = {}): Promise<void> {
     try {
-      const bitmap = await createImageBitmap(file)
+      const bytes = await host.api.vfs.readBytes(host.state.desktopId, target)
+      const bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: MIME[extensionOf(target)] ?? 'image/png' }))
       snapshot()
       width = canvas!.width = Math.min(bitmap.width, 4000)
       height = canvas!.height = Math.min(bitmap.height, 4000)
@@ -318,17 +349,21 @@
       ctx().drawImage(bitmap, 0, 0)
       bitmap.close()
       dirty = false
+      path = target
+      message = ''
     } catch {
-      await showMessageBox({ text: 'That file is not a picture Agent Paint can open.', caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
+      if (quiet) path = null
+      else await showMessageBox({ text: `${vpathName(target)} is not a picture Agent Paint can open.`, caption: 'Agent Paint', buttons: 'OK', icon: 'error' })
     }
   }
 
+  /** File > Open... (Ctrl+O): picks a picture on the desktop's disks. */
   async function chooseOpen(): Promise<void> {
     if (dirty) {
       const answer = await showMessageBox({ text: 'Do you want to discard the picture?', caption: 'Agent Paint', buttons: 'YesNo', icon: 'warning' })
       if (answer !== 'yes') return
     }
-    fileInput?.click()
+    picking = true
   }
 
   async function copyImage(): Promise<void> {
@@ -346,7 +381,7 @@
 
   const menus = $derived<MenuDef[]>(
     menuBar([
-      { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, { id: 'open', testid: 'paint-menu-open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void chooseOpen() }, { id: 'save-png', testid: 'paint-menu-save-png', label: '&Save as PNG...', shortcut: 'Ctrl+S', action: () => void savePng() }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
+      { label: '&File', items: [{ id: 'new', testid: 'paint-menu-new', label: '&New', shortcut: 'Ctrl+N', action: () => void newImage() }, { id: 'open', testid: 'paint-menu-open', label: '&Open...', shortcut: 'Ctrl+O', action: () => void chooseOpen() }, { id: 'save', testid: 'paint-menu-save', label: '&Save', shortcut: 'Ctrl+S', action: () => void save() }, { id: 'save-as', testid: 'paint-menu-save-as', label: 'Save &as...', action: () => (saveAs = path ? vpathName(path) : 'Picture.png') }, ...closeItems('paint', () => void host.closeWindow(win.id))] },
       { label: '&Edit', items: editItems('paint-menu', { undo: undoLast, copy: () => void copyImage() }, { hasSelection: true }) },
       help.viewMenu(win.id),
       help.menu()
@@ -420,18 +455,6 @@
   <div class="workspace xp-scroll" role="region" tabindex="0" aria-label="Drawing area">
     {#if agentDrawing}<div class="pill" data-testid="paint-agent-drawing" role="status">The agent is drawing…</div>{/if}
     <div class="sheet" style:width="{width}px" style:height="{height}px">
-      <input
-        bind:this={fileInput}
-        type="file"
-        accept="image/*"
-        hidden
-        data-testid="paint-open-input"
-        aria-label="Picture to open"
-        onchange={(e) => {
-          void openPicture(e.currentTarget.files?.[0])
-          e.currentTarget.value = ''
-        }}
-      />
       <canvas
         bind:this={canvas}
         {width}
@@ -496,10 +519,26 @@
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={pointer ? `${pointer.x}, ${pointer.y}px` : ''} width={110} />
     <StatusStripLabel text="{resizing?.width ?? width} × {resizing?.height ?? height}px" borders={['left']} width={130} />
-    <StatusStripLabel text={agentDrawing ? 'The agent is drawing…' : tip} borders={['left']} spring />
+    <StatusStripLabel text={agentDrawing ? 'The agent is drawing…' : message || (path ? `${vpathName(path)}${dirty ? ' (modified)' : ''}` : tip)} borders={['left']} spring testid="paint-status" />
   </StatusStrip>
   <ContextMenuStrip items={menuCtx.items} bind:open={menuCtx.open} x={menuCtx.x} y={menuCtx.y} label="Paint" />
   <AppAbout {help} />
+  {#if picking}
+    <OpenFileDialog
+      api={host.api}
+      desktopId={host.state.desktopId}
+      startPath={path ? (vpathParent(path) ?? '') : (joinVPath(host.state.home, 'Documents') ?? '')}
+      extensions={IMAGE_EXTENSIONS}
+      onopen={(p) => {
+        picking = false
+        void load(p)
+      }}
+      onclose={() => (picking = false)}
+    />
+  {/if}
+  {#if saveAs !== null}
+    <SaveAsDialog caption="Agent Paint" name={saveAs} onsave={finishSaveAs} onclose={() => (saveAs = null)} />
+  {/if}
 </div>
 
 <style>

@@ -57,7 +57,11 @@
     }
   }
 
-  onMount(() => void guard(() => store.load()))
+  onMount(() => {
+    void guard(() => store.load())
+    // An agent changed skills or servers (skill_*, mcp_*): show it.
+    return host.api.on('config.changed', (e) => (e.area === 'skills' || e.area === 'mcp') && void guard(() => store.load()))
+  })
 
   /** Install...: the Browse For Folder dialog, then the skill is copied into AgentXP. */
   async function install(): Promise<void> {

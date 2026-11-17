@@ -63,7 +63,11 @@
     document.querySelector('[data-testid="agents-row"][aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
   }
 
-  onMount(() => void guard(() => agents.load()).then(() => void probe()).then(selectBroken))
+  onMount(() => {
+    void guard(() => agents.load()).then(() => void probe()).then(selectBroken)
+    // An agent changed the agents (agent_*): show it.
+    return host.api.on('config.changed', (e) => e.area === 'agents' && void guard(() => agents.load()))
+  })
 
   async function submit(input: AgentInput, makeDefault: boolean): Promise<void> {
     const target = editing?.agent

@@ -135,6 +135,13 @@ export function createFakeVfs(options: FakeVfsOptions): FakeVfs {
         return node.text
       },
       writeFile: async (_desktop, path, text) => put(path, text),
+      // Bytes are kept as a latin1 string: one character per byte.
+      readBytes: async (_desktop, path) => {
+        const node = walk(path)
+        if (node.kind !== 'file') throw new Error(`'${path}' is a folder.`)
+        return Uint8Array.from(node.text, (c) => c.charCodeAt(0) & 0xff)
+      },
+      writeBytes: async (_desktop, path, bytes) => put(path, new TextDecoder('latin1').decode(bytes)),
       stat: async (_desktop, path) => {
         try {
           return entryOf(path, walk(path))
