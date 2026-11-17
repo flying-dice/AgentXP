@@ -1,5 +1,3 @@
-/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
-const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, TOOL_GROUPS, closedAppMessage, enabledToolGroups, type ToolPolicyDto } from '@shared/desktop'
 import { PAUSED_MESSAGE, evaluateToolAccess } from './AppToolPolicy'
@@ -15,28 +13,26 @@ const policy = (patch: Partial<ToolPolicyDto['groups']> = {}): ToolPolicyDto => 
   groups: { ...DEFAULT_TOOL_POLICY.groups, ...patch }
 })
 
-describe('enabledToolGroups (open apps -> tool groups)', () => {
-  it('always has the shell group', () => {
-    expect(enabledToolGroups([])).toEqual(['shell', 'board', ...ADMIN_GROUPS])
+const NO_WINDOW_GROUPS = TOOL_GROUPS.filter((g) => !['browser', 'paint', 'diagrams', 'review'].includes(g))
+
+describe('enabledToolGroups (policy gates the tools; only output apps need their window)', () => {
+  it('has every group but the output apps\' with nothing open', () => {
+    expect(enabledToolGroups([])).toEqual(NO_WINDOW_GROUPS)
+    expect(enabledToolGroups([])).toEqual(expect.arrayContaining(['shell', 'fs.read', 'fs.write', 'terminal', 'notepad', 'code', 'wordpad', 'notes', 'events', 'snip', 'recycle']))
   })
 
-  it('follows the apps that provide each group', () => {
-    expect(enabledToolGroups(['explorer'])).toEqual(['shell', 'fs.read', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['notepad'])).toEqual(['shell', 'fs.write', 'notepad', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['code'])).toEqual(['shell', 'fs.read', 'fs.write', 'code', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['terminal', 'browser'])).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['chat', 'control-centre', 'agent-manager'])).toEqual(['shell', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle', 'board', ...ADMIN_GROUPS])
-    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'board', 'review', ...ADMIN_GROUPS])
+  it('adds an output app\'s group while its window is open', () => {
+    expect(enabledToolGroups(['explorer', 'code', 'terminal'])).toEqual(NO_WINDOW_GROUPS)
+    expect(enabledToolGroups(['browser'])).toContain('browser')
+    expect(enabledToolGroups(['paint'])).toContain('paint')
+    expect(enabledToolGroups(['diagrams'])).toContain('diagrams')
+    expect(enabledToolGroups(['code-review'])).toContain('review')
+    expect(enabledToolGroups(['code-review'])).not.toContain('browser')
   })
 
   it('ignores order and duplicates, and every group is reachable', () => {
     expect(enabledToolGroups(['browser', 'browser', 'terminal'])).toEqual(enabledToolGroups(['terminal', 'browser']))
-    expect(
-      enabledToolGroups(['explorer', 'notepad', 'code', 'terminal', 'browser', 'paint', 'wordpad', 'sticky-notes', 'event-viewer', 'snipping-tool', 'recycle-bin', 'code-review', 'diagrams'])
-    ).toEqual([...TOOL_GROUPS])
+    expect(enabledToolGroups(['browser', 'paint', 'code-review', 'diagrams'])).toEqual([...TOOL_GROUPS])
   })
 })
 
@@ -46,6 +42,13 @@ describe('evaluateToolAccess', () => {
       kind: 'refuse',
       message: closedAppMessage('browser')
     })
+  })
+
+  it('never refuses a Work group for a closed app: only the policy decides', () => {
+    const nothingOpen = state({ tools: enabledToolGroups([]) })
+    expect(evaluateToolAccess({ state: nothingOpen, group: 'fs.read', policy: policy() })).toEqual({ kind: 'allow' })
+    expect(evaluateToolAccess({ state: nothingOpen, group: 'terminal', policy: policy() })).toMatchObject({ kind: 'ask' })
+    expect(evaluateToolAccess({ state: nothingOpen, group: 'fs.write', policy: policy({ 'fs.write': 'deny' }) })).toMatchObject({ kind: 'refuse', message: expect.stringContaining('blocked') })
   })
 
   it('allows an open app whose policy is allow', () => {

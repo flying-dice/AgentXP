@@ -30,7 +30,9 @@ AgentXP is a program that gives coding agents a virtual Windows XP desktop to wo
   - Sending a Message
   - Undoing a Change
 - 6 - What the Agent Can Use
-  - Tools Follow Apps
+  - Permissions Decide the Tools
+  - Seeing What the Agent Does
+  - Windows That the Agent Opens
   - Pause and Take Control
 - 7 - Allowing or Denying an Action
   - Answering a Request
@@ -65,9 +67,9 @@ This chapter tells you what AgentXP does and explains the words that this guide 
 
 ### What AgentXP Does
 
-AgentXP starts a coding agent as a separate program on your computer. The agent does not work in one window. It lives on a desktop, a small virtual Windows XP computer, and works through apps that open as windows on that desktop.
+AgentXP starts a coding agent as a separate program on your computer. The agent does not work in one window. It lives on a desktop, a small virtual Windows XP computer. The desktop is your screen. The agent works out of sight and puts its results in the apps of the desktop.
 
-You see exactly what the agent can use, because the tools of the agent follow the apps that are open. If you close the Terminal app, the agent cannot run commands. If you open the Browser app, the agent can browse the web.
+You see exactly what the agent can use, because the top bar shows the permissions that you set in the Control Center. Each step of the agent shows in the chat, with a link to the file, the change, or the command.
 
 AgentXP stores your desktops, chats, and changes on your computer. Nothing leaves your computer except the requests that the agent itself sends to its own service.
 
@@ -320,36 +322,53 @@ The reverted change goes to the Recycle Bin. To get it back, open **Recycle Bin*
 
 ## 6 - What the Agent Can Use
 
-The agent can use only the tools of the apps that are open on the desktop. You find the tools that the agent has now in the **Agent can use** list of the top bar.
+The permissions in the Control Center decide which tools the agent can use. No app has to be open. You find the setting of the main tools in the **Agent can use** list of the top bar.
 
-### Tools Follow Apps
+### Permissions Decide the Tools
 
-Each app gives the agent a group of tools. When you close the last window of an app, the agent loses its tools. When you open the app, the agent gets them back. The table below shows the apps and their tools.
+Each tool belongs to a group, for example **Read files** or **Run commands**. The Control Center sets each group to **Allow**, **Ask**, or **Deny**. The agent can use a tool of a group at any time, as far as its setting lets it. The table below shows the groups and their tools.
 
-| App | The agent can | Tool names |
+| Group | The agent can | Tool names |
 |---|---|---|
-| Explorer | Read and list files, and find files by name | `fs_list`, `fs_find`, `fs/read_text_file` |
-| Code | Read and write files, open a file, show a line, and show a change | `code_open`, `code_reveal`, `code_show_diff` |
-| Notepad | Open and read text files, and write files | `notepad_open`, `notepad_read`, `fs/write_text_file` |
-| Terminal | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
-| Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
-| Agent Paint | Draw, read the picture, clear it, and resize it | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
-| Agent Diagrams | Draw flowcharts, UML, ER diagrams, org charts, network maps, and swimlanes with glued connectors; lay them out, read them, look at them as a picture, and save them | `diagram_new`, `diagram_stencils`, `diagram_add`, `diagram_update`, `diagram_delete`, `diagram_layout`, `diagram_arrange`, `diagram_pages`, `diagram_select`, `diagram_read`, `diagram_export`, `diagram_save`, `diagram_open` |
+| Read files | Read and list files, find files by name or by a word, and search inside files | `fs_list`, `fs_find`, `code_read`, `code_search`, `fs/read_text_file` |
+| Write files | Change and write files. Each change goes to the Changes pane. | `code_edit`, `code_write`, `fs/write_text_file` |
+| Code | Show you a file, some lines, or a change in Code | `code_open`, `code_reveal`, `code_show_diff` |
+| Notepad | Open a file in Notepad for you, and read it | `notepad_open`, `notepad_read` |
+| Run commands | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
+| Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. Needs an open Browser window. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
+| Agent Paint | Draw, read the picture, clear it, and resize it. Needs an open Agent Paint window. | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
+| Agent Diagrams | Draw flowcharts, UML, ER diagrams, org charts, network maps, and swimlanes with glued connectors. Lay them out, read them, look at them as a picture, and save them. Needs an open Agent Diagrams window. | `diagram_new`, `diagram_stencils`, `diagram_add`, `diagram_update`, `diagram_delete`, `diagram_layout`, `diagram_arrange`, `diagram_pages`, `diagram_select`, `diagram_read`, `diagram_export`, `diagram_save`, `diagram_open` |
 | WordPad | Open, read, and write documents | `wordpad_open`, `wordpad_read`, `wordpad_write` |
 | Sticky Notes | List, add, change, and remove notes, and keep a plan note | `notes_list`, `notes_add`, `notes_update`, `notes_remove` |
-| Kanban boards | List, read, create, and change boards, lists, and cards, and move cards. Always on: the Kanban window does not need to be open. | `board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card` |
+| Kanban boards | List, read, create, and change boards, lists, and cards, and move cards | `board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card` |
 | Event Viewer | Search the messages of the desktop | `events_query` |
-| Snipping Tool | Take a picture of the desktop or of one window | `screen_capture` |
+| Screen capture | Take a picture of the desktop or of one window | `screen_capture` |
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
-| Code Review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict | `review_open` (any time), `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
+| Code review | Review the changes of a project in its own review session: list the changes, read a diff, leave comments, and give a verdict. Needs an open Code Review window. | `review_open` (any time), `review_list_changes`, `review_read_diff`, `review_add_comment`, `review_submit` |
 
-The Chat, Control Center, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
+The agent always can see the desktop, list the drives, open and close apps, and draw windows in the chat. Chapter 10 explains these windows.
 
-To take a tool away from the agent, close its app. To give it a tool, open its app. If the agent calls a tool of a closed app, AgentXP refuses the call and tells the agent which app to open.
+Only the tools of the Browser, Agent Paint, Agent Diagrams, and Code Review need an open window, because they work on what that window shows. If the agent calls one of these tools while its window is closed, AgentXP refuses the call and tells the agent which app to open.
 
-The control **Agent may open apps** in the Control Center decides if the agent can open apps itself. Chapter 7 explains how to set it.
+To take a tool away from the agent, set its group to **Deny** in the Control Center. Chapter 7 explains how to set it.
 
 **Note:** AgentXP controls the tools that the agent asks AgentXP to run. An agent can have its own built-in tools, and AgentXP cannot stop those. Claude Code uses AgentXP for files and commands when AgentXP offers them.
+
+### Seeing What the Agent Does
+
+The agent works out of your sight. When it reads, searches, changes a file, or runs a command, no window opens and nothing takes the focus. You can still see each step in two clicks:
+
+- **Chat** – Shows each step as a row. A row has a link to where you can see the step: **Show in Code**, **Show diff**, **Show in Terminal**, or **Show in Browser**.
+- **Activity** – Lists the latest steps in the infopanel at the right. Click a line to go to the same place, or to the chat that did the step.
+- **Top bar** – Shows **Working:** and the current step. Click the text to go to the chat that does the work.
+
+A window that already shows the file or the command updates in place. If Code shows the file that the agent changes, Code reloads it and marks the changed lines. An open Terminal shows each command of the agent as it runs.
+
+### Windows That the Agent Opens
+
+Some apps hold the output of the agent: the Browser, Agent Paint, Agent Diagrams, WordPad, Code Review, and the windows that the agent draws. The agent can open these apps. A window that the agent opens appears behind the window that you use. It does not take the focus, and its taskbar button flashes until you click it.
+
+The control **Agent may open apps** in the Control Center decides if the agent can open windows itself. It applies to every window that the agent opens. Chapter 7 explains how to set it.
 
 ### Pause and Take Control
 

@@ -13,7 +13,8 @@
       working: 'Read src/auth/redirect.ts',
       paused: false,
       userInControl: false,
-      tools: ['shell', 'fs.read', 'fs.write', 'terminal'],
+      policy: DEFAULT_TOOL_POLICY,
+      onopenworking: fn(),
       maximized: false,
       onpause: fn(),
       ontakecontrol: fn(),
@@ -22,14 +23,14 @@
       onmaximize: fn(),
       ondisconnect: fn()
     },
-    argTypes: { title: { control: 'text' }, working: { control: 'text' }, paused: { control: 'boolean' }, userInControl: { control: 'boolean' }, tools: { control: 'object' }, maximized: { control: 'boolean' }, onminimize: { action: 'minimize' }, onmaximize: { action: 'maximize' }, ondisconnect: { action: 'disconnect' }, onpause: { action: 'pause' }, ontakecontrol: { action: 'take control' } }
+    argTypes: { title: { control: 'text' }, working: { control: 'text' }, paused: { control: 'boolean' }, userInControl: { control: 'boolean' }, maximized: { control: 'boolean' }, onminimize: { action: 'minimize' }, onmaximize: { action: 'maximize' }, ondisconnect: { action: 'disconnect' }, onpause: { action: 'pause' }, ontakecontrol: { action: 'take control' } }
   })
 </script>
 
 <Story name="Working">
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
-<Story name="Idle" args={{ working: null, tools: ['shell'] }}>
+<Story name="Idle" args={{ working: null }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 <Story name="PausedAndInControl" args={{ paused: true, userInControl: true }}>
@@ -43,10 +44,10 @@
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 
-<Story name="AsksBeforeEveryAction" args={{ userInControl: true, tools: ['shell', 'fs.read', 'terminal'], policy: DEFAULT_TOOL_POLICY }}>
+<Story name="AsksBeforeEveryAction" args={{ userInControl: true, policy: DEFAULT_TOOL_POLICY }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
-<Story name="PermissionsShownOnChips" args={{ tools: ['shell', 'fs.read', 'fs.write', 'terminal', 'browser'], policy: { ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, browser: 'deny' } } }}>
+<Story name="PermissionsShownOnChips" args={{ policy: { ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, browser: 'deny' } } }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
 

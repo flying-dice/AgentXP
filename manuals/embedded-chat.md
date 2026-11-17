@@ -84,7 +84,7 @@ With each message, the agent gets the state of the desktop and the context of th
 | Sticky Notes | The text of the selected note. |
 | Help and Support | The topic on the screen. |
 
-The agent works in the folder of the drive that the window shows. Without a drive, it works in its own home folder. The agent can use the tools of the apps that are open. For example, in the Browser pane the agent can read and click in the page.
+The agent works in the folder of the drive that the window shows. Without a drive, it works in its own home folder. The agent can use the tools that the permissions in Control Center allow. For example, in the Browser pane the agent can read and click in the page.
 
 ### Explain This and Ask the Agent
 

@@ -9,6 +9,7 @@ import type { Id } from '@shared/models'
 import type { DriveDto, DriveLetter, VPath } from '@shared/vfs'
 import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
+import type { ToolShowTarget } from '../app/session/toolShowTarget'
 import type { RemovedProject } from '../desktop/projectDrives'
 
 /** What the shell gives every app. Implemented by lib/desktop/DesktopController. */
@@ -19,6 +20,11 @@ export interface DesktopHost {
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
   /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event ("Show in Event Viewer"). */
   openEventViewer(scope?: { sessionId?: Id | null; selectedEventId?: number | null }): Promise<void>
+  /**
+   * "Show in Code", "Show diff", "Show in Terminal", "Show in Browser" of a chat tool row: the operator asked, so the
+   * window opens (or comes forward) with the focus, at the file and lines, the change, the run or the page.
+   */
+  showToolTarget(target: ToolShowTarget, sessionId?: Id | null): Promise<void>
   /** Opens Task Manager on a tab (default Chats); `chatId` selects that chat's row. */
   openTaskManager(tab?: TaskManagerTab, chatId?: Id): Promise<void>
   /** What a working chat is doing now (the title of its running tool), or null. */

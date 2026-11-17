@@ -256,7 +256,7 @@ describe('Task Manager tools', () => {
       sessions: { list: () => [session(1, 'working', 'Me'), session(2, 'working')], terminalsOf: (id) => terminals[id] ?? [], cancel: async (id) => void cancelled.push(id) },
       processes: { list: () => procs, end: async (a, d) => void ended.push([a, d]) },
       agents: { list: () => [{ id: 1, name: 'Claude Code' } as never] },
-      desktops: { state: () => ({ windows: [{ view: { app: 'chat', sessionId: 2 } } as never] }), openChat: (_d, id) => void opened.push(id) }
+      desktops: { state: () => ({ windows: [{ view: { app: 'chat', sessionId: 2 } } as never] }), openChat: async (_s, _d, id) => void opened.push(id) }
     })
     return { tools, cancelled, ended, opened }
   }

@@ -9,7 +9,8 @@ export interface TaskmgrToolsDeps {
   sessions: { list(desktopId: Id): SessionDto[]; terminalsOf(sessionId: Id): TerminalDto[]; cancel(sessionId: Id): Promise<void> }
   processes: { list(): AgentProcessDto[]; end(agentId: Id, desktopId: Id): Promise<void> }
   agents: { list(): AgentDto[] }
-  desktops: { state(desktopId: Id): Pick<DesktopState, 'windows'>; openChat(desktopId: Id, sessionId: Id): void }
+  /** `openChat`: an agent open (`openOutputWindow`): behind the user's window, after "Agent may open apps". */
+  desktops: { state(desktopId: Id): Pick<DesktopState, 'windows'>; openChat(callerSessionId: Id, desktopId: Id, sessionId: Id): Promise<void> }
 }
 
 type Names = 'taskmgr_chats' | 'taskmgr_processes' | 'taskmgr_terminals' | 'taskmgr_open_chat' | 'taskmgr_end_task' | 'taskmgr_end_process'
@@ -56,10 +57,10 @@ export function createTaskmgrTools({ sessions, processes, agents, desktops }: Ta
         )
         return textResult(rows.join('\n') || 'No terminals.')
       }),
-    taskmgr_open_chat: ({ chat }, { desktopId }) =>
-      attempt(() => {
+    taskmgr_open_chat: ({ chat }, { desktopId, sessionId }) =>
+      attempt(async () => {
         const found = chatOf(desktopId, chat)
-        desktops.openChat(desktopId, found.id)
+        await desktops.openChat(sessionId, desktopId, found.id)
         return textResult(`Opened the chat [${found.id}] ${found.title}.`)
       }),
     taskmgr_end_task: ({ chat }, { desktopId, sessionId }) =>

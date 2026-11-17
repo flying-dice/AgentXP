@@ -170,7 +170,7 @@ each step. Fixtures in `e2e/fixtures/scripted.ts`:
   `a2ui-surface`, `a2ui-button`, `a2ui-textbox`, `a2ui-checkbox`.
 
 Pattern: start the desktop, open a chat (`desktop.openApp('chat')`, or plug a project in and start from AutoPlay when the
-script touches files; open Code for file reads/writes and Terminal for `terminal/*`, tools follow apps), `chat.send(...)`,
+script touches files; no app needs to be open for reads, writes and runs, only for output apps such as the Browser), `chat.send(...)`,
 wait on test ids (`chat-transcript` has `data-running`), then compare `messageShape(...)` of a run with the expected list.
 Do not assert counts of streamed chunks or STATE_DELTA events. A permission request ends the run with an `interrupt`;
 answering starts a second run. Every `next()` should be followed by `control.waitForPause()` and a UI assertion.

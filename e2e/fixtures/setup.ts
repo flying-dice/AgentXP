@@ -80,6 +80,18 @@ export async function allowFileWrites(page: Page): Promise<void> {
   })
 }
 
+/** Sets Control Center permissions (setup only): `groups` patches the tool groups, `openApps` is "Agent may open apps". */
+export async function setToolPolicy(page: Page, groups: Record<string, 'allow' | 'ask' | 'deny'>, openApps?: 'allow' | 'ask' | 'deny'): Promise<void> {
+  await page.evaluate(
+    async ({ groups, openApps }) => {
+      const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
+      const policy = await api.desktop.policy()
+      await api.desktop.setPolicy({ groups: { ...policy.groups, ...groups }, openApps: openApps ?? policy.openApps })
+    },
+    { groups, openApps }
+  )
+}
+
 /** The id of the desktop a window shows, read from its URL (`?desktop=<id>`). */
 export const desktopIdOf = (page: Page): number => Number(new URL(page.url()).searchParams.get('desktop'))
 

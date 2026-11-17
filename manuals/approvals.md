@@ -26,7 +26,7 @@ There are two ways to make the agent ask. They differ in how long they last:
 
 To keep the agent asking, also after you restart AgentXP, follow the steps below. To ask only for a while, select **Ask before every action (this session only)** in the top bar instead.
 
-A chip that asks reads **Ask first**, for example **Run commands: Ask first**. While the box is selected, a chip that is not on **Ask** in Control Center reads **Ask first (now)**. Point to the chip to read the saved setting, for example **Saved setting: Allow.** If the app that gives the tool is closed, the tooltip says so, for example **The agent cannot use it yet because no Terminal is open.** The link **Control Center** in the line **To keep a tool on Ask...** opens the Permissions page.
+A chip that asks reads **Ask first**, for example **Run commands: Ask first**. While the box is selected, a chip that is not on **Ask** in Control Center reads **Ask first (now)**. Point to the chip to read the saved setting, for example **Saved setting: Allow.** The link **Control Center** in the line **To keep a tool on Ask...** opens the Permissions page.
 
 **Pause all agents** holds every agent on the desktop. **Stop** in a chat stops that chat only.
 

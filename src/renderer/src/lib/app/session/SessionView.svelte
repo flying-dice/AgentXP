@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ToolShowTarget } from './toolShowTarget'
   import { onDestroy, untrack } from 'svelte'
   import { effectiveStatus, isStarting } from '../sessionStatus'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
@@ -51,6 +52,8 @@
     onshowevents?: () => void
     /** "Show in Event Viewer" under a failed step: opens the viewer on the event of that tool call. */
     onshowtoolevent?: (toolCallId: string) => void
+    /** "Show in Code", "Show diff", "Show in Terminal", "Show in Browser" of a step (the host opens the place). */
+    onshowtooltarget?: (target: ToolShowTarget) => void
     /** "Open Agents" and "Choose another agent" of the error row: Control Center at Agents. */
     onopenagents?: () => void
     /** "Start a new chat" of the error row: the host opens a chat on the same folder and puts `text` (the message that failed) in its message box. */
@@ -81,6 +84,7 @@
     loadDetails,
     onshowevents,
     onshowtoolevent,
+    onshowtooltarget,
     onopenagents,
     onnewchat,
     newDefaultAgent = null
@@ -257,6 +261,8 @@
     onaction={(event) => void store.sendA2uiAction(event)}
     {surfaceControls}
     {onshowtoolevent}
+    {onshowtooltarget}
+    cwd={session.cwd}
   />
   {#if suggestions.length > 0 && !store.running && !request}
     <div class="chips" data-testid="embedded-chat-suggestions" role="group" aria-label="Suggestions">

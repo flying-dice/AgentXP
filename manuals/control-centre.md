@@ -73,13 +73,13 @@ Other agents can have other modes. You can type the id of a mode in the box. If 
 The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
 
 - **What the agent may do** – Read files, Write files, and Run commands. Point at **Run commands** to see "Run commands (Terminal)".
-- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Agent Diagrams, Code review, Task Scheduler, Teams, Team chat, Control Center, Task Manager, Help, and Agent may open apps.
+- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Agent Diagrams, Code review, Task Scheduler, Teams, Team chat, Control Center, Task Manager, Help, and Agent may open apps. **Agent may open apps** applies to every window that the agent opens. Such a window appears behind the window that you use and does not take the focus.
 
 Each row has two lines. The first line shows the name and the setting. The second line tells what the row covers. The table has no sideways scroll, so you can read every line at the default size of the window.
 
 Each row is separate. **Write files** covers changing files in any app. **Code** and **Notepad** cover only what their rows list. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
 
-The top bar shows chips with the same names, for example **Run commands: Ask first**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, the same setting as the row. When no app that gives the agent this tool is open, the chip has a dashed border. The agent cannot use the tool until you open the app. Point to a chip to read the setting and the reason, for example **The agent cannot use it yet because no Terminal is open.** Click a chip to open this page.
+The top bar shows chips with the same names, for example **Run commands: Ask first**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, the same setting as the row. The setting alone decides. No app has to be open. Point to a chip to read the setting. Click a chip to open this page.
 
 - **Allow** – The agent acts without a question.
 - **Ask** – A request appears in the Action Center.

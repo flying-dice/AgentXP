@@ -95,7 +95,7 @@ The agent uses the tools below when Terminal is open. The permission **Run comma
 
 | Tool | What it does |
 |---|---|
-| `terminal_run` | Runs a command and waits for it. The output appears in Terminal. |
+| `terminal_run` | Runs a command and waits for it. Terminal does not need to be open. An open Terminal shows the command and its output as it runs. Nothing opens. |
 | `terminal_read` | Reads the last lines that `terminal_run` printed. |
 
 ## 5 - Common Tasks
@@ -107,7 +107,8 @@ To see an older terminal, select it in the **Terminal** list. The list appears w
 ## 6 - Troubleshooting
 
 - **The screen is empty.** No agent ran a command yet. The status bar says **No terminals**.
-- **The agent says that Terminal is closed.** Open this app. The agent can then run commands.
+- **The agent cannot run commands.** Make sure that **Run commands** is not set to **Deny** in **[Control Center](control-centre.md)**. Terminal does not need to be open.
+- **You want to see a command of the agent.** Click **Show in Terminal** under the step in the chat. Terminal opens on that command.
 - **The agent asks before it runs a command.** Terminal is set to **Ask** in **[Control Center](control-centre.md)**. Answer in the **Action Center**.
 - **I cannot type.** The window is read-only by design. The agent runs the commands. Ask the agent in **[Chat](chat.md)** to run the command for you, and watch the output here.
 

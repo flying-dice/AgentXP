@@ -1,97 +1,118 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import type { Locator } from 'playwright'
-import { allowTerminal, payloadOf, protocolEvents, see, startScriptedDesktop, type ScriptedDesktop } from './fixtures'
+import { allowTerminal, payloadOf, protocolEvents, see, setToolPolicy, shot, startScriptedDesktop, type ScriptedDesktop } from './fixtures'
 
-/** Do two windows' frames overlap on screen? */
-async function overlap(a: Locator, b: Locator): Promise<boolean> {
-  const [x, y] = [await a.boundingBox(), await b.boundingBox()]
-  if (!x || !y) throw new Error('window has no box')
-  return x.x < y.x + y.width && y.x < x.x + x.width && x.y < y.y + y.height && y.y < x.y + x.height
-}
-
-/** desktop.json: the agent calls the agentxp MCP tools, which follow the apps that are open on the desktop. */
-describe('scripted agent: tools follow apps (desktop.json)', () => {
+/**
+ * desktop.json: the agent calls the agentxp MCP tools. They no longer follow the apps that are open
+ * (docs/AGENT_PRESENCE.md): terminal_run works with the Terminal closed and opens nothing; a window the agent opens
+ * (desktop_open_app) goes behind the operator's window, without the focus, with its taskbar button flashing.
+ */
+describe('scripted agent: Work opens nothing, agent windows open behind (desktop.json)', () => {
   let ctx: ScriptedDesktop
   let sessionId: number
 
   beforeAll(async () => {
-    ctx = await startScriptedDesktop({ script: 'desktop', title: 'Tools follow apps' })
+    ctx = await startScriptedDesktop({ script: 'desktop', title: 'Headless work' })
     await allowTerminal(ctx.desktopPage)
     await ctx.desktop.openApp('chat')
     await see.visible(ctx.desktop.chat().composer)
   })
   afterAll(async () => ctx?.close())
 
-  it('with Terminal closed the scripted terminal_run is refused ("is closed")', async () => {
+  it('with the Terminal closed terminal_run works, and no window opens or takes the focus', async () => {
     const chat = ctx.desktop.chat()
     sessionId = await chat.sessionId()
     await chat.send('Run it while the terminal is closed')
-    await see.visible(chat.agentMessage('Refused as expected'))
-    await see.text(chat.agentMessage('Refused as expected'), 'is closed')
+    await see.visible(chat.agentMessage('Ran with the Terminal closed'))
+    await see.text(chat.agentMessage('Ran with the Terminal closed'), 'works without a window')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.toolCalls, 1)
     await see.text(chat.toolCalls, 'Run a command') // the plain title, not the tool name
-    await see.attribute(chat.toolCalls, 'data-status', 'failed')
+    await see.attribute(chat.toolCalls, 'data-status', 'done')
+    await see.count(ctx.desktop.windows('terminal'), 0)
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
 
     await see.eventually(async () => {
       const mcp = await protocolEvents(ctx.desktopPage, { source: 'mcp', sessionId })
       expect(mcp.map((e) => `${e.direction} ${e.name}`)).toEqual(['in terminal_run', 'out terminal_run'])
-      const result = payloadOf<{ isError: boolean; content: { text: string }[] }>(mcp[1])
-      expect(mcp[1].level).toBe('warning')
-      expect(result.isError).toBe(true)
-      expect(result.content[0].text).toContain('is closed')
-    })
-  })
-
-  it('after opening Terminal the same call succeeds and the command output comes back to the agent', async () => {
-    await ctx.desktop.openApp('terminal')
-    await see.visible(ctx.desktop.toolChip('terminal'))
-    // The new window is tiled beside the chat, so the composer stays reachable without refocusing the chat.
-    expect(await overlap(ctx.desktop.window('terminal'), ctx.desktop.window('chat'))).toBe(false)
-    const chat = ctx.desktop.chat()
-    await chat.send('Terminal is already open, run the command')
-    await see.visible(chat.agentMessage('The terminal printed'))
-    await see.text(chat.agentMessage('The terminal printed'), 'nope')
-    await see.attribute(chat.transcript, 'data-running', 'false')
-    // terminal_run shows up in the Terminal window: command, output and exit code.
-    const terminal = ctx.desktop.terminal()
-    await see.text(terminal.output, 'echo nope')
-    await see.text(terminal.output, 'nope')
-    await see.text(terminal.status, 'Exit code 0')
-
-    await see.eventually(async () => {
-      const mcp = (await protocolEvents(ctx.desktopPage, { source: 'mcp', sessionId })).slice(2)
-      expect(mcp.map((e) => `${e.direction} ${e.name}`)).toEqual(['in terminal_run', 'out terminal_run'])
       expect(mcp[1].level).toBe('info')
       expect(payloadOf<{ isError: boolean }>(mcp[1]).isError).toBe(false)
     })
+    await shot(ctx.desktopPage, 'desktop-tools-03-terminal-run-closed')
   })
 
-  it('desktop_open_app opens the window by itself, then terminal_run works (the fallback rule)', async () => {
-    await ctx.desktop.closeWindow('terminal')
-    await see.attribute(ctx.desktop.toolChip('terminal'), 'data-state', 'off')
+  it('Show in Terminal on the step opens the Terminal on that run, with the focus (the operator asked)', async () => {
     const chat = ctx.desktop.chat()
-    await chat.send('Open the terminal and run something')
-    await see.visible(ctx.desktop.window('terminal'))
+    await chat.toolCalls.getByTestId('tool-call-show-terminal').click()
+    await see.attribute(ctx.desktop.window('terminal'), 'data-focused', 'true')
+    await see.text(ctx.desktop.terminal().output, 'works without a window')
+    await shot(ctx.desktopPage, 'desktop-tools-04-show-in-terminal')
+  })
+
+  it('with the Terminal open the run is mirrored there live, and the Terminal does not come forward', async () => {
+    await ctx.desktop.taskbarItem('chat').click()
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    const chat = ctx.desktop.chat()
+    await chat.composer.fill('Terminal is already open, run the command')
+    await chat.composer.press('Enter')
+    await see.visible(chat.agentMessage('The terminal printed'))
+    await see.text(chat.agentMessage('The terminal printed'), 'nope')
+    const terminal = ctx.desktop.terminal()
+    await see.text(terminal.output, 'echo nope')
+    await see.text(terminal.status, 'Exit code 0')
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.attribute(ctx.desktop.window('terminal'), 'data-focused', 'false')
+  })
+
+  it('desktop_open_app opens the window behind the chat: no focus change, the taskbar button flashes until it is focused', async () => {
+    await ctx.desktop.closeWindow('terminal')
+    await see.count(ctx.desktop.windows('terminal'), 0)
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    const chat = ctx.desktop.chat()
+    await chat.composer.fill('Open the terminal and run something')
+    await chat.composer.press('Enter')
     await see.visible(chat.agentMessage('hello from the scripted agent'))
-    await see.visible(ctx.desktop.toolChip('terminal'))
-    await see.attribute(chat.toolCalls.last(), 'data-status', 'done')
-    // UX-55: the agent's window comes to the front. It takes the focus, unless the user typed in the last 2 seconds: then the
-    // focus stays in the chat and the taskbar button flashes until the window is focused (the unit tests pin each case).
-    await see.eventually(async () => {
-      const terminalFocused = await ctx.desktop.window('terminal').getAttribute('data-focused')
-      const chatFocused = await ctx.desktop.window('chat').getAttribute('data-focused')
-      const flashing = await ctx.desktop.taskbarItem('terminal').getAttribute('data-flashing')
-      expect([terminalFocused, chatFocused]).toContain('true')
-      expect(terminalFocused).not.toBe(chatFocused)
-      expect(flashing).toBe(terminalFocused === 'true' ? 'false' : 'true')
-    })
-    expect(await overlap(ctx.desktop.window('terminal'), ctx.desktop.window('chat'))).toBe(false)
-    // Its own tab with the streamed output; the earlier run is still listed.
-    await see.text(ctx.desktop.terminal().output, 'hello from the scripted agent')
-    await see.visible(ctx.desktop.terminal().picker)
-    // Focusing the window ends the flash.
-    await ctx.desktop.focusWindow('terminal')
+    await see.visible(ctx.desktop.window('terminal'))
+    await see.attribute(ctx.desktop.window('terminal'), 'data-focused', 'false')
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.attribute(ctx.desktop.taskbarItem('terminal'), 'data-flashing', 'true')
+    await shot(ctx.desktopPage, 'desktop-tools-05-open-app-behind')
+    // Focusing the window ends the flash; its own tab has the streamed output.
+    await ctx.desktop.taskbarItem('terminal').click()
+    await see.attribute(ctx.desktop.window('terminal'), 'data-focused', 'true')
     await see.attribute(ctx.desktop.taskbarItem('terminal'), 'data-flashing', 'false')
+    await see.text(ctx.desktop.terminal().output, 'hello from the scripted agent')
+  })
+
+  it('"Agent may open apps" set to Never refuses the open; the run still works without the window', async () => {
+    await ctx.desktop.closeWindow('terminal')
+    await setToolPolicy(ctx.desktopPage, {}, 'deny')
+    const chat = ctx.desktop.chat()
+    await chat.composer.fill('Open the terminal and run something')
+    await chat.composer.press('Enter')
+    await see.attribute(chat.transcript, 'data-running', 'false')
+    await see.eventually(async () => {
+      const mcp = (await protocolEvents(ctx.desktopPage, { source: 'mcp', sessionId })).filter((e) => e.name === 'desktop_open_app' && e.direction === 'out')
+      expect(payloadOf<{ isError: boolean; content: { text: string }[] }>(mcp.at(-1)!).content[0].text).toContain('blocked by the permission policy')
+    })
+    await see.count(ctx.desktop.windows('terminal'), 0)
+    await setToolPolicy(ctx.desktopPage, {}, 'allow')
+  })
+
+  it('the "Working: ..." link of the top bar goes to the chat doing the work', async () => {
+    const chat = ctx.desktop.chat()
+    const control = await ctx.scripted.control()
+    await control.setMode('manual') // the turn waits before each step, so the bar says Working long enough to click
+    await chat.composer.fill('Run it while the terminal is closed')
+    await chat.composer.press('Enter')
+    await control.waitForPause()
+    await ctx.desktop.openApp('notepad')
+    await see.attribute(ctx.desktop.window('notepad'), 'data-focused', 'true')
+    await see.visible(ctx.desktopPage.getByTestId('topbar-working-link'))
+    await shot(ctx.desktopPage, 'desktop-tools-06-working-link')
+    await ctx.desktopPage.getByTestId('topbar-working-link').click()
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await control.setMode('auto')
+    await see.attribute(chat.transcript, 'data-running', 'false')
+    control.close()
   })
 })

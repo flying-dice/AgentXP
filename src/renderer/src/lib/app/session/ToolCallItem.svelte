@@ -7,6 +7,7 @@
   import { DENIED_NOTE, FAILED_NOTE, toolStatusView } from './toolStatus'
   import { plainToolTitle } from './toolTitles'
   import { browserNow, browserStep } from './browserSteps'
+  import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from './toolShowTarget'
 
   interface Props {
     row: Extract<TranscriptRow, { kind: 'tool' }>
@@ -19,11 +20,15 @@
     denied?: boolean
     /** "Show in Event Viewer" of a failed step; gets the id of the tool call. */
     onshowevent?: (toolCallId: string) => void
+    /** The **Show in...** actions of the row (Code, diff, Terminal, Browser); without it the row has none. */
+    onshowtarget?: (target: ToolShowTarget) => void
+    /** The chat's working directory: relative paths of the step are relative to it. */
+    cwd?: string | null
     /** The card belongs to an earlier step (it gets the caption "Earlier step"). */
     earlier?: boolean
   }
 
-  let { row, toolCall, terminals, waiting = false, denied = false, earlier = false, onshowevent }: Props = $props()
+  let { row, toolCall, terminals, waiting = false, denied = false, earlier = false, onshowevent, onshowtarget, cwd = null }: Props = $props()
 
   const rawInput = $derived(toolCall?.rawInput ?? row.rawInput)
   const status = $derived(toolStatusView(toolCall?.status, waiting, denied))
@@ -40,6 +45,16 @@
   // Opened by the user, otherwise the kind's default (the Bash card shows its output).
   let userOpen = $state<boolean | null>(null)
   const open = $derived(userOpen ?? expandsByDefault(toolCall?.kind))
+  // Work opens nothing by itself: the row says where the step can be seen, and the operator opens it.
+  const showActions = $derived(
+    onshowtarget
+      ? toolShowTargets({ title: toolCall?.title ?? row.name, kind: toolCall?.kind, rawInput, locations: toolCall?.locations ?? [], contents, result: row.result, cwd }).map((target) => ({
+          kind: target.kind,
+          label: SHOW_LABELS[target.kind],
+          run: () => onshowtarget(target)
+        }))
+      : []
+  )
 </script>
 
 <ToolCallCard
@@ -48,6 +63,7 @@
   {status}
   note={denied ? DENIED_NOTE : status.kind === 'failed' ? FAILED_NOTE : undefined}
   onshowevent={onshowevent ? () => onshowevent(row.toolCallId) : undefined}
+  {showActions}
   {earlier}
   expandable={contents.length > 0 || !!row.result}
   {open}

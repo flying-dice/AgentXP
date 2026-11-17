@@ -16,7 +16,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { parseVPath, REMOVED_PROJECTS_KEPT, type DriveDto, type DriveLetter, type RemovedProjectDto, type VPath } from '@shared/vfs'
+import { normaliseVPath, parseVPath, REMOVED_PROJECTS_KEPT, type DriveDto, type DriveLetter, type RemovedProjectDto, type VPath } from '@shared/vfs'
 import { SessionAgentStore } from '../agui/SessionAgentStore.svelte'
 import { chatTitleLabels } from '../app/chatTitles'
 import { askChatCwd, askChatDraft, askChatPrompt } from '../apps/askChat'
@@ -31,7 +31,8 @@ import { DELETE_WARNING } from '../launcher/launcherModel'
 import { effectiveStatus, isBusy } from '../app/sessionStatus'
 import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE, resumedLine, stoppedLine } from '../app/session/resumeNote'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
-import { recentToolCalls, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import { feedTarget, recentToolCalls, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import type { ToolShowTarget } from '../app/session/toolShowTarget'
 import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
@@ -188,7 +189,7 @@ export class DesktopController implements DesktopHost {
     return this.allSessions.flatMap((s): ChatActivityInput[] => {
       const store = this.inbox.stores.get(s.id)
       // The status inside the chat's own state can be old (UX-145): `effectiveStatus` prefers the session row for connecting and error.
-      return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: effectiveStatus(store.state.session.status, s.status) ?? s.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
+      return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: effectiveStatus(store.state.session.status, s.status) ?? s.status, updatedAt: s.updatedAt, cwd: s.cwd, toolCalls: store.state.toolCalls }] : []
     })
   }
   /** A chat was busy when the user took control: the Activity infopanel says "Stopped: you took control". */
@@ -196,10 +197,6 @@ export class DesktopController implements DesktopHost {
   /** Requests that wait for the user's answer: the one count of the bar, the Activity infopanel and the taskbar flag. */
   get waitingCount(): number {
     return this.inbox.pending.length
-  }
-  /** Open chat windows: an open chat is something the agent can use (the line next to the chips of the bar). */
-  get chatsOpen(): number {
-    return this.state.windows.filter((w) => w.view.app === 'chat').length
   }
   /** True while a turn of any chat of this desktop runs or waits for an answer. */
   get agentBusy(): boolean {
@@ -673,6 +670,71 @@ export class DesktopController implements DesktopHost {
   async openEventViewer(scope: { sessionId?: Id | null; selectedEventId?: number | null } = {}): Promise<void> {
     const window = await this.openApp({ app: 'event-viewer' })
     await this.api.desktop.updateView(window.id, { app: 'event-viewer', sessionId: scope.sessionId ?? null, level: 'all', selectedEventId: scope.selectedEventId ?? null })
+  }
+
+  /**
+   * The **Show in...** actions of a chat tool row and of the activity feed (`toolShowTargets`): the operator asked, so
+   * the window opens or comes forward with the focus. Code goes to the file and highlights the lines; Show diff selects
+   * the chat's recorded change of the file; the Terminal selects the run; the Browser comes forward.
+   */
+  async showToolTarget(target: ToolShowTarget, sessionId: Id | null = null): Promise<void> {
+    switch (target.kind) {
+      case 'code':
+      case 'diff': {
+        const change = target.kind === 'diff' && sessionId !== null ? (await this.api.sessions.changes(sessionId).catch(() => [])).findLast((c) => (normaliseVPath(c.path) ?? c.path).toLowerCase() === target.path.toLowerCase()) : undefined
+        const window = await this.openApp({ app: 'code', path: target.path })
+        const view = this.windowById(window.id)?.view ?? window.view
+        if (view.app !== 'code') return
+        const tabs = view.tabs.includes(target.path) ? view.tabs : [...view.tabs, target.path]
+        // A view report of the window still waiting in the debouncer goes first, so it cannot land after this one and undo it.
+        this.views.flush(window.id)
+        await this.api.desktop.updateView(window.id, {
+          ...view,
+          tabs,
+          activePath: target.path,
+          selection: null,
+          visibleLines: target.kind === 'code' ? target.lines : view.visibleLines,
+          ...(change ? { selectedChangeId: change.id } : {})
+        })
+        return
+      }
+      case 'terminal': {
+        const terminals = sessionId === null ? {} : (this.inbox.stores.get(sessionId)?.state.terminals ?? {})
+        const terminalId = target.terminalId ?? Object.entries(terminals).findLast(([, t]) => target.command !== null && t.command === target.command)?.[0] ?? null
+        const open = this.state.windows.findLast((w) => w.app === 'terminal')
+        const window = open ?? (await this.openApp({ app: 'terminal' }))
+        if (open) await this.raiseWindow(open.id)
+        const view = this.windowById(window.id)?.view ?? window.view
+        this.views.flush(window.id)
+        if (view.app === 'terminal' && terminalId !== null) await this.api.desktop.updateView(window.id, { ...view, terminalId })
+        return
+      }
+      case 'browser': {
+        const open = (target.windowId !== null ? this.state.windows.find((w) => w.id === target.windowId && w.app === 'browser') : undefined) ?? this.state.windows.findLast((w) => w.app === 'browser')
+        if (open) await this.raiseWindow(open.id)
+        else await this.openApp({ app: 'browser', ...(target.url ? { url: target.url } : {}) })
+        return
+      }
+    }
+  }
+
+  /** A click on a line of the Activity infopanel: its **Show in...** place (Code, Terminal, Browser), else the chat that did it. */
+  async showFeedItem(item: FeedItem): Promise<void> {
+    const target = feedTarget(item)
+    if (target) return this.showToolTarget(target, item.sessionId)
+    await this.openChatOf(item.sessionId)
+  }
+
+  /** Brings the chat of a session forward: its Chat window, or the window whose chat pane it is, else opens its Chat window. */
+  async openChatOf(sessionId: Id): Promise<void> {
+    const pane = this.state.windows.find((w) => w.asideSessionId === sessionId)
+    if (pane) return this.raiseWindow(pane.id)
+    await this.openApp({ app: 'chat', sessionId })
+  }
+
+  /** The chat the "Working: ..." link of the top bar opens: the focused working chat, else the first one that works. */
+  get workingChatId(): Id | null {
+    return workingChatId(this.activityInputs, this.focusedChatId)
   }
 
   /**

@@ -530,7 +530,7 @@ To save the drawing, click **File -> Save**. The first time, type a name. The fi
 - **I cannot move or change a shape.** The shape is locked. Right-click it and click **Unlock**.
 - **A shape does not move to where I drop it.** Snap to Grid and the guides move it to the nearest grid line or edge. Hold Alt while you drag, or clear **View -> Snap to Grid**.
 - **The sheet is bigger than one page.** The drawing passed the edge of the sheet. Move the shapes back, or clear **Grow the page to fit the drawing** in the Format pane.
-- **The agent says that Agent Diagrams is closed.** The agent can use its diagram tools only while Agent Diagrams is open. Open it, or let the agent open it.
+- **The agent says that Agent Diagrams is closed.** The agent can use its diagram tools only while Agent Diagrams is open. Open it, or let the agent open it. A window that the agent opens appears behind your window, and its taskbar button flashes.
 - **I do not like what the agent drew.** Press Ctrl+Z. Each change of the agent is one undo step.
 
 ## 9 - Need Help?

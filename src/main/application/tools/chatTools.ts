@@ -5,14 +5,12 @@ import { AppError } from '../errors'
 import { transcriptToMarkdown } from '../transcriptMarkdown'
 import type { ToolHandlers } from './catalog'
 import type { DesktopOps } from './ports'
-import { attempt, errorResult, textResult, type ToolContext, type ToolResult } from './types'
+import { attempt, textResult, type ToolContext } from './types'
 
 export interface ChatToolsDeps {
-  desktops: Pick<DesktopOps, 'state' | 'openWindow' | 'policy'>
+  desktops: Pick<DesktopOps, 'state' | 'openOutputWindow'>
   sessions: Pick<SessionRepository, 'get' | 'listByDesktop'>
   transcripts: Pick<TranscriptRepository, 'list'>
-  /** Puts a permission request in front of the user; true when allowed. */
-  ask(sessionId: number, title: string, reason: string): Promise<boolean>
 }
 
 export const CHATS_LIST_DEFAULT = 20
@@ -28,7 +26,7 @@ function chatLine(chat: SessionDto, open: boolean, self: boolean): string {
  * chats_*, chat_*: the chats of the desktop as an agent sees them (always available, like Start > Recent chats). A
  * chat outlives its window; these tools list the chats, read one's transcript and open one again.
  */
-export function createChatTools({ desktops, sessions, transcripts, ask }: ChatToolsDeps): ToolHandlers<'chats_list' | 'chat_read' | 'chat_open'> {
+export function createChatTools({ desktops, sessions, transcripts }: ChatToolsDeps): ToolHandlers<'chats_list' | 'chat_read' | 'chat_open'> {
   /** The chats the user sees under Recent chats: not the reviewer of a Code Review window or a pane chat still in its window. */
   const chatsOf = (desktopId: number): SessionDto[] => sessions.listByDesktop(desktopId).filter((s) => s.role === 'chat')
 
@@ -40,15 +38,6 @@ export function createChatTools({ desktops, sessions, transcripts, ask }: ChatTo
 
   const openChatIds = (desktopId: number): Set<number> =>
     new Set(desktops.state(desktopId).windows.flatMap((w) => (w.view.app === 'chat' ? [w.view.sessionId] : [])))
-
-  const mayOpen = async (context: ToolContext): Promise<ToolResult | null> => {
-    const decision = desktops.policy().openApps
-    if (decision === 'deny') return errorResult('Opening apps is blocked by the permission policy in Control Center.')
-    if (decision === 'ask' && !(await ask(context.sessionId, 'Open a chat window', 'Agent may open apps is set to Ask in Control Center'))) {
-      return errorResult('The user declined to open the chat window.')
-    }
-    return null
-  }
 
   return {
     chats_list: (args, context) =>
@@ -72,15 +61,12 @@ export function createChatTools({ desktops, sessions, transcripts, ask }: ChatTo
         return textResult(`[The first ${markdown.length - max} characters are left out. Pass a larger maxChars to read them.]\n\n…${markdown.slice(markdown.length - max)}`)
       }),
 
-    chat_open: async (args, context) => {
-      const found = await attempt(() => (chatOf(context, args.chat), textResult('')))
-      if (found.isError) return found
-      const refused = await mayOpen(context)
-      if (refused) return refused
-      return attempt(() => {
-        const window = desktops.openWindow({ desktopId: context.desktopId, app: 'chat', sessionId: args.chat }, 'agent')
+    chat_open: (args, context) =>
+      attempt(async () => {
+        chatOf(context, args.chat)
+        // Behind the user's window (or its open window, left where it is), after "Agent may open apps".
+        const window = await desktops.openOutputWindow(context.sessionId, { desktopId: context.desktopId, app: 'chat', sessionId: args.chat })
         return textResult(`Opened chat ${args.chat} ("${window.title}") in Chat window ${window.id}, with its history.`)
       })
-    }
   }
 }

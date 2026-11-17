@@ -104,10 +104,10 @@ refusals such as an ejected drive.
 |--------|-------|
 | `demo.json` | greeting rule; plan, read README, edit proposal with allow/deny/cancelled branches, `npm test` in a terminal, usage, done |
 | `a2ui.json` | `agentxp.a2ui_render` with a small WinForms form; the prompt picks the `target`: "window" (own desktop window), "sidebar" (beside the chat), "update" (changes the window surface, reports the tool's note about a closed window), anything else inline. `expect` on the `ok` answer |
-| `desktop.json` | `desktop_open_app` then `terminal_run`; a prompt containing "closed" calls `terminal_run` with the Terminal closed and expects `is closed` |
+| `desktop.json` | a prompt containing "closed" calls `terminal_run` with the Terminal closed and expects it to work (it prints the output); the default rule calls `desktop_open_app` for the Terminal (it opens behind the focused window) and runs a command; "already open" runs a command in an open Terminal; "diagram" draws and saves a flowchart in Agent Diagrams |
 | `review.json` | the Code Review reviewer: a prompt with "code review of the changes" calls `agentxp.review_add_comment` twice (`notes.txt` lines 1 and 4) and `review_submit`; a prompt with "fix the following code review comments" (what Send to chat sends) is answered with a message |
 | `aside.json` | the chat pane of an app window: a prompt with "explain this" `expect`s `appContext` (with `selection`) in the desktop state, `extract`s the open file name from it and answers naming the file; "summarise" answers for the Browser pane |
-| `search.json` | find, read and edit files through the apps: "find files" calls `fs_find` (Explorer's Search Companion), "search code" calls `code_search` and `code_read` (Code's Search tab), "edit code" calls `code_edit` and `code_write` |
+| `search.json` | find, read and edit files headless (nothing opens): "find files" calls `fs_find`, "search code" calls `code_search` and `code_read`, "edit code" calls `code_edit` and `code_write` |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |
 

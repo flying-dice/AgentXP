@@ -1,6 +1,6 @@
 # AgentXP Desktop Design
 
-Status: accepted, being built. **Being replaced in part:** "tools follow apps" (section 1, section 3 "How gating works") is retired by `docs/AGENT_PRESENCE.md` (Work, Show, Output). Until PR 1 of that plan merges, the code still behaves as written here. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
+Status: accepted, being built. **Replaced in part:** "tools follow apps" (section 1, section 3 "How gating works") is retired by `docs/AGENT_PRESENCE.md` (Work, Show, Output). PR 1 of that plan has landed: every tool group is enabled and gated by policy only, except the output apps whose tools need their window (Browser, Agent Paint, Agent Diagrams, Code Review); Work tools open nothing; every agent open goes through `DesktopService.openOutputWindow`. Where this note says otherwise, `AGENT_PRESENCE.md` wins. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
 
 ## 1. Idea
 
@@ -9,7 +9,7 @@ The agent does not live in one window. It lives on a **desktop**, a small virtua
 - A **desktop** is one Electron `BrowserWindow`. It belongs to one folder (the workspace, shown as drive `W:`) and one default agent. You can have several desktops open at once, each in its own OS window.
 - A **chat** is one ACP session. A desktop holds many chats. Each chat is shown by a **Chat app** window. Closing the window hides the chat; it stays in **Start -> Recent chats** and **File -> Open Recent** of every Chat window, and the agent reaches it with `chats_list`, `chat_read` and `chat_open`. Reopening shows the persisted transcript; the agent resumes its ACP session with `session/load` when it supports it, else a fresh session gets the conversation so far with the next prompt (`agentxp://chat/history`, `historyBlock.ts`, not stored).
 - An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Center, Agent Manager. Apps are windows inside the desktop window (our own Luna chrome, draggable, resizable, minimise to the taskbar).
-- **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`. *(Being retired: agents will work headless and gated by policy only; the desktop becomes the operator's environment. See `docs/AGENT_PRESENCE.md`.)*
+- **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`. *(Retired in PR 1 of `docs/AGENT_PRESENCE.md`: agents work headless and are gated by policy only, except the tools of output apps that need their window. The desktop is the operator's environment.)*
 - **System level** settings (agents, permission policy, connectors, about) live in **Control Center**, a desktop app, not in a per-chat dialog.
 
 ## 2. Vocabulary in code
@@ -41,7 +41,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Agent Diagrams | `diagrams` | no | MCP `diagram_*` (`diagram_new`, `diagram_stencils`, `diagram_add`, `diagram_update`, `diagram_delete`, `diagram_layout`, `diagram_arrange`, `diagram_pages`, `diagram_select`, `diagram_read`, `diagram_export`, `diagram_save`, `diagram_open`). The main process forwards each call to the open window through the app request broker; the window's editor applies it as one undo step. | file path, title, dirty flag, page and page names, shape and connector counts, selection, outline of the page |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
 | Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
-| Kanban | `kanban` | yes | MCP `board_*` (`board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card`). The `board` tool group is **always on** (`ALWAYS_ON_TOOL_GROUPS`): agents work on boards without the window, gated by the Control Center policy only. | open board |
+| Kanban | `kanban` | yes | MCP `board_*` (`board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card`). The `board` tool group needs no window: agents work on boards gated by the Control Center policy only (since PR 1 of `docs/AGENT_PRESENCE.md` this holds for every group but `WINDOW_TOOL_GROUPS`). | open board |
 | Event Viewer | `event-viewer` | yes | MCP `events_query` (chat, source, level, text; at most 200 compact lines) | chat filter, level filter, selected event |
 | Snipping Tool | `snipping-tool` | yes | MCP `screen_capture` (whole desktop or one window) | last snip id |
 | Recycle Bin | `recycle-bin` | yes | MCP `recycle_list`, `recycle_restore` | selected item |
@@ -50,13 +50,13 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 
 Default policy: Ask for `wordpad` and `recycle` (and `fs.write`, `terminal` as before), Allow for the rest.
 
-Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, `desktop_focus_app`, and the A2UI tools `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws where `target` says, see section 10).
+Always present, whatever is open (the "shell" tool group): `desktop_state`, `desktop_open_app`, `desktop_close_app`, and the A2UI tools (`desktop_focus_app` left the agent catalog in PR 1 of `docs/AGENT_PRESENCE.md`) `a2ui_catalog`, `a2ui_render`, `a2ui_delete_surface` (A2UI draws where `target` says, see section 10).
 
-`desktop_open_app` is governed by the Control Center policy **Agent may open apps**: Always (default), Ask (permission dialog), Never.
+`desktop_open_app`, and every other window an agent opens, is governed by the Control Center policy **Agent may open apps**: Always (default), Ask (permission dialog), Never. Since PR 1 the window opens behind the focused window, unfocused, flashing (`DesktopService.openOutputWindow`).
 
 ### How gating works
 
-*Being retired by `docs/AGENT_PRESENCE.md` section 10: the closed-app step goes, policy and scope remain.*
+*Changed by PR 1 of `docs/AGENT_PRESENCE.md` section 10: the closed-app step applies only to `WINDOW_TOOL_GROUPS` (browser, paint, diagrams, review); policy and scope remain. The text below describes the old rule.*
 
 Two channels reach the agent and both are gated by one `AppToolPolicy` (pure function: open app kinds -> enabled `ToolGroup`s).
 

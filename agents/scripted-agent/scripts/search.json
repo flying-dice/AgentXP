@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "search",
-  "description": "Find, read and edit files through the desktop apps (the project is E:\\ with src\\index.ts containing \"needle\"). A prompt with \"find files\" runs fs_find (Explorer's Search Companion shows it); \"search code\" runs code_search (the Code app's Search tab) and code_read; \"edit code\" runs code_edit and code_write (shown in Code); \"edit legacy\" tries code_edit on E:\\docs\\legacy.txt, a Windows-1252 file, and reports the refusal.",
+  "description": "Find, read and edit files with the AgentXP tools, which open nothing (the project is E:\\ with src\\index.ts containing \"needle\"). A prompt with \"find files\" runs fs_find; \"search code\" runs code_search and code_read; \"edit code\" runs code_edit and code_write (recorded in the Changes pane); \"edit legacy\" tries code_edit on E:\\docs\\legacy.txt, a Windows-1252 file, and reports the refusal.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -11,7 +11,6 @@
       "id": "find-files",
       "match": { "contains": "find files" },
       "steps": [
-        { "type": "mcpCall", "server": "agentxp", "tool": "desktop_open_app", "arguments": { "app": "explorer" }, "saveAs": "opened" },
         { "type": "mcpCall", "server": "agentxp", "tool": "fs_find", "arguments": { "pattern": "*.ts", "containing": "needle", "path": "E:\\" }, "saveAs": "found", "label": "find files" },
         { "type": "expect", "from": "found.isError", "equals": "false" },
         { "type": "expect", "from": "found", "contains": "index.ts" },
@@ -22,7 +21,6 @@
       "id": "search-code",
       "match": { "contains": "search code" },
       "steps": [
-        { "type": "mcpCall", "server": "agentxp", "tool": "desktop_open_app", "arguments": { "app": "code" }, "saveAs": "opened" },
         { "type": "mcpCall", "server": "agentxp", "tool": "code_search", "arguments": { "query": "needle", "path": "E:\\" }, "saveAs": "matches", "label": "search code" },
         { "type": "expect", "from": "matches.isError", "equals": "false" },
         { "type": "expect", "from": "matches", "contains": "index.ts:2:" },

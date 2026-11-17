@@ -221,7 +221,7 @@ export interface DesktopState {
   focusedWindowId: Id | null
   /** Back to front. */
   windows: AppWindowState[]
-  /** Enabled tool groups, derived from the open windows with `enabledToolGroups`. */
+  /** Enabled tool groups (`enabledToolGroups`): every group but those of output apps whose window is closed. */
   tools: ToolGroup[]
   paused: boolean
   /**
@@ -257,78 +257,39 @@ export const TOOL_GROUPS = [
   'notepad', // notepad_open, notepad_read
   'code', // code_open, code_reveal, code_show_diff
   'terminal', // ACP terminal/*, terminal_run, terminal_read
-  'browser', // browser_*
-  'paint', // paint_draw, paint_read, paint_clear, paint_resize
+  'browser', // browser_* (the open Browser window)
+  'paint', // paint_draw, paint_read, paint_clear, paint_resize (the open Agent Paint window)
   'wordpad', // wordpad_open, wordpad_read, wordpad_write
   'notes', // notes_list, notes_add, notes_update, notes_remove
   'events', // events_query
   'snip', // screen_capture
   'recycle', // recycle_list, recycle_restore
-  'board', // board_* (always on: a board is how the agents of a team track work, no window needed)
+  'board', // board_* (a board is how the agents of a team track work, no window needed)
   'diagrams', // diagram_* (the open Agent Diagrams window)
   'review', // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
-  'scheduler', // scheduler_* (always on: the Task Scheduler of the desktop)
-  'teams', // profile_*, team_* (always on: the profiles and teams of the Teams app)
-  'rooms', // room_* (always on: the team chat rooms of the desktop)
-  'settings', // settings_*, agent_*, skill_*, mcp_* (always on: Control Center; every change asks the user)
-  'taskmgr', // taskmgr_* (always on: the chats, agent programs and terminals that Task Manager shows)
-  'help' // help_search, help_read (always on: the manuals of Help and Support)
+  'scheduler', // scheduler_* (the Task Scheduler of the desktop)
+  'teams', // profile_*, team_* (the profiles and teams of the Teams app)
+  'rooms', // room_* (the team chat rooms of the desktop)
+  'settings', // settings_*, agent_*, skill_*, mcp_* (Control Center; every change asks the user)
+  'taskmgr', // taskmgr_* (the chats, agent programs and terminals that Task Manager shows)
+  'help' // help_search, help_read (the manuals of Help and Support)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
 
-/** Which app kinds provide each tool group. `shell` needs no app. */
-export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
-  shell: [],
-  'fs.read': ['explorer', 'code', 'code-review'],
-  'fs.write': ['notepad', 'code'],
-  notepad: ['notepad'],
-  code: ['code'],
-  terminal: ['terminal'],
-  browser: ['browser'],
-  paint: ['paint'],
-  wordpad: ['wordpad'],
-  notes: ['sticky-notes'],
-  events: ['event-viewer'],
-  snip: ['snipping-tool'],
-  recycle: ['recycle-bin'],
-  board: [],
-  diagrams: ['diagrams'],
-  review: ['code-review'],
-  scheduler: [],
-  teams: [],
-  rooms: [],
-  settings: [],
-  taskmgr: [],
-  help: []
-}
-
-/** Groups that are on whatever apps are open (`shell` has no gate; `board` is gated by the Control Center policy only). */
-export const ALWAYS_ON_TOOL_GROUPS: readonly ToolGroup[] = ['shell', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help']
-
-/** The app suggested to the agent when a group is missing. */
-export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
-  'fs.read': 'explorer',
-  'fs.write': 'code',
-  notepad: 'notepad',
-  code: 'code',
-  terminal: 'terminal',
+/**
+ * Output apps whose tools act on a mounted window (the page of a Browser, the canvas of Agent Paint, the drawing of
+ * Agent Diagrams, the review session of a Code Review window). Their groups are enabled only while such a window is
+ * open; every other group is always enabled and gated by the Control Center policy alone (`docs/AGENT_PRESENCE.md`).
+ */
+export const WINDOW_TOOL_GROUPS = {
   browser: 'browser',
   paint: 'paint',
-  wordpad: 'wordpad',
-  notes: 'sticky-notes',
-  events: 'event-viewer',
-  snip: 'snipping-tool',
-  recycle: 'recycle-bin',
-  board: 'kanban',
   diagrams: 'diagrams',
-  review: 'code-review',
-  scheduler: 'task-scheduler',
-  teams: 'teams',
-  rooms: 'team-chat',
-  settings: 'control-centre',
-  taskmgr: 'agent-manager',
-  help: 'help'
-}
+  review: 'code-review'
+} as const satisfies Partial<Record<ToolGroup, AppKind>>
+export type WindowToolGroup = keyof typeof WINDOW_TOOL_GROUPS
+
+export const isWindowToolGroup = (group: ToolGroup): group is WindowToolGroup => group in WINDOW_TOOL_GROUPS
 
 export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   chat: 'Chat',
@@ -355,16 +316,19 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   'task-scheduler': 'Task Scheduler'
 }
 
-/** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
+/**
+ * AppToolPolicy: the tool groups the agent can see. Every group is there, except the groups of output apps whose
+ * window is not open (minimised windows count as open).
+ */
 export function enabledToolGroups(openApps: Iterable<AppKind>): ToolGroup[] {
   const open = new Set(openApps)
-  return TOOL_GROUPS.filter((g) => ALWAYS_ON_TOOL_GROUPS.includes(g) || TOOL_GROUP_PROVIDERS[g].some((k) => open.has(k)))
+  return TOOL_GROUPS.filter((g) => !isWindowToolGroup(g) || open.has(WINDOW_TOOL_GROUPS[g]))
 }
 
-/** The message an agent gets when it uses a tool whose app is closed. */
-export function closedAppMessage(group: Exclude<ToolGroup, 'shell'>): string {
+/** The message an agent gets when it uses a tool of an output app whose window is not open. */
+export function closedAppMessage(group: WindowToolGroup): string {
   if (group === 'review') return 'There is no Code Review window on this desktop. Call review_open with the project path to open one (or the user opens it from the Start menu), then use the review tools.'
-  const app = TOOL_GROUP_APP[group]
+  const app = WINDOW_TOOL_GROUPS[group]
   return `The ${APP_DISPLAY_NAMES[app]} app is closed on this desktop. Call desktop_open_app with app "${app}" to open it.`
 }
 
@@ -372,7 +336,7 @@ export function closedAppMessage(group: Exclude<ToolGroup, 'shell'>): string {
 
 export type PolicyDecision = 'allow' | 'ask' | 'deny'
 
-/** Control Center permission policy. `openApps` governs desktop_open_app. */
+/** Control Center permission policy. `openApps` governs every window an agent opens (`DesktopService.openOutputWindow`). */
 export interface ToolPolicyDto {
   groups: Record<Exclude<ToolGroup, 'shell'>, PolicyDecision>
   openApps: PolicyDecision

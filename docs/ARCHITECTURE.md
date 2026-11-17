@@ -148,16 +148,20 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   manager is the `DesktopWindowHost` port: `open` focuses or creates a window, reusing the blank first-run window. Closing an
   OS window only disconnects (`is_open = 0`, not when the app quits); nothing running stops. `desktop.current` and `desktop.attachBrowser` need the calling window
   and are registered per sender (`ipc/registerDesktopHandlers`); every other call goes through `createApi`.
-- **Tools follow apps.** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
+- **Tools (policy, not open apps).** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
   (`agentxp`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
   every `tools/list`, forwards other calls to the app and sends `notifications/tools/list_changed` when the bridge pushes
   `toolsChanged` (the child holds a subscription socket per desktop). Handlers are one module per group
   (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`, `paintTools`, `wordpadTools`,
   `notesTools`, `eventsTools`, `snipTools`, `recycleTools`); `DesktopToolService` validates the
-  arguments, applies the gate and runs them. Tools that change what a window shows go through `DesktopService.updateView`.
-- **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, app closed, policy deny, then ask (policy ask or
-  "take control"). `ToolGateway` applies it to both channels: MCP tools (closed app = MCP error result with
-  `closedAppMessage`) and the ACP client methods (`AcpAgentConnection` calls the `ToolGate` port for `fs/*` and `terminal/*`
+  arguments, applies the gate and runs them. `enabledToolGroups` (shared) enables every group except the output apps whose tools need their
+  window (`WINDOW_TOOL_GROUPS`: browser, paint, diagrams, review). Work tools (`fs_*`, `code_read/search/edit/write`, `terminal_run`)
+  open nothing; they update a window only when it already shows that file. Every window an agent opens goes through
+  `DesktopService.openOutputWindow` (checks **Agent may open apps**, opens behind the focused window with `attention`). See
+  `docs/AGENT_PRESENCE.md`.
+- **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, output app closed (`WINDOW_TOOL_GROUPS` only), policy deny, then ask (policy ask or
+  "take control"). `ToolGateway` applies it to both channels: MCP tools (closed output app = MCP error result with
+  `closedAppMessage`) and the ACP client methods (`AcpAgentConnection` calls the `ToolGate` port for `fs/*` and `terminal/*`, policy only,
   and answers refusals with a JSON-RPC error). "Ask" shows an AgentXP permission request through `PermissionBroker`; an allow
   the agent's own prompt just obtained covers the next gated call of that session (60 s, once), so users are not asked twice.
 - **Prompt context.** The AG-UI client sends the desktop as `RunAgentInput.context` (`agentxp.desktop`);

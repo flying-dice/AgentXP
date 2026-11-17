@@ -1,5 +1,5 @@
 export { launchAgentXP, WAIT_MS, type AgentXPInstance } from './launch'
-export { addProject, addServerAndProfile, removeServer, allowFileWrites, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, type Workspace } from './setup'
+export { addProject, addServerAndProfile, removeServer, allowFileWrites, allowTerminal, createWorkspace, desktopIdByTitle, desktopIdOf, fakeAgentScript, listAgents, plugWorkspaceIn, readProtocolEvents, registerAgent, registerFakeAgent, setDefaultAgentByName, setToolPolicy, type Workspace } from './setup'
 export { AsidePane } from './pages/AsidePane'
 export { ChatWindow } from './pages/ChatWindow'
 export { CodeReviewWindow } from './pages/CodeReviewWindow'

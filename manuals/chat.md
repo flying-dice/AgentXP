@@ -67,6 +67,8 @@ The transcript is the large area in the middle. It shows your messages and the a
 
 If the agent only worked in the Browser, the Thinking line reads **Used 28 steps in the browser (read, clicked, typed)**. Point at the line to see how many steps of each kind there were. A line under it names the first and the last step in plain words, for example **First: Opened localhost:3000/chat. Last: Typed 'hi' in the Message box.** A click or typing names the button, link, or box that the agent used, for example **Clicked the button 'Send'**. Open the line to see every step in plain words. Names of tools and numbers of page elements show only under **Show**.
 
+The agent works out of sight. When it reads, searches, changes a file, or runs a command, no window opens and nothing takes the focus. Each step has a link to the place where you can see it: **Show in Code**, **Show diff**, **Show in Terminal**, or **Show in Browser**. The links show while the step runs and when it is done. You clicked the link, so the window opens in front with the focus.
+
 If the agent stops while you read older messages, the button **Newer messages below. Click to see them.** shows above the message box. It never covers a message. After you send a message, after an answer ends, and after a restart, the transcript scrolls to the end by itself, unless you scrolled up.
 
 When Resume agents continues a step that **Pause all agents** stopped, your message **Please continue where you stopped.** shows with the note **Resumed. Continuing where you stopped.** above it.
@@ -169,6 +171,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Newer messages | Shows above the message box when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
 | Card note | A line under a tool card, for example "Denied by you" or "The agent could not finish this step." | `tool-call-note` |
 | Show in Event Viewer (step) | A link under a failed step. It opens Event Viewer on the event of that step. | `tool-call-show-event` |
+| Show in Code (step) | A link under a step that read, searched, or changed a file. It opens Code at the file and marks the lines that the agent read, or the first match of a search. | `tool-call-show-code` |
+| Show diff (step) | A link under a step that changed or wrote a file. It opens Code on the change of that file. | `tool-call-show-diff` |
+| Show in Terminal (step) | A link under a step that ran a command. It opens Terminal on that command. | `tool-call-show-terminal` |
+| Show in Browser (step) | A link under a Browser step. It brings that Browser window to the front. | `tool-call-show-browser` |
 | Restarted note | The line "AgentXP restarted. Your last request was not sent again:" with your text. It shows after **Restart** when your last request did not go through. | `chat-restarted-note` |
 | Restarted text | Your last request, on one line, in the restarted note. | `chat-restarted-text` |
 | Send it again | Sends your last request again, in one click. | `chat-restarted-resend` |

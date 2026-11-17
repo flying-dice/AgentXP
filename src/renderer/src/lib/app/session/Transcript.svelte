@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ToolShowTarget } from './toolShowTarget'
   import { tick, untrack } from 'svelte'
   import type { Message } from '@ag-ui/core'
   import type { A2uiClientEvent } from '@shared/a2ui'
@@ -61,6 +62,10 @@
     onlink?: (href: string) => void
     /** "Show in Event Viewer" under a failed step; gets the id of the tool call. */
     onshowtoolevent?: (toolCallId: string) => void
+    /** "Show in Code", "Show diff", "Show in Terminal", "Show in Browser" of a step. */
+    onshowtooltarget?: (target: ToolShowTarget) => void
+    /** The chat's working directory (relative paths of the steps). */
+    cwd?: string | null
   }
 
   let {
@@ -86,7 +91,9 @@
     onaction,
     surfaceControls = noSurfaceControls,
     onlink,
-    onshowtoolevent
+    onshowtoolevent,
+    onshowtooltarget,
+    cwd = null
   }: Props = $props()
 
   const rows = $derived(buildTranscriptRows(messages, activities))
@@ -227,6 +234,8 @@
       denied={deniedToolCalls.has(row.toolCallId)}
       earlier={earlier.has(row.id)}
       onshowevent={onshowtoolevent}
+      onshowtarget={onshowtooltarget}
+      {cwd}
     />
   {:else if row.kind === 'stop'}
     <StopNotice reason={row.reason} />

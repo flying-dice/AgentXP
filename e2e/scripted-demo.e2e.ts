@@ -16,11 +16,12 @@ import {
   type Workspace
 } from './fixtures'
 
-/** Opens Terminal and Code (tools follow apps), plugs the project in and starts a chat on it from AutoPlay. */
+/**
+ * Plugs the project in and starts a chat on it from AutoPlay. No app is opened first: the agent's file reads, writes and
+ * terminal runs need only the permissions, never an open window (docs/AGENT_PRESENCE.md).
+ */
 async function startChat(ctx: ScriptedDesktop, workspace: Workspace): Promise<void> {
   await allowTerminal(ctx.desktopPage)
-  await ctx.desktop.openApp('terminal')
-  await ctx.desktop.openApp('code')
   await plugWorkspaceIn(ctx.desktopPage, ctx.desktopId, workspace)
   await ctx.desktopPage.getByTestId('autoplay-start-chat').click()
   await see.visible(ctx.desktop.chat().composer)
@@ -62,6 +63,10 @@ describe('scripted agent: demo.json, allow path', () => {
     await see.count(chat.toolCalls, 2)
     await see.attribute(chat.toolCalls.first(), 'data-status', 'done')
     await see.attribute(chat.toolCalls.last(), 'data-status', 'done')
+    // Nothing opened for the edit or the run; the run's step has Show in Terminal, which opens the Terminal on it.
+    await see.count(ctx.desktop.windows('terminal'), 0)
+    await see.count(ctx.desktop.windows('code'), 0)
+    await chat.toolCalls.last().getByTestId('tool-call-show-terminal').click()
     await see.text(ctx.desktop.terminal().output, 'tests-pass')
   })
 

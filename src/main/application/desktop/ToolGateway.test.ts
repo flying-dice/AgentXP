@@ -81,10 +81,15 @@ describe('ToolGateway', () => {
     expect(broker.prompts).toEqual([])
   })
 
-  it('refuses a closed app with the open-the-app message', async () => {
-    state = baseState(['terminal'])
+  it('refuses a closed output app with the open-the-app message, and gates ACP fs and terminal by policy only', async () => {
+    state = baseState([])
     await expect(check('browser')).rejects.toThrow(closedAppMessage('browser'))
-    await expect(check('fs.write')).rejects.toBeInstanceOf(ToolRefusedError)
+    await expect(check('browser')).rejects.toBeInstanceOf(ToolRefusedError)
+    await expect(check('fs.read')).resolves.toBeUndefined() // no Explorer or Code needed
+    policy.groups['fs.write'] = 'allow'
+    policy.groups.terminal = 'allow'
+    await expect(check('fs.write')).resolves.toBeUndefined()
+    await expect(check('terminal')).resolves.toBeUndefined() // no Terminal needed
   })
 
   it('refuses everything while paused and when the policy denies', async () => {

@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SessionDto } from '@shared/models'
+import { enabledToolGroups } from '@shared/desktop'
 import { composeApp, type AppServices } from './compose'
 import { RecordingPublisher } from './application/test-helpers'
 import { openDatabase } from './infrastructure/db/open-database'
@@ -57,10 +58,7 @@ async function createSession(): Promise<SessionDto> {
   })
   const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
   const session = await app.api.sessions.create(desktop.id, agent.id, 'E:\\')
-  // The fake agent writes a file and runs a command: those need the apps that provide them.
-  const desktopId = session.desktopId!
-  app.api.desktop.openWindow({ desktopId, app: 'code' })
-  app.api.desktop.openWindow({ desktopId, app: 'terminal' })
+  // The fake agent writes a file and runs a command: no app needs to be open for that, only the permissions.
   app.api.desktop.setPolicy({ ...(await app.api.desktop.policy()), groups: { ...(await app.api.desktop.policy()).groups, terminal: 'allow' } })
   return session
 }
@@ -84,12 +82,12 @@ describe('app composition with the fake ACP agent', () => {
 
     const transcript = await app.api.sessions.transcript(session.id)
     expect(transcript.map((e) => e.kind)).toEqual(['message', 'message', 'tool_call'])
-    // The first prompt of a desktop chat carries the briefing (prefer the desktop's tools, the real shell), then the desktop
+    // The first prompt of a desktop chat carries the briefing (work quietly, the real shell), then the desktop
     // state (both stored, but not shown as the user's text).
     expect(transcript[0]).toMatchObject({
       role: 'user',
       blocks: [
-        { kind: 'resource', uri: 'agentxp://briefing', mimeType: 'text/markdown', text: expect.stringContaining('Prefer AgentXP tools') },
+        { kind: 'resource', uri: 'agentxp://briefing', mimeType: 'text/markdown', text: expect.stringContaining('Work quietly') },
         { kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json' },
         { kind: 'text', text: 'Write the output file' }
       ]
@@ -173,7 +171,7 @@ describe('app composition with the fake ACP agent', () => {
 
     await app.api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
     const changed = publisher.payloads('desktop.changed')
-    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: ['shell', 'terminal', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'], home: 'C:\\Users\\Agent' })
+    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: enabledToolGroups([]), home: 'C:\\Users\\Agent' })
     expect(changed.at(-1)?.drives.map((d) => d.letter)).toEqual(['C', 'E'])
     expect(changed.at(-1)?.windows.map((w) => w.app)).toEqual(['chat', 'terminal'])
 

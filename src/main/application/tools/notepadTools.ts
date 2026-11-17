@@ -21,10 +21,10 @@ export function createNotepadTools({ desktops, vfs, paths }: NotepadToolsDeps): 
         const { desktopId } = context
         const file = paths.resolve(context, path)
         await vfs.readFile(desktopId, file) // fails with a readable error when the file is missing
+        // A Notepad that shows the file already is left where it is; otherwise one opens behind the operator's window.
         const open = desktops.state(desktopId).windows.find((w) => w.view.app === 'notepad' && w.view.path === file)
-        if (open) desktops.focusWindow(open.id, 'agent')
-        else desktops.openWindow({ desktopId, app: 'notepad', path: file }, 'agent')
-        return textResult(`Notepad shows ${file}.`)
+        if (!open) await desktops.openOutputWindow(context.sessionId, { desktopId, app: 'notepad', path: file })
+        return textResult(open ? `A Notepad window already shows ${file}.` : `Opened ${file} in a Notepad window (behind the user's window).`)
       }),
 
     notepad_read: ({ path }, context) =>

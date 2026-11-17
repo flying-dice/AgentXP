@@ -1,4 +1,4 @@
-import type { AppView, CodeSearchView } from '@shared/desktop'
+import type { AppView } from '@shared/desktop'
 import type { FileChangeDto, Id } from '@shared/models'
 import { textSearchSummary } from '@shared/search'
 import type { VPath } from '@shared/vfs'
@@ -8,7 +8,7 @@ import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import type { ToolHandlers } from './catalog'
 import type { AgentFileWriter, DesktopOps } from './ports'
 import type { ToolPaths } from './ToolPaths'
-import { attempt, textResult } from './types'
+import { attempt, textResult, type ToolContext } from './types'
 import { pickWindow } from './windows'
 
 export interface CodeToolsDeps {
@@ -36,33 +36,43 @@ export const MAX_READ_CHARS = 100_000
 const clipLine = (line: string): string =>
   line.length <= MAX_READ_LINE_CHARS ? line : `${line.slice(0, MAX_READ_LINE_CHARS)} [... ${line.length - MAX_READ_LINE_CHARS} more characters]`
 
-/** The singleton Code window (opened by the agent when needed) and its view. */
-function codeWindow(desktops: DesktopOps, desktopId: Id, file?: VPath): { id: Id; view: CodeView } {
-  const window = desktops.openWindow({ desktopId, app: 'code', ...(file ? { path: file } : {}) }, 'agent')
-  return { id: window.id, view: pickWindow(desktops.state(desktopId), 'code', window.id).view }
+/**
+ * Shows `file` in the Code app for the operator (code_open, code_reveal; `show` replaces them in a later release). An
+ * agent open goes through `openOutputWindow`: a new Code window opens behind the focused window, an open one is reused
+ * where it is. `selection` selects lines; `changeId` picks a recorded change.
+ */
+async function showFile(
+  desktops: DesktopOps,
+  context: ToolContext,
+  file: VPath | undefined,
+  options: { selection?: CodeView['selection']; changeId?: Id } = {}
+): Promise<void> {
+  const window = await desktops.openOutputWindow(context.sessionId, { desktopId: context.desktopId, app: 'code', ...(file ? { path: file } : {}) })
+  const view = pickWindow(desktops.state(context.desktopId), 'code', window.id).view
+  const selection = options.selection ?? null
+  const first = selection ? Math.max(1, selection.startLine - VIEW_CONTEXT_LINES) : null
+  desktops.updateView(window.id, {
+    ...view,
+    ...(file
+      ? {
+          tabs: view.tabs.includes(file) ? view.tabs : [...view.tabs, file],
+          activePath: file,
+          selection,
+          visibleLines: first === null ? null : [first, first + VIEW_HEIGHT]
+        }
+      : {}),
+    ...(options.changeId !== undefined ? { selectedChangeId: options.changeId } : {})
+  })
 }
 
 /**
- * Shows `file` in the Code app (opening it when needed). `selection` selects lines; `visibleLines` scrolls to and
- * highlights lines without selecting them (what the agent read or changed). `change` picks a recorded change.
+ * Work, live where open: when a Code window already shows `file` as its active file, the changed lines get a short
+ * highlight (the window reloads the file by itself). Nothing opens, and no tab, active file or window changes.
  */
-function showFile(
-  desktops: DesktopOps,
-  desktopId: Id,
-  file: VPath,
-  options: { selection?: CodeView['selection']; visibleLines?: [number, number] | null; changeId?: Id | null } = {}
-): void {
-  const { id, view } = codeWindow(desktops, desktopId, file)
-  const selection = options.selection ?? null
-  const first = selection ? Math.max(1, selection.startLine - VIEW_CONTEXT_LINES) : null
-  desktops.updateView(id, {
-    ...view,
-    tabs: view.tabs.includes(file) ? view.tabs : [...view.tabs, file],
-    activePath: file,
-    selection,
-    visibleLines: options.visibleLines !== undefined ? options.visibleLines : first === null ? null : [first, first + VIEW_HEIGHT],
-    ...(options.changeId !== undefined ? { selectedChangeId: options.changeId } : {})
-  })
+function highlightIfShowing(desktops: DesktopOps, desktopId: Id, file: VPath, lines: [number, number]): void {
+  const window = desktops.state(desktopId).windows.find((w) => w.view.app === 'code' && w.view.activePath?.toLowerCase() === file.toLowerCase())
+  if (!window || window.view.app !== 'code') return
+  desktops.updateView(window.id, { ...window.view, visibleLines: lines })
 }
 
 const numbered = (lines: string[], first: number): string => lines.map((line, i) => `${first + i}\t${line}`).join('\n')
@@ -73,7 +83,10 @@ const occurrences = (text: string, needle: string): number => text.split(needle)
 /** The 1-based line of a character offset. */
 const lineAt = (text: string, offset: number): number => text.slice(0, offset).split('\n').length
 
-/** code_open, code_reveal, code_show_diff, code_read, code_search, code_edit, code_write: the agent works in the Code app. */
+/**
+ * code_read, code_search, code_edit, code_write: Work, headless (no window opens or moves). code_open, code_reveal and
+ * code_show_diff show the operator something in the Code app.
+ */
 export function createCodeTools({ desktops, changes, paths, vfs, search, files }: CodeToolsDeps): ToolHandlers<CodeTool> {
   const changeOf = (sessionId: Id, file: VPath): FileChangeDto | undefined => changes.list(sessionId).find((c) => c.path.toLowerCase() === file.toLowerCase())
 
@@ -93,28 +106,26 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
 
   return {
     code_open: ({ path, line }, context) =>
-      attempt(() => {
+      attempt(async () => {
         const file = paths.resolve(context, path)
-        showFile(desktops, context.desktopId, file, { selection: line === undefined ? null : { startLine: line, endLine: line } })
+        await showFile(desktops, context, file, { selection: line === undefined ? null : { startLine: line, endLine: line } })
         return textResult(`Code shows ${file}${line === undefined ? '' : ` at line ${line}`}.`)
       }),
 
     code_reveal: ({ path, startLine, endLine }, context) =>
-      attempt(() => {
+      attempt(async () => {
         const file = paths.resolve(context, path)
         const end = Math.max(startLine, endLine ?? startLine)
-        showFile(desktops, context.desktopId, file, { selection: { startLine, endLine: end } })
+        await showFile(desktops, context, file, { selection: { startLine, endLine: end } })
         return textResult(`Code shows ${file}, lines ${startLine}-${end} selected.`)
       }),
 
     code_show_diff: ({ path }, context) =>
-      attempt(() => {
-        const { desktopId, sessionId } = context
+      attempt(async () => {
         const file = paths.resolve(context, path)
-        const change = changeOf(sessionId, file)
+        const change = changeOf(context.sessionId, file)
         if (!change) throw new AppError(`There is no recorded change for ${file} in this chat.`)
-        const { id, view } = codeWindow(desktops, desktopId)
-        desktops.updateView(id, { ...view, selectedChangeId: change.id })
+        await showFile(desktops, context, undefined, { changeId: change.id })
         return textResult(`Code shows the change of ${file}: ${change.kind}, +${change.additions} -${change.deletions}.`)
       }),
 
@@ -138,9 +149,6 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
             break
           }
         }
-        const ranged = startLine !== undefined || endLine !== undefined
-        // A whole file opens at the top; a range is scrolled to and highlighted.
-        showFile(desktops, context.desktopId, file, { visibleLines: ranged ? [first, last] : null })
         const more = last < lines.length ? `\n(${lines.length - last} more lines: read from startLine ${last + 1})` : ''
         return textResult(`${file}, lines ${first}-${last} of ${lines.length}:\n${numbered(lines.slice(first - 1, last).map(clipLine), first)}${more}`)
       }),
@@ -149,11 +157,8 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
       attempt(async () => {
         const root = paths.resolve(context, path)
         const result = await search.searchText(context.desktopId, root, { query, regex, matchCase, include, limit })
-        const view: CodeSearchView = { query, root, regex: regex ?? false, matchCase: matchCase ?? false, include: include ?? '', by: 'agent', ...(limit !== undefined ? { limit } : {}), ranAt: Date.now() }
-        const { id, view: current } = codeWindow(desktops, context.desktopId)
-        desktops.updateView(id, { ...current, search: view })
         const lines = result.matches.map((m) => `${m.path}:${m.line}:${m.column}: ${m.text}`)
-        return textResult([`${textSearchSummary(result)} (searched ${result.filesSearched} files below ${root}; the Search tab of Code shows them).`, ...lines].join('\n'))
+        return textResult([`${textSearchSummary(result)} (searched ${result.filesSearched} files below ${root}).`, ...lines].join('\n'))
       }),
 
     code_edit: ({ path, oldText, newText, replaceAll }, context) =>
@@ -174,9 +179,9 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
         await files.write(sessionId, file, after)
         const startLine = lineAt(after, at)
         const endLine = startLine + Math.max(0, newText.split('\n').length - 1)
-        showFile(desktops, desktopId, file, { visibleLines: [startLine, endLine], changeId: changeOf(sessionId, file)?.id ?? null })
+        highlightIfShowing(desktops, desktopId, file, [startLine, endLine])
         const where = replaceAll && count > 1 ? `${count} places` : `line${endLine > startLine ? `s ${startLine}-${endLine}` : ` ${startLine}`}`
-        return textResult(`Edited ${file} (${where}); Code shows the change.`)
+        return textResult(`Edited ${file} (${where}).`)
       }),
 
     code_write: ({ path, text }, context) =>
@@ -188,9 +193,8 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
           () => false
         )
         await files.write(sessionId, file, text)
-        showFile(desktops, desktopId, file, { visibleLines: null, changeId: changeOf(sessionId, file)?.id ?? null })
         const lineCount = text === '' ? 0 : text.split('\n').length - (text.endsWith('\n') ? 1 : 0)
-        return textResult(`${existed ? 'Replaced' : 'Created'} ${file} (${lineCount} lines); Code shows it.`)
+        return textResult(`${existed ? 'Replaced' : 'Created'} ${file} (${lineCount} lines).`)
       })
   }
 }

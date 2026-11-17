@@ -2,8 +2,8 @@
   import Button from '../kit/atoms/Button.svelte'
   import { tooltip } from '../kit/actions/tooltip'
   import CheckBox from '../kit/atoms/CheckBox.svelte'
-  import type { ToolGroup, ToolPolicyDto } from '@shared/desktop'
-  import { NOT_SAVED_NOTE, PAUSE_TIP, RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, TAKE_CONTROL_LABEL, barStatus, chipAriaLabel, closedAppNames, toolChips, toolsLine } from './activity'
+  import type { ToolPolicyDto } from '@shared/desktop'
+  import { NOT_SAVED_NOTE, PAUSE_TIP, RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, TAKE_CONTROL_LABEL, barStatus, chipAriaLabel, toolChips } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
 
   interface Props {
@@ -14,19 +14,18 @@
     waiting?: number
     /** The words of the link when it names the chat that waits ("Fix login is waiting: run a command (1 of 2 waiting)"); else the count is said. */
     waitingFor?: string | null
-    /** Chat windows that are open: an open chat is something the agent can use. */
-    chatsOpen?: number
     paused: boolean
     /** "Ask before every action": the agent must ask before it reads, writes, runs a command or uses the browser. */
     userInControl: boolean
-    tools: ToolGroup[]
-    /** The Control Center permissions; chips read Allow, Ask or Deny from them. */
+    /** The Control Center permissions; chips read Allow, Ask or Deny from them (what the agent may use; no app has to be open). */
     policy?: ToolPolicyDto | null
     /** A short line that stands in for "Idle" for a few seconds ("Resumed. Nothing was stopped."). */
     notice?: string | null
     onpause?: () => void
     /** The "Waiting for you" link: opens the next request. */
     onopenrequest?: () => void
+    /** The "Working: ..." link: brings the chat doing the work forward. */
+    onopenworking?: () => void
     /** The "Ask before every action" check box and the "Resume" button: switches the flag. */
     ontakecontrol?: () => void
     /** A chip was clicked: open Control Center at Permissions with the row of that tool selected. */
@@ -41,16 +40,15 @@
     agentProblem?: string | null
   }
 
-  let { title, working, waiting = 0, waitingFor = null, chatsOpen = 0, paused, userInControl, tools, policy = null, notice = null, onpause, onopenrequest, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
+  let { title, working, waiting = 0, waitingFor = null, paused, userInControl, policy = null, notice = null, onpause, onopenrequest, onopenworking, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
 
   let pinned = $state(true)
   /** The tooltip of the chip that has the keyboard focus, shown in a line of the bar (a tooltip needs a pointer to appear). */
   let focusTip = $state<string | null>(null)
 
-  const chips = $derived(toolChips(tools, policy, userInControl))
-  const toolsNote = $derived(toolsLine(tools, chatsOpen))
+  const chips = $derived(toolChips(policy, userInControl))
   // One derivation for the text, the dot and `data-state`, so they cannot disagree.
-  const view = $derived(barStatus({ paused, userInControl, working, waiting, waitingFor, notice, closedApps: closedAppNames(chips) }))
+  const view = $derived(barStatus({ paused, userInControl, working, waiting, waitingFor, notice }))
   const status = $derived(view.text)
   const mode = $derived(view.state)
 </script>
@@ -59,7 +57,7 @@
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} class:control={mode === 'control'} class:waiting={mode === 'waiting'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
-      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else}{status}{/if}
+      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else if mode === 'working' && onopenworking}<button type="button" class="link" data-testid="topbar-working-link" title="Go to the chat that is doing this. Its steps show what it read, changed and ran." onclick={() => onopenworking?.()}>{status}</button>{:else}{status}{/if}
     </span>
     {#if userInControl && !paused}
       <button type="button" class="give-back" data-testid="topbar-give-back" title={RESUME_CONTROL_TIP} onclick={() => ontakecontrol?.()}>{RESUME_CONTROL_BUTTON}</button>
@@ -68,11 +66,10 @@
   </ConnectionBar>
   <div class="body">
     <div class="chips" data-testid="topbar-tool-chips" role="group" aria-label="What the agent can use">
-      <span class="lead" use:tooltip={'The agent can use only what is open here. Closing an app takes its tool away.'}>Agent can use</span>
+      <span class="lead" use:tooltip={'What the agent may use, as set in Control Center (Permissions). Click a chip to change it. Nothing opens on your screen while it works.'}>Agent can use</span>
       {#each chips as chip (chip.group)}
-        <button type="button" class="chip" data-state={chip.state} data-closed={chip.closed} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" use:tooltip={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)} onfocus={(e) => (focusTip = e.currentTarget.matches(':focus-visible') ? chip.tooltip : null)} onblur={() => (focusTip = null)}>{chip.label}</button>
+        <button type="button" class="chip" data-state={chip.state} data-word={chip.word} data-testid="topbar-tool-chip-{chip.group.replaceAll('.', '-')}" use:tooltip={chip.tooltip} aria-label={chipAriaLabel(chip)} onclick={() => onopenpermissions?.(chip.group)} onfocus={(e) => (focusTip = e.currentTarget.matches(':focus-visible') ? chip.tooltip : null)} onblur={() => (focusTip = null)}>{chip.label}</button>
       {/each}
-      {#if toolsNote}<span class="none" data-testid="topbar-tool-chips-none">{toolsNote}</span>{/if}
     </div>
     <span class="pause-slot">
       <Button
@@ -174,8 +171,7 @@
     padding: 0 0 0 2px;
     font-size: 11px;
   }
-  .lead,
-  .none {
+  .lead {
     color: var(--xp-text-muted);
   }
   /* Buttons that show the state: a border and a hover face say they can be clicked, and a click opens Permissions (UX-142). */
@@ -213,10 +209,6 @@
   .chip[data-state='off'] {
     background: linear-gradient(#fbfbfc, #eceef2);
     color: #4b5666;
-  }
-  /* The dashed border is only for a chip with no setting to change yet: its app is not open (UX-159). */
-  .chip[data-closed='true'] {
-    border-style: dashed;
   }
   .chip:hover {
     border-color: var(--xp-hot-border);

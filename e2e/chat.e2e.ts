@@ -15,7 +15,7 @@ describe('chat turn with the fake agent', () => {
     await workspace?.remove()
   })
 
-  it('opens Code and Terminal (tools follow apps) and lets the shell run without asking', async () => {
+  it('opens Code and Terminal and lets the shell run without asking', async () => {
     await allowTerminal(ctx.desktopPage)
     await ctx.desktop.openApp('terminal')
     await ctx.desktop.openApp('code')
