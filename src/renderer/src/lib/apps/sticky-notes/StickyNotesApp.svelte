@@ -49,7 +49,7 @@
     selected = note.id
   }
 
-  const colorItems = $derived<MenuItemDef[]>(STICKY_COLORS.map((c) => ({ label: NOTE_THEME[c].label, radio: true, checked: color === c, action: () => (color = c) })))
+  const colorItems = $derived<MenuItemDef[]>(STICKY_COLORS.map((c) => ({ testid: `sticky-color-${c}`, label: NOTE_THEME[c].label, radio: true, checked: color === c, action: () => (color = c) })))
   const planItems = $derived<MenuItemDef[]>(
     sessions.length === 0 ? [{ label: '(no chats yet)', disabled: true }] : sessions.map((s) => ({ label: s.title || 'New chat', icon: 'tasks', action: () => void addPlan(s) }))
   )
@@ -95,8 +95,8 @@
   <MenuStrip {menus} aria-label="Sticky Notes menu" />
   <ToolStrip aria-label="Sticky Notes">
     <ToolStripButton data-testid="sticky-notes-new" icon="plus" text="New note" onclick={() => void addNote()} />
-    <ToolStripDropDownButton text="Color" items={colorItems} />
-    <ToolStripDropDownButton icon="tasks" text="Plan note" items={planItems} />
+    <ToolStripDropDownButton text="Color" items={colorItems} testid="sticky-color" />
+    <ToolStripDropDownButton icon="tasks" text="Plan note" items={planItems} testid="sticky-plan" />
   </ToolStrip>
   <!-- Only a list with items is a list: the empty message is not a list item (UX-83). -->
   <div class="list xp-scroll" role={notes.length > 0 ? 'list' : undefined} aria-label={notes.length > 0 ? 'Notes' : undefined}>

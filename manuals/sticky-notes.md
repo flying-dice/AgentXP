@@ -83,6 +83,9 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: new | File menu: adds a note. Ctrl+N. | `sticky-notes-menu-new` |
 | Menu: close | Closes the window. Alt+F4. | `sticky-notes-menu-close` |
 | Menu: delete | Edit menu: deletes the selected note. | `sticky-notes-menu-delete` |
+| Toolbar: color | Opens the colour list for new notes. | `sticky-color` |
+| Toolbar: color * | One entry per colour in the Color list. | `sticky-color-*` |
+| Toolbar: plan note | Opens the list of chats to make a plan note from. | `sticky-plan` |
 | Context menu: color * | Sets the colour of the selected note. | `sticky-notes-ctx-color-*` |
 | Context menu: delete | Deletes the selected note. | `sticky-notes-ctx-delete` |
 | Context menu: new | Adds a note. | `sticky-notes-ctx-new` |

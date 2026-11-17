@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { placePopup } from '../actions/popup'
+  import { keepPlaced, placePopup } from '../actions/popup'
   import type { IconName } from '../atoms/icons'
   import type { MenuItemDef } from './MenuItem'
   import MenuPopup from './MenuPopup.svelte'
@@ -24,18 +23,23 @@
   let pos = $state({ left: 0, top: 0 })
   let byKeyboard = $state(false)
   let popup = $state<HTMLElement | null>(null)
+  let anchor = $state<DOMRect | null>(null)
 
   function show(keyboard: boolean): void {
     if (!button || disabled) return
     const r = button.getBoundingClientRect()
     pos = { left: r.left, top: r.bottom - 1 }
     byKeyboard = keyboard
+    anchor = r
     open = true
-    // Measure once rendered (before paint) and flip up / clamp so it never runs off screen.
-    tick().then(() => {
-      if (popup) pos = placePopup(r, popup.getBoundingClientRect())
-    })
   }
+
+  // Once rendered (before paint), and whenever it resizes: below the button, above it when cramped, on screen.
+  $effect(() => {
+    if (!popup || !anchor) return
+    const r = anchor
+    return keepPlaced(popup, (size) => (pos = placePopup(r, size)))
+  })
 
   function close(refocus: boolean): void {
     open = false

@@ -9,6 +9,12 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 UI, backend, agent API (agentxp MCP tools), e2e and docs. `docs/APP_PILLARS.md` explains them and shows the state of
 each app; `npm run app:pillars` enforces them in CI. To add an app, follow `.claude/skills/new-agentxp-app/SKILL.md`.
 
+## Look at every change in the real app
+
+Before a pull request merges, launch the built app, use the changed behaviour by hand, eyeball screenshots against
+the intended result, and fill the PR's **Manual verification** section. See `AGENTS.md` and
+`.claude/skills/verify-change/SKILL.md`. Tests passing is not enough.
+
 ## Svelte / kit
 
 - Svelte 5 runes only. Props via `let { ..., class: className = '', ...rest } = $props()`.

@@ -171,6 +171,22 @@
   })
 
   $effect(() => () => clearTimeout(hoverTimer))
+
+  /**
+   * One style attribute: the caller's `style` (a MenuStrip/drop-down/context menu passes its fixed left/top there)
+   * plus this popup's own placement. Not `style:left`/`style:top` directives: when they are undefined Svelte
+   * removes those properties, wiping the caller's coordinates and leaving the menu at its static position.
+   */
+  const popupStyle = $derived(
+    [
+      style,
+      shift ? `translate: 0 ${shift}px` : '',
+      maxHeight !== undefined ? `max-height: ${maxHeight}px` : '',
+      fixedAt ? `left: ${fixedAt.left}px; top: ${fixedAt.top}px` : ''
+    ]
+      .filter(Boolean)
+      .join('; ') || undefined
+  )
 </script>
 
 <div
@@ -184,11 +200,7 @@
   tabindex="-1"
   aria-label={label}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
-  {style}
-  style:translate={shift ? `0 ${shift}px` : undefined}
-  style:max-height={maxHeight !== undefined ? `${maxHeight}px` : undefined}
-  style:left={fixedAt ? `${fixedAt.left}px` : undefined}
-  style:top={fixedAt ? `${fixedAt.top}px` : undefined}
+  style={popupStyle}
   onscroll={() => {
     if (openSub >= 0) openSub = -1
   }}

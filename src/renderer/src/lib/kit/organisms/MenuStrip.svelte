@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { placePopup } from '../actions/popup'
+  import { keepPlaced, placePopup } from '../actions/popup'
   import { rovingFocus } from '../actions/rovingFocus'
   import MenuPopup from '../molecules/MenuPopup.svelte'
   import { mnemonicKey, parseMnemonic, type MenuDef, type MenuItemDef } from '../molecules/MenuItem'
@@ -24,6 +23,7 @@
   let openByKeyboard = $state(false)
   let pos = $state({ left: 0, top: 0 })
   let popup = $state<HTMLElement | null>(null)
+  let anchor = $state<DOMRect | null>(null)
   let altPending = false
   let restoreTo: HTMLElement | null = null
 
@@ -38,11 +38,16 @@
     pos = { left: rect.left, top: rect.bottom - 1 }
     focusIndex = i
     openByKeyboard = byKeyboard
+    anchor = rect
     openIndex = i
-    tick().then(() => {
-      if (popup && openIndex === i) pos = placePopup(rect, popup.getBoundingClientRect())
-    })
   }
+
+  // Below the menu bar button (above it only when there is no room below), kept there as the menu lays out.
+  $effect(() => {
+    if (!popup || !anchor || openIndex < 0) return
+    const r = anchor
+    return keepPlaced(popup, (size) => (pos = placePopup(r, size)))
+  })
 
   function closeMenu(refocus: 'button' | 'restore' | 'none'): void {
     const was = openIndex

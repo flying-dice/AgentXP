@@ -98,7 +98,11 @@ permissions), the tool must still exist but always ask the user (`ToolGateway.as
 
 ## 7. Verify, then open the PR
 
-Run all of these and fix every failure (re-run only what failed while fixing):
+First look at the app in the real Electron app, exactly as `.claude/skills/verify-change/SKILL.md` says: use every
+action from step 0 by hand (normal, maximized and small window, keyboard, and through the agent), open the
+screenshots and compare them with what the app should do. This is mandatory; tests passing is not enough.
+
+Then run all of these and fix every failure (re-run only what failed while fixing):
 
 ```sh
 npm run typecheck
@@ -123,4 +127,5 @@ The pull request description must include:
 - [ ] E2E: user flows + one agent-driven flow
 - [ ] Docs: manual with Controls Reference and What the Agent Can Do; help:coverage and app:pillars pass
 - [ ] Screenshots in this description
+- [ ] Manual verification: launched the real app, used every action by hand, eyeballed the screenshots (verify-change)
 ```

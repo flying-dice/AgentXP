@@ -3,9 +3,9 @@
    * An Office XP colour button for a tool strip: the glyph with a bar of the current colour under it applies that
    * colour; the narrow arrow beside it opens a colour palette.
    */
-  import { tick, type Snippet } from 'svelte'
+  import type { Snippet } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { placePopup } from '../actions/popup'
+  import { keepPlaced, placePopup } from '../actions/popup'
   import { tooltip } from '../actions/tooltip'
   import ColorPalette from '../atoms/ColorPalette.svelte'
 
@@ -31,16 +31,21 @@
   let arrow = $state<HTMLButtonElement | null>(null)
   let pos = $state({ left: 0, top: 0 })
   let popup = $state<HTMLElement | null>(null)
+  let anchor = $state<DOMRect | null>(null)
 
   function show(): void {
     if (!arrow || disabled) return
     const r = arrow.parentElement!.getBoundingClientRect()
     pos = { left: r.left, top: r.bottom - 1 }
+    anchor = r
     open = true
-    tick().then(() => {
-      if (popup) pos = placePopup(r, popup.getBoundingClientRect())
-    })
   }
+
+  $effect(() => {
+    if (!popup || !anchor) return
+    const r = anchor
+    return keepPlaced(popup, (size) => (pos = placePopup(r, size)))
+  })
 
   function pick(color: string): void {
     open = false

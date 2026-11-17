@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
-  import { workArea } from '../actions/popup'
+  import { keepPlaced, workArea } from '../actions/popup'
   import MenuPopup from '../molecules/MenuPopup.svelte'
   import type { MenuItemDef } from '../molecules/MenuItem'
 
@@ -41,12 +40,17 @@
     restoreTo = document.activeElement as HTMLElement | null
     left = x
     top = y
-    tick().then(() => {
-      if (!element) return
-      const r = element.getBoundingClientRect()
+  })
+
+  // At the pointer, slid back inside the work area (window minus taskbar) once its size is known.
+  $effect(() => {
+    if (!open || !element) return
+    const px = x
+    const py = y
+    return keepPlaced(element, (size) => {
       const area = workArea()
-      left = Math.max(0, Math.min(x, area.width - r.width - 2))
-      top = Math.max(0, Math.min(y, area.height - r.height - 2))
+      left = Math.max(0, Math.min(px, area.width - size.width - 2))
+      top = Math.max(0, Math.min(py, area.height - size.height - 2))
     })
   })
 </script>
