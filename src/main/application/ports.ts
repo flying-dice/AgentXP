@@ -137,6 +137,11 @@ export interface HostFiles {
   stat(root: string, relativePath: string): Promise<HostEntry | null>
   /** The absolute path of `relativePath` below `root`, checked against escapes (symlinks included). */
   resolveInside(root: string, relativePath: string): Promise<string>
+  /**
+   * The canonical form of a root (symlinks resolved, e.g. macOS `/var` -> `/private/var`); the root itself when it cannot
+   * be resolved. A process started in a root may see and report its canonical form (`pwd`, `process.cwd()`).
+   */
+  canonicalRoot?(root: string): string
   /** Trusted calls for the desktop's own system disk: create a directory tree / delete one. */
   ensureDirectory(path: string): Promise<void>
   removeTree(path: string): Promise<void>

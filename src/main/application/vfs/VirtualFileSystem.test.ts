@@ -1,4 +1,4 @@
-import { mkdir, symlink, writeFile, readFile } from 'node:fs/promises'
+import { mkdir, realpath, symlink, writeFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createVfsFixture, tempDir } from '../test-helpers'
@@ -41,6 +41,17 @@ describe('Computer and drives', () => {
     expect(f.vfs.toVPath(id, real)).toBe('E:\\a.txt')
     expect(f.vfs.toVPath(id, '/etc/passwd')).toBeNull()
     expect(f.vfs.toVPath(id, join(f.desktopsDir, String(id), 'C', 'Users'))).toBe('C:\\Users')
+  })
+
+  it('maps a path under the canonical form of a symlinked project folder (what an agent\'s pwd reports)', async () => {
+    const target = tempDir('agentxp-linked-')
+    const link = join(tempDir('agentxp-link-'), 'project')
+    await symlink(target, link)
+    const folder = f.repos.folders.add(link, 'linked')
+    const drive = f.drives.plugInFolder(id, folder.id)
+    expect(f.vfs.toVPath(id, join(link, 'src', 'a.ts'))).toBe(`${drive.letter}:\\src\\a.ts`)
+    expect(f.vfs.toVPath(id, join(await realpath(target), 'src', 'a.ts'))).toBe(`${drive.letter}:\\src\\a.ts`)
+    expect(f.vfs.toVPath(id, join(await realpath(target), '..', 'elsewhere'))).toBeNull()
   })
 
   it('resolves relative input against the cwd', () => {

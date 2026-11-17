@@ -78,7 +78,7 @@
   })
   $effect(() => {
     const id = board?.id ?? null
-    if (loaded && sync.mark(id)) host.updateView(win.id, { app: 'kanban', boardId: id })
+    if (loaded && sync.report(id)) host.updateView(win.id, { app: 'kanban', boardId: id })
   })
   $effect(() => {
     if (selectedCard !== null && !allCards.some((c) => c.id === selectedCard)) selectedCard = null

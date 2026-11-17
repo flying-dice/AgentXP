@@ -78,12 +78,15 @@
 
   function report(): void {
     const view = { path, selected: $state.snapshot(selected) }
-    if (sync.mark(view)) host.updateView(win.id, { app: 'explorer', ...view, search: searchView })
+    if (sync.report(view)) host.updateView(win.id, { app: 'explorer', ...view, search: searchView })
   }
 
   /** Tells the view which search is on screen (null: none), so the agent sees what the user searched for. */
   function reportSearch(): void {
-    if (searchSync.mark(searchView)) host.updateView(win.id, { app: 'explorer', path, selected: $state.snapshot(selected), search: searchView })
+    if (!searchSync.report(searchView)) return
+    const view = { path, selected: $state.snapshot(selected) }
+    sync.report(view)
+    host.updateView(win.id, { app: 'explorer', ...view, search: searchView })
   }
 
   function reveal(target: VPath | ''): void {

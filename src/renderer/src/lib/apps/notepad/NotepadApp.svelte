@@ -46,7 +46,7 @@
   const sync = new ViewSync<{ path: string | null; caretLine: number }>((v) => JSON.stringify([v.path, v.caretLine]))
 
   function report(): void {
-    const moved = sync.mark({ path, caretLine: caret.line })
+    const moved = sync.report({ path, caretLine: caret.line })
     if (moved || dirty !== reportedDirty) {
       reportedDirty = dirty
       host.updateView(win.id, { app: 'notepad', path, dirty, caretLine: caret.line })
@@ -236,6 +236,10 @@
     } else if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 's') {
       event.preventDefault()
       void save()
+    } else if (event.ctrlKey && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'a') {
+      // Edit > Select All says Ctrl+A; on macOS a text box takes Ctrl+A as "start of line", so Notepad selects all itself.
+      event.preventDefault()
+      ops.selectAll()
     }
   }
 </script>

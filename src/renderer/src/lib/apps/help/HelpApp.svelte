@@ -143,7 +143,7 @@
   // Report the topic (the shell stores it) and follow a topic that arrives from outside (F1 on another window).
   $effect(() => {
     const view = { topic }
-    if (sync.mark(view)) untrack(() => host.updateView(win.id, { app: 'help', topic }))
+    if (sync.report(view)) untrack(() => host.updateView(win.id, { app: 'help', topic }))
   })
   $effect(() => {
     const incoming = win.view.topic

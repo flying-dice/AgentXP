@@ -58,7 +58,7 @@
 
   $effect(() => {
     const id = current?.id ?? null
-    if (sync.mark({ selectedId: id })) untrack(() => host.updateView(win.id, { app: 'recycle-bin', selectedId: id }))
+    if (sync.report({ selectedId: id })) untrack(() => host.updateView(win.id, { app: 'recycle-bin', selectedId: id }))
   })
 
   // The agent selects an item.

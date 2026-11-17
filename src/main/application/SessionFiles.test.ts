@@ -59,9 +59,10 @@ describe('ACP path gating', () => {
   })
 
   it('resolves the cwd: the chat cwd by default, a real path inside a drive, and refuses others', async () => {
-    expect(await access.resolveCwd!()).toBe(root)
+    // The cwd keeps the drive root as stored; compare canonical forms (macOS temp folders are under the /var symlink).
+    expect(await realpath(await access.resolveCwd!())).toBe(root)
     await mkdir(join(root, 'sub'))
-    expect(await access.resolveCwd!(join(root, 'sub'))).toBe(join(root, 'sub'))
+    expect(await realpath(await access.resolveCwd!(join(root, 'sub')))).toBe(join(root, 'sub'))
     await expect(access.resolveCwd!('/tmp')).rejects.toBeInstanceOf(OutsideDrivesError)
     f.drives.eject(f.desktop.id, 'E')
     await expect(access.resolveCwd!()).rejects.toThrow(/Drive E:/)

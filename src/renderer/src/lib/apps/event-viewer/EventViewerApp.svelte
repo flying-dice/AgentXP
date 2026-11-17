@@ -70,7 +70,7 @@
 
   function report(): void {
     const selectedEventId = current?.id ?? null
-    const moved = sync.mark({ sessionId: scope.sessionId, level })
+    const moved = sync.report({ sessionId: scope.sessionId, level })
     if (moved || selectedEventId !== lastSelected) {
       lastSelected = selectedEventId
       host.updateView(win.id, { app: 'event-viewer', sessionId: scope.sessionId, level, selectedEventId })

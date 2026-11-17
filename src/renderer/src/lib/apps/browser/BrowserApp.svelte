@@ -73,7 +73,7 @@
 
   function report(): void {
     const t = active
-    if (sync.mark({ url: t.url })) host.updateView(win.id, { app: 'browser', url: t.url, title: t.title, loading: t.loading })
+    if (sync.report({ url: t.url })) host.updateView(win.id, { app: 'browser', url: t.url, title: t.title, loading: t.loading })
     else if (win.view.title !== t.title || win.view.loading !== t.loading) host.updateView(win.id, { app: 'browser', url: t.url, title: t.title, loading: t.loading })
   }
 

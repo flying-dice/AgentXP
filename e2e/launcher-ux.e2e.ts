@@ -17,6 +17,8 @@ describe('launcher keyboard and name check', () => {
   })
 
   it('F1 opens the launcher help, Esc closes it', async () => {
+    // Keys are only heard once the launcher has loaded (its keyboard handler mounts with the page), as a person would wait.
+    await see.visible(page.getByTestId('launcher-empty-help'))
     await page.keyboard.press('F1')
     await see.visible(page.getByTestId('launcher-help'))
     await page.keyboard.press('Escape')

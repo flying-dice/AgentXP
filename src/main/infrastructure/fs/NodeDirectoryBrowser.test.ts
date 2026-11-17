@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -32,6 +32,19 @@ describe('NodeDirectoryBrowser', () => {
       ['login-app', true]
     ])
     expect(listing.entries[1].path).toBe(join(root, 'login-app'))
+  })
+
+  it('lists a symbolic link to a folder as a folder (macOS /var, a projects folder on another disk), not one to a file', async () => {
+    await symlink(join(root, 'login-app'), join(root, 'linked-app'))
+    await symlink(join(root, 'readme.txt'), join(root, 'linked-file'))
+    await symlink(join(root, 'gone'), join(root, 'broken-link'))
+    const listing = await browser.browse(root)
+    expect(listing.entries.map((e) => [e.name, e.hasChildren])).toEqual([
+      ['Alpha', false],
+      ['linked-app', true],
+      ['login-app', true]
+    ])
+    expect((await browser.browse(join(root, 'linked-app'))).entries.map((e) => e.name)).toEqual(['src'])
   })
 
   it('lists `/` as the only drive on Linux and offers the shortcuts that exist', async () => {

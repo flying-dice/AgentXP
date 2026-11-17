@@ -119,14 +119,14 @@
 
   function report(): void {
     const view = syncedView()
-    if (sync.mark(view)) host.updateView(win.id, { app: 'code', ...view, selection, search: searchView })
+    if (sync.report(view)) host.updateView(win.id, { app: 'code', ...view, selection, search: searchView })
   }
 
   /** Tells the view which search the Search tab shows, with the rest of the view as this window has it (never a stale copy). */
   function reportSearch(): void {
-    if (!searchSync.mark(searchView)) return
+    if (!searchSync.report(searchView)) return
     const view = syncedView()
-    sync.mark(view)
+    sync.report(view)
     host.updateView(win.id, { app: 'code', ...view, selection, search: searchView })
   }
 

@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
 import type { HostEntry, HostFiles } from '../../application/ports'
@@ -12,6 +13,14 @@ const toEntry = (name: string, info: { isDirectory(): boolean; size: number; mti
 
 /** `HostFiles` on the real file system; every call is confined to its root by the workspace path guard. */
 export class NodeHostFiles implements HostFiles {
+  canonicalRoot(root: string): string {
+    try {
+      return realpathSync(root)
+    } catch {
+      return root
+    }
+  }
+
   async list(root: string, relativePath: string): Promise<HostEntry[]> {
     const dir = await resolveInsideRoot(resolve(root), relativePath)
     const entries = await readdir(dir, { withFileTypes: true })

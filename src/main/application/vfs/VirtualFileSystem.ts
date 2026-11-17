@@ -56,6 +56,8 @@ const sameCase = (path: string): string => (process.platform === 'win32' ? path.
  * refuses escapes (symlinks included).
  */
 export class VirtualFileSystem {
+  private readonly canonicalRoots = new Map<string, string>()
+
   constructor(private readonly deps: VirtualFileSystemDeps) {}
 
   // ---- drives ------------------------------------------------------------------------------------
@@ -113,17 +115,34 @@ export class VirtualFileSystem {
     return this.deps.host.resolveInside(mount.root, relativePath)
   }
 
-  /** Finds the drive a real absolute path is on (the deepest root wins); null when it is on none. Textual: no I/O. */
+  /**
+   * Finds the drive a real absolute path is on (the deepest root wins); null when it is on none. The path may use the
+   * drive's root as stored or its canonical form (an agent may report `/private/var/...` for a root under `/var`).
+   * Textual, apart from resolving each root once.
+   */
   locateReal(desktopId: Id, realPath: string): Located | null {
     if (!isAbsolute(realPath)) return null
-    const target = resolve(realPath)
+    const target = sameCase(resolve(realPath))
     let best: Located | null = null
     for (const mount of this.mounts(desktopId)) {
-      const rel = relative(sameCase(mount.root), sameCase(target))
-      if (rel.startsWith('..') || isAbsolute(rel)) continue
-      if (!best || mount.root.length > best.mount.root.length) best = { mount, relativePath: posix(rel) }
+      for (const root of new Set([mount.root, this.canonicalRoot(mount.root)])) {
+        const rel = relative(sameCase(root), target)
+        if (rel.startsWith('..') || isAbsolute(rel)) continue
+        if (!best || mount.root.length > best.mount.root.length) best = { mount, relativePath: posix(rel) }
+        break
+      }
     }
     return best
+  }
+
+  /** The canonical form of a drive root, resolved once per root (it does not change while the folder exists). */
+  private canonicalRoot(root: string): string {
+    let canonical = this.canonicalRoots.get(root)
+    if (canonical === undefined) {
+      canonical = this.deps.host.canonicalRoot?.(root) ?? root
+      this.canonicalRoots.set(root, canonical)
+    }
+    return canonical
   }
 
   toVPath(desktopId: Id, realPath: string): VPath | null {

@@ -162,7 +162,7 @@
   $effect(() => {
     const view = { baseRef, selectedPath: chosenPath }
     untrack(() => {
-      if (sync.mark(view)) host.updateView(win.id, { app: 'code-review', root, sessionId, ...view })
+      if (sync.report(view)) host.updateView(win.id, { app: 'code-review', root, sessionId, ...view })
     })
   })
   $effect(() => {

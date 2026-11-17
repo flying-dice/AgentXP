@@ -52,6 +52,20 @@ const exists = async (path: string): Promise<boolean> => {
 
 const visible = (e: { name: string; isDirectory(): boolean }): boolean => e.isDirectory() && !e.name.startsWith('.')
 
+/**
+ * The folders of `dir`, dot-folders hidden. A symbolic link to a folder counts as a folder (macOS `/var`, a projects folder
+ * linked to another disk), like a junction in the XP dialog. Throws when `dir` cannot be read.
+ */
+async function folderNames(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true })
+  const linked = await Promise.all(
+    entries
+      .filter((e) => e.isSymbolicLink() && !e.name.startsWith('.'))
+      .map(async (e) => ((await stat(join(dir, e.name)).catch(() => null))?.isDirectory() ? e.name : null))
+  )
+  return [...entries.filter(visible).map((e) => e.name), ...linked.filter((n): n is string => n !== null)]
+}
+
 /** Lists folders of the real disk (the in-app Browse For Folder dialog). Dot-folders are hidden. */
 export class NodeDirectoryBrowser implements DirectoryBrowser {
   private readonly platform: NodeJS.Platform
@@ -73,7 +87,7 @@ export class NodeDirectoryBrowser implements DirectoryBrowser {
     const dir = resolve(path)
     let names: string[]
     try {
-      names = (await readdir(dir, { withFileTypes: true })).filter(visible).map((e) => e.name)
+      names = await folderNames(dir)
     } catch {
       if (!(await exists(dir))) throw new AppError(`The folder '${dir}' does not exist. Check the spelling, or select the parent folder and click Make New Folder.`)
       throw new AppError(`The folder '${dir}' cannot be opened. It may not exist, or you may not have permission.`)
@@ -139,7 +153,7 @@ export class NodeDirectoryBrowser implements DirectoryBrowser {
 
   private async hasSubfolders(path: string): Promise<boolean> {
     try {
-      return (await readdir(path, { withFileTypes: true })).some(visible)
+      return (await folderNames(path)).length > 0
     } catch {
       return false
     }
