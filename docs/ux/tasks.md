@@ -473,8 +473,7 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 **T32.1 - Why this line? [planned]**
 - Scenario: "You asked the assistant where the login redirect is checked. It is pointing something out to you. Find out what it wants you to see and why, and tell it that you agree."
 - Start state: scripted agent `show-file` in the foreground chat calls `show` on `src/auth/redirect.ts:12-20` with a note.
-- Success check: the chat has a new user message that quotes the note (Reply was used) or a typed reply; the panelist states the reason from the note (answer check).
-- Answer: the reason in the note ("the redirect target is not checked here").
+- Success check: the chat has a new user message that quotes the note (Reply was used) or a typed reply that agrees.
 - Min 2 (**Reply**, type and send). Budget 6 / 8.
 
 **T32.2 - Someone else wants your attention [planned]**
@@ -488,8 +487,7 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 **T33.1 - What happened while I was busy? [planned]**
 - Scenario: "Two assistants worked while you were in a meeting. Find out what each one did, and open the review comments one of them left."
 - Start state: scripted team run `two-agent-output` finished: Reviewer left 4 comments, Builder changed 6 files and ran tests; balloons have timed out.
-- Success check: Code Review is open on the first new comment; the panelist names both results (answer check).
-- Answer: Reviewer left 4 comments; Builder changed 6 files and ran tests.
+- Success check: Code Review is open on the first new comment, and the Action Center was opened during the session.
 - Min 2 (tray flag, **Open review**). Budget 6 / 8.
 
 **T33.2 - Do not disturb me [planned]**
