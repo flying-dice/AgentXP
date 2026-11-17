@@ -38,6 +38,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Task Manager | `agent-manager` | yes | none | none |
 | Task Scheduler | `task-scheduler` | yes | none (the agent does not edit schedules; a task starts a prompt through the chat services) | `selectedTaskId`, `tab` |
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
+| Agent Diagrams | `diagrams` | no | MCP `diagram_*` (`diagram_new`, `diagram_stencils`, `diagram_add`, `diagram_update`, `diagram_delete`, `diagram_layout`, `diagram_arrange`, `diagram_pages`, `diagram_select`, `diagram_read`, `diagram_export`, `diagram_save`, `diagram_open`). The main process forwards each call to the open window through the app request broker; the window's editor applies it as one undo step. | file path, title, dirty flag, page and page names, shape and connector counts, selection, outline of the page |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
 | Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
 | Kanban | `kanban` | yes | MCP `board_*` (`board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card`). The `board` tool group is **always on** (`ALWAYS_ON_TOOL_GROUPS`): agents work on boards without the window, gated by the Control Center policy only. | open board |
@@ -331,6 +332,7 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 | Browser | `url`, `title`, `tabs`, `selection` (the text selected at the last right-click: the guest page does not report it otherwise) |
 | Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
 | Paint | `canvas` (width, height), `tool`, `color` |
+| Agent Diagrams | `openFile`, `drawing`, `page`, `unsavedChanges`, `selection` (the selected shapes and connectors with their text) |
 | Sticky Notes | `note` (the selected note) or `notes` |
 | Task Scheduler | `tasks` (the number of tasks) and `selectedTask` (id, name, status, enabled, trigger count, last result) |
 | Kanban | `board` (the open board as text with ids) and `selectedCard` |

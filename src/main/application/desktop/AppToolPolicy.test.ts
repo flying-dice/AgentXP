@@ -33,7 +33,7 @@ describe('enabledToolGroups (open apps -> tool groups)', () => {
   it('ignores order and duplicates, and every group is reachable', () => {
     expect(enabledToolGroups(['browser', 'browser', 'terminal'])).toEqual(enabledToolGroups(['terminal', 'browser']))
     expect(
-      enabledToolGroups(['explorer', 'notepad', 'code', 'terminal', 'browser', 'paint', 'wordpad', 'sticky-notes', 'event-viewer', 'snipping-tool', 'recycle-bin', 'code-review'])
+      enabledToolGroups(['explorer', 'notepad', 'code', 'terminal', 'browser', 'paint', 'wordpad', 'sticky-notes', 'event-viewer', 'snipping-tool', 'recycle-bin', 'code-review', 'diagrams'])
     ).toEqual([...TOOL_GROUPS])
   })
 })

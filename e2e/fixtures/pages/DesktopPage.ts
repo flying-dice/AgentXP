@@ -17,6 +17,7 @@ export type AppId =
   | 'notepad'
   | 'wordpad'
   | 'paint'
+  | 'diagrams'
   | 'snipping-tool'
   | 'sticky-notes'
   | 'event-viewer'
@@ -32,6 +33,7 @@ const START_GROUP: Partial<Record<AppId, string>> = {
   notepad: 'accessories',
   wordpad: 'accessories',
   paint: 'accessories',
+  diagrams: 'accessories',
   'snipping-tool': 'accessories',
   'sticky-notes': 'accessories',
   'agent-manager': 'system-tools',

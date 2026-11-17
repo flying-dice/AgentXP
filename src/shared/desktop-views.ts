@@ -21,6 +21,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   wordpad: { x: 170, y: 80, width: 700, height: 520 },
   'sticky-notes': { x: 600, y: 60, width: 360, height: 420 },
   kanban: { x: 120, y: 50, width: 900, height: 520 },
+  diagrams: { x: 70, y: 30, width: 1080, height: 700 },
   'event-viewer': { x: 130, y: 90, width: 980, height: 560 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
   'recycle-bin': { x: 240, y: 120, width: 680, height: 420 },
@@ -33,7 +34,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
 }
 
 /** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
-export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 }, 'task-scheduler': { width: 760, height: 520 } }
+export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 }, 'task-scheduler': { width: 760, height: 520 }, diagrams: { width: 640, height: 440 } }
 export const DEFAULT_MIN_WINDOW_SIZE = { width: 480, height: 320 } as const
 export const minWindowSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? DEFAULT_MIN_WINDOW_SIZE
 
@@ -289,6 +290,8 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'sticky-notes' }
     case 'kanban':
       return { app: 'kanban', boardId: null }
+    case 'diagrams':
+      return { app: 'diagrams', path: input.path ?? null, title: 'Drawing1', dirty: false, page: 0, pages: ['Page-1'], shapeCount: 0, connectorCount: 0, selection: [], outline: { shapes: [], connectors: [], more: 0 } }
     case 'event-viewer':
       return { app: 'event-viewer', sessionId: input.sessionId ?? null, level: 'all', selectedEventId: null }
     case 'snipping-tool':
@@ -353,6 +356,8 @@ export function windowTitle(view: AppView, projectName?: string): string {
       return `${view.path ? vpathName(view.path) : 'Untitled'} - Agent Paint`
     case 'wordpad':
       return `${view.path ? vpathName(view.path) : 'Document'} - WordPad`
+    case 'diagrams':
+      return `${view.path ? vpathName(view.path) : view.title} - Agent Diagrams`
     case 'help':
       return helpWindowTitle(view.topic)
     case 'agent-manager':

@@ -15,7 +15,8 @@ export const see = {
   count: (locator: Locator, expected: number): Promise<void> => retry(async () => expect(await locator.count()).toBe(expected)),
   text: (locator: Locator, expected: string | RegExp): Promise<void> =>
     retry(async () => {
-      const text = await locator.first().innerText()
+      // SVG elements (a diagram shape) have no innerText: fall back to their text content.
+      const text = await locator.first().evaluate((el) => (el instanceof HTMLElement ? el.innerText : (el.textContent ?? '')))
       if (typeof expected === 'string') expect(text).toContain(expected)
       else expect(text).toMatch(expected)
     }),

@@ -6,7 +6,7 @@ import { ToolRefusedError, type ToolGate, type ToolGateRequest } from '../../dom
 export const NOT_ALLOWED_IN_REVIEW = 'Not allowed during a review.'
 
 /** Tool groups a reviewer may not use: every one that writes, runs commands or changes the desktop's apps. */
-const REFUSED_GROUPS: ReadonlySet<ToolGateRequest['group']> = new Set(['fs.write', 'terminal', 'notepad', 'wordpad', 'paint', 'notes', 'recycle'])
+const REFUSED_GROUPS: ReadonlySet<ToolGateRequest['group']> = new Set(['fs.write', 'terminal', 'notepad', 'wordpad', 'paint', 'diagrams', 'notes', 'recycle'])
 
 /** Agent tool kinds that change something. */
 const WRITING_KINDS: ReadonlySet<ToolKind> = new Set(['edit', 'delete', 'move', 'execute'])

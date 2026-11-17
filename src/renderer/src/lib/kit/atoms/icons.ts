@@ -11,7 +11,7 @@ export const iconNames = [
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
   'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agentxp',
   'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
-  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban', 'scheduler'
+  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban', 'scheduler', 'diagram'
 ] as const
 
 export type IconName = (typeof iconNames)[number]
@@ -293,6 +293,13 @@ const markup: Record<IconName, string> = {
       '<rect x="2.5" y="7" width="2" height="2.5" fill="url(#~c)" stroke="#a38a14" stroke-width=".7"/>' +
       '<rect x="6.5" y="3" width="3" height="3.5" fill="url(#~c)" stroke="#a38a14" stroke-width=".7"/>' +
       '<rect x="11.5" y="3" width="2" height="2.5" fill="#bfe0a8" stroke="#4d8a2a" stroke-width=".7"/>'
+  ),
+  diagram: defs(
+    vg('a', '#ffffff', '#cfe0f5') + vg('g', '#e2f6d0', '#9fd27a') + vg('y', '#fff6c8', '#f2cf4a'),
+    '<path d="M7.5 3.5h4v2.7M4.5 5.5v5M8.5 8.8h-4" fill="none" stroke="#3a5070"/>' +
+      '<rect x="1.5" y="1.5" width="6" height="4" rx=".8" fill="url(#~a)" stroke="#3a6aa5"/>' +
+      '<path d="M11.5 6.2l3 2.6-3 2.6-3-2.6z" fill="url(#~y)" stroke="#a87a0c" stroke-linejoin="round"/>' +
+      '<rect x="1.5" y="10.5" width="6" height="4" fill="url(#~g)" stroke="#4d8a2a"/>'
   ),
   eventlog: defs(
     docDefs + rg('w', '#fff6c0', '#f0b81c'),

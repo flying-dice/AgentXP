@@ -23,6 +23,7 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   snip: 'Screen capture',
   recycle: 'Recycle Bin tools',
   board: 'Kanban board tools',
+  diagrams: 'Agent Diagrams tools',
   review: 'Code review tools'
 }
 

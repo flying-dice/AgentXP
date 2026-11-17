@@ -16,6 +16,9 @@ const NOTEPAD_EXTENSIONS = new Set(['txt', 'md', 'log', 'markdown', 'text'])
 /** Files Explorer opens in Notepad; everything else opens in Code. */
 export const opensInNotepad = (path: VPath): boolean => NOTEPAD_EXTENSIONS.has(extensionOf(path))
 
+/** Drawings of Agent Diagrams (`.xpdiagram`). */
+export const opensInDiagrams = (path: VPath): boolean => extensionOf(path) === 'xpdiagram'
+
 /** Human type name of a file for the Explorer's Type column. */
 export function typeName(path: VPath, isDirectory: boolean): string {
   if (isDirectory) return 'File folder'
@@ -35,7 +38,8 @@ export function typeName(path: VPath, isDirectory: boolean): string {
     yml: 'YAML file',
     yaml: 'YAML file',
     png: 'PNG image',
-    svg: 'SVG image'
+    svg: 'SVG image',
+    xpdiagram: 'Agent Diagrams drawing'
   }
   return names[ext] ?? (ext ? `${ext.toUpperCase()} file` : 'File')
 }
