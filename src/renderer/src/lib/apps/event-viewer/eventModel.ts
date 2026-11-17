@@ -115,7 +115,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
           text: 'Agent7 Logs',
           icon: 'folder',
           expanded: true,
-          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
+          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), testid: `event-viewer-log-${s}`, text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
         },
         {
           id: 'chats',

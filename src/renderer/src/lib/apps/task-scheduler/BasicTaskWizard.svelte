@@ -70,7 +70,7 @@
     }
     saving = true
     try {
-      const error = await onfinish(wizardInput(draft), draft.openProperties)
+      const error = await onfinish(wizardInput($state.snapshot(draft)), draft.openProperties)
       if (error) problem = error
     } finally {
       saving = false
@@ -94,7 +94,7 @@
 
 <Dialog testid="basic-wizard" title="Create Basic Task Wizard" iconName="scheduler" width="660px" contained onclose={oncancel}>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="wizard" data-step={step} {onkeydown}>
+  <div class="wizard" data-testid="basic-wizard-body" data-step={step} {onkeydown}>
     <WizardHeader testid="basic-wizard-header" title={WIZARD_TITLE[step]} description={WIZARD_DESCRIPTION[step]} icon="scheduler" />
     <div class="body">
       <ol class="steps" aria-label="Steps" data-testid="basic-wizard-steps">

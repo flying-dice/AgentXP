@@ -4,6 +4,7 @@ import { ChatWindow } from './ChatWindow'
 import { CodeReviewWindow } from './CodeReviewWindow'
 import { CodeWindow } from './CodeWindow'
 import { ExplorerWindow } from './ExplorerWindow'
+import { TaskSchedulerWindow } from './TaskSchedulerWindow'
 import { TerminalWindow } from './TerminalWindow'
 
 export type AppId =
@@ -128,6 +129,10 @@ export class DesktopPage {
 
   codeReview(index = 0): CodeReviewWindow {
     return new CodeReviewWindow(this.window('code-review', index))
+  }
+
+  taskScheduler(index = 0): TaskSchedulerWindow {
+    return new TaskSchedulerWindow(this.window('task-scheduler', index))
   }
 
   terminal(index = 0): TerminalWindow {

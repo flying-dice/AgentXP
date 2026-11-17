@@ -22,7 +22,7 @@
   let { initial, agents, drives, sessions, onsave, oncancel }: Props = $props()
 
   // svelte-ignore state_referenced_locally
-  let draft = $state<AgentActionDto>(initial ? structuredClone(initial) : newAgentAction(defaultProject(drives)))
+  let draft = $state<AgentActionDto>(initial ? structuredClone($state.snapshot(initial)) : newAgentAction(defaultProject(drives)))
   let problem = $state('')
 
   function result(r: DialogResult): void {

@@ -60,10 +60,11 @@
   const nodes: TreeNodeData[] = [
     {
       id: ROOT,
+      testid: 'task-scheduler-node-root',
       text: 'Task Scheduler (Local)',
       icon: 'scheduler',
       expanded: true,
-      children: [{ id: LIBRARY, text: 'Task Scheduler Library', icon: 'folder' }]
+      children: [{ id: LIBRARY, testid: 'task-scheduler-node-library', text: 'Task Scheduler Library', icon: 'folder' }]
     }
   ]
 

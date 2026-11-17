@@ -19,7 +19,7 @@
   let { initial, onsave, oncancel }: Props = $props()
 
   // svelte-ignore state_referenced_locally
-  let draft = $state<TriggerDto>(initial ? structuredClone(initial) : newTrigger('daily', defaultStart()))
+  let draft = $state<TriggerDto>(initial ? structuredClone($state.snapshot(initial)) : newTrigger('daily', defaultStart()))
   let problem = $state('')
 
   const kinds = TRIGGER_KINDS.map((k) => ({ value: k, label: TRIGGER_KIND_LABEL[k] }))
