@@ -33,7 +33,7 @@ AgentXP is hard Windows XP. Nothing in the UI may borrow from Vista or Windows 7
 
 ## Icons and logo
 
-The icons are our own 16 px art drawn in `kit/atoms/icons.ts`, in the XP style (bright, outlined, soft gradients). Do not copy Microsoft bitmaps. The logo (`resources/logo.svg`) is a waving four-colour flag with a prompt chevron.
+The icons are our own 16 px art drawn in `kit/atoms/icons.ts`, in the XP style (bright, outlined, soft gradients). Do not copy Microsoft bitmaps. The logo (`resources/logo.svg`) is a glossy Luna-blue rounded badge with a white prompt chevron and a green cursor block. It must never use the four-colour flag or any other Microsoft mark.
 
 ## Checklist for a new app or atom
 
