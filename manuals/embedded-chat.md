@@ -40,6 +40,10 @@ Each new window starts with the pane closed. Use one of these ways.
 
 AgentXP remembers if the pane is open, and its width, for each window.
 
+When you open the pane in a small window, the window gets wider first, so the app keeps at least 380 pixels beside the pane. When you close the pane again, the window gets its old width back, unless you moved or resized it in the meantime.
+
+When the window cannot get wider (it is at the edge of the desktop, or you made it smaller with the pane open), the pane floats over the right side of the app, with a shadow. A strip of the app stays in view at the left. Make the window wider and the pane goes back beside the app.
+
 ## 3 - The Pane
 
 ### The Edge Toggle

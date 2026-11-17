@@ -59,6 +59,16 @@ export function fitToArea(b: Bounds, area: Size, min: Size = MIN_WINDOW_SIZE): B
   return moveBounds({ ...b, width, height }, 0, 0, area)
 }
 
+/**
+ * A window made `extra` px wider for its chat pane: it grows to the right, moves left when the work area ends, and never gets
+ * wider than the area. The result equals `b` when there is no room at all.
+ */
+export function widenBounds(b: Bounds, extra: number, area: Size): Bounds {
+  const width = Math.min(b.width + Math.max(0, extra), Math.max(b.width, area.width))
+  const x = Math.max(0, Math.min(b.x, area.width - width))
+  return { ...b, x, width }
+}
+
 /** Where the top bar is: its horizontal extent and its height (px, as measured). */
 export interface BarRect {
   left: number

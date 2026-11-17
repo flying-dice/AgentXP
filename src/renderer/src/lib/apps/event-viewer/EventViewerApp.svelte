@@ -409,12 +409,15 @@
     flex-direction: column;
     min-height: 0;
   }
+  /* Wraps onto a second line in a narrow window instead of squeezing the log name and the check boxes into each other. */
   .heading {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
-    height: 24px;
+    gap: 0 10px;
+    min-height: 24px;
+    white-space: nowrap;
     padding: 0 6px;
     background: linear-gradient(#fff, #e3ecf8);
     border: 1px solid var(--xp-list-border);

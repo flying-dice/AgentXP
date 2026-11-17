@@ -13,14 +13,17 @@
   import ChatStrip from '../apps/shared/ChatStrip.svelte'
   import { chatStripHidden } from './chatStrip.svelte'
   import { chatAboutTitle } from '../app/session/folderLabel'
-  import { paneMaxWidth, suggestionsFor } from './chatPane'
+  import { paneDeficit, paneLayout, suggestionsFor } from './chatPane'
   import { asideCwd } from '@shared/desktop-views'
   import type { DesktopController } from './DesktopController.svelte'
 
   interface Props {
     window: AppWindowState
     desktop: DesktopController
-    /** Width of the window's client area (the pane never takes more than 60 % of it, nor so much that the app has under 380 px). */
+    /**
+     * Width of the window's client area. Docked, the pane never takes more than 60 % of it, nor so much that the app has under
+     * 380 px; in a narrower window it floats over the app (`paneLayout`), after the window first tried to grow to make room.
+     */
     available: number
   }
 
@@ -30,7 +33,20 @@
   untrack(() => desktop.loadPane(w.id))
 
   const pane = $derived(desktop.paneOf(w.id))
-  const maxWidth = $derived(paneMaxWidth(available))
+  const layout = $derived(paneLayout(available, pane.width))
+
+  // Opening the pane in a narrow window widens the window first (once per opening), so the app keeps its own layout.
+  let fitted = false
+  $effect(() => {
+    if (pane.collapsed) {
+      fitted = false
+      return
+    }
+    if (fitted || available <= 0) return
+    fitted = true
+    const extra = untrack(() => paneDeficit(available, pane.width))
+    if (extra > 0) void desktop.widenForPane(w.id, extra)
+  })
 
   /** The session shown: what this panel just started (or ended) until `desktop.changed` says the same, else the window's. */
   let local = $state<number | null>(null)
@@ -86,7 +102,7 @@
   {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="pane" data-testid="chat-pane" data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++}>
+  <div class="pane" class:overlay={layout.mode === 'overlay'} data-testid="chat-pane" data-pane-mode={layout.mode} data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++}>
     <EmbeddedChat
       host={desktop}
       {sessionId}
@@ -99,7 +115,7 @@
       contained
       contextProvider={() => desktop.contextOf(w.id)}
       bind:collapsed={() => pane.collapsed, (collapsed) => desktop.setChatPane(w.id, !collapsed)}
-      bind:width={() => Math.min(pane.width, maxWidth), (width) => desktop.setPaneWidth(w.id, width)}
+      bind:width={() => layout.width, (width) => desktop.setPaneWidth(w.id, width)}
       onstart={start}
       onnew={startOver}
       {suggestions}
@@ -116,5 +132,15 @@
     min-width: 0;
     min-height: 0;
     border-left: 1px solid #9aa9bf;
+  }
+  /* Too narrow to dock: the pane floats over the right of the app, with the XP drop shadow of a popup, never under its content. */
+  .pane.overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    background: var(--xp-face);
+    box-shadow: -3px 0 6px rgba(0, 0, 0, 0.28);
   }
 </style>

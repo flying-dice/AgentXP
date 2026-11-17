@@ -63,6 +63,8 @@ The task pane is the blue strip at the left side of the window. It has four sect
 - **Other Places** – Opens **Event Viewer** and **Task Manager**.
 - **Details** – Shows the counts of your tasks. When you select a task, it shows the name, the status, the next run, and the last result of the task.
 
+When the window is narrow (for example with the chat pane open), the task pane hides, as it does in a narrow Explorer window. Its commands are still in the **Action** menu and in the right-click menu of the task list. Make the window wider to show the task pane again.
+
 ### The Task List
 
 The list has one row for each task. Each row has an icon that shows the status.

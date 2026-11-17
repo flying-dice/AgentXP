@@ -21,6 +21,22 @@ export const APP_MIN_WIDTH = 380
 /** The widest the pane can be in a window whose client area is `available` wide: 60 % of it, and never so wide that the app has under 380 px. */
 export const paneMaxWidth = (available: number): number => Math.max(PANE_MIN_WIDTH, Math.min(Math.floor(available * 0.6), available - APP_MIN_WIDTH))
 
+/** An overlaid pane leaves this much of the app showing on its left, so the user still sees what they are asking about. */
+export const OVERLAY_APP_STRIP = 48
+
+/**
+ * How the pane sits in a window whose client area is `available` px wide and that the user wants `width` px of pane in.
+ * It docks beside the app when the app keeps at least 380 px; in a narrower window it floats over the right of the app
+ * (like an XP Explorer bar dropped over a small window) instead of crushing the app into a sliver that its content bleeds out of.
+ */
+export function paneLayout(available: number, width: number): { mode: 'docked' | 'overlay'; width: number } {
+  if (available >= APP_MIN_WIDTH + PANE_MIN_WIDTH) return { mode: 'docked', width: Math.min(width, paneMaxWidth(available)) }
+  return { mode: 'overlay', width: Math.max(0, Math.min(width, available - OVERLAY_APP_STRIP)) }
+}
+
+/** How much wider a window must get so that the app keeps 380 px beside a `width` px pane (0 when it already does). */
+export const paneDeficit = (available: number, width: number): number => Math.max(0, APP_MIN_WIDTH + Math.max(PANE_MIN_WIDTH, width) - available)
+
 /** What the shell remembers of a window's chat pane. A new window starts collapsed. */
 export interface PaneState {
   collapsed: boolean

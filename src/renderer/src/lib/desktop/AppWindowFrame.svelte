@@ -5,7 +5,7 @@
   import Form from '../kit/organisms/Form.svelte'
   import AppChatPane from './AppChatPane.svelte'
   import type { DesktopController } from './DesktopController.svelte'
-  import { minWindowSize } from '@shared/desktop-views'
+  import { hardMinSize, minWindowSize } from '@shared/desktop-views'
   import { RESIZE_EDGES, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize, type ResizeEdge, type Size } from './geometry'
   import UnknownApp from './UnknownApp.svelte'
 
@@ -32,6 +32,12 @@
   const App = $derived(definition?.component)
   const hasPane = $derived(windowHasAside(w))
   let hostedWidth = $state(0)
+  /** The app's smallest size holds even for stored or agent-set bounds that are smaller (but never beyond the desktop). */
+  const minStyle = $derived.by(() => {
+    if (maximized) return ''
+    const min = hardMinSize(w.app)
+    return `min-width:min(${min.width}px,100%);min-height:min(${min.height}px,100%);`
+  })
 
   /** Ctrl+Shift+C anywhere inside the window: show or hide its chat pane (the shortcut of View > Chat pane). */
   function onKeyDown(event: KeyboardEvent): void {
@@ -80,7 +86,7 @@
   class="appframe"
   class:minimized
   class:glow={glowing}
-  style="{frameStyle(bounds, maximized)}z-index:{z}"
+  style="{frameStyle(bounds, maximized)}{minStyle}z-index:{z}"
   data-testid="window-{w.view.app}"
   data-window-id={w.id}
   data-window-state={w.windowState}
@@ -107,7 +113,7 @@
     bodyColor="window"
   >
     <div class="hosted" bind:clientWidth={hostedWidth}>
-      <div class="client-app">
+      <div class="client-app" data-testid="window-client">
         {#if App}
           <App window={w} host={desktop} {focused} />
         {:else}
@@ -124,7 +130,7 @@
   {/if}
   {#if !maximized}
     {#each RESIZE_EDGES as edge (edge)}
-      <div class="grip {edge}" data-edge={edge}></div>
+      <div class="grip {edge}" data-edge={edge} data-testid="window-grip-{edge}"></div>
     {/each}
   {/if}
 </div>
@@ -138,6 +144,7 @@
     min-height: 0;
   }
   .hosted {
+    position: relative;
     flex: 1;
     min-height: 0;
     min-width: 0;
@@ -148,6 +155,8 @@
     flex: 1;
     min-width: 0;
     min-height: 0;
+    /* Whatever an app cannot fit stays inside its own client area: it never paints under the chat pane or past the frame. */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
   }

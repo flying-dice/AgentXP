@@ -705,9 +705,8 @@
   }
   /* Office XP toolbars are compact: 24 px buttons on a 28 px strip. */
   .diagrams :global(.dg-strip) {
-    height: 28px;
+    min-height: 28px;
     gap: 0;
-    overflow: hidden;
   }
   .diagrams :global(.dg-strip .tb) {
     height: 24px;

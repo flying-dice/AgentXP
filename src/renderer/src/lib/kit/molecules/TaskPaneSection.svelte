@@ -34,7 +34,9 @@
 </section>
 
 <style>
+  /* A section keeps its full height; the task pane scrolls when they do not all fit (they are never squashed and clipped). */
   .xp-tasksection {
+    flex: none;
     border-radius: 6px 6px 0 0;
     overflow: hidden;
     color: var(--xp-text);

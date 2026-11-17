@@ -41,6 +41,8 @@
     align-self: stretch;
     gap: 4px;
     padding: 0 10px;
+    flex: 0 1 auto;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
   }
@@ -48,9 +50,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* The spring keeps room for a short status ("Ready") while fixed panels give way first. */
   .spring {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 0;
+    min-width: min(72px, 40%);
     padding: 0 8px;
   }
   .bl {

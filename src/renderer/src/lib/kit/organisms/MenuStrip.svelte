@@ -127,6 +127,7 @@
 <div
   bind:this={root}
   class="xp-menustrip {className}"
+  data-testid="menubar"
   role="menubar"
   aria-label={ariaLabel}
   tabindex="-1"
@@ -174,17 +175,21 @@
 </div>
 
 <style>
+  /* A narrow window wraps its menu bar onto a second row, as a Win32 menu bar does, instead of clipping the last menus. */
   .xp-menustrip {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    height: 24px;
+    min-height: 24px;
+    min-width: 0;
     padding: 0 2px;
     background: var(--xp-menubar-face);
     border-bottom: 1px solid #b4bfcf;
     outline: none;
   }
   .mb {
+    flex: none;
     height: 24px;
     min-width: 24px;
     padding: 0 8px;

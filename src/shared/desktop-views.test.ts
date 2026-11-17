@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { supportsAside, type AppView, type Bounds } from './desktop'
-import { clearIconColumn, ICON_COLUMN_WIDTH, asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
+import { atLeastMinSize, clearIconColumn, ICON_COLUMN_WIDTH, asideCwd, cascadedBounds, numberDuplicateTitles, DEFAULT_BOUNDS, DESKTOP_AREA, helpWindowTitle, minWindowSize, placeChatBesideBrowser, placeNewWindow, placeWindow, REVIEW_MIN_WIDTH, windowMinY, viewPath, windowTitle, WINDOW_MIN_Y } from './desktop-views'
 
 const area = DESKTOP_AREA
 const overlap = (a: Bounds, b: Bounds): boolean => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -290,6 +290,17 @@ describe('Task Scheduler window', () => {
     expect(helpWindowTitle('task-scheduler')).toBe('AgentXP Help and Support: Using Task Scheduler')
     expect([DEFAULT_BOUNDS['task-scheduler'].width, DEFAULT_BOUNDS['task-scheduler'].height]).toEqual([1000, 600])
     expect(minWindowSize('task-scheduler')).toEqual({ width: 760, height: 520 })
+  })
+  it('is never tiled narrower than its minimum beside a chat (it was squeezed to 405 px and its panes overlapped)', () => {
+    const chat = { x: 700, y: 72, width: 560, height: 600 }
+    const placed = placeWindow('task-scheduler', 0, chat, DESKTOP_AREA)
+    expect(placed.width).toBeGreaterThanOrEqual(760)
+    expect(placed.height).toBeGreaterThanOrEqual(520)
+  })
+  it('keeps a requested size no smaller than the minimum', () => {
+    expect(atLeastMinSize('task-scheduler', { x: 0, y: 0, width: 400, height: 300 })).toEqual({ x: 0, y: 0, width: 760, height: 520 })
+    expect(atLeastMinSize('notepad', { x: 5, y: 5, width: 600, height: 400 })).toEqual({ x: 5, y: 5, width: 600, height: 400 })
+    expect(cascadedBounds('task-scheduler', 0, { width: 300, height: 200 })).toMatchObject({ width: 760, height: 520 })
   })
   it('opens in the library with the General tab and no task selected', () => {
     expect(viewPath({ app: 'task-scheduler', selectedTaskId: null, tab: 'general' })).toBeNull()

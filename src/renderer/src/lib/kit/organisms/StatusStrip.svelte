@@ -2,19 +2,19 @@
   import type { Snippet } from 'svelte'
 
   interface Props {
-    /** `data-testid` of the control (agents and e2e specs find it by this id). */
-    testid?: string
     /** StatusStripLabel / ProgressBar items. */
     children: Snippet
     /** Show the resize grip at the right end (SizingGrip). */
     sizeGrip?: boolean
     class?: string
+    /** `data-testid` of the strip (agents and e2e specs find it by this id). Default `status-strip`: one per window, so a spec scopes it by the window. */
+    testid?: string
   }
 
-  let { testid, children, sizeGrip = true, class: className = '' }: Props = $props()
+  let { children, sizeGrip = true, class: className = '', testid = 'status-strip' }: Props = $props()
 </script>
 
-<div data-testid={testid} class="xp-statusstrip {className}" role="status">
+<div class="xp-statusstrip {className}" data-testid={testid} role="status">
   {@render children()}
   {#if sizeGrip}
     <svg class="grip" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -29,6 +29,8 @@
     display: flex;
     align-items: center;
     height: 24px;
+    min-width: 0;
+    overflow: hidden;
     background: linear-gradient(#f5f7fa, #dbe4f1);
     border-top: 1px solid #a9b6c9;
   }

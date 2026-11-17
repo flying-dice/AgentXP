@@ -30,17 +30,23 @@
 </div>
 
 <style>
+  /* A narrow window wraps the strip onto more rows (a rebar band does the same) instead of pushing buttons out of the window. */
   .xp-toolstrip {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1px;
-    height: 34px;
+    min-height: 34px;
+    min-width: 0;
     padding: 0 4px;
     background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .spring {
     flex: 1;
+  }
+  .xp-toolstrip > :global(*) {
+    flex-shrink: 0;
   }
 </style>
