@@ -43,8 +43,13 @@
   const shownRecent = $derived(filterStartItems(recent, query))
   const searching = $derived(query.trim().length > 0)
   let openGroups = $state<Record<string, boolean>>({})
-  /** "All Programs": shows the folders under the programs; a search always shows the matching ones. */
+  /**
+   * "All Programs": the folder list takes over the left column (the pinned programs and recent chats step
+   * aside, as in later Windows) so it has the whole height and scrolls; "Back" returns. A search always shows
+   * the matching folders alongside everything else.
+   */
   let allOpen = $state(false)
+  const allView = $derived(allOpen && !searching)
   const shownGroups = $derived(groups.map((g) => ({ ...g, items: filterStartItems(g.items, query) })).filter((g) => !searching || g.items.length > 0))
   const empty = $derived(searching && shownPrograms.length + shownRecent.length + shownGroups.length === 0)
 
@@ -53,7 +58,7 @@
 
   // The first entry is highlighted when the menu opens and after every change of the search text; Up and Down move it
   // and Enter starts it.
-  const nav = $derived(startNavItems({ programs: shownPrograms, groups: shownGroups, recent: shownRecent, openGroups, searching }))
+  const nav = $derived(startNavItems({ programs: allView ? [] : shownPrograms, groups: shownGroups, recent: allView ? [] : shownRecent, openGroups, searching }))
   let hot = $state(0)
   const hotKey = $derived(nav[Math.min(hot, nav.length - 1)]?.key ?? null)
   $effect(() => {
@@ -87,6 +92,7 @@
 <div class="xp-start" data-testid="start-menu" role="group" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
   <div class="header"><div class="tile" aria-hidden="true"><Icon name="agentxp" size={40} /></div><span class="user">AgentXP</span></div>
   <div class="left">
+    {#if !allView}
     <ul class="programs" role="menu" aria-label="Programs">
       {#each shownPrograms as item (item.id)}
         <li role="none">
@@ -97,17 +103,9 @@
         </li>
       {/each}
     </ul>
-    {#if groups.length > 0 && !searching}
-      <ul role="menu" aria-label="All programs">
-        <li role="none">
-          <button type="button" role="menuitem" class="entry all" data-testid="start-menu-all" aria-haspopup="menu" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
-            <span class="tri" class:open={allOpen} aria-hidden="true"></span><span class="title">All Programs</span>
-          </button>
-        </li>
-      </ul>
     {/if}
     {#if shownGroups.length > 0 && (allOpen || searching)}
-      <ul class="groups" role="menu" aria-label="Program folders">
+      <ul class="groups" class:fill={allView} role="menu" aria-label="Program folders" data-testid="start-menu-groups">
         {#each shownGroups as group (group.id)}
           {@const open = searching || openGroups[group.id]}
           <li role="none">
@@ -129,7 +127,16 @@
         {/each}
       </ul>
     {/if}
-    {#if shownRecent.length > 0}
+    {#if groups.length > 0 && !searching}
+      <ul role="menu" aria-label="All programs">
+        <li role="none">
+          <button type="button" role="menuitem" class="entry all" class:back={allOpen} data-testid="start-menu-all" aria-haspopup="menu" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
+            {#if allOpen}<span class="tri back" aria-hidden="true"></span><span class="title">Back</span>{:else}<span class="tri" aria-hidden="true"></span><span class="title">All Programs</span>{/if}
+          </button>
+        </li>
+      </ul>
+    {/if}
+    {#if shownRecent.length > 0 && !allView}
       <div class="heading">Recent chats</div>
       <ul class="recent" role="menu" aria-label="Recent chats">
         {#each shownRecent as item (item.id)}
@@ -189,6 +196,10 @@
     box-sizing: border-box;
     width: 380px;
     height: 520px;
+    /* Never taller than the space it is given (the desktop above the taskbar): the columns scroll instead. */
+    max-height: 100%;
+    min-height: 0;
+    flex: 0 1 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 54px 1fr 38px;
@@ -244,8 +255,15 @@
     margin: 0;
     padding: 0;
   }
+  /*
+   * The left column never overflows: when the menu is short (a small window, or All Programs and its
+   * folders open), the lists shrink and scroll. The folder list gives way first, then recent chats,
+   * then the pinned programs; the search box and hint always stay visible.
+   */
   .programs {
-    flex: none;
+    flex: 0 1 auto;
+    min-height: 34px;
+    overflow-y: auto;
   }
   .entry {
     width: 100%;
@@ -296,10 +314,13 @@
   .entry:hover .tri {
     border-left-color: #fff;
   }
-  .tri.open {
-    border-width: 7px 5px 0 5px;
-    border-color: #1f8a1f transparent transparent transparent;
-    margin: 2px 4px 0 3px;
+  .tri.back {
+    border-width: 5px 7px 5px 0;
+    border-color: transparent #1f8a1f transparent transparent;
+  }
+  .entry:hover .tri.back {
+    border-left-color: transparent;
+    border-right-color: #fff;
   }
   .text {
     display: flex;
@@ -327,7 +348,17 @@
     border-top: 1px solid #d3e5fa;
     padding-top: 4px;
     max-height: 190px;
-    overflow: auto;
+    flex: 0 100 auto;
+    min-height: 44px;
+    overflow-y: auto;
+  }
+  /* All Programs view: the folder list owns the column. */
+  .groups.fill {
+    flex: 1 1 auto;
+    max-height: none;
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
   }
   .sub {
     padding-left: 18px;
@@ -340,21 +371,23 @@
     transform: rotate(90deg);
   }
   .recent {
-    flex: 1;
+    flex: 1 50 auto;
     min-height: 0;
-    overflow: auto;
+    overflow-y: auto;
   }
   .none {
     padding: 10px 8px;
     color: var(--xp-text-muted);
   }
   .hint {
+    flex: none;
     margin: 6px 2px 0;
     color: #3a4656;
     font-size: 11px;
     line-height: 1.3;
   }
   .search {
+    flex: none;
     margin-top: auto;
     position: relative;
     padding-top: 6px;
