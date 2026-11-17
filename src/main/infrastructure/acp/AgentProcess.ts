@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process'
+import { childEnv } from '../process/childEnv'
 import { Readable, Writable } from 'node:stream'
 import { ndJsonStream, type Stream } from '@agentclientprotocol/sdk'
 import { hasExited, killProcessTree, treeSpawnOptions } from './processTree'
@@ -34,7 +35,7 @@ export class AgentProcess {
     this.maxLogLines = options.maxLogLines ?? 500
     this.child = spawn(options.command, options.args, {
       cwd: options.cwd,
-      env: { ...process.env, ...options.env },
+      env: childEnv(options.env),
       stdio: ['pipe', 'pipe', 'pipe'],
       ...treeSpawnOptions()
     })

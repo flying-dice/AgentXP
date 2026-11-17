@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { BoundedOutput } from './boundedOutput'
+import { childEnv } from '../process/childEnv'
 import { killProcessTree, treeSpawnOptions } from './processTree'
 
 const DEFAULT_OUTPUT_BYTE_LIMIT = 1024 * 1024
@@ -91,7 +92,7 @@ export class TerminalManager {
     const id = `term-${++this.counter}`
     const child = spawn(params.command, params.args ?? [], {
       cwd: params.cwd,
-      env: { ...process.env, ...params.env },
+      env: childEnv(params.env),
       stdio: ['ignore', 'pipe', 'pipe'],
       ...treeSpawnOptions()
     })

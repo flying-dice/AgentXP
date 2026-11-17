@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import type { CommandResult, CommandRunner } from '../../application/tools/ports'
 import { BoundedOutput } from '../acp/boundedOutput'
 import { killProcessTree, treeSpawnOptions } from '../acp/processTree'
+import { childEnv } from './childEnv'
 
 const OUTPUT_BYTE_LIMIT = 256 * 1024
 
@@ -11,7 +12,7 @@ export class ShellCommandRunner implements CommandRunner {
     return new Promise((resolve) => {
       const output = new BoundedOutput(OUTPUT_BYTE_LIMIT)
       const shellOptions = treeSpawnOptions()
-      const child = spawn(command, { cwd: options.cwd, stdio: ['ignore', 'pipe', 'pipe'], ...shellOptions, shell: true })
+      const child = spawn(command, { cwd: options.cwd, env: childEnv(), stdio: ['ignore', 'pipe', 'pipe'], ...shellOptions, shell: true })
       let timedOut = false
       const timer = setTimeout(() => {
         timedOut = true
