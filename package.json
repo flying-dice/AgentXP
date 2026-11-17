@@ -17,6 +17,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "dist": "node scripts/write-build-info.mjs && npm run build && electron-builder",
+    "app:install": "npm run dist && node scripts/install-app.mjs",
     "docs:screenshots": "node scripts/docs-screenshots.mjs",
     "help:coverage": "node scripts/check-help-coverage.mjs",
     "app:pillars": "node scripts/check-app-pillars.mjs",

@@ -103,7 +103,7 @@ To install and start AgentXP, follow the steps below:
 
 3. Type `npm run dev` and press Enter. The **AgentXP Desktop Connection** window appears.
 
-**Tip:** To make an installer for your computer, type `npm run dist`. The installer appears in the `dist` folder.
+**Tip:** To make an installer for your computer, type `npm run dist`. The installer appears in the `dist` folder. On macOS, type `npm run app:install` to make the app and install it in your Applications folder in one step. Quit AgentXP first, or type `npm run app:install -- --quit` to let the script quit it. The app that it replaces is kept in `dist/previous-install`.
 
 ## 3 - The Desktop Connection Window
 
@@ -603,6 +603,7 @@ The commands below run from the AgentXP folder:
 | `npm run agent:scripted` | Runs the Scripted Agent from the terminal |
 | `npm run docs:screenshots` | Takes the screenshots of this guide from the built program |
 | `npm run dist` | Makes an installer in the `dist` folder |
+| `npm run app:install` | macOS: makes the app and installs it in `~/Applications` (`-- --quit` quits a running AgentXP first, `-- --dir <folder>` installs elsewhere) |
 
 To run one end-to-end test, type `npm run test:e2e -- e2e/chat.e2e.ts`. To skip the build, set `A7_E2E_SKIP_BUILD=1`.
 
