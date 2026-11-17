@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { newAgentAction, newTaskInput, type ScheduledTaskInput } from '@shared/scheduler'
+import { INHERIT_CAPABILITIES, newAgentAction, newTaskInput, type AgentActionDto, type ScheduledTaskInput } from '@shared/scheduler'
 import { SqliteAgentRepository } from '../../infrastructure/db/sqlite-agent-repository'
+import { SqliteMcpServerRepository } from '../../infrastructure/db/sqlite-mcp-server-repository'
+import { SqliteSkillRepository } from '../../infrastructure/db/sqlite-skill-repository'
+import { SqliteProfileRepository, SqliteTeamRepository } from '../../infrastructure/db/sqlite-team-repositories'
 import type { AppEventName, AppEvents } from '../ports'
 import { SchedulerService } from './SchedulerService'
 import { at, setupScheduler, settle } from './test-helpers'
 
 function setup() {
   const s = setupScheduler()
+  const registry = { skills: new SqliteSkillRepository(s.db), servers: new SqliteMcpServerRepository(s.db), profiles: new SqliteProfileRepository(s.db), teams: new SqliteTeamRepository(s.db) }
   const published: { name: AppEventName; payload: AppEvents[AppEventName] }[] = []
   const service = new SchedulerService({
     tasks: s.tasks,
@@ -15,6 +19,7 @@ function setup() {
     desktops: { get: (id) => (id === s.desktop.id ? ({ id } as never) : null) },
     agents: new SqliteAgentRepository(s.db),
     sessions: s.sessions,
+    registry,
     events: { publish: (name, payload) => void published.push({ name, payload }) },
     log: s.log,
     clock: s.time
@@ -26,7 +31,7 @@ function setup() {
     ...over
   })
   const events = (): string[] => published.map((p) => p.name)
-  return { ...s, service, input, published, events }
+  return { ...s, service, input, published, events, registry }
 }
 
 describe('SchedulerService', () => {
@@ -118,5 +123,48 @@ describe('SchedulerService', () => {
     expect(t.service.list(t.desktop.id)).toEqual([])
     expect(() => t.service.history(task.id)).toThrow(/Task not found/)
     expect(t.log.names.at(-1)).toBe('task/deleted')
+  })
+
+  describe('skills and tools of an action', () => {
+    const withCapabilities = (t: ReturnType<typeof setup>, capabilities: AgentActionDto['capabilities']): ScheduledTaskInput => t.input({ actions: [{ ...newAgentAction('E:\\'), prompt: 'Go.', capabilities }] })
+
+    it('saves a custom choice with the names of the registry, and drops hidden tools of servers that are not chosen', () => {
+      const t = setup()
+      const skill = t.registry.skills.add({ name: 'pdf', description: '', path: '/s/pdf' })
+      const server = t.registry.servers.create({ name: 'github', transport: 'stdio', command: 'x', args: [], url: '', vars: [] })
+      const task = t.service.create(t.desktop.id, withCapabilities(t, { mode: 'custom', profileId: null, teamId: null, skills: [{ id: skill.id, name: 'old name' }], servers: [{ id: server.id, name: 'old' }], hiddenTools: [{ serverId: server.id, tool: 'delete' }, { serverId: 999, tool: 'x' }] }))
+      expect(task.actions[0].capabilities).toEqual({ mode: 'custom', profileId: null, teamId: null, skills: [{ id: skill.id, name: 'pdf' }], servers: [{ id: server.id, name: 'github' }], hiddenTools: [{ serverId: server.id, tool: 'delete' }] })
+    })
+
+    it('saves a profile and a team, and clears what the mode does not use', () => {
+      const t = setup()
+      const profile = t.registry.profiles.create({ name: 'Reviewer', instructions: '', agentId: null, model: null, skillIds: [], mcpServerIds: [], color: '#000' })
+      const team = t.registry.teams.create({ name: 'Core', instructions: '', skillIds: [], memberIds: [profile.id], boardRef: null })
+      const a = t.service.create(t.desktop.id, withCapabilities(t, { ...INHERIT_CAPABILITIES, mode: 'profile', profileId: profile.id, teamId: team.id }))
+      expect(a.actions[0].capabilities).toMatchObject({ mode: 'profile', profileId: profile.id, teamId: null })
+      const b = t.service.create(t.desktop.id, withCapabilities(t, { ...INHERIT_CAPABILITIES, mode: 'team', teamId: team.id }))
+      expect(b.actions[0].capabilities).toMatchObject({ mode: 'team', teamId: team.id, profileId: null })
+    })
+
+    it('refuses what does not exist or does not apply', () => {
+      const t = setup()
+      const refuse = (c: AgentActionDto['capabilities']): string => {
+        try {
+          t.service.create(t.desktop.id, withCapabilities(t, c))
+          return ''
+        } catch (e) {
+          return (e as Error).message
+        }
+      }
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'profile', profileId: null })).toBe('Choose the profile for the run.')
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'profile', profileId: 99 })).toBe('Choose a profile that exists.')
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'team', teamId: 99 })).toBe('Choose a team that exists.')
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'custom', skills: [{ id: 99, name: 'x' }] })).toBe('Choose skills that are installed.')
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'custom', servers: [{ id: 99, name: 'x' }] })).toBe('Choose MCP servers that exist.')
+      expect(refuse({ ...INHERIT_CAPABILITIES, mode: 'custom', skills: [{ id: null, name: 'gone' }] })).toContain('no longer exists')
+      const chat = t.sessions.create({ agentId: t.agentId, desktopId: t.desktop.id, title: 'c' })
+      const existing = t.input({ actions: [{ ...newAgentAction('E:\\'), prompt: 'Go.', session: 'existing', sessionId: chat.id, capabilities: { ...INHERIT_CAPABILITIES, mode: 'custom' } }] })
+      expect(() => t.service.create(t.desktop.id, existing)).toThrow('An existing chat keeps its own skills and tools.')
+    })
   })
 })

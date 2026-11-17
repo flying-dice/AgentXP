@@ -28,7 +28,8 @@
   ]
   const actionColumns: ListColumn[] = [
     { key: 'action', header: 'Action', width: 100 },
-    { key: 'details', header: 'Details', minWidth: 200 }
+    { key: 'details', header: 'Details', minWidth: 160 },
+    { key: 'tools', header: 'Skills and tools', width: 170 }
   ]
   let runSelected = $state<string[]>([])
   const chat = $derived(runs.find((r) => String(r.id) === runSelected[0])?.sessionId ?? null)

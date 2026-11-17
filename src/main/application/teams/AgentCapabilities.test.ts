@@ -3,6 +3,7 @@ import { createFixture } from '../../infrastructure/db/test-helpers'
 import { SqliteDesktopRepository } from '../../infrastructure/db/sqlite-desktop-repository'
 import { SqliteMcpServerRepository } from '../../infrastructure/db/sqlite-mcp-server-repository'
 import { SqliteSessionRepository } from '../../infrastructure/db/sqlite-session-repository'
+import { SqliteSessionScopeRepository } from '../../infrastructure/db/sqlite-session-scope-repository'
 import { SqliteSkillRepository } from '../../infrastructure/db/sqlite-skill-repository'
 import { SqliteProfileRepository, SqliteRoomRepository, SqliteTeamRepository } from '../../infrastructure/db/sqlite-team-repositories'
 import { AgentCapabilities, ENV_PROXY_HIDE, ENV_PROXY_TARGET } from './AgentCapabilities'
@@ -18,7 +19,8 @@ const setup = (proxy = true) => {
     sessions: new SqliteSessionRepository(f.db)
   }
   const desktop = new SqliteDesktopRepository(f.db).create({ agentId: f.agentId, title: 'd', isOpen: true })
-  const caps = new AgentCapabilities({ ...repos, boards: { board: (id) => (id === 7 ? { name: 'Sprint board' } : null) }, proxy: proxy ? { electronPath: 'electron', scriptPath: 'mcp-proxy.js' } : undefined })
+  const scopes = new SqliteSessionScopeRepository(f.db)
+  const caps = new AgentCapabilities({ ...repos, scopes, boards: { board: (id) => (id === 7 ? { name: 'Sprint board' } : null) }, proxy: proxy ? { electronPath: 'electron', scriptPath: 'mcp-proxy.js' } : undefined })
   const chat = repos.sessions.create({ agentId: f.agentId, title: 'chat', desktopId: desktop.id })
   const skill = (name: string, enabled = true) => {
     const s = repos.skills.add({ name, description: `${name} skill`, path: `/s/${name}` })
@@ -26,7 +28,7 @@ const setup = (proxy = true) => {
     return s
   }
   const server = (name: string) => repos.servers.create({ name, transport: 'stdio', command: 'node', args: ['s.js'], url: '', vars: [{ key: 'K', value: 'v', secret: false }] })
-  return { f, repos, desktop, caps, chat, skill, server }
+  return { f, repos, desktop, caps, chat, skill, server, scopes }
 }
 
 describe('a plain chat', () => {
@@ -112,5 +114,40 @@ describe('a member of a team room', () => {
     repos.rooms.ensureMember(room.id, coder.id)
     repos.rooms.setMemberSession(room.id, coder.id, session.id)
     expect(caps.briefing(session.id)).toContain('Kanban board "Sprint board" (board id 7)')
+  })
+})
+
+describe('a chat that a scheduled run gave its own skills and tools', () => {
+  it('gets only the chosen skills and servers, the instructions, and hides the chosen tools', () => {
+    const { repos, caps, chat, skill, server, scopes } = setup()
+    const pdf = skill('pdf')
+    skill('other')
+    const github = server('github')
+    server('slack')
+    repos.servers.saveTest(github.id, { ok: true, message: 'ok', at: '' }, [{ name: 'read', description: '' }, { name: 'delete', description: '' }])
+    scopes.set(chat.id, { instructions: 'Review the work.', skillIds: [pdf.id], serverIds: [github.id], hiddenTools: [{ serverId: github.id, tool: 'delete' }] })
+    const servers = caps.mcpServers(chat.id)
+    expect(servers.map((s) => s.name)).toEqual(['github'])
+    // The server is launched behind the proxy that hides the tool.
+    expect(servers[0]).toMatchObject({ command: 'electron' })
+    expect(JSON.parse((servers[0] as { env: Record<string, string> }).env[ENV_PROXY_HIDE])).toEqual(['delete'])
+    const briefing = caps.briefing(chat.id)!
+    expect(briefing).toContain('## Instructions\nReview the work.')
+    expect(briefing).toContain('pdf: pdf skill')
+    expect(briefing).not.toContain('other skill')
+  })
+
+  it('has nothing when the scope is empty, and skips a skill or server that is switched off now', () => {
+    const { repos, caps, chat, skill, server, scopes } = setup()
+    const pdf = skill('pdf')
+    const github = server('github')
+    scopes.set(chat.id, { instructions: '', skillIds: [], serverIds: [], hiddenTools: [] })
+    expect(caps.mcpServers(chat.id)).toEqual([])
+    expect(caps.briefing(chat.id)).toBeNull()
+    scopes.set(chat.id, { instructions: '', skillIds: [pdf.id], serverIds: [github.id], hiddenTools: [] })
+    repos.skills.setEnabled(pdf.id, false)
+    repos.servers.setEnabled(github.id, false)
+    expect(caps.mcpServers(chat.id)).toEqual([])
+    expect(caps.briefing(chat.id)).toBeNull()
   })
 })

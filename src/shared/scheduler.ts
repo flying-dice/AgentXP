@@ -10,10 +10,51 @@ import type { Id, IsoDate } from './models'
 import { triggerProblem, type LocalDateTime, type TriggerDto } from './schedule'
 import { normaliseVPath, type VPath } from './vfs'
 
+/** Which skills and MCP tools a run has. `inherit`: everything that is switched on (a plain chat). */
+export type CapabilitiesMode = 'inherit' | 'profile' | 'team' | 'custom'
+
+export const CAPABILITIES_LABEL: Record<CapabilitiesMode, string> = {
+  inherit: 'Everything that is switched on',
+  profile: 'Use a profile',
+  team: 'Use a team',
+  custom: 'Choose skills and tools'
+}
+
+/** A skill or an MCP server that a task names: its id, and its name as it was when the task was saved (the id is null once it was removed). */
+export interface CapabilityRef {
+  id: Id | null
+  name: string
+}
+
+/** One tool of an MCP server that the run does not get. */
+export interface HiddenToolDto {
+  serverId: Id
+  tool: string
+}
+
+/**
+ * The skills and tools of the chat that an action starts. `profile`: the skills, servers, instructions, agent and model of the
+ * profile. `team`: the first member of the team, with the instructions and skills of the team. `custom`: exactly the chosen
+ * skills and servers, minus the hidden tools. Only a new chat can have them; an existing chat keeps what it has.
+ */
+export interface ActionCapabilitiesDto {
+  mode: CapabilitiesMode
+  /** Mode `profile`; null once the profile was removed. */
+  profileId: Id | null
+  /** Mode `team`; null once the team was removed. */
+  teamId: Id | null
+  /** Mode `custom`. */
+  skills: CapabilityRef[]
+  servers: CapabilityRef[]
+  hiddenTools: HiddenToolDto[]
+}
+
+export const INHERIT_CAPABILITIES: ActionCapabilitiesDto = { mode: 'inherit', profileId: null, teamId: null, skills: [], servers: [], hiddenTools: [] }
+
 /** "Run an agent": send `prompt` to an agent that works in `cwd`, in a new chat or in an existing one. */
 export interface AgentActionDto {
   kind: 'agent'
-  /** The agent to run; null = the default agent when the task runs. */
+  /** The agent to run; null = the default agent when the task runs (or the agent of the profile). */
   agentId: Id | null
   /** The working directory of a new chat (a VPath on C: or on a plugged-in drive: the project). */
   cwd: VPath
@@ -21,6 +62,7 @@ export interface AgentActionDto {
   session: 'new' | 'existing'
   sessionId: Id | null
   prompt: string
+  capabilities: ActionCapabilitiesDto
 }
 export type TaskActionDto = AgentActionDto
 
@@ -165,12 +207,41 @@ export const HISTORY_KEPT = 100
 
 /** A new agent action with the usual choices. */
 export function newAgentAction(cwd: VPath): AgentActionDto {
-  return { kind: 'agent', agentId: null, cwd, session: 'new', sessionId: null, prompt: '' }
+  return { kind: 'agent', agentId: null, cwd, session: 'new', sessionId: null, prompt: '', capabilities: { ...INHERIT_CAPABILITIES } }
 }
 
 /** A task to start the Create Task dialog with. `from` is a wall-clock time (the next full hour is a good one). */
 export function newTaskInput(cwd: VPath, triggers: TriggerDto[] = []): ScheduledTaskInput {
   return { name: '', description: '', enabled: true, triggers, actions: [newAgentAction(cwd)], conditions: { ...DEFAULT_CONDITIONS }, settings: { ...DEFAULT_SETTINGS } }
+}
+
+/** Why the skills and tools of an action cannot be saved, or null. */
+export function capabilitiesProblem(action: Pick<AgentActionDto, 'session' | 'capabilities'>): string | null {
+  const c = action.capabilities
+  if (c.mode === 'inherit') return null
+  if (action.session === 'existing') return 'An existing chat keeps its own skills and tools. Start a new chat for every run to choose them.'
+  if (c.mode === 'profile' && c.profileId === null) return 'Choose the profile for the run.'
+  if (c.mode === 'team' && c.teamId === null) return 'Choose the team for the run.'
+  if (c.mode === 'custom' && (c.skills.some((x) => x.id === null) || c.servers.some((x) => x.id === null))) return 'A chosen skill or MCP server no longer exists. Remove it from the list.'
+  return null
+}
+
+/** The skills and tools of an action in a few words, for the Actions list and the summary ("Profile: Reviewer", "2 skills, 1 server"). */
+export function capabilitiesSummary(c: ActionCapabilitiesDto, names: { profile?: string | null; team?: string | null } = {}): string {
+  const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
+  switch (c.mode) {
+    case 'inherit':
+      return 'All skills and tools that are switched on'
+    case 'profile':
+      return `Profile: ${c.profileId === null ? 'removed' : (names.profile ?? 'unknown')}`
+    case 'team':
+      return `Team: ${c.teamId === null ? 'removed' : (names.team ?? 'unknown')}`
+    case 'custom': {
+      const parts = [count(c.skills.length, 'skill', 'skills'), count(c.servers.length, 'MCP server', 'MCP servers')]
+      if (c.hiddenTools.length > 0) parts.push(`${count(c.hiddenTools.length, 'tool', 'tools')} off`)
+      return parts.join(', ')
+    }
+  }
 }
 
 /** Why an action cannot be saved, or null. */
@@ -179,7 +250,7 @@ export function actionProblem(action: TaskActionDto): string | null {
   if (action.session === 'existing' && action.sessionId === null) return 'Choose the chat that gets the prompt.'
   if (action.prompt.trim() === '') return 'Type the prompt for the agent.'
   if (action.prompt.length > PROMPT_MAX) return `The prompt can have at most ${PROMPT_MAX} characters.`
-  return null
+  return capabilitiesProblem(action)
 }
 
 const inRange = (n: number, min: number, max: number): boolean => Number.isInteger(n) && n >= min && n <= max

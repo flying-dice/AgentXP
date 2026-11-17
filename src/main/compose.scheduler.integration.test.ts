@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { DEFAULT_SETTINGS, newTaskInput, type ScheduledTaskDto } from '@shared/scheduler'
+import { DEFAULT_SETTINGS, INHERIT_CAPABILITIES, newTaskInput, type ActionCapabilitiesDto, type ScheduledTaskDto } from '@shared/scheduler'
+import { writeFile, mkdir } from 'node:fs/promises'
 import { composeApp, type AppServices } from './compose'
 import { RecordingPublisher } from './application/test-helpers'
 import { openDatabase } from './infrastructure/db/open-database'
@@ -47,7 +48,7 @@ async function waitFor<T>(read: () => Promise<T | undefined | null | false> | T 
 }
 
 /** A desktop with the project plugged in, the fake agent, and a task that runs it with a prompt (run on demand only). */
-async function createTask(): Promise<{ desktopId: number; task: ScheduledTaskDto }> {
+async function createTask(capabilities: ActionCapabilitiesDto = INHERIT_CAPABILITIES): Promise<{ desktopId: number; task: ScheduledTaskDto }> {
   const folder = await app.api.folders.add(workspace)
   const agent = await app.api.agents.create({ name: 'Fake agent', command: 'node', args: ['--experimental-strip-types', '--no-warnings', fixture], env: {} })
   const desktop = await app.api.launcher.create({ title: 'Project', folderIds: [folder.id] })
@@ -57,7 +58,7 @@ async function createTask(): Promise<{ desktopId: number; task: ScheduledTaskDto
   const policy = await app.api.desktop.policy()
   await app.api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, terminal: 'allow', 'fs.write': 'allow' } })
   const input = { ...newTaskInput('E:\\'), name: 'Nightly review', settings: { ...DEFAULT_SETTINGS, stopIfRunsLonger: false } }
-  input.actions = [{ kind: 'agent', agentId: agent.id, cwd: 'E:\\', session: 'new', sessionId: null, prompt: 'Write the output file' }]
+  input.actions = [{ kind: 'agent', agentId: agent.id, cwd: 'E:\\', session: 'new', sessionId: null, prompt: 'Write the output file', capabilities }]
   return { desktopId: desktop.id, task: await app.api.scheduler.create(desktop.id, input) }
 }
 
@@ -105,4 +106,32 @@ describe('Task Scheduler with the fake ACP agent', () => {
     await app.api.launcher.remove(desktopId)
     await expect(app.api.scheduler.history(task.id)).rejects.toThrow(/Task not found/)
   }, 30_000)
+
+  it('a run with chosen skills and tools gives its chat exactly those, and a removed server fails the run with a sentence', async () => {
+    const folder = join(workspace, 'skills', 'pdf')
+    await mkdir(folder, { recursive: true })
+    await writeFile(join(folder, 'SKILL.md'), '---\nname: pdf\ndescription: Work with PDFs\n---\nBody')
+    const skill = await app.api.skills.install(folder)
+    const server = await app.api.mcp.add({ name: 'github', transport: 'stdio', command: 'node', args: ['-e', ''], url: '', vars: [] })
+    const { task } = await createTask({ mode: 'custom', profileId: null, teamId: null, skills: [{ id: skill.id, name: 'pdf' }], servers: [{ id: server.id, name: 'github' }], hiddenTools: [{ serverId: server.id, tool: 'delete' }] })
+    expect(task.actions[0].capabilities).toMatchObject({ mode: 'custom', skills: [{ id: skill.id, name: 'pdf' }], servers: [{ id: server.id, name: 'github' }] })
+
+    await app.api.scheduler.run(task.id)
+    const running = await waitFor(async () => (await app.api.scheduler.history(task.id)).find((r) => r.sessionId !== null), 'the chat of the run')
+    const scope = db.prepare('SELECT instructions FROM session_scopes WHERE session_id = ?').get(running.sessionId!)
+    expect(scope).toEqual({ instructions: '' })
+    expect(db.prepare('SELECT skill_id FROM session_scope_skills WHERE session_id = ?').all(running.sessionId!)).toEqual([{ skill_id: skill.id }])
+    expect(db.prepare('SELECT server_id, tool FROM session_scope_hidden_tools WHERE session_id = ?').all(running.sessionId!)).toEqual([{ server_id: server.id, tool: 'delete' }])
+    await app.api.scheduler.end(task.id)
+    await waitFor(async () => (await app.api.scheduler.history(task.id)).find((r) => r.result !== 'running'), 'the end of the run')
+
+    // The server is removed: the next run does not start a chat and says why.
+    await app.api.mcp.remove(server.id)
+    const [again] = await app.api.scheduler.list(task.desktopId)
+    expect(again.actions[0].capabilities.servers).toEqual([{ id: null, name: 'github' }])
+    await app.api.scheduler.run(task.id)
+    const failed = await waitFor(async () => (await app.api.scheduler.history(task.id)).find((r) => r.result === 'failed'), 'the failed run')
+    expect(failed.message).toContain('The MCP server "github" no longer exists.')
+    expect(failed.sessionId).toBeNull()
+  }, 40_000)
 })

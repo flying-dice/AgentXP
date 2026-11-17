@@ -7,6 +7,7 @@ import type { Id } from '@shared/models'
 import { fixedZone, nextRunOfTriggers, type Zone } from '@shared/schedule'
 import {
   HISTORY_KEPT,
+  INHERIT_CAPABILITIES,
   type ScheduledTaskDto,
   type ScheduledTaskInput,
   type SchedulerApi,
@@ -41,6 +42,7 @@ const agentAction = (prompt: string, over: Partial<ScheduledTaskInput['actions']
   session: 'new',
   sessionId: null,
   prompt,
+  capabilities: { ...INHERIT_CAPABILITIES },
   ...over
 })
 

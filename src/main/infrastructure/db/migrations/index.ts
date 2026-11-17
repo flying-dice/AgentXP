@@ -13,6 +13,7 @@ import { sql as oldTextError } from './012_old_text_error'
 import { sql as kanban } from './013_kanban'
 import { sql as teams } from './014_teams'
 import { sql as taskScheduler } from './015_task_scheduler'
+import { sql as scheduledCapabilities } from './016_scheduled_capabilities'
 
 export interface Migration {
   /** Strictly increasing; stored in `PRAGMA user_version`. */
@@ -41,5 +42,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 12, name: 'old_text_error', sql: oldTextError },
   { version: 13, name: 'kanban', sql: kanban },
   { version: 14, name: 'teams', sql: teams },
-  { version: 15, name: 'task_scheduler', sql: taskScheduler }
+  { version: 15, name: 'task_scheduler', sql: taskScheduler },
+  { version: 16, name: 'scheduled_capabilities', sql: scheduledCapabilities }
 ]

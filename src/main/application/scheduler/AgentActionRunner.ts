@@ -4,11 +4,14 @@ import type { AgentRepository } from '../../domain/repositories/agent-repository
 import type { SessionRepository } from '../../domain/repositories/session-repository'
 import type { PromptTurnInput } from '../SessionService'
 import type { StopReason } from '../ports'
+import type { SessionScopeRepository } from '../../domain/repositories/session-scope-repository'
+import { resolveScope, type CapabilityRegistry } from './ActionScope'
 import type { ActionRunInput, ActionRunResult, ActionRunner } from './ports'
 
 /** What the runner needs from the chat lifecycle (satisfied by `SessionService`). */
 export interface ActionChats {
-  create(desktopId: Id, agentId: Id | undefined, cwd: VPath, role?: SessionRole): Promise<SessionDto>
+  create(desktopId: Id, agentId: Id | undefined, cwd: VPath, role?: SessionRole, options?: { onCreated?: (session: SessionDto) => void }): Promise<SessionDto>
+  setModel(id: Id, modelId: string): Promise<void>
   rename(id: Id, title: string): void
   promptTurn(input: PromptTurnInput): Promise<StopReason>
   cancel(id: Id): Promise<void>
@@ -18,6 +21,10 @@ export interface AgentActionRunnerDeps {
   chats: ActionChats
   sessions: Pick<SessionRepository, 'get'>
   agents: Pick<AgentRepository, 'get' | 'getDefault'>
+  /** Skills, servers, profiles and teams a run may choose from. */
+  registry: CapabilityRegistry
+  /** Where the skills and tools of a chat are kept (read when the agent connects). */
+  scopes: Pick<SessionScopeRepository, 'set'>
 }
 
 const pad = (n: number): string => String(n).padStart(2, '0')
@@ -68,13 +75,32 @@ export class AgentActionRunner implements ActionRunner {
     }
   }
 
-  /** A new chat; a problem comes back as a sentence. */
+  /**
+   * A new chat; a problem comes back as a sentence. A choice of skills and tools is stored for the chat as soon as its row exists,
+   * before the agent connects, so the agent starts with exactly those skills and servers.
+   */
   private async startChat({ desktopId, action, taskName, startedAt }: ActionRunInput): Promise<SessionDto | string> {
-    const agent = action.agentId === null ? this.deps.agents.getDefault() : this.deps.agents.get(action.agentId)
-    if (!agent) return action.agentId === null ? 'There is no default agent. Add an agent in Control Center.' : 'The agent of this task no longer exists.'
-    const session = await this.deps.chats.create(desktopId, agent.id, action.cwd)
+    const resolved = resolveScope(action.capabilities, this.deps.registry)
+    if (resolved.kind === 'problem') return resolved.message
+    const agentId = action.agentId ?? (resolved.kind === 'scoped' ? resolved.agentId : null)
+    const agent = agentId === null ? this.deps.agents.getDefault() : this.deps.agents.get(agentId)
+    if (!agent) return action.agentId === null && agentId === null ? 'There is no default agent. Add an agent in Control Center.' : 'The agent of this task no longer exists.'
+    const session = await this.deps.chats.create(desktopId, agent.id, action.cwd, 'chat', {
+      onCreated: (created) => {
+        if (resolved.kind === 'scoped') this.deps.scopes.set(created.id, resolved.scope)
+      }
+    })
     this.deps.chats.rename(session.id, scheduledChatTitle(taskName, startedAt))
+    if (resolved.kind === 'scoped' && resolved.model) await this.applyModel(session.id, resolved.model)
     return session
+  }
+
+  /** The model of a profile, when the agent offers it by id or name; otherwise the agent's own choice stays. */
+  private async applyModel(sessionId: Id, wanted: string): Promise<void> {
+    const lower = wanted.toLowerCase()
+    const current = this.deps.sessions.get(sessionId)
+    const model = current?.models.find((m) => m.id.toLowerCase() === lower || m.name.toLowerCase() === lower)
+    if (model && model.id !== current?.currentModelId) await this.deps.chats.setModel(sessionId, model.id).catch(() => {})
   }
 
   private existingChat({ desktopId, action }: ActionRunInput): SessionDto | string {

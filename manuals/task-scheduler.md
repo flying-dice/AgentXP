@@ -140,14 +140,30 @@ These rules apply to the times of a trigger:
 
 ### Actions
 
-The action **Run an agent** has four settings:
+The action **Run an agent** has five settings:
 
 - **Agent** – The agent that runs. **Default agent** uses the agent that is the default when the task starts. If the agent that you selected is removed, the default agent runs instead.
 - **Project** – The place where the agent works. The list has **Your files (C:)** and the plugged-in projects. If the project is not plugged in when the task starts, the run fails and the history says so.
 - **Chat** – **Start a new chat for every run**, or **Send the prompt to this chat**. A new chat has the name of the task and the time. The chat stays in the chat list.
+- **Skills and tools** – The skills and the MCP servers that the new chat starts with. Look at the next topic.
 - **Prompt** – The text that the agent receives.
 
 A task with more than one action runs the actions one after the other. If an action fails, the later actions do not run.
+
+#### Skills and Tools
+
+Select how the chat of a run gets its skills and tools:
+
+- **Everything that is switched on** – The agent gets every skill and every MCP server that is switched on in **[Control Center](control-centre.md)**. A chat that you start yourself gets the same. This is the default.
+- **Use a profile** – The agent gets the skills, the MCP servers, and the instructions of the profile that you select. If the profile has an agent or a model, the run uses them. The agent that you select in the action takes priority over the agent of the profile.
+- **Use a team** – The agent runs as the first member of the team that you select. It gets the skills and the MCP servers of that member, the skills of the team, and the instructions of both. The other members do not take part.
+- **Choose skills and tools** – The agent gets only the skills and the MCP servers that you check. Under the lists, **Tools of the chosen servers** shows the tools that the last test of each server found. Clear a tool to hide it from the agent. If you did not test a server yet, the agent gets all of its tools. Test the server in Control Center to see its tools.
+
+AgentXP keeps the choice with the action. The **Actions** tab, the **Actions** tab of the dialog box, and the last page of the wizard show it in the column **Skills and tools**.
+
+A choice applies to a new chat only. A chat that exists keeps the skills and the tools that it has. If you select **Send the prompt to this chat**, the choice is not available.
+
+A choice can name something that is gone later, for example a skill that you removed. Then the run does not start. The **History** tab shows **Failed** with a message that names the skill, the MCP server, the profile, or the team. The same happens when you switch a chosen skill or MCP server off in Control Center. Open **Properties...** and change the choice. The dialog box lists a removed skill or server with the words "no longer installed" or "removed". Clear it, and then click **OK**.
 
 ### Conditions
 
@@ -277,6 +293,13 @@ Task Scheduler writes each start, end, failure, and change of a task to the **Ta
 | Wizard existing chat | Sends the prompt to one chat. | `basic-wizard-action-session-existing` |
 | Wizard chat | Selects the chat. | `basic-wizard-action-chat` |
 | Wizard prompt | The prompt for the agent. | `basic-wizard-action-prompt` |
+| Wizard skills and tools | Selects how the chat gets its skills and tools. | `basic-wizard-action-capabilities`, `basic-wizard-action-capabilities-box` |
+| Wizard profile | Selects the profile. | `basic-wizard-action-profile`, `basic-wizard-action-profile-hint` |
+| Wizard team | Selects the team. | `basic-wizard-action-team`, `basic-wizard-action-team-hint` |
+| Wizard skills | The skills to check. Each skill has a box. | `basic-wizard-action-skills`, `basic-wizard-action-skill-*` |
+| Wizard MCP servers | The MCP servers to check. Each server has a box. | `basic-wizard-action-servers`, `basic-wizard-action-server-*` |
+| Wizard tools | The tools of the chosen servers. Clear a tool to hide it. | `basic-wizard-action-tools`, `basic-wizard-action-tool-*`, `basic-wizard-action-tools-hint` |
+| Wizard existing chat note | Says that an existing chat keeps its own skills and tools. | `basic-wizard-action-capabilities-existing` |
 | Wizard summary | The task before you save it. | `basic-wizard-summary` |
 | Open Properties | Opens the properties after Finish. | `basic-wizard-open-properties` |
 | Wizard problem | Says what is wrong in the step. | `basic-wizard-problem` |
@@ -339,6 +362,13 @@ Task Scheduler writes each start, end, failure, and change of a task to the **Ta
 | Action existing chat | Sends the prompt to one chat. | `action-dialog-session-existing` |
 | Action chat | Selects the chat. | `action-dialog-chat` |
 | Action prompt | The prompt for the agent. | `action-dialog-prompt` |
+| Action skills and tools | Selects how the chat gets its skills and tools. | `action-dialog-capabilities`, `action-dialog-capabilities-box` |
+| Action profile | Selects the profile. | `action-dialog-profile`, `action-dialog-profile-hint` |
+| Action team | Selects the team. | `action-dialog-team`, `action-dialog-team-hint` |
+| Action skills | The skills to check. Each skill has a box. | `action-dialog-skills`, `action-dialog-skill-*` |
+| Action MCP servers | The MCP servers to check. Each server has a box. | `action-dialog-servers`, `action-dialog-server-*` |
+| Action tools | The tools of the chosen servers. Clear a tool to hide it. | `action-dialog-tools`, `action-dialog-tool-*`, `action-dialog-tools-hint` |
+| Action existing chat note | Says that an existing chat keeps its own skills and tools. | `action-dialog-capabilities-existing` |
 | Action problem | Says why the action is not saved. | `action-dialog-problem` |
 
 ## 5 - Common Tasks
@@ -353,6 +383,15 @@ To ask an agent for a report each day, follow the steps below:
 4. Set the start time to 9:00 AM. Make sure that **Recur every** is 1 day. Click **Next >**.
 5. Select the project. Type the prompt, for example `Review the changes of yesterday and write a short summary.`
 6. Click **Next >**, then click **Finish**. The task appears in the list with the status **Ready**.
+
+### Give a Run Only Some Skills and Tools
+
+To start the agent with a profile or with chosen skills, follow the steps below:
+
+1. Open the action of the task. In the wizard, the action page has the fields. In the properties, click the **Actions** tab, select the action, and click **Edit...**.
+2. Select **Use a profile** or **Choose skills and tools** in **Skills and tools**.
+3. Select the profile, or check the skills and the MCP servers. Clear the tools that the agent must not use.
+4. Click **OK**. The column **Skills and tools** shows the choice.
 
 ### Start a Task on Two Days of the Week
 
@@ -397,6 +436,7 @@ To delete a task, select it, click **Delete**, and click **Yes**. AgentXP delete
 | The run failed because the project is not plugged in. | Plug in the project again, or open **Properties...** and select another project in the action. |
 | The run failed with "The chat is busy with another message." | The task sends its prompt to a chat that works on another answer. Wait for the chat to finish, or select **Start a new chat for every run**. |
 | The run failed with "The chat of this task no longer exists." | Someone deleted the chat. Open **Properties...**, click the **Actions** tab, and select another chat. |
+| The run failed with a message about a skill, an MCP server, a profile, or a team. | The choice in the action names something that was removed or switched off. Open **Properties...**, click the **Actions** tab, edit the action, and change **Skills and tools**. |
 | The agent cannot use a tool. | The agent uses the tools of the apps that are open on the desktop. Open the app, or change the permissions in **[Control Center](control-centre.md)**. |
 | A monthly task did not start in February. | The month does not have the day that you selected. Select **Last** to start on the last day of each month. |
 | A task started one hour later than set. | The clocks went forward. A time that does not exist moves to the first time after the gap. |

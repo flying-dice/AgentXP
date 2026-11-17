@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import type { AgentDto, SessionDto } from '@shared/models'
 import { fixedZone, newTrigger, type TriggerDto } from '@shared/schedule'
-import type { ScheduledTaskDto, TaskRunDto } from '@shared/scheduler'
+import { INHERIT_CAPABILITIES, type ScheduledTaskDto, type TaskRunDto } from '@shared/scheduler'
 import { AGENT_HOME, type DriveDto } from '@shared/vfs'
 import { createFakeScheduler, SAMPLE_NOW } from '../../app/fakeScheduler'
+import { sampleMcpServers, sampleProfiles, sampleSkills, sampleTeams } from '../../app/fakeTeams'
 import {
   actionRow,
   actionSummary,
+  actionToolsText,
+  hiddenFromChecked,
+  refChoices,
+  refsFromChecked,
+  toolChoices,
+  withCapabilitiesMode,
   agentChoices,
   agentFromValue,
   agentNameOf,
@@ -144,7 +151,7 @@ describe('choices of the forms', () => {
 })
 
 describe('texts', () => {
-  const action = { kind: 'agent' as const, agentId: 2, cwd: 'E:\\' as const, session: 'new' as const, sessionId: null, prompt: '  Review   the\nchanges ' }
+  const action = { kind: 'agent' as const, agentId: 2, cwd: 'E:\\' as const, session: 'new' as const, sessionId: null, prompt: '  Review   the\nchanges ', capabilities: INHERIT_CAPABILITIES }
   it('sums an action up in one line', () => {
     expect(actionSummary(action, ctx)).toBe('Ask Gemini CLI in claude-code-win (E:), in a new chat: Review the changes')
     expect(actionSummary({ ...action, session: 'existing', sessionId: 7, agentId: null }, ctx)).toContain('the chat "Fix login redirect bug"')
@@ -240,5 +247,55 @@ describe('the Create Basic Task wizard', () => {
     expect(rows['Description']).toBe('(none)')
     expect(rows['Trigger']).toBe('At 10:00 AM every day')
     expect(rows['Action']).toContain('Run the tests.')
+  })
+})
+
+describe('skills and tools of an action', () => {
+  const choices = { skills: sampleSkills, servers: sampleMcpServers, profiles: sampleProfiles, teams: sampleTeams }
+  const custom = { ...INHERIT_CAPABILITIES, mode: 'custom' as const }
+  const action = { kind: 'agent' as const, agentId: null, cwd: 'E:\\' as const, session: 'new' as const, sessionId: null, prompt: 'Go', capabilities: INHERIT_CAPABILITIES }
+  const ctxNames = { profiles: sampleProfiles, teams: sampleTeams }
+
+  it('says what a run gets in the Actions list and the wizard summary', () => {
+    expect(actionToolsText(action, ctxNames)).toBe('All skills and tools that are switched on')
+    expect(actionToolsText({ ...action, capabilities: { ...INHERIT_CAPABILITIES, mode: 'profile', profileId: sampleProfiles[0].id } }, ctxNames)).toBe(`Profile: ${sampleProfiles[0].name}`)
+    expect(actionToolsText({ ...action, capabilities: { ...INHERIT_CAPABILITIES, mode: 'team', teamId: sampleTeams[0].id } }, ctxNames)).toBe(`Team: ${sampleTeams[0].name}`)
+    expect(actionToolsText({ ...action, capabilities: { ...custom, skills: [{ id: 1, name: 'a' }] } }, ctxNames)).toBe('1 skill, 0 MCP servers')
+    expect(actionToolsText({ ...action, session: 'existing', sessionId: 7 }, ctxNames)).toBe('Kept by the chat')
+    expect(actionRow(action, 0, { agents, drives, sessions, ...ctxNames })).toMatchObject({ tools: 'All skills and tools that are switched on' })
+    const draft = newWizardDraft('E:\\')
+    expect(wizardSummary(draft, { agents, drives, sessions }).at(-1)).toEqual(['Skills and tools', 'All skills and tools that are switched on'])
+  })
+
+  it('preselects a profile or team when the mode changes', () => {
+    expect(withCapabilitiesMode(INHERIT_CAPABILITIES, 'profile', choices)).toMatchObject({ mode: 'profile', profileId: sampleProfiles[0].id })
+    expect(withCapabilitiesMode({ ...INHERIT_CAPABILITIES, profileId: 5 }, 'profile', choices).profileId).toBe(5)
+    expect(withCapabilitiesMode(INHERIT_CAPABILITIES, 'team', choices)).toMatchObject({ mode: 'team', teamId: sampleTeams[0].id })
+    expect(withCapabilitiesMode(INHERIT_CAPABILITIES, 'profile', { ...choices, profiles: [] }).profileId).toBeNull()
+  })
+
+  it('lists the registry with the chosen ones checked, and a removed one that the task names', () => {
+    const { items, checked } = refChoices([{ id: sampleSkills[0].id, name: sampleSkills[0].name }, { id: 99, name: 'old' }, { id: null, name: 'gone' }], sampleSkills, 'no longer installed')
+    expect(items.map((i) => i.label)).toEqual([...sampleSkills.map((s) => (s.enabled ? s.name : `${s.name} (switched off)`)), 'old (no longer installed)', 'gone (no longer installed)'])
+    expect(checked).toEqual([String(sampleSkills[0].id), 'gone-1', 'gone-2'])
+  })
+
+  it('turns the checked values back into references, and clearing a removed one drops it', () => {
+    const previous = [{ id: null, name: 'gone' }]
+    expect(refsFromChecked([String(sampleSkills[1].id), 'gone-0'], previous, sampleSkills)).toEqual([{ id: sampleSkills[1].id, name: sampleSkills[1].name }, { id: null, name: 'gone' }])
+    expect(refsFromChecked([String(sampleSkills[1].id)], previous, sampleSkills)).toEqual([{ id: sampleSkills[1].id, name: sampleSkills[1].name }])
+  })
+
+  it('lists the tools of the chosen servers and keeps hidden ones cleared', () => {
+    const server = sampleMcpServers.find((s) => s.tools.length > 0)!
+    const c = { ...custom, servers: [{ id: server.id, name: server.name }], hiddenTools: [{ serverId: server.id, tool: server.tools[0].name }] }
+    const { items, checked } = toolChoices(c, sampleMcpServers)
+    expect(items.length).toBe(server.tools.filter((t) => t.enabled).length)
+    expect(checked).not.toContain(items[0].value)
+    // Everything checked again: nothing is hidden. One cleared: that one is hidden.
+    expect(hiddenFromChecked(c, sampleMcpServers, items.map((i) => i.value))).toEqual([])
+    expect(hiddenFromChecked({ ...c, hiddenTools: [] }, sampleMcpServers, items.slice(1).map((i) => i.value))).toEqual([{ serverId: server.id, tool: server.tools[0].name }])
+    // A server that is not chosen lists no tools.
+    expect(toolChoices(custom, sampleMcpServers).items).toEqual([])
   })
 })

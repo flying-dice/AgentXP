@@ -3,6 +3,7 @@ import type { McpServerDto, ProfileDto, SkillDto, TeamDto } from '@shared/teams'
 import type { McpServerConfig } from '../../domain/agent/McpServerConfig'
 import type { McpServerRepository, ProfileRepository, RoomRepository, SkillRepository, TeamRepository } from '../../domain/repositories/teams-repositories'
 import type { SessionRepository } from '../../domain/repositories/session-repository'
+import type { SessionScopeRepository } from '../../domain/repositories/session-scope-repository'
 import type { McpProxyLaunch } from './ports'
 import { toMcpConfig } from './McpServerService'
 
@@ -17,6 +18,8 @@ export interface AgentCapabilitiesDeps {
   teams: TeamRepository
   rooms: RoomRepository
   sessions: Pick<SessionRepository, 'get'>
+  /** The skills and tools that a scheduled run chose for a chat; without it every chat is a plain chat. */
+  scopes?: Pick<SessionScopeRepository, 'get'>
   /** Looks up a Kanban board by id so the briefing can name it. */
   boards?: { board(id: Id): { name: string } | null }
   /** Without it a server with switched-off tools is handed over whole (tests). */
@@ -31,7 +34,7 @@ export class AgentCapabilities {
   mcpServers(sessionId: Id): McpServerConfig[] {
     const scope = this.scopeOf(sessionId)
     if (scope === null) return []
-    return scope.servers.map((s) => this.configFor(s))
+    return scope.servers.map((s) => this.configFor(s, scope.hiddenTools.filter((t) => t.serverId === s.id).map((t) => t.tool)))
   }
 
   /** The text of the first prompt of a session (instructions, roster, skills), or null when there is nothing to tell. */
@@ -52,6 +55,7 @@ export class AgentCapabilities {
       )
       if (team.boardRef) parts.push(this.boardBriefing(team.boardRef))
     }
+    if (scope.instructions) parts.push(`## Instructions\n${scope.instructions}`)
     if (scope.skills.length > 0) {
       const lines = scope.skills.map((s) => `- ${s.name}: ${s.description} (read ${s.path}/SKILL.md before you use it)`)
       parts.push(`## Skills\nThese skills are installed. When a task matches one, read its SKILL.md and follow it.\n${lines.join('\n')}`)
@@ -68,9 +72,9 @@ export class AgentCapabilities {
       : `## Work board\nThe team tracks its work on the board "${ref}".`
   }
 
-  private configFor(server: McpServerDto): McpServerConfig {
+  private configFor(server: McpServerDto, alsoHidden: readonly string[] = []): McpServerConfig {
     const target = toMcpConfig(server)
-    const hidden = server.tools.filter((t) => !t.enabled).map((t) => t.name)
+    const hidden = [...new Set([...server.tools.filter((t) => !t.enabled).map((t) => t.name), ...alsoHidden])]
     const proxy = this.deps.proxy
     if (hidden.length === 0 || !proxy) return target
     return {
@@ -85,23 +89,35 @@ export class AgentCapabilities {
   private scopeOf(sessionId: Id): {
     skills: SkillDto[]
     servers: McpServerDto[]
+    /** Tools of the servers that this chat does not get, next to the ones that are switched off. */
+    hiddenTools: { serverId: Id; tool: string }[]
+    /** Instructions of a scheduled run (profile and team); empty for a plain chat. */
+    instructions: string
     member: { team: TeamDto; profile: ProfileDto; roster: string[]; roomTitle: string } | null
   } | null {
     const session = this.deps.sessions.get(sessionId)
     if (!session || session.role === 'review') return null
     const enabledSkills = this.deps.skills.list().filter((s) => s.enabled)
     const enabledServers = this.deps.servers.list().filter((s) => s.enabled)
+    const chosen = this.deps.scopes?.get(sessionId) ?? null
+    if (chosen) {
+      const skills = new Set(chosen.skillIds)
+      const servers = new Set(chosen.serverIds)
+      return { skills: enabledSkills.filter((x) => skills.has(x.id)), servers: enabledServers.filter((x) => servers.has(x.id)), hiddenTools: chosen.hiddenTools, instructions: chosen.instructions, member: null }
+    }
     const link = this.deps.rooms.findBySession(sessionId)
     const room = link ? this.deps.rooms.get(link.roomId) : null
     const profile = link ? this.deps.profiles.get(link.profileId) : null
     const team = room ? this.deps.teams.get(room.teamId) : null
-    if (!link || !room || !profile || !team) return { skills: enabledSkills, servers: enabledServers, member: null }
+    if (!link || !room || !profile || !team) return { skills: enabledSkills, servers: enabledServers, hiddenTools: [], instructions: '', member: null }
     const own = new Set([...profile.skillIds, ...team.skillIds])
     const ownServers = new Set(profile.mcpServerIds)
     const roster = team.memberIds.flatMap((id) => this.deps.profiles.get(id)?.name ?? [])
     return {
       skills: enabledSkills.filter((s) => own.has(s.id)),
       servers: enabledServers.filter((s) => ownServers.has(s.id)),
+      hiddenTools: [],
+      instructions: '',
       member: { team, profile, roster, roomTitle: room.title }
     }
   }
