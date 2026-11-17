@@ -4,6 +4,7 @@ import { ChatWindow } from './ChatWindow'
 import { CodeReviewWindow } from './CodeReviewWindow'
 import { CodeWindow } from './CodeWindow'
 import { ExplorerWindow } from './ExplorerWindow'
+import { TaskSchedulerWindow } from './TaskSchedulerWindow'
 import { TerminalWindow } from './TerminalWindow'
 
 export type AppId =
@@ -21,6 +22,7 @@ export type AppId =
   | 'event-viewer'
   | 'agent-manager'
   | 'control-centre'
+  | 'task-scheduler'
   | 'recycle-bin'
   | 'surface'
   | 'help'
@@ -33,7 +35,8 @@ const START_GROUP: Partial<Record<AppId, string>> = {
   'snipping-tool': 'accessories',
   'sticky-notes': 'accessories',
   'agent-manager': 'system-tools',
-  'control-centre': 'system-tools'
+  'control-centre': 'system-tools',
+  'task-scheduler': 'system-tools'
 }
 
 /** A desktop window: taskbar, Start menu, top bar, tray and the app windows. Test ids only. */
@@ -128,6 +131,10 @@ export class DesktopPage {
     return new CodeReviewWindow(this.window('code-review', index))
   }
 
+  taskScheduler(index = 0): TaskSchedulerWindow {
+    return new TaskSchedulerWindow(this.window('task-scheduler', index))
+  }
+
   terminal(index = 0): TerminalWindow {
     return new TerminalWindow(this.window('terminal', index))
   }
@@ -189,7 +196,7 @@ export class DesktopPage {
     return this.page.getByTestId('balloon-text')
   }
 
-  /** Desktop icon (`computer`, `chats`, `code`, `terminal`, `browser`, `control-centre`, `recycle`). */
+  /** Desktop icon (`computer`, `chats`, `code`, `terminal`, `browser`, `control-centre`, `task-scheduler`, `recycle`). */
   icon(id: string): Locator {
     return this.page.getByTestId(`desktop-icon-${id}`)
   }

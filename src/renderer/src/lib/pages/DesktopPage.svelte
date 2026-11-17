@@ -90,6 +90,7 @@
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
     { id: 'browser', label: 'Browser', icon: 'globe', title: 'Browser: browse the web together with the agent' },
     { id: 'control-centre', label: 'Control Center', icon: 'options', title: 'Control Center: agents, permissions and settings' },
+    { id: 'task-scheduler', label: 'Task Scheduler', icon: 'scheduler', title: 'Task Scheduler: run an agent at a time you choose' },
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
@@ -101,7 +102,7 @@
   })
   const groups: StartGroup[] = [
     groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes', 'kanban']),
-    groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre'])
+    groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre', 'task-scheduler'])
   ]
   const programs = $derived<StartItem[]>(
     START_APPS.map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))

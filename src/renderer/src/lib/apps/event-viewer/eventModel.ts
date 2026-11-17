@@ -10,12 +10,13 @@ export { formatDateTime }
 export const MAX_EVENTS = 2000
 
 export type Source = ProtocolEventDto['source']
-export const SOURCE_LABEL: Record<Source, string> = { acp: 'ACP', 'ag-ui': 'AG-UI', mcp: 'MCP' }
+export const SOURCE_LABEL: Record<Source, string> = { acp: 'ACP', 'ag-ui': 'AG-UI', mcp: 'MCP', scheduler: 'Task Scheduler' }
 /** What each log is, for the tooltip of its name (the names ACP, AG-UI and MCP mean nothing to most people). */
 export const SOURCE_HINT: Record<Source, string> = {
   acp: 'ACP: how Agent7 talks to the agent',
   'ag-ui': 'AG-UI: how the agent shows its answer in the chat',
-  mcp: 'MCP: how the agent uses the tools of the desktop'
+  mcp: 'MCP: how the agent uses the tools of the desktop',
+  scheduler: 'Task Scheduler: when scheduled tasks start, end or fail'
 }
 export const LEVEL_LABEL: Record<EventLevel, string> = { info: 'Information', warning: 'Warning', error: 'Error' }
 export const LEVEL_ICON: Record<EventLevel, IconName> = { info: 'info', warning: 'warning', error: 'error' }
@@ -114,7 +115,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
           text: 'Agent7 Logs',
           icon: 'folder',
           expanded: true,
-          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
+          children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), testid: `event-viewer-log-${s}`, text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
         },
         {
           id: 'chats',
@@ -215,6 +216,7 @@ export const START_FAILED = 'The agent program stopped before it was ready.'
 /** A plain sentence for one warning or error: what it says when that is readable, else one sentence per kind of event (UX-188). */
 export function problemSentence(e: ProtocolEventDto): string {
   const message = summaryOf(e.payload).replace(/\s+/g, ' ').trim()
+  if (e.source === 'scheduler' && message) return message
   const drive = DRIVE_GONE.exec(message) ?? DRIVE_GONE.exec(e.payload)
   if (drive) return `Drive ${drive[1]}: is not plugged in on this desktop.`
   if (e.level === 'error' && START_MESSAGE.test(e.name)) return START_FAILED
@@ -229,6 +231,7 @@ export function problemSentence(e: ProtocolEventDto): string {
 /** What to do about a problem, one plain sentence for the General tab; '' when there is nothing to add. */
 export function whatToDo(e: ProtocolEventDto): string {
   if (!isNotable(e)) return ''
+  if (e.source === 'scheduler') return 'Open Task Scheduler, select the task and read its History tab.'
   const sentence = problemSentence(e)
   if (sentence === START_FAILED) return 'Check that the program is installed, or open Agents and choose another agent.'
   if (/^Drive [A-Z]:/.test(sentence)) return 'Plug the drive in again, or work on another project.'
@@ -241,9 +244,26 @@ export function whatToDo(e: ProtocolEventDto): string {
 /** The "What happened" cell of a row: the sentence of a warning or an error, empty for the traffic of the logs. */
 export const whatHappened = (e: ProtocolEventDto): string => (isNotable(e) ? problemSentence(e) : '')
 
-/** A chat that finished a turn after event `e` has recovered from it (a later RUN_FINISHED of the same chat). */
-const recovered = (events: readonly ProtocolEventDto[], e: ProtocolEventDto): boolean =>
-  e.sessionId !== null && events.some((o) => o.id > e.id && o.sessionId === e.sessionId && o.name === 'RUN_FINISHED' && o.level === 'info')
+/** The id of the scheduled task an event of the Task Scheduler log is about; null for other events. */
+function taskIdOf(e: ProtocolEventDto): number | null {
+  if (e.source !== 'scheduler') return null
+  try {
+    const id = (JSON.parse(e.payload) as { taskId?: unknown }).taskId
+    return typeof id === 'number' ? id : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * A chat that finished a turn after event `e` has recovered from it (a later RUN_FINISHED of the same chat).
+ * A scheduled task has recovered from a failure when a later run of it completed (`task/completed` of the same task).
+ */
+const recovered = (events: readonly ProtocolEventDto[], e: ProtocolEventDto): boolean => {
+  const taskId = taskIdOf(e)
+  if (taskId !== null) return events.some((o) => o.id > e.id && o.name === 'task/completed' && taskIdOf(o) === taskId)
+  return e.sessionId !== null && events.some((o) => o.id > e.id && o.sessionId === e.sessionId && o.name === 'RUN_FINISHED' && o.level === 'info')
+}
 
 /**
  * The newest warning or error of the log that is still current, for the Activity gadget; null when there is none.
@@ -262,7 +282,7 @@ export function lastProblem(events: readonly ProtocolEventDto[]): ProblemLine | 
 export function lastFinished(events: readonly ProtocolEventDto[]): string | null {
   const healed = events.findLast((o) => o.level === 'error' && recovered(events, o))
   const done = events.findLast((o) => o.name === 'RUN_FINISHED' && o.level === 'info')
-  if (healed && (!done || done.id > healed.id)) return `Recovered: ${problemSentence(healed)}. The chat finished a later turn.`
+  if (healed && (!done || done.id > healed.id)) return `Recovered: ${problemSentence(healed).replace(/\.$/, '')}. ${healed.source === 'scheduler' ? 'A later run of the task completed.' : 'The chat finished a later turn.'}`
   if (done) return 'The agent finished its last turn.'
   return events.length > 0 ? 'The agent is connected. Nothing was asked yet.' : null
 }

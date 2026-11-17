@@ -84,7 +84,7 @@ describe('suggestionsFor', () => {
   })
 
   it('has chips for every app and sends a text for each', () => {
-    for (const app of ['code', 'notepad', 'wordpad', 'explorer', 'terminal', 'browser', 'event-viewer', 'agent-manager', 'recycle-bin', 'paint', 'sticky-notes', 'kanban', 'help', 'control-centre', 'snipping-tool'] as const) {
+    for (const app of ['code', 'notepad', 'wordpad', 'explorer', 'terminal', 'browser', 'event-viewer', 'agent-manager', 'recycle-bin', 'paint', 'sticky-notes', 'kanban', 'help', 'control-centre', 'snipping-tool', 'task-scheduler'] as const) {
       const chips = suggestionsFor(app, null)
       expect(chips.length).toBeGreaterThan(0)
       for (const c of chips) expect(c.text.length).toBeGreaterThan(0)
