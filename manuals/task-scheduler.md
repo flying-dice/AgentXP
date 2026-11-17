@@ -43,11 +43,15 @@ Use one of the ways below to open Task Scheduler:
 - Click **Start -> System Tools -> Task Scheduler**.
 - Click **Task Scheduler** in the **Other Places** section of a window that has it.
 
+![The Task Scheduler icon on the desktop, between Control Center and Recycle Bin](../docs/images/task-scheduler-icon.png)
+
 Only one Task Scheduler window opens on a desktop. Each desktop has its own tasks. Agent7 keeps the tasks when you close the window and when you restart Agent7.
 
 ## 3 - The Window
 
 The window has a menu bar at the top. Below it, the task pane is on the left. The task list is at the top right, and the details pane is under the list. The status bar at the bottom shows the status of the selected task and the number of tasks.
+
+![The Task Scheduler window with four tasks and the General tab of the Morning review task](../docs/images/task-scheduler.png)
 
 ### The Task Pane
 
@@ -86,6 +90,8 @@ The details pane shows the selected task in six tabs. You can read the tabs here
 
 Click **Create Basic Task...** to open the wizard. The wizard asks one question on each page. The title of the page is in the header band. The number of the step is at the lower left. Click **Next >** to go to the next step and **< Back** to go to the previous step.
 
+![The first page of the Create Basic Task Wizard with a name and a description](../docs/images/task-scheduler-wizard.png)
+
 1. **Create a Basic Task** – Type a name and, if you want, a description.
 2. **Task Trigger** – Select when the task starts: **Daily**, **Weekly**, **Monthly**, **One time**, or **At Agent7 startup**.
 3. **Trigger Details** – Set the start and how often the task repeats. The fields depend on your choice in step 2.
@@ -97,6 +103,8 @@ If a step has a problem, a red line at the bottom says what to do. The wizard do
 ### Create Task and Properties
 
 Click **Create Task...** to make a task with all options. Click **Properties...** to change a task. Both open the same dialog box. It has five tabs.
+
+![The Create Task dialog with the Triggers tab open and no triggers](../docs/images/task-scheduler-create-task.png)
 
 - **General** – The name, the description, and **Enabled**. A task that is not enabled does not start by itself.
 - **Triggers** – The list of triggers. Click **New...**, **Edit...**, or **Delete**.
@@ -160,6 +168,8 @@ A condition must hold when a trigger starts the task. If it does not hold, the r
 ### History
 
 The **History** tab lists the runs of the selected task. Agent7 keeps the last 100 runs of each task.
+
+![The History tab with two completed runs of the Morning review task](../docs/images/task-scheduler-history.png)
 
 - **Result** – **Running**, **Completed**, **Failed**, **Stopped**, **Not started**, or **Missed**.
 - **Start** and **End** – The times of the run.

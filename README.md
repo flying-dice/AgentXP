@@ -494,6 +494,8 @@ Task Scheduler runs an agent on a schedule. Open it from **Start -> System Tools
 
 A task runs only while Agent7 is open. When Agent7 was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
 
+![The Task Scheduler window with four tasks and the History tab of the Morning review task](docs/images/task-scheduler-history.png)
+
 ### Adding an Agent
 
 Agent7 adds Claude Code and the Scripted Agent for you. You can add other agents that speak ACP. To add an agent, follow the steps below:

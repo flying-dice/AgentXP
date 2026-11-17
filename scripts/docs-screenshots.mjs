@@ -232,7 +232,8 @@ async function main() {
     await shot('action-center', page.getByTestId('action-center'), { margin: 60 })
     await page.getByTestId('action-center-review').first().click()
     await page.getByTestId('uac-dialog').waitFor()
-    await page.getByTestId('uac-details').click()
+    // Older builds fold the details behind a button; the dialog now shows them.
+    if ((await page.getByTestId('uac-details').count()) > 0) await page.getByTestId('uac-details').click()
     await pause(700)
     await pageShot('uac-dialog', page)
     await page.getByTestId('uac-allow').click()
@@ -343,8 +344,11 @@ async function main() {
 
     // ---- the launcher: a third chat waits for approval while the desktop is disconnected ----------------------------------
     console.log('launcher (again)')
-    await page.getByTestId('window-event-viewer').getByTestId('window-close').click()
-    await page.getByTestId('window-control-centre').getByTestId('window-close').click()
+    // Close through the API: the windows overlap, and the title bar of the lower one can sit under the other.
+    await api(async () => {
+      const s = await window.agent7.desktop.current()
+      for (const w of s.windows.filter((x) => x.app === 'event-viewer' || x.app === 'control-centre')) await window.agent7.desktop.closeWindow(w.id)
+    })
     await say(chat, 'Take another look at the sign-in handler')
     await page.getByTestId('action-center-flag').waitFor()
     await page.waitForFunction(async () => (await window.agent7.launcher.list()).some((d) => d.runState === 'awaiting_approval'), undefined, { timeout: 60_000 })
@@ -370,6 +374,124 @@ async function main() {
     const menu = await page2.getByTestId('start-menu').boundingBox()
     const size = await page2.evaluate(() => ({ width: innerWidth, height: innerHeight }))
     await pageClip('start-menu', page2, { x: 0, y: Math.floor(menu.y) - 6, width: Math.ceil(menu.x + menu.width) + 160, height: size.height - Math.floor(menu.y) + 6 })
+
+    // ---- Task Scheduler: the icon, the library with a history, the wizard and the Create Task dialog -------------------------------------
+    console.log('task scheduler')
+    await page2.keyboard.press('Escape')
+    const api2 = (fn, arg) => page2.evaluate(fn, arg)
+    // Minimize the windows that the desktop restored, so that the icons show.
+    await api2(async () => {
+      const state = await window.agent7.desktop.current()
+      for (const w of state.windows) await window.agent7.desktop.setWindowState(w.id, 'minimized')
+    })
+    await pause(600)
+    await shot('task-scheduler-icon', page2.getByTestId('desktop-icon-task-scheduler'), { margin: 56 })
+
+    const now = new Date()
+    const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const agentAction = (prompt) => ({ kind: 'agent', agentId: null, cwd: 'E:\\', session: 'new', sessionId: null, prompt })
+    const conditions = { onlyIfNoOtherTaskRuns: false, onlyIfAgentIdle: false, onlyIfNotPaused: true }
+    const settings = { allowOnDemand: true, runMissed: false, stopIfRunsLonger: true, stopAfterMinutes: 60, restartOnFailure: false, restartIntervalMinutes: 5, restartAttempts: 3, ifRunning: 'ignore' }
+    const tasks = [
+      {
+        name: 'Morning review',
+        description: 'Summarise the changes of yesterday before the work starts.',
+        enabled: true,
+        triggers: [{ kind: 'daily', enabled: true, startAt: `${day}T09:00`, expiresAt: null, everyDays: 1 }],
+        actions: [agentAction('Review the changes of yesterday and write a short summary.')],
+        conditions,
+        settings
+      },
+      {
+        name: 'Dependency check',
+        description: 'Look for outdated packages twice a week.',
+        enabled: true,
+        triggers: [{ kind: 'weekly', enabled: true, startAt: `${day}T08:30`, expiresAt: null, everyWeeks: 1, daysOfWeek: [1, 5] }],
+        actions: [agentAction('Run the dependency check and list the packages that are out of date.')],
+        conditions,
+        settings: { ...settings, runMissed: true, restartOnFailure: true, restartIntervalMinutes: 10, restartAttempts: 2, ifRunning: 'queue' }
+      },
+      {
+        name: 'Start of day',
+        description: 'Read the open tasks when Agent7 starts.',
+        enabled: true,
+        triggers: [{ kind: 'startup', enabled: true, delayMinutes: 2 }],
+        actions: [agentAction('List the open tasks of this project.')],
+        conditions,
+        settings
+      },
+      {
+        name: 'Month-end report',
+        description: 'Write the report of the month.',
+        enabled: false,
+        triggers: [{ kind: 'monthly', enabled: true, startAt: `${day}T17:00`, expiresAt: null, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], daysOfMonth: [], lastDay: true }],
+        actions: [agentAction('Write the report of this month.')],
+        conditions,
+        settings
+      }
+    ]
+    const taskIds = await api2(
+      async ({ desktopId, tasks }) => {
+        const ids = []
+        for (const input of tasks) ids.push((await window.agent7.scheduler.create(desktopId, input)).id)
+        return ids
+      },
+      { desktopId, tasks }
+    )
+
+    await page2.getByTestId('taskbar-start').click()
+    await page2.getByTestId('start-menu-all').click()
+    await page2.getByTestId('start-menu-group-system-tools').click()
+    await page2.getByTestId('start-menu-item-task-scheduler').click()
+    const ts = page2.getByTestId('window-task-scheduler')
+    await ts.waitFor()
+    await api2(async () => {
+      const state = await window.agent7.desktop.current()
+      const w = state.windows.find((x) => x.app === 'task-scheduler')
+      await window.agent7.desktop.setBounds(w.id, { x: 90, y: 120, width: 1020, height: 640 })
+    })
+    await ts.getByTestId('task-scheduler-row').first().waitFor()
+
+    // Two real runs of the first task make a history.
+    await ts.getByTestId('task-scheduler-row').filter({ hasText: 'Morning review' }).click()
+    for (let run = 1; run <= 2; run++) {
+      await ts.getByTestId('task-scheduler-action-run').click()
+      // Wait until this run has ended; the next click then starts a second run instead of being skipped.
+      for (let i = 0; ; i++) {
+        if (i > 240) throw new Error('the task run did not end')
+        const runs = await api2((id) => window.agent7.scheduler.history(id), taskIds[0])
+        console.log(`  run ${run}: ${runs.map((r) => r.result).join(', ') || 'no row yet'}`)
+        if (runs.length >= run && runs.every((r) => r.result !== 'running')) break
+        await pause(500)
+      }
+    }
+    await ts.getByTestId('task-scheduler-tab-general').click()
+    await pause(900)
+    await shot('task-scheduler', ts)
+    await ts.getByTestId('task-scheduler-tab-history').click()
+    await ts.getByTestId('task-scheduler-history-row').first().waitFor()
+    await pause(500)
+    await shot('task-scheduler-history', ts)
+
+    // The Create Basic Task wizard on its first page, with a name typed.
+    await ts.getByTestId('task-scheduler-action-create-basic').click()
+    const wizard = page2.getByTestId('basic-wizard')
+    await wizard.waitFor()
+    await wizard.getByTestId('basic-wizard-name').fill('Weekly summary')
+    await wizard.getByTestId('basic-wizard-description').fill('Write what the team finished this week.')
+    await pause(500)
+    await shot('task-scheduler-wizard', wizard, { margin: 40 })
+    await wizard.getByTestId('basic-wizard-cancel').click()
+
+    // The Create Task dialog on its Triggers tab.
+    await ts.getByTestId('task-scheduler-action-create').click()
+    const editor = page2.getByTestId('task-editor')
+    await editor.waitFor()
+    await editor.getByTestId('task-editor-name').fill('Weekly summary')
+    await editor.getByTestId('task-editor-tab-triggers').click()
+    await pause(500)
+    await shot('task-scheduler-create-task', editor, { margin: 40 })
+    await editor.getByTestId('dialog-button-cancel').click()
   } catch (error) {
     // Keep a picture of every window, to see what the script was waiting for.
     for (const [i, w] of app.windows().entries()) await w.screenshot({ path: join(tmpdir(), `agent7-docs-failure-${i}.png`) }).catch(() => undefined)
