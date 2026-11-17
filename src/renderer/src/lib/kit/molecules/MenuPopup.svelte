@@ -3,6 +3,7 @@
   import MenuItem from './MenuItem.svelte'
   import MenuPopup from './MenuPopup.svelte'
   import { isSelectable, mnemonicKey, type MenuItemDef } from './MenuItem'
+  import { nudgeUp } from '../actions/popup'
 
   interface Props {
     items: MenuItemDef[]
@@ -45,6 +46,8 @@
   let active = $state(-1)
   let openSub = $state(-1)
   let flipped = $state(false)
+  /** Upward shift (px, ≤ 0) that keeps a submenu above the bottom of the screen. */
+  let shift = $state(0)
   let subFocus = $state(false)
   let hoverTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -133,7 +136,9 @@
 
   function flipIfClipped(node: HTMLElement | null): void {
     if (!submenu || !node) return
-    flipped = node.getBoundingClientRect().right > window.innerWidth
+    const r = node.getBoundingClientRect()
+    flipped = r.right > window.innerWidth
+    shift = nudgeUp(r)
   }
 
   $effect(() => {
@@ -159,6 +164,7 @@
   aria-label={label}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
   {style}
+  style:translate={shift ? `0 ${shift}px` : undefined}
   {onkeydown}
   onpointerleave={() => {
     if (openSub < 0) active = -1

@@ -3,8 +3,9 @@
    * An Office XP colour button for a tool strip: the glyph with a bar of the current colour under it applies that
    * colour; the narrow arrow beside it opens a colour palette.
    */
-  import type { Snippet } from 'svelte'
+  import { tick, type Snippet } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
+  import { placePopup } from '../actions/popup'
   import { tooltip } from '../actions/tooltip'
   import ColorPalette from '../atoms/ColorPalette.svelte'
 
@@ -29,12 +30,16 @@
   let open = $state(false)
   let arrow = $state<HTMLButtonElement | null>(null)
   let pos = $state({ left: 0, top: 0 })
+  let popup = $state<HTMLElement | null>(null)
 
   function show(): void {
     if (!arrow || disabled) return
     const r = arrow.parentElement!.getBoundingClientRect()
     pos = { left: r.left, top: r.bottom - 1 }
     open = true
+    tick().then(() => {
+      if (popup) pos = placePopup(r, popup.getBoundingClientRect())
+    })
   }
 
   function pick(color: string): void {
@@ -73,7 +78,7 @@
   </button>
   {#if open}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="popup" style:left="{pos.left}px" style:top="{pos.top}px" onkeydown={(e) => e.key === 'Escape' && ((open = false), arrow?.focus())}>
+    <div class="popup" bind:this={popup} style:left="{pos.left}px" style:top="{pos.top}px" onkeydown={(e) => e.key === 'Escape' && ((open = false), arrow?.focus())}>
       <ColorPalette {value} {allowNone} {noneLabel} {recent} label={title} testid={testid ? `${testid}-palette` : 'color-palette'} onpick={pick} />
     </div>
   {/if}

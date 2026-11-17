@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
+  import { placePopup } from '../actions/popup'
   import type { IconName } from '../atoms/icons'
   import type { MenuItemDef } from './MenuItem'
   import MenuPopup from './MenuPopup.svelte'
@@ -21,6 +23,7 @@
   let button = $state<HTMLButtonElement | null>(null)
   let pos = $state({ left: 0, top: 0 })
   let byKeyboard = $state(false)
+  let popup = $state<HTMLElement | null>(null)
 
   function show(keyboard: boolean): void {
     if (!button || disabled) return
@@ -28,6 +31,10 @@
     pos = { left: r.left, top: r.bottom - 1 }
     byKeyboard = keyboard
     open = true
+    // Measure once rendered (before paint) and flip up / clamp so it never runs off screen.
+    tick().then(() => {
+      if (popup) pos = placePopup(r, popup.getBoundingClientRect())
+    })
   }
 
   function close(refocus: boolean): void {
@@ -67,6 +74,7 @@
   <svg class="arrow" width="7" height="4" viewBox="0 0 7 4" aria-hidden="true"><path d="M0 0h7L3.5 4z" fill="#404040" /></svg>
   {#if open}
     <MenuPopup
+      bind:element={popup}
       {items}
       label={text ?? title}
       autofocus
