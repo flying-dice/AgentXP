@@ -18,7 +18,7 @@ const NO_WINDOW_GROUPS = TOOL_GROUPS.filter((g) => !['browser', 'paint', 'diagra
 describe('enabledToolGroups (policy gates the tools; only output apps need their window)', () => {
   it('has every group but the output apps\' with nothing open', () => {
     expect(enabledToolGroups([])).toEqual(NO_WINDOW_GROUPS)
-    expect(enabledToolGroups([])).toEqual(expect.arrayContaining(['shell', 'fs.read', 'fs.write', 'terminal', 'notepad', 'code', 'wordpad', 'notes', 'events', 'snip', 'recycle']))
+    expect(enabledToolGroups([])).toEqual(expect.arrayContaining(['shell', 'fs.read', 'fs.write', 'terminal', 'notepad', 'show', 'wordpad', 'notes', 'events', 'snip', 'recycle']))
   })
 
   it('adds an output app\'s group while its window is open', () => {
@@ -52,7 +52,7 @@ describe('evaluateToolAccess', () => {
   })
 
   it('allows an open app whose policy is allow', () => {
-    expect(evaluateToolAccess({ state: state(), group: 'code', policy: policy() })).toEqual({ kind: 'allow' })
+    expect(evaluateToolAccess({ state: state(), group: 'notepad', policy: policy() })).toEqual({ kind: 'allow' })
   })
 
   it('asks when the policy says ask, and refuses on deny', () => {
@@ -68,10 +68,10 @@ describe('evaluateToolAccess', () => {
       kind: 'refuse',
       message: closedAppMessage('browser')
     })
-    expect(evaluateToolAccess({ state: state({ paused: true }), group: 'code', policy: policy() })).toEqual({ kind: 'refuse', message: PAUSED_MESSAGE })
+    expect(evaluateToolAccess({ state: state({ paused: true }), group: 'notepad', policy: policy() })).toEqual({ kind: 'refuse', message: PAUSED_MESSAGE })
   })
 
   it('asks for every call while the user is in control', () => {
-    expect(evaluateToolAccess({ state: state({ userInControl: true }), group: 'code', policy: policy() })).toMatchObject({ kind: 'ask' })
+    expect(evaluateToolAccess({ state: state({ userInControl: true }), group: 'notepad', policy: policy() })).toMatchObject({ kind: 'ask' })
   })
 })

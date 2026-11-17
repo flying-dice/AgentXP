@@ -80,6 +80,9 @@ import { NoticeService } from './application/notices/NoticeService'
 import { agentIdentity } from '@shared/identity'
 import { createWordpadTools } from './application/tools/wordpadTools'
 import { createCodeTools } from './application/tools/codeTools'
+import { createShowTools } from './application/tools/showTools'
+import { ShowService } from './application/show/ShowService'
+import { ShowTargets } from './application/show/ShowTargets'
 import { DesktopToolService } from './application/tools/DesktopToolService'
 import { createFsTools } from './application/tools/fsTools'
 import { createNotepadTools } from './application/tools/notepadTools'
@@ -482,6 +485,24 @@ export function composeApp(options: ComposeOptions): AppServices {
   const appRequests = new AppRequestBroker(publisher)
   const notes = new StickyNoteService({ notes: repos.notes, events: publisher, desktops })
   const kanban = new KanbanService({ kanban: repos.kanban, events: publisher })
+  // Show (docs/AGENT_PRESENCE.md, section 5): the agent points the operator at one thing; only the foreground chat moves the view.
+  const shows = new ShowService({
+    desktops,
+    identity: identityOf,
+    ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason),
+    targets: new ShowTargets({
+      desktops,
+      paths: toolPaths,
+      files: { stat: (desktopId, path) => vfs.stat(desktopId, path) },
+      changes: repos.changes,
+      comments: repos.reviews,
+      boards: kanban,
+      requests: appRequests,
+      browser: browsers
+    }),
+    events: publisher
+  })
+  publisher.subscribe((message) => shows.onEvent(message))
   const screen: ScreenCapturer = options.screen ?? {
     capture: () => Promise.reject(new Error('Screen capture is not available here.'))
   }
@@ -512,15 +533,15 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
       ...createCodeTools({
         desktops,
-        changes: repos.changes,
         paths: toolPaths,
         vfs,
         search: fileSearch,
         files: { write: (sessionId, path, text) => sessionFiles.writeVPath(sessionId, path, text) }
       }),
       ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths, terminals: terminalRecorder }),
-      ...createBrowserTools({ desktops, driver: browsers, requests: appRequests }),
-      ...createPaintTools({ desktops, requests: appRequests }),
+      ...createBrowserTools({ desktops, driver: browsers, requests: appRequests, cursor: shows }),
+      ...createShowTools({ shows }),
+      ...createPaintTools({ desktops, requests: appRequests, identity: identityOf }),
       ...createWordpadTools({
         desktops,
         vfs,
@@ -600,6 +621,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     mcp,
     teamService,
     rooms,
+    shows,
     appVersion: options.appVersion ?? '0.0.0'
   })
 

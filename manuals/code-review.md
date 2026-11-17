@@ -199,6 +199,8 @@ The agent uses the tools below to review changes. The permission **Code review**
 | `review_add_comment` | Adds a comment on a line, with a severity. This is output: the comment flashes in the window, and a notice tells you when the window does not have the focus. |
 | `review_submit` | Ends the review with a verdict and a summary. |
 
+The agent can also show you one comment with the `show` tool (target `review-comment`). The Code Review window comes to the front with the comment selected, and a note tells why. If you do not work in the chat of that agent, you get a **Show request** balloon instead. The permission **Agent may show you things** controls it. See **[Using the Desktop](desktop.md)**.
+
 ## 5 - Common Tasks
 
 To review the changes of a project, follow the steps below:

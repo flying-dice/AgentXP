@@ -7,6 +7,7 @@
  */
 import type { A2uiSurfaceTarget } from './a2ui'
 import type { Id, IsoDate } from './models'
+import type { ShowTarget } from './show'
 import type { DriveDto, RemovedProjectDto, VPath } from './vfs'
 
 export const APP_KINDS = [
@@ -255,7 +256,7 @@ export const TOOL_GROUPS = [
   'fs.read', // ACP fs/read_text_file, fs_list, fs_find, code_read, code_search
   'fs.write', // ACP fs/write_text_file, code_edit, code_write
   'notepad', // notepad_open, notepad_read
-  'code', // code_open, code_reveal, code_show_diff
+  'show', // show (and its deprecated aliases code_open, code_reveal, code_show_diff): the agent points the operator at something
   'terminal', // ACP terminal/*, terminal_run, terminal_read
   'browser', // browser_* (the open Browser window)
   'paint', // paint_draw, paint_read, paint_clear, paint_resize (the open Agent Paint window)
@@ -343,7 +344,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', diagrams: 'allow', review: 'allow', scheduler: 'ask', teams: 'ask', rooms: 'ask', settings: 'allow', taskmgr: 'allow', help: 'allow' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', show: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', diagrams: 'allow', review: 'allow', scheduler: 'ask', teams: 'ask', rooms: 'ask', settings: 'allow', taskmgr: 'allow', help: 'allow' },
   openApps: 'allow'
 }
 
@@ -466,6 +467,12 @@ export interface DesktopApi {
    * window has the focus, the pane's chat is the foreground chat (`docs/AGENT_PRESENCE.md`, rule 1).
    */
   notePaneFocus(windowId: Id, active: boolean): Promise<void>
+  /** The operator is done with the show on screen (OK, Reply, Esc, any click or key): the next one waiting shows. */
+  dismissShow(desktopId: Id, showId: string): Promise<void>
+  /** **Show** on a request balloon or its Action Center line: the operator asked, so the target opens with the focus. */
+  acceptShow(desktopId: Id, showId: string): Promise<void>
+  /** **Show again** on a transcript row: the target opens at the spot with the note, without the cursor. */
+  showAgain(desktopId: Id, sessionId: Id, target: ShowTarget, note: string): Promise<void>
 }
 
 export interface AgentProcessDto {

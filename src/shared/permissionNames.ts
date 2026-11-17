@@ -8,7 +8,7 @@ export const PERMISSION_NAMES: Record<Exclude<ToolGroup, 'shell'>, string> = {
   'fs.read': 'Read files',
   'fs.write': 'Write files',
   terminal: 'Run commands',
-  code: 'Code',
+  show: 'Agent may show you things',
   notepad: 'Notepad',
   browser: 'Browser',
   paint: 'Agent Paint',

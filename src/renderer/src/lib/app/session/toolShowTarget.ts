@@ -6,6 +6,7 @@
  */
 import type { ToolCallContentDto, ToolCallLocationDto, ToolKind } from '@shared/models'
 import { joinVPath, normaliseVPath, type VPath } from '@shared/vfs'
+import { parseShowTarget, showLabelOf, showOutcomeOf, showRowTitle, showTargetLabel, type ShowTarget } from '@shared/show'
 
 export type ToolShowTarget =
   /** Code at a file, with the lines to highlight when they are known. */
@@ -16,6 +17,8 @@ export type ToolShowTarget =
   | { kind: 'terminal'; terminalId: string | null; command: string | null }
   /** The Browser window the step drove (`window` of the call, else the front-most Browser). */
   | { kind: 'browser'; windowId: number | null; url: string | null }
+  /** **Show again** of a `show` row: the agent's target and note, opened at the spot for the operator. */
+  | { kind: 'again'; target: ShowTarget; note: string }
 
 export interface ToolShowInput {
   /** The title the agent gave the call (`agentxp.code_read`, `mcp__agentxp__code_read`, `Read src/a.ts`...). */
@@ -35,7 +38,8 @@ export const SHOW_LABELS: Record<ToolShowTarget['kind'], string> = {
   code: 'Show in Code',
   diff: 'Show diff',
   terminal: 'Show in Terminal',
-  browser: 'Show in Browser'
+  browser: 'Show in Browser',
+  again: 'Show again'
 }
 
 type Input = Record<string, unknown>
@@ -54,6 +58,7 @@ function parse(json: string | null | undefined): Input {
 export function agentxpToolName(title: string): string | null {
   const head = title.trim().split(/\s/)[0] ?? ''
   const name = head.replace(/^mcp__.*?__/, '').replace(/^[a-z0-9_-]+\./i, '')
+  if (name === 'show' && head !== 'show') return name // `agentxp.show`, `mcp__agentxp__show` (a bare "show" may be another server's)
   return /^(code|terminal|browser|fs|notepad|wordpad)_[a-z_]+$/.test(name) ? name : null
 }
 
@@ -75,6 +80,22 @@ function firstMatch(result: string | null | undefined): { path: VPath; line: num
 }
 
 /**
+ * The row of a `show` call (Show, `docs/AGENT_PRESENCE.md` section 5): "Showed you auth.ts:40-62: <note>",
+ * "Asked to show you ...", "Not shown (Never): ...", and whether **Show again** fits (not after Never or a decline).
+ * Null for any other tool.
+ */
+export function showRowOf(call: ToolShowInput): { title: string; again: boolean } | null {
+  if (agentxpToolName(call.title) !== 'show') return null
+  const titled = /^[\w.-]+\s+(\{[\s\S]*\})\s*$/.exec(call.title.trim())?.[1]
+  const input: Input = { ...parse(titled), ...parse(call.rawInput) }
+  const target = parseShowTarget(input['target'])
+  const note = text(input['note']) ?? ''
+  const outcome = showOutcomeOf(call.result)
+  const label = showLabelOf(call.result) ?? (target ? showTargetLabel(target) : 'something')
+  return { title: showRowTitle(outcome, label, note), again: target !== null && outcome !== 'never' && outcome !== 'declined' }
+}
+
+/**
  * The places a step can be shown, the main one first (the activity feed opens that one). Empty when there is nothing to
  * show (a search with no match, a path outside the drives, a tool with no place).
  */
@@ -85,6 +106,10 @@ export function toolShowTargets(call: ToolShowInput): ToolShowTarget[] {
   const tool = agentxpToolName(call.title)
   const path = text(input['path']) ? toVPath(String(input['path']), call.cwd) : null
   switch (tool) {
+    case 'show': {
+      const target = parseShowTarget(input['target'])
+      return target ? [{ kind: 'again', target, note: text(input['note']) ?? '' }] : []
+    }
     case 'code_read':
     case 'code_reveal':
     case 'code_open': {

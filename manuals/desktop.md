@@ -16,6 +16,7 @@ This manual describes the parts of the desktop that do not belong to one app: th
   - The Notification Area
   - The Action Center
   - Notices About Agent Work
+  - When the Agent Shows You Something
   - Permission Prompts
   - Other Dialog Boxes
 - 4 - Controls Reference
@@ -122,6 +123,28 @@ AgentXP tells you once about agent work that you did not watch. A notice is a ba
 
 AgentXP does not show a notice for the chat that you work in. This is the Chat window that has the focus, or the chat pane of a window that has the focus, after you clicked or typed in that pane. AgentXP also does not show a notice for a member of the Team Chat room that has the focus. A change in a window that has the focus appears there at once: new review comments and cards that the agent changed have an orange frame for a moment. AgentXP tells nothing about a turn that you stopped with **Stop** or **Pause all agents**.
 
+### When the Agent Shows You Something
+
+An agent can point you at one thing on purpose, with a reason. This is a show. The agent uses the `show` tool for it. The target can be lines of a file, a change, a review comment, a Kanban card, a shape in Agent Diagrams, an element of a Browser page, or an app window.
+
+If you work in the chat of that agent, the show happens at once:
+
+1. The window of the target comes to the front, at the exact spot. For example, Code opens the file and marks the lines. The keyboard focus stays in your chat, so you can go on typing.
+2. The agent cursor moves to the spot. The agent cursor is an arrow in the color of the agent, with the name of the agent next to it. It moves there in about a third of a second.
+3. A note appears next to the spot. The note has the color square and the name of the agent, the target (for example **auth.ts:40-62**), and the reason. Click **OK** to close the note. Click **Reply** to put the note, quoted, in the message box of that chat.
+
+The marked lines, comment, or card stay selected after the note closes. The agent cursor fades after about 1.5 seconds without movement. Press Esc, click anywhere else, or press any key to close the note. A key or a click also stops the agent cursor if it is still moving.
+
+If you do not work in the chat of that agent, nothing on your screen moves. A balloon **Show request** appears instead, for example **Builder wants to show you auth.ts:40-62: Here the token is checked**. Click **Show** to see it. Click **Not now** to close the balloon. The request stays in the Action Center, with its **Show** button.
+
+AgentXP shows one thing at a time. Other shows wait until you close the note. The Action Center tells how many things wait, for example **2 things to look at**.
+
+Each show is a line in the chat, for example **Showed you auth.ts:40-62: Here the token is checked**. Click **Show again** on that line to open the target at the spot again. See **[Using Chat](chat.md)**.
+
+You can turn shows off. In **[Control Center](control-centre.md)**, set **Agent may show you things** to **Ask** or **Never**. **Pause all agents** closes the note, hides the agent cursors, and removes the shows that wait.
+
+The agent cursor appears only when an agent shows you something, when it clicks or types in a Browser window that you can see while you work in its chat, and when you follow an agent. If your computer asks for less motion (the **prefers-reduced-motion** setting), the agent cursor jumps to the spot and shows a short ring instead of moving.
+
 ### Permission Prompts
 
 AgentXP asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. The permission dialog box opens by itself over the whole desktop and dims it, whichever window or chat asked, and it waits for your answer. The oldest request comes first. A request also appears in the Action Center, where **Review** opens its box again.
@@ -204,7 +227,22 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Balloon button | Runs the action that the balloon offers, for example Open Task Manager, Open Computer, Open review, or Open chat. | `balloon-action` |
 | Balloon agent | Shows the color of the agent that a notice is about. Point to it to see the name. | `balloon-agent` |
 | Balloons waiting | Tells how many balloons wait behind this one, for example 2 more. | `balloon-more` |
-| Notice announcer | Reads each new notice aloud to a screen reader. It is not visible. | `notice-announcer` |
+| Balloon second button | Closes a show request balloon. The request stays in the Action Center. Its text is Not now. | `balloon-secondary` |
+| Notice announcer | Reads each new notice and each show aloud to a screen reader. It is not visible. | `notice-announcer` |
+
+### Agent cursor and show note
+
+| Name | What it does | data-testid |
+|---|---|---|
+| Agent cursor | The arrow of an agent that shows you something. `data-agent` is the name of the agent. `data-state` is ready, gliding, arrived, idle (faded), cancelled (you took over), or hidden. `data-motion` is glide, or reduced when the agent cursor jumps. | `agent-cursor` |
+| Agent name | The name of the agent next to its arrow. | `agent-cursor-name` |
+| Arrival ring | A short ring where the agent cursor jumped to, when less motion is set. | `agent-cursor-pulse` |
+| Show note | The note next to the spot. `data-agent` is the name of the agent. | `show-callout` |
+| Show note agent | The color square of the agent. Point to it to see the name. | `show-callout-agent` |
+| Show note target | What the agent shows, for example auth.ts:40-62. | `show-callout-label` |
+| Show note text | Why the agent shows it. | `show-callout-note` |
+| OK | Closes the note. | `show-callout-ok` |
+| Reply | Closes the note and puts it, quoted, in the message box of that chat. | `show-callout-reply` |
 
 ### Start menu
 
@@ -239,7 +277,8 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Message title | Shows the title of a notice, for example New review comments. | `action-center-message-title` |
 | Message text | Shows the text of a message. | `action-center-message-text` |
 | Message agent | Shows the color of the agent that a notice is about. Point to it to see the name. | `action-center-message-agent` |
-| Message button | Runs the action of a message, for example Open review or Open board. | `action-center-message-action` |
+| Message button | Runs the action of a message, for example Open review, Open board, or Show. | `action-center-message-action` |
+| Things to look at | Tells how many shows wait and how many show requests you did not answer, for example 2 things to look at. | `action-center-shows` |
 | Open Control Center | Opens Control Center. | `action-center-open-control-centre` |
 | Open Event Viewer | Opens Event Viewer, the list of what happened. | `action-center-open-event-viewer` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |

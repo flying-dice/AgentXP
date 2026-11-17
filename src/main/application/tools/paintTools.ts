@@ -1,3 +1,4 @@
+import type { AgentIdentity } from '@shared/identity'
 import type { Id } from '@shared/models'
 import type { ToolHandlers } from './catalog'
 import { parseImageDataUrl } from './dataUrl'
@@ -8,19 +9,21 @@ import { pickWindow } from './windows'
 export interface PaintToolsDeps {
   desktops: Pick<DesktopOps, 'state'>
   requests: AppRequests
+  /** Who draws (`agentIdentity`): the Paint window's agent cursor carries the name and colour. */
+  identity?: (sessionId: Id) => AgentIdentity
 }
 
 /** paint_draw, paint_read, paint_clear, paint_resize: the renderer's Paint window does the drawing (AppRequest). */
-export function createPaintTools({ desktops, requests }: PaintToolsDeps): ToolHandlers<'paint_draw' | 'paint_read' | 'paint_clear' | 'paint_resize'> {
+export function createPaintTools({ desktops, requests, identity }: PaintToolsDeps): ToolHandlers<'paint_draw' | 'paint_read' | 'paint_clear' | 'paint_resize'> {
   const ask = (desktopId: Id, windowId: number | undefined, method: string, params: unknown): Promise<unknown> => {
     const window = pickWindow(desktops.state(desktopId), 'paint', windowId)
     return requests.request(desktopId, window.id, method, params)
   }
 
   return {
-    paint_draw: ({ ops, windowId }, { desktopId }) =>
+    paint_draw: ({ ops, windowId }, { desktopId, sessionId }) =>
       attempt(async () => {
-        await ask(desktopId, windowId, 'draw', { ops })
+        await ask(desktopId, windowId, 'draw', { ops, ...(identity ? { agent: identity(sessionId) } : {}) })
         return textResult(`Drew ${ops.length} operation${ops.length === 1 ? '' : 's'}. Call paint_read to see the result.`)
       }),
 

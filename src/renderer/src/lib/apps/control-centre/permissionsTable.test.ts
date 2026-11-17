@@ -9,7 +9,7 @@ describe('permissionsTable', () => {
       'Read files',
       'Write files',
       'Run commands',
-      'Code',
+      'Agent may show you things',
       'Notepad',
       'Browser',
       'Agent Paint',
@@ -58,7 +58,7 @@ describe('permissionsTable', () => {
   it('splits the rows into the two blocks of the page', () => {
     const groups = permissionGroups(DEFAULT_TOOL_POLICY)
     expect(groups.map((g) => g.title)).toEqual(['What the agent may do', 'Apps the agent may use'])
-    expect(groups[0].rows.map((r) => r.key)).toEqual(['fs.read', 'fs.write', 'terminal'])
+    expect(groups[0].rows.map((r) => r.key)).toEqual(['fs.read', 'fs.write', 'terminal', 'show'])
     expect(groups[1].rows.at(-1)?.key).toBe('openApps')
     expect(groups.flatMap((g) => g.rows)).toHaveLength(22)
   })
@@ -68,6 +68,13 @@ describe('permissionsTable', () => {
     expect(permissionRows(all).every((r) => r.decision === 'deny')).toBe(true)
     expect(DEFAULT_TOOL_POLICY.groups.terminal).toBe('ask')
     expect(policiesEqual(withAllDecisions(DEFAULT_TOOL_POLICY, 'ask'), DEFAULT_TOOL_POLICY)).toBe(false)
+  })
+
+  it('Agent may show you things reads Always, Ask, Never', () => {
+    const show = permissionRows(DEFAULT_TOOL_POLICY).find((r) => r.key === 'show')!
+    expect(show.items?.map((i) => i.label)).toEqual(['Always', 'Ask', 'Never'])
+    expect(decisionNote(show.decision, show.items)).toBe('Always: runs without asking')
+    expect(settingTestid('show')).toBe('permissions-setting-show')
   })
 
   it('names the test id of a setting box', () => {

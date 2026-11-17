@@ -13,7 +13,7 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   'fs.read': 'Reading files',
   'fs.write': 'Writing files',
   notepad: 'Notepad tools',
-  code: 'Code tools',
+  show: 'Showing you things',
   terminal: 'Running commands',
   browser: 'Browser tools',
   paint: 'Agent Paint tools',

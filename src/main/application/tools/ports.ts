@@ -69,6 +69,8 @@ export interface BrowserDriver {
   select(windowId: Id, ref: number, option: string, guard: BrowserGuard): Promise<ActionResult>
   /** The role and accessible name of the element a ref points to (for the words of the "Agent is using this page" bar). */
   elementOf(windowId: Id, ref: number): Promise<{ role: string; name: string } | undefined>
+  /** Scrolls the element of a ref into view and returns its box (the agent cursor goes there before a click; `show` of a page element). */
+  locate(windowId: Id, ref: number): Promise<PageBox>
   back(windowId: Id): Promise<PageInfo>
   forward(windowId: Id): Promise<PageInfo>
   reload(windowId: Id): Promise<PageInfo>

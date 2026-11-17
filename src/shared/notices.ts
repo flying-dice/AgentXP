@@ -13,8 +13,10 @@ import type { Id } from './models'
  * - `board`: an agent changed Kanban cards.
  * - `output`: an agent drew or wrote in an output app (Agent Diagrams, Paint, WordPad) whose window is closed or behind.
  * - `summary`: a turn of a chat the operator was not watching ended (changed files, ran commands, stopped with an error).
+ * - `show`: a chat the operator is not in wants to show them something (`docs/AGENT_PRESENCE.md`, section 5): **Show**
+ *   and **Not now**.
  */
-export type NoticeKind = 'review' | 'board' | 'output' | 'summary'
+export type NoticeKind = 'review' | 'board' | 'output' | 'summary' | 'show'
 
 /** Where a notice's button takes the operator. The operator asked, so it may open and focus. */
 export type NoticeTarget =
@@ -28,6 +30,10 @@ export type NoticeTarget =
   | { kind: 'changes'; sessionId: Id; path: string }
   /** An output app's window (its existing window, else a new one). */
   | { kind: 'window'; app: AppKind; windowId?: Id }
+  /** A show request: the operator accepts it (`desktop.acceptShow`), the target opens at the spot with the note. */
+  | { kind: 'show'; showId: string }
+  /** "Not now": the balloon goes; the request stays in the Action Center. */
+  | { kind: 'later' }
 
 export interface NoticeAction {
   id: string
@@ -50,7 +56,7 @@ export interface NoticeDto {
   identity?: AgentIdentity
   /** The session it is about. */
   sessionId?: Id
-  /** Exactly one for the notices main sends. */
+  /** Exactly one for the notices of output and turns; a show request has **Show** and **Not now**. */
   actions: NoticeAction[]
   /** ISO time. */
   at: string

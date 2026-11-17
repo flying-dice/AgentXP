@@ -1,6 +1,6 @@
 # Agent presence: Work, Show, Output
 
-Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions) and PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking) have landed. It replaces "tools follow
+Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions), PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking) and PR 3 (`show`, the agent cursor, the note callout, show requests) have landed. It replaces "tools follow
 apps" (`DESKTOP_DESIGN.md` sections 1 and 3) as the rule for how agents appear on the desktop. The UX rules for
 contributors are in `.claude/skills/agent-presence-ux/SKILL.md`; this note is the design and the build plan.
 
@@ -109,6 +109,32 @@ row only.
 
 `code_open`, `code_reveal` and `code_show_diff` become aliases of `show` for one release, then go.
 
+As built (PR 3, `src/main/application/show/ShowService.ts` and `ShowTargets.ts`, tool handlers in `tools/showTools.ts`):
+
+- The group `show` replaces the old `code` group (its only tools were the three aliases). A stored policy for `code` is
+  ignored. The Control Center row reads **Agent may show you things** with Always, Ask and Never.
+- `ShowTargets.check` proves the target is there (file, recorded change, comment and its open Code Review window, card,
+  shape through the Diagrams app request `show` with `check`, page ref through `driver.elementOf`, window) and names it.
+  A stale target is a tool error and nothing opens. `ShowTargets.land` opens or raises the window and goes to the spot.
+- A foreground show raises the target window **without taking the keyboard focus** (`DesktopService.presentWindow`):
+  the chat stays the foreground chat and the operator keeps typing. A request the operator accepts (**Show**) and
+  **Show again** raise and focus the window, because the operator asked. A new window obeys **Agent may open apps**.
+- Code gets exactly the lines as `visibleLines` (the highlight), not a padded range.
+- Never returns `Not shown (Never): ...`, not a refusal. Ask (and **Ask before every action**) asks through the tool
+  gateway after the target was checked. The gateway itself does not gate the `show` group (only Pause does).
+- Events: `desktop.show` (show id, session, identity, target, label, note, the resolved spot, `cursor`),
+  `desktop.showEnded` (dismissed, replaced, paused), `desktop.showQueue` (shows waiting plus unanswered requests) and
+  `desktop.agentCursor` (Browser). The renderer tells main `desktop.dismissShow`, `acceptShow` and `showAgain`.
+- The queue moves on when the operator dismisses the show on screen; a queued show whose target went away is skipped.
+  **Not now** only closes the balloon: the request stays in the Action Center with **Show**. Pause drops the show on
+  screen, the queue and the requests.
+- Each tool result starts with a fixed prefix (`SHOW_RESULT` in `src/shared/show.ts`: "Shown now:", "Queued:", "Sent as
+  a request:", "Not shown (Never):", "Not shown (declined):") and the label on the first line. The transcript row reads
+  it back ("Showed you ...", "Will show you ...", "Asked to show you ...") and offers **Show again**
+  (`tool-call-show-again`) except after Never or a decline.
+- When a show arrives, the renderer flushes a pending view report of the target window and sends main's view again, so a
+  stale report (Code's scroll after an earlier show) cannot undo the new spot.
+
 ## 6. Output: it lands in the app, and you hear about it once
 
 - **Window open.** The change appears live with a short cue: new review comments flash their gutter marker, moved
@@ -164,6 +190,24 @@ As built (PR 2, `src/main/application/notices/NoticeService.ts`):
   arrives first and then the click happens. That is the one place where the cursor shows real control.
 - The cursor appears only for Show, Browser actions and Follow. Never for background Work.
 
+As built (PR 3):
+
+- `kit/organisms/AgentCursor.svelte` (story `Organisms/AgentCursor`): `data-agent`, `data-state` (ready, gliding,
+  arrived, idle, cancelled, hidden) and `data-motion` (glide, reduced). Paint uses it for its drawing cursor, with the
+  agent identity that `paint_draw` now sends.
+- `lib/desktop/ShowOverlay.svelte` is the layer (fixed, z-index 160000, click-through) with one cursor per agent and the
+  note callout (`ShowCallout.svelte`, test ids `show-callout*`). The spot is resolved to a rectangle in
+  `lib/desktop/showResolvers.ts` (pure geometry with tests: union of line rows, clipping, the Browser box offset by the
+  page area marked `data-show-page`, the callout placement that stays inside the desktop). The resolver waits until the
+  rectangle is still for a few frames, so the window has opened and the lines have scrolled in.
+- The glide starts at the agent's last cursor position, else the middle of its chat window or pane. The cursor fades
+  after `CURSOR_IDLE_MS` (1.5 s). Any operator pointer-down or key-down outside the callout stops a glide and dismisses
+  the show; focus is never moved. The show is announced in the existing `aria-live` region.
+- Browser: `BrowserDriver.locate` scrolls the element into view and returns its box before `browser_click`,
+  `browser_type` and `browser_select`. `ShowService.pointAt` publishes it only for the foreground chat with the Browser
+  on screen (Follow joins in PR 4) and waits the glide (`BROWSER_POINT_WAIT_MS`) before the action. The orange ring stays
+  as the landing cue.
+
 ## 9. Identity
 
 `AgentIdentity { name, color }`, resolved in one place:
@@ -173,7 +217,7 @@ As built (PR 2, `src/main/application/notices/NoticeService.ts`):
 
 As built (PR 2): `agentIdentity()` in `src/shared/identity.ts`, resolved in main by compose (`TeamRoomService.memberOfSession`,
 then the agent row). Balloons and Action Center messages show it now; feed rows, tool rows, the cursor and the top bar
-take it in PR 3 and PR 4.
+take it in PR 3 (the cursor and the note callout) and PR 4.
 
 ## 10. Architecture changes
 
@@ -208,7 +252,7 @@ key in the pane, and `false` when the pane is hidden).
 **Notices** (PR 2). The unused `status.message` event is gone. `desktop.notice { desktopId, id, kind, title, text,
 identity, sessionId, actions[], at }` (`src/shared/notices.ts`) is published by `NoticeService` to the owning desktop
 only. It hears turn starts and ends from `SessionService.observeTurns`, the app events from the publisher, and the
-output tools of Diagrams, Paint and WordPad from the tool service log. Background show requests join it in PR 3. The
+output tools of Diagrams, Paint and WordPad from the tool service log. Background show requests joined it in PR 3 (`ShowService`, notice kind `show`). The
 balloon is a queue (`lib/desktop/balloonQueue.ts`: a notice waits, a shell balloon shows at once) with history in the
 Action Center; `ActionCenterMessage` has generic `actions`; `Balloon` is a kit molecule. An A2UI window refused by
 **Agent may open apps** now tells the agent that it was not opened and why, not that the user closed it.
@@ -225,7 +269,7 @@ open behind the operator. Tool descriptions that promise a window are rewritten.
 | 0 | This note, the `agent-presence-ux` skill, the glide exception, journeys J10 (rewritten) and J32 to J34, panel tasks | docs only |
 | 1 | Headless Work: retire the gate, strip side effects, `openOutputWindow`, Browser and WordPad stop stealing focus, new instructions, **Show in...** on tool rows and feed rows, top-bar working link, README chapter 6 and manuals | `tools.test.ts`, `AppToolPolicy.test.ts`, `desktop-tools.integration.test.ts`, `catalog.test.ts`, `e2e/search.e2e.ts`, `e2e/scripted-desktop-tools.e2e.ts`, `e2e/desktop-tools.e2e.ts`, `e2e/scripted-demo.e2e.ts` |
 | 2 (landed) | Notices and Output: `desktop.notice`, balloon queue and history, Action Center actions, turn summaries, change cues in Code Review and Kanban, `AgentIdentity`, foreground tracking (moved forward from PR 3) | `NoticeService.test.ts`, `e2e/notices.e2e.ts` |
-| 3 | Show and the cursor: `show`, `ShowService`, foreground rule (uses PR 2's `foregroundSessionId`), queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
+| 3 (landed) | Show and the cursor: `show`, `ShowService`, foreground rule (uses PR 2's `foregroundSessionId`), queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
 | 4 | Follow and team presence: Follow toggle, projection with typing pause, a cursor per member, member step text | `e2e/follow.e2e.ts` |
 
 Each PR follows `verify-change` and `agent-presence-ux` and runs every gate in `AGENTS.md`.

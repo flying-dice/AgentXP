@@ -70,20 +70,26 @@ Other agents can have other modes. You can type the id of a mode in the box. If 
 
 ### The Permissions Page
 
-The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
+The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**. The row **Agent may show you things** has the choices **Always**, **Ask**, and **Never**.
 
-- **What the agent may do** – Read files, Write files, and Run commands. Point at **Run commands** to see "Run commands (Terminal)".
-- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Agent Diagrams, Code review, Task Scheduler, Teams, Team chat, Control Center, Task Manager, Help, and Agent may open apps. **Agent may open apps** applies to every window that the agent opens. Such a window appears behind the window that you use and does not take the focus.
+- **What the agent may do** – Read files, Write files, Run commands, and Agent may show you things. Point at **Run commands** to see "Run commands (Terminal)".
+- **Apps the agent may use** – Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Agent Diagrams, Code review, Task Scheduler, Teams, Team chat, Control Center, Task Manager, Help, and Agent may open apps. **Agent may open apps** applies to every window that the agent opens. Such a window appears behind the window that you use and does not take the focus.
 
 Each row has two lines. The first line shows the name and the setting. The second line tells what the row covers. The table has no sideways scroll, so you can read every line at the default size of the window.
 
-Each row is separate. **Write files** covers changing files in any app. **Code** and **Notepad** cover only what their rows list. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
+Each row is separate. **Write files** covers changing files in any app. **Notepad** covers only what its row lists. The **Notepad** row reads: open and read documents. Saving a file uses **Write files**.
 
 The top bar shows chips with the same names, for example **Run commands: Ask first**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, the same setting as the row. The setting alone decides. No app has to be open. Point to a chip to read the setting. Click a chip to open this page.
 
 - **Allow** – The agent acts without a question.
 - **Ask** – A request appears in the Action Center.
 - **Deny** – The agent cannot act.
+
+**Agent may show you things** controls the shows of the agent: the agent opens a file, a change, a comment, a card, a shape, or a page element at the spot, with a note that tells why. See **[Using the Desktop](desktop.md)**.
+
+- **Always** – This is the default. A chat that you work in shows you the thing at once. Any other chat sends a show request.
+- **Ask** – The chat asks you first, like a permission request. The box **Ask before every action (this session only)** has the same effect.
+- **Never** – Nothing moves. The line in the chat says **Not shown (Never)**.
 
 To set all rows at once, choose a setting in **Set every permission to** and click **Set all**. The note **Not applied yet** shows until you save. Click **OK** or **Apply** to save. The line **Saved. New requests use these settings.** shows for four seconds. Click **Cancel** to drop your changes.
 
@@ -184,14 +190,14 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | MCP dialog problem | Says what is missing. | `mcp-dialog-problem` |
 | Permission table | The permissions in two blocks. | `permissions-table` |
 | Permissions page | The whole page: help, **Set every permission to**, the list and the buttons. The attribute `data-narrow` is true when the page is narrower than 520 px. The page scrolls when the window is short. | `permissions-page` |
-| Permissions note | The box above the list that says what each row covers, including Code and Notepad, and what the top bar box **Ask before every action (this session only)** does. In a page narrower than 520 px it shows two sentences. | `permissions-callout` |
+| Permissions note | The box above the list that says what each row covers, including Notepad, and what the top bar box **Ask before every action (this session only)** does. In a page narrower than 520 px it shows two sentences. | `permissions-callout` |
 | More | Shows the whole note in a narrow page. | `permissions-help-more` |
 | Less | Shortens the note again. | `permissions-help-less` |
 | Permission block | The heading of a block. | `permissions-group` |
 | Permission row | One permission. The row that a top bar chip asked for is highlighted. | `permissions-row` |
 | What it covers | The second line of a row. It tells what the permission covers. | `permissions-covers` |
 | What the setting does | The third line of a row. **Allow** runs without asking, **Ask** asks you each time, **Deny** never runs. | `permissions-mode` |
-| Permission list | Sets Allow, Ask, or Deny for one row. The name ends with the row, for example `fs-read`. | `permissions-setting-*` |
+| Permission list | Sets Allow, Ask, or Deny for one row (Always, Ask, or Never for Agent may show you things). The name ends with the row, for example `fs-read` or `show`. | `permissions-setting-*` |
 | Permission list entry | One choice of a list. The name ends with the row and the choice, for example `fs-read-option-deny`. | `permissions-setting-*-option-*` |
 | Set every permission to | Chooses a setting for Set all. | `permissions-set-all-value` |
 | Set every permission entry | One choice of that list, for example `allow`, `ask` or `deny`. | `permissions-set-all-value-option-*` |

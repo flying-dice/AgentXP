@@ -36,6 +36,9 @@ import { StickyNoteService } from '../desktop/StickyNoteService'
 import { createShellTools } from './shellTools'
 import { createChatTools } from './chatTools'
 import { createTerminalTools } from './terminalTools'
+import { createShowTools } from './showTools'
+import { ShowService } from '../show/ShowService'
+import { ShowTargets } from '../show/ShowTargets'
 import { ToolPaths } from './ToolPaths'
 import type { TerminalActivity } from '../ports'
 import { textResult, type ToolResult } from './types'
@@ -95,7 +98,12 @@ class FakeDriver implements BrowserDriver {
     return this.act(`select:${ref}:${option}`, guard)
   }
   async elementOf(_w: number, ref: number) {
+    if (ref === 404) return undefined
     return ref === 2 ? { role: 'textbox', name: 'Message' } : { role: 'button', name: 'Send' }
+  }
+  async locate(_w: number, ref: number) {
+    this.calls.push(`locate:${ref}`)
+    return { x: 10, y: 20, width: 30, height: 40 }
   }
   async back() {
     return this.go('back')
@@ -129,6 +137,7 @@ let captures: (Bounds | undefined)[]
 let restored: number[]
 let eventLog: ProtocolEventLog
 let noteService: StickyNoteService
+let shows: ShowService
 
 const run = (tool: string, args: unknown = {}): Promise<ToolResult> => tools.call({ sessionId, desktopId }, tool, args)
 
@@ -219,6 +228,24 @@ beforeEach(async () => {
     list: () => [{ id: 4, desktopId, sessionId, path: 'a.txt', revertedText: 'x', restoredText: null, revertedAt: '2026-01-01T00:00:00.000Z' }],
     restore: async (id: number) => void restored.push(id)
   }
+  const kanbanService = new KanbanService({ kanban: new SqliteKanbanRepository(f.db), events: f.publisher })
+  shows = new ShowService({
+    desktops,
+    identity: () => ({ name: 'Builder', color: '#2a6' }),
+    ask,
+    targets: new ShowTargets({
+      desktops,
+      paths,
+      files: { stat: (id, path) => f.vfs.stat(id, path) },
+      changes: { list: () => changes },
+      comments: { getComment: () => null },
+      boards: kanbanService,
+      requests,
+      browser: driver
+    }),
+    events: f.publisher,
+    sleep: async () => {}
+  })
   tools = new DesktopToolService({
     states: desktops,
     log: {
@@ -233,7 +260,6 @@ beforeEach(async () => {
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
       ...createCodeTools({
         desktops,
-        changes: { list: () => changes },
         paths,
         vfs: f.vfs,
         search: new FileSearch(f.vfs),
@@ -247,6 +273,7 @@ beforeEach(async () => {
       }),
       ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths, terminals: { record: (id, a) => void recorded.push([id, a]) }, newTerminalId: () => `run-${++runCounter}` }),
       ...createBrowserTools({ desktops, driver, requests: browserRequests }),
+      ...createShowTools({ shows }),
       ...createPaintTools({ desktops, requests }),
       ...createWordpadTools({
         desktops,
@@ -263,7 +290,7 @@ beforeEach(async () => {
         files: { write: async (sessionId, path, text) => void written.push({ sessionId, path, text }) }
       }),
       ...createNotesTools({ notes: noteService }),
-      ...createBoardTools({ kanban: new KanbanService({ kanban: new SqliteKanbanRepository(f.db), events: f.publisher }) }),
+      ...createBoardTools({ kanban: kanbanService }),
       ...createEventsTools({ log: eventLog }),
       ...createSnipTools({
         desktops,
@@ -288,7 +315,7 @@ describe('tool catalog', () => {
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find', 'code_read', 'code_search'])
     expect(byGroup('fs.write')).toEqual(['code_edit', 'code_write'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
-    expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
+    expect(byGroup('show')).toEqual(['show', 'code_open', 'code_reveal', 'code_show_diff'])
     expect(byGroup('terminal')).toEqual(['terminal_run', 'terminal_read'])
     expect(byGroup('browser')).toEqual([
       'browser_navigate',
@@ -335,11 +362,11 @@ describe('tool catalog', () => {
     expect(byGroup('settings')).toHaveLength(18)
     expect(byGroup('taskmgr')).toEqual(['taskmgr_chats', 'taskmgr_processes', 'taskmgr_terminals', 'taskmgr_open_chat', 'taskmgr_end_task', 'taskmgr_end_process'])
     expect(byGroup('help')).toEqual(['help_search', 'help_read'])
-    expect(TOOL_SPECS).toHaveLength(129)
+    expect(TOOL_SPECS).toHaveLength(130)
   })
 
   it('lists every group but those of closed output apps, falling back to shell for an unknown desktop', () => {
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'fs.read', 'fs.write', 'notepad', 'code', 'terminal', 'wordpad', 'notes', 'events', 'snip', 'recycle', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'fs.read', 'fs.write', 'notepad', 'show', 'terminal', 'wordpad', 'notes', 'events', 'snip', 'recycle', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'])
     desktops.openWindow({ desktopId, app: 'browser' })
     expect(tools.enabledGroups(desktopId)).toContain('browser')
     expect(tools.enabledGroups(999)).toEqual(['shell'])
@@ -541,43 +568,130 @@ describe('notepad and code tools', () => {
     expect((await run('notepad_open', { path: 'missing.txt' })).isError).toBe(true)
   })
 
-  it('code_open and code_reveal drive the singleton Code window as the agent', async () => {
-    desktops.openWindow({ desktopId, app: 'code' })
+  it('show from the foreground chat: Code comes forward at exactly those lines, the focus stays in the chat', async () => {
     const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
     desktops.focusWindow(chat.id)
-    await run('code_open', { path: 'src/app.ts', line: 40 })
+    const result = await run('show', { target: { kind: 'file', path: 'src/app.ts', lines: [40, 42] }, note: 'Here the token is checked' })
+    expect(textOf(result)).toMatch(/^Shown now: app\.ts:40-42\n/)
+    const code = desktops.windowsOf(desktopId, 'code')[0]!
+    expect(code.view).toMatchObject({ app: 'code', tabs: ['E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', selection: { startLine: 40, endLine: 42 }, visibleLines: [40, 42] })
+    const state = desktops.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id) // the operator keeps typing in the chat
+    expect(state.windows.at(-1)?.id).toBe(code.id) // the target is in front
+    expect(f.publisher.payloads('desktop.show').at(-1)).toMatchObject({ label: 'app.ts:40-42', note: 'Here the token is checked', identity: { name: 'Builder' }, spot: { kind: 'lines', windowId: code.id, lines: [40, 42] }, cursor: true })
+  })
+
+  it('show from a chat the operator is not in: a request notice with Show and Not now, nothing moves', async () => {
+    desktops.openWindow({ desktopId, app: 'notepad' }) // the operator works in Notepad
+    const before = screen()
+    const result = await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'The setup steps changed' })
+    expect(textOf(result)).toMatch(/^Sent as a request: README\.md\n/)
+    expect(screen()).toBe(before)
+    expect(desktops.windowsOf(desktopId, 'code')).toEqual([])
+    const notice = f.publisher.payloads('desktop.notice').at(-1)!
+    expect(notice).toMatchObject({ kind: 'show', text: 'Builder wants to show you README.md: The setup steps changed' })
+    expect(notice.actions.map((a) => a.label)).toEqual(['Show', 'Not now'])
+    const showId = notice.actions[0]!.target.kind === 'show' ? notice.actions[0]!.target.showId : ''
+    await shows.accept(desktopId, showId)
+    // The operator asked: Code opens in front with the focus.
+    const code = desktops.windowsOf(desktopId, 'code')[0]!
+    expect(desktops.state(desktopId).focusedWindowId).toBe(code.id)
+  })
+
+  it('show refuses a stale target and opens nothing; Never keeps the transcript row only', async () => {
+    const before = screen()
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'missing.ts' }, note: 'x' }))).toMatch(/There is no file E:\\missing\.ts/)
+    expect(textOf(await run('show', { target: { kind: 'change', path: 'src/app.ts' }, note: 'x' }))).toMatch(/no recorded change/)
+    expect(textOf(await run('show', { target: { kind: 'page-element', ref: 1 }, note: 'x' }))).toMatch(/Browser window is closed/)
+    expect(textOf(await run('show', { target: { kind: 'card', boardId: 'Nope', cardId: 1 }, note: 'x' }))).toMatch(/does not exist/)
+    expect(screen()).toBe(before)
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, show: 'deny' } })
+    const never = await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'x' })
+    expect(never.isError).toBeUndefined()
+    expect(textOf(never)).toMatch(/^Not shown \(Never\): README\.md/)
+    expect(screen()).toBe(before)
+  })
+
+  it('show with the policy at Ask asks first; a declined show moves nothing', async () => {
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, show: 'ask' } })
+    allowAsk = false
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'Look' }))).toMatch(/^Not shown \(declined\)/)
+    expect(asked).toEqual(['Show you README.md'])
+    expect(desktops.windowsOf(desktopId, 'code')).toEqual([])
+    allowAsk = true
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'Look' }))).toMatch(/^Shown now/)
+  })
+
+  it('code_open, code_reveal and code_show_diff are aliases of show (the foreground rule applies)', async () => {
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    expect(textOf(await run('code_open', { path: 'src/app.ts', line: 40 }))).toMatch(/^Shown now: app\.ts:40/)
     let view = desktops.windowsOf(desktopId, 'code')[0]!.view
-    expect(view).toMatchObject({ app: 'code', tabs: ['E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', selection: { startLine: 40, endLine: 40 }, visibleLines: [35, 65] })
-    await run('code_reveal', { path: 'README.md', startLine: 3, endLine: 9 })
+    expect(view).toMatchObject({ app: 'code', activePath: 'E:\\src\\app.ts', visibleLines: [40, 40] })
+    const first = f.publisher.payloads('desktop.show').at(-1)!
+    expect(first.note).toBe('The agent pointed you here without saying why.')
+    // A second show waits until the operator is done with the first.
+    expect(textOf(await run('code_reveal', { path: 'README.md', startLine: 3, endLine: 9, note: 'The intro' }))).toMatch(/^Queued: README\.md:3-9/)
+    await shows.dismiss(desktopId, first.showId)
     view = desktops.windowsOf(desktopId, 'code')[0]!.view
-    expect(view).toMatchObject({ tabs: ['E:\\src\\app.ts', 'E:\\README.md'], activePath: 'E:\\README.md', selection: { startLine: 3, endLine: 9 } })
-    expect(desktops.windowsOf(desktopId, 'code')).toHaveLength(1)
-    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id) // shown behind; the focus stays where the user is
+    expect(view).toMatchObject({ activePath: 'E:\\README.md', visibleLines: [3, 9] })
+    expect(f.publisher.payloads('desktop.showEnded').at(-1)).toMatchObject({ showId: first.showId, reason: 'dismissed' })
+    changes = [{ id: 11, sessionId, path: 'E:\\src\\app.ts', kind: 'modified', additions: 3, deletions: 1, originalText: '', currentText: '' } as FileChangeDto]
+    await shows.dismiss(desktopId, f.publisher.payloads('desktop.show').at(-1)!.showId)
+    expect(textOf(await run('code_show_diff', { path: 'e:\\SRC\\app.ts', note: 'The fix' }))).toMatch(/^Shown now: the change of app\.ts/)
+    expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
     expect(textOf(await run('code_open', { path: 'G:\\x.ts' }))).toMatch(/Drive G: is not plugged in/)
   })
 
-  it('code_open opens a Code window behind the user\'s window and follows "Agent may open apps"', async () => {
-    const chat = desktops.state(desktopId).focusedWindowId
+  it('show opens a new window only when "Agent may open apps" allows it', async () => {
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
     desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
-    expect(textOf(await run('code_open', { path: 'README.md' }))).toMatch(/blocked by the permission policy/)
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'Look' }))).toMatch(/blocked by the permission policy/)
     expect(desktops.windowsOf(desktopId, 'code')).toEqual([])
-    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'ask' })
-    allowAsk = false
-    expect(textOf(await run('code_open', { path: 'README.md' }))).toMatch(/declined to open the Code app/)
-    allowAsk = true
-    expect((await run('code_open', { path: 'README.md' })).isError).toBeUndefined()
-    expect(asked).toEqual(['Open the Code app', 'Open the Code app'])
-    expect(desktops.windowsOf(desktopId, 'code')[0]).toMatchObject({ openedBy: 'agent', attention: true })
-    expect(desktops.state(desktopId).focusedWindowId).toBe(chat)
   })
 
-  it('code_show_diff selects the recorded change', async () => {
-    desktops.openWindow({ desktopId, app: 'code' })
-    expect((await run('code_show_diff', { path: 'src/app.ts' })).isError).toBe(true)
-    changes = [{ id: 11, sessionId, path: 'E:\\src\\app.ts', kind: 'modified', additions: 3, deletions: 1, originalText: '', currentText: '' } as FileChangeDto]
-    expect(textOf(await run('code_show_diff', { path: 'src/app.ts' }))).toMatch(/\+3 -1/)
-    expect(textOf(await run('code_show_diff', { path: 'e:\\SRC\\app.ts' }))).toMatch(/\+3 -1/)
-    expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
+  it('show of a page element: the Browser comes forward and the box of the element is the spot', async () => {
+    const browser = desktops.openWindow({ desktopId, app: 'browser', url: 'https://example.com/' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    expect(textOf(await run('show', { target: { kind: 'page-element', ref: 404 }, note: 'x' }))).toMatch(/not known on this page/)
+    expect(textOf(await run('show', { target: { kind: 'page-element', ref: 5 }, note: 'This button sends it' }))).toMatch(/^Shown now: the button 'Send'/)
+    expect(f.publisher.payloads('desktop.show').at(-1)?.spot).toEqual({ kind: 'page-box', windowId: browser.id, box: { x: 10, y: 20, width: 30, height: 40 } })
+  })
+
+  it('show of a card: Kanban comes forward with the card selected', async () => {
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    await run('board_create', { name: 'Sprint' })
+    expect(textOf(await run('board_add_card', { board: 'Sprint', column: 'To do', title: 'Login bug' }))).toBeTruthy()
+    const board = (await run('board_get', { board: 'Sprint' }))
+    const cardId = Number(/Card \[(\d+)\] Login bug/.exec(textOf(board))?.[1])
+    expect(textOf(await run('show', { target: { kind: 'card', boardId: 'Sprint', cardId }, note: 'This one is blocked' }))).toMatch(/^Shown now: card 'Login bug'/)
+    const kanban = desktops.windowsOf(desktopId, 'kanban')[0]!
+    expect(kanban.view).toMatchObject({ app: 'kanban', selectedCardId: cardId })
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id)
+    expect(textOf(await run('show', { target: { kind: 'card', boardId: 'Sprint', cardId: 9999 }, note: 'x' }))).toMatch(/has no card 9999/)
+  })
+
+  it('browser_click with a watching operator: the cursor is sent to the box first, then the click happens', async () => {
+    const browserTools = createBrowserTools({
+      desktops,
+      driver,
+      cursor: {
+        pointAt: async (_context, _windowId, box) => {
+          driver.calls.push(`point:${box.x},${box.y}`)
+          return true
+        }
+      }
+    })
+    desktops.openWindow({ desktopId, app: 'browser', url: 'https://example.com/' })
+    await browserTools.browser_click({ ref: 5 }, { desktopId, sessionId })
+    await browserTools.browser_type({ ref: 2, text: 'hi' }, { desktopId, sessionId })
+    await browserTools.browser_press({ keys: 'Enter' }, { desktopId, sessionId })
+    expect(driver.calls).toEqual(['locate:5', 'point:10,20', 'click:5:left:false', 'locate:2', 'point:10,20', 'type:2:hi:false', 'press:Enter'])
   })
 
   it('code_read returns numbered lines and leaves an open Code window as it is', async () => {

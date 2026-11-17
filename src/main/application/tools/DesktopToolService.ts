@@ -68,7 +68,9 @@ export class DesktopToolService implements DesktopToolHost {
 
   private async authorize(context: ToolContext, tool: ToolName, args: unknown): Promise<void> {
     const group = TOOL_DEFS[tool].group
-    if (group === 'shell') {
+    // Show decides its policy itself (`ShowService`): Never is a transcript row ("Not shown"), not a refusal, and Ask
+    // asks only once the target is known to be there.
+    if (group === 'shell' || group === 'show') {
       // desktop_state stays readable while paused so the agent can see why it is stopped.
       if (tool !== 'desktop_state' && this.deps.states.state(context.desktopId).paused) throw new ToolRefusedError(PAUSED_MESSAGE)
       return

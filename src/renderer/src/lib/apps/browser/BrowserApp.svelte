@@ -404,7 +404,7 @@
       {/if}
     </div>
   {/if}
-  <div class="page">
+  <div class="page" data-show-page>
     {#each tabs as tab (tab.id)}
       <BrowserTabPage
         bind:this={pages[tab.id]}

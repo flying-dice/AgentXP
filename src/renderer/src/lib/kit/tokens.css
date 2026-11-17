@@ -173,3 +173,12 @@
   --xp-change-cue: #ff9c00;
   --xp-change-cue-face: #fff1c9;
 }
+
+/* The agent cursor (AgentCursor): the XP arrow in the agent's colour, a white edge and the name tag (a tooltip face). */
+:root {
+  --xp-cursor-edge: #fff;
+  --xp-cursor-outline: #000;
+  --xp-cursor-tag-face: #ffffe1;
+  --xp-cursor-tag-border: #000;
+  --xp-cursor-shadow: 1px 2px 2px rgba(0, 0, 0, 0.35);
+}

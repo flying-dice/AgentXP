@@ -32,6 +32,7 @@ AgentXP is a program that gives coding agents a virtual Windows XP desktop to wo
 - 6 - What the Agent Can Use
   - Permissions Decide the Tools
   - Seeing What the Agent Does
+  - When the Agent Shows You Something
   - Windows That the Agent Opens
   - Pause and Take Control
 - 7 - Allowing or Denying an Action
@@ -332,7 +333,7 @@ Each tool belongs to a group, for example **Read files** or **Run commands**. Th
 |---|---|---|
 | Read files | Read and list files, find files by name or by a word, and search inside files | `fs_list`, `fs_find`, `code_read`, `code_search`, `fs/read_text_file` |
 | Write files | Change and write files. Each change goes to the Changes pane. | `code_edit`, `code_write`, `fs/write_text_file` |
-| Code | Show you a file, some lines, or a change in Code | `code_open`, `code_reveal`, `code_show_diff` |
+| Agent may show you things | Show you one thing with a note that tells why: lines of a file, a change, a review comment, a card, a diagram shape, a page element, or a window. The control has the choices Always, Ask, and Never. | `show` (and its old names `code_open`, `code_reveal`, `code_show_diff`) |
 | Notepad | Open a file in Notepad for you, and read it | `notepad_open`, `notepad_read` |
 | Run commands | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
 | Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. Needs an open Browser window. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
@@ -363,6 +364,12 @@ The agent works out of your sight. When it reads, searches, changes a file, or r
 - **Top bar** – Shows **Working:** and the current step. Click the text to go to the chat that does the work.
 
 A window that already shows the file or the command updates in place. If Code shows the file that the agent changes, Code reloads it and marks the changed lines. An open Terminal shows each command of the agent as it runs.
+
+### When the Agent Shows You Something
+
+An agent can point you at one thing on purpose, with the `show` tool. It always gives a reason. If you work in the chat of that agent, the window comes to the front at the exact spot, for example the lines in Code. The agent cursor, an arrow with the name of the agent, moves there, and a note tells why. Your keyboard stays in the chat. Click **OK** to close the note, or **Reply** to answer in the chat.
+
+Only the chat that you work in can move your view. Any other chat, a team member, or a scheduled task asks first: a balloon **Show request** appears with **Show** and **Not now**, and the Action Center keeps it. AgentXP shows one thing at a time. Any click or key closes the note. **Pause all agents** hides the agent cursors and removes the shows that wait.
 
 ### Windows That the Agent Opens
 
@@ -542,6 +549,8 @@ The agent can draw its own forms, for example a form, a table of test results, o
 You use these forms like any other form. Select an item, type text, or click a button. When you click a button, AgentXP sends your answer to the chat that the form belongs to. The agent then continues its work. If the agent is still working on a turn, AgentXP ignores the click. Click the button again when the agent is done.
 
 The agent can draw a form at any time. It does not need an open app for this.
+
+A form is new content from the agent. To point you at something that already exists, for example lines of a file or a card, the agent shows it to you instead. Chapter 6 explains shows.
 
 ### Three Places for a Form
 

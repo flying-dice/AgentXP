@@ -18,8 +18,10 @@ export class KeyedDebouncer<K, V> {
   }
 
   /** Runs the pending call of `key` now. */
-  flush(key: K): void {
-    if (this.timers.has(key)) this.fire(key)
+  flush(key: K): boolean {
+    if (!this.timers.has(key)) return false
+    this.fire(key)
+    return true
   }
 
   /** Drops the pending call of `key` (its window closed). */

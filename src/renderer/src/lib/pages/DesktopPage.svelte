@@ -21,6 +21,7 @@
   import DesktopSurface, { type DesktopIconDef } from '../desktop/DesktopSurface.svelte'
   import InfoPanels from '../desktop/InfoPanels.svelte'
   import SnipOverlay from '../desktop/SnipOverlay.svelte'
+  import ShowOverlay from '../desktop/ShowOverlay.svelte'
   import StickyNotesLayer from '../desktop/StickyNotesLayer.svelte'
   import TopBar from '../desktop/TopBar.svelte'
   import TrayFlag from '../desktop/TrayFlag.svelte'
@@ -162,6 +163,10 @@
   const balloonAction = $derived.by(() => {
     const action = desktop.balloon?.action
     return action ? { label: action.label, onclick: () => void desktop.runBalloonAction() } : undefined
+  })
+  const balloonSecondary = $derived.by(() => {
+    const second = desktop.balloon?.secondary
+    return second ? { label: second.label, onclick: () => void desktop.runBalloonSecondary() } : undefined
   })
 
   const approvals = $derived(desktop.inbox.pending)
@@ -322,6 +327,7 @@
           approvals={centreApprovals}
           {messages}
           onaction={(id, actionId) => void desktop.runMessageAction(id, actionId)}
+          toLook={desktop.toLook}
           ignore={flag}
           onreview={(key) => {
             const a = approvals.find((x) => x.key === key)
@@ -390,12 +396,15 @@
             more={desktop.moreBalloons}
             live={!desktop.balloon.queued}
             action={balloonAction}
+            secondary={balloonSecondary}
             onclose={() => desktop.dismissBalloon()}
             onhold={(held) => desktop.holdBalloon(held)}
           />
         {/key}
       </div>
     {/if}
+    <!-- The agent cursors and the note callout of a show, over everything but the UAC prompt. -->
+    {#if !desktop.needsDesktop}<ShowOverlay {desktop} />{/if}
     <!-- New notices are read out once when they arrive (the balloon of a notice is not a live region itself). -->
     <div class="announcer" data-testid="notice-announcer" aria-live="polite" aria-atomic="true">{desktop.announcement}</div>
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />

@@ -49,7 +49,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J29 | Browse with tabs and recover from a bad page | P1, P4 |
 | J30 | Use menus, right-click and About in any app | P4, P3 |
 | J31 | Get help from inside an app (Help menu and F1) | P4 |
-| J32 | An agent shows you something [planned] | P1, P4 |
+| J32 | An agent shows you something | P1, P4 |
 | J33 | Hear about what the agents made | P2, P3 |
 | J34 | Follow an agent as it works [planned] | P3, P1 |
 
@@ -923,7 +923,7 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
 - **E2E coverage.** `help.e2e.ts` (F1, search, Start). Missing: F1 in dialogs and the Launcher, Back and Forward, accuracy of procedures.
 - **Docs and panel.** Manual topic `manuals/help.md` and the manuals of all apps. Panel tasks: T31.1, T31.2 in `tasks.md`.
 
-## J32 - An agent shows you something [planned]
+## J32 - An agent shows you something
 
 `docs/AGENT_PRESENCE.md`, sections 5 and 8.
 
@@ -935,15 +935,16 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
 | 1 | Chat | Asks the question | The agent works quietly, then calls `show` on `src/auth/redirect.ts:12-20` | Nothing moved while it worked |
-| 2 | Desktop | Watches | Code opens or comes forward at the lines, highlighted; the agent cursor (name tag, agent colour) glides to them | Who is pointing, and where |
+| 2 | Desktop | Watches | Code opens or comes forward at the lines, highlighted, while the keyboard focus stays in the chat; the agent cursor (name tag, agent colour) glides to them | Who is pointing, and where |
 | 3 | Code | Reads the note callout | Agent name, the note ("The redirect target is not checked here"), **OK**, **Reply** | Why they are looking at this |
 | 4 | Note callout | Clicks **Reply** | The chat composer gets focus with the note quoted | The conversation continues where it was |
-| 5 | Chat | Reads the transcript | A row "Showed you redirect.ts:12-20" with **Show again** | The show is kept and can be repeated |
+| 5 | Chat | Reads the transcript | A row "Showed you redirect.ts:12-20: <note>" with **Show again** | The show is kept and can be repeated |
 
 - **Decision points.** **OK**, **Reply**, or ignore it (any click elsewhere dismisses). Change **Agent may show you things** to Ask or Never in Control Center.
 - **Failure and edge branches.**
   - A background chat or a team member calls `show`: no motion; a balloon "Builder wants to show you redirect.ts:12-20" with **Show** and **Not now**; it stays in the Action Center.
-  - Two shows in a row: the second waits; the Action Center says "2 things to look at".
+  - Two shows in a row: the second waits (its row reads "Will show you ...") and lands when the first note is closed; the Action Center counts what waits ("1 thing to look at").
+  - **Agent may show you things** is Never: nothing moves; the row reads "Not shown (Never): ...".
   - The user types or clicks during the glide: the glide stops, focus stays where the user is.
   - Pause during a show: the cursor and callout disappear.
   - **Ask before every action** is on: the show asks first.
@@ -951,8 +952,8 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - Reduced motion: the cursor jumps and pulses.
   - A stale target (file deleted, comment removed): the agent gets an error; nothing opens.
 - **Success measure.** P4 states why the agent showed the lines, and replies to it, in under 20 seconds, on the first try.
-- **E2E coverage.** Planned: `e2e/show.e2e.ts` (foreground show, background request, typing during a glide, Pause, Ask).
-- **Docs and panel.** `manuals/desktop.md` (the agent cursor and note callout), `manuals/chat.md`, `manuals/control-centre.md`. Panel tasks: T32.1, T32.2 in `tasks.md`.
+- **E2E coverage.** `e2e/show.e2e.ts` (foreground show at the exact lines with cursor and note, Reply, OK, Show again, typing during a show, background request with Show and Not now and the Action Center count, Pause, reduced motion, Never). Ask and the queue are unit tests (`ShowService.test.ts`). `e2e/browser-agent.e2e.ts` checks the cursor before Browser clicks.
+- **Docs and panel.** `manuals/desktop.md` (the agent cursor, the note callout, show requests), `manuals/chat.md`, `manuals/control-centre.md`, and the "What the Agent Can Do" of Code, Code Review, Kanban, Agent Diagrams and Browser. Panel tasks: T32.1, T32.2 in `tasks.md`.
 
 ## J33 - Hear about what the agents made
 

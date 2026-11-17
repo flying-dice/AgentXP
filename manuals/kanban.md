@@ -163,6 +163,8 @@ The agent can use the tools below at any time. The Kanban window does not need t
 | `board_move_card` | Moves a card to a list, optionally to a position. |
 | `board_delete_card` | Deletes a card. |
 
+The agent can also show you one card with the `show` tool (target `card`). Kanban comes to the front on the board with the card selected, and a note tells why. If you do not work in the chat of that agent, you get a **Show request** balloon instead. The permission **Agent may show you things** controls it. See **[Using the Desktop](desktop.md)**.
+
 ## 5 - Common Tasks
 
 To start a board for a team, follow the steps below:

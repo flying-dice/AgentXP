@@ -57,12 +57,20 @@ describe('Browser agent: a local chat web app', () => {
     expect(await ctx.desktop.status.innerText()).not.toMatch(/browser_|agentxp/)
     // The status bar says whether the agent can see the page.
     await see.visible(browser.getByTestId('browser-assistant-status'))
+    // Before a click the agent cursor goes to the element (docs/AGENT_PRESENCE.md, section 8).
+    await see.attribute(ctx.desktopPage.getByTestId('agent-cursor'), 'data-state', /gliding|arrived/)
+    await shot(ctx.desktopPage, 'browser-agent-cursor')
 
     // The last step is a message that quotes the agent's own message as the page shows it.
     await agentSays(ctx, 'DONE')
     await see.text(chat.agentMessage('DONE'), 'You Second message via submit')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
+    // The operator is in this chat and the Browser is on screen: the agent cursor went to each element before the click
+    // (docs/AGENT_PRESENCE.md, section 8). It stays where the last action was, then fades.
+    const cursor = ctx.desktopPage.getByTestId('agent-cursor')
+    await see.count(cursor, 1)
+    await see.attribute(cursor, 'data-state', /arrived|idle/)
     // The Browser never took the focus for the agent's steps (docs/AGENT_PRESENCE.md): the chat the user typed in keeps it.
     await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
     await see.attribute(browser, 'data-focused', 'false')

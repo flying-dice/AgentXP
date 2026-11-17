@@ -1,5 +1,4 @@
-import type { AppView } from '@shared/desktop'
-import type { FileChangeDto, Id } from '@shared/models'
+import type { Id } from '@shared/models'
 import { textSearchSummary } from '@shared/search'
 import type { VPath } from '@shared/vfs'
 import { AppError } from '../errors'
@@ -8,23 +7,18 @@ import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import type { ToolHandlers } from './catalog'
 import type { AgentFileWriter, DesktopOps } from './ports'
 import type { ToolPaths } from './ToolPaths'
-import { attempt, textResult, type ToolContext } from './types'
-import { pickWindow } from './windows'
+import { attempt, textResult } from './types'
 
 export interface CodeToolsDeps {
   desktops: DesktopOps
-  changes: { list(sessionId: Id): FileChangeDto[] }
   paths: ToolPaths
   vfs: Pick<VirtualFileSystem, 'readFile' | 'readBytes'>
   search: Pick<FileSearch, 'searchText'>
   files: AgentFileWriter
 }
 
-type CodeView = Extract<AppView, { app: 'code' }>
-type CodeTool = 'code_open' | 'code_reveal' | 'code_show_diff' | 'code_read' | 'code_search' | 'code_edit' | 'code_write'
+type CodeTool = 'code_read' | 'code_search' | 'code_edit' | 'code_write'
 
-const VIEW_CONTEXT_LINES = 5
-const VIEW_HEIGHT = 30
 /** Lines code_read returns at most in one call. */
 export const MAX_READ_LINES = 2000
 /** Characters of one line that code_read returns (a minified bundle is one huge line). */
@@ -35,35 +29,6 @@ export const MAX_READ_CHARS = 100_000
 /** Cuts a line to MAX_READ_LINE_CHARS and says how much was left out. */
 const clipLine = (line: string): string =>
   line.length <= MAX_READ_LINE_CHARS ? line : `${line.slice(0, MAX_READ_LINE_CHARS)} [... ${line.length - MAX_READ_LINE_CHARS} more characters]`
-
-/**
- * Shows `file` in the Code app for the operator (code_open, code_reveal; `show` replaces them in a later release). An
- * agent open goes through `openOutputWindow`: a new Code window opens behind the focused window, an open one is reused
- * where it is. `selection` selects lines; `changeId` picks a recorded change.
- */
-async function showFile(
-  desktops: DesktopOps,
-  context: ToolContext,
-  file: VPath | undefined,
-  options: { selection?: CodeView['selection']; changeId?: Id } = {}
-): Promise<void> {
-  const window = await desktops.openOutputWindow(context.sessionId, { desktopId: context.desktopId, app: 'code', ...(file ? { path: file } : {}) })
-  const view = pickWindow(desktops.state(context.desktopId), 'code', window.id).view
-  const selection = options.selection ?? null
-  const first = selection ? Math.max(1, selection.startLine - VIEW_CONTEXT_LINES) : null
-  desktops.updateView(window.id, {
-    ...view,
-    ...(file
-      ? {
-          tabs: view.tabs.includes(file) ? view.tabs : [...view.tabs, file],
-          activePath: file,
-          selection,
-          visibleLines: first === null ? null : [first, first + VIEW_HEIGHT]
-        }
-      : {}),
-    ...(options.changeId !== undefined ? { selectedChangeId: options.changeId } : {})
-  })
-}
 
 /**
  * Work, live where open: when a Code window already shows `file` as its active file, the changed lines get a short
@@ -84,11 +49,10 @@ const occurrences = (text: string, needle: string): number => text.split(needle)
 const lineAt = (text: string, offset: number): number => text.slice(0, offset).split('\n').length
 
 /**
- * code_read, code_search, code_edit, code_write: Work, headless (no window opens or moves). code_open, code_reveal and
- * code_show_diff show the operator something in the Code app.
+ * code_read, code_search, code_edit, code_write: Work, headless (no window opens or moves). Showing the operator a file,
+ * lines or a change is `show` (`showTools.ts`; code_open, code_reveal and code_show_diff are its aliases).
  */
-export function createCodeTools({ desktops, changes, paths, vfs, search, files }: CodeToolsDeps): ToolHandlers<CodeTool> {
-  const changeOf = (sessionId: Id, file: VPath): FileChangeDto | undefined => changes.list(sessionId).find((c) => c.path.toLowerCase() === file.toLowerCase())
+export function createCodeTools({ desktops, paths, vfs, search, files }: CodeToolsDeps): ToolHandlers<CodeTool> {
 
   /**
    * The text of a file that code_edit may change. A binary file or one that is not UTF-8 (Windows-1252, UTF-16) is refused:
@@ -105,30 +69,6 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
   }
 
   return {
-    code_open: ({ path, line }, context) =>
-      attempt(async () => {
-        const file = paths.resolve(context, path)
-        await showFile(desktops, context, file, { selection: line === undefined ? null : { startLine: line, endLine: line } })
-        return textResult(`Code shows ${file}${line === undefined ? '' : ` at line ${line}`}.`)
-      }),
-
-    code_reveal: ({ path, startLine, endLine }, context) =>
-      attempt(async () => {
-        const file = paths.resolve(context, path)
-        const end = Math.max(startLine, endLine ?? startLine)
-        await showFile(desktops, context, file, { selection: { startLine, endLine: end } })
-        return textResult(`Code shows ${file}, lines ${startLine}-${end} selected.`)
-      }),
-
-    code_show_diff: ({ path }, context) =>
-      attempt(async () => {
-        const file = paths.resolve(context, path)
-        const change = changeOf(context.sessionId, file)
-        if (!change) throw new AppError(`There is no recorded change for ${file} in this chat.`)
-        await showFile(desktops, context, undefined, { changeId: change.id })
-        return textResult(`Code shows the change of ${file}: ${change.kind}, +${change.additions} -${change.deletions}.`)
-      }),
-
     code_read: ({ path, startLine, endLine }, context) =>
       attempt(async () => {
         const file = paths.resolve(context, path)

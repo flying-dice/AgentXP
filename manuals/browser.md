@@ -168,6 +168,10 @@ The agent reads the whole page, also below the fold, in frames, and in shadow ro
 | `browser_back`, `browser_forward`, `browser_reload` | Move in the history, or load the page again. |
 | `browser_screenshot` | Takes a picture of the page. |
 
+If you work in the chat of the agent and the Browser window is on the screen (not minimized), the agent cursor moves to the item before `browser_click`, `browser_type`, or `browser_select` acts on it. Then the action happens. The orange ring around the item still marks where the agent acted. In any other case only the ring shows.
+
+The agent can also show you one item of the page with the `show` tool (target `page-element`, a `ref` from `browser_read` or `browser_find`). Browser scrolls the item into view and comes to the front, the agent cursor points at it, and a note tells why. If you do not work in the chat of that agent, you get a **Show request** balloon instead. The permission **Agent may show you things** controls it. See **[Using the Desktop](desktop.md)**.
+
 ## 6 - Troubleshooting
 
 - **Back is dimmed.** The window has no earlier page.

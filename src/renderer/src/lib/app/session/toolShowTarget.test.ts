@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agentxpToolName, toVPath, toolShowTargets } from './toolShowTarget'
+import { agentxpToolName, showRowOf, toVPath, toolShowTargets } from './toolShowTarget'
 
 const call = (title: string, rawInput: unknown, extra: Partial<Parameters<typeof toolShowTargets>[0]> = {}) =>
   toolShowTargets({ title, kind: 'other', rawInput: rawInput === null ? null : JSON.stringify(rawInput), cwd: 'E:\\', ...extra })
@@ -70,5 +70,28 @@ describe('toolShowTargets', () => {
     expect(call('agentxp.fs_find', { pattern: '*.ts' })).toEqual([])
     expect(call('agentxp.board_get', {})).toEqual([])
     expect(toolShowTargets({ title: 'Think', kind: 'think', rawInput: null })).toEqual([])
+  })
+})
+
+describe('show rows (Show, docs/AGENT_PRESENCE.md section 5)', () => {
+  const input = { target: { kind: 'file', path: 'E:\\src\\auth.ts', lines: [40, 62] }, note: 'Here the token is checked' }
+
+  it('a show row says what the operator was shown and why, with Show again', () => {
+    expect(showRowOf({ title: 'mcp__agentxp__show', rawInput: JSON.stringify(input), result: 'Shown now: auth.ts:40-62\nThe user sees it.' })).toEqual({ title: 'Showed you auth.ts:40-62: Here the token is checked', again: true })
+    expect(showRowOf({ title: 'agentxp.show', rawInput: JSON.stringify(input), result: 'Sent as a request: auth.ts:40-62\n...' })?.title).toBe('Asked to show you auth.ts:40-62: Here the token is checked')
+    expect(showRowOf({ title: 'agentxp.show', rawInput: JSON.stringify(input), result: 'Queued: auth.ts:40-62\n...' })?.title).toBe('Will show you auth.ts:40-62: Here the token is checked')
+    expect(call('mcp__agentxp__show', input)).toEqual([{ kind: 'again', target: input.target, note: 'Here the token is checked' }])
+  })
+
+  it('Never and a decline: no Show again; while it runs the row names the target', () => {
+    expect(showRowOf({ title: 'agentxp.show', rawInput: JSON.stringify(input), result: 'Not shown (Never): auth.ts:40-62\n...' })).toEqual({ title: 'Not shown (Never): auth.ts:40-62', again: false })
+    expect(showRowOf({ title: 'agentxp.show', rawInput: JSON.stringify(input), result: 'Not shown (declined): auth.ts:40-62\n...' })?.again).toBe(false)
+    expect(showRowOf({ title: 'agentxp.show', rawInput: JSON.stringify(input), result: null })?.title).toBe('Show you auth.ts:40-62: Here the token is checked')
+  })
+
+  it('only the agentxp show tool: a bare "show" of another server and other tools are not show rows', () => {
+    expect(showRowOf({ title: 'show', rawInput: JSON.stringify(input) })).toBeNull()
+    expect(showRowOf({ title: 'agentxp.code_read', rawInput: '{}' })).toBeNull()
+    expect(agentxpToolName('mcp__agentxp__show')).toBe('show')
   })
 })

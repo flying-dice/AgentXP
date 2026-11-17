@@ -14,6 +14,7 @@ import type { RecycleService } from '../application/RecycleService'
 import type { SchedulerService } from '../application/scheduler/SchedulerService'
 import type { StickyNoteService } from '../application/desktop/StickyNoteService'
 import type { KanbanService } from '../application/kanban/KanbanService'
+import type { ShowService } from '../application/show/ShowService'
 import type { DesktopService } from '../application/desktop/DesktopService'
 import type { ProcessService } from '../application/ProcessService'
 import type { A2uiService } from '../application/A2uiService'
@@ -41,6 +42,7 @@ export interface ApiServices {
   a2ui: A2uiService
   shell: ShellService
   desktops: DesktopService
+  shows: ShowService
   vfs: VirtualFileSystem
   fileSearch: FileSearch
   git: GitService
@@ -121,7 +123,10 @@ export function createApi(s: ApiServices): InvokeApi {
       respondAppRequest: async (response) => s.appRequests.respond(response),
       raiseWindow: async (windowId) => s.desktops.raiseWindow(windowId),
       userActive: async (desktopId) => s.desktops.noteUserActivity(desktopId),
-      notePaneFocus: async (windowId, active) => s.desktops.notePaneFocus(windowId, active)
+      notePaneFocus: async (windowId, active) => s.desktops.notePaneFocus(windowId, active),
+      dismissShow: async (desktopId, showId) => s.shows.dismiss(desktopId, showId),
+      acceptShow: async (desktopId, showId) => s.shows.accept(desktopId, showId),
+      showAgain: async (desktopId, sessionId, target, note) => s.shows.again({ desktopId, sessionId }, target, note)
     },
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),

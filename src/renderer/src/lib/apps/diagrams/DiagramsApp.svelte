@@ -28,7 +28,7 @@
   import SaveAsDialog from '../shared/SaveAsDialog.svelte'
   import { DiagramEditor, ZOOM_STEPS } from './editor.svelte'
   import { download, svgToPng } from './exportImage'
-  import { describeShape, pageIndexFor, pageSummary } from './model/agentApi'
+  import { describeShape, findShowItem, pageIndexFor, pageSummary } from './model/agentApi'
   import { createDoc, DiagramError, parseDiagram, serializeDiagram, type AlignMode } from './model/document'
   import { exportSvg } from './model/render'
   import { stencilOf } from './model/stencils'
@@ -238,6 +238,14 @@
         editor.load(parseDiagram(p['text']), p['path'])
         queueMicrotask(() => void canvas?.fit('page'))
         return `Opened ${p['path']}.\n\n${editor.agent('read', {}).text}`
+      }
+      case 'show': {
+        // A show (docs/AGENT_PRESENCE.md, section 5): the shape on any page, selected; `check` only proves it is there.
+        const id = typeof p['id'] === 'string' ? p['id'] : ''
+        const found = findShowItem(editor.doc, id)
+        if (!found) throw new DiagramError(`There is no shape or connector ${id} in the diagram. Call diagram_read for the ids. Nothing was shown.`)
+        if (p['check'] !== true) editor.agent('select', { ids: [id], page: found.page })
+        return { label: found.label }
       }
       default:
         return editor.agent(method, params).text

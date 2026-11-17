@@ -32,6 +32,10 @@ const RENDERER_EVENTS = {
   'session.removed': true,
   'folders.changed': true,
   'desktop.notice': true,
+  'desktop.show': true,
+  'desktop.showEnded': true,
+  'desktop.showQueue': true,
+  'desktop.agentCursor': true,
   'transcript.cleared': true,
   'desktop.changed': true,
   'desktop.appRequest': true,
@@ -99,7 +103,10 @@ const INVOKE_METHODS = {
     respondAppRequest: true,
     raiseWindow: true,
     userActive: true,
-    notePaneFocus: true
+    notePaneFocus: true,
+    dismissShow: true,
+    acceptShow: true,
+    showAgain: true
   },
   vfs: { readDir: true, searchText: true, find: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },
