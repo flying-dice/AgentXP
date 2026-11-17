@@ -12,6 +12,7 @@ This manual describes Sticky Notes. Sticky Notes puts notes on the desktop. You 
   - The Notes on the Desktop
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -97,6 +98,17 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Sticky Notes is open. The permission **Notes** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `notes_list` | Lists the notes of the desktop. |
+| `notes_add` | Puts a note on the desktop. A plan note shows the task list of the chat. |
+| `notes_update` | Changes the text or the colour of a note. |
+| `notes_remove` | Removes a note. |
 
 ## 5 - Common Tasks
 

@@ -12,7 +12,7 @@ export { TaskSchedulerWindow } from './pages/TaskSchedulerWindow'
 export { TerminalWindow } from './pages/TerminalWindow'
 export { see } from './expect'
 export { serveFixtureWeb, type WebServer } from './webServer'
-export { startConnectedDesktop, type ConnectedDesktop } from './session'
+export { reconnectDesktop, startConnectedDesktop, type ConnectedDesktop } from './session'
 export {
   aguiRuns,
   collapseRuns,

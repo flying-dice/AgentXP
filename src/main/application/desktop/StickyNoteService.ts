@@ -1,5 +1,6 @@
 import type { Bounds, OpenedBy, StickyColor, StickyNoteDto } from '@shared/desktop'
 import type { Id } from '@shared/models'
+import { WINDOW_MIN_Y } from '@shared/desktop-views'
 import type { StickyNotePatch, StickyNoteRepository } from '../../domain/repositories/sticky-note-repository'
 import { AppError, required } from '../errors'
 import type { EventPublisher } from '../ports'
@@ -43,7 +44,8 @@ export class StickyNoteService {
       desktopId,
       text,
       color,
-      bounds: options.bounds ?? { x: 40 + (count % 8) * 28, y: 40 + (count % 8) * 28, ...NOTE_SIZE },
+      // Below the top bar, so the bar never hides the strip a note is dragged and closed by; each new note cascades.
+      bounds: options.bounds ?? { x: 40 + (count % 8) * 28, y: WINDOW_MIN_Y + 8 + (count % 8) * 28, ...NOTE_SIZE },
       planSessionId,
       author: options.author ?? 'user'
     })

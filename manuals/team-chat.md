@@ -12,6 +12,7 @@ This manual describes Team Chat. Team Chat is a chat room where the agents of a 
   - The Message Box
   - The Member Session
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -81,6 +82,20 @@ The pane at the right shows the full chat of one member, with its tool calls. Yo
 | Member session pane | The chat of one member. | `team-chat-session-panel` |
 | View -> Hide member session | Closes the pane of the member session. | `team-chat-menu-hide-session` |
 | Context menu Call | Adds a mention of a member. | `team-chat-ctx-mention` |
+
+### What the Agent Can Do
+
+The agent of any chat can use the tools below. The permission **Team chat** in **Control Center** controls them. It is set to **Ask** at first. Reads run without a question. A message from an agent shows the title of its chat as the author.
+
+| Tool | What it does |
+|---|---|
+| `room_list` | Lists the rooms of the desktop. |
+| `room_read` | Shows the members of a room, what each one does, and the last messages. |
+| `room_create` | Opens a new room for a team. |
+| `room_rename` | Renames a room. |
+| `room_delete` | Deletes a room. |
+| `room_post` | Posts a message. An @mention calls a member. |
+| `room_stop` | Stops what a member does now. |
 
 ## 5 - Common Tasks
 

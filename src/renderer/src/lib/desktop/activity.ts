@@ -3,7 +3,7 @@ import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
 import { liveToolTitle } from '../app/session/toolTitles'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
-import { APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
+import { ALWAYS_ON_TOOL_GROUPS, APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
 export interface ChatActivityInput {
   sessionId: number
@@ -150,7 +150,8 @@ export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | n
     return { group, name, word, state, closed, label, tooltip: chipTooltip(group, name, word, setting, closed) }
   }
   const headline = new Set<ToolGroup>(HEADLINE)
-  const others = tools.filter((g): g is Exclude<ToolGroup, 'shell'> => g !== 'shell' && !headline.has(g))
+  // Always-on groups (Kanban boards, Task Scheduler, Control Center...) need no window, so they are not chips of the bar.
+  const others = tools.filter((g): g is Exclude<ToolGroup, 'shell'> => !ALWAYS_ON_TOOL_GROUPS.includes(g) && !headline.has(g))
   return [...HEADLINE, ...others].map((g) => chip(g, PERMISSION_NAMES[g]))
 }
 
@@ -160,13 +161,16 @@ export function closedAppNames(chips: readonly ToolChip[]): string[] {
   return [...new Set(names)]
 }
 
+/** A group the agent has with no app open: not something an open app gave it. */
+const alwaysOn = (g: ToolGroup): boolean => ALWAYS_ON_TOOL_GROUPS.includes(g)
+
 /** True when no app and no chat is open; an open chat is something the agent can use. */
-export const noToolsOpen = (tools: readonly ToolGroup[], chatsOpen = 0): boolean => chatsOpen === 0 && tools.every((g) => g === 'shell')
+export const noToolsOpen = (tools: readonly ToolGroup[], chatsOpen = 0): boolean => chatsOpen === 0 && tools.every(alwaysOn)
 
 /** The line next to the chips: "nothing yet" when no app and no chat is open, "this chat" when only chats are, otherwise none. */
 export function toolsLine(tools: readonly ToolGroup[], chatsOpen: number): string | null {
   if (noToolsOpen(tools, chatsOpen)) return 'Open an app (Terminal, Browser, Code) to give the agent a tool.'
-  return tools.every((g) => g === 'shell') ? 'The agent can use this chat.' : null
+  return tools.every(alwaysOn) ? 'The agent can use this chat.' : null
 }
 
 /** What the status area of the top bar shows; `data-state` of the bar and its dot. */

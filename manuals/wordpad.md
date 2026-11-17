@@ -13,6 +13,7 @@ This manual describes WordPad. WordPad reads and writes markdown documents.
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -104,6 +105,16 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Ctrl+I | Makes the selection italic in edit mode. | none |
 | F1 | Opens this manual. | none |
 
+### What the Agent Can Do
+
+The agent uses the tools below when WordPad is open. The permission **WordPad** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `wordpad_open` | Shows a markdown file in a WordPad window. |
+| `wordpad_read` | Reads the text that WordPad shows, also changes that you did not save. |
+| `wordpad_write` | Writes a markdown file and shows it in WordPad. The change appears in the Changes list. |
+
 ## 5 - Common Tasks
 
 To write a document, follow the steps below:
@@ -111,7 +122,7 @@ To write a document, follow the steps below:
 1. Click **Edit**.
 2. Type your text. Use **H1** for a title and **List** for a list.
 3. Press Ctrl+S. If the document is new, the **Save as** dialog box appears.
-4. Type a file name, for example `Plan.md`, and click **OK**. WordPad saves the file in the Documents folder.
+4. Type a file name, for example `Plan`, and click **OK**. WordPad saves the file in the Documents folder. It adds `.md` when the name has no extension, so **File -> Open** lists the file.
 
 To read the result, click **Read**.
 

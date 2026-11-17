@@ -12,6 +12,7 @@ This manual describes Notepad. Notepad reads and edits plain text files.
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
   - Save a file
 - 6 - Troubleshooting
@@ -110,6 +111,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Ctrl+S | Saves the file. | none |
 | F5 | Types the time and date. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when a Notepad window is open. The permission **Notepad** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `notepad_open` | Shows a file in a Notepad window. It opens a window when none is open. |
+| `notepad_read` | Reads the saved text of the file that Notepad shows. |
 
 ## 5 - Common Tasks
 

@@ -124,6 +124,18 @@ describe('ToolGateway', () => {
     expect(broker.prompts).toHaveLength(2)
   })
 
+  it('forced calls ask even when the policy allows, ignore an earlier agent approval, and still obey Deny', async () => {
+    broker.agentPromptResolved('allow_once')
+    await gateway.authorize(SESSION, { group: 'settings', title: 'Change permissions', force: true })
+    expect(broker.prompts).toHaveLength(1)
+    expect(events[0]).toMatchObject({ title: 'Change permissions', rawInput: expect.stringContaining('always asks you') })
+    broker.answer = { outcome: 'selected', optionId: 'reject' }
+    await expect(gateway.authorize(SESSION, { group: 'settings', title: 'x', force: true })).rejects.toThrow(/declined/)
+    policy.groups.settings = 'deny'
+    await expect(gateway.authorize(SESSION, { group: 'settings', title: 'x', force: true })).rejects.toThrow(/blocked/)
+    expect(broker.prompts).toHaveLength(2)
+  })
+
   it('follow-up calls (askUser false) are not asked again', async () => {
     await check('terminal', false)
     expect(broker.prompts).toEqual([])

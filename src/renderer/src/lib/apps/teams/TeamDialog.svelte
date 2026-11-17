@@ -29,7 +29,7 @@
   let form = $state<TeamFormValues>({ ...initial, memberIds: [...initial.memberIds], skillIds: [...initial.skillIds] })
   let touched = $state(false)
   const problem = $derived(validateTeamForm(form))
-  const memberItems = $derived(profiles.map((p) => ({ value: p.id, label: p.name })))
+  const memberItems = $derived(profiles.map((p) => ({ value: p.id, label: p.name, testid: 'team-dialog-member' })))
   const boardItems = $derived([{ value: '', label: '(none)' }, ...boards.map((b) => ({ value: String(b.id), label: b.name }))])
   const skillItems = $derived(skills.map((s) => ({ value: s.id, label: s.name, title: s.description })))
 

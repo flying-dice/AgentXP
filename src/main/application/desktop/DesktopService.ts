@@ -624,6 +624,10 @@ export class DesktopService implements DesktopStates {
       case 'explorer':
         return windows.setPath(record.id, view.path || null) // '' (Computer) has no row
       case 'notepad':
+      case 'paint':
+      case 'wordpad':
+      case 'diagrams':
+        // The file comes back with the window after a restart.
         return windows.setPath(record.id, view.path)
       case 'code':
         return windows.setPath(record.id, view.activePath)

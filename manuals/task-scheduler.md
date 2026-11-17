@@ -19,6 +19,7 @@ This manual describes Task Scheduler. Task Scheduler asks an agent to do a job a
   - History
   - The Event Viewer Log
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -372,6 +373,22 @@ Task Scheduler writes each start, end, failure, and change of a task to the **Ta
 | Action tools | The tools of the chosen servers. Clear a tool to hide it. | `action-dialog-tools`, `action-dialog-tool-*`, `action-dialog-tools-hint` |
 | Action existing chat note | Says that an existing chat keeps its own skills and tools. | `action-dialog-capabilities-existing` |
 | Action problem | Says why the action is not saved. | `action-dialog-problem` |
+
+### What the Agent Can Do
+
+The agent can use the tools below at any time. The Task Scheduler window does not need to be open. The permission **Task Scheduler** in **Control Center** controls them. It is set to **Ask** at first. Reads run without a question.
+
+| Tool | What it does |
+|---|---|
+| `scheduler_list` | Lists the tasks, with their triggers, the next run, and the last result. |
+| `scheduler_get` | Shows one task in full and its last runs. |
+| `scheduler_create` | Creates a task: a prompt for an agent, and when to run it. |
+| `scheduler_update` | Changes a task. Only the fields that the agent gives change. |
+| `scheduler_delete` | Deletes a task and its history. |
+| `scheduler_enable` | Enables or disables a task. |
+| `scheduler_run` | Runs a task now, like **Run**. |
+| `scheduler_end` | Stops a running task, like **End**. |
+| `scheduler_clear_history` | Clears the history of a task. |
 
 ## 5 - Common Tasks
 

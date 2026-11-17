@@ -40,7 +40,8 @@ export async function launchAgentXP(options: LaunchOptions = {}): Promise<AgentX
   const userData = options.userData ?? (await mkdtemp(join(tmpdir(), 'a7-e2e-data-')))
   const app = await electron.launch({
     executablePath: require('electron') as string,
-    args: [join(projectRoot, 'out/main/index.js'), '--no-sandbox'],
+    // A7_E2E_SCALE=2 renders at 2x for screenshots a person looks at (PR descriptions).
+    args: [join(projectRoot, 'out/main/index.js'), '--no-sandbox', ...(process.env.A7_E2E_SCALE ? [`--force-device-scale-factor=${process.env.A7_E2E_SCALE}`] : [])],
     cwd: projectRoot,
     env: { ...process.env, AGENTXP_USER_DATA: userData } as Record<string, string>
   })

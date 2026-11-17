@@ -16,6 +16,7 @@ This manual describes the Code Review window. Code Review shows the changes of a
   - The Review Chat
   - The Status Bar
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -183,6 +184,18 @@ The status bar shows the folder, how many files changed (for example "2 files ch
 | Status: change | Which change you are on, such as Change 3 of 7. | `review-status-change` |
 | Totals | The number of added and removed lines. | `review-totals` |
 | View: all changes (button) | Switches to the one-page view. | `review-view-all` |
+
+### What the Agent Can Do
+
+The agent uses the tools below to review changes. The permission **Code review** in **Control Center** controls them, except `review_open`.
+
+| Tool | What it does |
+|---|---|
+| `review_open` | Opens a Code Review window for a project, or uses the open one. |
+| `review_list_changes` | Lists the changed files, with the lines added and removed. |
+| `review_read_diff` | Shows the change of one file, with line numbers. |
+| `review_add_comment` | Adds a comment on a line, with a severity. |
+| `review_submit` | Ends the review with a verdict and a summary. |
 
 ## 5 - Common Tasks
 

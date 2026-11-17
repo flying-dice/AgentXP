@@ -1,3 +1,5 @@
+/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
+const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, TOOL_GROUPS, closedAppMessage, enabledToolGroups, type ToolPolicyDto } from '@shared/desktop'
 import { PAUSED_MESSAGE, evaluateToolAccess } from './AppToolPolicy'
@@ -15,19 +17,19 @@ const policy = (patch: Partial<ToolPolicyDto['groups']> = {}): ToolPolicyDto => 
 
 describe('enabledToolGroups (open apps -> tool groups)', () => {
   it('always has the shell group', () => {
-    expect(enabledToolGroups([])).toEqual(['shell', 'board'])
+    expect(enabledToolGroups([])).toEqual(['shell', 'board', ...ADMIN_GROUPS])
   })
 
   it('follows the apps that provide each group', () => {
-    expect(enabledToolGroups(['explorer'])).toEqual(['shell', 'fs.read', 'board'])
-    expect(enabledToolGroups(['notepad'])).toEqual(['shell', 'fs.write', 'notepad', 'board'])
-    expect(enabledToolGroups(['code'])).toEqual(['shell', 'fs.read', 'fs.write', 'code', 'board'])
-    expect(enabledToolGroups(['terminal', 'browser'])).toEqual(['shell', 'terminal', 'browser', 'board'])
-    expect(enabledToolGroups(['chat', 'control-centre', 'agent-manager'])).toEqual(['shell', 'board'])
-    expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes', 'board'])
-    expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events', 'board'])
-    expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle', 'board'])
-    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'board', 'review'])
+    expect(enabledToolGroups(['explorer'])).toEqual(['shell', 'fs.read', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['notepad'])).toEqual(['shell', 'fs.write', 'notepad', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['code'])).toEqual(['shell', 'fs.read', 'fs.write', 'code', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['terminal', 'browser'])).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['chat', 'control-centre', 'agent-manager'])).toEqual(['shell', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle', 'board', ...ADMIN_GROUPS])
+    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'board', 'review', ...ADMIN_GROUPS])
   })
 
   it('ignores order and duplicates, and every group is reachable', () => {

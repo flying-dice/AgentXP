@@ -90,8 +90,9 @@ permissions), the tool must still exist but always ask the user (`ToolGateway.as
 - `manuals/<kind>.md` following `docs/DOCUMENTATION_STYLE.md` (Simplified Technical English, numbered chapters,
   "Need Help?" last) and the manual chapter shape in `manuals/index.md`.
 - **Controls Reference** table: one row per `data-testid` (`npm run help:coverage` fails otherwise).
-- **What the Agent Can Do** chapter: one row per agent tool, by its exact name, and the Control Center permission
-  that governs it (`npm run app:pillars` fails if a tool is missing).
+- **What the Agent Can Do** section at the end of the Controls Reference chapter (and in the Table of Contents):
+  the Control Center permission that governs the tools, then one row per agent tool by its exact name
+  (`npm run app:pillars` fails if a tool is missing). `manuals/kanban.md` is an example.
 - Link it from `manuals/index.md` and `manuals/desktop.md`; update `README.md` chapter 9 if it is a headline app.
 - Screenshots for the manual go in `docs/images/` (`npm run docs:screenshots` patterns in `scripts/docs-screenshots/`).
 

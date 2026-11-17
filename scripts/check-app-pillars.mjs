@@ -38,8 +38,8 @@ function appKinds() {
 function agentTools() {
   const names = new Set()
   const catalog = read('src/main/application/tools/catalog.ts')
-  const defs = catalog.slice(catalog.indexOf('export const TOOL_DEFS'))
-  for (const m of defs.matchAll(/^ {2}([a-z0-9]+_[a-z0-9_]+|[a-z0-9]+_[a-z0-9]+): \{/gm)) names.add(m[1])
+  const defs = catalog.slice(catalog.indexOf('export const TOOL_DEFS')) + read('src/main/application/tools/adminCatalog.ts')
+  for (const m of defs.matchAll(/^ {2}([a-z0-9]+_[a-z0-9_]+): \{/gm)) names.add(m[1])
   for (const m of read('src/main/infrastructure/a2ui/mcp-tools.ts').matchAll(/name: '([a-z0-9_]+)'/g)) names.add(m[1])
   return names
 }

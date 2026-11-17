@@ -174,13 +174,13 @@
   </ToolStrip>
   <div class="view xp-scroll" aria-label="Snip">
     {#if image}
-      <img src={image} alt="The last snip" width={size?.width} height={size?.height} />
+      <img data-testid="snipping-tool-image" src={image} alt="The last snip" width={size?.width} height={size?.height} />
     {:else}
-      <p class="empty">Select the snip type using the New button, or click New for a rectangular snip.</p>
+      <p class="empty" data-testid="snipping-tool-empty">Select the snip type using the New button, or click New for a rectangular snip.</p>
     {/if}
   </div>
   <StatusStrip sizeGrip={false}>
-    <StatusStripLabel text={status} spring />
+    <StatusStripLabel testid="snipping-tool-status" text={status} spring />
     {#if delay > 0}<StatusStripLabel text="Delay: {delay} s" borders={['left']} width={90} />{/if}
   </StatusStrip>
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Snipping Tool" />

@@ -143,6 +143,9 @@ describe('the agent line next to the chips', () => {
     expect(noToolsOpen(['shell'], 1)).toBe(false)
     expect(toolsLine(['shell'], 0)).toBe('Open an app (Terminal, Browser, Code) to give the agent a tool.')
     expect(toolsLine(['shell'], 1)).toBe('The agent can use this chat.')
+    // Groups that need no window (boards, Task Scheduler, Control Center...) are not an open app.
+    expect(toolsLine(['shell', 'board', 'scheduler', 'settings', 'help'], 0)).toBe('Open an app (Terminal, Browser, Code) to give the agent a tool.')
+    expect(toolChips(['shell', 'board', 'scheduler', 'paint']).map((c) => c.group)).not.toContain('scheduler')
     expect(toolsLine(['shell', 'code'], 1)).toBeNull()
   })
 })

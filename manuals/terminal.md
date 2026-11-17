@@ -12,6 +12,7 @@ This manual describes Terminal. Terminal shows the commands that the agent runs.
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -87,6 +88,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Terminal is open. The permission **Run commands** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `terminal_run` | Runs a command and waits for it. The output appears in Terminal. |
+| `terminal_read` | Reads the last lines that `terminal_run` printed. |
 
 ## 5 - Common Tasks
 

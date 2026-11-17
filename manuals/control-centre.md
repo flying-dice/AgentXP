@@ -15,6 +15,7 @@ This manual describes Control Center. Control Center sets the agents, the permis
   - The About Page
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -72,7 +73,7 @@ Other agents can have other modes. You can type the id of a mode in the box. If 
 The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
 
 - **What the agent may do** – Read files, Write files, and Run commands. Point at **Run commands** to see "Run commands (Terminal)".
-- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Code review, and Agent may open apps.
+- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Agent Diagrams, Code review, Task Scheduler, Teams, Team chat, Control Center, Task Manager, Help, and Agent may open apps.
 
 Each row has two lines. The first line shows the name and the setting. The second line tells what the row covers. The table has no sideways scroll, so you can read every line at the default size of the window.
 
@@ -216,6 +217,31 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: close | Closes the window. Alt+F4. | `control-centre-menu-close` |
 | Menu: page * | View menu: shows a page. | `control-centre-menu-page-*` |
 | Context menu: page * | Shows a page. | `control-centre-ctx-page-*` |
+
+### What the Agent Can Do
+
+The agent can use the tools below at any time. The permission **Control Center** controls them. The agent can read the settings without a question. Each change shows a request first, also when the permission is **Allow**. If you click **Deny**, nothing changes. An open Control Center window shows the change at once.
+
+| Tool | What it does |
+|---|---|
+| `settings_get` | Reads every permission and the agents. |
+| `settings_set_permission` | Sets one permission to **Allow**, **Ask**, or **Deny**. |
+| `agent_list` | Lists the agents. |
+| `agent_add` | Adds an agent. |
+| `agent_update` | Changes an agent. |
+| `agent_remove` | Removes an agent. |
+| `agent_set_default` | Makes an agent the default. |
+| `skill_list` | Lists the skills. |
+| `skill_install` | Installs a skill from a folder on a drive of the desktop. |
+| `skill_remove` | Removes a skill. |
+| `skill_enable` | Turns a skill on or off. |
+| `mcp_list` | Lists the MCP servers. The agent never sees the value of a secret. |
+| `mcp_add` | Adds an MCP server. |
+| `mcp_update` | Changes an MCP server. |
+| `mcp_remove` | Removes an MCP server. |
+| `mcp_enable` | Turns an MCP server on or off. |
+| `mcp_tool_enable` | Shows or hides one tool of an MCP server. |
+| `mcp_test` | Connects to an MCP server and lists its tools, like **Test connection**. |
 
 ## 5 - Common Tasks
 

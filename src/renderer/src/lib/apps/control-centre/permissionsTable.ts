@@ -39,6 +39,12 @@ const META: { key: PolicyKey; group: PermissionGroupId; label: string; descripti
   { key: 'diagrams', group: 'apps', label: PERMISSION_NAMES['diagrams'], description: 'Draw, change, read and export diagrams in the Agent Diagrams window' },
   { key: 'board', group: 'apps', label: PERMISSION_NAMES['board'], description: 'Read and write Kanban boards, even while the Kanban window is closed' },
   { key: 'review', group: 'apps', label: PERMISSION_NAMES['review'], description: 'Comment on changes and give a verdict in a Code Review window' },
+  { key: 'scheduler', group: 'apps', label: PERMISSION_NAMES['scheduler'], description: 'List, create, change, run and end scheduled tasks' },
+  { key: 'teams', group: 'apps', label: PERMISSION_NAMES['teams'], description: 'List, create, change and remove profiles and teams' },
+  { key: 'rooms', group: 'apps', label: PERMISSION_NAMES['rooms'], description: 'Open, read and post in team chat rooms' },
+  { key: 'settings', group: 'apps', label: PERMISSION_NAMES['settings'], description: 'Read the settings. A change to permissions, agents, skills or MCP servers always asks you.' },
+  { key: 'taskmgr', group: 'apps', label: PERMISSION_NAMES['taskmgr'], description: 'List chats, agent programs and terminals. Ending an agent program always asks you.' },
+  { key: 'help', group: 'apps', label: PERMISSION_NAMES['help'], description: 'Search and read the manuals' },
   { key: 'openApps', group: 'apps', label: 'Agent may open apps', description: 'Let the agent open and close apps on this desktop' }
 ]
 

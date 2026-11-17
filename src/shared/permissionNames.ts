@@ -19,7 +19,13 @@ export const PERMISSION_NAMES: Record<Exclude<ToolGroup, 'shell'>, string> = {
   recycle: 'Recycle Bin',
   board: 'Kanban boards',
   diagrams: 'Agent Diagrams',
-  review: 'Code review'
+  review: 'Code review',
+  scheduler: 'Task Scheduler',
+  teams: 'Teams',
+  rooms: 'Team chat',
+  settings: 'Control Center',
+  taskmgr: 'Task Manager',
+  help: 'Help'
 }
 
 /** The tooltip of a permission name that has a longer form. */

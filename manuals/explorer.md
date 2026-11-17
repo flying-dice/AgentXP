@@ -15,6 +15,7 @@ This manual describes Explorer. Explorer shows the drives and the folders of a d
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -147,6 +148,16 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | F4 | Lets you type a path in the address bar. | `explorer-address` |
 | Enter | Opens the selected file or drive. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Explorer or Code is open. The permission **Read files** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `drives_list` | Lists the drives of the desktop. C: is the private disk of the agent. USB drives are your projects. |
+| `fs_list` | Lists the files and folders of one folder. It hides `.git` and `node_modules`. |
+| `fs_find` | Finds files and folders by name below a folder. A `*` matches any characters. |
 
 ## 5 - Common Tasks
 

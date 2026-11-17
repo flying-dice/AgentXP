@@ -16,6 +16,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
   - Save a file
 - 6 - Troubleshooting
@@ -238,6 +239,16 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Esc | Closes the peek. | none |
 | F11 | Focus on the file, or show the panes again. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Code is open. The permission **Code** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `code_open` | Opens a file in Code, optionally at a line. |
+| `code_reveal` | Scrolls to a range of lines and selects them, so that you see what the agent means. |
+| `code_show_diff` | Shows the change that the agent made to a file in the changes list. |
 
 ## 5 - Common Tasks
 

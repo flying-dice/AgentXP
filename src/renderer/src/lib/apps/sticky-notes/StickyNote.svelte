@@ -81,6 +81,7 @@
   class="note"
   data-testid={isPlan ? 'notes-plan' : 'notes-sticky'}
   data-note-id={note.id}
+  data-color={note.color}
   class:agent={note.author === 'agent'}
   style:left="{bounds.x}px"
   style:top="{bounds.y}px"
