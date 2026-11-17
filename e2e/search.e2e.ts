@@ -19,7 +19,9 @@ describe('search in Code and Explorer', () => {
       'README.md': '# Search demo\nThe needle is in src.\n',
       'src/index.ts': INDEX,
       'src/util.ts': 'export const util = true\n',
-      'docs/notes.md': 'nothing to see\n'
+      'docs/notes.md': 'nothing to see\n',
+      // A line that makes a nested-repeat pattern such as (a+)+$ backtrack for minutes.
+      'docs/slow.log': `${'a'.repeat(40)}b\n`
     })
     ctx = await startScriptedDesktop({ script: 'search', title: 'Search desktop', workspace })
   })
@@ -68,6 +70,25 @@ describe('search in Code and Explorer', () => {
     await see.text(code.searchSummary, 'Not a valid regular expression')
     await code.frame.getByTestId('code-search-regex').click()
     await see.attribute(code.frame.getByTestId('code-search-regex'), 'aria-checked', 'false')
+  })
+
+  it('Code: Files to include takes the globs agents write, and a runaway regular expression stops with a message', async () => {
+    const code = ctx.desktop.code()
+    await code.searchInclude.fill('src/**/*.ts')
+    await code.findInFiles('export')
+    await see.text(code.searchSummary, '4 results in 2 files')
+    await code.searchInclude.fill('*.{md,log}')
+    await code.findInFiles('needle')
+    await see.text(code.searchSummary, '1 result in 1 file')
+    await shot(ctx.desktopPage, 'search-10-code-globs')
+    await code.searchInclude.fill('*.log')
+    await code.frame.getByTestId('code-search-regex').click()
+    await code.findInFiles('(a+)+$')
+    // The app stays responsive: the search stops after its time limit and says why.
+    await see.text(code.searchSummary, 'takes too long')
+    await shot(ctx.desktopPage, 'search-11-code-regex-timeout')
+    await code.frame.getByTestId('code-search-regex').click()
+    await code.searchInclude.fill('')
   })
 
   it('Explorer: the Search Companion finds files by name and by a word in the file; Back closes it', async () => {

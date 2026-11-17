@@ -88,6 +88,8 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
     }
     await see.eventually(async () => expect(await browser.path.inputValue()).toBe(workspace.path))
     await page.keyboard.press('Tab')
+    // Enter only once the focus is in the Folder box (a busy machine moves it a moment later).
+    await see.eventually(async () => expect(await browser.path.evaluate((el) => el === document.activeElement)).toBe(true))
     await page.keyboard.press('Enter')
     await see.gone(browser.dialog)
   })
