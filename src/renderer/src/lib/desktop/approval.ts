@@ -13,6 +13,8 @@ export interface PendingApproval {
   sessionId: number
   interruptId: string
   chatTitle: string
+  /** The team chat room when a member of one asks (`chatTitle` is then the member's name); null for a chat. */
+  room: string | null
   title: string
   toolKind: ToolKind | null
   options: PermissionOptionDto[]
@@ -20,7 +22,7 @@ export interface PendingApproval {
 }
 
 /** Builds the pending approval of an interrupt, or null when it is not a tool permission request. */
-export function approvalFromInterrupt(sessionId: number, interrupt: Interrupt | null, state: AguiSessionState | null): PendingApproval | null {
+export function approvalFromInterrupt(sessionId: number, interrupt: Interrupt | null, state: AguiSessionState | null, room: string | null = null): PendingApproval | null {
   if (!interrupt) return null
   const meta = permissionMetadata(interrupt.metadata)
   if (!meta) return null
@@ -29,6 +31,7 @@ export function approvalFromInterrupt(sessionId: number, interrupt: Interrupt | 
     sessionId,
     interruptId: interrupt.id,
     chatTitle: state?.session.title || 'New chat',
+    room,
     title: meta.title,
     toolKind: meta.toolKind,
     options: meta.options,
@@ -45,8 +48,8 @@ export function approvalPath(approval: Pick<PendingApproval, 'toolCall'>): strin
 
 const titleInput = (approval: PendingApproval): ToolTitleInput => ({ title: approval.title, toolKind: approval.toolKind, path: approvalPath(approval) })
 
-/** "Allow the agent to change src/auth/redirect.ts?": no tool name, command or JSON. */
-export const approvalQuestion = (approval: PendingApproval): string => approvalTitle(titleInput(approval))
+/** "Allow the agent to change src/auth/redirect.ts?" ("Allow Tester to ..." for a room member): no tool name, command or JSON. */
+export const approvalQuestion = (approval: PendingApproval): string => approvalTitle(titleInput(approval), approval.room ? approval.chatTitle : 'the agent')
 
 /** "Change src/auth/redirect.ts": the first line of an Action Center row. */
 export const approvalLabel = (approval: PendingApproval): string => toolLabel(titleInput(approval))
@@ -56,8 +59,9 @@ const SHORT_TITLE = 28
 const shortTitle = (chatTitle: string): string => (chatTitle.length > SHORT_TITLE ? `${chatTitle.slice(0, SHORT_TITLE).trimEnd()}...` : chatTitle)
 
 /** "In chat 'Fix the login redirect bug...' (started 10:42)": the second line of an Action Center row. */
-export function approvalOrigin(chatTitle: string, startedAt?: string): string {
+export function approvalOrigin(chatTitle: string, startedAt?: string, room: string | null = null): string {
   const title = shortTitle(chatTitle)
+  if (room) return `${title} in the room '${shortTitle(room)}'`
   const date = startedAt ? new Date(startedAt) : null
   const time = date && !Number.isNaN(date.getTime()) ? ` (started ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')})` : ''
   return `In chat '${title}'${time}`

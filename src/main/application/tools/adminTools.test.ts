@@ -198,9 +198,10 @@ describe('room tools', () => {
     const said: [number, string, string][] = []
     const stopped: [number, number][] = []
     const rooms = new Map<number, { id: number; desktopId: number; teamId: number; title: string; cwd: string; createdAt: string }>()
+    let devSession: number | null = null
     const state = (id: number): RoomStateDto => ({
       room: rooms.get(id)!,
-      members: [{ profileId: 7, name: 'Dev', color: '#000', sessionId: null, activity: 'thinking', queued: 1 }],
+      members: [{ profileId: 7, name: 'Dev', color: '#000', sessionId: devSession, activity: 'thinking', queued: 1 }],
       messages: [{ id: 1, roomId: id, profileId: null, author: 'You', text: 'hello', createdAt: '' }]
     })
     const tools = createRoomTools({
@@ -227,6 +228,13 @@ describe('room tools', () => {
     expect(text(await tools.room_read({ room: 1 }, ctx))).toBe('[1] Squad: team Squad, folder E:\\\nMembers: Dev (thinking, 1 queued)\n#1 You: hello')
     await tools.room_post({ room: 'Squad', text: '@dev go' }, ctx)
     expect(said).toEqual([[1, '@dev go', 'Planner chat']])
+    // A member of the room posting into its own room is refused: its final answer is posted there for it.
+    devSession = 1
+    const own = await tools.room_post({ room: 'Squad', text: 'pong' }, ctx)
+    expect(own.isError).toBe(true)
+    expect(text(own)).toMatch(/You are Dev, a member of \[1\] Squad.*Do not call room_post/)
+    expect(said).toHaveLength(1)
+    devSession = null
     await tools.room_stop({ room: 1, member: 'Dev' }, ctx)
     expect(stopped).toEqual([[1, 7]])
     expect((await tools.room_read({ room: 1 }, { ...ctx, desktopId: 2 })).isError).toBe(true)

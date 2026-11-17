@@ -30,6 +30,13 @@ describe('approvals', () => {
     expect(approvalOrigin('Fix the login redirect bug and add a test', '2026-11-16T10:42:00')).toBe("In chat 'Fix the login redirect bug a...' (started 10:42)")
     expect(approvalOrigin('hello')).toBe("In chat 'hello'")
     expect(approvalOrigin('hello', 'nope')).toBe("In chat 'hello'")
+    expect(approvalOrigin('Tester', '2026-11-16T10:42:00', 'Development Team')).toBe("Tester in the room 'Development Team'")
+  })
+  it('names the member who asks in a team chat room', () => {
+    const member = approvalFromInterrupt(4, permissionInterrupt('t', 'terminal_run {"command":"npm test"}', 'other'), null, 'Development Team')!
+    expect(member.room).toBe('Development Team')
+    expect(approvalQuestion({ ...member, chatTitle: 'Tester' })).toBe('Allow Tester to run a command?')
+    expect(approvalFromInterrupt(4, permissionInterrupt('t', 'Run x', 'execute'), null)?.room).toBeNull()
   })
   it('says what each choice does', () => {
     expect(optionDescription('allow_once')).toMatch(/goes ahead/)

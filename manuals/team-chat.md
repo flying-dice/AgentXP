@@ -37,10 +37,10 @@ The bar at the top lists the members. Each member shows a colored letter, its na
 
 - **thinking…** – The member works on a message.
 - **starting…** – The agent program of the member starts.
-- **waiting for approval** – The member asked for permission. A request appears in the Action Center.
+- **waiting for approval** – The member asked for permission. The permission box opens over the desktop, for example **Allow Tester to run a command?** with **Requested by Tester in the room Development Team**. Click **Allow** or **Deny**. If you click **Not now**, the request stays in the Action Center and in the link on the top bar.
 - **stopped with an error** – The last message of the member failed.
 
-If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Session** to show the chat of that member in the pane at the right.
+If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Session** to show the chat of that member in the pane at the right. The pane shows what the member does while it works: its messages and each step, as it happens.
 
 ### The Messages
 
@@ -110,7 +110,7 @@ To see what a member did, click **Session** next to its name. The pane shows the
 ## 6 - Troubleshooting
 
 - **A member shows stopped with an error.** Read its last message in the room. Click **Session** to see the problem. Send a new message to try again.
-- **A member does not answer.** If the member shows **waiting for approval**, answer the request in the Action Center.
+- **A member does not answer.** If the member shows **waiting for approval**, answer the permission box. If you closed it with **Not now**, click the link on the top bar or open the Action Center.
 - **Members call each other without end.** Click **Stop** next to each member. Then change the instructions of the profiles to say when a member must not call another one.
 
 ## 7 - Need Help?

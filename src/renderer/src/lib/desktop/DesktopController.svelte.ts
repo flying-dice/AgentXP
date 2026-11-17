@@ -1,5 +1,6 @@
 import type { AgentXPApi } from '@shared/ipc'
 import type { FolderDto, Id, SessionDto } from '@shared/models'
+import type { RoomStateDto } from '@shared/teams'
 import {
   DESKTOP_CONTEXT_DESCRIPTION,
   windowHasAside,
@@ -130,6 +131,8 @@ export class DesktopController implements DesktopHost {
   actionCenterOpen = $state(false)
   infopanelsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
+  /** The sessions of team chat room members: the member's name and its room, so an approval says who asks and where. */
+  roomMembers = $state.raw<ReadonlyMap<Id, { member: string; room: string; roomId: Id }>>(new Map())
   /** Requests whose popup the user closed with "Not now": they stay in the Action Center and in the chat's waiting line. */
   private dismissed = $state.raw<ReadonlySet<string>>(new Set())
   selectedIcon = $state<string | null>(null)
@@ -248,7 +251,7 @@ export class DesktopController implements DesktopHost {
   constructor(api: AgentXPApi, inbox?: PermissionInbox) {
     this.api = api
     // One AG-UI store per chat; the apps take theirs from `inbox.storeFor` (see lib/apps/sessionStores).
-    this.inbox = inbox ?? new PermissionInbox((id) => this.createStore(id))
+    this.inbox = inbox ?? new PermissionInbox((id) => this.createStore(id), (id) => this.roomMembers.get(id)?.room ?? null)
     this.sessions = new SessionsStore(api.sessions)
     this.views = new KeyedDebouncer(VIEW_DEBOUNCE_MS, (id, view) => void this.api.desktop.updateView(id, view).catch(() => {}))
   }
@@ -269,6 +272,8 @@ export class DesktopController implements DesktopHost {
       this.sessions.start(this.api, (id) => this.forgetSession(id)),
       this.api.on('session.changed', () => this.syncStores()),
       this.api.on('status.message', ({ text }) => this.pushMessage(text)),
+      this.api.on('room.changed', (room) => this.applyRoom(room)),
+      this.api.on('room.removed', ({ id }) => this.dropRoom(id)),
       this.api.on('recycle.changed', () => void this.refreshRecycle()),
       // A cleared transcript: the chat's store drops its messages and tool cards (nothing streams while idle).
       this.api.on('transcript.cleared', ({ sessionId }) => {
@@ -280,6 +285,7 @@ export class DesktopController implements DesktopHost {
     if (state) this.apply(state)
     this.loaded = true
     this.syncStores()
+    void this.loadRooms()
     void this.refreshRecycle()
   }
 
@@ -294,6 +300,27 @@ export class DesktopController implements DesktopHost {
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
     if (this.noticeTimer) clearTimeout(this.noticeTimer)
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
+  }
+
+  /** The rooms of this desktop and who their members are (for the approvals of members). */
+  private async loadRooms(): Promise<void> {
+    try {
+      const rooms = await this.api.rooms.list(this.state.desktopId)
+      for (const room of rooms) this.applyRoom(await this.api.rooms.state(room.id))
+    } catch {
+      // Without the room names an approval of a member still shows; it names the member only.
+    }
+  }
+
+  private applyRoom({ room, members }: RoomStateDto): void {
+    if (room.desktopId !== this.state.desktopId) return
+    const next = new Map([...this.roomMembers].filter(([, m]) => m.roomId !== room.id))
+    for (const m of members) if (m.sessionId !== null) next.set(m.sessionId, { member: m.name, room: room.title, roomId: room.id })
+    this.roomMembers = next
+  }
+
+  private dropRoom(roomId: Id): void {
+    this.roomMembers = new Map([...this.roomMembers].filter(([, m]) => m.roomId !== roomId))
   }
 
   /** Counts the items in the Recycle Bin. */
@@ -358,7 +385,14 @@ export class DesktopController implements DesktopHost {
       // A review session's approvals (the reviewer may ask to read files) show up in the Action Center too.
       else if (w.view.app === 'code-review' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
     }
-    for (const s of this.allSessions) if (isBusy(s.status)) this.inbox.storeFor(s.id)
+    for (const s of this.allSessions) {
+      if (!isBusy(s.status)) continue
+      const known = this.inbox.has(s.id)
+      const store = this.inbox.storeFor(s.id) as Partial<Pick<SessionAgentStore, 'running' | 'pendingInterrupt' | 'connect'>>
+      // A turn the store did not start (a team room member, a scheduled task) is not streamed to it: a store that was idle when
+      // that turn began connects again, so it follows the turn live and shows its permission requests. A new store just connected.
+      if (known && s.status !== 'connecting' && store.running === false && !store.pendingInterrupt) void store.connect?.()
+    }
   }
 
   private pushMessage(text: string): void {

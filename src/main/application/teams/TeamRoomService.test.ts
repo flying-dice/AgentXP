@@ -89,6 +89,32 @@ const setup = () => {
 }
 
 describe('TeamRoomService', () => {
+  it('answers a message that came in while the member was working, in its next turn (it is not taken as seen)', async () => {
+    const { service, sessions, room, texts } = setup()
+    sessions.holdAnswers = true
+    sessions.answers['Planner'] = ['First answer.', 'Second answer.']
+    await service.say(room.id, 'first question')
+    await settle()
+    await service.say(room.id, '@Planner second question')
+    await settle()
+    expect(service.state(room.id).members[0]).toMatchObject({ activity: 'thinking', queued: 1 })
+    sessions.finish('Planner')
+    await settle()
+    // The queued call runs: the second question was not marked seen by the first answer.
+    expect(sessions.prompts).toHaveLength(2)
+    expect(sessions.prompts[1].text).toContain('You: @Planner second question')
+    sessions.finish('Planner')
+    await settle()
+    expect(texts()).toEqual(['You: first question', 'You: @Planner second question', 'Planner: First answer.', 'Planner: Second answer.'])
+  })
+
+  it('tells a member that its reply is posted for it (no room tool needed)', async () => {
+    const { service, sessions, room } = setup()
+    await service.say(room.id, 'hi')
+    await settle()
+    expect(sessions.prompts[0].text).toContain('your reply is posted in the room for you')
+  })
+
   it('sends a message without a mention to the first member, and posts its answer under its name', async () => {
     const { service, sessions, room, texts } = setup()
     sessions.answers['Planner'] = ['Plan is ready.']

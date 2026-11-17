@@ -66,7 +66,9 @@
       <h2 id="uac-q" data-testid="uac-question">{approvalQuestion(approval)}</h2>
     </div>
     <div class="body">
-      <div class="from" data-testid="uac-from">Requested by the agent in <em>{approval.chatTitle}</em></div>
+      <div class="from" data-testid="uac-from">
+        {#if approval.room}Requested by {approval.chatTitle} in the room <em>{approval.room}</em>{:else}Requested by the agent in <em>{approval.chatTitle}</em>{/if}
+      </div>
       <div class="reason" data-testid="uac-reason">Reason: {reason}</div>
       {#if queueText}<div class="queue" data-testid="uac-queue">{queueText}</div>{/if}
       <ApprovalDetail toolCall={approval.toolCall} testid="uac" note={false} />

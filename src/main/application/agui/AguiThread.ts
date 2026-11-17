@@ -1,6 +1,6 @@
 import { EventType, type Interrupt, type RunFinishedOutcome } from '@ag-ui/core'
 import { isNoticeableStopReason, STOP_NOTICE_ACTIVITY_TYPE, type StopNoticeActivity } from '@shared/agui-state'
-import type { Id, PermissionRequestDto } from '@shared/models'
+import type { Id, PermissionRequestDto, SessionStatus } from '@shared/models'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { AppEventMessage } from '../FanOutEventPublisher'
 import { AppError } from '../errors'
@@ -10,6 +10,9 @@ import { buildSessionState, type AguiQueries } from './buildSessionState'
 import { permissionInterrupt } from './permissionInterrupt'
 import { SessionStateModel } from './SessionStateModel'
 import { surfaceRemovedEvent, surfaceSnapshotEvent } from './a2uiActivity'
+
+/** Session states in which a turn runs: also one that no AG-UI run started (a team room member, a scheduled task). */
+const TURN_STATUSES: ReadonlySet<SessionStatus> = new Set(['working', 'awaiting_permission'])
 
 /** The run currently streaming this thread's events to a client. */
 export interface RunAttachment {
@@ -52,8 +55,18 @@ export class AguiThread {
     })
   }
 
+  /**
+   * A turn runs: one this thread started (a prompt or an A2UI action), or one the session runs on its own (main prompted it
+   * for a team room or a scheduled task). A connect follows either, so a background turn streams to the client and its
+   * permission requests reach it like a chat's.
+   */
   get turnActive(): boolean {
-    return this.turn !== null
+    return this.turn !== null || this.backgroundTurn
+  }
+
+  /** The session runs a turn that no AG-UI run started (its status says so). */
+  private get backgroundTurn(): boolean {
+    return this.turn === null && TURN_STATUSES.has(this.model.current().session.status)
   }
 
   /** Resolves when the running turn has ended (immediately when none runs). */
@@ -176,8 +189,13 @@ export class AguiThread {
   /** Applies a published app event of this session; returns nothing, pushes to the attached run. */
   onAppEvent(message: AppEventMessage): void {
     switch (message.name) {
-      case 'session.changed':
-        return this.updateState(() => this.model.setSession(message.payload))
+      case 'session.changed': {
+        const followed = this.backgroundTurn
+        this.updateState(() => this.model.setSession(message.payload))
+        // The background turn a run followed has ended (idle, error, closed): the run ends with it.
+        if (followed && !this.backgroundTurn && this.turn === null) this.finish({ type: 'success' })
+        return
+      }
       case 'desktop.changed':
         return this.updateState(() => this.model.setDesktop(message.payload))
       case 'tasks.changed':
