@@ -29,7 +29,8 @@ export const APP_KINDS = [
   'help',
   'code-review',
   'teams',
-  'team-chat'
+  'team-chat',
+  'task-scheduler'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
@@ -61,7 +62,8 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'snipping-tool',
   'recycle-bin',
   'help',
-  'teams'
+  'teams',
+  'task-scheduler'
 ]
 
 /** Windows that have no chat pane: Chat is the chat, Code Review has its reviewer panel, a surface is the agent's own UI. */
@@ -121,6 +123,8 @@ export type AppView =
   | { app: 'teams'; tab?: TeamsTab; selectedId?: Id | null }
   /** A team chat room: the members' messages, who is thinking, and the member whose own session is open in the side panel. */
   | { app: 'team-chat'; roomId: Id; title: string; openMemberId?: Id | null }
+  /** Task Scheduler: the selected task of the library (null = none) and the tab of its details. */
+  | { app: 'task-scheduler'; selectedTaskId: Id | null; tab: SchedulerTab }
 
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
@@ -130,6 +134,8 @@ export type TaskManagerTab = 'chats' | 'processes' | 'terminals' | 'performance'
 export type ControlCentrePage = 'agents' | 'permissions' | 'skills' | 'appearance' | 'about'
 /** The tabs of Teams. */
 export type TeamsTab = 'teams' | 'profiles' | 'rooms'
+/** The tabs of the details of a scheduled task. */
+export type SchedulerTab = 'general' | 'triggers' | 'actions' | 'conditions' | 'settings' | 'history'
 
 export type ViewOf<K extends AppKind> = Extract<AppView, { app: K }>
 
@@ -278,7 +284,8 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   help: 'Help and Support',
   'code-review': 'Code Review',
   teams: 'Teams',
-  'team-chat': 'Team Chat'
+  'team-chat': 'Team Chat',
+  'task-scheduler': 'Task Scheduler'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -472,7 +479,7 @@ export interface ProtocolEventDto {
   at: IsoDate
   desktopId: Id
   sessionId: Id | null
-  source: 'acp' | 'ag-ui' | 'mcp'
+  source: 'acp' | 'ag-ui' | 'mcp' | 'scheduler'
   direction: 'in' | 'out'
   level: EventLevel
   /** JSON-RPC method or AG-UI event type. */

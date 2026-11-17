@@ -10,7 +10,7 @@ AgentXP is hard Windows XP. Nothing in the UI may borrow from Vista or Windows 7
 | Caption buttons | 21 px rounded squares with a white border: blue for minimize and maximize, red for close. White glyphs. |
 | Taskbar | 30 px Luna blue bar. Green **start** button on the left (italic bold label), task buttons that show icon and title (160 px wide, shrinking), the running app pressed in, a blue tray with the clock on the right. |
 | Start menu | Blue frame with a header (user tile and name), white programs column with bold names, pale blue places column, footer with the power buttons. Hover is the selection blue with white text. |
-| Task pane | The side panels of the desktop are Explorer task panes: a blue gradient header with a bold white title over a pale blue body. They replace Windows 7 gadgets. |
+| Info panel | The side panels of the desktop are Explorer task panes: a blue gradient header with a bold white title over a pale blue body. They replace Windows 7 gadgets. |
 | Desktop | A blue sky and green hill; icons with white labels. |
 
 ## Controls

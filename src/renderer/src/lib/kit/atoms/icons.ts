@@ -11,7 +11,7 @@ export const iconNames = [
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
   'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agentxp',
   'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
-  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban'
+  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban', 'scheduler'
 ] as const
 
 export type IconName = (typeof iconNames)[number]
@@ -363,6 +363,15 @@ const markup: Record<IconName, string> = {
     '<rect x="2" y="2.500" width="3" height="11" fill="#7aa7de" stroke="#2f5f9f"/><rect x="5.500" y="1.500" width="3" height="12" fill="#a8cb7a" stroke="#4c7a2a"/>' +
       '<path d="M9.200 3l3 -.8 2.300 10.800-3 .8z" fill="#f0c04e" stroke="#b8902c" stroke-linejoin="round"/>' +
       '<path d="M1.500 13.500h13" stroke="#6b7886"/>'
+  ),
+  scheduler: defs(
+    vg('p', '#ffffff', '#e4eaf2') + vg('h', '#6fb1f5', '#2d6fc4') + rg('c', '#ffffff', '#dfe9f4'),
+    '<rect x="1.5" y="2.5" width="11" height="11" rx="1" fill="url(#~p)" stroke="#52667f"/>' +
+      '<path d="M1.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v2.500h-11z" fill="url(#~h)" stroke="#1f5aa8" stroke-linejoin="round"/>' +
+      '<path d="M4 1v3M10 1v3" stroke="#52667f" stroke-width="1.200" stroke-linecap="round"/>' +
+      '<path d="M3.500 7.500h2M3.500 9.500h2M3.500 11.500h2M6.500 7.500h2" stroke="#9aa9bd"/>' +
+      '<circle cx="11.500" cy="11.500" r="4" fill="url(#~c)" stroke="#2c3e5c" stroke-width=".9"/>' +
+      '<path d="M11.500 9.200v2.500l1.600 1" fill="none" stroke="#2c3e5c" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>'
   ),
   agentxp: defs(
     '<linearGradient id="~b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fa8ff"/><stop offset=".5" stop-color="#2a63e4"/><stop offset="1" stop-color="#0f3fb8"/></linearGradient><linearGradient id="~g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity=".08"/></linearGradient><linearGradient id="~n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8bea6a"/><stop offset=".5" stop-color="#3fb83a"/><stop offset="1" stop-color="#2a9a2a"/></linearGradient>',

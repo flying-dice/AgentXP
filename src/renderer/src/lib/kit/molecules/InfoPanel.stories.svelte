@@ -1,11 +1,11 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf'
-  import TaskPane from './TaskPane.svelte'
+  import InfoPanel from './InfoPanel.svelte'
   import Gauge from '../atoms/Gauge.svelte'
 
   const { Story } = defineMeta({
-    title: 'Molecules/TaskPane',
-    component: TaskPane,
+    title: 'Molecules/InfoPanel',
+    component: InfoPanel,
     parameters: { layout: 'centered', backgrounds: { disable: true } },
     args: { title: 'Context meter' },
     argTypes: { title: { control: 'text' } }
@@ -14,14 +14,14 @@
 
 <Story name="Default" asChild>
   <div class="stage">
-    <TaskPane title="Context meter">
+    <InfoPanel title="Context meter">
       <div class="row"><Gauge value={0.39} /><div><div class="big">39%</div><div class="muted">78k of 200k tokens</div></div></div>
-    </TaskPane>
+    </InfoPanel>
   </div>
 </Story>
 
 <Story name="TextOnly" asChild>
-  <div class="stage"><TaskPane title="Activity">Nothing has happened yet.</TaskPane></div>
+  <div class="stage"><InfoPanel title="Activity">Nothing has happened yet.</InfoPanel></div>
 </Story>
 
 <style>
@@ -40,6 +40,6 @@
   }
   .muted {
     font-size: 11px;
-    color: var(--xp-taskpane-muted);
+    color: var(--xp-infopanel-muted);
   }
 </style>

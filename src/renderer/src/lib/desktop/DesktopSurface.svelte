@@ -15,18 +15,18 @@
   interface Props {
     icons: DesktopIconDef[]
     selected: string | null
-    taskpanes: boolean
+    infopanels: boolean
     onselect?: (id: string | null) => void
     onopen?: (id: string) => void
     onnewchat?: () => void
     onopencomputer?: () => void
-    ontoggletaskpanes?: () => void
+    ontoggleinfopanels?: () => void
     oncontrolcentre?: () => void
     /** Any press on the bare desktop (closes popups). */
     onbackground?: () => void
   }
 
-  let { icons, selected, taskpanes, onselect, onopen, onnewchat, onopencomputer, ontoggletaskpanes, oncontrolcentre, onbackground }: Props = $props()
+  let { icons, selected, infopanels, onselect, onopen, onnewchat, onopencomputer, ontoggleinfopanels, oncontrolcentre, onbackground }: Props = $props()
 
   let root: HTMLDivElement | undefined = $state()
   let menuOpen = $state(false)
@@ -37,7 +37,7 @@
     { id: 'desktop-new-chat', label: 'New &chat', icon: 'session', action: () => onnewchat?.() },
     { id: 'desktop-open-computer', label: 'Open &Computer', icon: 'computer', action: () => onopencomputer?.() },
     { separator: true },
-    { id: 'desktop-taskpanes', label: '&TaskPanes', checked: taskpanes, action: () => ontoggletaskpanes?.() },
+    { id: 'desktop-infopanels', label: '&InfoPanels', checked: infopanels, action: () => ontoggleinfopanels?.() },
     { id: 'desktop-control-centre', label: 'Control &Centre', icon: 'options', action: () => oncontrolcentre?.() }
   ])
 

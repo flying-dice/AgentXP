@@ -17,8 +17,8 @@
     title: 'Desktop/DesktopSurface',
     component: DesktopSurface,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
-    args: { icons: [...icons], selected: null, taskpanes: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopencomputer: fn(), ontoggletaskpanes: fn(), oncontrolcentre: fn(), onbackground: fn() },
-    argTypes: { selected: { control: 'text' }, taskpanes: { control: 'boolean' } }
+    args: { icons: [...icons], selected: null, infopanels: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopencomputer: fn(), ontoggleinfopanels: fn(), oncontrolcentre: fn(), onbackground: fn() },
+    argTypes: { selected: { control: 'text' }, infopanels: { control: 'boolean' } }
   })
 </script>
 

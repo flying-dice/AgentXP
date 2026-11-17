@@ -23,7 +23,7 @@ This manual describes Event Viewer. Event Viewer lists the messages between Agen
 
 ## 1 - What It Is For
 
-Use Event Viewer to see what an agent sent and received. Read it to find out why a chat does not work. The messages use three logs, named ACP, AG-UI, and MCP. Only one window exists on a desktop.
+Use Event Viewer to see what an agent sent and received. Read it to find out why a chat does not work. The messages use four logs, named ACP, AG-UI, MCP, and Task Scheduler. Only one window exists on a desktop.
 
 ## 2 - Open It
 
@@ -33,7 +33,7 @@ Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in
 
 ### The Log Tree
 
-The tree is at the left. **AgentXP Logs** has the logs **ACP**, **AG-UI**, and **MCP**. **Chats** has one entry for each chat. Select an entry to show only its events. Point at **ACP**, **AG-UI**, or **MCP** to read what the log is. ACP is how AgentXP talks to the agent.
+The tree is at the left. **AgentXP Logs** has the logs **ACP**, **AG-UI**, **MCP**, and **Task Scheduler**. **Chats** has one entry for each chat. Select an entry to show only its events. Point at **ACP**, **AG-UI**, **MCP**, or **Task Scheduler** to read what the log is. The **Task Scheduler** log has the starts, ends, and failures of scheduled tasks. See **[Task Scheduler](task-scheduler.md)**. ACP is how AgentXP talks to the agent.
 
 ### The Event List
 

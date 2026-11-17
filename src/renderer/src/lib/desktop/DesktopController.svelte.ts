@@ -99,7 +99,7 @@ const emptyState = (): DesktopState => ({
 /**
  * The renderer side of one desktop: the live `DesktopState` (pushed by main), the commands that change
  * it, optimistic local window geometry while dragging, and the shell UI state (Start menu, Action Center,
- * taskpanes, selected icon). Implements `DesktopHost` for the apps.
+ * infopanels, selected icon). Implements `DesktopHost` for the apps.
  */
 export class DesktopController implements DesktopHost {
   readonly api: AgentXPApi
@@ -128,7 +128,7 @@ export class DesktopController implements DesktopHost {
   /** The "Code Review" dialog (pick the project and the ref), with the drive root to preselect. */
   reviewDialog = $state.raw<{ root?: VPath } | null>(null)
   actionCenterOpen = $state(false)
-  taskpanesVisible = $state(true)
+  infopanelsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
   selectedIcon = $state<string | null>(null)
   /** Set while the Snipping Tool waits for the user to pick a region (dims the desktop). */
@@ -186,9 +186,9 @@ export class DesktopController implements DesktopHost {
       return store ? [{ sessionId: s.id, title: store.state.session.title || s.title, status: effectiveStatus(store.state.session.status, s.status) ?? s.status, updatedAt: s.updatedAt, toolCalls: store.state.toolCalls }] : []
     })
   }
-  /** A chat was busy when the user took control: the Activity taskpane says "Stopped: you took control". */
+  /** A chat was busy when the user took control: the Activity infopanel says "Stopped: you took control". */
   stoppedStep = $state(false)
-  /** Requests that wait for the user's answer: the one count of the bar, the Activity taskpane and the taskbar flag. */
+  /** Requests that wait for the user's answer: the one count of the bar, the Activity infopanel and the taskbar flag. */
   get waitingCount(): number {
     return this.inbox.pending.length
   }

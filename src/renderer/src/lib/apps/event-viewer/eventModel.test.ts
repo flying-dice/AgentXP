@@ -41,7 +41,7 @@ describe('tree', () => {
     const tree = logTree([{ id: 4, title: 'Fix bug' }, { id: 5, title: '' }])
     expect(tree[0]?.text).toBe('Event Viewer')
     const logs = tree[0].children!.find((n) => n.id === ALL_NODE)!
-    expect(logs.children!.map((n) => n.text)).toEqual(['ACP', 'AG-UI', 'MCP'])
+    expect(logs.children!.map((n) => n.text)).toEqual(['ACP', 'AG-UI', 'MCP', 'Task Scheduler'])
     expect(tree[0].children!.find((n) => n.id === 'chats')!.children!.map((n) => n.text)).toEqual(['Fix bug', 'New chat'])
   })
   it('turns a node into a scope', () => {
@@ -172,5 +172,27 @@ describe('plain sentences for the rows (UX-213)', () => {
     expect(shownText([ev(1, { level: 'error' }), ev(2, { level: 'warning' }), ev(3, { level: 'warning' })])).toBe('1 error and 2 warnings shown')
     expect(hiddenText(25)).toBe('25 other events hidden: Show all')
     expect(hiddenText(1)).toBe('1 other event hidden: Show all')
+  })
+})
+
+describe('the Task Scheduler log', () => {
+  const task = (id: number, taskId: number, name: string, level: ProtocolEventDto['level'], message: string): ProtocolEventDto =>
+    ev(id, { source: 'scheduler', direction: 'out', sessionId: null, name, level, payload: JSON.stringify({ message, task: 'Review', taskId }) })
+
+  it('is a log of its own in the tree', () => {
+    expect(SOURCE_HINT.scheduler).toContain('scheduled tasks')
+    expect(nodeScope(sourceNode('scheduler'))).toMatchObject({ source: 'scheduler', title: 'Task Scheduler' })
+    expect(JSON.stringify(logTree([]))).toContain('source:scheduler')
+  })
+  it('shows the message of the event as the sentence and sends the reader to the History tab', () => {
+    const failed = task(1, 7, 'task/failed', 'error', 'The task "Review" failed: The agent stopped.')
+    expect(whatHappened(failed)).toBe('The task "Review" failed: The agent stopped.')
+    expect(whatToDo(failed)).toContain('History tab')
+  })
+  it('drops a failure once a later run of the same task completed, not a run of another task', () => {
+    const failed = task(1, 7, 'task/failed', 'error', 'The task "Review" failed.')
+    expect(lastProblem([failed, task(2, 7, 'task/completed', 'info', 'done')])).toBeNull()
+    expect(lastProblem([failed, task(2, 8, 'task/completed', 'info', 'done')])?.level).toBe('error')
+    expect(lastFinished([failed, task(2, 7, 'task/completed', 'info', 'done')])).toBe('Recovered: The task "Review" failed. A later run of the task completed.')
   })
 })

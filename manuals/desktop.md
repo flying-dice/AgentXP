@@ -62,9 +62,9 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens **Chats - Task Manager**, with the first chat selected, where a double-click on a chat opens its window. The pointer shows that AgentXP is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, Task Scheduler, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens **Chats - Task Manager**, with the first chat selected, where a double-click on a chat opens its window. The pointer shows that AgentXP is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
-Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **TaskPanes**, and **Control Center**.
+Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **InfoPanels**, and **Control Center**.
 
 ### The Windows
 
@@ -87,7 +87,7 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **Programs** – Lists New chat, Explorer, Code, Terminal, and Browser. The first item is highlighted when the menu opens. Press the Up and Down arrow keys to move and Enter to start the item. Type to search; Enter starts the first match.
 - **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
 - **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
-- **System Tools** – A folder (under All Programs) with Task Manager and Control Center. Event Viewer is in the left column of the Start menu.
+- **System Tools** – A folder (under All Programs) with Task Manager, Control Center, and Task Scheduler. Event Viewer is in the left column of the Start menu.
 - **Recent chats** – Lists your latest chats.
 - **Search programs and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
 - **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and AgentXP Desktops.
@@ -162,7 +162,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Maximize | Makes the window fill the desktop. | `window-maximize` |
 | Close | Closes the window. | `window-close` |
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
-| Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-taskpanes`, `menu-item-desktop-control-centre` |
+| Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |
 
 ### Taskbar
 

@@ -22,7 +22,7 @@ AgentXP is a program that gives coding agents a virtual Windows XP desktop to wo
   - The Taskbar
   - The Start Menu
   - The Action Center
-  - The TaskPanes
+  - The InfoPanels
 - 5 - Getting Started
   - Creating a Desktop for a Project
   - Plugging In a Project
@@ -42,6 +42,7 @@ AgentXP is a program that gives coding agents a virtual Windows XP desktop to wo
 - 9 - The Apps
   - The Chat Pane
   - The Event Viewer
+  - Task Scheduler
   - Adding an Agent
 - 10 - Windows That the Agent Draws
   - Three Places for a Form
@@ -164,7 +165,7 @@ If an agent asks for permission on a desktop that has no window, AgentXP shows a
 
 ## 4 - The Desktop
 
-The desktop window looks like Windows XP. It has a top bar for the agent, windows for the apps, a taskbar at the bottom, and taskpanes on the right side.
+The desktop window looks like Windows XP. It has a top bar for the agent, windows for the apps, a taskbar at the bottom, and infopanels on the right side.
 
 ![The AgentXP desktop with a chat, Explorer, Code, and Terminal open while the agent works](docs/images/desktop.png)
 
@@ -174,7 +175,7 @@ The desktop has these parts:
 - **Desktop icons** – Open **Computer**, **Chats**, **Code**, **Terminal**, **Browser**, **Control Center**, and **Recycle Bin**. Double-click an icon.
 - **Windows** – Show the apps. You can move, resize, minimize, maximize, and close them. To maximize a window, drag its title bar to the top of the desktop.
 - **Sticky notes** – Stay on the desktop. The agent can read and write them while Sticky Notes is open.
-- **TaskPanes** – Show the context meter, the clock, and the activity of the agent on the right side.
+- **InfoPanels** – Show the context meter, the clock, and the activity of the agent on the right side.
 - **Taskbar** – Shows the **Start** button, one button for each window, and the notification area.
 
 ### The Top Bar
@@ -208,7 +209,7 @@ The Start menu has these parts:
 
 - **Programs** – Opens **New chat**, **Explorer**, **Code**, **Terminal**, and **Browser**.
 - **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Snipping Tool**, **Sticky Notes**, and **Kanban**.
-- **System Tools** – Opens **Event Viewer**, **Task Manager**, and **Control Center**.
+- **System Tools** – Opens **Event Viewer**, **Task Manager**, **Task Scheduler**, and **Control Center**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
 - **Places** – Opens **Computer**, **Documents**, **Control Center**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **AgentXP Desktops...**.
@@ -223,15 +224,15 @@ Click the flag in the notification area to open the Action Center. It lists each
 
 Click **Review** next to a request to answer it. Chapter 7 explains how. The **Messages** list shows notes from AgentXP, for example that a USB drive is safe to remove. Click **Open Control Center** to change the permissions.
 
-### The TaskPanes
+### The InfoPanels
 
-The taskpanes are on the right side of the desktop. They have these parts:
+The infopanels are on the right side of the desktop. They have these parts:
 
 - **Context meter** – Shows how much of its context the agent uses in the chat.
 - **Session clock** – Shows the time and how long the agent runs.
 - **Activity** – Lists the last actions of the agent and their state.
 
-To hide the taskpanes, open **Control Center**, click **Appearance**, and clear **Show taskpanes on the desktop**.
+To hide the infopanels, open **Control Center**, click **Appearance**, and clear **Show infopanels on the desktop**.
 
 ## 5 - Getting Started
 
@@ -466,7 +467,8 @@ The desktop has these apps:
   ![The Kanban window with three lists of cards](docs/images/kanban-board.png)
 
 - **Snipping Tool** – Takes a picture of an area of the desktop or of one window.
-- **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen.
+- **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen. Task Scheduler writes its own log there.
+- **Task Scheduler** – Asks an agent to do a job at a time that you choose: once, every day, every week, every month, or when AgentXP starts. Each task keeps a history of its runs. See `manuals/task-scheduler.md`.
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
 - **Task Manager** – Lists the chats, the agent processes, the terminals, and the context use. **End process** stops an agent process.
 - **Control Center** – Sets the agents, the permissions, and the appearance of the desktop.
@@ -485,6 +487,14 @@ The right-click items **Explain this**, **Send selection to chat**, and **Ask ch
 The Event Viewer shows each message between AgentXP and the agent. Select a message to read its details. Use it to find out why the agent did something, or why AgentXP refused it.
 
 ![The Event Viewer with the ACP, AG-UI, and MCP messages of a chat](docs/images/event-viewer.png)
+
+### Task Scheduler
+
+Task Scheduler runs an agent on a schedule. Open it from **Start -> System Tools -> Task Scheduler**, or double-click its icon on the desktop. To make a task, click **Create Basic Task** in the task pane. The wizard asks for a name, a trigger, a project, and a prompt. Use **Create Task** when you need more than one trigger, or the conditions and settings.
+
+A task runs only while AgentXP is open. When AgentXP was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
+
+![The Task Scheduler window with four tasks and the History tab of the Morning review task](docs/images/task-scheduler-history.png)
 
 ### Adding an Agent
 

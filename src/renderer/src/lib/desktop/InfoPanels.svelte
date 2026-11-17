@@ -1,7 +1,7 @@
 <script lang="ts">
   import AnalogClock from '../kit/atoms/AnalogClock.svelte'
   import Gauge from '../kit/atoms/Gauge.svelte'
-  import TaskPane from '../kit/molecules/TaskPane.svelte'
+  import InfoPanel from '../kit/molecules/InfoPanel.svelte'
   import ToolStatusIcon from '../app/session/ToolStatusIcon.svelte'
   import { toolStatusView } from '../app/session/toolStatus'
   import { toolTitleOr } from '../app/session/toolTitles'
@@ -19,14 +19,14 @@
     feed: FeedItem[]
     /** `controlNote` of the feed: "You are in control. The agent asks first." while the user is in control; null otherwise. */
     controlNote?: string | null
-    /** Session start for the running-time line; defaults to when the taskpanes appeared. */
+    /** Session start for the running-time line; defaults to when the infopanels appeared. */
     since?: Date
     now?: Date
-    /** Opens the Event Viewer: the link under the Activity list, a double-click on the taskpane and its right-click menu. */
+    /** Opens the Event Viewer: the link under the Activity list, a double-click on the infopanel and its right-click menu. */
     onopeneventviewer?: () => void
     /** The link of the "This is not saved" sentence (UX-173): opens Control Center at Permissions. */
     onopenpermissions?: () => void
-    /** Where the last warning or error comes from (UX-171); without it the taskpane shows the tool calls only. */
+    /** Where the last warning or error comes from (UX-171); without it the infopanel shows the tool calls only. */
     api?: Pick<AgentXPApi, 'events' | 'on'>
     desktopId?: number
     /** What the desktop's chats are doing now ("start the long job", `workingText` of the bar); null when idle. */
@@ -36,7 +36,7 @@
   let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId, working = null }: Props = $props()
 
   const menu = new ContextMenu()
-  const menuItems = () => [{ id: 'taskpane-activity-menu-event-viewer', testid: 'taskpane-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
+  const menuItems = () => [{ id: 'infopanel-activity-menu-event-viewer', testid: 'infopanel-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
 
   // The newest warning or error, so "Drive E: was removed" shows here and not only in the Event Viewer.
   let events = $state.raw<ProtocolEventDto[]>([])
@@ -76,8 +76,8 @@
   })
 </script>
 
-<aside class="taskpanes" aria-label="TaskPanes">
-  <TaskPane title="Context meter">
+<aside class="infopanels" aria-label="InfoPanels">
+  <InfoPanel title="Context meter">
     <div class="meter">
       <Gauge value={ratio} label="Context used" />
       <div class="read">
@@ -86,8 +86,8 @@
         {#if chatTitle}<div class="muted name" title={chatTitle}>{chatTitle}</div>{/if}
       </div>
     </div>
-  </TaskPane>
-  <TaskPane title="Desktop clock">
+  </InfoPanel>
+  <InfoPanel title="Desktop clock">
     <div class="meter">
       <AnalogClock time={now} />
       <div class="read">
@@ -95,29 +95,29 @@
         <div class="muted">{running} running time</div>
       </div>
     </div>
-  </TaskPane>
-  <TaskPane title="Activity">
+  </InfoPanel>
+  <InfoPanel title="Activity">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div class="activity" role="group" aria-label="Activity" data-testid="taskpane-activity" title={onopeneventviewer ? 'Double-click to open the Event Viewer.' : undefined} ondblclick={() => onopeneventviewer?.()} oncontextmenu={(e) => onopeneventviewer && menu.show(e, menuItems())}>
+    <div class="activity" role="group" aria-label="Activity" data-testid="infopanel-activity" title={onopeneventviewer ? 'Double-click to open the Event Viewer.' : undefined} ondblclick={() => onopeneventviewer?.()} oncontextmenu={(e) => onopeneventviewer && menu.show(e, menuItems())}>
     <ul class="feed">
-      {#if controlNote}<li class="control" data-testid="taskpane-activity-control">{controlNote}</li>
-        <li class="not-saved" data-testid="taskpane-activity-not-saved"><span>{NOT_SAVED_NOTE.before}{#if onopenpermissions}<button type="button" class="open-events inline" data-testid="taskpane-activity-open-permissions" onclick={() => onopenpermissions?.()}>{NOT_SAVED_NOTE.link}</button>{:else}{NOT_SAVED_NOTE.link}{/if}{NOT_SAVED_NOTE.after}</span></li>{/if}
-      {#if problem}<li class="problem" data-testid="taskpane-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
-      {#if workingLine}<li class="working" data-testid="taskpane-activity-working"><span class="t" title={workingLine}>{workingLine}</span></li>{/if}
+      {#if controlNote}<li class="control" data-testid="infopanel-activity-control">{controlNote}</li>
+        <li class="not-saved" data-testid="infopanel-activity-not-saved"><span>{NOT_SAVED_NOTE.before}{#if onopenpermissions}<button type="button" class="open-events inline" data-testid="infopanel-activity-open-permissions" onclick={() => onopenpermissions?.()}>{NOT_SAVED_NOTE.link}</button>{:else}{NOT_SAVED_NOTE.link}{/if}{NOT_SAVED_NOTE.after}</span></li>{/if}
+      {#if problem}<li class="problem" data-testid="infopanel-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
+      {#if workingLine}<li class="working" data-testid="infopanel-activity-working"><span class="t" title={workingLine}>{workingLine}</span></li>{/if}
       {#each feed as item (item.key)}
         <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
       {:else}
-        {#if !problem && !working}<li class="muted" data-testid="taskpane-activity-last">{finished ?? 'Nothing has happened yet.'}</li>{/if}
+        {#if !problem && !working}<li class="muted" data-testid="infopanel-activity-last">{finished ?? 'Nothing has happened yet.'}</li>{/if}
       {/each}
     </ul>
-    {#if onopeneventviewer}<button type="button" class="open-events" data-testid="taskpane-activity-open-event-viewer" onclick={() => onopeneventviewer?.()}>Event Viewer</button>{/if}
+    {#if onopeneventviewer}<button type="button" class="open-events" data-testid="infopanel-activity-open-event-viewer" onclick={() => onopeneventviewer?.()}>Event Viewer</button>{/if}
     </div>
-  </TaskPane>
+  </InfoPanel>
 </aside>
 <ContextMenuStrip bind:open={menu.open} x={menu.x} y={menu.y} items={menu.items} label="Activity" />
 
 <style>
-  .taskpanes {
+  .infopanels {
     position: absolute;
     top: 40px;
     right: 14px;
@@ -143,7 +143,7 @@
   }
   .muted {
     font-size: 11px;
-    color: var(--xp-taskpane-muted);
+    color: var(--xp-infopanel-muted);
   }
   .name {
     overflow: hidden;
@@ -184,7 +184,7 @@
     background: none;
     font: inherit;
     font-size: 11px;
-    color: var(--xp-taskpane-text);
+    color: var(--xp-infopanel-text);
     text-decoration: underline;
     cursor: default;
   }

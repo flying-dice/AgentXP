@@ -19,7 +19,7 @@
   import { setDesktopContext } from '../desktop/context'
   import { DesktopController } from '../desktop/DesktopController.svelte'
   import DesktopSurface, { type DesktopIconDef } from '../desktop/DesktopSurface.svelte'
-  import TaskPanes from '../desktop/TaskPanes.svelte'
+  import InfoPanels from '../desktop/InfoPanels.svelte'
   import SnipOverlay from '../desktop/SnipOverlay.svelte'
   import StickyNotesLayer from '../desktop/StickyNotesLayer.svelte'
   import TopBar from '../desktop/TopBar.svelte'
@@ -90,6 +90,7 @@
     { id: 'terminal', label: 'Terminal', icon: 'terminal', title: 'Terminal: run commands' },
     { id: 'browser', label: 'Browser', icon: 'globe', title: 'Browser: browse the web together with the agent' },
     { id: 'control-centre', label: 'Control Center', icon: 'options', title: 'Control Center: agents, permissions and settings' },
+    { id: 'task-scheduler', label: 'Task Scheduler', icon: 'scheduler', title: 'Task Scheduler: run an agent at a time you choose' },
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
@@ -101,7 +102,7 @@
   })
   const groups: StartGroup[] = [
     groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes', 'kanban']),
-    groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre'])
+    groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre', 'task-scheduler'])
   ]
   const programs = $derived<StartItem[]>(
     START_APPS.map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
@@ -240,17 +241,17 @@
     <DesktopSurface
       icons={desktopIcons}
       selected={desktop.selectedIcon}
-      taskpanes={desktop.taskpanesVisible}
+      infopanels={desktop.infopanelsVisible}
       onselect={(id) => (desktop.selectedIcon = id)}
       onopen={openIcon}
       onnewchat={() => void desktop.newChatFlow()}
       onopencomputer={() => void desktop.openApp({ app: 'explorer', path: '' })}
-      ontoggletaskpanes={() => (desktop.taskpanesVisible = !desktop.taskpanesVisible)}
+      ontoggleinfopanels={() => (desktop.infopanelsVisible = !desktop.infopanelsVisible)}
       oncontrolcentre={() => void desktop.openApp({ app: 'control-centre' })}
       onbackground={() => desktop.closePopups()}
     />
-    {#if desktop.taskpanesVisible && !desktop.needsDesktop}
-      <TaskPanes chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
+    {#if desktop.infopanelsVisible && !desktop.needsDesktop}
+      <InfoPanels chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />

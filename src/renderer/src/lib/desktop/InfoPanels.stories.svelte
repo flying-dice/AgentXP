@@ -1,12 +1,12 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf'
-  import TaskPanes from './TaskPanes.svelte'
+  import InfoPanels from './InfoPanels.svelte'
 
   const now = new Date(2026, 10, 16, 3, 56)
 
   const { Story } = defineMeta({
-    title: 'Desktop/TaskPanes',
-    component: TaskPanes,
+    title: 'Desktop/InfoPanels',
+    component: InfoPanels,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
     args: {
       chatTitle: 'Fix login redirect bug',
@@ -25,10 +25,10 @@
 </script>
 
 <Story name="Default">
-  {#snippet template(args)}<div class="stage"><TaskPanes {...args} /></div>{/snippet}
+  {#snippet template(args)}<div class="stage"><InfoPanels {...args} /></div>{/snippet}
 </Story>
 <Story name="NoChat" args={{ chatTitle: null, contextUsed: 0, contextSize: 0, feed: [] }}>
-  {#snippet template(args)}<div class="stage"><TaskPanes {...args} /></div>{/snippet}
+  {#snippet template(args)}<div class="stage"><InfoPanels {...args} /></div>{/snippet}
 </Story>
 
 <style>

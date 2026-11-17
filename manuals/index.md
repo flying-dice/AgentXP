@@ -73,6 +73,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 - **[Sticky Notes](sticky-notes.md)** – Notes on the desktop, shared with the agent.
 - **[Kanban](kanban.md)** – Boards of cards that track work, shared with the agents.
 - **[Snipping Tool](snipping-tool.md)** – Capture part of the screen.
+- **[Task Scheduler](task-scheduler.md)** – Ask an agent to do a job at a time that you choose.
 
 ### System
 

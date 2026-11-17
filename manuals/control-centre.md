@@ -23,7 +23,7 @@ This manual describes Control Center. Control Center sets the agents, the permis
 
 ## 1 - What It Is For
 
-Use Control Center to add an agent, to choose when AgentXP asks you before the agent acts, and to hide the taskpanes.
+Use Control Center to add an agent, to choose when AgentXP asks you before the agent acts, and to hide the infopanels.
 
 ## 2 - Open It
 
@@ -116,7 +116,7 @@ The server dialog box has these parts:
 
 ### The Appearance Page
 
-The page has the option **Show taskpanes on the desktop**. The taskpanes are the context meter, the desktop clock, and the activity list. The theme is Windows XP Luna (Blue). You cannot change it.
+The page has the option **Show infopanels on the desktop**. The infopanels are the context meter, the desktop clock, and the activity list. The theme is Windows XP Luna (Blue). You cannot change it.
 
 ### The About Page
 
@@ -199,7 +199,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | OK | Saves the permissions and brings back the window that opened Control Center. | `permissions-ok` |
 | Apply | Saves the permissions. | `permissions-apply` |
 | Cancel | Drops the changes. | `permissions-cancel` |
-| Show taskpanes on the desktop | Shows or hides the taskpanes. | none |
+| Show infopanels on the desktop | Shows or hides the infopanels. | none |
 
 ### Menu Bar and Context Menu
 

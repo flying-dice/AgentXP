@@ -7,10 +7,12 @@
     label?: string
     disabled?: boolean
     class?: string
+    /** `data-testid` of the radio button. */
+    testid?: string
     children?: Snippet
   }
 
-  let { value, label, disabled: ownDisabled = false, class: className = '', children }: Props = $props()
+  let { value, label, disabled: ownDisabled = false, class: className = '', testid, children }: Props = $props()
 
   const group = useRadioGroup()
   const disabled = $derived(ownDisabled || group.disabled)
@@ -27,6 +29,7 @@
     class="dot"
     role="radio"
     aria-checked={checked}
+    data-testid={testid}
     tabindex={tabbable ? 0 : -1}
     {disabled}
     onclick={() => group.select(value)}

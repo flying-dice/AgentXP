@@ -11,6 +11,8 @@
     disabled?: boolean
     width?: number
     label?: string
+    /** `data-testid` of the field; the button that opens the calendar gets `<testid>-open`. */
+    testid?: string
     onchange?: (date: Date) => void
     class?: string
   }
@@ -22,6 +24,7 @@
     disabled = false,
     width = 220,
     label = 'Date',
+    testid,
     onchange,
     class: className = ''
   }: Props = $props()
@@ -62,6 +65,7 @@
       aria-label={label}
       aria-valuetext={text}
       aria-disabled={disabled}
+      data-testid={testid}
       onkeydown={adjust}
     >
       {text}
@@ -74,6 +78,7 @@
         aria-label="Open calendar"
         aria-haspopup="dialog"
         aria-expanded={open}
+        data-testid={testid ? `${testid}-open` : undefined}
         class="drop"
         onclick={() => (open = !open)}
       >

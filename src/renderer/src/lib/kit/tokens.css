@@ -107,12 +107,12 @@
   --xp-menubar-face: #ece9d8;
 }
 
-/* Added by the desktop shell: taskpanes, start menu, action center, UAC */
+/* Added by the desktop shell: infopanels, start menu, action center, UAC */
 :root {
-  --xp-taskpane-face: #d6dff7;
-  --xp-taskpane-border: #fff;
-  --xp-taskpane-text: #000;
-  --xp-taskpane-muted: #3b4d78;
+  --xp-infopanel-face: #d6dff7;
+  --xp-infopanel-border: #fff;
+  --xp-infopanel-text: #000;
+  --xp-infopanel-muted: #3b4d78;
   --xp-glass-face: linear-gradient(90deg, #3a73d8 0, #2a5ac0 100%);
   --xp-glass-border: #0831d9;
   --xp-start-hover: #316ac5;

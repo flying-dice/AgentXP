@@ -28,7 +28,7 @@ export interface PrepareOptions {
   firstRun?: boolean
   paused?: boolean
   agentOpened?: boolean
-  taskpanes?: boolean
+  infopanels?: boolean
   /** The Safely Remove menu of the USB tray icon is open. */
   usbMenu?: boolean
   /** The "Project removed" balloon is showing (as after an eject). */
@@ -92,7 +92,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   }
   controller.startOpen = !!options.startOpen
   controller.actionCenterOpen = !!options.actionCenter
-  controller.taskpanesVisible = options.taskpanes !== false
+  controller.infopanelsVisible = options.infopanels !== false
   controller.messages = options.actionCenter || options.review ? [
     { id: 1, text: 'Context is at 6%. The agent compacts automatically at 80%.', at: new Date() },
     { id: 2, text: 'Opened E:\\', at: new Date() }

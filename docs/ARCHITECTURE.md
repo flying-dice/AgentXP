@@ -177,6 +177,16 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   for the desktop of the chat, then removes the change. `RecycleService.restore` writes `revertedText` back (or deletes the file
   when the agent had deleted it), records that as a new file change of the chat when the chat still exists, and removes the row.
   `recycle.changed` goes to the owning window.
+- **Task Scheduler.** Pure rules are in `src/shared/schedule.ts` (next run time of a trigger: one time, daily, weekly, monthly,
+  at startup; wall-clock strings plus an injectable `Zone`) and `src/shared/scheduler.ts` (task validation and summaries).
+  `application/scheduler/TaskEngine` is timer based with an injected clock and timers. It arms one timer for the nearest run,
+  applies the conditions (no other task running, agent idle), the missed-run rule (a start up to two minutes late counts as on
+  time; an older one runs only with "run missed", otherwise it is a "Missed" history row), the overlap policy (ignore, queue at
+  most 10, stop the existing run), the time limit, and restart on failure. `AgentActionRunner` sends the prompt through the chat
+  services. `SchedulerService` is the use case that the IPC handlers call (`scheduler.*`); `scheduler.changed` goes to the
+  windows of the desktop. Four tables (`scheduled_tasks`, `scheduled_task_triggers`, `scheduled_task_actions`,
+  `scheduled_task_runs`, migration 015) hold the tasks and the last 100 runs of each. `ProtocolSchedulerLog` writes the
+  `scheduler` source of the Event Viewer. Limitation: tasks run only while the app is open; there is no OS-level wake-up.
 - **Event Viewer.** `ProtocolEventLog` (application/events) keeps a ring buffer of 5,000 events per desktop in memory (payload =
   pretty JSON cut at 64 KB) and pushes `events.appended` in 250 ms batches. Three taps feed it: (a) ACP JSON-RPC in both
   directions, `infrastructure/acp/tapStream` wraps the SDK stream and calls the `ProtocolTap` port that `SessionRuntime` binds

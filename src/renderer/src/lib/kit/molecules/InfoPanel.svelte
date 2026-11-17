@@ -10,18 +10,18 @@
   let { title, children, class: className = '' }: Props = $props()
 </script>
 
-<section class="xp-taskpane {className}" aria-label={title}>
+<section class="xp-infopanel {className}" aria-label={title}>
   {#if title}<h3>{title}</h3>{/if}
   <div class="content">{@render children?.()}</div>
 </section>
 
 <style>
   /* An XP task pane: a rounded header with a pale gradient and a bold blue title, over a light blue body. */
-  .xp-taskpane {
+  .xp-infopanel {
     box-sizing: border-box;
     border-radius: 6px 6px 0 0;
-    background: var(--xp-taskpane-face);
-    color: var(--xp-taskpane-text);
+    background: var(--xp-infopanel-face);
+    color: var(--xp-infopanel-text);
     font: var(--xp-font);
     user-select: none;
     overflow: hidden;
@@ -41,6 +41,6 @@
     padding: 8px 10px 9px;
     border: 1px solid #fff;
     border-top: 0;
-    background: var(--xp-taskpane-face);
+    background: var(--xp-infopanel-face);
   }
 </style>

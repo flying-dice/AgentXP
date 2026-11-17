@@ -19,6 +19,18 @@
   },
   "rules": [
     {
+      "id": "scheduled-review",
+      "match": {
+        "contains": "changes of yesterday"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Yesterday there were three commits. The sign-in redirect now keeps deep links, and the tests pass."
+        }
+      ]
+    },
+    {
       "id": "action",
       "match": {
         "contains": "triggered the action"

@@ -36,6 +36,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_find`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload` | url, page title, loading |
 | Control Center | `control-centre` | yes | none (system UI) | open page |
 | Task Manager | `agent-manager` | yes | none | none |
+| Task Scheduler | `task-scheduler` | yes | none (the agent does not edit schedules; a task starts a prompt through the chat services) | `selectedTaskId`, `tab` |
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
 | Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
@@ -109,7 +110,7 @@ Built from kit organisms, matching the mockup:
 - **Taskbar** - Start orb (AgentXP mark), one button per window, tray with clock and Action Center flag.
 - **Start menu** - apps, Recent chats, New chat, New desktop, Control Center, search box.
 - **Action Center** (tray popup) - pending permission requests from every chat on the desktop, newest first, each with **Review** -> UAC style dialog (dimmed desktop, shield, reason text such as "Writing files is set to Ask in Control Center").
-- **TaskPanes** (right column, can be hidden) - context meter per active chat, activity feed (last tool calls), session clock.
+- **InfoPanels** (right column, can be hidden) - context meter per active chat, activity feed (last tool calls), session clock.
 
 ## 7. Apps (renderer)
 
@@ -127,7 +128,7 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
   - **Input**: `DOM.scrollIntoViewIfNeeded` + `DOM.getBoxModel`, then trusted `Input.dispatchMouseEvent` at the box centre; `Input.dispatchKeyEvent` for `browser_press` (chords such as `Control+K`); `browser_type` focuses the node, selects all and calls `Input.insertText`, so contenteditable and React inputs work; the wheel (`mouseWheel`) scrolls pages and containers. Only `<select>` choice and the password-focus check use a page script.
   - **Safety**: password values are never returned and typing into a password field is refused; only http(s) navigation; the webview lockdown is unchanged; actions check `paused` and `userInControl` between steps (the tool gate already refuses or asks first).
   - `capturePage` PNG is still returned as MCP image content.
-- **Control Center** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (taskpanes on/off), About.
+- **Control Center** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (infopanels on/off), About.
 - **Agent Manager** - running agent processes, chats per process, status, context use, **End process**.
 
 ### Code Review and the embedded chat
@@ -331,6 +332,7 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 | Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
 | Paint | `canvas` (width, height), `tool`, `color` |
 | Sticky Notes | `note` (the selected note) or `notes` |
+| Task Scheduler | `tasks` (the number of tasks) and `selectedTask` (id, name, status, enabled, trigger count, last result) |
 | Kanban | `board` (the open board as text with ids) and `selectedCard` |
 | Help, Control Center, Snipping Tool | `topic`, `page`, `hasSnip` |
 
@@ -340,11 +342,26 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 
 **Tests.** `DesktopService.test.ts` (lazy creation, one session per window, delete on close and on New conversation, not a chat), `LauncherService.test.ts` (chat counts), `migration-008.test.ts`, `chatPane.test.ts`, `desktop-views.test.ts`, `askChat.test.ts`; `e2e/aside.e2e.ts` and `e2e/context-menus.e2e.ts` with the `aside.json` scripted agent.
 
+## 13. Task Scheduler (migration 015)
+
+Task Scheduler is a window in the Windows XP style: a Luna title bar, a task pane at the left, a task list, a details pane with
+the tabs General, Triggers, Actions, Conditions, Settings, and History, the Create Basic Task wizard, and the Create Task dialog.
+
+- **Contract.** `src/shared/schedule.ts` and `src/shared/scheduler.ts` (pure), DTOs in `desktop.ts`, channels `scheduler.*` in
+  `ipc-channels.ts`, push event `scheduler.changed`.
+- **Engine.** `application/scheduler/TaskEngine` (timers, clock and storage injected; nothing from electron or sqlite). It
+  starts with the app, runs the `startup` triggers, and handles missed runs once for each task.
+- **Data.** `scheduled_tasks`, `scheduled_task_triggers`, `scheduled_task_actions`, `scheduled_task_runs`. A removed agent sets
+  `agent_id` to NULL, and the action then uses the default agent. A task belongs to a desktop; deleting the desktop deletes its tasks.
+- **Event Viewer.** The source `scheduler` records `task/created`, `updated`, `deleted`, `enabled`, `disabled`, `started`, `completed`, `failed`, `stopped`, `missed`, `skipped`, and `restart-scheduled`.
+- **View state.** `selectedTaskId` and `tab` are saved with the window. `fakeScheduler` (renderer) backs the Storybook stories and
+  the web preview.
+
 ## 9. Build order
 
 1. Contracts: `src/shared/desktop.ts`, IPC additions, tool group table. (orchestrator)
 2. In parallel:
    - **Backend**: migration, repositories, `DesktopService`, `AppToolPolicy`, multi-window, bridge + MCP server tools and `list_changed`, ACP refusal, desktop state in AG-UI state and run context, browser driver.
-   - **Shell**: desktop surface, window manager, taskbar, start menu, top bar, Action Center + UAC, taskpanes, Storybook stories.
+   - **Shell**: desktop surface, window manager, taskbar, start menu, top bar, Action Center + UAC, infopanels, Storybook stories.
    - **Apps**: the eight apps against `fakeApi`, with stories.
 3. Integrate, smoke test, README chapter rewrite and new screenshots, merge.
