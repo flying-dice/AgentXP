@@ -3,6 +3,7 @@
   import MenuItem from './MenuItem.svelte'
   import MenuPopup from './MenuPopup.svelte'
   import { isSelectable, mnemonicKey, type MenuItemDef } from './MenuItem'
+  import { nudgeUp, placeBeside } from '../actions/popup'
 
   interface Props {
     items: MenuItemDef[]
@@ -24,6 +25,13 @@
     /** Left/Right pressed where this popup cannot handle it (switch menu in a MenuStrip). */
     onnavigate?: (direction: 'left' | 'right') => void
     element?: HTMLElement | null
+    /**
+     * Cap the height (px): a taller menu scrolls. Its submenus are then placed with fixed coordinates
+     * beside their item, so the scrolling box does not clip them.
+     */
+    maxHeight?: number
+    /** Fixed placement beside this item rect (a submenu of a scrolling menu). */
+    anchor?: DOMRect
   }
 
   let {
@@ -38,14 +46,22 @@
     onselect,
     onclose,
     onnavigate,
-    element = $bindable(null)
+    element = $bindable(null),
+    maxHeight,
+    anchor
   }: Props = $props()
 
   const uid = $props.id()
   let active = $state(-1)
   let openSub = $state(-1)
   let flipped = $state(false)
+  /** Upward shift (px, ≤ 0) that keeps a submenu above the bottom of the screen. */
+  let shift = $state(0)
   let subFocus = $state(false)
+  /** Item rect of the open submenu, when this menu scrolls (see `maxHeight`). */
+  let subAnchor = $state<DOMRect | undefined>(undefined)
+  /** Fixed coordinates when placed beside `anchor`. */
+  let fixedAt = $state<{ left: number; top: number } | null>(null)
   let hoverTimer: ReturnType<typeof setTimeout> | undefined
 
   const hasSub = (i: number): boolean => !!items[i]?.items?.length
@@ -62,6 +78,7 @@
   function openSubmenu(i: number, focus: boolean): void {
     if (!hasSub(i) || items[i].disabled) return
     active = i
+    subAnchor = maxHeight !== undefined ? element?.querySelectorAll<HTMLElement>(':scope > .slot')[i]?.getBoundingClientRect() : undefined
     openSub = i
     subFocus = focus
   }
@@ -132,8 +149,15 @@
   }
 
   function flipIfClipped(node: HTMLElement | null): void {
-    if (!submenu || !node) return
-    flipped = node.getBoundingClientRect().right > window.innerWidth
+    if (!node) return
+    if (anchor) {
+      fixedAt = placeBeside(anchor, node.getBoundingClientRect())
+      return
+    }
+    if (!submenu) return
+    const r = node.getBoundingClientRect()
+    flipped = r.right > window.innerWidth
+    shift = nudgeUp(r)
   }
 
   $effect(() => {
@@ -154,11 +178,20 @@
   class="menu {className}"
   class:flipped
   class:submenu
+  class:fixed={!!anchor}
+  class:scrolls={maxHeight !== undefined}
   role="menu"
   tabindex="-1"
   aria-label={label}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
   {style}
+  style:translate={shift ? `0 ${shift}px` : undefined}
+  style:max-height={maxHeight !== undefined ? `${maxHeight}px` : undefined}
+  style:left={fixedAt ? `${fixedAt.left}px` : undefined}
+  style:top={fixedAt ? `${fixedAt.top}px` : undefined}
+  onscroll={() => {
+    if (openSub >= 0) openSub = -1
+  }}
   {onkeydown}
   onpointerleave={() => {
     if (openSub < 0) active = -1
@@ -178,6 +211,7 @@
       {#if openSub === i && item.items}
         <MenuPopup
           submenu
+          anchor={subAnchor}
           items={item.items}
           {showMnemonics}
           autofocus={subFocus}
@@ -213,6 +247,14 @@
   .menu.submenu.flipped {
     left: auto;
     right: calc(100% - 3px);
+  }
+  .menu.submenu.fixed {
+    position: fixed;
+    right: auto;
+  }
+  .menu.scrolls {
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .slot {
     position: relative;

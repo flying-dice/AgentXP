@@ -404,6 +404,9 @@
     position: absolute;
     left: 0;
     bottom: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
     z-index: 100001;
   }
   .balloon {
