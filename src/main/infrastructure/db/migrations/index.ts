@@ -14,6 +14,7 @@ import { sql as kanban } from './013_kanban'
 import { sql as teams } from './014_teams'
 import { sql as taskScheduler } from './015_task_scheduler'
 import { sql as scheduledCapabilities } from './016_scheduled_capabilities'
+import { sql as diagrams } from './017_diagrams'
 
 export interface Migration {
   /** Strictly increasing; stored in `PRAGMA user_version`. */
@@ -43,5 +44,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 13, name: 'kanban', sql: kanban },
   { version: 14, name: 'teams', sql: teams },
   { version: 15, name: 'task_scheduler', sql: taskScheduler },
-  { version: 16, name: 'scheduled_capabilities', sql: scheduledCapabilities }
+  { version: 16, name: 'scheduled_capabilities', sql: scheduledCapabilities },
+  { version: 17, name: 'diagrams', sql: diagrams }
 ]

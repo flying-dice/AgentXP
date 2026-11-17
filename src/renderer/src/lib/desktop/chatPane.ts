@@ -148,6 +148,8 @@ export function suggestionsFor(app: AppKind, context: Record<string, unknown> | 
       return [chip('summarise', 'Summarise my notes')]
     case 'kanban':
       return [chip('summarise', 'Summarise this board'), chip('next', 'What should be done next?')]
+    case 'diagrams':
+      return [has(c['selection']) ? explainChip(app, windowId, c) : chip('describe', 'Describe this diagram'), chip('draw', 'Draw a flowchart of a login'), chip('tidy', 'Tidy up the layout')]
     case 'help':
       return [chip('explain', 'Explain this topic')]
     default:

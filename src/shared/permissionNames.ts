@@ -18,6 +18,7 @@ export const PERMISSION_NAMES: Record<Exclude<ToolGroup, 'shell'>, string> = {
   snip: 'Screen capture',
   recycle: 'Recycle Bin',
   board: 'Kanban boards',
+  diagrams: 'Agent Diagrams',
   review: 'Code review'
 }
 

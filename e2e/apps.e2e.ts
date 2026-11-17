@@ -20,6 +20,7 @@ describe('apps open from the Start menu', () => {
     ['notepad', 'notepad-app'],
     ['wordpad', 'wordpad-app'],
     ['paint', 'paint-app'],
+    ['diagrams', 'diagrams-app'],
     ['snipping-tool', 'snipping-tool-app'],
     ['sticky-notes', 'sticky-notes-app'],
     ['event-viewer', 'event-viewer-app'],

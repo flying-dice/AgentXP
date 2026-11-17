@@ -14,6 +14,7 @@ import PaintApp from './paint/PaintApp.svelte'
 import RecycleBinApp from './recycle-bin/RecycleBinApp.svelte'
 import SnippingToolApp from './snipping-tool/SnippingToolApp.svelte'
 import KanbanApp from './kanban/KanbanApp.svelte'
+import DiagramsApp from './diagrams/DiagramsApp.svelte'
 import StickyNotesApp from './sticky-notes/StickyNotesApp.svelte'
 import WordPadApp from './wordpad/WordPadApp.svelte'
 import SurfaceApp from './surface/SurfaceApp.svelte'
@@ -36,6 +37,7 @@ export const appRegistry: Record<AppKind, AppDefinition> = {
   wordpad: { kind: 'wordpad', title: 'WordPad', icon: 'wordpad', description: 'Read and write markdown documents', component: WordPadApp },
   'sticky-notes': { kind: 'sticky-notes', title: 'Sticky Notes', icon: 'sticky', description: 'Notes on the desktop, shared with the agent', component: StickyNotesApp },
   kanban: { kind: 'kanban', title: 'Kanban', icon: 'kanban', description: 'Boards of cards to track work, shared with the agents', component: KanbanApp },
+  diagrams: { kind: 'diagrams', title: 'Agent Diagrams', icon: 'diagram', description: 'Flowcharts, UML, ER diagrams and more, drawn with the agent', component: DiagramsApp },
   'event-viewer': { kind: 'event-viewer', title: 'Event Viewer', icon: 'eventlog', description: 'What the agent and the desktop send each other, as it happens', component: EventViewerApp },
   'snipping-tool': { kind: 'snipping-tool', title: 'Snipping Tool', icon: 'scissors', description: 'Capture part of the screen', component: SnippingToolApp },
   'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp },

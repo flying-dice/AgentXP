@@ -3,6 +3,7 @@
  * (`createFakeDesktop`). Reading `state` is reactive, and `updateView` is applied at once, so the
  * two-way flow (app reports, agent changes the view) can be played in Storybook.
  */
+import { untrack } from 'svelte'
 import type { Message } from '@ag-ui/core'
 import type { AgentXPApi } from '@shared/ipc'
 import type { Id } from '@shared/models'
@@ -105,7 +106,8 @@ export class StoryHost implements DesktopHost {
   contexts = $state.raw<Record<number, () => Record<string, unknown> | null | undefined>>({})
   panes = $state.raw<Record<number, boolean>>({})
   setContext = (windowId: Id, provider: (() => Record<string, unknown> | null | undefined) | null): void => {
-    const next = { ...this.contexts }
+    // Called from an app's effect: reading `contexts` there would make that effect depend on what it writes (a loop).
+    const next = { ...untrack(() => this.contexts) }
     if (provider) next[windowId] = provider
     else delete next[windowId]
     this.contexts = next

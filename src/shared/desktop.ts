@@ -22,6 +22,7 @@ export const APP_KINDS = [
   'wordpad',
   'sticky-notes',
   'kanban',
+  'diagrams',
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
@@ -45,6 +46,7 @@ export const AGENT_OPENABLE_APPS = [
   'wordpad',
   'sticky-notes',
   'kanban',
+  'diagrams',
   'event-viewer',
   'snipping-tool',
   'recycle-bin'
@@ -107,6 +109,22 @@ export type AppView =
   | { app: 'sticky-notes' }
   /** `boardId`: the board shown (null: the first one, or none yet). */
   | { app: 'kanban'; boardId: Id | null }
+  /**
+   * Agent Diagrams: the drawing (`path` a .xpdiagram VPath, or null when not saved yet), the page shown (0-based) and a
+   * short outline of that page, so the agent knows the ids of what it can see.
+   */
+  | {
+      app: 'diagrams'
+      path: VPath | null
+      title: string
+      dirty: boolean
+      page: number
+      pages: string[]
+      shapeCount: number
+      connectorCount: number
+      selection: string[]
+      outline: { shapes: string[]; connectors: string[]; more: number }
+    }
   | { app: 'event-viewer'; sessionId: Id | null; level: EventLevel | 'all'; selectedEventId: number | null }
   | { app: 'snipping-tool'; lastSnipId: string | null }
   | { app: 'recycle-bin'; selectedId: Id | null }
@@ -220,6 +238,7 @@ export const TOOL_GROUPS = [
   'snip', // screen_capture
   'recycle', // recycle_list, recycle_restore
   'board', // board_* (always on: a board is how the agents of a team track work, no window needed)
+  'diagrams', // diagram_* (the open Agent Diagrams window)
   'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
@@ -240,6 +259,7 @@ export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   snip: ['snipping-tool'],
   recycle: ['recycle-bin'],
   board: [],
+  diagrams: ['diagrams'],
   review: ['code-review']
 }
 
@@ -261,6 +281,7 @@ export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
   snip: 'snipping-tool',
   recycle: 'recycle-bin',
   board: 'kanban',
+  diagrams: 'diagrams',
   review: 'code-review'
 }
 
@@ -277,6 +298,7 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   wordpad: 'WordPad',
   'sticky-notes': 'Sticky Notes',
   kanban: 'Kanban',
+  diagrams: 'Agent Diagrams',
   'event-viewer': 'Event Viewer',
   'snipping-tool': 'Snipping Tool',
   'recycle-bin': 'Recycle Bin',
@@ -312,7 +334,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', review: 'allow' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', diagrams: 'allow', review: 'allow' },
   openApps: 'allow'
 }
 
@@ -328,7 +350,7 @@ export const DESKTOP_RESOURCE_URI = 'agentxp://desktop/state'
 export interface OpenWindowInput {
   desktopId: Id
   app: AppKind
-  /** Initial view hints: a VPath for explorer/notepad/code/wordpad/paint, a url for browser, a session for chat, a session and surface id for surface. */
+  /** Initial view hints: a VPath for explorer/notepad/code/wordpad/paint/diagrams, a url for browser, a session for chat, a session and surface id for surface. */
   path?: VPath
   url?: string
   sessionId?: Id

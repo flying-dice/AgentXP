@@ -61,6 +61,7 @@ import { createBoardTools } from './application/tools/boardTools'
 import { KanbanService } from './application/kanban/KanbanService'
 import { SqliteKanbanRepository } from './infrastructure/db/sqlite-kanban-repository'
 import { createPaintTools } from './application/tools/paintTools'
+import { createDiagramTools } from './application/tools/diagramTools'
 import { createRecycleTools } from './application/tools/recycleTools'
 import { createSnipTools } from './application/tools/snipTools'
 import { createWordpadTools } from './application/tools/wordpadTools'
@@ -440,6 +441,13 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createBrowserTools({ desktops, driver: browsers, requests: appRequests }),
       ...createPaintTools({ desktops, requests: appRequests }),
       ...createWordpadTools({
+        desktops,
+        vfs,
+        paths: toolPaths,
+        requests: appRequests,
+        files: { write: (sessionId, path, text) => sessionFiles.writeVPath(sessionId, path, text) }
+      }),
+      ...createDiagramTools({
         desktops,
         vfs,
         paths: toolPaths,

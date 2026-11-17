@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "desktop",
-  "description": "Desktop tools through the agentxp MCP server: a prompt containing \"closed\" is refused while the Terminal is closed; \"already open\" runs the command in an open Terminal; anything else opens the Terminal first, then runs a command.",
+  "description": "Desktop tools through the agentxp MCP server: a prompt containing \"closed\" is refused while the Terminal is closed; \"already open\" runs the command in an open Terminal; anything else opens the Terminal first, then runs a command. A prompt containing \"diagram\" opens Agent Diagrams, draws a four-step login flowchart, reads it back and saves it as C:\\Users\\Agent\\Documents\\login-flow.xpdiagram.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -67,6 +67,111 @@
         {
           "type": "message",
           "text": "The terminal printed: {{ran}}"
+        }
+      ]
+    },
+    {
+      "id": "draw-diagram",
+      "match": {
+        "contains": "diagram"
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "desktop_open_app",
+          "arguments": {
+            "app": "diagrams"
+          },
+          "saveAs": "opened"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_add",
+          "arguments": {
+            "shapes": [
+              {
+                "ref": "start",
+                "stencil": "flowchart.terminator",
+                "text": "Start"
+              },
+              {
+                "ref": "check",
+                "stencil": "flowchart.decision",
+                "text": "Signed in?"
+              },
+              {
+                "ref": "login",
+                "stencil": "flowchart.process",
+                "text": "Show login"
+              },
+              {
+                "ref": "home",
+                "stencil": "flowchart.process",
+                "text": "Show home"
+              }
+            ],
+            "connectors": [
+              {
+                "from": "start",
+                "to": "check"
+              },
+              {
+                "from": "check",
+                "to": "home",
+                "label": "Yes"
+              },
+              {
+                "from": "check",
+                "to": "login",
+                "label": "No"
+              },
+              {
+                "from": "login",
+                "to": "check"
+              }
+            ],
+            "layout": {
+              "direction": "TB"
+            }
+          },
+          "saveAs": "added"
+        },
+        {
+          "type": "expect",
+          "from": "added",
+          "contains": "Added 4 shapes and 4 connectors"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_read",
+          "arguments": {},
+          "saveAs": "outline"
+        },
+        {
+          "type": "expect",
+          "from": "outline",
+          "contains": "Signed in?"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_save",
+          "arguments": {
+            "path": "C:\\Users\\Agent\\Documents\\login-flow"
+          },
+          "saveAs": "saved"
+        },
+        {
+          "type": "expect",
+          "from": "saved",
+          "contains": "login-flow.xpdiagram"
+        },
+        {
+          "type": "message",
+          "text": "Drew the login flow: {{saved}}"
         }
       ]
     },

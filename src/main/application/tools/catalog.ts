@@ -56,6 +56,68 @@ const PAINT_OP = z.object({
   font: z.string().optional()
 })
 
+// ---- Agent Diagrams (the shapes are validated again by the Diagrams window, which knows the stencils)
+const DIAGRAM_STYLE = z
+  .object({
+    fill: z.string().optional().describe('CSS colour or "none"'),
+    gradient: z.boolean().optional(),
+    stroke: z.string().optional().describe('Line colour or "none"'),
+    strokeWidth: z.number().min(0).max(20).optional(),
+    dash: z.enum(['solid', 'dashed', 'dotted', 'dash-dot']).optional(),
+    opacity: z.number().min(0).max(1).optional(),
+    shadow: z.boolean().optional(),
+    fontFamily: z.string().optional(),
+    fontSize: z.number().min(4).max(144).optional(),
+    fontColor: z.string().optional(),
+    bold: z.boolean().optional(),
+    italic: z.boolean().optional(),
+    underline: z.boolean().optional(),
+    textAlign: z.enum(['left', 'center', 'right']).optional(),
+    verticalAlign: z.enum(['top', 'middle', 'bottom']).optional(),
+    startMarker: z.string().optional().describe('Connectors: none, arrow, open-arrow, triangle, filled-triangle, diamond, filled-diamond, circle, filled-circle, erd-one, erd-many, erd-one-only, erd-zero-one, erd-one-many, erd-zero-many'),
+    endMarker: z.string().optional().describe('Connectors: as startMarker'),
+    rounded: z.boolean().optional().describe('Connectors: rounded corners')
+  })
+  .describe('Style overrides; only the keys you give change')
+const DIAGRAM_DATA = z.record(z.string(), z.unknown()).describe('Stencil data (UML class: stereotype, abstract, attributes[], operations[]; ERD entity: attributes[] like "PK id int"; see diagram_stencils)')
+const DIAGRAM_SHAPE = z.object({
+  ref: z.string().optional().describe('A name for this shape, usable as from/to of connectors in the same call'),
+  stencil: z.string().describe('Stencil id such as flowchart.process, uml.class, erd.entity (diagram_stencils lists them)'),
+  x: z.number().optional().describe('Left edge in page units (1/96 inch); leave x and y out to place it automatically'),
+  y: z.number().optional(),
+  w: z.number().positive().optional(),
+  h: z.number().positive().optional(),
+  rotation: z.number().optional().describe('Degrees clockwise'),
+  text: z.string().optional(),
+  style: DIAGRAM_STYLE.optional(),
+  data: DIAGRAM_DATA.optional()
+})
+const DIAGRAM_END = z.union([z.string(), z.object({ x: z.number(), y: z.number() })]).describe('A shape id, a ref from this call, or a free point {x, y}')
+const DIAGRAM_CONNECTOR = z.object({
+  ref: z.string().optional(),
+  from: DIAGRAM_END,
+  to: DIAGRAM_END,
+  fromPort: z.string().optional().describe('A connection point: a stencil port (n, e, s, w, ...), an ERD attribute name, "y=<px>" on a lifeline, or "fx,fy" fractions; default: the best side, chosen dynamically'),
+  toPort: z.string().optional(),
+  y: z.number().optional().describe('Sequence diagrams: the page y of a message between two lifelines (sets both ports)'),
+  preset: z.string().optional().describe('flow, line, arrow, double-arrow, curved, elbow, dashed, uml.association, uml.inheritance, uml.realization, uml.dependency, uml.aggregation, uml.composition, uml.message, uml.async-message, uml.return, uml.include, uml.extend, uml.transition, uml.note-link, erd.one-to-one, erd.one-to-many, erd.one-to-one-or-many, erd.zero-or-one, erd.many-to-many, erd.chen'),
+  routing: z.enum(['orthogonal', 'straight', 'curved']).optional(),
+  label: z.string().optional(),
+  startLabel: z.string().optional().describe('Text near the start (a multiplicity such as 1 or 0..*)'),
+  endLabel: z.string().optional(),
+  style: DIAGRAM_STYLE.optional(),
+  waypoints: z.array(z.object({ x: z.number(), y: z.number() })).max(50).optional()
+})
+const DIAGRAM_PAGE = z.union([z.number().int(), z.string()]).optional().describe('Page number (1 = first) or name; default: the page the window shows')
+const DIAGRAM_LAYOUT = z.object({
+  algorithm: z.enum(['layered', 'grid', 'circle']).optional().describe('layered (default): flows and trees along the connectors; grid; circle'),
+  direction: z.enum(['TB', 'LR', 'BT', 'RL']).optional().describe('layered: TB top to bottom (default), LR left to right, ...'),
+  spacing: z.number().min(0).max(1000).optional(),
+  rankSpacing: z.number().min(0).max(1000).optional(),
+  columns: z.number().int().min(1).max(100).optional(),
+  ids: z.array(z.string()).optional().describe('Only these shapes; default: every shape that is not a container')
+})
+
 export interface ToolDefinition {
   group: ToolGroup
   description: string
@@ -76,10 +138,10 @@ export const TOOL_DEFS = {
   desktop_open_app: {
     group: 'shell',
     description:
-      'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*, Agent Paint: paint_*, WordPad: wordpad_*, Sticky Notes: notes_*, Event Viewer: events_query, Snipping Tool: screen_capture, Recycle Bin: recycle_*).',
+      'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*, Agent Paint: paint_*, WordPad: wordpad_*, Sticky Notes: notes_*, Event Viewer: events_query, Snipping Tool: screen_capture, Recycle Bin: recycle_*, Agent Diagrams: diagram_*).',
     input: z.object({
       app,
-      path: z.string().optional().describe('explorer, notepad, code, wordpad, paint: virtual path to show (E:\\src, relative to your working directory, ...); an Explorer without a path shows Computer (the drives)'),
+      path: z.string().optional().describe('explorer, notepad, code, wordpad, paint, diagrams: virtual path to show (E:\\src, relative to your working directory, ...); an Explorer without a path shows Computer (the drives)'),
       url: z.string().optional().describe('browser: address to load')
     })
   },
@@ -292,6 +354,106 @@ export const TOOL_DEFS = {
     group: 'wordpad',
     description: 'Write a markdown file and show it in WordPad. The write is recorded as one of your file changes (Changes list).',
     input: z.object({ path: path('File'), markdown: z.string(), windowId: windowIdParam })
+  },
+  diagram_new: {
+    group: 'diagrams',
+    description: 'Start a new, empty diagram in the Agent Diagrams window. The drawing it replaces stays in Undo; save it first when it matters.',
+    input: z.object({
+      title: z.string().optional(),
+      pageSize: z.enum(['letter-landscape', 'letter-portrait', 'a4-landscape', 'a4-portrait', 'a3-landscape', 'screen']).optional(),
+      pageName: z.string().optional(),
+      windowId: windowIdParam
+    })
+  },
+  diagram_stencils: {
+    group: 'diagrams',
+    description:
+      'List the stencils (shape types) you can add, by category: basic, flowchart, uml-class, uml-sequence, uml-usecase, uml-activity, uml-state, erd, containers, orgchart, network. Also lists the connector presets and line ends. Call it once before drawing a kind of diagram you have not drawn yet.',
+    input: z.object({
+      category: z.string().optional(),
+      query: z.string().optional().describe('Search words, such as "database" or "decision"'),
+      detail: z.boolean().optional().describe('Also list the connection points of each stencil'),
+      windowId: windowIdParam
+    })
+  },
+  diagram_add: {
+    group: 'diagrams',
+    description:
+      'Add shapes and connectors to the diagram in one call. Give each new shape a ref and connect refs (or existing ids). Connectors glue to the shapes and re-route when shapes move. Leave out x/y and pass layout to arrange everything automatically. Returns the new ids.',
+    input: z.object({
+      shapes: z.array(DIAGRAM_SHAPE).max(300).optional(),
+      connectors: z.array(DIAGRAM_CONNECTOR).max(600).optional(),
+      layout: DIAGRAM_LAYOUT.optional().describe('Run an automatic layout after adding'),
+      page: DIAGRAM_PAGE,
+      windowId: windowIdParam
+    })
+  },
+  diagram_update: {
+    group: 'diagrams',
+    description: 'Change shapes (position, size, rotation, text, style, data, stencil, locked) and connectors (ends, ports, preset, routing, labels, style) by id.',
+    input: z.object({
+      shapes: z.array(DIAGRAM_SHAPE.partial().extend({ id: z.string(), locked: z.boolean().optional() })).max(300).optional(),
+      connectors: z.array(DIAGRAM_CONNECTOR.partial().extend({ id: z.string() })).max(600).optional(),
+      page: DIAGRAM_PAGE,
+      windowId: windowIdParam
+    })
+  },
+  diagram_delete: {
+    group: 'diagrams',
+    description: 'Delete shapes and connectors by id. Deleting a shape also deletes the connectors glued to it.',
+    input: z.object({ ids: z.array(z.string()).min(1), page: DIAGRAM_PAGE, windowId: windowIdParam })
+  },
+  diagram_layout: {
+    group: 'diagrams',
+    description: 'Arrange the shapes of a page automatically: layered (flowcharts, trees, class and ER diagrams), grid or circle. Connectors re-route.',
+    input: DIAGRAM_LAYOUT.extend({ page: DIAGRAM_PAGE, windowId: windowIdParam })
+  },
+  diagram_arrange: {
+    group: 'diagrams',
+    description: 'Align, distribute, order or group shapes.',
+    input: z.object({
+      ids: z.array(z.string()).min(1),
+      action: z.enum(['align-left', 'align-center', 'align-right', 'align-top', 'align-middle', 'align-bottom', 'distribute-horizontal', 'distribute-vertical', 'front', 'back', 'forward', 'backward', 'group', 'ungroup']),
+      page: DIAGRAM_PAGE,
+      windowId: windowIdParam
+    })
+  },
+  diagram_pages: {
+    group: 'diagrams',
+    description: 'List, show (select), add, rename, delete or duplicate the pages of the diagram.',
+    input: z.object({ action: z.enum(['list', 'select', 'add', 'rename', 'delete', 'duplicate']), page: DIAGRAM_PAGE, name: z.string().optional(), windowId: windowIdParam })
+  },
+  diagram_select: {
+    group: 'diagrams',
+    description: 'Select shapes and connectors in the window, to point the user at them (an empty list clears the selection).',
+    input: z.object({ ids: z.array(z.string()), page: DIAGRAM_PAGE, windowId: windowIdParam })
+  },
+  diagram_read: {
+    group: 'diagrams',
+    description: 'Read the diagram: an outline of a page (every shape with id, stencil, position, size and text; every connector with its ends), or the full JSON.',
+    input: z.object({ page: DIAGRAM_PAGE, format: z.enum(['outline', 'json']).optional(), allPages: z.boolean().optional().describe('json: the whole document'), windowId: windowIdParam })
+  },
+  diagram_export: {
+    group: 'diagrams',
+    description:
+      'Export a page. png returns a picture of it, so you can look at your diagram; svg and json return the text, or with path write the file (recorded as one of your file changes).',
+    input: z.object({
+      format: z.enum(['png', 'svg', 'json']).default('png'),
+      path: path('File to write (svg or json)').optional(),
+      page: DIAGRAM_PAGE,
+      area: z.enum(['content', 'page']).optional().describe('content (default): the drawing with a margin; page: the whole sheet'),
+      windowId: windowIdParam
+    })
+  },
+  diagram_save: {
+    group: 'diagrams',
+    description: 'Save the diagram as an .xpdiagram file (default: the file it was opened from). The write is recorded as one of your file changes.',
+    input: z.object({ path: path('File').optional(), windowId: windowIdParam })
+  },
+  diagram_open: {
+    group: 'diagrams',
+    description: 'Open an .xpdiagram file in the Agent Diagrams window.',
+    input: z.object({ path: path('File'), windowId: windowIdParam })
   },
   notes_list: {
     group: 'notes',

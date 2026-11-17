@@ -248,6 +248,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Start chat | Starts the chat. | `new-chat-start` |
 | Cancel | Closes the dialog box. | `new-chat-cancel` |
 | Open file | Lets you select a file. | `open-file-dialog` |
+| Open file: a file or folder | Double-click a folder to open it. Double-click a file to open the file. | `open-file-item` |
 | Save as | Asks for the name of the file to save. | `save-as-dialog` |
 | Save as: file name | The name of the file. | `save-as-name` |
 | Message box | Asks a question. | `message-box` |

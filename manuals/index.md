@@ -70,6 +70,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 - **[Terminal](terminal.md)** – Watch the commands that the agent runs.
 - **[Browser](browser.md)** – Browse the web together with the agent.
 - **[Agent Paint](paint.md)** – Draw, and watch the agent draw.
+- **[Agent Diagrams](diagrams.md)** – Flowcharts, UML, ER diagrams and more, drawn by you and the agent.
 - **[Sticky Notes](sticky-notes.md)** – Notes on the desktop, shared with the agent.
 - **[Kanban](kanban.md)** – Boards of cards that track work, shared with the agents.
 - **[Snipping Tool](snipping-tool.md)** – Capture part of the screen.

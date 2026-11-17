@@ -62,6 +62,8 @@ describe('propertiesText and defaultOpener', () => {
   it('opens text in Notepad and code in Code', () => {
     expect(defaultOpener('E:\\a.md')).toBe('notepad')
     expect(defaultOpener('E:\\a.ts')).toBe('code')
+    expect(defaultOpener('E:\\flow.xpdiagram')).toBe('diagrams')
+    expect(otherOpener('E:\\flow.xpdiagram')).toBe('code')
   })
 })
 

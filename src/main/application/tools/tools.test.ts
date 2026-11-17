@@ -24,6 +24,7 @@ import { createBoardTools } from './boardTools'
 import { KanbanService } from '../kanban/KanbanService'
 import { SqliteKanbanRepository } from '../../infrastructure/db/sqlite-kanban-repository'
 import { createPaintTools } from './paintTools'
+import { createDiagramTools } from './diagramTools'
 import { createRecycleTools } from './recycleTools'
 import { createReviewTools } from './reviewTools'
 import { createSnipTools } from './snipTools'
@@ -231,6 +232,13 @@ beforeEach(async () => {
         requests,
         files: { write: async (sessionId, path, text) => void written.push({ sessionId, path, text }) }
       }),
+      ...createDiagramTools({
+        desktops,
+        vfs: f.vfs,
+        paths,
+        requests,
+        files: { write: async (sessionId, path, text) => void written.push({ sessionId, path, text }) }
+      }),
       ...createNotesTools({ notes: noteService }),
       ...createBoardTools({ kanban: new KanbanService({ kanban: new SqliteKanbanRepository(f.db), events: f.publisher }) }),
       ...createEventsTools({ log: eventLog }),
@@ -281,8 +289,23 @@ describe('tool catalog', () => {
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
     expect(byGroup('board')).toHaveLength(12)
+    expect(byGroup('diagrams')).toEqual([
+      'diagram_new',
+      'diagram_stencils',
+      'diagram_add',
+      'diagram_update',
+      'diagram_delete',
+      'diagram_layout',
+      'diagram_arrange',
+      'diagram_pages',
+      'diagram_select',
+      'diagram_read',
+      'diagram_export',
+      'diagram_save',
+      'diagram_open'
+    ])
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(60)
+    expect(TOOL_SPECS).toHaveLength(73)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -760,6 +783,62 @@ describe('paint tools', () => {
     appAnswers['fail'] = 'did not answer'
     expect(textOf(await run('paint_clear'))).toBe('did not answer')
     expect((await run('paint_draw', { ops: [] })).isError).toBe(true) // schema: at least one op
+  })
+})
+
+describe('diagram tools', () => {
+  beforeEach(() => void desktops.openWindow({ desktopId, app: 'diagrams' }))
+  const diagramsId = (): number => desktops.state(desktopId).windows.find((w) => w.app === 'diagrams')!.id
+
+  it('forwards the model calls to the Diagrams window and returns its answer', async () => {
+    appAnswers['add'] = 'Added 2 shapes and 1 connector.'
+    const shapes = [
+      { ref: 'a', stencil: 'flowchart.terminator', text: 'Start' },
+      { ref: 'b', stencil: 'flowchart.process', text: 'Work' }
+    ]
+    const connectors = [{ from: 'a', to: 'b', label: 'go' }]
+    expect(textOf(await run('diagram_add', { shapes, connectors, layout: { direction: 'LR' } }))).toBe('Added 2 shapes and 1 connector.')
+    expect(appCalls).toEqual([{ windowId: diagramsId(), method: 'add', params: { shapes, connectors, layout: { direction: 'LR' } } }])
+    appAnswers['read'] = 'Page 1 "Page-1": 2 shapes'
+    expect(textOf(await run('diagram_read', { page: 1 }))).toMatch(/2 shapes/)
+    expect(appCalls.at(-1)).toEqual({ windowId: diagramsId(), method: 'read', params: { page: 1 } })
+  })
+
+  it('validates the arguments before the window sees them', async () => {
+    expect((await run('diagram_add', { shapes: [{ text: 'no stencil' }] })).isError).toBe(true)
+    expect((await run('diagram_arrange', { ids: ['s1'], action: 'spin' })).isError).toBe(true)
+    expect((await run('diagram_delete', { ids: [] })).isError).toBe(true)
+    expect(appCalls).toEqual([])
+  })
+
+  it('returns a png export as an image and writes svg exports through the recorded write path', async () => {
+    appAnswers['export-png'] = PNG
+    const res = await run('diagram_export', { format: 'png' })
+    expect(res.content[1]).toEqual({ type: 'image', data: 'UE5H', mimeType: 'image/png' })
+    expect((await run('diagram_export', { format: 'png', path: 'x.png' })).isError).toBe(true)
+    appAnswers['export-svg'] = '<svg/>'
+    expect(textOf(await run('diagram_export', { format: 'svg' }))).toBe('<svg/>')
+    expect(textOf(await run('diagram_export', { format: 'svg', path: 'out/flow.svg' }))).toMatch(/Wrote E:\\out\\flow.svg/)
+    expect(written).toEqual([{ sessionId, path: 'E:\\out\\flow.svg', text: '<svg/>' }])
+  })
+
+  it('saves to the given or the current file, adding the extension, and tells the window', async () => {
+    appAnswers['serialize'] = { json: '{"format":"agentxp-diagram"}', path: null, title: 'Flow' }
+    expect(textOf(await run('diagram_save'))).toMatch(/give a path such as .*Flow\.xpdiagram/)
+    expect(textOf(await run('diagram_save', { path: 'flow' }))).toBe('Saved the diagram as E:\\flow.xpdiagram.')
+    expect(written).toEqual([{ sessionId, path: 'E:\\flow.xpdiagram', text: '{"format":"agentxp-diagram"}' }])
+    expect(appCalls.at(-1)).toEqual({ windowId: diagramsId(), method: 'saved', params: { path: 'E:\\flow.xpdiagram' } })
+    appAnswers['serialize'] = { json: '{}', path: 'E:\\kept.xpdiagram', title: 'Flow' }
+    expect(textOf(await run('diagram_save'))).toBe('Saved the diagram as E:\\kept.xpdiagram.')
+  })
+
+  it('opens a file by sending its text to the window, and reports a missing file or window', async () => {
+    await run('diagram_save', { path: 'none' }).catch(() => {})
+    appAnswers['serialize'] = { json: '{"x":1}', path: null, title: '' }
+    await run('diagram_save', { path: 'd.xpdiagram' })
+    expect((await run('diagram_open', { path: 'missing.xpdiagram' })).isError).toBe(true)
+    await desktops.closeWindow(diagramsId())
+    expect(textOf(await run('diagram_read'))).toMatch(/No Agent Diagrams window is open|closed/)
   })
 })
 

@@ -4,7 +4,7 @@
  */
 import type { VPath } from '@shared/vfs'
 import type { MenuItemDef } from '../../kit/molecules/MenuItem'
-import { opensInNotepad } from '../paths'
+import { opensInDiagrams, opensInNotepad } from '../paths'
 
 export interface EntryTarget {
   path: VPath
@@ -24,7 +24,7 @@ export interface EntryActions {
 export const OPEN_LABEL = '&Open'
 
 /** The program of a file that is not its default: the only one in Open with (there are two programs). */
-export const otherOpener = (path: VPath): 'code' | 'notepad' => (defaultOpener(path) === 'notepad' ? 'code' : 'notepad')
+export const otherOpener = (path: VPath): 'code' | 'notepad' => (defaultOpener(path) === 'code' ? 'notepad' : 'code')
 
 const OPENERS = {
   notepad: { id: 'explorer-ctx-open-notepad', label: '&Notepad', icon: 'file-text' },
@@ -90,8 +90,8 @@ export function propertiesText(entry: { name: string; path: VPath; kind: 'file' 
   return lines.join('\n')
 }
 
-/** The app Open picks for a file: Notepad for text, Code for the rest. */
-export const defaultOpener = (path: VPath): 'code' | 'notepad' => (opensInNotepad(path) ? 'notepad' : 'code')
+/** The app Open picks for a file: Agent Diagrams for drawings, Notepad for text, Code for the rest. */
+export const defaultOpener = (path: VPath): 'code' | 'notepad' | 'diagrams' => (opensInDiagrams(path) ? 'diagrams' : opensInNotepad(path) ? 'notepad' : 'code')
 
 export interface DriveActions {
   open: () => void

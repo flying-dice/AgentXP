@@ -82,7 +82,7 @@
       <span class="path">Look in: {dir === '' ? 'Computer' : dir}</span>
     </div>
     <div class="list">
-      <ListView {columns} {rows} bind:selected aria-label="Files" emptyText={error ?? 'This folder is empty.'} onactivate={activate} />
+      <ListView {columns} {rows} bind:selected rowTestid="open-file-item" aria-label="Files" emptyText={error ?? 'This folder is empty.'} onactivate={activate} />
     </div>
   </div>
   {#snippet buttons()}

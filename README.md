@@ -208,7 +208,7 @@ Click the **Start** button, or press Ctrl+Esc, to open the Start menu.
 The Start menu has these parts:
 
 - **Programs** – Opens **New chat**, **Explorer**, **Code**, **Terminal**, and **Browser**.
-- **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Snipping Tool**, **Sticky Notes**, and **Kanban**.
+- **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Agent Diagrams**, **Snipping Tool**, **Sticky Notes**, and **Kanban**.
 - **System Tools** – Opens **Event Viewer**, **Task Manager**, **Task Scheduler**, and **Control Center**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
@@ -334,6 +334,7 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Terminal | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
 | Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |
 | Agent Paint | Draw, read the picture, clear it, and resize it | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
+| Agent Diagrams | Draw flowcharts, UML, ER diagrams, org charts, network maps, and swimlanes with glued connectors; lay them out, read them, look at them as a picture, and save them | `diagram_new`, `diagram_stencils`, `diagram_add`, `diagram_update`, `diagram_delete`, `diagram_layout`, `diagram_arrange`, `diagram_pages`, `diagram_select`, `diagram_read`, `diagram_export`, `diagram_save`, `diagram_open` |
 | WordPad | Open, read, and write documents | `wordpad_open`, `wordpad_read`, `wordpad_write` |
 | Sticky Notes | List, add, change, and remove notes, and keep a plan note | `notes_list`, `notes_add`, `notes_update`, `notes_remove` |
 | Kanban boards | List, read, create, and change boards, lists, and cards, and move cards. Always on: the Kanban window does not need to be open. | `board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card` |
@@ -449,6 +450,8 @@ An app is a program that opens as a window on the desktop. Click **Start** to op
 
 ![Agent Paint with a picture of a house that the agent drew](docs/images/agent-paint.png)
 
+![Agent Diagrams with a flowchart and a UML class diagram that the agent drew](docs/images/agent-diagrams.png)
+
 The desktop has these apps:
 
 - **Chat** – Shows one chat with an agent. You write your messages here and follow the work of the agent.
@@ -461,6 +464,7 @@ The desktop has these apps:
 - **WordPad** – Lets you read and write documents in Markdown.
 - **Browser** – Shows web pages. You and the agent can use it.
 - **Agent Paint** – Lets you draw. The agent can draw in it too.
+- **Agent Diagrams** – Lets you draw diagrams from stencils: flowcharts, UML, ER diagrams, org charts, network maps, and swimlanes. Connectors stay glued to their shapes. The agent can draw in it too.
 - **Sticky Notes** – Puts notes on the desktop. You and the agent can read them. A plan note shows the tasks of a chat.
 - **Kanban** – Shows boards of cards with a title, a description, and an assignee. Drag cards between lists. You and the agents can read and write the boards, so a team of agents can track its work on one board.
 
