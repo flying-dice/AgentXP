@@ -210,12 +210,21 @@ describe('Task Scheduler', () => {
     await see.count(scheduler.historyRows, 0)
   })
 
-  it('the summary page of the tree counts the tasks', async () => {
-    await scheduler.frame.getByTestId('task-scheduler-node-root').click()
-    await see.text(scheduler.frame.getByTestId('task-scheduler-overview-total'), '2')
+  it('the task pane shows the counts when no task is selected and the task when one is', async () => {
+    await see.text(scheduler.frame.getByTestId('task-scheduler-details'), 'Morning review')
+    await scheduler.frame.getByTestId('task-scheduler-list').click({ position: { x: 5, y: 150 } })
+    await see.visible(scheduler.frame.getByTestId('task-scheduler-overview'))
     await see.text(scheduler.frame.getByTestId('task-scheduler-overview-ready'), '2')
-    await scheduler.frame.getByTestId('task-scheduler-overview-open-library').click()
-    await see.visible(scheduler.list)
+    await see.attribute(scheduler.action('run'), 'disabled', '')
+  })
+
+  it('the task pane links open Event Viewer and Task Manager', async () => {
+    await scheduler.frame.getByTestId('task-scheduler-place-event-viewer').click()
+    await see.visible(ctx.desktop.window('event-viewer'))
+    await ctx.desktop.closeWindow('event-viewer')
+    await scheduler.frame.getByTestId('task-scheduler-place-task-manager').click()
+    await see.visible(ctx.desktop.window('agent-manager'))
+    await ctx.desktop.closeWindow('agent-manager')
   })
 
   it('keeps the tasks when Agent7 restarts', async () => {

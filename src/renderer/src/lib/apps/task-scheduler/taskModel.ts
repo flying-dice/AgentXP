@@ -361,12 +361,6 @@ export function firstWizardProblem(draft: WizardDraft): { step: WizardStep; text
   return null
 }
 
-/** The steps the wizard shows on its left: the details step carries the name of the trigger ("Daily"). */
-export function wizardStepLabel(step: WizardStep, draft: Pick<WizardDraft, 'trigger'>): string {
-  if (step === 'details') return TRIGGER_KIND_LABEL[draft.trigger.kind]
-  return WIZARD_TITLE[step]
-}
-
 /** The task the wizard saves. */
 export function wizardInput(draft: WizardDraft): ScheduledTaskInput {
   return { name: draft.name.trim(), description: draft.description.trim(), enabled: true, triggers: [structuredClone(draft.trigger)], actions: [structuredClone(draft.action)], conditions: { ...DEFAULT_CONDITIONS }, settings: { ...DEFAULT_SETTINGS } }

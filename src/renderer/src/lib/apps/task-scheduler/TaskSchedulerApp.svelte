@@ -15,8 +15,9 @@
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
   import SplitContainer from '../../kit/organisms/SplitContainer.svelte'
   import StatusStrip from '../../kit/organisms/StatusStrip.svelte'
-  import TreeView from '../../kit/organisms/TreeView.svelte'
-  import type { TreeNodeData } from '../../kit/organisms/TreeView'
+  import TaskPane from '../../kit/organisms/TaskPane.svelte'
+  import TaskPaneLink from '../../kit/molecules/TaskPaneLink.svelte'
+  import TaskPaneSection from '../../kit/molecules/TaskPaneSection.svelte'
   import { showMessageBox } from '../../kit/organisms/messageBox'
   import AppAbout from '../shared/AppAbout.svelte'
   import { AppHelp } from '../shared/AppHelp.svelte'
@@ -27,19 +28,14 @@
   import TaskDetail from './TaskDetail.svelte'
   import TaskEditorDialog from './TaskEditorDialog.svelte'
   import TriggerDialog from './TriggerDialog.svelte'
-  import { blankTask, commandsFor, countText, defaultProject, inputOf, LIBRARY_COLUMNS, overview, statusText, taskRows } from './taskModel'
+  import { blankTask, commandsFor, countText, defaultProject, formatWhen, inputOf, lastResultText, LIBRARY_COLUMNS, overview, statusText, taskRows } from './taskModel'
 
   let { window: win, host }: AppProps<'task-scheduler'> = $props()
-
-  const LIBRARY = 'library'
-  const ROOT = 'root'
 
   let tasks = $state.raw<ScheduledTaskDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
   let sessions = $state.raw<SessionDto[]>([])
   let runs = $state.raw<TaskRunDto[]>([])
-  let node = $state<string | null>(LIBRARY)
-  let expanded = $state(new Set<string>([ROOT]))
   // svelte-ignore state_referenced_locally
   let selected = $state<string[]>(win.view.selectedTaskId !== null ? [String(win.view.selectedTaskId)] : [])
   // svelte-ignore state_referenced_locally
@@ -57,16 +53,6 @@
   const rows = $derived(taskRows(tasks))
   const summary = $derived(overview(tasks))
   const ctx = $derived({ agents, drives, sessions })
-  const nodes: TreeNodeData[] = [
-    {
-      id: ROOT,
-      testid: 'task-scheduler-node-root',
-      text: 'Task Scheduler (Local)',
-      icon: 'scheduler',
-      expanded: true,
-      children: [{ id: LIBRARY, testid: 'task-scheduler-node-library', text: 'Task Scheduler Library', icon: 'folder' }]
-    }
-  ]
 
   // ---- load and follow -----------------------------------------------------------------------------
 
@@ -176,7 +162,6 @@
     try {
       const saved = open.taskId === null ? await host.api.scheduler.create(desktopId, input) : await host.api.scheduler.update(open.taskId, input)
       editor = null
-      node = LIBRARY
       selected = [String(saved.id)]
       await refresh()
     } catch (e) {
@@ -211,7 +196,6 @@
     try {
       const saved = await host.api.scheduler.create(desktopId, input)
       wizard = false
-      node = LIBRARY
       selected = [String(saved.id)]
       await refresh()
       if (openProperties) await openEditor(tasks.find((t) => t.id === saved.id) ?? saved)
@@ -282,78 +266,71 @@
 <div class="ts" data-testid="task-scheduler-app" {onkeydown} oncontextmenu={(e) => ctxMenu.show(e, [...createItems('task-scheduler-ctx'), { separator: true }, { id: 'task-scheduler-ctx-refresh', testid: 'task-scheduler-ctx-refresh', label: 'R&efresh', icon: 'refresh', shortcut: 'F5', action: () => void refresh() }])}>
   <MenuStrip {menus} aria-label="Task Scheduler menu" />
   <div class="body">
-    <SplitContainer splitterDistance={176} panel1MinSize={120} panel2MinSize={300} fixedPanel="panel1">
-      {#snippet panel1()}
-        <TreeView testid="task-scheduler-tree" {nodes} bind:selected={node} bind:expanded aria-label="Task Scheduler" class="tree" />
-      {/snippet}
-      {#snippet panel2()}
-        <div class="row">
-          <div class="main">
-            {#if node === ROOT}
-              <div class="overview" data-testid="task-scheduler-overview">
-                <h2>Task Scheduler Summary</h2>
-                <p>Use Task Scheduler to ask an agent to do a job at a time you choose, once or again and again, for example every morning.</p>
-                <dl>
-                  <dt>Tasks:</dt>
-                  <dd data-testid="task-scheduler-overview-total">{summary.total}</dd>
-                  <dt>Ready:</dt>
-                  <dd data-testid="task-scheduler-overview-ready">{summary.ready}</dd>
-                  <dt>Running:</dt>
-                  <dd data-testid="task-scheduler-overview-running">{summary.running}</dd>
-                  <dt>Disabled:</dt>
-                  <dd data-testid="task-scheduler-overview-disabled">{summary.disabled}</dd>
-                  <dt>Last run failed:</dt>
-                  <dd data-testid="task-scheduler-overview-failed">{summary.failed}</dd>
-                  <dt>Next task:</dt>
-                  <dd data-testid="task-scheduler-overview-next">{summary.next ? `${summary.next.name}, ${summary.next.at}` : 'No task is due.'}</dd>
-                </dl>
-                <p><button type="button" class="link" data-testid="task-scheduler-overview-open-library" onclick={() => (node = LIBRARY)}>Open the Task Scheduler Library</button></p>
-              </div>
-            {:else}
-              <SplitContainer orientation="horizontal" splitterDistance={220} panel1MinSize={90} panel2MinSize={120} fixedPanel="panel2">
-                {#snippet panel1()}
-                  <div class="center">
-                    <div class="heading"><strong>Task Scheduler Library</strong><span class="count" data-testid="task-scheduler-count">{countText(tasks.length)}</span></div>
-                    <div class="grid">
-                      <ListView
-                        testid="task-scheduler-list"
-                        columns={LIBRARY_COLUMNS}
-                        {rows}
-                        bind:selected
-                        aria-label="Tasks"
-                        emptyText={error ?? 'No tasks. Use Create Basic Task or Create Task to add one.'}
-                        onactivate={() => void openEditor(current)}
-                        oncontextmenu={(_row, e) => ctxMenu.show(e, rowMenu())}
-                      />
-                    </div>
-                  </div>
-                {/snippet}
-                {#snippet panel2()}
-                  {#if current}
-                    <TaskDetail task={current} bind:tab {runs} {ctx} onopenchat={openChat} onclearhistory={() => void clearHistory()} />
-                  {:else}
-                    <p class="none" data-testid="task-scheduler-none">Select a task to see its details.</p>
-                  {/if}
-                {/snippet}
-              </SplitContainer>
-            {/if}
+    <div class="pane">
+      <TaskPane testid="task-scheduler-pane" aria-label="Task Scheduler tasks">
+        <TaskPaneSection title="Task Scheduler Tasks" testid="task-scheduler-section-tasks">
+          {#each libraryActions as a (a.id)}
+            <TaskPaneLink testid="task-scheduler-action-{a.id}" icon={a.icon} label={a.label} disabled={!a.enabled} onclick={a.run} />
+          {/each}
+        </TaskPaneSection>
+        <TaskPaneSection title={current ? 'Selected Task' : 'Selected Task (none)'} testid="task-scheduler-section-selected">
+          {#each taskActions as a (a.id)}
+            <TaskPaneLink testid="task-scheduler-action-{a.id}" icon={a.icon} label={a.label} disabled={!a.enabled} onclick={a.run} />
+          {/each}
+        </TaskPaneSection>
+        <TaskPaneSection title="Other Places" testid="task-scheduler-section-places">
+          <TaskPaneLink testid="task-scheduler-place-event-viewer" icon="eventlog" label="Event Viewer" title="See what the scheduler did, in the Task Scheduler log" onclick={() => void host.openEventViewer()} />
+          <TaskPaneLink testid="task-scheduler-place-task-manager" icon="taskmgr" label="Task Manager" title="See the chats that run" onclick={() => void host.openTaskManager('chats')} />
+        </TaskPaneSection>
+        <TaskPaneSection title="Details" collapsible={false} testid="task-scheduler-section-details">
+          {#if current}
+            <div class="details" data-testid="task-scheduler-details" data-task-id={current.id}>
+              <strong class="dname">{current.name}</strong>
+              <span>Status: {statusText(current)}</span>
+              <span>Next run: {current.nextRunAt ? formatWhen(current.nextRunAt) : 'none'}</span>
+              <span>Last result: {lastResultText(current) || 'not run yet'}</span>
+            </div>
+          {:else}
+            <div class="details" data-testid="task-scheduler-overview">
+              <strong class="dname">{countText(summary.total)}</strong>
+              <span>Ready: <span data-testid="task-scheduler-overview-ready">{summary.ready}</span></span>
+              <span>Running: <span data-testid="task-scheduler-overview-running">{summary.running}</span></span>
+              <span>Disabled: <span data-testid="task-scheduler-overview-disabled">{summary.disabled}</span></span>
+              <span>Last run failed: <span data-testid="task-scheduler-overview-failed">{summary.failed}</span></span>
+              <span data-testid="task-scheduler-overview-next">{summary.next ? `Next: ${summary.next.name}, ${summary.next.at}` : 'No task is due.'}</span>
+            </div>
+          {/if}
+        </TaskPaneSection>
+      </TaskPane>
+    </div>
+    <div class="main">
+      <SplitContainer orientation="horizontal" splitterDistance={240} panel1MinSize={90} panel2MinSize={120} fixedPanel="panel2">
+        {#snippet panel1()}
+          <div class="center">
+            <div class="heading"><Icon name="scheduler" /><strong>Scheduled tasks</strong><span class="count" data-testid="task-scheduler-count">{countText(tasks.length)}</span></div>
+            <div class="grid">
+              <ListView
+                testid="task-scheduler-list"
+                columns={LIBRARY_COLUMNS}
+                {rows}
+                bind:selected
+                aria-label="Tasks"
+                emptyText={error ?? 'No tasks. Click Create Basic Task or Create Task to add one.'}
+                onactivate={() => void openEditor(current)}
+                oncontextmenu={(_row, e) => ctxMenu.show(e, rowMenu())}
+              />
+            </div>
           </div>
-          <aside class="actions" aria-label="Actions">
-            <div class="ahead">Actions</div>
-            <div class="asub">{node === ROOT ? 'Task Scheduler (Local)' : 'Task Scheduler Library'}</div>
-            {#each libraryActions as a (a.id)}
-              <button type="button" class="act" data-testid="task-scheduler-action-{a.id}" disabled={!a.enabled} onclick={a.run}><Icon name={a.icon} />{a.label}</button>
-            {/each}
-            {#if node !== ROOT}
-              <div class="asub">{current ? `Selected Item: ${current.name}` : 'Selected Item'}</div>
-              {#each taskActions as a (a.id)}
-                <button type="button" class="act" data-testid="task-scheduler-action-{a.id}" disabled={!a.enabled} onclick={a.run}><Icon name={a.icon} />{a.label}</button>
-              {/each}
-            {/if}
-          </aside>
-        </div>
-      {/snippet}
-    </SplitContainer>
+        {/snippet}
+        {#snippet panel2()}
+          {#if current}
+            <TaskDetail task={current} bind:tab {runs} {ctx} onopenchat={openChat} onclearhistory={() => void clearHistory()} />
+          {:else}
+            <p class="none" data-testid="task-scheduler-none">Select a task to see its details.</p>
+          {/if}
+        {/snippet}
+      </SplitContainer>
+    </div>
   </div>
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={error ?? (current ? `${current.name}: ${statusText(current)}` : 'Ready')} spring />
@@ -404,21 +381,17 @@
     flex: 1;
     min-height: 0;
     display: flex;
-    flex-direction: column;
-    padding: 4px;
   }
-  .body :global(.tree) {
-    height: 100%;
-  }
-  .row {
-    height: 100%;
-    display: flex;
-    gap: 4px;
+  .pane {
+    flex: none;
+    width: 200px;
+    min-height: 0;
   }
   .main {
     flex: 1;
     min-width: 0;
     min-height: 0;
+    padding: 4px;
   }
   .center {
     height: 100%;
@@ -430,14 +403,15 @@
     flex: none;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     height: 24px;
     padding: 0 6px;
-    background: linear-gradient(#fdfeff, #e3ecf8);
+    background: var(--w7-face);
     border: 1px solid var(--w7-list-border);
     border-bottom: 0;
   }
   .count {
+    margin-left: 6px;
     color: var(--w7-text-muted);
   }
   .grid {
@@ -456,87 +430,13 @@
     padding: 8px;
     color: var(--w7-text-muted);
   }
-  .overview {
-    height: 100%;
-    box-sizing: border-box;
-    padding: 12px 16px;
-    overflow: auto;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
-  }
-  .overview h2 {
-    margin: 0 0 8px;
-    font: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    color: #1e3287;
-  }
-  .overview p {
-    margin: 0 0 10px;
-  }
-  .overview dl {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 3px 8px;
-    margin: 0 0 12px;
-  }
-  .overview dt {
-    color: var(--w7-text-muted);
-  }
-  .overview dd {
-    margin: 0;
-  }
-  .link {
-    border: 0;
-    padding: 0;
-    background: none;
-    font: inherit;
-    color: var(--w7-link, #0066cc);
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  .actions {
-    flex: none;
-    width: 170px;
-    height: 100%;
-    box-sizing: border-box;
+  .details {
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
-    overflow: auto;
+    gap: 2px;
   }
-  .ahead {
-    padding: 3px 8px;
-    background: linear-gradient(#fdfeff, #dce6f4);
-    border-bottom: 1px solid var(--w7-list-border);
-    font-weight: 700;
-  }
-  .asub {
-    padding: 4px 8px;
-    background: #e8eef7;
-    font-weight: 700;
-    color: #1e3287;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .act {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px;
-    border: 1px solid transparent;
-    background: transparent;
-    font: inherit;
-    text-align: left;
-    cursor: default;
-  }
-  .act:hover:not(:disabled) {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
-  }
-  .act:disabled {
-    color: var(--w7-text-disabled);
+  .dname {
+    overflow-wrap: anywhere;
+    margin-bottom: 2px;
   }
 </style>

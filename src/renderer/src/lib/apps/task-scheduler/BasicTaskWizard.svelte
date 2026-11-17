@@ -21,7 +21,6 @@
     withTriggerKind,
     wizardInput,
     wizardProblem,
-    wizardStepLabel,
     wizardSummary,
     WIZARD_DESCRIPTION,
     WIZARD_STEPS,
@@ -97,11 +96,6 @@
   <div class="wizard" data-testid="basic-wizard-body" data-step={step} {onkeydown}>
     <WizardHeader testid="basic-wizard-header" title={WIZARD_TITLE[step]} description={WIZARD_DESCRIPTION[step]} icon="scheduler" />
     <div class="body">
-      <ol class="steps" aria-label="Steps" data-testid="basic-wizard-steps">
-        {#each WIZARD_STEPS as s, i (s)}
-          <li class:current={s === step} class:done={i < index} aria-current={s === step ? 'step' : undefined}>{wizardStepLabel(s, draft)}</li>
-        {/each}
-      </ol>
       <div class="page">
         {#if step === 'name'}
           <LabeledField label="Name:" for="basic-wizard-name" labelWidth={90}>
@@ -136,6 +130,7 @@
   </div>
   {#snippet buttons()}
     <div class="bar">
+      <span class="stepno" data-testid="basic-wizard-step-number">Step {index + 1} of {WIZARD_STEPS.length}: {WIZARD_TITLE[step]}</span>
       <Button data-testid="basic-wizard-back" disabled={index === 0 || saving} onclick={back}>&lt; Back</Button>
       {#if last}
         <Button data-testid="basic-wizard-finish" isDefault disabled={saving} onclick={() => void finish()}>Finish</Button>
@@ -159,35 +154,6 @@
     display: flex;
     gap: 0;
   }
-  .steps {
-    flex: none;
-    width: 150px;
-    margin: 0;
-    padding: 12px 8px;
-    list-style: none;
-    background: linear-gradient(#f4f7fb, #dde6f2);
-    border-right: 1px solid var(--w7-group-border);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .steps li {
-    padding-left: 12px;
-    color: var(--w7-text-muted);
-  }
-  .steps li.done {
-    color: var(--w7-text);
-  }
-  .steps li.current {
-    color: #1e3287;
-    font-weight: 700;
-    position: relative;
-  }
-  .steps li.current::before {
-    content: '\25B8';
-    position: absolute;
-    left: 0;
-  }
   .page {
     flex: 1;
     min-width: 0;
@@ -196,7 +162,8 @@
     gap: 8px;
     padding: 12px 14px;
     overflow: auto;
-    background: var(--w7-window);
+    background: var(--w7-face);
+    border-bottom: 1px solid var(--w7-group-border);
   }
   .page :global(.top) {
     align-items: flex-start;
@@ -223,7 +190,11 @@
   }
   .bar {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 6px;
+  }
+  .stepno {
+    flex: 1;
+    color: var(--w7-text-muted);
   }
 </style>

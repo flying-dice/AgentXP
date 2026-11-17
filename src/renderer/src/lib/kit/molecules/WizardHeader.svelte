@@ -43,7 +43,7 @@
     font: inherit;
     font-size: 12px;
     font-weight: 700;
-    color: #1e3287;
+    color: var(--w7-text);
   }
   p {
     margin: 2px 0 0 14px;

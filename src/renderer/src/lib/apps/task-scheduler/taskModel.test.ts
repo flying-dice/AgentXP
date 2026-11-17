@@ -33,7 +33,6 @@ import {
   withTriggerKind,
   wizardInput,
   wizardProblem,
-  wizardStepLabel,
   wizardSummary,
   WIZARD_STEPS
 } from './taskModel'
@@ -227,10 +226,8 @@ describe('the Create Basic Task wizard', () => {
     expect(startup.trigger.kind).toBe('startup')
     expect(withTriggerKind(startup, 'once', now).trigger).toMatchObject({ kind: 'once', startAt: '2026-11-17T10:00' })
   })
-  it('labels the details step with the trigger and makes a task of the draft', () => {
+  it('makes a task of the draft', () => {
     const d = draft()
-    expect(wizardStepLabel('details', d)).toBe('Daily')
-    expect(wizardStepLabel('action', d)).toBe('Action')
     const input = wizardInput({ ...d, name: ' Nightly ', description: ' d ' })
     expect(input).toMatchObject({ name: 'Nightly', description: 'd', enabled: true })
     expect(input.triggers).toHaveLength(1)

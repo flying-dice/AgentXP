@@ -46,10 +46,6 @@ export class TaskSchedulerWindow {
     return this.id(`task-scheduler-action-${id}`)
   }
 
-  get tree(): Locator {
-    return this.id('task-scheduler-tree')
-  }
-
   /** The Create Basic Task wizard. */
   get wizard(): Locator {
     return this.id('basic-wizard')
