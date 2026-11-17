@@ -29,3 +29,14 @@ describe('team forms', () => {
     expect(rows[0]).toMatchObject({ about: 'Plan the work.', teams: 'T' })
   })
 })
+
+describe('inputs are sendable over IPC', () => {
+  // Svelte $state arrays are proxies; structuredClone (what Electron IPC uses) throws on them.
+  const proxied = <T,>(a: T[]): T[] => new Proxy(a, {})
+  it('copies the id arrays of a profile and a team into plain arrays', () => {
+    const profile = profileInputFromForm({ name: 'A', instructions: '', agentId: '', model: '', skillIds: proxied([1]), mcpServerIds: proxied([2]) })
+    const team = teamInputFromForm({ name: 'T', instructions: '', memberIds: proxied([1]), skillIds: proxied([2]), boardRef: '7' })
+    expect(structuredClone(profile)).toEqual(profile)
+    expect(structuredClone(team)).toEqual(team)
+  })
+})
