@@ -105,6 +105,11 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   attributes through a row's `attrs` field.
 - App windows: `AppWindowFrame` sets `data-testid="window-<appKind>"` plus `data-window-id`; each app root is
   `<app>-app` (`notepad-app`, `code-app`, ...).
+- **Every interactive element has one** (stable, so agents can validate changes with tools as well as specs):
+  native buttons, inputs, links, anything with a click / key handler or an interactive role, every kit control,
+  and every menu item (`testid:` or `id:` on the `MenuItemDef`). `npm run testids` (`scripts/check-testids.mjs`)
+  fails when one is missing. Popups are findable too: a menu bar menu is `menubar-<menu>-menu` (submenus
+  `-sub`), a tool strip drop-down's menu `<button testid>-menu`, a context menu `context-menu`.
 - New UI gets test ids as part of the change, with the same naming; do not rename existing ones lightly (specs
   depend on them).
 - **Every new `data-testid` must be documented in `manuals`**: add a row to the Controls reference table of the

@@ -228,9 +228,9 @@
   const moveItems = (card: CardDto): MenuItemDef[] =>
     (board?.columns ?? []).map((c) => ({ testid: `kanban-ctx-move-to-${c.id}`, label: c.name, radio: true, checked: c.id === card.columnId, disabled: c.id === card.columnId, action: () => moveCardTo(card, c.id) }))
   const assignItems = (card: CardDto): MenuItemDef[] => [
-    ...assignees.map((a) => ({ label: a.label, radio: true, checked: card.assignee === a.value, action: () => void run(() => api.updateCard(card.id, { assignee: a.value })) })),
+    ...assignees.map((a) => ({ testid: `kanban-ctx-assign-to-${a.value || 'nobody'}`, label: a.label, radio: true, checked: card.assignee === a.value, action: () => void run(() => api.updateCard(card.id, { assignee: a.value })) })),
     { separator: true } as MenuItemDef,
-    { label: 'Nobody', disabled: card.assignee === null, action: () => void run(() => api.updateCard(card.id, { assignee: '' })) }
+    { testid: 'kanban-ctx-unassign', label: 'Nobody', disabled: card.assignee === null, action: () => void run(() => api.updateCard(card.id, { assignee: '' })) }
   ]
 
   const cardItems = (card: CardDto): MenuItemDef[] => [

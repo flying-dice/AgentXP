@@ -24,6 +24,11 @@
   let pos = $state({ left: 0, top: 0 })
   let popup = $state<HTMLElement | null>(null)
   let anchor = $state<DOMRect | null>(null)
+  /** `File` / `&File` -> `file`: the test id stem of a menu bar button (`menubar-file`) and its menu (`menubar-file-menu`). */
+  const menuSlug = (label: string): string => {
+    const p = parseMnemonic(label)
+    return (p.before + p.key + p.after).toLowerCase().replace(/\s+/g, '-')
+  }
   let altPending = false
   let restoreTo: HTMLElement | null = null
 
@@ -134,7 +139,7 @@
     <button
       type="button"
       class="mb"
-      data-testid="menubar-{(parts.before + parts.key + parts.after).toLowerCase().replace(/\s+/g, '-')}"
+      data-testid="menubar-{menuSlug(menu.label)}"
       class:open={openIndex === i}
       role="menuitem"
       tabindex={focusIndex === i ? 0 : -1}
@@ -153,6 +158,7 @@
       <MenuPopup
         bind:element={popup}
         layer
+        testid="menubar-{menuSlug(menus[openIndex].label)}-menu"
         items={menus[openIndex].items}
         label={menus[openIndex].label.replace('&', '')}
         showMnemonics={keyboardMode}

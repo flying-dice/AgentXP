@@ -238,6 +238,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Show all lines | Shows every line of a long change, or the whole change in a small window. | `permission-detail-more` |
 | Don't ask again for this kind of action | Saves your answer. | `permission-remember` |
 | Project tree | The tree of files, shown in Code. | `file-tree` |
+| Sidebar tab label | Shows the surface of the tab in the sidebar. | `chat-sidebar-tab-label` |
 
 ### Menu Bar and Context Menu
 

@@ -97,7 +97,7 @@
   onkeydown={(e) => ctx.key(e, menu)}
 >
   <!-- svelte-ignore a11y_no_static_element_interactions -- the title bar is a pointer-only drag handle; the note has its own keyboard-reachable buttons -->
-  <header class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
+  <header data-testid="notes-sticky-bar" class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
     <button type="button" class="btn" data-testid="notes-sticky-add" title="New note" aria-label="New note" onpointerdown={(e) => e.stopPropagation()} onclick={onadd}>+</button>
     {#if note.author === 'agent'}<span class="by" title="Written by the agent">AgentXP</span>{/if}
     <span class="spring"></span>
@@ -108,7 +108,7 @@
       <div class="head">{chatTitle ?? 'Plan'}</div>
       {#each items as item (item.id)}
         <div class="item" role="listitem" class:done={item.done} class:active={item.active}>
-          <CheckBox checked={item.done} readonly><span>{item.text}</span></CheckBox>
+          <CheckBox testid="notes-plan-item-check" checked={item.done} readonly><span>{item.text}</span></CheckBox>
         </div>
       {:else}
         <div class="none">No tasks yet.</div>
@@ -128,7 +128,7 @@
       oninput={() => onpatch({ text: draft })}
     ></textarea>
   {/if}
-  <div class="grip" role="separator" aria-label="Resize note" aria-orientation="horizontal" onpointerdown={(e) => down('resize', e)} onpointermove={move} onpointerup={up} onpointercancel={up}></div>
+  <div data-testid="notes-sticky-grip" class="grip" role="separator" aria-label="Resize note" aria-orientation="horizontal" onpointerdown={(e) => down('resize', e)} onpointermove={move} onpointerup={up} onpointercancel={up}></div>
 </article>
 <ContextMenuStrip items={ctx.items} bind:open={ctx.open} x={ctx.x} y={ctx.y} label="Note menu" />
 

@@ -1,5 +1,7 @@
 <script lang="ts">
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     value?: number
     min?: number
     max?: number
@@ -15,6 +17,7 @@
     class?: string
   }
   let {
+    testid,
     value = $bindable(0),
     min = 0,
     max = 10,
@@ -98,7 +101,7 @@
   })
 </script>
 
-<div
+<div data-testid={testid}
   bind:this={root}
   role="slider"
   tabindex={disabled ? -1 : 0}

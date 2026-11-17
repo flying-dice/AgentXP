@@ -1,5 +1,7 @@
 <script lang="ts">
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     orientation?: 'horizontal' | 'vertical'
     value?: number
     min?: number
@@ -16,6 +18,7 @@
     class?: string
   }
   let {
+    testid,
     orientation = 'vertical',
     value = $bindable(0),
     min = 0,
@@ -99,7 +102,7 @@
   }
 </script>
 
-<div
+<div data-testid={testid}
   role="scrollbar"
   tabindex={inactive ? -1 : 0}
   aria-orientation={orientation}

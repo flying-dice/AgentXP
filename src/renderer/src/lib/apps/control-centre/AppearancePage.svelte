@@ -23,7 +23,7 @@
 <p class="lead">Change how the desktop looks.</p>
 <GroupBox text="Desktop infopanels">
   <div class="body">
-    <CheckBox label="Show infopanels on the desktop" {checked} onchange={toggle} />
+    <CheckBox testid="control-centre-show-infopanels" label="Show infopanels on the desktop" {checked} onchange={toggle} />
     <p class="hint">InfoPanels show the context meter, the desktop clock and what the agent did last, in a column at the right of the desktop.</p>
   </div>
 </GroupBox>

@@ -47,7 +47,8 @@ permissions), the tool must still exist but always ask the user (`ToolGateway.as
 - Only kit components (`lib/kit`), Svelte 5 runes, `--xp-*` tokens, Luna look, no emoji, no third-party UI libs.
 - Menu bar (`menuBar`, `closeItems`, `editItems`), `AppHelp` + `<AppAbout>`, `ContextMenu`; F1 opens its manual.
 - Start menu entry and desktop icon if it belongs there; `chatPane.ts` if it has a chat pane.
-- Every interactive element gets a `data-testid` named `<area>-<thing>` (see CONVENTIONS "Test ids").
+- Every interactive element and every menu item gets a stable `data-testid` named `<area>-<thing>` (see CONVENTIONS
+  "Test ids"); `npm run testids` fails otherwise. Kit controls take it as `testid` (or `data-testid`).
 - Keep logic in pure `.ts` helpers next to the component, with `*.test.ts`. A Storybook story for new kit parts.
 - The window must follow changes made by the agent live (subscribe to the backend's push events), not only its own.
 
@@ -108,6 +109,7 @@ Then run all of these and fix every failure (re-run only what failed while fixin
 npm run typecheck
 npm test
 npm run help:coverage
+npm run testids              # every interactive element and menu item has a data-testid
 npm run app:pillars          # add --write to refresh the table in docs/APP_PILLARS.md
 node scripts/check-e2e-selectors.mjs
 npm run test:e2e -- e2e/<kind>.e2e.ts e2e/apps.e2e.ts

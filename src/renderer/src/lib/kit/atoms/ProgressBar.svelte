@@ -1,5 +1,7 @@
 <script lang="ts">
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     value?: number
     min?: number
     max?: number
@@ -10,6 +12,7 @@
     class?: string
   }
   let {
+    testid,
     value = 0,
     min = 0,
     max = 100,
@@ -25,7 +28,7 @@
   const dim = $derived(typeof width === 'number' ? `${width}px` : width)
 </script>
 
-<div
+<div data-testid={testid}
   role="progressbar"
   aria-label={label}
   aria-valuemin={min}

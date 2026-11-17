@@ -3,6 +3,8 @@
   import { computeDiff, diffStats, parseUnifiedDiff, toSplitRows, type DiffFile, type DiffLine } from '@shared/diff'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** Text input pair; ignored when `unified` is given. */
     oldText?: string
     newText?: string
@@ -23,6 +25,7 @@
   }
 
   let {
+    testid,
     oldText = '',
     newText = '',
     unified,
@@ -48,7 +51,7 @@
   const title = (file: DiffFile): string => file.newPath ?? file.oldPath ?? ''
 </script>
 
-<div class="xp-diffviewer {className}" class:wrap style:max-height={maxHeight}>
+<div data-testid={testid} class="xp-diffviewer {className}" class:wrap style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <span class="summary">

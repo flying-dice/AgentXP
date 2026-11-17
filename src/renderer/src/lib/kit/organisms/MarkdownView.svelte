@@ -2,6 +2,8 @@
   import { highlightCodeBlocks, renderMarkdown } from './markdown'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     source: string
     /** Called with the href when a link is activated; the default navigation is suppressed. */
     onlink?: (href: string) => void
@@ -9,7 +11,7 @@
     class?: string
   }
 
-  let { source, onlink, label, class: className = '' }: Props = $props()
+  let { testid, source, onlink, label, class: className = '' }: Props = $props()
 
   let root: HTMLDivElement | undefined = $state()
   const html = $derived(renderMarkdown(source))
@@ -34,7 +36,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<div class="xp-markdown {className}" bind:this={root} role="document" aria-label={label} onclick={onClick}>
+<div data-testid={testid} class="xp-markdown {className}" bind:this={root} role="document" aria-label={label} onclick={onClick}>
   {@html html}
 </div>
 

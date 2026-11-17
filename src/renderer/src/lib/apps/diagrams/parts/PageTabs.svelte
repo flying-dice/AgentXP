@@ -43,10 +43,10 @@
 
 <div class="tabs" role="tablist" aria-label="Pages" data-testid="diagrams-page-tabs">
   <div class="nav">
-    <button type="button" aria-label="First page" title="First page" disabled={current === 0} onclick={() => onselect(0)}><svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0v8M8 0L3 4l5 4z" stroke="currentColor" fill="currentColor" /></svg></button>
-    <button type="button" aria-label="Previous page" title="Previous page" disabled={current === 0} onclick={() => onselect(current - 1)}><svg width="6" height="8" viewBox="0 0 6 8" aria-hidden="true"><path d="M5 0L0 4l5 4z" fill="currentColor" /></svg></button>
-    <button type="button" aria-label="Next page" title="Next page" disabled={current >= pages.length - 1} onclick={() => onselect(current + 1)}><svg width="6" height="8" viewBox="0 0 6 8" aria-hidden="true"><path d="M1 0l5 4-5 4z" fill="currentColor" /></svg></button>
-    <button type="button" aria-label="Last page" title="Last page" disabled={current >= pages.length - 1} onclick={() => onselect(pages.length - 1)}><svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M8 0v8M1 0l5 4-5 4z" stroke="currentColor" fill="currentColor" /></svg></button>
+    <button data-testid="diagrams-page-first" type="button" aria-label="First page" title="First page" disabled={current === 0} onclick={() => onselect(0)}><svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0v8M8 0L3 4l5 4z" stroke="currentColor" fill="currentColor" /></svg></button>
+    <button data-testid="diagrams-page-previous" type="button" aria-label="Previous page" title="Previous page" disabled={current === 0} onclick={() => onselect(current - 1)}><svg width="6" height="8" viewBox="0 0 6 8" aria-hidden="true"><path d="M5 0L0 4l5 4z" fill="currentColor" /></svg></button>
+    <button data-testid="diagrams-page-next" type="button" aria-label="Next page" title="Next page" disabled={current >= pages.length - 1} onclick={() => onselect(current + 1)}><svg width="6" height="8" viewBox="0 0 6 8" aria-hidden="true"><path d="M1 0l5 4-5 4z" fill="currentColor" /></svg></button>
+    <button data-testid="diagrams-page-last" type="button" aria-label="Last page" title="Last page" disabled={current >= pages.length - 1} onclick={() => onselect(pages.length - 1)}><svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M8 0v8M1 0l5 4-5 4z" stroke="currentColor" fill="currentColor" /></svg></button>
   </div>
   <div class="strip" bind:this={strip} onwheel={(e) => (e.preventDefault(), scrollBy(Math.sign(e.deltaY || e.deltaX)))}>
     {#each pages as name, i (i)}

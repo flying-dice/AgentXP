@@ -111,9 +111,9 @@
   }
 
   const newItems = $derived<MenuItemDef[]>([
-    { label: '&Rectangular Snip', action: () => void snip('rect') },
-    { label: '&Window Snip', action: () => void snip('window') },
-    { label: '&Full-screen Snip', action: () => void snip('full') }
+    { testid: 'snipping-tool-type-rect', label: '&Rectangular Snip', action: () => void snip('rect') },
+    { testid: 'snipping-tool-type-window', label: '&Window Snip', action: () => void snip('window') },
+    { testid: 'snipping-tool-type-full', label: '&Full-screen Snip', action: () => void snip('full') }
   ])
   // svelte-ignore state_referenced_locally
   const help = new AppHelp(host, 'snipping-tool')
@@ -164,12 +164,12 @@
   <MenuStrip {menus} aria-label="Snipping Tool menu" />
   <ToolStrip aria-label="Snipping Tool">
     <ToolStripButton data-testid="snipping-tool-new" icon="scissors" text="New" disabled={busy} onclick={() => void snip('rect')} />
-    <ToolStripDropDownButton text="▾" title="Snip type" items={newItems} disabled={busy} />
-    <ToolStripButton icon="close" text="Cancel" disabled={!busy} onclick={cancel} />
-    <ToolStripButton icon="options" text="Options" onclick={() => (options = true)} />
+    <ToolStripDropDownButton testid="snipping-tool-type" text="▾" title="Snip type" items={newItems} disabled={busy} />
+    <ToolStripButton data-testid="snipping-tool-cancel" icon="close" text="Cancel" disabled={!busy} onclick={cancel} />
+    <ToolStripButton data-testid="snipping-tool-options" icon="options" text="Options" onclick={() => (options = true)} />
     {#snippet trailing()}
       <ToolStripButton data-testid="snipping-tool-send-chat" icon="agent" text="Send to chat" title="Saves the snip as a picture in Pictures\Snips in the Agent folder on C: and sends it to the chat" disabled={!image} onclick={() => void sendToChat()} />
-      <ToolStripButton icon="copy" text="Copy" disabled={!image} onclick={() => void copy()} />
+      <ToolStripButton data-testid="snipping-tool-copy" icon="copy" text="Copy" disabled={!image} onclick={() => void copy()} />
     {/snippet}
   </ToolStrip>
   <div class="view xp-scroll" aria-label="Snip">
@@ -189,7 +189,7 @@
     <Dialog title="Snipping Tool Options" iconName="options" width="340px" contained onclose={() => (options = false)}>
       <div class="opts">
         <span>Delay before the capture:</span>
-        <ComboBox aria-label="Delay" items={delays} value={String(delay)} onchange={(v) => (delay = Number(v))} />
+        <ComboBox testid="snipping-tool-delay" aria-label="Delay" items={delays} value={String(delay)} onchange={(v) => (delay = Number(v))} />
         <p class="note">Send to chat saves the snip as a picture in C:\Users\Agent\Pictures\Snips and attaches it to the chat.</p>
       </div>
       {#snippet buttons()}

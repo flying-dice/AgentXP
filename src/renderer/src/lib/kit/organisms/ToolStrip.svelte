@@ -3,6 +3,8 @@
   import { rovingFocus } from '../actions/rovingFocus'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** Items (ToolStripButton, Separator, ToolStripDropDownButton) laid out from the left. */
     children: Snippet
     /** Items pushed to the right edge (the "spring" of the strip). */
@@ -11,10 +13,10 @@
     'aria-label'?: string
   }
 
-  let { children, trailing, class: className = '', 'aria-label': ariaLabel = 'Tools' }: Props = $props()
+  let { testid, children, trailing, class: className = '', 'aria-label': ariaLabel = 'Tools' }: Props = $props()
 </script>
 
-<div
+<div data-testid={testid}
   class="xp-toolstrip {className}"
   role="toolbar"
   aria-label={ariaLabel}

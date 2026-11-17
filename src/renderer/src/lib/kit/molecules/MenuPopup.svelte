@@ -35,6 +35,8 @@
     anchor?: DOMRect
     /** Draw in the popup layer above every window and bar (a top-level menu bar, drop-down or context menu). */
     layer?: boolean
+    /** `data-testid` of the menu box (its submenus get `<testid>-sub`). */
+    testid?: string
   }
 
   let {
@@ -52,7 +54,8 @@
     element = $bindable(null),
     maxHeight,
     anchor,
-    layer = false
+    layer = false,
+    testid
   }: Props = $props()
 
   const uid = $props.id()
@@ -196,6 +199,7 @@
 <div
   bind:this={element}
   use:portal={layer}
+  data-testid={testid}
   class="menu {className}"
   class:flipped
   class:submenu
@@ -229,6 +233,7 @@
         <MenuPopup
           submenu
           anchor={subAnchor}
+          testid={testid ? `${testid}-sub` : undefined}
           items={item.items}
           {showMnemonics}
           autofocus={subFocus}

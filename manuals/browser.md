@@ -85,6 +85,7 @@ Each Browser window has a chat pane at its right edge. Its header says **Chat ab
 | Error technical name | The technical name of the error, after you click Details. | `browser-error-technical` |
 | Error help | Opens this manual at the section Troubleshooting. | `browser-error-help` |
 | Highlight ring | An orange frame around the item the agent used. | `browser-agent-ring` |
+| Placeholder link | The address on the page shown before a page loads. | `browser-placeholder-link` |
 
 ### Menu Bar and Context Menu
 

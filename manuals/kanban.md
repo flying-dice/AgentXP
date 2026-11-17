@@ -99,6 +99,8 @@ Each Kanban window has a chat pane at its right edge. The pane starts closed, as
 | Card assignee box | The assignee of the card. | `kanban-card-dialog-assignee` |
 | Card dialog OK | Saves the card. | `kanban-card-dialog-ok` |
 | Card dialog Cancel | Closes the dialog. | `kanban-card-dialog-cancel` |
+| Context menu: assign to * | One entry per person in the Assign to submenu. | `kanban-ctx-assign-to-*` |
+| Context menu: unassign | Assign to submenu: removes the assignee. | `kanban-ctx-unassign` |
 
 ### Menu Bar and Context Menu
 

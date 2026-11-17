@@ -74,6 +74,8 @@ Each Task Manager window has a chat pane at its right edge, except on the **Chat
 | End Task | Stops the turn of the selected chat. | `agent-manager-end-task` |
 | Reason note | Says why End process or End Task is off, for example **Select a chat first**. | `agent-manager-reason` |
 | End process | Stops the selected agent program after a question. | `agent-manager-end-process` |
+| Processes grid | The agent programs that run, one row each. | `agent-manager-processes` |
+| Terminals list | The terminals that chats have opened. | `agent-manager-terminals` |
 
 ### Menu Bar and Context Menu
 

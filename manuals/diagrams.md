@@ -226,6 +226,30 @@ Each change by the agent is one step in **Edit -> Undo**. Press Ctrl+Z to undo t
 | Status | The left part of the status bar. | `diagrams-status` |
 | Page number | The page number in the status bar. | `diagrams-status-page` |
 | Zoom level | The zoom in the status bar. | `diagrams-status-zoom` |
+| Format: X | Format pane: the left edge of the shape. | `diagrams-format-x` |
+| Format: Y | Format pane: the top edge of the shape. | `diagrams-format-y` |
+| Format: width | Format pane: the width of the shape. | `diagrams-format-width` |
+| Format: height | Format pane: the height of the shape. | `diagrams-format-height` |
+| Format: angle | Format pane: the rotation of the shape in degrees. | `diagrams-format-angle` |
+| Format: opacity | Format pane: the opacity of the shape in percent. | `diagrams-format-opacity` |
+| Format: bold | Format pane: bold text. | `diagrams-format-bold` |
+| Format: italic | Format pane: italic text. | `diagrams-format-italic` |
+| Format: underline | Format pane: underlined text. | `diagrams-format-underline` |
+| Format: align | Format pane: horizontal text alignment. | `diagrams-format-align` |
+| Format: vertical align | Format pane: vertical text alignment. | `diagrams-format-valign` |
+| Format: connector font color | Format pane: the text colour of the connector. | `diagrams-format-connector-font-color` |
+| Format: line weight | Format pane: the width of the line. | `diagrams-format-line-weight` |
+| Format: line pattern | Format pane: solid, dashed or dotted line. | `diagrams-format-line-pattern` |
+| Format: text size | Format pane: the size of the connector text. | `diagrams-format-text-size` |
+| Format: rounded | Format pane: rounded corners on the connector. | `diagrams-format-rounded` |
+| Format: page width | Format pane: the width of the page. | `diagrams-format-page-width` |
+| Format: page height | Format pane: the height of the page. | `diagrams-format-page-height` |
+| Format: grid size | Format pane: the distance between grid lines. | `diagrams-format-grid-size` |
+| Format: show grid | Format pane: shows the grid on this page. | `diagrams-format-show-grid` |
+| First page | Page tabs: goes to the first page. | `diagrams-page-first` |
+| Previous page | Page tabs: goes to the previous page. | `diagrams-page-previous` |
+| Next page | Page tabs: goes to the next page. | `diagrams-page-next` |
+| Last page | Page tabs: goes to the last page. | `diagrams-page-last` |
 
 ### The Toolbars
 
