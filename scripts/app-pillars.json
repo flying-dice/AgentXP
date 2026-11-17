@@ -135,11 +135,10 @@
       "tools": [
         "paint_*"
       ],
-      "e2e": [],
-      "manual": "manuals/paint.md",
-      "gaps": {
-        "e2e": "Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls."
-      }
+      "e2e": [
+        "e2e/paint.e2e.ts"
+      ],
+      "manual": "manuals/paint.md"
     },
     "wordpad": {
       "area": "wordpad",
@@ -151,11 +150,10 @@
       "tools": [
         "wordpad_*"
       ],
-      "e2e": [],
-      "manual": "manuals/wordpad.md",
-      "gaps": {
-        "e2e": "Only the open/close smoke test and Ctrl+O. No spec edits or saves a document."
-      }
+      "e2e": [
+        "e2e/wordpad.e2e.ts"
+      ],
+      "manual": "manuals/wordpad.md"
     },
     "sticky-notes": {
       "area": "notes",
@@ -166,11 +164,10 @@
       "tools": [
         "notes_*"
       ],
-      "e2e": [],
-      "manual": "manuals/sticky-notes.md",
-      "gaps": {
-        "e2e": "Only the open/close smoke test."
-      }
+      "e2e": [
+        "e2e/sticky-notes.e2e.ts"
+      ],
+      "manual": "manuals/sticky-notes.md"
     },
     "kanban": {
       "area": "kanban",
@@ -181,11 +178,10 @@
       "tools": [
         "board_*"
       ],
-      "e2e": [],
-      "manual": "manuals/kanban.md",
-      "gaps": {
-        "e2e": "No spec at all."
-      }
+      "e2e": [
+        "e2e/kanban.e2e.ts"
+      ],
+      "manual": "manuals/kanban.md"
     },
     "diagrams": {
       "area": "diagrams",
@@ -224,11 +220,10 @@
       "tools": [
         "screen_capture"
       ],
-      "e2e": [],
-      "manual": "manuals/snipping-tool.md",
-      "gaps": {
-        "e2e": "Only the open/close smoke test."
-      }
+      "e2e": [
+        "e2e/snipping-tool.e2e.ts"
+      ],
+      "manual": "manuals/snipping-tool.md"
     },
     "recycle-bin": {
       "area": "recycle",
@@ -240,7 +235,8 @@
         "recycle_*"
       ],
       "e2e": [
-        "e2e/changes-pane.e2e.ts"
+        "e2e/changes-pane.e2e.ts",
+        "e2e/recycle-bin.e2e.ts"
       ],
       "manual": "manuals/recycle-bin.md"
     },
@@ -285,11 +281,10 @@
         "profile_*",
         "team_*"
       ],
-      "e2e": [],
-      "manual": "manuals/teams.md",
-      "gaps": {
-        "e2e": "No spec at all."
-      }
+      "e2e": [
+        "e2e/teams.e2e.ts"
+      ],
+      "manual": "manuals/teams.md"
     },
     "team-chat": {
       "area": "team-chat",
@@ -300,11 +295,10 @@
       "tools": [
         "room_*"
       ],
-      "e2e": [],
-      "manual": "manuals/team-chat.md",
-      "gaps": {
-        "e2e": "No spec at all."
-      }
+      "e2e": [
+        "e2e/teams.e2e.ts"
+      ],
+      "manual": "manuals/team-chat.md"
     },
     "task-scheduler": {
       "area": "task-scheduler",

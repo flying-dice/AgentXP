@@ -122,7 +122,7 @@ To write a document, follow the steps below:
 1. Click **Edit**.
 2. Type your text. Use **H1** for a title and **List** for a list.
 3. Press Ctrl+S. If the document is new, the **Save as** dialog box appears.
-4. Type a file name, for example `Plan.md`, and click **OK**. WordPad saves the file in the Documents folder.
+4. Type a file name, for example `Plan`, and click **OK**. WordPad saves the file in the Documents folder. It adds `.md` when the name has no extension, so **File -> Open** lists the file.
 
 To read the result, click **Read**.
 

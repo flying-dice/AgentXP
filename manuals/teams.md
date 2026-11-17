@@ -109,6 +109,7 @@ The dialog box has these parts:
 | Team name | The name of the team. | `team-dialog-name` |
 | Team instructions | The instructions of every member. | `team-dialog-instructions` |
 | Team members | The profiles of the team. | `team-dialog-members` |
+| Team member | One profile in the list; its box adds it to the team (`team-dialog-member-check`). | `team-dialog-member` |
 | Team skills | The skills of every member. | `team-dialog-skills` |
 | Team board | The Kanban board of the team. | `team-dialog-board` |
 | Team problem | Says what is missing. | `team-dialog-problem` |

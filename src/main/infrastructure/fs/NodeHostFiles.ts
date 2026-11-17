@@ -28,6 +28,10 @@ export class NodeHostFiles implements HostFiles {
     return readFile(await resolveInsideRoot(resolve(root), relativePath), 'utf8')
   }
 
+  async readBytes(root: string, relativePath: string): Promise<Uint8Array> {
+    return new Uint8Array(await readFile(await resolveInsideRoot(resolve(root), relativePath)))
+  }
+
   async writeText(root: string, relativePath: string, text: string): Promise<void> {
     const target = await resolveInsideRoot(resolve(root), relativePath)
     await mkdir(dirname(target), { recursive: true })

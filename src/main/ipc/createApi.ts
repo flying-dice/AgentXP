@@ -127,7 +127,11 @@ export function createApi(s: ApiServices): InvokeApi {
         await s.vfs.writeFile(desktopId, path, text)
         s.git.touched(desktopId, path)
       },
-      stat: (desktopId, path) => s.vfs.stat(desktopId, path)
+      stat: (desktopId, path) => s.vfs.stat(desktopId, path),
+      readBytes: (desktopId, path) => s.vfs.readBytes(desktopId, path),
+      writeBytes: async (desktopId, path, bytes) => {
+        await s.vfs.writeBytes(desktopId, path, new Uint8Array(bytes))
+      }
     },
     git: {
       status: (desktopId, root) => s.git.status(desktopId, root),

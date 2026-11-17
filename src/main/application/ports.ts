@@ -126,6 +126,7 @@ export interface HostFiles {
   /** One directory level, unsorted, nothing hidden. */
   list(root: string, relativePath: string): Promise<HostEntry[]>
   readText(root: string, relativePath: string): Promise<string>
+  readBytes(root: string, relativePath: string): Promise<Uint8Array>
   /** Creates missing parent directories. */
   writeText(root: string, relativePath: string, text: string): Promise<void>
   /** Creates missing parent directories. */

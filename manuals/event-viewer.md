@@ -72,9 +72,9 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 | Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
 | Other events hidden: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
 | Show all (n) | A link in an empty list. It clears the filter and shows every event. | `event-viewer-empty-show-all` |
-| Last problem | The last warning or error in the Activity list on the desktop, in plain words. An error goes away when the same chat finishes a later turn. A warning stays. | `taskpane-activity-problem` |
-| Working line | The Activity list says **Working:** with what the agent does while it works. | `taskpane-activity-working` |
-| Last finished | The Activity list says what finished last when it has nothing else to show. | `taskpane-activity-last` |
+| Last problem | The last warning or error in the Activity list on the desktop, in plain words. An error goes away when the same chat finishes a later turn. A warning stays. | `infopanel-activity-problem` |
+| Working line | The Activity list says **Working:** with what the agent does while it works. | `infopanel-activity-working` |
+| Last finished | The Activity list says what finished last when it has nothing else to show. | `infopanel-activity-last` |
 | What happened | The plain sentence of the selected warning or error, first line of the General tab. | `event-viewer-what-happened` |
 | What to do | One step to take, under the sentence of the General tab. | `event-viewer-what-to-do` |
 | Raw names | The log, event, and direction of the selected event, on the Details tab. | `event-viewer-raw` |

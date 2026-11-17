@@ -67,6 +67,9 @@ Each Snipping Tool window has a chat pane at its right edge. The pane starts clo
 | Cancel | Stops the snip. | none |
 | Options | Opens the options dialog box. | none |
 | Send to chat | Saves the snip as a picture on drive C: and sends it to the chat pane. | `snipping-tool-send-chat` |
+| Snip | The last snip. | `snipping-tool-image` |
+| Empty note | The note shown before the first snip. | `snipping-tool-empty` |
+| Status | What happened last, for example **Captured the whole desktop.** | `snipping-tool-status` |
 | Copy | Copies the snip. | none |
 | Delay | Selects the delay before the capture. | none |
 

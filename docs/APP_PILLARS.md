@@ -60,31 +60,24 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | browser | Yes | Yes | Yes | Yes | Yes |
 | control-centre | Yes | Yes | Yes | Yes | Yes |
 | agent-manager | Yes | Yes | Yes | Yes | Yes |
-| paint | Yes | Yes | Yes | **Gap** | Yes |
-| wordpad | Yes | Yes | Yes | **Gap** | Yes |
-| sticky-notes | Yes | Yes | Yes | **Gap** | Yes |
-| kanban | Yes | Yes | Yes | **Gap** | Yes |
+| paint | Yes | Yes | Yes | Yes | Yes |
+| wordpad | Yes | Yes | Yes | Yes | Yes |
+| sticky-notes | Yes | Yes | Yes | Yes | Yes |
+| kanban | Yes | Yes | Yes | Yes | Yes |
 | diagrams | Yes | Yes | Yes | Yes | Yes |
 | event-viewer | Yes | Yes | Yes | Yes | Yes |
-| snipping-tool | Yes | Yes | Yes | **Gap** | Yes |
+| snipping-tool | Yes | Yes | Yes | Yes | Yes |
 | recycle-bin | Yes | Yes | Yes | Yes | Yes |
 | surface | Yes | Yes | Yes | Yes | Yes |
 | help | Yes | Yes | Yes | Yes | Yes |
 | code-review | Yes | Yes | Yes | Yes | Yes |
-| teams | Yes | Yes | Yes | **Gap** | Yes |
-| team-chat | Yes | Yes | Yes | **Gap** | Yes |
+| teams | Yes | Yes | Yes | Yes | Yes |
+| team-chat | Yes | Yes | Yes | Yes | Yes |
 | task-scheduler | Yes | Yes | Yes | Yes | Yes |
 
-7 open gap(s).
+0 open gap(s).
 
 - **chat, Agent API** (not needed): The chat is the agent's own conversation. The agent acts through it, not on it.
-- **paint, E2E** (gap): Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.
-- **wordpad, E2E** (gap): Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.
-- **sticky-notes, E2E** (gap): Only the open/close smoke test.
-- **kanban, E2E** (gap): No spec at all.
-- **snipping-tool, E2E** (gap): Only the open/close smoke test.
-- **teams, E2E** (gap): No spec at all.
-- **team-chat, E2E** (gap): No spec at all.
 <!-- app-pillars:end -->
 
 ## 5 - Need Help?

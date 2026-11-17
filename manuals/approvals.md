@@ -61,8 +61,8 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 | Check box label | The label of the check box in the top bar: **Ask before every action (this session only)**. | `topbar-ask-slot` |
 | Not saved line | The line in the top bar while you are in control: **To keep a tool on Ask, change it in Control Center.** The status above it says **This is not saved.** | `topbar-control-note` |
 | Not saved link (top bar) | The words **Control Center** in that line. It opens the Permissions page. | `topbar-control-note-link` |
-| Not saved line (Activity) | The same sentence in the Activity list, under **You are in control... This is not saved.** | `taskpane-activity-not-saved` |
-| Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `taskpane-activity-open-permissions` |
+| Not saved line (Activity) | The same sentence in the Activity list, under **You are in control... This is not saved.** | `infopanel-activity-not-saved` |
+| Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `infopanel-activity-open-permissions` |
 | Chip help line | Shows the help text of a tool chip while the chip has the keyboard focus. | `topbar-chip-tip` |
 | Change preview (Action Center) | The same preview in the permission dialog box of the Action Center. | `uac-detail-view` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |

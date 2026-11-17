@@ -185,7 +185,8 @@
 
   function finishSaveAs(name: string): void {
     saveAs = null
-    path = joinVPath(host.state.home, 'Documents', name)
+    // Like WordPad on Windows: a name without an extension is saved as markdown, so File > Open lists it.
+    path = joinVPath(host.state.home, 'Documents', /\.[a-z0-9]+$/i.test(name) ? name : `${name}.md`)
     void save()
   }
 

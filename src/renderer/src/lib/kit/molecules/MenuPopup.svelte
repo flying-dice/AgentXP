@@ -238,6 +238,8 @@
     outline: none;
     cursor: default;
     z-index: 100;
+    /* A menu opened from a layer that lets clicks through (the sticky notes on the desktop) still takes clicks. */
+    pointer-events: auto;
   }
   .menu.submenu {
     position: absolute;

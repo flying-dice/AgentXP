@@ -49,7 +49,7 @@ The canvas is the white sheet. Drag on it to draw. With the **Text** tool, click
 
 ### The Status Bar
 
-The status bar shows the pointer position, the size of the canvas, and a tip.
+The status bar shows the pointer position, the size of the canvas, and a tip. When the picture is saved in a file, it shows the name of the file. It adds **(modified)** when the picture has changes that are not saved.
 
 ### The Chat Pane
 
@@ -83,9 +83,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: chat pane | Shows or hides the chat pane. Ctrl+Shift+C. | `paint-menu-chat-pane` |
 | Chat pane edge | Opens the chat pane. | `chat-pane-toggle` |
 | Menu: new | Starts a new picture. Ctrl+N. | `paint-menu-new` |
-| Menu: open | Shows a picture from your computer. Ctrl+O. | `paint-menu-open` |
-| Menu: save as PNG | Saves the picture as a PNG file. Ctrl+S. | `paint-menu-save-png` |
-| Picture chooser | The hidden box that picks the picture for Open. | `paint-open-input` |
+| Menu: open | Opens a picture from a disk of this desktop. Ctrl+O. | `paint-menu-open` |
+| Menu: save | Saves the picture in its file. A new picture asks for a name first. Ctrl+S. | `paint-menu-save` |
+| Menu: save as | Saves the picture in a new file in **Documents**. | `paint-menu-save-as` |
+| Status: file | The name of the file, the tip, or **Saved**. | `paint-status` |
 | Menu: close | Closes the window. Alt+F4. | `paint-menu-close` |
 | Menu: undo | Undoes the last stroke. Ctrl+Z. | `paint-menu-undo` |
 | Menu: copy | Copies the picture to the clipboard. | `paint-menu-copy` |
@@ -128,6 +129,14 @@ To add text, follow the steps below:
 2. Click the place on the canvas.
 3. Type the text and press Enter.
 
+To save the picture, follow the steps below:
+
+1. Press Ctrl+S, or click **File -> Save**.
+2. Type a name, for example **Plan**. Agent Paint adds **.png** when the name has no picture extension.
+3. Click **OK**. The picture is saved in **Documents**, and the status bar says **Saved Plan.png**.
+
+To open a picture again, press Ctrl+O and double-click the file. A window that showed a saved picture shows it again when you open it after a restart.
+
 To start again, click **Paint -> New**. A question appears if the picture has changes.
 
 ## 6 - Troubleshooting
@@ -135,7 +144,7 @@ To start again, click **Paint -> New**. A question appears if the picture has ch
 - **Undo is dimmed.** No stroke can be undone.
 - **The picture is not copied.** An error says so. Try again.
 - **The Home and View tabs do nothing.** They are for the look only.
-- **I cannot save the picture.** Agent Paint has no Save. Use **Copy picture** and paste it in another app.
+- **My picture is not in the Open box.** Open lists PNG, JPG, GIF, BMP, and WebP files. Save the picture with one of these extensions.
 
 ## 7 - Need Help?
 
