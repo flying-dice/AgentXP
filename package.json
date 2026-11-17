@@ -19,6 +19,7 @@
     "dist": "node scripts/write-build-info.mjs && npm run build && electron-builder",
     "docs:screenshots": "node scripts/docs-screenshots.mjs",
     "help:coverage": "node scripts/check-help-coverage.mjs",
+    "app:pillars": "node scripts/check-app-pillars.mjs",
     "agent:scripted": "node --experimental-strip-types --no-warnings agents/scripted-agent/index.ts"
   },
   "dependencies": {

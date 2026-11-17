@@ -1,0 +1,363 @@
+{
+  "$comment": "The five pillars of every app (docs/APP_PILLARS.md). scripts/check-app-pillars.mjs checks this file against the code. A pillar that is not met goes under `gaps` (to be fixed) or `exempt` (never needed), each with a reason.",
+  "apps": {
+    "chat": {
+      "area": "chat",
+      "ui": "src/renderer/src/lib/apps/chat/ChatApp.svelte",
+      "backend": [
+        "src/main/application/SessionService.ts"
+      ],
+      "tools": [],
+      "e2e": [
+        "e2e/chat.e2e.ts"
+      ],
+      "manual": "manuals/chat.md",
+      "exempt": {
+        "agentApi": "The chat is the agent's own conversation. The agent acts through it, not on it."
+      }
+    },
+    "explorer": {
+      "area": "explorer",
+      "ui": "src/renderer/src/lib/apps/explorer/ExplorerApp.svelte",
+      "backend": [
+        "src/main/application/vfs/VirtualFileSystem.ts"
+      ],
+      "tools": [
+        "fs_*",
+        "drives_list"
+      ],
+      "e2e": [
+        "e2e/explorer-usb.e2e.ts",
+        "e2e/fixtures/pages/ExplorerWindow.ts"
+      ],
+      "manual": "manuals/explorer.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "notepad": {
+      "area": "notepad",
+      "ui": "src/renderer/src/lib/apps/notepad/NotepadApp.svelte",
+      "backend": [
+        "src/main/application/vfs/VirtualFileSystem.ts",
+        "src/main/application/desktop/AppRequestBroker.ts"
+      ],
+      "tools": [
+        "notepad_*"
+      ],
+      "e2e": [
+        "e2e/apps.e2e.ts"
+      ],
+      "manual": "manuals/notepad.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "code": {
+      "area": "code",
+      "ui": "src/renderer/src/lib/apps/code/CodeApp.svelte",
+      "backend": [
+        "src/main/application/vfs/VirtualFileSystem.ts",
+        "src/main/application/git/GitService.ts"
+      ],
+      "tools": [
+        "code_*"
+      ],
+      "e2e": [
+        "e2e/code-git.e2e.ts"
+      ],
+      "manual": "manuals/code.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "terminal": {
+      "area": "terminal",
+      "ui": "src/renderer/src/lib/apps/terminal/TerminalApp.svelte",
+      "backend": [
+        "src/main/application/ShellService.ts"
+      ],
+      "tools": [
+        "terminal_*"
+      ],
+      "e2e": [
+        "e2e/scripted-desktop-tools.e2e.ts",
+        "e2e/fixtures/pages/TerminalWindow.ts"
+      ],
+      "manual": "manuals/terminal.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "browser": {
+      "area": "browser",
+      "ui": "src/renderer/src/lib/apps/browser/BrowserApp.svelte",
+      "backend": [
+        "src/main/infrastructure/browser/ElectronBrowserDriver.ts"
+      ],
+      "tools": [
+        "browser_*"
+      ],
+      "e2e": [
+        "e2e/browser-agent.e2e.ts"
+      ],
+      "manual": "manuals/browser.md"
+    },
+    "control-centre": {
+      "area": "control-centre",
+      "ui": "src/renderer/src/lib/apps/control-centre/ControlCentreApp.svelte",
+      "backend": [
+        "src/main/application/desktop/DesktopService.ts",
+        "src/main/application/AgentService.ts"
+      ],
+      "tools": [],
+      "e2e": [
+        "e2e/control-centre.e2e.ts"
+      ],
+      "manual": "manuals/control-centre.md",
+      "gaps": {
+        "agentApi": "The agent cannot read or change permissions, agents or appearance."
+      }
+    },
+    "agent-manager": {
+      "area": "agent-manager",
+      "ui": "src/renderer/src/lib/apps/agent-manager/AgentManagerApp.svelte",
+      "backend": [
+        "src/main/application/SessionQueryService.ts",
+        "src/main/application/ProcessService.ts"
+      ],
+      "tools": [],
+      "e2e": [
+        "e2e/chat-restart.e2e.ts"
+      ],
+      "manual": "manuals/agent-manager.md",
+      "gaps": {
+        "agentApi": "The agent cannot list chats, agent processes or context use."
+      }
+    },
+    "paint": {
+      "area": "paint",
+      "ui": "src/renderer/src/lib/apps/paint/PaintApp.svelte",
+      "backend": [
+        "src/main/application/desktop/AppRequestBroker.ts"
+      ],
+      "tools": [
+        "paint_*"
+      ],
+      "e2e": [],
+      "manual": "manuals/paint.md",
+      "gaps": {
+        "e2e": "Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.",
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "wordpad": {
+      "area": "wordpad",
+      "ui": "src/renderer/src/lib/apps/wordpad/WordPadApp.svelte",
+      "backend": [
+        "src/main/application/vfs/VirtualFileSystem.ts",
+        "src/main/application/desktop/AppRequestBroker.ts"
+      ],
+      "tools": [
+        "wordpad_*"
+      ],
+      "e2e": [],
+      "manual": "manuals/wordpad.md",
+      "gaps": {
+        "e2e": "Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.",
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "sticky-notes": {
+      "area": "notes",
+      "ui": "src/renderer/src/lib/apps/sticky-notes/StickyNotesApp.svelte",
+      "backend": [
+        "src/main/application/desktop/StickyNoteService.ts"
+      ],
+      "tools": [
+        "notes_*"
+      ],
+      "e2e": [],
+      "manual": "manuals/sticky-notes.md",
+      "gaps": {
+        "e2e": "Only the open/close smoke test.",
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "kanban": {
+      "area": "kanban",
+      "ui": "src/renderer/src/lib/apps/kanban/KanbanApp.svelte",
+      "backend": [
+        "src/main/application/kanban/KanbanService.ts"
+      ],
+      "tools": [
+        "board_*"
+      ],
+      "e2e": [],
+      "manual": "manuals/kanban.md",
+      "gaps": {
+        "e2e": "No spec at all.",
+        "docs": "The manual does not list the agent tools of the app.",
+        "agentApi": "board_rename, board_add_column, board_rename_column, board_delete_column and board_delete_card have no unit test."
+      }
+    },
+    "diagrams": {
+      "area": "diagrams",
+      "ui": "src/renderer/src/lib/apps/diagrams/DiagramsApp.svelte",
+      "backend": [
+        "src/main/application/desktop/AppRequestBroker.ts"
+      ],
+      "tools": [
+        "diagram_*"
+      ],
+      "e2e": [
+        "e2e/diagrams.e2e.ts"
+      ],
+      "manual": "manuals/diagrams.md"
+    },
+    "event-viewer": {
+      "area": "event-viewer",
+      "ui": "src/renderer/src/lib/apps/event-viewer/EventViewerApp.svelte",
+      "backend": [
+        "src/main/application/events/ProtocolEventLog.ts"
+      ],
+      "tools": [
+        "events_query"
+      ],
+      "e2e": [
+        "e2e/chat-problems.e2e.ts"
+      ],
+      "manual": "manuals/event-viewer.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "snipping-tool": {
+      "area": "snipping-tool",
+      "ui": "src/renderer/src/lib/apps/snipping-tool/SnippingToolApp.svelte",
+      "backend": [
+        "src/main/ipc/ElectronScreenCapturer.ts"
+      ],
+      "tools": [
+        "screen_capture"
+      ],
+      "e2e": [],
+      "manual": "manuals/snipping-tool.md",
+      "gaps": {
+        "e2e": "Only the open/close smoke test.",
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "recycle-bin": {
+      "area": "recycle",
+      "ui": "src/renderer/src/lib/apps/recycle-bin/RecycleBinApp.svelte",
+      "backend": [
+        "src/main/application/RecycleService.ts"
+      ],
+      "tools": [
+        "recycle_*"
+      ],
+      "e2e": [
+        "e2e/changes-pane.e2e.ts"
+      ],
+      "manual": "manuals/recycle-bin.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "help": {
+      "area": "help",
+      "ui": "src/renderer/src/lib/apps/help/HelpApp.svelte",
+      "backend": [],
+      "tools": [],
+      "e2e": [
+        "e2e/help.e2e.ts"
+      ],
+      "manual": "manuals/help.md",
+      "gaps": {
+        "backend": "The manuals are bundled into the renderer only. Main cannot search or serve them.",
+        "agentApi": "The agent cannot search or read the manuals."
+      }
+    },
+    "code-review": {
+      "area": "review",
+      "ui": "src/renderer/src/lib/apps/code-review/CodeReviewApp.svelte",
+      "backend": [
+        "src/main/application/review/ReviewService.ts"
+      ],
+      "tools": [
+        "review_*"
+      ],
+      "e2e": [
+        "e2e/code-review.e2e.ts"
+      ],
+      "manual": "manuals/code-review.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    },
+    "teams": {
+      "area": "teams",
+      "ui": "src/renderer/src/lib/apps/teams/TeamsApp.svelte",
+      "backend": [
+        "src/main/application/teams/TeamService.ts",
+        "src/main/application/teams/SkillService.ts",
+        "src/main/application/teams/McpServerService.ts"
+      ],
+      "tools": [],
+      "e2e": [],
+      "manual": "manuals/teams.md",
+      "gaps": {
+        "agentApi": "The agent cannot list or change profiles, teams, skills or MCP servers.",
+        "e2e": "No spec at all."
+      }
+    },
+    "team-chat": {
+      "area": "team-chat",
+      "ui": "src/renderer/src/lib/apps/team-chat/TeamChatApp.svelte",
+      "backend": [
+        "src/main/application/teams/TeamRoomService.ts"
+      ],
+      "tools": [],
+      "e2e": [],
+      "manual": "manuals/team-chat.md",
+      "gaps": {
+        "agentApi": "An agent outside a room cannot list rooms, read them or post to them.",
+        "e2e": "No spec at all."
+      }
+    },
+    "task-scheduler": {
+      "area": "task-scheduler",
+      "ui": "src/renderer/src/lib/apps/task-scheduler/TaskSchedulerApp.svelte",
+      "backend": [
+        "src/main/application/scheduler/SchedulerService.ts"
+      ],
+      "tools": [],
+      "e2e": [
+        "e2e/task-scheduler.e2e.ts"
+      ],
+      "manual": "manuals/task-scheduler.md",
+      "gaps": {
+        "agentApi": "The agent cannot list, create, run or change scheduled tasks."
+      }
+    },
+    "surface": {
+      "area": "a2ui",
+      "ui": "src/renderer/src/lib/apps/surface/SurfaceApp.svelte",
+      "backend": [
+        "src/main/application/A2uiService.ts"
+      ],
+      "tools": [
+        "a2ui_*"
+      ],
+      "e2e": [
+        "e2e/scripted-a2ui.e2e.ts",
+        "e2e/fixtures/pages/ChatWindow.ts"
+      ],
+      "manual": "manuals/surface.md",
+      "gaps": {
+        "docs": "The manual does not list the agent tools of the app."
+      }
+    }
+  }
+}

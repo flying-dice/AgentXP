@@ -28,8 +28,9 @@ export const profileInputFromForm = (f: ProfileFormValues): ProfileInput => ({
   instructions: f.instructions.trim(),
   agentId: f.agentId === '' ? null : Number(f.agentId),
   model: f.model.trim() || null,
-  skillIds: f.skillIds,
-  mcpServerIds: f.mcpServerIds
+  // Plain copies: the form's arrays are Svelte $state proxies, which Electron cannot send over IPC ("An object could not be cloned").
+  skillIds: [...f.skillIds],
+  mcpServerIds: [...f.mcpServerIds]
 })
 
 export const validateProfileForm = (f: ProfileFormValues): string | null => (f.name.trim() ? null : 'Enter a name. Teammates call this member with @name.')
@@ -49,8 +50,8 @@ export const formFromTeam = (t: TeamDto): TeamFormValues => ({ name: t.name, ins
 export const teamInputFromForm = (f: TeamFormValues): TeamInput => ({
   name: f.name.trim(),
   instructions: f.instructions.trim(),
-  memberIds: f.memberIds,
-  skillIds: f.skillIds,
+  memberIds: [...f.memberIds],
+  skillIds: [...f.skillIds],
   boardRef: f.boardRef.trim() || null
 })
 
