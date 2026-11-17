@@ -72,7 +72,7 @@ The dialog box has these parts:
 - **Instructions** – Every member gets these instructions before its own.
 - **Members** – The profiles of the team. The member that you tick first answers a message without an @mention.
 - **Skills** – Skills that every member gets, in addition to its own.
-- **Board** – Optional. The name of the work board that the team uses. Agent7 tells the members the name.
+- **Board** – Optional. A Kanban board of this desktop. Agent7 tells the members the board and its id, so they can use the board tools on it.
 
 ## 4 - Controls Reference
 
@@ -109,7 +109,7 @@ The dialog box has these parts:
 | Team instructions | The instructions of every member. | `team-dialog-instructions` |
 | Team members | The profiles of the team. | `team-dialog-members` |
 | Team skills | The skills of every member. | `team-dialog-skills` |
-| Team board | The name of the work board. | `team-dialog-board` |
+| Team board | The Kanban board of the team. | `team-dialog-board` |
 | Team problem | Says what is missing. | `team-dialog-problem` |
 
 ## 5 - Common Tasks

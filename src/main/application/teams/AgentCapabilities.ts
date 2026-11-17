@@ -17,6 +17,8 @@ export interface AgentCapabilitiesDeps {
   teams: TeamRepository
   rooms: RoomRepository
   sessions: Pick<SessionRepository, 'get'>
+  /** Looks up a Kanban board by id so the briefing can name it. */
+  boards?: { board(id: Id): { name: string } | null }
   /** Without it a server with switched-off tools is handed over whole (tests). */
   proxy?: McpProxyLaunch
 }
@@ -48,13 +50,22 @@ export class AgentCapabilities {
           'Everything you write as your final answer is posted in the room under your name; the room does not show your tool calls, so say what matters. ' +
           'Write @Name to call a teammate: they start work as soon as they are called. Do not call anyone you do not need.'
       )
-      if (team.boardRef) parts.push(`## Work board\nThe team tracks its work on the board "${team.boardRef}".`)
+      if (team.boardRef) parts.push(this.boardBriefing(team.boardRef))
     }
     if (scope.skills.length > 0) {
       const lines = scope.skills.map((s) => `- ${s.name}: ${s.description} (read ${s.path}/SKILL.md before you use it)`)
       parts.push(`## Skills\nThese skills are installed. When a task matches one, read its SKILL.md and follow it.\n${lines.join('\n')}`)
     }
     return parts.length > 0 ? parts.join('\n\n') : null
+  }
+
+  /** `boardRef` is a Kanban board id; an unknown id (or a plain name, as before) is passed on as written. */
+  private boardBriefing(ref: string): string {
+    const id = /^\d+$/.test(ref) ? Number(ref) : null
+    const board = id === null ? null : (this.deps.boards?.board(id) ?? null)
+    return board
+      ? `## Work board\nThe team tracks its work on the Kanban board "${board.name}" (board id ${id}). Use the board_* tools with that board to read and update work.`
+      : `## Work board\nThe team tracks its work on the board "${ref}".`
   }
 
   private configFor(server: McpServerDto): McpServerConfig {

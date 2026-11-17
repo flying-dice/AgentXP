@@ -18,7 +18,7 @@ const setup = (proxy = true) => {
     sessions: new SqliteSessionRepository(f.db)
   }
   const desktop = new SqliteDesktopRepository(f.db).create({ agentId: f.agentId, title: 'd', isOpen: true })
-  const caps = new AgentCapabilities({ ...repos, proxy: proxy ? { electronPath: 'electron', scriptPath: 'mcp-proxy.js' } : undefined })
+  const caps = new AgentCapabilities({ ...repos, boards: { board: (id) => (id === 7 ? { name: 'Sprint board' } : null) }, proxy: proxy ? { electronPath: 'electron', scriptPath: 'mcp-proxy.js' } : undefined })
   const chat = repos.sessions.create({ agentId: f.agentId, title: 'chat', desktopId: desktop.id })
   const skill = (name: string, enabled = true) => {
     const s = repos.skills.add({ name, description: `${name} skill`, path: `/s/${name}` })
@@ -101,5 +101,16 @@ describe('a member of a team room', () => {
     expect(text).toContain('- own:')
     expect(text).toContain('- shared:')
     expect(text).not.toContain('- other:')
+  })
+
+  it('names the Kanban board a team stores by id', () => {
+    const { repos, caps, f, desktop } = setup()
+    const coder = repos.profiles.create({ name: 'Coder', instructions: '', agentId: null, model: null, skillIds: [], mcpServerIds: [], color: '#000' })
+    const team = repos.teams.create({ name: 'Crew', instructions: '', skillIds: [], memberIds: [coder.id], boardRef: '7' })
+    const room = repos.rooms.create({ desktopId: desktop.id, teamId: team.id, title: 'Room', cwd: 'C:\\Agent' })
+    const session = repos.sessions.create({ agentId: f.agentId, title: 'Coder', desktopId: desktop.id, role: 'aside' })
+    repos.rooms.ensureMember(room.id, coder.id)
+    repos.rooms.setMemberSession(room.id, coder.id, session.id)
+    expect(caps.briefing(session.id)).toContain('Kanban board "Sprint board" (board id 7)')
   })
 })
