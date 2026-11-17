@@ -108,6 +108,7 @@ refusals such as an ejected drive.
 | `review.json` | the Code Review reviewer: a prompt with "code review of the changes" calls `agentxp.review_add_comment` twice (`notes.txt` lines 1 and 4) and `review_submit`; a prompt with "fix the following code review comments" (what Send to chat sends) is answered with a message |
 | `aside.json` | the chat pane of an app window: a prompt with "explain this" `expect`s `appContext` (with `selection`) in the desktop state, `extract`s the open file name from it and answers naming the file; "summarise" answers for the Browser pane |
 | `search.json` | find, read and edit files headless (nothing opens): "find files" calls `fs_find`, "search code" calls `code_search` and `code_read`, "edit code" calls `code_edit` and `code_write` |
+| `notices.json` | notices of agent work (`e2e/notices.e2e.ts`): "background job" pauses before it ends (a turn summary), "plan the sprint" adds a Kanban card and writes `E:\PLAN.md` (two notices that queue), "move the login card" moves it to Done, the Code Review prompt waits 3 s and leaves two comments |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |
 
