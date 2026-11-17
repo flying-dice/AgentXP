@@ -36,6 +36,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_find`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload` | url, page title, loading |
 | Control Center | `control-centre` | yes | none (system UI) | open page |
 | Task Manager | `agent-manager` | yes | none | none |
+| Task Scheduler | `task-scheduler` | yes | none (the agent does not edit schedules; a task starts a prompt through the chat services) | `selectedTaskId`, `tab` |
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
 | Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
@@ -331,6 +332,7 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 | Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
 | Paint | `canvas` (width, height), `tool`, `color` |
 | Sticky Notes | `note` (the selected note) or `notes` |
+| Task Scheduler | `tasks` (the number of tasks) and `selectedTask` (id, name, status, enabled, trigger count, last result) |
 | Kanban | `board` (the open board as text with ids) and `selectedCard` |
 | Help, Control Center, Snipping Tool | `topic`, `page`, `hasSnip` |
 
@@ -339,6 +341,21 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 **askChat.** `DesktopController.askChat` expands the pane of `request.windowId` and sends the prompt there (`explain`, `send`) or fills the composer (`ask`, with `askChatDraft`, and focuses it through the `prefill` of `Composer`). If a turn is running in the pane, the text goes to the composer instead. `kind: 'window'` (context menu item "Open in Chat window") and windows without a pane use `askChatWindow`: a full chat in the Chat window, as before.
 
 **Tests.** `DesktopService.test.ts` (lazy creation, one session per window, delete on close and on New conversation, not a chat), `LauncherService.test.ts` (chat counts), `migration-008.test.ts`, `chatPane.test.ts`, `desktop-views.test.ts`, `askChat.test.ts`; `e2e/aside.e2e.ts` and `e2e/context-menus.e2e.ts` with the `aside.json` scripted agent.
+
+## 13. Task Scheduler (migration 015)
+
+Task Scheduler is a window in the Windows XP style: a Luna title bar, a task pane at the left, a task list, a details pane with
+the tabs General, Triggers, Actions, Conditions, Settings, and History, the Create Basic Task wizard, and the Create Task dialog.
+
+- **Contract.** `src/shared/schedule.ts` and `src/shared/scheduler.ts` (pure), DTOs in `desktop.ts`, channels `scheduler.*` in
+  `ipc-channels.ts`, push event `scheduler.changed`.
+- **Engine.** `application/scheduler/TaskEngine` (timers, clock and storage injected; nothing from electron or sqlite). It
+  starts with the app, runs the `startup` triggers, and handles missed runs once for each task.
+- **Data.** `scheduled_tasks`, `scheduled_task_triggers`, `scheduled_task_actions`, `scheduled_task_runs`. A removed agent sets
+  `agent_id` to NULL, and the action then uses the default agent. A task belongs to a desktop; deleting the desktop deletes its tasks.
+- **Event Viewer.** The source `scheduler` records `task/created`, `updated`, `deleted`, `enabled`, `disabled`, `started`, `completed`, `failed`, `stopped`, `missed`, `skipped`, and `restart-scheduled`.
+- **View state.** `selectedTaskId` and `tab` are saved with the window. `fakeScheduler` (renderer) backs the Storybook stories and
+  the web preview.
 
 ## 9. Build order
 
