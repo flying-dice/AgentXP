@@ -110,7 +110,7 @@ node scripts/ux-panel/session.mjs check --out $S --no-answer      # a task with 
 - An answer task ends in MANUAL when `check` is run with `--no-answer` (H-82). `stop` then refuses (`the last check of this answer task had no answer`)
   until you run `check --answer "<text>"` with the panelist's answer; pass `--accept-no-answer` only when the panelist really gave none
   (the record says so). Keyword checks (case-insensitive substrings): T02.2 (already, exists, same name, own name, unique, in use, taken),
-  T10.1 (chip, top bar, workspace bar, agent can use, closed, deny, never), T16.2 (no and Write files), T31.1 (Ctrl+S, H-84).
+  T10.1 (login and redirect), T10.2 (deny, chip, Control Center, permission, top bar, agent can use), T16.2 (no and Write files), T31.1 (Ctrl+S, H-84).
 - Line numbers (H-77, T06.1, T24.1): the answer must name 1, 3 and 4 as written (or +3 and -3 for T06.1). A range such as "lines 1 to 5" is
   not expanded; an answer that says it could not tell (could not say, cannot tell, no idea, unclear) fails with that reason.
 - `stop --record <file>` adds "Steps: N of M" to the record's Result line when the panelist left it out (H-83).
