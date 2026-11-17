@@ -20,6 +20,7 @@
   import CardDialog from './CardDialog.svelte'
   import KanbanCard from './KanbanCard.svelte'
   import NameDialog from './NameDialog.svelte'
+  import { submission, type DialogInput, type KanbanDialog } from './dialogSubmit'
   import { assigneeItems, assigneesOf, cardCount, columnDropIndex, dropIndex, isNoop, targetIndex } from './kanbanModel'
 
   let { window: win, host }: AppProps<'kanban'> = $props()
@@ -32,15 +33,7 @@
   let selectedCard = $state<number | null>(null)
   let error = $state<string | null>(null)
   /** A prompt or the card dialog that is open. */
-  let dialog = $state<
-    | { kind: 'new-board' }
-    | { kind: 'rename-board' }
-    | { kind: 'new-column' }
-    | { kind: 'rename-column'; column: ColumnDto }
-    | { kind: 'new-card'; columnId: number }
-    | { kind: 'edit-card'; card: CardDto }
-    | null
-  >(null)
+  let dialog = $state<KanbanDialog | null>(null)
 
   /** What is being dragged, and where it would land (the line between cards, or beside columns). */
   let drag = $state<{ kind: 'card' | 'column'; id: number } | null>(null)
@@ -104,13 +97,7 @@
 
   const api = $derived(host.api.kanban)
 
-  async function createBoard(name: string): Promise<void> {
-    const created = await run(() => api.createBoard(desktopId, name))
-    if (created) boardId = created.id
-  }
-  const renameBoard = (name: string) => (board ? run(() => api.renameBoard(board.id, name)) : undefined)
   const deleteBoard = (): void => void (board && run(() => api.deleteBoard(board.id)))
-  const addColumn = (name: string) => (board ? run(() => api.addColumn(board.id, name)) : undefined)
   const deleteCard = (card: CardDto): void => void run(() => api.deleteCard(card.id))
   const moveCardTo = (card: CardDto, columnId: number, index?: number): void => void run(() => api.moveCard(card.id, columnId, index))
 
@@ -130,6 +117,16 @@
       const at = col.cards.indexOf(card) + dy
       if (at >= 0 && at < col.cards.length) moveCardTo(card, col.id, at)
     }
+  }
+
+  /** OK in a dialog: the call is built from the dialog first, then the dialog closes. */
+  async function finish(input: DialogInput): Promise<void> {
+    const open = dialog
+    const make = open ? submission(open, input, { desktopId, boardId: board?.id ?? null }) : null
+    dialog = null
+    if (!open || !make) return
+    const result = await run(() => make(api))
+    if (open.kind === 'new-board' && result) boardId = result.id
   }
 
   // ---- drag and drop
@@ -394,20 +391,17 @@
   <AppAbout {help} />
 
   {#if dialog?.kind === 'new-board'}
-    <NameDialog testid="kanban-board-name" title="New board" label="Board name:" onok={(n) => ((dialog = null), void createBoard(n))} oncancel={() => (dialog = null)} />
+    <NameDialog testid="kanban-board-name" title="New board" label="Board name:" onok={finish} oncancel={() => (dialog = null)} />
   {:else if dialog?.kind === 'rename-board' && board}
-    <NameDialog testid="kanban-board-name" title="Rename board" label="Board name:" value={board.name} onok={(n) => ((dialog = null), void renameBoard(n))} oncancel={() => (dialog = null)} />
+    <NameDialog testid="kanban-board-name" title="Rename board" label="Board name:" value={board.name} onok={finish} oncancel={() => (dialog = null)} />
   {:else if dialog?.kind === 'new-column'}
-    <NameDialog testid="kanban-list-name" title="New list" label="List name:" onok={(n) => ((dialog = null), void addColumn(n))} oncancel={() => (dialog = null)} />
+    <NameDialog testid="kanban-list-name" title="New list" label="List name:" onok={finish} oncancel={() => (dialog = null)} />
   {:else if dialog?.kind === 'rename-column'}
-    {@const col = dialog.column}
-    <NameDialog testid="kanban-list-name" title="Rename list" label="List name:" value={col.name} onok={(n) => ((dialog = null), void run(() => api.renameColumn(col.id, n)))} oncancel={() => (dialog = null)} />
+    <NameDialog testid="kanban-list-name" title="Rename list" label="List name:" value={dialog.column.name} onok={finish} oncancel={() => (dialog = null)} />
   {:else if dialog?.kind === 'new-card'}
-    {@const columnId = dialog.columnId}
-    <CardDialog title="New card" {assignees} onok={(c) => ((dialog = null), void run(() => api.addCard(columnId, c)))} oncancel={() => (dialog = null)} />
+    <CardDialog title="New card" {assignees} onok={finish} oncancel={() => (dialog = null)} />
   {:else if dialog?.kind === 'edit-card'}
-    {@const card = dialog.card}
-    <CardDialog title="Card properties" {card} {assignees} onok={(c) => ((dialog = null), void run(() => api.updateCard(card.id, { title: c.title, description: c.description, assignee: c.assignee ?? '' })))} oncancel={() => (dialog = null)} />
+    <CardDialog title="Card properties" card={dialog.card} {assignees} onok={finish} oncancel={() => (dialog = null)} />
   {/if}
 
   <StatusStrip sizeGrip={false}>
