@@ -23,6 +23,7 @@ import type { DrivesApi, LauncherApi, LauncherEvents, VPath, VfsApi } from './vf
 import type { GitApi, GitEvents } from './git'
 import type { ReviewApi, ReviewEvents } from './review'
 import type { KanbanApi, KanbanEvents } from './kanban'
+import type { McpApi, ProfilesApi, RoomsApi, SkillsApi, TeamsApi, TeamsEvents } from './teams'
 
 export interface PromptInput {
   sessionId: Id
@@ -156,6 +157,11 @@ export interface Agent7Api {
   review: ReviewApi
   drives: DrivesApi
   launcher: LauncherApi
+  skills: SkillsApi
+  mcp: McpApi
+  profiles: ProfilesApi
+  teams: TeamsApi
+  rooms: RoomsApi
   notes: DesktopExtrasApi['notes']
   kanban: KanbanApi
   events: DesktopExtrasApi['events']
@@ -181,7 +187,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents {
+export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

@@ -1,4 +1,5 @@
 import { isDesktopBlock } from './desktop/desktopBlock'
+import { isBriefingBlock } from './teams/briefing'
 import type { ContentBlockDto, SessionDto, ToolCallContentDto, TranscriptEntryDto } from '@shared/models'
 
 const blockText = (block: ContentBlockDto): string => {
@@ -15,7 +16,7 @@ const blockText = (block: ContentBlockDto): string => {
 }
 
 /** The desktop state block is plumbing, not part of what the user wrote. */
-const blocksText = (blocks: ContentBlockDto[]): string => blocks.filter((b) => !isDesktopBlock(b)).map(blockText).join('\n\n')
+const blocksText = (blocks: ContentBlockDto[]): string => blocks.filter((b) => !isDesktopBlock(b) && !isBriefingBlock(b)).map(blockText).join('\n\n')
 
 const ROLE_HEADINGS = { user: 'You', agent: 'Agent', thought: 'Agent (thinking)' } as const
 

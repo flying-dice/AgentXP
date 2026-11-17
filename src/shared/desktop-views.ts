@@ -26,7 +26,9 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'recycle-bin': { x: 240, y: 120, width: 680, height: 420 },
   surface: { x: 260, y: 100, width: 480, height: 360 },
   help: { x: 150, y: 70, width: 800, height: 560 },
-  'code-review': { x: 50, y: 30, width: 1120, height: 650 }
+  'code-review': { x: 50, y: 30, width: 1120, height: 650 },
+  teams: { x: 190, y: 90, width: 820, height: 560 },
+  'team-chat': { x: 60, y: 50, width: 760, height: 580 }
 }
 
 /** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
@@ -252,7 +254,7 @@ export function placeChatBesideBrowser(
   return { chat, browser: narrowed }
 }
 
-export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath'>, title = 'Chat'): AppView {
+export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' | 'sessionId' | 'surfaceId' | 'topic' | 'baseRef' | 'selectedPath' | 'roomId'>, title = 'Chat'): AppView {
   switch (input.app) {
     case 'chat':
       return { app: 'chat', sessionId: input.sessionId ?? 0, title }
@@ -296,6 +298,10 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'surface', surfaceId: input.surfaceId ?? '', sessionId: input.sessionId ?? 0, title: SURFACE_FALLBACK_TITLE }
     case 'help':
       return { app: 'help', topic: input.topic ?? 'index' }
+    case 'teams':
+      return { app: 'teams', tab: 'teams', selectedId: null }
+    case 'team-chat':
+      return { app: 'team-chat', roomId: input.roomId ?? 0, title }
     case 'code-review':
       return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: input.selectedPath ?? null, sessionId: input.sessionId ?? 0 }
   }
@@ -330,6 +336,8 @@ export function windowTitle(view: AppView, projectName?: string): string {
       return view.title
     case 'surface':
       return surfaceWindowTitle(view.title)
+    case 'team-chat':
+      return view.title
     case 'explorer':
       return view.path ? (view.path.length <= 3 ? view.path : vpathName(view.path)) : 'Computer'
     case 'notepad':

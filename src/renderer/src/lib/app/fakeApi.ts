@@ -8,6 +8,7 @@ import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
 import { createFakeKanban } from './fakeKanban'
 import { createFakeReview } from './fakeReview'
+import { createFakeTeams } from './fakeTeams'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
@@ -166,6 +167,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
   const emit = <K extends keyof Agent7Events>(event: K, payload: Agent7Events[K]): void => (listeners[event] ?? []).forEach((l) => l(payload))
   let nextId = 100
   const extras = createFakeExtras(emit as unknown as Parameters<typeof createFakeExtras>[0])
+  const teams = createFakeTeams()
+  teams.onRoomEvents(emit as never)
   let desktopApi: ReturnType<typeof createFakeDesktop> | null = null
   const driveWatchers = new Set<(drives: DriveDto[]) => void>()
   const fakeVfs = createFakeVfs({
@@ -232,6 +235,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     review: createFakeReview({ vfs: fakeVfs.vfs, head: sampleHead(), emit: emit as never }),
     drives: fakeVfs.drives,
     launcher,
+    ...teams.api,
     sessions: {
       list: async (desktopId) => (desktopId === undefined ? sessions : sessions.filter((s) => s.desktopId === desktopId)),
       get: async (id) => sessions.find((s) => s.id === id) ?? session(id, 1, 'Fake session'),

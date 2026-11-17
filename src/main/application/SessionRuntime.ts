@@ -1,4 +1,5 @@
 import type { AgentDto, Id, SessionDto, SessionStatus } from '@shared/models'
+import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import type { AgentSessionEvent } from '../domain/agent/AgentSessionEvent'
 import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSink'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
@@ -42,6 +43,8 @@ export interface RuntimeDeps {
   /** Where a failed start or a dropped connection is recorded for the UI (plain words for the user). */
   problems?: SessionProblems
   a2uiMcpConfig: A2uiMcpConfigFactory
+  /** More MCP servers for a session next to the A2UI one: the ones the user installed (see `AgentCapabilities`). */
+  extraMcpServers?: (sessionId: Id) => McpServerConfig[]
   /** Gate for the client-side fs and terminal requests of a session. */
   toolGate(sessionId: Id): ToolGate
   /** Taps the protocol traffic of a session's agent connection (Event Viewer). */
@@ -127,7 +130,7 @@ export class SessionRuntime {
     sink: MutableSink,
     defaultModeId: string | null
   ): Promise<LiveSession> {
-    const mcpServers = [this.deps.a2uiMcpConfig(session.id)]
+    const mcpServers = [this.deps.a2uiMcpConfig(session.id), ...(this.deps.extraMcpServers?.(session.id) ?? [])]
     try {
       if (session.acpSessionId && connection.canLoadSession) {
         const acpSessionId = session.acpSessionId

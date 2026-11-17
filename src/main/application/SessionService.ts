@@ -10,6 +10,7 @@ import type { SessionRepository } from '../domain/repositories/session-repositor
 import type { TranscriptRepository } from '../domain/repositories/transcript-repository'
 import type { AgentConnectionPool } from './AgentConnectionPool'
 import { desktopBlock } from './desktop/desktopBlock'
+import { briefingBlock } from './teams/briefing'
 import { isConnectionLoss, stoppedUnexpectedly } from './agentProblems'
 import { AppError, required } from './errors'
 import type { EventPublisher, StopReason } from './ports'
@@ -39,6 +40,8 @@ export interface SessionServiceDeps {
   problems?: SessionProblems
   /** The desktop state of a chat as JSON, for the prompt's desktop resource block. */
   desktopContext?: { contextOfSession(sessionId: Id): string | null }
+  /** Instructions and skills of a chat, told to the agent with the first prompt (see `AgentCapabilities`). */
+  briefing?: (sessionId: Id) => string | null
 }
 
 /** A short single-line title taken from the start of a prompt. */
@@ -73,13 +76,14 @@ export class SessionService {
    * With `options.background` the agent starts after this returns (the row is `connecting`): a Chat window can open and
    * take typing at once, and an agent that fails to start leaves the chat in place with its problem (`SessionDto.problem`)
    * instead of removing it. Without it the agent is up (or the call throws and the row is gone) when this returns.
+   * `onCreated` runs as soon as the row exists, before the agent starts (a team room links the session to its member there).
    */
   async create(
     desktopId: Id,
     agentId?: Id,
     cwd: VPath = AGENT_HOME,
     role: SessionRole = 'chat',
-    options: { background?: boolean } = {}
+    options: { background?: boolean; onCreated?: (session: SessionDto) => void } = {}
   ): Promise<SessionDto> {
     const { sessions, runtime, events } = this.deps
     const agent = required(agentId === undefined ? this.deps.agents.getDefault() : this.deps.agents.get(agentId), 'Agent')
@@ -89,6 +93,7 @@ export class SessionService {
     if (folder?.kind !== 'directory') throw new AppError(`The working directory ${workingDirectory} does not exist.`)
     const title = role === 'review' ? `Review of ${vpathName(workingDirectory)}` : DEFAULT_SESSION_TITLE
     const session = sessions.create({ agentId: agent.id, desktopId, cwd: workingDirectory, title, role })
+    options.onCreated?.(session)
     if (options.background) {
       this.deps.broadcaster.setStatus(session.id, 'connecting')
       void runtime.ensureConnected(session.id).catch(() => {}) // the failure is the session's problem, shown in its window
@@ -131,7 +136,9 @@ export class SessionService {
     if (userBlocks.length === 0) throw new AppError('Nothing to send')
     // Main is the truth about the desktop: what the client sent is used, otherwise the current state.
     const desktop = input.desktopContext ?? this.deps.desktopContext?.contextOfSession(session.id) ?? null
-    const blocks = desktop ? [desktopBlock(desktop), ...userBlocks] : userBlocks
+    // The first prompt of a chat also carries its briefing (instructions, skills); the agent keeps it in its own memory.
+    const briefing = this.deps.transcripts.list(session.id).some((e) => e.kind === 'message' && e.role === 'user') ? null : (this.deps.briefing?.(session.id) ?? null)
+    const blocks = [...(briefing ? [briefingBlock(briefing)] : []), ...(desktop ? [desktopBlock(desktop)] : []), ...userBlocks]
     const entry = this.deps.transcripts.appendMessage(session.id, 'user', blocks)
     this.deps.events.publish('transcript.upserted', { sessionId: session.id, entry })
     this.autoTitle(session, input.text)

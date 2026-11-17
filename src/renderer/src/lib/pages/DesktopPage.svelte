@@ -93,7 +93,7 @@
     { id: 'recycle', label: 'Recycle Bin', icon: desktop.recycleCount > 0 ? 'recycle-full' : 'recycle', title: 'Recycle Bin: bring back changes that the agent made' }
   ])
 
-  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser', 'event-viewer']
+  const START_APPS: AppKind[] = ['chat', 'explorer', 'code', 'code-review', 'terminal', 'browser', 'event-viewer', 'teams']
   const groupOf = (id: string, title: string, kinds: AppKind[]): StartGroup => ({
     id,
     title,

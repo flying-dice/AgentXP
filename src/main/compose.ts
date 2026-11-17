@@ -103,6 +103,18 @@ import { NodeHostFiles } from './infrastructure/fs/NodeHostFiles'
 import { NodeWorkspaceFileSystem } from './infrastructure/fs/NodeWorkspaceFileSystem'
 import { createApi } from './ipc/createApi'
 import type { InvokeApi } from '../shared/ipc-channels'
+import { AgentCapabilities } from './application/teams/AgentCapabilities'
+import { McpServerService } from './application/teams/McpServerService'
+import type { McpProber, McpProxyLaunch, SkillStore } from './application/teams/ports'
+import { SessionServiceRoomSessions } from './application/teams/SessionServiceRoomSessions'
+import { SkillService } from './application/teams/SkillService'
+import { TeamRoomService } from './application/teams/TeamRoomService'
+import { TeamService } from './application/teams/TeamService'
+import { NodeSkillStore } from './infrastructure/fs/NodeSkillStore'
+import { SdkMcpProber } from './infrastructure/mcp/SdkMcpProber'
+import { SqliteMcpServerRepository } from './infrastructure/db/sqlite-mcp-server-repository'
+import { SqliteSkillRepository } from './infrastructure/db/sqlite-skill-repository'
+import { SqliteProfileRepository, SqliteRoomRepository, SqliteTeamRepository } from './infrastructure/db/sqlite-team-repositories'
 
 export interface ComposeOptions {
   db: Database
@@ -141,6 +153,14 @@ export interface ComposeOptions {
   screen?: ScreenCapturer
   /** Runs the `git` CLI for the Code app's git awareness; defaults to the real `git`. */
   git?: GitCli
+  /** `<userData>/skills`: installed skills live in `<skillsDir>/<name>/`. Defaults to a fresh temp folder (tests). */
+  skillsDir?: string
+  /** Copies and reads skill folders; defaults to the disk. */
+  skillStore?: SkillStore
+  /** Connects to MCP servers for "Test"; defaults to the official MCP client. */
+  mcpProber?: McpProber
+  /** How the proxy that hides switched-off MCP tools is launched; without it a server is handed over whole (tests). */
+  mcpProxy?: McpProxyLaunch
   /** Poll interval of `git.changed` while a Code window is open (ms); default 5000, 0 disables. */
   gitPollMs?: number
 }
@@ -199,8 +219,22 @@ export function composeApp(options: ComposeOptions): AppServices {
     notes: new SqliteStickyNoteRepository(db),
     recycled: new SqliteRecycledChangeRepository(db),
     kanban: new SqliteKanbanRepository(db),
-    reviews: new SqliteReviewRepository(db)
+    reviews: new SqliteReviewRepository(db),
+    skills: new SqliteSkillRepository(db),
+    mcpServers: new SqliteMcpServerRepository(db),
+    profiles: new SqliteProfileRepository(db),
+    teams: new SqliteTeamRepository(db),
+    rooms: new SqliteRoomRepository(db)
   }
+  const capabilities = new AgentCapabilities({
+    skills: repos.skills,
+    servers: repos.mcpServers,
+    profiles: repos.profiles,
+    teams: repos.teams,
+    rooms: repos.rooms,
+    sessions: repos.sessions,
+    proxy: options.mcpProxy
+  })
   const fileSystem = new NodeWorkspaceFileSystem()
   const desktopsDir = options.desktopsDir ?? mkdtempSync(join(tmpdir(), 'agent7-desktops-'))
   const hostFiles = new NodeHostFiles()
@@ -258,6 +292,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     broadcaster,
     problems,
     a2uiMcpConfig,
+    extraMcpServers: (sessionId) => capabilities.mcpServers(sessionId),
     toolGate: (sessionId) => gateway.forSession(sessionId),
     protocolTap: (sessionId) => eventLog.acpTap(sessionId)
   })
@@ -277,7 +312,15 @@ export function composeApp(options: ComposeOptions): AppServices {
     broadcaster,
     events: publisher,
     problems,
-    desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) }
+    desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) },
+    briefing: (sessionId) => capabilities.briefing(sessionId)
+  })
+  const rooms = new TeamRoomService({
+    rooms: repos.rooms,
+    teams: repos.teams,
+    profiles: repos.profiles,
+    sessions: new SessionServiceRoomSessions(sessions, repos.sessions, repos.transcripts),
+    events: publisher
   })
   const desktops = new DesktopService({
     desktops: repos.desktops,
@@ -417,6 +460,10 @@ export function composeApp(options: ComposeOptions): AppServices {
     eventLog,
     recycle,
     screen,
+    skills: new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agent7-skills-'))),
+    mcp: new McpServerService(repos.mcpServers, options.mcpProber ?? new SdkMcpProber()),
+    teamService: new TeamService(repos.profiles, repos.teams),
+    rooms,
     appVersion: options.appVersion ?? '0.0.0'
   })
 
@@ -429,6 +476,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     } else if (message.name === 'desktop.changed') bridge.publishTools(message.payload.desktopId, message.payload.tools)
     else if (message.name === 'session.changed') {
       desktops.onSessionChanged(message.payload)
+      rooms.onSessionChanged(message.payload)
       launcher.publishChanged()
     } else if (message.name === 'surface.removed') {
       desktops.onSessionRemoved() // clearing a transcript deletes surfaces and (by trigger) their windows
