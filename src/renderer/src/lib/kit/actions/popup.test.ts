@@ -61,3 +61,14 @@ describe('placeBeside', () => {
     expect(placeBeside(rect(800, 100, 150, 24), { width: 200, height: 100 }, viewport).left).toBe(603)
   })
 })
+
+describe('placePopup (menu bar regressions)', () => {
+  it('opens a menu bar menu below its label in a maximized window', () => {
+    // File in a maximized Kanban window: label near the top, plenty of room below.
+    expect(placePopup(rect(2, 30, 38, 24), { width: 200, height: 110 }, viewport)).toEqual({ left: 2, top: 53 })
+  })
+
+  it('slides up from below instead of flipping past the top when it fits neither side', () => {
+    expect(placePopup(rect(10, 500, 80, 22), { width: 100, height: 700 }, viewport).top).toBe(100)
+  })
+})

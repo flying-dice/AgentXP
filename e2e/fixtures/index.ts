@@ -28,3 +28,4 @@ export {
   type ScriptedAgent,
   type ScriptedDesktop
 } from './scripted'
+export { setWindowSize, shot } from './verify'

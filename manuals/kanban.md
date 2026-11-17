@@ -121,6 +121,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Context menu: edit | Changes the card. | `kanban-ctx-edit` |
 | Context menu: move | Moves the card to a list. | `kanban-ctx-move` |
 | Context menu: assign | Sets the assignee of the card. | `kanban-ctx-assign` |
+| Context menu: move to a list * | One entry per list in the Move to submenu, by list id. | `kanban-ctx-move-to-*` |
 | Context menu: delete card | Deletes the card. | `kanban-ctx-delete-card` |
 | Context menu: add card | List menu: adds a card. | `kanban-ctx-add-card` |
 | Context menu: rename list | List menu: renames the list. | `kanban-ctx-rename-list` |

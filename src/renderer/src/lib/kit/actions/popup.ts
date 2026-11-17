@@ -43,19 +43,39 @@ export function workArea(): Viewport {
 }
 
 /**
- * Where a measured popup (menu, palette) goes so it stays on screen: below its anchor when it fits,
- * otherwise above it when there is more room there (WinForms ToolStripDropDown behaviour), and
- * finally clamped inside the viewport. Horizontally it lines up with the anchor's left edge, sliding
- * left when it would run past the right edge.
+ * Where a measured popup (menu, palette) goes so it stays on screen (WinForms ToolStripDropDown behaviour):
+ * below its anchor when it fits there; otherwise above it when it fits there; otherwise it starts below and
+ * slides up just far enough to end at the bottom of the work area (never flipping past the top edge).
+ * Horizontally it lines up with the anchor's left edge, sliding left when it would run past the right edge.
  */
 export function placePopup(anchor: DOMRect, size: PopupSize, viewport: Viewport = workArea()): { left: number; top: number } {
-  const below = viewport.height - anchor.bottom
-  const above = anchor.top
+  const below = viewport.height - anchor.bottom + 1
+  const above = anchor.top + 1
   let top = anchor.bottom - 1
-  if (size.height > below && above > below) top = anchor.top - size.height + 1
+  if (size.height > below) top = size.height <= above ? anchor.top - size.height + 1 : viewport.height - size.height
   top = Math.max(0, Math.min(top, viewport.height - size.height))
   const left = Math.max(0, Math.min(anchor.left, viewport.width - size.width))
   return { left, top }
+}
+
+/**
+ * Runs `place` with the popup's measured size now and again whenever its size or the window changes, so a popup
+ * is never left where it was first drawn (its items may still be laying out on the first frame). Returns the
+ * cleanup, for an `$effect`.
+ */
+export function keepPlaced(el: HTMLElement, place: (size: PopupSize) => void): () => void {
+  const run = (): void => {
+    const r = el.getBoundingClientRect()
+    place({ width: r.width, height: r.height })
+  }
+  run()
+  const observer = new ResizeObserver(run)
+  observer.observe(el)
+  window.addEventListener('resize', run)
+  return () => {
+    observer.disconnect()
+    window.removeEventListener('resize', run)
+  }
 }
 
 /** Vertical shift (≤ 0) that pulls a nested popup back inside the viewport's bottom edge. */

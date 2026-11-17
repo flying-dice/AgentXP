@@ -226,7 +226,7 @@
   const ctx = new ContextMenu()
 
   const moveItems = (card: CardDto): MenuItemDef[] =>
-    (board?.columns ?? []).map((c) => ({ label: c.name, radio: true, checked: c.id === card.columnId, disabled: c.id === card.columnId, action: () => moveCardTo(card, c.id) }))
+    (board?.columns ?? []).map((c) => ({ testid: `kanban-ctx-move-to-${c.id}`, label: c.name, radio: true, checked: c.id === card.columnId, disabled: c.id === card.columnId, action: () => moveCardTo(card, c.id) }))
   const assignItems = (card: CardDto): MenuItemDef[] => [
     ...assignees.map((a) => ({ label: a.label, radio: true, checked: card.assignee === a.value, action: () => void run(() => api.updateCard(card.id, { assignee: a.value })) })),
     { separator: true } as MenuItemDef,
