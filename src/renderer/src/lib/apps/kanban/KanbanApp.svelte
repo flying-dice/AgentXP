@@ -511,17 +511,38 @@
     padding: 6px;
     overflow: auto;
   }
+  /* The drop lines take no room (the flex gap around them is cancelled), so the layout does not move under the pointer. */
   .gap {
     flex: none;
+    position: relative;
+    height: 0;
+    margin: -2.5px 0;
+    pointer-events: none;
+  }
+  .gap::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
     height: 3px;
-    margin: -2px 0;
     background: var(--w7-select-border);
   }
   .col-gap {
     flex: none;
+    position: relative;
     align-self: stretch;
+    width: 0;
+    margin: 0 -4px;
+    pointer-events: none;
+  }
+  .col-gap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
     width: 3px;
-    margin: 0 -3px;
     background: var(--w7-select-border);
   }
   .add,
