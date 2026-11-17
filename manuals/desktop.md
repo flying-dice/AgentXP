@@ -15,6 +15,7 @@ This manual describes the parts of the desktop that do not belong to one app: th
   - The Start Menu
   - The Notification Area
   - The Action Center
+  - Notices About Agent Work
   - Permission Prompts
   - Other Dialog Boxes
 - 4 - Controls Reference
@@ -101,11 +102,25 @@ The notification area is at the right end of the taskbar. It has these parts:
 - **Safely Remove Hardware** – A USB icon. It appears while a project is plugged in. Point to it to read **Safely Remove Hardware: 1 project plugged in**. Click it to see **Eject** and the name of each project, for example **Eject login-app (E:)**. **Start -> Eject a project...** opens the same list.
 - **Action Center** – A flag. A number on the flag tells how many requests wait for your answer.
 - **Clock** – Shows the time and the date.
-- **Balloon** – A message above the tray, for example **Project plugged in** (**login-app (E:) is ready to use.**) or **Project removed** (**'login-app' (E:) was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.**). Most balloons close by themselves after nine seconds.
+- **Balloon** – A message above the tray, for example **Project plugged in** (**login-app (E:) is ready to use.**) or **Project removed** (**'login-app' (E:) was removed from this desktop. Your files are still in the folder. Double-click it in Computer to plug it in again.**). Most balloons close by themselves after nine seconds. A balloon stays while the pointer is on it. AgentXP shows one balloon at a time. The other balloons wait, and **2 more** under the balloon tells you how many wait. When a balloon closes, the next one appears.
 
 ### The Action Center
 
 Click the flag to open the Action Center. Point at the flag to see how many requests wait for you. The Action Center lists each request that waits for your approval, in two lines: what the agent wants to do (for example **Change src/auth/redirect.ts**) and which chat asked, with the time the chat started. A chat that waits has the prefix **Waiting:** on its taskbar button. Click **Review** to answer a request. Click **Open Control Center** to change what the agent can do.
+
+Under **Messages**, the Action Center keeps the last 30 messages, newest first. Each notice about agent work is there with its title, the color square of the agent, the time, and its button, for example **Open review**. Click the button to go to the result, also after its balloon closed.
+
+### Notices About Agent Work
+
+AgentXP tells you once about agent work that you did not watch. A notice is a balloon above the tray, and it also goes to the Action Center. Each notice starts with the name of the agent, has the color square of the agent next to its title, and has one button that takes you to the result:
+
+- **Chat finished** – A chat that you did not watch ended its turn, for example **Builder finished: changed 6 files, ran tests (passed)**. If the chat changed files, **Review changes** opens Code on the change. Otherwise **Open chat** opens the chat.
+- **Chat stopped** – A chat stopped with an error, refused to go on, or reached its limit. **Open chat** opens the chat.
+- **New review comments** – An agent left comments in a Code Review window that does not have the focus, for example **Reviewer left 4 comments on auth.ts**. **Open review** brings the window forward and selects the first new comment.
+- **Board changed** – An agent changed Kanban cards, for example **Builder moved card 'Login bug' to Done**. **Open board** opens Kanban on the board and selects the card.
+- **Diagram updated**, **Picture updated**, **Document updated** – An agent drew or wrote in Agent Diagrams, Paint, or WordPad while that window did not have the focus. The button brings the window forward.
+
+AgentXP does not show a notice for the chat that you work in. This is the Chat window that has the focus, or the chat pane of a window that has the focus, after you clicked or typed in that pane. AgentXP also does not show a notice for a member of the Team Chat room that has the focus. A change in a window that has the focus appears there at once: new review comments and cards that the agent changed have an orange frame for a moment. AgentXP tells nothing about a turn that you stopped with **Stop** or **Pause all agents**.
 
 ### Permission Prompts
 
@@ -186,7 +201,10 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Balloon title | Shows the title of the message. | `balloon-title` |
 | Balloon text | Shows the text of the message. | `balloon-text` |
 | Balloon close | Closes the balloon. | `balloon-close` |
-| Balloon button | Runs the action that the balloon offers, for example Open Task Manager or Open Computer. | `balloon-action` |
+| Balloon button | Runs the action that the balloon offers, for example Open Task Manager, Open Computer, Open review, or Open chat. | `balloon-action` |
+| Balloon agent | Shows the color of the agent that a notice is about. Point to it to see the name. | `balloon-agent` |
+| Balloons waiting | Tells how many balloons wait behind this one, for example 2 more. | `balloon-more` |
+| Notice announcer | Reads each new notice aloud to a screen reader. It is not visible. | `notice-announcer` |
 
 ### Start menu
 
@@ -218,6 +236,10 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Request action | Names what the agent wants to do, for example Change src/auth/redirect.ts. | `action-center-approval-title` |
 | Request chat | Names the chat that asked and when it started. | `action-center-approval-chat` |
 | Message | Shows one message. | `action-center-message` |
+| Message title | Shows the title of a notice, for example New review comments. | `action-center-message-title` |
+| Message text | Shows the text of a message. | `action-center-message-text` |
+| Message agent | Shows the color of the agent that a notice is about. Point to it to see the name. | `action-center-message-agent` |
+| Message button | Runs the action of a message, for example Open review or Open board. | `action-center-message-action` |
 | Open Control Center | Opens Control Center. | `action-center-open-control-centre` |
 | Open Event Viewer | Opens Event Viewer, the list of what happened. | `action-center-open-event-viewer` |
 | Dim layer | Dims the desktop behind the permission dialog box. | `uac-dim` |
@@ -302,6 +324,12 @@ To answer a permission request, follow the steps below:
 2. Click **Review** next to the request. The permission dialog box appears.
 3. Read the change to the file or the command in the box.
 4. Click **Allow**, or click the button that refuses the action. The focus starts on the refusal.
+
+To go to the result of a notice after its balloon closed, follow the steps below:
+
+1. Click the flag in the notification area. The Action Center opens.
+2. Under **Messages**, find the notice.
+3. Click its button, for example **Open review**. The window comes forward at the result.
 
 To make the agent ask before every action, even reading, tick **Ask before every action** in the top bar. Clear the box to go back to the settings in Control Center.
 

@@ -11,9 +11,11 @@
     selectedId?: number | null
     onselect: (comment: ReviewCommentDto) => void
     onsendall: () => void
+    /** Comments an agent just added or changed: their rows flash. */
+    flash?: ReadonlySet<number>
   }
 
-  let { comments, selectedId = null, onselect, onsendall }: Props = $props()
+  let { comments, selectedId = null, onselect, onsendall, flash = new Set() }: Props = $props()
 
   let onlyOpen = $state(false)
   const counts = $derived(commentCounts(comments))
@@ -33,7 +35,7 @@
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div class="list xp-scroll" role="group" tabindex="0" aria-label="Comments">
     {#each roots as c (c.id)}
-      <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
+      <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-selected={c.id === selectedId ? 'true' : undefined} data-flash={flash.has(c.id) ? 'true' : undefined} class:flash={flash.has(c.id)} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">
           <span class="dot {c.severity}" aria-hidden="true"></span>
           <span class="level" data-testid="review-comment-level">{SEVERITY_LABELS[c.severity]}</span>
@@ -107,6 +109,11 @@
   }
   .row.selected {
     background: var(--xp-select-face, #d6dff7);
+  }
+  .row.flash {
+    outline: 2px solid var(--xp-change-cue);
+    outline-offset: -2px;
+    background: var(--xp-change-cue-face);
   }
   .row[data-state='resolved'] .text {
     color: var(--xp-text-muted);

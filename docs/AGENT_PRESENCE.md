@@ -1,6 +1,6 @@
 # Agent presence: Work, Show, Output
 
-Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill) and PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions) have landed. It replaces "tools follow
+Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions) and PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking) have landed. It replaces "tools follow
 apps" (`DESKTOP_DESIGN.md` sections 1 and 3) as the rule for how agents appear on the desktop. The UX rules for
 contributors are in `.claude/skills/agent-presence-ux/SKILL.md`; this note is the design and the build plan.
 
@@ -123,6 +123,22 @@ row only.
 - **Output windows** are the apps whose window owns the state: Paint, Agent Diagrams, WordPad, Browser, Code Review
   and agent-drawn surfaces. They open behind, unfocused and flashing, and never take focus.
 
+As built (PR 2, `src/main/application/notices/NoticeService.ts`):
+
+- "Window closed" means **the window does not have the focus**: closed, behind or minimized. The review tools need a
+  Code Review window, so review comments are told when that window is behind.
+- File changes are not a notice of their own. They are part of the turn summary, whose one action is
+  **Review changes** (Code on the first changed file, its recorded change selected) when the turn changed files and
+  ended well, else **Open chat**. So a background turn that only edited files gives one balloon, not two.
+- The summary is left out when the turn only left output that has its own notice (a reviewer that only commented).
+  A turn the operator stopped (Stop, Pause) gets nothing. Errors, refusals and the token limit say so.
+- Everything is told when the turn ends. There is no quiet-period flush for long turns: open windows show the output
+  live meanwhile, and one notice at the end keeps the count honest.
+- The members of the focused Team Chat room count as watched (no notices), like the foreground chat.
+- Change cues: `review.changed` carries `commentIds` and `by` (the agent's session); `kanban.changed` carries
+  `boardId`, `cards` (id, title, added, moved, updated or deleted, column) and `by`. Code Review flashes the threads and
+  the comment-list rows (it has no separate gutter marker); Kanban flashes the cards. Both expose `data-flash`.
+
 ## 7. Follow: opt-in live watching
 
 - **Follow** is on a team-room member row, a Chat window's **View** menu and the top-bar agents popup. The top bar
@@ -155,6 +171,10 @@ row only.
 - Team member: the profile name and colour (`RoomMemberDto.name`, `.color`).
 - Plain chat: the agent display name and `colorOfName(sessionId)` (`src/shared/teams.ts`). No migration.
 
+As built (PR 2): `agentIdentity()` in `src/shared/identity.ts`, resolved in main by compose (`TeamRoomService.memberOfSession`,
+then the agent row). Balloons and Action Center messages show it now; feed rows, tool rows, the cursor and the top bar
+take it in PR 3 and PR 4.
+
 ## 10. Architecture changes
 
 **Retire "tools follow apps".**
@@ -180,13 +200,18 @@ row only.
 requests and publishes `desktop.show { desktopId, sessionId, target, note, identity }`. Apps that own their state get
 an `AppRequestBroker` method `show`; Code, Code Review and Kanban use view updates.
 
-**Foreground tracking.** `DesktopService.foregroundSessionId`, set from window focus and from aside-pane focus and
-typing reports.
+**Foreground tracking** (PR 2). `DesktopService.foregroundSessionId(desktopId)`: a focused Chat window is its chat, a
+focused Code Review window its review session, and a focused app window whose chat pane the operator last focused or
+typed in is that pane's chat. The renderer reports the pane with `desktop.notePaneFocus(windowId, active)` (focus or a
+key in the pane, and `false` when the pane is hidden).
 
-**Notices.** The unused `status.message` event (`src/shared/ipc.ts`) is replaced by
-`desktop.notice { desktopId, id, kind, title, text, identity, actions[] }` published from main for turn summaries,
-output events and background show requests. The balloon becomes a queue with history; `ActionCenterMessage` gets
-generic `actions` in place of the fixed **Continue**. `Balloon` moves into the kit.
+**Notices** (PR 2). The unused `status.message` event is gone. `desktop.notice { desktopId, id, kind, title, text,
+identity, sessionId, actions[], at }` (`src/shared/notices.ts`) is published by `NoticeService` to the owning desktop
+only. It hears turn starts and ends from `SessionService.observeTurns`, the app events from the publisher, and the
+output tools of Diagrams, Paint and WordPad from the tool service log. Background show requests join it in PR 3. The
+balloon is a queue (`lib/desktop/balloonQueue.ts`: a notice waits, a shell balloon shows at once) with history in the
+Action Center; `ActionCenterMessage` has generic `actions`; `Balloon` is a kit molecule. An A2UI window refused by
+**Agent may open apps** now tells the agent that it was not opened and why, not that the user closed it.
 
 **Agent instructions** (`src/main/application/tools/catalog.ts`). `PREFER_DESKTOP_INSTRUCTIONS` and the "Tools follow
 the apps that are open" line are replaced by "Work quietly": built-in tools and AgentXP tools are both fine and
@@ -199,8 +224,8 @@ open behind the operator. Tool descriptions that promise a window are rewritten.
 |---|---|---|
 | 0 | This note, the `agent-presence-ux` skill, the glide exception, journeys J10 (rewritten) and J32 to J34, panel tasks | docs only |
 | 1 | Headless Work: retire the gate, strip side effects, `openOutputWindow`, Browser and WordPad stop stealing focus, new instructions, **Show in...** on tool rows and feed rows, top-bar working link, README chapter 6 and manuals | `tools.test.ts`, `AppToolPolicy.test.ts`, `desktop-tools.integration.test.ts`, `catalog.test.ts`, `e2e/search.e2e.ts`, `e2e/scripted-desktop-tools.e2e.ts`, `e2e/desktop-tools.e2e.ts`, `e2e/scripted-demo.e2e.ts` |
-| 2 | Notices and Output: `desktop.notice`, balloon queue and history, Action Center actions, turn summaries, change cues in Code Review and Kanban, `AgentIdentity` | `e2e/notices.e2e.ts` |
-| 3 | Show and the cursor: `show`, `ShowService`, foreground rule, queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
+| 2 (landed) | Notices and Output: `desktop.notice`, balloon queue and history, Action Center actions, turn summaries, change cues in Code Review and Kanban, `AgentIdentity`, foreground tracking (moved forward from PR 3) | `NoticeService.test.ts`, `e2e/notices.e2e.ts` |
+| 3 | Show and the cursor: `show`, `ShowService`, foreground rule (uses PR 2's `foregroundSessionId`), queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
 | 4 | Follow and team presence: Follow toggle, projection with typing pause, a cursor per member, member step text | `e2e/follow.e2e.ts` |
 
 Each PR follows `verify-change` and `agent-presence-ux` and runs every gate in `AGENTS.md`.

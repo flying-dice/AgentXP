@@ -8,6 +8,8 @@
     selected?: boolean
     /** The card is being dragged (it dims). */
     dragging?: boolean
+    /** An agent just added, moved or changed it: a short highlight (`data-flash`). */
+    flash?: boolean
     onselect?: () => void
     /** Double-click or Enter: edit the card. */
     onopen?: () => void
@@ -17,7 +19,7 @@
     onkeydown?: (event: KeyboardEvent) => void
   }
 
-  let { card, selected = false, dragging = false, onselect, onopen, ondragstart, ondragend, oncontextmenu, onkeydown }: Props = $props()
+  let { card, selected = false, dragging = false, flash = false, onselect, onopen, ondragstart, ondragend, oncontextmenu, onkeydown }: Props = $props()
 
   const preview = $derived(descriptionPreview(card.description))
 </script>
@@ -26,6 +28,7 @@
   class="card"
   class:selected
   class:dragging
+  class:flash
   role="option"
   aria-selected={selected}
   aria-label={cardLabel(card)}
@@ -33,6 +36,8 @@
   draggable="true"
   data-testid="kanban-card"
   data-card-id={card.id}
+  data-flash={flash ? 'true' : undefined}
+  data-selected={selected ? 'true' : undefined}
   onclick={onselect}
   ondblclick={onopen}
   {ondragstart}
@@ -71,6 +76,11 @@
   .card.selected {
     border-color: var(--xp-select-border);
     background: var(--xp-select-face);
+  }
+  /* The change cue of agent output: a short orange highlight, like the Diagrams flash. */
+  .card.flash {
+    outline: 3px solid var(--xp-change-cue);
+    background: var(--xp-change-cue-face);
   }
   .card:focus-visible {
     outline: 1px dotted #000;

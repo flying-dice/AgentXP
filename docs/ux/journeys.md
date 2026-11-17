@@ -50,7 +50,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J30 | Use menus, right-click and About in any app | P4, P3 |
 | J31 | Get help from inside an app (Help menu and F1) | P4 |
 | J32 | An agent shows you something [planned] | P1, P4 |
-| J33 | Hear about what the agents made [planned] | P2, P3 |
+| J33 | Hear about what the agents made | P2, P3 |
 | J34 | Follow an agent as it works [planned] | P3, P1 |
 
 J10 and J32 to J34 come from `docs/AGENT_PRESENCE.md` (Work, Show, Output). J10 replaces "Tools follow apps"; until PR 1 of that plan merges, the built app still behaves as the old J10 described (see git history).
@@ -954,20 +954,20 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
 - **E2E coverage.** Planned: `e2e/show.e2e.ts` (foreground show, background request, typing during a glide, Pause, Ask).
 - **Docs and panel.** `manuals/desktop.md` (the agent cursor and note callout), `manuals/chat.md`, `manuals/control-centre.md`. Panel tasks: T32.1, T32.2 in `tasks.md`.
 
-## J33 - Hear about what the agents made [planned]
+## J33 - Hear about what the agents made
 
 `docs/AGENT_PRESENCE.md`, section 6.
 
 - **Personas.** P2, P3.
 - **Trigger.** Agents in background chats or a team room finish work that leaves results in apps: review comments, cards, changes, a diagram.
 - **Goal.** Learn about each result once, in plain words, and reach it in one click, without being interrupted while working.
-- **Preconditions.** A connected desktop; the user is working in a foreground chat or an app; a team room with Reviewer and Builder runs in the background; Code Review and Kanban windows are closed.
+- **Preconditions.** A connected desktop; the user is working in a foreground chat or an app; a team room with Reviewer and Builder runs in the background; Kanban is closed. The review tools need a Code Review window, so the Reviewer's window is open behind the user's window (`review_open` opens it there).
 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
 | 1 | Desktop | Keeps working | Reviewer adds 4 comments. One balloon: "Reviewer left 4 comments on redirect.ts", **Open review** | One message, in outcome words, not one per comment |
 | 2 | Balloon | Clicks **Open review** | Code Review opens on the first new comment | The result, not just the app |
-| 3 | Desktop | Ignores the next balloon | Builder's turn ends: "Builder finished: changed 6 files, ran tests (passed)", **Open chat**; it times out | Nothing lost |
+| 3 | Desktop | Ignores the next balloon | Builder's turn ends: "Builder finished: changed 6 files, ran tests (passed)", **Review changes** (**Open chat** when it changed no file); it times out | Nothing lost |
 | 4 | Action Center | Opens it from the tray flag | Both balloons are listed with their actions | History of what happened |
 | 5 | Kanban (open) | Watches while Builder moves a card | The card moves live and flashes; no balloon; no focus change | Live change in an open window |
 
@@ -979,8 +979,8 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - Balloons while a UAC popup is open: they wait below it.
   - Two desktops: notices go only to their own desktop.
 - **Success measure.** P2 names every result of a two-agent run from the Action Center alone; P3 reaches each result in one click; the user was never pulled out of their own window.
-- **E2E coverage.** Planned: `e2e/notices.e2e.ts`.
-- **Docs and panel.** `manuals/desktop.md` (balloons, Action Center), `manuals/code-review.md`, `manuals/kanban.md`, `manuals/team-chat.md`. Panel tasks: T33.1, T33.2 in `tasks.md`.
+- **E2E coverage.** `e2e/notices.e2e.ts`: a background chat finishes (one summary balloon, kept in the Action Center), review comments in a Code Review window behind (balloon, **Open review** lands on the comment), the window focused (the threads flash, no balloon), a card moved with Kanban open (the card flashes, no balloon), the foreground chat (no balloon), two notices queue. Not yet: a two-member team run (step 1 with a room), balloons below a UAC popup.
+- **Docs and panel.** `manuals/desktop.md` (balloons, Action Center, notices), `manuals/code-review.md`, `manuals/kanban.md`. Panel tasks: T33.1, T33.2 in `tasks.md` (still **[planned]**: no preset and checker yet).
 
 ## J34 - Follow an agent as it works [planned]
 

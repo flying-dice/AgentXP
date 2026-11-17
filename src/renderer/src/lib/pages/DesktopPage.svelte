@@ -14,7 +14,7 @@
   import { appRegistry } from '../desktop/apps'
   import { approvalLabel, approvalOrigin, approvalReason } from '../desktop/approval'
   import AutoPlayDialog from '../desktop/AutoPlayDialog.svelte'
-  import Balloon from '../desktop/Balloon.svelte'
+  import Balloon from '../kit/molecules/Balloon.svelte'
   import UsbTray from '../desktop/UsbTray.svelte'
   import { setDesktopContext } from '../desktop/context'
   import { DesktopController } from '../desktop/DesktopController.svelte'
@@ -321,6 +321,7 @@
         <ActionCenter
           approvals={centreApprovals}
           {messages}
+          onaction={(id, actionId) => void desktop.runMessageAction(id, actionId)}
           ignore={flag}
           onreview={(key) => {
             const a = approvals.find((x) => x.key === key)
@@ -379,9 +380,23 @@
     {/if}
     {#if desktop.balloon}
       <div class="balloon">
-        <Balloon title={desktop.balloon.title} text={desktop.balloon.text} icon={desktop.balloon.icon} action={balloonAction} onclose={() => desktop.dismissBalloon()} onhold={(held) => desktop.holdBalloon(held)} />
+        {#key desktop.balloon}
+          <Balloon
+            title={desktop.balloon.title}
+            text={desktop.balloon.text}
+            icon={desktop.balloon.icon}
+            identity={desktop.balloon.identity}
+            more={desktop.moreBalloons}
+            live={!desktop.balloon.queued}
+            action={balloonAction}
+            onclose={() => desktop.dismissBalloon()}
+            onhold={(held) => desktop.holdBalloon(held)}
+          />
+        {/key}
       </div>
     {/if}
+    <!-- New notices are read out once when they arrive (the balloon of a notice is not a live region itself). -->
+    <div class="announcer" data-testid="notice-announcer" aria-live="polite" aria-atomic="true">{desktop.announcement}</div>
     <ContextMenuStrip bind:open={taskbarMenu.open} x={taskbarMenu.x} y={taskbarMenu.y} items={taskbarMenu.items} label="Taskbar button" />
     {#snippet tray()}
       <UsbTray drives={desktop.state.drives} bind:open={desktop.usbMenuOpen} bind:element={usbIcon} oneject={(l) => void desktop.ejectDrive(l)} removed={desktop.recentlyRemoved} onplugagain={(id) => void desktop.plugInAgain(id, { autoPlay: true })} />
@@ -419,6 +434,14 @@
     right: 72px;
     bottom: 44px;
     z-index: 100002;
+  }
+  .announcer {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .center {
     position: absolute;

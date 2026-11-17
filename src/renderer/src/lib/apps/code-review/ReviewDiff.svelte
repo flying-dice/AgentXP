@@ -27,9 +27,14 @@
     onreply: (root: ReviewCommentDto, body: string) => void
     ondelete: (comment: ReviewCommentDto) => void
     onsend: (comment: ReviewCommentDto) => void
+    /** Comments an agent just added or changed: their threads flash. */
+    flash?: ReadonlySet<number>
+    /** The selected comment: its thread is marked. */
+    selectedCommentId?: number | null
   }
 
-  let { file, view, layout, comments, reviewer, selectedRow = null, flow = false, onselectrow, oncomment, onresolve, onreply, ondelete, onsend }: Props = $props()
+  let { file, view, layout, comments, reviewer, selectedRow = null, flow = false, onselectrow, oncomment, onresolve, onreply, ondelete, onsend, flash = new Set(), selectedCommentId = null }: Props = $props()
+  const flashes = (t: { root: ReviewCommentDto; replies: readonly ReviewCommentDto[] }): boolean => flash.has(t.root.id) || t.replies.some((r) => flash.has(r.id))
 
   let scroller = $state<HTMLElement | null>(null)
   let composing = $state<{ row: number; side: ReviewSide; line: number } | null>(null)
@@ -143,7 +148,7 @@
     </div>
   {/if}
   {#each placed.byRow.get(row) ?? [] as thread (thread.root.id)}
-    <ReviewThreadView {thread} {reviewer} {onresolve} {onreply} {ondelete} {onsend} />
+    <ReviewThreadView {thread} {reviewer} {onresolve} {onreply} {ondelete} {onsend} flash={flashes(thread)} selected={thread.root.id === selectedCommentId} />
   {/each}
 {/snippet}
 
@@ -260,7 +265,7 @@
       <div class="orphans" data-testid="review-orphans">
         <div class="note">Comments on lines that are no longer in the diff:</div>
         {#each placed.orphans as thread (thread.root.id)}
-          <ReviewThreadView {thread} {reviewer} {onresolve} {onreply} {ondelete} {onsend} />
+          <ReviewThreadView {thread} {reviewer} {onresolve} {onreply} {ondelete} {onsend} flash={flashes(thread)} selected={thread.root.id === selectedCommentId} />
         {/each}
       </div>
     {/if}

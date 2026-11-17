@@ -13,9 +13,13 @@
     onreply: (root: ReviewCommentDto, body: string) => void
     ondelete: (comment: ReviewCommentDto) => void
     onsend: (comment: ReviewCommentDto) => void
+    /** An agent just added or changed a comment of the thread: a short highlight (`data-flash`). */
+    flash?: boolean
+    /** The thread is the one selected (the comments list, a notice's Open review). */
+    selected?: boolean
   }
 
-  let { thread, reviewer = 'Reviewer', onresolve, onreply, ondelete, onsend }: Props = $props()
+  let { thread, reviewer = 'Reviewer', onresolve, onreply, ondelete, onsend, flash = false, selected = false }: Props = $props()
 
   let replying = $state(false)
   const root = $derived(thread.root)
@@ -29,7 +33,7 @@
   <Button variant="flat" data-testid={testid} {disabled} onclick={run}>{label}</Button>
 {/snippet}
 
-<div class="thread" data-testid="review-thread" data-comment-id={root.id} data-state={root.state} data-severity={root.severity} class:resolved>
+<div class="thread" data-testid="review-thread" data-comment-id={root.id} data-state={root.state} data-severity={root.severity} data-flash={flash ? 'true' : undefined} data-selected={selected ? 'true' : undefined} class:resolved class:flash class:selected>
   {#each [root, ...thread.replies] as c (c.id)}
     <div class="comment" data-testid="review-comment" data-comment-id={c.id} data-author={c.author} data-reply={c.parentId !== null ? '' : undefined}>
       <div class="meta">
@@ -86,6 +90,14 @@
   }
   .thread[data-severity='nit'] {
     border-left-color: #7a8aa0;
+  }
+  /* The change cue of agent output: a short orange highlight, like the Diagrams flash. */
+  .thread.flash {
+    outline: 3px solid var(--xp-change-cue);
+    background: var(--xp-change-cue-face);
+  }
+  .thread.selected {
+    box-shadow: 0 0 0 1px #316ac5;
   }
   .thread.resolved {
     opacity: 0.65;
