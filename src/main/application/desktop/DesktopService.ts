@@ -17,7 +17,7 @@ import {
   type ToolPolicyDto,
   type WindowState
 } from '@shared/desktop'
-import { DEFAULT_BOUNDS, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeChatBesideBrowser, placeNewWindow, windowTitle } from '@shared/desktop-views'
+import { DEFAULT_BOUNDS, atLeastMinSize, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeChatBesideBrowser, placeNewWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
 import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, parseVPath, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
@@ -275,7 +275,8 @@ export class DesktopService implements DesktopStates {
 
   setBounds(windowId: Id, bounds: Bounds): void {
     const record = this.windowRecord(windowId)
-    this.deps.windows.setBounds(windowId, bounds)
+    // Never smaller than the app's smallest size: an agent or a stale renderer cannot make a window too small to lay out.
+    this.deps.windows.setBounds(windowId, atLeastMinSize(record.app, bounds))
     this.emit(record.desktopId)
   }
 

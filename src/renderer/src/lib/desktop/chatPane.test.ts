@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PANE, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, PANE_MIN_WIDTH, paneMaxWidth, composeAppContext, explainChip, explainRequest, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
+import { DEFAULT_PANE, OVERLAY_APP_STRIP, paneDeficit, paneLayout, PANE_DEFAULT_WIDTH, PANE_MAX_WIDTH, PANE_MIN_WIDTH, paneMaxWidth, composeAppContext, explainChip, explainRequest, paneKey, readPane, suggestionsFor, writePane } from './chatPane'
 import { askChatPrompt } from '../apps/askChat'
 
 const memory = (initial: Record<string, string> = {}): Storage => {
@@ -103,5 +103,22 @@ describe('paneMaxWidth (UX-198)', () => {
   })
   it('never goes under the narrowest pane', () => {
     expect(paneMaxWidth(500)).toBe(PANE_MIN_WIDTH)
+  })
+})
+
+describe('pane layout in narrow windows', () => {
+  it('docks beside the app while the app keeps 380 px', () => {
+    expect(paneLayout(800, 420)).toEqual({ mode: 'docked', width: 420 })
+    expect(paneLayout(640, 420)).toEqual({ mode: 'docked', width: 260 })
+  })
+  it('floats over the app in a window too narrow to dock it, leaving a strip of the app showing', () => {
+    expect(paneLayout(600, 420)).toEqual({ mode: 'overlay', width: 420 })
+    expect(paneLayout(464, 420)).toEqual({ mode: 'overlay', width: 464 - OVERLAY_APP_STRIP })
+  })
+  it('says how much wider a window must get to keep 380 px of app beside the pane', () => {
+    expect(paneDeficit(800, 420)).toBe(0)
+    expect(paneDeficit(392, 420)).toBe(408)
+    expect(paneDeficit(748, 420)).toBe(52)
+    expect(paneDeficit(500, 100)).toBe(PANE_MIN_WIDTH + 380 - 500)
   })
 })

@@ -33,10 +33,34 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   'task-scheduler': { x: 110, y: 70, width: 1000, height: 600 }
 }
 
-/** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
-export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 }, 'task-scheduler': { width: 760, height: 520 }, diagrams: { width: 640, height: 440 } }
+/**
+ * Smallest size of a window: 480 x 320, and more for the apps whose controls do not fit in that (the resize audit measured each
+ * app at its minimum, with and without the chat pane, until nothing clipped or overlapped).
+ */
+export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = {
+  'control-centre': { width: 640, height: 420 },
+  'task-scheduler': { width: 760, height: 520 },
+  diagrams: { width: 640, height: 440 },
+  // Chat tiles down to 360 px beside another window, but needs 420 px of height for its composer and Send button.
+  chat: { width: 360, height: 420 },
+  'code-review': { width: 720, height: 440 },
+  paint: { width: 520, height: 440 },
+  // An agent-drawn window takes the size its theme asks for, down to a short dialog.
+  surface: { width: 280, height: 160 }
+}
 export const DEFAULT_MIN_WINDOW_SIZE = { width: 480, height: 320 } as const
 export const minWindowSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? DEFAULT_MIN_WINDOW_SIZE
+/**
+ * The size no window of the app is ever laid out below, whoever set it (a placement, a stored size, the agent): the app's own
+ * minimum when it has one, else the smallest tile (360 x 220, the size a plain tool is squeezed to beside a chat).
+ */
+export const hardMinSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? MIN_TILE
+
+/** Bounds no smaller than `hardMinSize` (a stored, requested or agent-set size never makes a window that cannot lay out its content). */
+export const atLeastMinSize = <B extends { width: number; height: number }>(app: AppKind, b: B): B => {
+  const min = hardMinSize(app)
+  return b.width >= min.width && b.height >= min.height ? b : { ...b, width: Math.max(min.width, b.width), height: Math.max(min.height, b.height) }
+}
 
 /**
  * Height of the top bar of the desktop until the renderer has measured it (UX-88). The bar is about 52 px with the
@@ -72,7 +96,7 @@ export const CASCADE_STEP = 32
 export function cascadedBounds(app: AppKind, openCount: number, size?: { width: number; height: number }): Bounds {
   const offset = (openCount % 6) * CASCADE_STEP
   const b = DEFAULT_BOUNDS[app]
-  return { ...b, ...(size ?? {}), x: b.x + offset, y: b.y + offset }
+  return atLeastMinSize(app, { ...b, ...(size ?? {}), x: b.x + offset, y: b.y + offset })
 }
 
 /**
@@ -91,7 +115,9 @@ const MIN_TILE = { width: 360, height: 220 }
  * much room they take their default size and cascade over the other window instead.
  */
 const TILE_MIN_WIDTH: Partial<Record<AppKind, number>> = { 'control-centre': 640, 'event-viewer': 720 }
-const tileMinWidth = (app: AppKind): number => TILE_MIN_WIDTH[app] ?? MIN_TILE.width
+/** A tiled window is never squeezed below its own smallest size either (a 760 px Task Scheduler was squeezed to 360 px beside a chat). */
+const tileMinWidth = (app: AppKind): number => Math.max(TILE_MIN_WIDTH[app] ?? MIN_TILE.width, hardMinSize(app).width)
+const tileMinHeight = (app: AppKind): number => Math.max(MIN_TILE.height, hardMinSize(app).height)
 
 const overlaps = (a: Bounds, b: Bounds): boolean =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
@@ -137,7 +163,7 @@ export function placeWindow(
   const roomRight = area.width - rightX
   if (roomRight >= tileMinWidth(app)) return { x: rightX, y: top, width: roomRight, height }
   const roomBelow = area.height - belowY
-  if (roomBelow >= MIN_TILE.height) return { x: left, y: belowY, width, height: roomBelow }
+  if (roomBelow >= tileMinHeight(app)) return { x: left, y: belowY, width, height: roomBelow }
   // The window sits at the right edge (a chat does): squeeze into the room to its left (UX-181).
   const roomLeft = avoid.x - PLACEMENT_GAP
   if (roomLeft >= tileMinWidth(app)) return { x: 0, y: top, width: roomLeft, height }

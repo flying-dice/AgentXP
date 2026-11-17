@@ -321,10 +321,12 @@
   .bar {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 8px;
+    gap: 2px 8px;
+    min-height: 36px;
+    padding: 4px 8px;
+    box-sizing: border-box;
     background: linear-gradient(#e9f0fa, #cbd9ee);
     border-bottom: 1px solid #8ea4c4;
   }
@@ -350,11 +352,13 @@
   .spring {
     flex: 1;
   }
+  /* The search box gives way first in a narrow window (down to 110 px) so it never runs past the frame. */
   .search {
+    flex: 0 1 220px;
+    min-width: 110px;
     display: flex;
     align-items: center;
     gap: 4px;
-    width: 220px;
   }
   .search :global(.xp-textbox) {
     flex: 1;

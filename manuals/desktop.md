@@ -161,6 +161,10 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Minimize | Hides the window on the taskbar. | `window-minimize` |
 | Maximize | Makes the window fill the desktop. | `window-maximize` |
 | Close | Closes the window. | `window-close` |
+| App area | The part of the window that shows the app, between the frame and the chat pane. Nothing in the app shows outside it. | `window-client` |
+| Menu bar | The menus of an app window. In a narrow window the menus wrap onto a second row. | `menubar` |
+| Status bar | The bar at the bottom of an app window. When a window is narrow, the panels at the right get smaller first, so the status text at the left stays readable. | `status-strip` |
+| Resize edges | Drag an edge or a corner of a window to change its size. The name ends with the side: `n`, `s`, `e`, `w`, `ne`, `nw`, `se`, `sw`. Each app has a smallest size: you cannot make a window smaller than its app needs, for example 760 by 520 pixels for Task Scheduler. | `window-grip-*` |
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
 | Activity list | The infopanel that says what the agent does now, the last problem, and what finished. The Event Viewer button and the right-click item open the Event Viewer. | `infopanel-activity`, `infopanel-activity-control`, `infopanel-activity-not-saved`, `infopanel-activity-problem`, `infopanel-activity-working`, `infopanel-activity-last`, `infopanel-activity-open-event-viewer`, `infopanel-activity-open-permissions`, `infopanel-activity-menu-event-viewer` |
 | Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |

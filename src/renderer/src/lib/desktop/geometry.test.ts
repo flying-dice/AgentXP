@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_WINDOW_SIZE, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, placeBesideOpener, CHAT_MIN_WIDTH, OPENER_CASCADE, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
+import { MIN_WINDOW_SIZE, widenBounds, belowBar, minYBelow, fitInsideWorkArea, fitToArea, helpBounds, placeBesideOpener, CHAT_MIN_WIDTH, OPENER_CASCADE, frameStyle, moveBounds, resizeBounds, shouldSnapMaximize } from './geometry'
 
 const b = { x: 100, y: 100, width: 400, height: 300 }
 const area = { width: 1000, height: 700 }
@@ -154,5 +154,15 @@ describe('placeBesideOpener (UX-181)', () => {
     expect(cascaded).toMatchObject({ x: wide.x + OPENER_CASCADE, y: wide.y + OPENER_CASCADE, width: 600, height: 560 })
     const narrow = placeBesideOpener('chat', { x: 150, y: 100, width: 450, height: 400 }, { ...first, width: 400 }, area, 68, 2, 'chat')
     expect(narrow.width).toBe(CHAT_MIN_WIDTH)
+  })
+})
+
+describe('widenBounds', () => {
+  it('grows to the right while there is room', () => {
+    expect(widenBounds({ x: 100, y: 50, width: 480, height: 320 }, 300, area)).toEqual({ x: 100, y: 50, width: 780, height: 320 })
+  })
+  it('moves left at the edge of the work area and never gets wider than it', () => {
+    expect(widenBounds({ x: 600, y: 50, width: 400, height: 320 }, 300, area)).toEqual({ x: 300, y: 50, width: 700, height: 320 })
+    expect(widenBounds({ x: 0, y: 50, width: 900, height: 320 }, 300, area)).toEqual({ x: 0, y: 50, width: 1000, height: 320 })
   })
 })

@@ -35,7 +35,7 @@ import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
 import { PermissionInbox } from './PermissionInbox.svelte'
-import { helpBounds, placeBesideOpener, type BarRect } from './geometry'
+import { helpBounds, placeBesideOpener, widenBounds, type BarRect } from './geometry'
 import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } from './windowOrder'
 import { ICON_HINT, PROJECT_HINT, takeIconHint, takeProjectHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
@@ -852,6 +852,39 @@ export class DesktopController implements DesktopHost {
     if (!window || !windowHasAside(window)) return
     this.patchPane(windowId, { collapsed: !open })
     if (open) this.focusPane(windowId)
+    else void this.unwidenAfterPane(window)
+  }
+
+  /** Windows that grew to make room for their chat pane: the bounds before and after, so hiding the pane gives the width back. */
+  private readonly widenedForPane = new Map<Id, { before: Bounds; after: Bounds }>()
+
+  /**
+   * The chat pane opened in a window too narrow to keep 380 px of app beside it: the window grows by `extra` px (as far as the
+   * work area allows), so the app keeps its layout. A maximized window, or one with no room to grow, keeps its size (the pane then
+   * floats over the app).
+   */
+  async widenForPane(windowId: Id, extra: number): Promise<void> {
+    const window = this.windowById(windowId)
+    const area = this.workArea?.()
+    if (!window || window.windowState !== 'normal' || extra <= 0 || !area || area.width <= 0) return
+    const before = this.boundsOf(window)
+    const after = widenBounds(before, extra, area)
+    if (after.width <= before.width) return
+    this.widenedForPane.set(windowId, { before, after })
+    this.patch(windowId, { bounds: after })
+    await this.api.desktop.setBounds(windowId, after)
+  }
+
+  /** Hiding the pane gives back the width it took, unless the user moved or resized the window since. */
+  private async unwidenAfterPane(window: AppWindowState): Promise<void> {
+    const widened = this.widenedForPane.get(window.id)
+    if (!widened) return
+    this.widenedForPane.delete(window.id)
+    const now = this.boundsOf(window)
+    const same = now.x === widened.after.x && now.y === widened.after.y && now.width === widened.after.width && now.height === widened.after.height
+    if (!same || window.windowState !== 'normal') return
+    this.patch(window.id, { bounds: widened.before })
+    await this.api.desktop.setBounds(window.id, widened.before)
   }
 
   toggleChatPane(windowId: Id): void {

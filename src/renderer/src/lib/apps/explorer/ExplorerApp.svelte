@@ -496,12 +496,15 @@
     background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
+  /* Wraps in a narrow window instead of pushing Eject and the reason past the frame. */
   .commands {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 2px;
-    height: 28px;
+    min-height: 28px;
+    min-width: 0;
     padding: 0 6px;
     background: linear-gradient(#fff, #eef3fa 50%, #e4ecf7 51%, #eaf1fa);
     border-bottom: 1px solid #c5d0e0;
@@ -530,8 +533,12 @@
     height: 100%;
   }
   .reason {
+    flex: 0 1 auto;
+    min-width: 0;
     align-self: center;
     margin-left: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: var(--xp-text-muted);
     white-space: nowrap;
   }

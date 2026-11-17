@@ -394,6 +394,7 @@
 
 <style>
   .ts {
+    container: task-scheduler / inline-size;
     position: relative;
     flex: 1;
     min-height: 0;
@@ -410,6 +411,12 @@
     flex: none;
     width: 200px;
     min-height: 0;
+  }
+  /* A narrow window drops the task pane, as XP Explorer does: its commands stay in the Action menu and the context menu. */
+  @container task-scheduler (max-width: 560px) {
+    .pane {
+      display: none;
+    }
   }
   .main {
     flex: 1;
@@ -430,6 +437,8 @@
     gap: 6px;
     height: 24px;
     padding: 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
     background: var(--xp-face);
     border: 1px solid var(--xp-list-border);
     border-bottom: 0;
