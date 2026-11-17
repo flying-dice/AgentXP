@@ -9,6 +9,7 @@ import {
   includeMatcher,
   lineMatcher,
   nameMatcher,
+  pathBelow,
   type FileFindQuery,
   type FileFindResultDto,
   type TextMatchDto,
@@ -19,7 +20,7 @@ import type { VfsEntryDto, VPath } from '@shared/vfs'
 import { AppError } from '../errors'
 import type { VirtualFileSystem } from './VirtualFileSystem'
 
-/** Folders one search may open before it gives up (a whole disk is too much; narrow the folder). */
+/** Folders one search opens at most; past it the search stops and returns what it found, marked as more not shown. */
 export const MAX_SEARCHED_DIRECTORIES = 2000
 /** Bigger files are skipped when searching contents. */
 export const MAX_SEARCHED_FILE_BYTES = 1024 * 1024
@@ -43,8 +44,9 @@ export class FileSearch {
     const matches: TextMatchDto[] = []
     let filesSearched = 0
     let filesMatched = 0
-    for await (const file of this.files(desktopId, root)) {
-      if (!included(file.name)) continue
+    const walk = { capped: false }
+    for await (const file of this.files(desktopId, root, walk)) {
+      if (!included(file.name, pathBelow(root, file.path))) continue
       const text = await this.textOf(desktopId, file)
       if (text === null) continue
       filesSearched++
@@ -60,7 +62,7 @@ export class FileSearch {
         matches.push({ path: file.path, line: i + 1, column: hit.start + 1, length: hit.length, text: clipped.text, textStart: clipped.start })
       }
     }
-    return { matches, filesSearched, filesMatched, truncated: false }
+    return { matches, filesSearched, filesMatched, truncated: walk.capped }
   }
 
   async find(desktopId: Id, root: VPath, query: FileFindQuery): Promise<FileFindResultDto> {
@@ -71,8 +73,9 @@ export class FileSearch {
     const inFile = containing === '' ? null : lineMatcher({ query: containing })
     const limit = clamp(query.limit, DEFAULT_FOUND_FILES, MAX_FOUND_FILES)
     const entries: VfsEntryDto[] = []
-    for await (const entry of this.walk(desktopId, root)) {
-      if (!named(entry.name)) continue
+    const walk = { capped: false }
+    for await (const entry of this.walk(desktopId, root, walk)) {
+      if (!named(entry.name, pathBelow(root, entry.path))) continue
       if (inFile) {
         // A folder has no words in it.
         if (entry.kind !== 'file') continue
@@ -82,7 +85,7 @@ export class FileSearch {
       if (entries.length >= limit) return { entries, truncated: true }
       entries.push(entry)
     }
-    return { entries, truncated: false }
+    return { entries, truncated: walk.capped }
   }
 
   private matcher(query: TextSearchQuery): ReturnType<typeof lineMatcher> {
@@ -102,12 +105,16 @@ export class FileSearch {
   }
 
   /** The files below `root`, or `root` itself when it is a file. */
-  private async *files(desktopId: Id, root: VPath): AsyncGenerator<VfsEntryDto> {
-    for await (const entry of this.walk(desktopId, root)) if (entry.kind === 'file') yield entry
+  private async *files(desktopId: Id, root: VPath, outcome: { capped: boolean }): AsyncGenerator<VfsEntryDto> {
+    for await (const entry of this.walk(desktopId, root, outcome)) if (entry.kind === 'file') yield entry
   }
 
-  /** Every entry below `root`, breadth first, folders listed before their contents. */
-  private async *walk(desktopId: Id, root: VPath): AsyncGenerator<VfsEntryDto> {
+  /**
+   * Every entry below `root`, breadth first, folders listed before their contents. A folder that cannot be read (a link
+   * that leads off the drive, no permission) is skipped, not the whole search. After MAX_SEARCHED_DIRECTORIES folders the
+   * walk stops and sets `outcome.capped`, so the caller keeps what it found and says that more may exist.
+   */
+  private async *walk(desktopId: Id, root: VPath, outcome: { capped: boolean }): AsyncGenerator<VfsEntryDto> {
     const start = await this.vfs.stat(desktopId, root)
     if (!start) throw new AppError(`${root} does not exist.`)
     if (start.kind === 'file') {
@@ -117,8 +124,16 @@ export class FileSearch {
     const queue: VPath[] = [root]
     let visited = 0
     while (queue.length > 0) {
-      if (++visited > MAX_SEARCHED_DIRECTORIES) throw new AppError('Too many folders to search; search a smaller folder.')
-      for (const entry of await this.vfs.readDir(desktopId, queue.shift()!, { hideIgnored: true })) {
+      if (++visited > MAX_SEARCHED_DIRECTORIES) {
+        outcome.capped = true
+        return
+      }
+      const dir = queue.shift()!
+      const listed = await this.vfs.readDir(desktopId, dir, { hideIgnored: true }).catch((error: unknown) => {
+        if (dir === root) throw error
+        return []
+      })
+      for (const entry of listed) {
         yield entry
         if (entry.kind === 'directory') queue.push(entry.path)
       }

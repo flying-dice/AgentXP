@@ -23,7 +23,7 @@ This manual describes Terminal. Terminal shows the commands that the agent runs.
 
 Use Terminal to watch the shell of the agent. The window is read-only. The agent is the only user of the shell, so you can watch but you cannot type.
 
-If you close Terminal, the agent cannot run commands.
+If you close Terminal, the agent cannot start new commands. A command that already runs goes on to the end, and the agent still gets its output.
 
 ## 2 - Open It
 

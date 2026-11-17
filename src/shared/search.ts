@@ -55,27 +55,83 @@ export const MAX_FOUND_FILES = 500
 /** Characters of a matching line that are kept. */
 export const MAX_MATCH_TEXT = 240
 
-/** Case-insensitive match of a file name against a name fragment or a `*` glob. */
-export function nameMatcher(pattern: string): (name: string) => boolean {
-  const lower = pattern.trim().toLowerCase()
-  if (!lower.includes('*')) return (name) => name.toLowerCase().includes(lower)
-  const source = lower
-    .split('*')
-    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
-    .join('.*')
-  const regex = new RegExp(`^${source}$`)
-  return (name) => regex.test(name.toLowerCase())
+/**
+ * Tests a file: its name, and its path below the folder searched (`src\app\a.ts`, either slash), when the caller knows it.
+ */
+export type FileMatcher = (name: string, relativePath?: string) => boolean
+
+const GLOB_CHARS = /[*?{]/
+
+/** The regular expression source of a glob: `**` any folders, `*` and `?` within one name, `{a,b}` either. */
+function globSource(glob: string): string {
+  let out = ''
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i]!
+    if (c === '*' && glob[i + 1] === '*') {
+      i++
+      if (glob[i + 1] === '/') {
+        i++
+        out += '(?:.*/)?'
+      } else out += '.*'
+    } else if (c === '*') out += '[^/]*'
+    else if (c === '?') out += '[^/]'
+    else if (c === '{') {
+      const end = glob.indexOf('}', i)
+      if (end < 0) out += '\\{'
+      else {
+        out += `(?:${glob
+          .slice(i + 1, end)
+          .split(',')
+          .map(globSource)
+          .join('|')})`
+        i = end
+      }
+    } else out += c.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+  }
+  return out
 }
 
-/** A file name filter from a comma-separated list of names or globs; an empty list lets every file through. */
-export function includeMatcher(include: string | undefined): (name: string) => boolean {
-  const parts = (include ?? '')
-    .split(',')
-    .map((p) => p.trim())
-    .filter((p) => p !== '')
+/**
+ * Case-insensitive match of a file against a name fragment (`read` finds `README.md`) or a glob: `*.ts`, `test?.js`,
+ * `*.{ts,svelte}`, and with a slash, a path below the folder searched: `src/*.ts`, `**\/*.test.ts`.
+ */
+export function nameMatcher(pattern: string): FileMatcher {
+  const lower = pattern.trim().toLowerCase().replace(/\\/g, '/')
+  if (!GLOB_CHARS.test(lower)) return (name) => name.toLowerCase().includes(lower)
+  const regex = new RegExp(`^${globSource(lower)}$`)
+  if (!lower.includes('/')) return (name) => regex.test(name.toLowerCase())
+  return (name, relativePath) => regex.test((relativePath ?? name).toLowerCase().replace(/\\/g, '/'))
+}
+
+/** Splits `*.{ts,tsx}, *.md` at the commas that are not inside braces. */
+function splitPatterns(list: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let start = 0
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] === '{') depth++
+    else if (list[i] === '}') depth = Math.max(0, depth - 1)
+    else if (list[i] === ',' && depth === 0) {
+      parts.push(list.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(list.slice(start))
+  return parts.map((p) => p.trim()).filter((p) => p !== '')
+}
+
+/** A file filter from a comma-separated list of names or globs; an empty list lets every file through. */
+export function includeMatcher(include: string | undefined): FileMatcher {
+  const parts = splitPatterns(include ?? '')
   if (parts.length === 0) return () => true
   const matchers = parts.map(nameMatcher)
-  return (name) => matchers.some((m) => m(name))
+  return (name, relativePath) => matchers.some((m) => m(name, relativePath))
+}
+
+/** The path of `path` below the folder `root` (`E:\src`, `E:\src\app\a.ts` -> `app\a.ts`). */
+export function pathBelow(root: string, path: string): string {
+  const prefix = root.endsWith('\\') ? root : `${root}\\`
+  return path.toLowerCase().startsWith(prefix.toLowerCase()) ? path.slice(prefix.length) : path
 }
 
 export class InvalidSearchError extends Error {}
@@ -93,9 +149,15 @@ export function lineMatcher(query: Pick<TextSearchQuery, 'query' | 'regex' | 'ma
     } catch (error) {
       throw new InvalidSearchError(`Not a valid regular expression: ${error instanceof Error ? error.message : String(error)}`)
     }
+    // Global, so a line whose first match is empty (`a*` on "baaa") is still searched for a real match further on.
+    const global = new RegExp(regex.source, `${regex.flags}g`)
     return (line) => {
-      const m = regex.exec(line)
-      return m && m[0].length > 0 ? { start: m.index, length: m[0].length } : null
+      global.lastIndex = 0
+      for (let m = global.exec(line); m; m = global.exec(line)) {
+        if (m[0].length > 0) return { start: m.index, length: m[0].length }
+        global.lastIndex++
+      }
+      return null
     }
   }
   const needle = query.matchCase ? query.query : query.query.toLowerCase()

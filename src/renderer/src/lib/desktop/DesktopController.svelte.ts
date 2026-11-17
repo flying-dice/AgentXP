@@ -360,6 +360,8 @@ export class DesktopController implements DesktopHost {
     // A drive that was not there before has just been plugged in (not on the first state).
     const plugged = this.current ? next.drives.find((d) => d.kind === 'removable' && !this.current?.drives.some((o) => o.letter === d.letter)) : undefined
     if (plugged && this.chosenPlugIns === 0) this.autoPlay = plugged
+    // "Plug in a project..." is wrong once a project is plugged in, whoever plugged it (the agent, Code, Computer).
+    if (this.balloon?.title === PROJECT_HINT.title && next.drives.some((d) => d.kind === 'removable')) this.dismissBalloon()
     this.current = next
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
@@ -386,7 +388,13 @@ export class DesktopController implements DesktopHost {
       else if (w.view.app === 'code-review' && w.view.sessionId) this.inbox.storeFor(w.view.sessionId)
     }
     for (const s of this.allSessions) {
-      if (!isBusy(s.status)) continue
+      if (!isBusy(s.status)) {
+        // Main dropped a request this store still shows (the room's Stop, the program ended in Task Manager): load the chat
+        // again, so the popup of a request that no longer exists goes away and the next turn is followed.
+        const stale = this.inbox.has(s.id) ? (this.inbox.storeFor(s.id) as Partial<Pick<SessionAgentStore, 'running' | 'pendingInterrupt' | 'connect'>>) : null
+        if (stale && stale.running === false && stale.pendingInterrupt) void stale.connect?.()
+        continue
+      }
       const known = this.inbox.has(s.id)
       const store = this.inbox.storeFor(s.id) as Partial<Pick<SessionAgentStore, 'running' | 'pendingInterrupt' | 'connect'>>
       // A turn the store did not start (a team room member, a scheduled task) is not streamed to it: a store that was idle when

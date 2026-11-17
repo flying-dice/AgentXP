@@ -20,7 +20,7 @@ import {
   type VfsEntryDto
 } from '@shared/vfs'
 import type { FolderDto } from '@shared/models'
-import { clipMatchLine, includeMatcher, lineMatcher, nameMatcher, type TextMatchDto } from '@shared/search'
+import { clipMatchLine, includeMatcher, lineMatcher, nameMatcher, pathBelow, type TextMatchDto } from '@shared/search'
 
 interface DirNode {
   kind: 'directory'
@@ -149,7 +149,7 @@ export function createFakeVfs(options: FakeVfsOptions): FakeVfs {
         const included = includeMatcher(query.include)
         const limit = query.limit ?? 200
         const matches: TextMatchDto[] = []
-        const files = below(root).filter((e) => e.kind === 'file' && included(e.name))
+        const files = below(root).filter((e) => e.kind === 'file' && included(e.name, pathBelow(root, e.path)))
         const matched = new Set<VPath>()
         for (const file of files) {
           for (const [i, line] of textAt(file.path).split('\n').entries()) {
@@ -166,7 +166,7 @@ export function createFakeVfs(options: FakeVfsOptions): FakeVfs {
       find: async (_desktop, root, query) => {
         const named = query.name?.trim() ? nameMatcher(query.name) : () => true
         const words = query.containing?.trim() ? lineMatcher({ query: query.containing.trim() }) : null
-        const entries = below(root).filter((e) => named(e.name) && (!words || (e.kind === 'file' && textAt(e.path).split('\n').some((l) => words(l) !== null))))
+        const entries = below(root).filter((e) => named(e.name, pathBelow(root, e.path)) && (!words || (e.kind === 'file' && textAt(e.path).split('\n').some((l) => words(l) !== null))))
         const limit = query.limit ?? 100
         return { entries: entries.slice(0, limit), truncated: entries.length > limit }
       },

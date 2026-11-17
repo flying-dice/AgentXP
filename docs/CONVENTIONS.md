@@ -82,7 +82,7 @@ attributes of a located element (`getAttribute('data-status')`); that is not sel
 `launcher-connect`, `taskbar-start`, `start-menu-item-notepad`, `window-explorer`, `window-close`,
 `topbar-pause`, `topbar-tool-chip-terminal` (dots become dashes: `topbar-tool-chip-fs-read`),
 `action-center-flag`, `uac-allow`, `chat-composer-input`, `chat-send`, `chat-transcript`,
-`chat-message-agent`, `tool-call-card`, `permission-option-<optionId>`, `explorer-item`,
+`chat-message-agent`, `tool-call-card`, `uac-option-<optionId>`, `explorer-item`,
 `explorer-drive-e`, `code-tab`, `code-editor`, `terminal-output`, `paint-canvas`, `notes-sticky`,
 `chat-surface-row` (`data-surface-id`, `data-state` open|closed, `data-target` inline|sidebar|window; with `chat-surface-title`, `chat-surface-state`, `chat-surface-open`, `chat-surface-close`, `chat-surface-delete`, `chat-surface-move` and `chat-surface-move-inline|sidebar|window`), `chat-sidebar`, `chat-sidebar-tab` (+ `chat-sidebar-tab-close`, `chat-sidebar-resizer`), `window-surface` with `surface-app`, `event-viewer-row`, `usb-tray`, `usb-eject-e`, `autoplay-open-folder`.
 
@@ -90,7 +90,7 @@ attributes of a located element (`getAttribute('data-status')`); that is not sel
 `window-chat` for two chats) and tests pick one with `.filter({ hasText })`, `.filter({ has })` or `.nth()`.
 Where the thing is a small closed set the id is unique instead: drives (`explorer-drive-e`,
 `usb-eject-e`), start menu items (`start-menu-item-<appKind>`), window frames (`window-<appKind>`), tool
-chips, permission options (`permission-option-<optionId>`). Rows additionally carry `data-*` attributes
+chips, permission options (`uac-option-<optionId>`). Rows additionally carry `data-*` attributes
 for disambiguation by humans and for assertions (`data-window-id`, `data-session-id`, `data-path`,
 `data-row-id`, `data-source`, `data-name`, `data-status`); tests never select by them.
 

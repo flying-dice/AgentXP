@@ -14,6 +14,15 @@ async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; contr
   return { api, controller }
 }
 
+/** A started desktop with no project plugged in (the fake desktop starts with E:). */
+async function startedWithoutProject(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
+  const { api, controller } = await started()
+  await api.drives.eject(controller.state.desktopId, 'E')
+  await vi.waitFor(() => expect(controller.state.drives.some((d) => d.kind === 'removable')).toBe(false))
+  controller.dismissBalloon()
+  return { api, controller }
+}
+
 describe('DesktopController', () => {
   afterEach(() => vi.useRealTimers())
 
@@ -381,10 +390,9 @@ describe('DesktopController projects and shell feedback', () => {
   })
 
   it('shows the project balloon once on a desktop without a project (UX-164)', async () => {
-    const { controller } = await started()
+    const { controller } = await startedWithoutProject()
     const data = new Map<string, string>()
     const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) }
-    if (controller.state.drives.some((d) => d.kind === 'removable')) return
     expect(controller.showProjectHint(storage)).toBe(true)
     expect(controller.balloon?.text).toContain('open Computer')
     expect(controller.balloon?.action?.label).toBe('Open Computer')
@@ -394,9 +402,8 @@ describe('DesktopController projects and shell feedback', () => {
   })
 
   it('the project balloon button opens Computer in front with a taskbar button, then the balloon goes (UX-179)', async () => {
-    const { controller } = await started()
+    const { controller } = await startedWithoutProject()
     const storage = { getItem: () => null, setItem: () => {} }
-    if (controller.state.drives.some((d) => d.kind === 'removable')) return
     expect(controller.showProjectHint(storage)).toBe(true)
     await controller.runBalloonAction()
     const explorer = controller.state.windows.filter((w) => w.app === 'explorer')
@@ -408,14 +415,20 @@ describe('DesktopController projects and shell feedback', () => {
 
   it('the project balloon stays until it is closed or Computer is opened (UX-179)', async () => {
     vi.useFakeTimers()
-    const { controller } = await started()
+    const { controller } = await startedWithoutProject()
     const storage = { getItem: () => null, setItem: () => {} }
-    if (controller.state.drives.some((d) => d.kind === 'removable')) return
     controller.showProjectHint(storage)
     vi.advanceTimersByTime(BALLOON_MS * 10)
     expect(controller.balloon).not.toBeNull()
     await controller.openApp({ app: 'explorer', path: '' })
     expect(controller.balloon).toBeNull()
+  })
+
+  it('the project balloon goes as soon as a project is plugged in, whoever plugs it in', async () => {
+    const { api, controller } = await startedWithoutProject()
+    expect(controller.showProjectHint({ getItem: () => null, setItem: () => {} })).toBe(true)
+    await api.drives.plugIn(controller.state.desktopId, 2)
+    await vi.waitFor(() => expect(controller.balloon?.title).not.toBe('No project yet'))
   })
 
   it('a balloon stays while the pointer is on it and for a moment after (UX-180)', async () => {

@@ -130,6 +130,11 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
         const { desktopId, sessionId } = context
         const file = paths.resolve(context, path)
         const before = await vfs.readFile(desktopId, file)
+        // code_read shows lines without their \r: in a file with Windows line endings, the agent's text gets them back.
+        if (before.includes('\r\n') && !oldText.includes('\r')) {
+          oldText = oldText.replace(/\n/g, '\r\n')
+          newText = newText.replace(/\r?\n/g, '\r\n')
+        }
         const count = occurrences(before, oldText)
         if (count === 0) throw new AppError(`oldText was not found in ${file}. Read the file (code_read) and copy the text exactly, spaces and line breaks too.`)
         if (count > 1 && !replaceAll) throw new AppError(`oldText occurs ${count} times in ${file}. Add more of the surrounding text so it is unique, or set replaceAll.`)

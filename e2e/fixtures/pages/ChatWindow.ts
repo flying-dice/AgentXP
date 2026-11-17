@@ -1,4 +1,5 @@
 import type { Locator, Page } from 'playwright'
+import { see } from '../expect'
 
 /** One chat window (pass the `window-chat` frame). */
 export class ChatWindow {
@@ -90,6 +91,11 @@ export class ChatWindow {
 
   get permissionDialog(): Locator {
     return this.page.getByTestId('uac-dialog')
+  }
+
+  /** Waits until the permission popup takes answers (it ignores keys and clicks for a moment after it appears). */
+  async permissionArmed(): Promise<void> {
+    await see.attribute(this.permissionDialog, 'data-armed', 'true')
   }
 
   /** Clicks the permission option (the agent's option id, e.g. `allow` / `reject`). */

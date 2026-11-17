@@ -570,6 +570,13 @@ describe('notepad and code tools', () => {
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\n2\nTHREE\nAND A HALF\n2\n')
   })
 
+  it('code_edit edits several lines of a file with Windows line endings, copied from code_read (which shows no \\r)', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    await writeFile(join(f.projectDir, 'src/win.ts'), 'one\r\ntwo\r\nthree\r\n')
+    expect(textOf(await run('code_edit', { path: 'src/win.ts', oldText: 'one\ntwo', newText: 'ONE\nTWO\nTWO AND A HALF' }))).toBe('Edited E:\\src\\win.ts (lines 1-3); Code shows the change.')
+    expect(await f.vfs.readFile(desktopId, 'E:\\src\\win.ts')).toBe('ONE\r\nTWO\r\nTWO AND A HALF\r\nthree\r\n')
+  })
+
   it('code_write creates or replaces a file and shows it in Code', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
     expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'a\nb\n' }))).toBe('Created E:\\src\\new.ts (2 lines); Code shows it.')

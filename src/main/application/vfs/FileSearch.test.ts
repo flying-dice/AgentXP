@@ -1,8 +1,8 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, symlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createVfsFixture } from '../test-helpers'
-import { FileSearch, MAX_SEARCHED_FILE_BYTES } from './FileSearch'
+import { FileSearch, MAX_SEARCHED_DIRECTORIES, MAX_SEARCHED_FILE_BYTES } from './FileSearch'
 
 let f: Awaited<ReturnType<typeof createVfsFixture>>
 let search: FileSearch
@@ -49,6 +49,30 @@ describe('FileSearch.searchText', () => {
   it('skips files that are too big', async () => {
     await writeFile(join(f.projectDir, 'big.txt'), `hello\n${'x'.repeat(MAX_SEARCHED_FILE_BYTES)}`)
     expect((await search.searchText(desktopId, 'E:\\', { query: 'hello', include: 'big.txt' })).matches).toEqual([])
+  })
+
+  it('takes the globs agents write: **, a folder path and {a,b}', async () => {
+    const paths = async (include: string) => [...new Set((await search.searchText(desktopId, 'E:\\', { query: 'e', include })).matches.map((m) => m.path))]
+    expect(await paths('**/*.ts')).toEqual(['E:\\src\\app.ts', 'E:\\src\\lib\\util.ts'])
+    expect(await paths('src/lib/*')).toEqual(['E:\\src\\lib\\notes.txt', 'E:\\src\\lib\\util.ts'])
+    expect(await paths('*.{md,txt}')).toEqual(['E:\\README.md', 'E:\\src\\lib\\notes.txt'])
+    expect([...new Set((await search.searchText(desktopId, 'E:\\src', { query: 'e', include: 'lib/*.ts' })).matches.map((m) => m.path))]).toEqual(['E:\\src\\lib\\util.ts'])
+  })
+
+  it('skips a folder it cannot read (a link off the drive) instead of failing the whole search', async () => {
+    const outside = join(f.projectDir, '..', `outside-${Date.now()}`)
+    await mkdir(outside, { recursive: true })
+    await writeFile(join(outside, 'secret.txt'), 'hello from outside\n')
+    await symlink(outside, join(f.projectDir, 'linked'))
+    const result = await search.searchText(desktopId, 'E:\\', { query: 'hello' })
+    expect(result.matches.map((m) => m.path)).toEqual(['E:\\README.md', 'E:\\src\\app.ts', 'E:\\src\\app.ts'])
+  })
+
+  it('keeps what it found when there are too many folders, and says more may exist', async () => {
+    for (let i = 0; i <= MAX_SEARCHED_DIRECTORIES; i++) await mkdir(join(f.projectDir, 'many', `d${i}`), { recursive: true })
+    const result = await search.searchText(desktopId, 'E:\\', { query: 'hello' })
+    expect(result.matches.length).toBeGreaterThan(0)
+    expect(result.truncated).toBe(true)
   })
 
   it('refuses a bad query, a missing folder and an ejected drive with a readable message', async () => {

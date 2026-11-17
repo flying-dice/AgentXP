@@ -180,13 +180,13 @@ The desktop has these parts:
 
 ### The Top Bar
 
-The top bar is at the top of the desktop. It starts with the connection bar. The rest of the top bar shows the state of the agent and two buttons.
+The top bar is at the top of the desktop. It starts with the connection bar. The rest of the top bar shows the state of the agent, a button and a check box.
 
 - **Connection bar** – Shows the name of the desktop. The pin keeps the top bar open. If you click the pin again, the top bar folds away until you point to it. The next buttons minimize and maximize the desktop window. The red **Close** button is **Disconnect**. It closes the window, and the agents keep running.
 
 - **Status** – Shows **Idle**, **Paused**, or **Working** with the name of the action that runs now.
-- **Pause** – Stops the running turns of the agent and blocks new tool calls. The button changes to **Resume**.
-- **Take control** – Makes every tool call of the agent wait for your approval. The button changes to **Release**.
+- **Pause all agents** – Stops the running turns of every agent on the desktop and blocks new tool calls. The button changes to **Resume**.
+- **Ask before every action (this session only)** – While it is selected, every tool call of the agent waits for your approval. It is not saved.
 - **Agent can use** – Shows one chip for each group of tools that the agent can use now, for example **Read files**, **Terminal**, or **Notes**.
 
 ### The Taskbar
@@ -353,21 +353,22 @@ The control **Agent may open apps** in the Control Center decides if the agent c
 
 ### Pause and Take Control
 
-To stop the agent at once, click **Pause** in the top bar. The agent stops its turn, and AgentXP refuses new tool calls. To let the agent continue, click **Resume**.
+To stop the agent at once, click **Pause all agents** in the top bar. The agent stops its turn, and AgentXP refuses new tool calls. To let the agent continue, click **Resume**.
 
-To approve each action yourself, click **Take control** in the top bar. Each tool call then waits for your approval in the Action Center. To go back, click **Release**.
+To approve each action yourself, select **Ask before every action (this session only)** in the top bar. Each tool call then asks you first. To go back, clear the check box.
 
 ## 7 - Allowing or Denying an Action
 
-Some actions need your permission, for example a file edit or a command. When the agent asks, AgentXP dims the desktop and shows the **User Account Control** style dialog box.
+Some actions need your permission, for example a file edit or a command. When the agent asks, AgentXP dims the desktop and shows the **User Account Control** style dialog box at once, whichever window or chat asked.
 
-![The permission dialog box for the edit of src/auth/redirect.ts with the difference open](docs/images/uac-dialog.png)
+![The permission dialog box for the change of src/auth/redirect.ts, with the changed lines](docs/images/uac-dialog.png)
 
 The dialog box has these parts:
 
-- **Question** – Tells you what the agent wants to do, for example "Do you want to allow the agent to edit src/auth/redirect.ts?"
-- **Reason** – Tells you why AgentXP asks, for example "Writing files is set to Ask in Control Center."
-- **Show details** – Shows the change or the command. Click **Hide details** to close it.
+- **Question** – Tells you what the agent wants to do, for example "Allow the agent to change src/auth/redirect.ts?"
+- **Requested by** – Names the chat, or the team member and room, that asked.
+- **Reason** – Tells you why AgentXP asks, for example "Write files is set to Ask in Control Center."
+- **Change** – Shows the file, how many lines are added and removed, and the changed lines; or the command. A long change scrolls.
 - **Allow** and **Deny** – Answer the request. The agent supplies the names of these buttons.
 - **Not now** – Closes the dialog box. The request stays in the Action Center.
 
@@ -375,15 +376,13 @@ The dialog box has these parts:
 
 To answer a request for permission, follow the steps below:
 
-1. Click the flag in the notification area. The Action Center appears.
-2. Click **Review** next to the request. The dialog box appears.
-3. Click **Show details** and read the change or the command.
-4. If you agree, click **Allow**. The agent continues.
-5. If you do not agree, click **Deny**. The agent does not do the action.
+1. Read the change or the command in the dialog box.
+2. If you agree, click **Allow** or press A. The agent continues.
+3. If you do not agree, click **Deny** or press Enter. The agent does not do the action.
 
-The Chat window also shows the request. You can answer in the Chat window instead.
+For a moment after the dialog box appears it takes no answer, so a key that you were typing in another window does not answer it.
 
-**Tip:** Press Esc in the dialog box to close it without an answer.
+**Tip:** Press Esc or click **Not now** to answer later. The request stays in the Action Center: click the flag in the notification area, then **Review**, to open the dialog box again.
 
 ### Choosing When AgentXP Asks
 

@@ -64,4 +64,18 @@ describe('Team room: what a member does in the background shows on the desktop',
     await ctx.desktopPage.getByTestId('uac-allow').click()
     await see.eventually(async () => expect((await roomMessages()).match(/Tester: The terminal printed/g)?.length).toBe(2))
   })
+
+  it('stopping a member that waits for an answer takes its request off the desktop', async () => {
+    await room().getByTestId('team-chat-input').fill('@Tester once more')
+    await room().getByTestId('team-chat-send').click()
+    await see.visible(popup())
+    // The room's Stop (the dimmed popup covers the button, so as the button does it): main drops the request.
+    await ctx.desktopPage.evaluate(async (id) => {
+      const api = (window as unknown as { agentxp: AgentXPApi }).agentxp
+      const state = await api.rooms.state(id)
+      await api.rooms.stop(id, state.members[0]!.profileId)
+    }, roomId)
+    await see.gone(popup())
+    await see.attribute(room().getByTestId('team-chat-member'), 'data-activity', 'idle')
+  })
 })

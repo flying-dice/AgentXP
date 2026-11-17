@@ -259,7 +259,7 @@ export const TOOL_DEFS = {
       'Case-insensitive; `*` in the name matches any characters. The results appear in Explorer\'s Search Companion (an Explorer window opens when none is open). ' +
       'Needs the Explorer or Code app. Use this instead of your built-in Glob or find.',
     input: z.object({
-      pattern: z.string().optional().describe('All or part of the file name, or a glob such as "*.test.ts" or "readme"'),
+      pattern: z.string().optional().describe('All or part of the file name, or a glob: "*.test.ts", "*.{ts,svelte}", "src/**/*.ts" (a pattern with a slash matches the path below the folder searched)'),
       containing: z.string().optional().describe('A word or phrase in the file (plain text, not case-sensitive); only files that contain it are found'),
       path: z.string().optional().describe('Directory to search, as a virtual path or relative to your working directory; default: your working directory'),
       limit: z.number().int().min(1).max(500).optional().describe('Maximum results (default 100)')
@@ -293,7 +293,7 @@ export const TOOL_DEFS = {
   code_read: {
     group: 'fs.read',
     description:
-      'Read a text file, or a range of its lines, with line numbers ("12\\tline text"). The Code app opens the file and highlights the lines you read, ' +
+      'Read a text file, or a range of its lines, with line numbers ("12\\tline text"). The Code app opens the file (and scrolls to and highlights a range of lines you read), ' +
       'so the user sees what you are reading (Code opens when needed). Use this instead of your built-in Read tool.',
     input: z.object({
       path: path('File'),
@@ -312,7 +312,7 @@ export const TOOL_DEFS = {
       path: z.string().optional().describe('Folder (or file) to search, as a virtual path or relative to your working directory; default: your working directory'),
       regex: z.boolean().optional().describe('Treat query as a regular expression (default false)'),
       matchCase: z.boolean().optional().describe('Match upper and lower case exactly (default false)'),
-      include: z.string().optional().describe('Only files whose name matches one of these comma-separated names or globs, such as "*.ts, *.svelte"'),
+      include: z.string().optional().describe('Only files that match one of these comma-separated names or globs, such as "*.ts, *.svelte", "*.{ts,tsx}" or "src/**/*.ts" (a pattern with a slash matches the path below the folder searched)'),
       limit: z.number().int().min(1).max(1000).optional().describe('Maximum matching lines (default 200)')
     })
   },
