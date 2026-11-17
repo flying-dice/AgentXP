@@ -28,12 +28,12 @@
     border: 0;
     background: none;
     font: inherit;
-    color: var(--xp-taskpane-link, #215dc6);
+    color: var(--xp-taskpane-link);
     text-align: left;
     cursor: default;
   }
   .xp-tasklink:hover:not(:disabled) {
-    color: var(--xp-taskpane-link-hot, #428eff);
+    color: var(--xp-taskpane-link-hot);
     text-decoration: underline;
   }
   .xp-tasklink:focus-visible {

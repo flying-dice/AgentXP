@@ -353,6 +353,13 @@ the tabs General, Triggers, Actions, Conditions, Settings, and History, the Crea
   starts with the app, runs the `startup` triggers, and handles missed runs once for each task.
 - **Data.** `scheduled_tasks`, `scheduled_task_triggers`, `scheduled_task_actions`, `scheduled_task_runs`. A removed agent sets
   `agent_id` to NULL, and the action then uses the default agent. A task belongs to a desktop; deleting the desktop deletes its tasks.
+- **Skills and tools of a run (migration 016).** An action has `capabilities`: `inherit` (everything that is switched on), `profile`,
+  `team` (the first member plus the skills and instructions of the team) or `custom` (skills, servers and hidden tools). Tables
+  `scheduled_action_skills`, `scheduled_action_servers`, `scheduled_action_hidden_tools` keep the choice with the action: a removed
+  skill or server leaves a null id and its saved name, a removed profile or team leaves a null id. The run stores the resolved scope
+  for its new chat in `session_scopes`, `session_scope_skills`, `session_scope_servers` and `session_scope_hidden_tools`;
+  `AgentCapabilities.scopeOf` uses it in place of the "everything" rule. An existing chat keeps its own. Save checks that the choice
+  exists (`checkCapabilities`); a run checks again (`resolveScope`) and fails with a sentence when something is gone or switched off.
 - **Event Viewer.** The source `scheduler` records `task/created`, `updated`, `deleted`, `enabled`, `disabled`, `started`, `completed`, `failed`, `stopped`, `missed`, `skipped`, and `restart-scheduled`.
 - **View state.** `selectedTaskId` and `tab` are saved with the window. `fakeScheduler` (renderer) backs the Storybook stories and
   the web preview.

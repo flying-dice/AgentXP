@@ -8,18 +8,21 @@
   import RadioButtonGroup from '../../kit/atoms/RadioButtonGroup.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
   import LabeledField from '../../kit/molecules/LabeledField.svelte'
-  import { agentChoices, agentFromValue, agentValue, chatChoices, projectChoices } from './taskModel'
+  import CapabilitiesFields from './CapabilitiesFields.svelte'
+  import { agentChoices, agentFromValue, agentValue, chatChoices, NO_CHOICES, projectChoices, type CapabilityChoices } from './taskModel'
 
   interface Props {
     action: AgentActionDto
     agents: readonly AgentDto[]
     drives: readonly DriveDto[]
     sessions: readonly Pick<SessionDto, 'id' | 'title' | 'role'>[]
+    /** The skills, servers, profiles and teams a run may use. */
+    choices?: CapabilityChoices
     /** `data-testid` prefix of the fields. */
     prefix: string
   }
 
-  let { action = $bindable(), agents, drives, sessions, prefix }: Props = $props()
+  let { action = $bindable(), agents, drives, sessions, choices = NO_CHOICES, prefix }: Props = $props()
 
   const agentItems = $derived(agentChoices(agents))
   const projectItems = $derived(projectChoices(drives, action.cwd))
@@ -46,6 +49,7 @@
       {/if}
     </div>
   </LabeledField>
+  <CapabilitiesFields bind:capabilities={action.capabilities} existingChat={action.session === 'existing'} {choices} {prefix} />
   <LabeledField label="Prompt:" for="{prefix}-prompt" labelWidth={90} class="top">
     <TextBox id="{prefix}-prompt" data-testid="{prefix}-prompt" multiline rows={6} bind:value={action.prompt} placeholder="What the agent should do, for example: Review the changes of yesterday and write a summary." />
   </LabeledField>

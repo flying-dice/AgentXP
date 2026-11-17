@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createWorkspace, launchAgentXP, readProtocolEvents, see, startConnectedDesktop, type ConnectedDesktop, type TaskSchedulerWindow, type Workspace } from './fixtures'
+import { addServerAndProfile, createWorkspace, launchAgentXP, readProtocolEvents, removeServer, see, startConnectedDesktop, type ConnectedDesktop, type TaskSchedulerWindow, type Workspace } from './fixtures'
 import { DesktopPage } from './fixtures/pages/DesktopPage'
 
 /** Task Scheduler: create tasks with the wizard and the full dialog, run and end one, the log in Event Viewer, and keeping tasks over a restart. */
@@ -266,6 +266,64 @@ describe('Task Scheduler', () => {
       await fresh.desktopPage.getByTestId('message-box').getByTestId('dialog-button-yes').click()
       await see.count(window.rows, 0)
       await see.text(window.count, '0 tasks')
+    } finally {
+      await fresh.app.close()
+    }
+  })
+
+  it('an action can run with a profile, or with chosen skills and MCP servers, and a removed server is flagged', async () => {
+    const fresh = await startConnectedDesktop({ title: 'Skills desktop', workspace })
+    try {
+      const ids = await addServerAndProfile(fresh.desktopPage, 'github', 'Reviewer')
+      await fresh.desktop.openApp('task-scheduler')
+      const window = fresh.desktop.taskScheduler()
+
+      // The wizard: the action step offers the four choices; a profile is preselected when the choice changes.
+      await window.createBasicTask({ name: 'Profile task', prompt: 'Review the open changes.' }, false)
+      await window.frame.getByTestId('basic-wizard-back').click()
+      await window.choose('basic-wizard-action-capabilities', 'profile')
+      await see.text(window.frame.getByTestId('basic-wizard-action-profile-hint'), 'Reviewer')
+      await window.frame.getByTestId('basic-wizard-next').click()
+      await see.text(window.frame.getByTestId('basic-wizard-summary'), 'Profile: Reviewer')
+      await window.frame.getByTestId('basic-wizard-finish').click()
+      await see.gone(window.wizard)
+      await window.selectTask('Profile task')
+      await window.tab('actions').click()
+      await see.text(window.frame.getByTestId('task-scheduler-actions'), 'Profile: Reviewer')
+
+      // Properties: choose the skills and the servers by hand.
+      await window.row('Profile task').dblclick()
+      await see.visible(window.editor)
+      await window.frame.getByTestId('task-editor-tab-actions').click()
+      await window.frame.getByTestId('task-editor-actions').getByTestId('task-editor-action-row').first().click()
+      await window.frame.getByTestId('task-editor-action-edit').click()
+      await see.visible(window.actionDialog)
+      await window.choose('action-dialog-capabilities', 'custom')
+      await window.frame.getByTestId(`action-dialog-server-${ids.serverId}-check`).click()
+      await window.actionDialog.getByTestId('dialog-button-ok').click()
+      await see.gone(window.actionDialog)
+      await see.text(window.frame.getByTestId('task-editor-actions'), '0 skills, 1 MCP server')
+      await window.editor.getByTestId('dialog-button-ok').click()
+      await see.gone(window.editor)
+      await see.text(window.frame.getByTestId('task-scheduler-actions'), '0 skills, 1 MCP server')
+
+      // The server is removed: the list says so, and the task cannot be saved until the choice is cleared.
+      await removeServer(fresh.desktopPage, ids.serverId)
+      await window.frame.getByTestId('task-scheduler-action-refresh').click()
+      await see.text(window.frame.getByTestId('task-scheduler-actions'), '0 skills, 1 MCP server')
+      await window.row('Profile task').dblclick()
+      await see.visible(window.editor)
+      await window.editor.getByTestId('dialog-button-ok').click()
+      await see.text(window.frame.getByTestId('task-editor-problem'), 'no longer exists')
+      await window.frame.getByTestId('task-editor-tab-actions').click()
+      await window.frame.getByTestId('task-editor-actions').getByTestId('task-editor-action-row').first().click()
+      await window.frame.getByTestId('task-editor-action-edit').click()
+      await see.text(window.frame.getByTestId('action-dialog-server-gone-0'), 'removed')
+      await window.frame.getByTestId('action-dialog-server-gone-0-check').click()
+      await window.actionDialog.getByTestId('dialog-button-ok').click()
+      await window.editor.getByTestId('dialog-button-ok').click()
+      await see.gone(window.editor)
+      await see.text(window.frame.getByTestId('task-scheduler-actions'), '0 skills, 0 MCP servers')
     } finally {
       await fresh.app.close()
     }

@@ -138,3 +138,21 @@ export async function setDefaultAgentByName(page: Page, name: string): Promise<v
     await api.agents.setDefault(found.id)
   }, name)
 }
+
+/** An MCP server (not tested, so with no tools yet) and a profile that uses it: the choices of a scheduled action. Returns both ids. */
+export async function addServerAndProfile(page: Page, serverName: string, profileName: string): Promise<{ serverId: number; profileId: number }> {
+  return page.evaluate(
+    async ({ serverName, profileName }) => {
+      const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
+      const server = await api.mcp.add({ name: serverName, transport: 'stdio', command: 'node', args: ['-e', ''], url: '', vars: [] })
+      const profile = await api.profiles.create({ name: profileName, instructions: 'Review the change.', agentId: null, model: null, skillIds: [], mcpServerIds: [server.id] })
+      return { serverId: server.id, profileId: profile.id }
+    },
+    { serverName, profileName }
+  )
+}
+
+/** Removes an MCP server (Control Center does this with its Remove button). */
+export async function removeServer(page: Page, serverId: number): Promise<void> {
+  await page.evaluate(async (id) => (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp.mcp.remove(id), serverId)
+}
