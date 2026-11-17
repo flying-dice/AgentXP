@@ -2,6 +2,9 @@
   import { untrack } from 'svelte'
   import Icon from '../atoms/Icon.svelte'
   import { clickOutside } from '../actions/clickOutside'
+  import { workArea } from '../actions/popup'
+  import MenuPopup from '../molecules/MenuPopup.svelte'
+  import type { MenuItemDef } from '../molecules/MenuItem'
   import { filterStartItems, moveHighlight, START_MENU_HINT, startNavItems, type StartGroup, type StartItem } from './StartMenu'
 
   interface Props {
@@ -43,8 +46,30 @@
   const shownRecent = $derived(filterStartItems(recent, query))
   const searching = $derived(query.trim().length > 0)
   let openGroups = $state<Record<string, boolean>>({})
-  /** "All Programs": shows the folders under the programs; a search always shows the matching ones. */
+  /**
+   * "All Programs": the classic XP cascade, a menu that flies out to the right of the button with a submenu per
+   * folder; it scrolls when it is taller than the screen. A search shows the matching folders inline instead.
+   */
   let allOpen = $state(false)
+  let allButton = $state<HTMLButtonElement | null>(null)
+  let allAnchor = $state<DOMRect | undefined>(undefined)
+  let allHover: ReturnType<typeof setTimeout> | undefined
+  const allItems = $derived<MenuItemDef[]>(
+    groups.map((g) => ({
+      id: g.id,
+      testid: `start-menu-group-${g.id}`,
+      label: g.title,
+      icon: 'folder',
+      items: g.items.map((i) => ({ id: i.id, testid: `start-menu-item-${i.id}`, label: i.title, icon: i.icon, title: i.description, action: () => onrun?.(i.id) }))
+    }))
+  )
+
+  function showAll(open: boolean): void {
+    clearTimeout(allHover)
+    if (open && allButton) allAnchor = allButton.getBoundingClientRect()
+    allOpen = open
+  }
+  $effect(() => () => clearTimeout(allHover))
   const shownGroups = $derived(groups.map((g) => ({ ...g, items: filterStartItems(g.items, query) })).filter((g) => !searching || g.items.length > 0))
   const empty = $derived(searching && shownPrograms.length + shownRecent.length + shownGroups.length === 0)
 
@@ -53,7 +78,7 @@
 
   // The first entry is highlighted when the menu opens and after every change of the search text; Up and Down move it
   // and Enter starts it.
-  const nav = $derived(startNavItems({ programs: shownPrograms, groups: shownGroups, recent: shownRecent, openGroups, searching }))
+  const nav = $derived(startNavItems({ programs: shownPrograms, groups: searching ? shownGroups : [], recent: shownRecent, openGroups, searching }))
   let hot = $state(0)
   const hotKey = $derived(nav[Math.min(hot, nav.length - 1)]?.key ?? null)
   $effect(() => {
@@ -87,7 +112,7 @@
 <div class="xp-start" data-testid="start-menu" role="group" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
   <div class="header"><div class="tile" aria-hidden="true"><Icon name="agentxp" size={40} /></div><span class="user">AgentXP</span></div>
   <div class="left">
-    <ul class="programs" role="menu" aria-label="Programs">
+    <ul class="programs" role="menu" aria-label="Programs" onpointerenter={() => allOpen && showAll(false)}>
       {#each shownPrograms as item (item.id)}
         <li role="none">
           <button type="button" role="menuitem" class="entry" class:hot={hotKey === `p:${item.id}`} data-hot={hotKey === `p:${item.id}`} id="sm-p:{item.id}" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
@@ -100,13 +125,58 @@
     {#if groups.length > 0 && !searching}
       <ul role="menu" aria-label="All programs">
         <li role="none">
-          <button type="button" role="menuitem" class="entry all" data-testid="start-menu-all" aria-haspopup="menu" aria-expanded={allOpen} onclick={() => (allOpen = !allOpen)}>
-            <span class="tri" class:open={allOpen} aria-hidden="true"></span><span class="title">All Programs</span>
+          <button
+            bind:this={allButton}
+            type="button"
+            role="menuitem"
+            class="entry all"
+            class:hot={allOpen}
+            data-testid="start-menu-all"
+            aria-haspopup="menu"
+            aria-expanded={allOpen}
+            onclick={() => showAll(!allOpen)}
+            onpointerenter={() => {
+              clearTimeout(allHover)
+              if (!allOpen) allHover = setTimeout(() => showAll(true), 400)
+            }}
+            onpointerleave={() => clearTimeout(allHover)}
+            onkeydown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault()
+                showAll(true)
+              }
+            }}
+          >
+            <span class="title">All Programs</span><span class="arrow" aria-hidden="true"></span>
           </button>
+          {#if allOpen && allAnchor}
+            <MenuPopup
+              items={allItems}
+              label="All Programs"
+              autofocus
+              maxHeight={workArea().height}
+              anchor={allAnchor}
+              class="all-programs"
+              onselect={(item) => {
+                showAll(false)
+                item.action?.()
+              }}
+              onclose={() => {
+                showAll(false)
+                allButton?.focus()
+              }}
+              onnavigate={(direction) => {
+                if (direction === 'left') {
+                  showAll(false)
+                  allButton?.focus()
+                }
+              }}
+            />
+          {/if}
         </li>
       </ul>
     {/if}
-    {#if shownGroups.length > 0 && (allOpen || searching)}
+    {#if shownGroups.length > 0 && searching}
       <ul class="groups" role="menu" aria-label="Program folders">
         {#each shownGroups as group (group.id)}
           {@const open = searching || openGroups[group.id]}
@@ -131,7 +201,7 @@
     {/if}
     {#if shownRecent.length > 0}
       <div class="heading">Recent chats</div>
-      <ul class="recent" role="menu" aria-label="Recent chats">
+      <ul class="recent" role="menu" aria-label="Recent chats" onpointerenter={() => allOpen && showAll(false)}>
         {#each shownRecent as item (item.id)}
           <li role="none">
             <button type="button" role="menuitem" class="entry small" class:hot={hotKey === `r:${item.id}`} data-hot={hotKey === `r:${item.id}`} id="sm-r:{item.id}" data-testid="start-menu-recent" data-session-id={item.id} onclick={() => onrecent?.(item.id)}>
@@ -188,8 +258,11 @@
     position: relative;
     box-sizing: border-box;
     width: 380px;
-    /* Tall enough for the programs and at least five recent chats, never taller than the screen above the taskbar. */
-    height: min(640px, calc(100vh - 40px));
+    /* Tall enough for the programs and at least five recent chats; never taller than the space it is given (the desktop above the taskbar). */
+    height: 640px;
+    max-height: 100%;
+    min-height: 0;
+    flex: 0 1 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 54px 1fr 38px;
@@ -245,11 +318,15 @@
     margin: 0;
     padding: 0;
   }
-  /* The programs give way (and scroll) before the recent chats do: a closed chat must stay reachable from here. */
+  /*
+   * The left column never overflows: when the menu is short (a small window, or All Programs and its
+   * folders open), the lists shrink and scroll. The folder list gives way first, then the pinned programs; recent chats keep
+   * room for two entries (a closed chat must stay reachable from here); the search box and hint always stay visible.
+   */
   .programs {
     flex: 0 1 auto;
-    min-height: 0;
-    overflow: auto;
+    min-height: 34px;
+    overflow-y: auto;
   }
   .entry {
     width: 100%;
@@ -289,21 +366,24 @@
     font-weight: bold;
     border-top: 1px solid #d3e5fa;
   }
-  .tri {
-    width: 0;
-    height: 0;
-    margin: 0 4px 0 2px;
+  /* The green round arrow of the XP All Programs button. */
+  .arrow {
+    position: relative;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #8fe08f, #2f9a2f 60%, #1d6e1d);
+    box-shadow: 0 0 0 1px rgba(0, 60, 0, 0.35);
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 4px;
     border-style: solid;
-    border-width: 5px 0 5px 7px;
-    border-color: transparent transparent transparent #1f8a1f;
-  }
-  .entry:hover .tri {
-    border-left-color: #fff;
-  }
-  .tri.open {
-    border-width: 7px 5px 0 5px;
-    border-color: #1f8a1f transparent transparent transparent;
-    margin: 2px 4px 0 3px;
+    border-width: 5px 0 5px 6px;
+    border-color: transparent transparent transparent #fff;
   }
   .text {
     display: flex;
@@ -331,7 +411,14 @@
     border-top: 1px solid #d3e5fa;
     padding-top: 4px;
     max-height: 190px;
-    overflow: auto;
+    flex: 0 100 auto;
+    min-height: 44px;
+    overflow-y: auto;
+  }
+  /* The All Programs cascade sits over the places column and beyond, like XP. */
+  :global(.menu.all-programs) {
+    position: fixed;
+    z-index: 100003;
   }
   .sub {
     padding-left: 18px;
@@ -344,22 +431,24 @@
     transform: rotate(90deg);
   }
   .recent {
-    flex: 1 0 auto;
+    flex: 1 1 auto;
     min-height: 44px;
     max-height: 200px;
-    overflow: auto;
+    overflow-y: auto;
   }
   .none {
     padding: 10px 8px;
     color: var(--xp-text-muted);
   }
   .hint {
+    flex: none;
     margin: 6px 2px 0;
     color: #3a4656;
     font-size: 11px;
     line-height: 1.3;
   }
   .search {
+    flex: none;
     margin-top: auto;
     position: relative;
     padding-top: 6px;

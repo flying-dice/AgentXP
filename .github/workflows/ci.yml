@@ -19,6 +19,10 @@ jobs:
       - run: npm test
       # Selector rule only: e2e specs may locate elements with getByTestId and nothing else.
       - run: node scripts/check-e2e-selectors.mjs
+      # Every data-testid of the UI is in a manual.
+      - run: npm run help:coverage
+      # Every app has UI, backend, agent API, e2e and docs, or a recorded reason (docs/APP_PILLARS.md).
+      - run: npm run app:pillars
       - run: npx electron-vite build
       - run: npm run build-storybook
       # Full Playwright e2e on the built app, headless under xvfb (Electron needs a display).

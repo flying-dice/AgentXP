@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
+  import { placePopup } from '../actions/popup'
   import { rovingFocus } from '../actions/rovingFocus'
   import MenuPopup from '../molecules/MenuPopup.svelte'
   import { mnemonicKey, parseMnemonic, type MenuDef, type MenuItemDef } from '../molecules/MenuItem'
@@ -21,6 +23,7 @@
   let keyboardMode = $state(false)
   let openByKeyboard = $state(false)
   let pos = $state({ left: 0, top: 0 })
+  let popup = $state<HTMLElement | null>(null)
   let altPending = false
   let restoreTo: HTMLElement | null = null
 
@@ -36,6 +39,9 @@
     focusIndex = i
     openByKeyboard = byKeyboard
     openIndex = i
+    tick().then(() => {
+      if (popup && openIndex === i) pos = placePopup(rect, popup.getBoundingClientRect())
+    })
   }
 
   function closeMenu(refocus: 'button' | 'restore' | 'none'): void {
@@ -140,6 +146,7 @@
   {#if openIndex >= 0}
     {#key openIndex}
       <MenuPopup
+        bind:element={popup}
         items={menus[openIndex].items}
         label={menus[openIndex].label.replace('&', '')}
         showMnemonics={keyboardMode}

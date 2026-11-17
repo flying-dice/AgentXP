@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
+  import { workArea } from '../actions/popup'
   import MenuPopup from '../molecules/MenuPopup.svelte'
   import type { MenuItemDef } from '../molecules/MenuItem'
 
@@ -43,8 +44,9 @@
     tick().then(() => {
       if (!element) return
       const r = element.getBoundingClientRect()
-      left = Math.max(0, Math.min(x, window.innerWidth - r.width - 2))
-      top = Math.max(0, Math.min(y, window.innerHeight - r.height - 2))
+      const area = workArea()
+      left = Math.max(0, Math.min(x, area.width - r.width - 2))
+      top = Math.max(0, Math.min(y, area.height - r.height - 2))
     })
   })
 </script>
