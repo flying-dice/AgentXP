@@ -63,7 +63,7 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | paint | Yes | Yes | Yes | **Gap** | Yes |
 | wordpad | Yes | Yes | Yes | **Gap** | Yes |
 | sticky-notes | Yes | Yes | Yes | **Gap** | Yes |
-| kanban | Yes | Yes | **Gap** | **Gap** | Yes |
+| kanban | Yes | Yes | Yes | **Gap** | Yes |
 | diagrams | Yes | Yes | Yes | Yes | Yes |
 | event-viewer | Yes | Yes | Yes | Yes | Yes |
 | snipping-tool | Yes | Yes | Yes | **Gap** | Yes |
@@ -75,7 +75,7 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | team-chat | Yes | Yes | **Gap** | **Gap** | Yes |
 | task-scheduler | Yes | Yes | **Gap** | Yes | Yes |
 
-15 open gap(s).
+14 open gap(s).
 
 - **chat, Agent API** (not needed): The chat is the agent's own conversation. The agent acts through it, not on it.
 - **control-centre, Agent API** (gap): The agent cannot read or change permissions, agents or appearance.
@@ -83,7 +83,6 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 - **paint, E2E** (gap): Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.
 - **wordpad, E2E** (gap): Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.
 - **sticky-notes, E2E** (gap): Only the open/close smoke test.
-- **kanban, Agent API** (gap): board_rename, board_add_column, board_rename_column, board_delete_column and board_delete_card have no unit test.
 - **kanban, E2E** (gap): No spec at all.
 - **snipping-tool, E2E** (gap): Only the open/close smoke test.
 - **help, Backend** (gap): The manuals are bundled into the renderer only. Main cannot search or serve them.

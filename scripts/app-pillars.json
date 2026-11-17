@@ -181,8 +181,7 @@
       "e2e": [],
       "manual": "manuals/kanban.md",
       "gaps": {
-        "e2e": "No spec at all.",
-        "agentApi": "board_rename, board_add_column, board_rename_column, board_delete_column and board_delete_card have no unit test."
+        "e2e": "No spec at all."
       }
     },
     "diagrams": {

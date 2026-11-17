@@ -938,6 +938,23 @@ describe('board tools', () => {
     expect(textOf(await run('board_list'))).toBe('No boards.')
   })
 
+  it('rename a board, add, rename and delete columns, and delete cards', async () => {
+    await run('board_create', { name: 'Sprint', columns: ['To do'] })
+    expect(textOf(await run('board_rename', { board: 'Sprint', name: 'Sprint 2' }))).toContain('Sprint 2')
+    expect((await run('board_rename', { board: 'Sprint', name: 'x' })).isError).toBe(true)
+    const added = textOf(await run('board_add_column', { board: 'Sprint 2', name: 'Review' }))
+    const columnId = Number(/Column \[(\d+)\] Review/.exec(added)![1])
+    expect(textOf(await run('board_rename_column', { column: columnId, name: 'QA' }))).toMatch(/Column \[\d+\] QA \(0\)/)
+    await run('board_add_card', { column: 'QA', title: 'Check it' })
+    await run('board_add_card', { column: 'To do', title: 'Keep me' })
+    const cardId = Number(/Card \[(\d+)\] Keep me/.exec(textOf(await run('board_get')))![1])
+    expect(textOf(await run('board_delete_column', { column: columnId }))).not.toContain('Check it')
+    expect(textOf(await run('board_delete_card', { card: cardId }))).toMatch(/Deleted|To do \(0\)/)
+    expect(textOf(await run('board_get'))).not.toContain('Keep me')
+    expect((await run('board_delete_card', { card: cardId })).isError).toBe(true)
+    expect((await run('board_rename_column', { column: 999999, name: 'x' })).isError).toBe(true)
+  })
+
   it('obeys the Control Center policy', async () => {
     desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, board: 'deny' } })
     expect(textOf(await run('board_list'))).toMatch(/blocked/)
