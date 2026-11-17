@@ -5,7 +5,7 @@
 // Playwright `_electron` exactly like the panel driver (lib/context.mjs): ONE app instance at a time, an isolated user-data
 // folder, the built Scripted Agent. Selectors are data-testid only. Every metric is the median of --runs runs; the memory
 // soak is ONE run of --soak-seconds (the rubric asks for 30 minutes; 3 to 5 minutes is run here, see the note in the output).
-// Test tooling only (setup through window.agent7 like the panel presets).
+// Test tooling only (setup through window.agentxp like the panel presets).
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { cpus, platform, release, tmpdir, totalmem } from 'node:os'
@@ -190,11 +190,11 @@ const keyRun = async (page, locator, n = 25) => {
 }
 
 const chatFrame = (page, sessionId) => page.getByTestId('window-chat').filter({ has: page.locator(`[data-testid="chat-app"][data-session-id="${sessionId}"]`) })
-const closeWin = (page, id) => page.evaluate((i) => window.agent7.desktop.closeWindow(i), id)
+const closeWin = (page, id) => page.evaluate((i) => window.agentxp.desktop.closeWindow(i), id)
 const closeAllWindows = (page) =>
   page.evaluate(async () => {
-    const st = await window.agent7.desktop.current()
-    for (const w of st.windows) await window.agent7.desktop.closeWindow(w.id)
+    const st = await window.agentxp.desktop.current()
+    for (const w of st.windows) await window.agentxp.desktop.closeWindow(w.id)
   })
 async function waitIdle(sessionId, ms = 120_000) {
   await ctx.waitFor(async () => (await ctx.sessions()).find((s) => s.id === sessionId)?.status === 'idle', `chat ${sessionId} idle`, ms)
@@ -272,7 +272,7 @@ try {
   // ---------------------------------------------------------------- seed the transcript through the DB (app closed)
   log(`seeding ${ROWS} transcript rows in session ${sessionId}`)
   {
-    const db = new DatabaseSync(join(userData, 'agent7.sqlite'))
+    const db = new DatabaseSync(join(userData, 'agentxp.sqlite'))
     db.exec('PRAGMA foreign_keys = ON')
     const lastSeq = db.prepare('SELECT COALESCE(MAX(seq), 0) AS s FROM transcript_entries WHERE session_id = ?').get(sessionId).s
     const entry = db.prepare('INSERT INTO transcript_entries (session_id, seq, kind) VALUES (?, ?, ?)')
@@ -329,7 +329,7 @@ try {
     const [t0, t1] = [await launcher.evaluate(() => window.__connectClick), await dp.evaluate(() => window.__connectPaint)]
     record('desktop_connect', t1 - t0)
     if (i < RUNS - 1) {
-      await launcher.evaluate((id) => window.agent7.launcher.disconnect(id), desktopId)
+      await launcher.evaluate((id) => window.agentxp.launcher.disconnect(id), desktopId)
       await ctx.waitFor(async () => !(await ctx.launcherList()).find((d) => d.id === desktopId)?.connected, 'desktop disconnected')
       await sleep(600)
     }
@@ -432,13 +432,13 @@ try {
   // ---- the load: the long chat, the small chat and 4 more windows (6 in all); the chat opens last so it is on top
   log('opening 6 windows with the long transcript')
   for (const a of ['explorer', 'notepad', 'wordpad', 'paint']) await ctx.openApp(desktopId, a)
-  const big = await desk.evaluate(({ desktopId, sessionId }) => window.agent7.desktop.openWindow({ desktopId, app: 'chat', sessionId }), { desktopId, sessionId })
+  const big = await desk.evaluate(({ desktopId, sessionId }) => window.agentxp.desktop.openWindow({ desktopId, app: 'chat', sessionId }), { desktopId, sessionId })
   const bigFrame = chatFrame(desk, sessionId)
   await bigFrame.getByTestId('chat-transcript').waitFor()
   await ctx.waitFor(async () => (await bigFrame.getByTestId('chat-transcript').locator('*').count()) > 0, 'transcript rendered')
   await sleep(1500)
   const domNodes = await desk.evaluate(() => document.querySelectorAll('*').length)
-  const windowsOpen = await desk.evaluate(async () => (await window.agent7.desktop.current()).windows.length)
+  const windowsOpen = await desk.evaluate(async () => (await window.agentxp.desktop.current()).windows.length)
   const seededEntries = (await ctx.transcript(sessionId)).length
   results.load = { windows: windowsOpen, transcriptEntries: seededEntries, domNodes }
   log('load', results.load)

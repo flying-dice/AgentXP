@@ -1,14 +1,14 @@
-# Agent7 Desktop Design
+# AgentXP Desktop Design
 
 Status: accepted, being built. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
 
 ## 1. Idea
 
-The agent does not live in one window. It lives on a **desktop**, a small virtual Windows 7 machine, and works through **apps** that open as windows on that desktop. The user sees exactly what the agent can touch, because what the agent can touch *is* what is open.
+The agent does not live in one window. It lives on a **desktop**, a small virtual Windows XP machine, and works through **apps** that open as windows on that desktop. The user sees exactly what the agent can touch, because what the agent can touch *is* what is open.
 
 - A **desktop** is one Electron `BrowserWindow`. It belongs to one folder (the workspace, shown as drive `W:`) and one default agent. You can have several desktops open at once, each in its own OS window.
 - A **chat** is one ACP session. A desktop holds many chats. Each chat is shown by a **Chat app** window. Closing the window hides the chat; it stays in **Start -> Recent chats**.
-- An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Center, Agent Manager. Apps are windows inside the desktop window (our own Aero Basic chrome, draggable, resizable, minimise to the taskbar).
+- An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Center, Agent Manager. Apps are windows inside the desktop window (our own Luna chrome, draggable, resizable, minimise to the taskbar).
 - **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`.
 - **System level** settings (agents, permission policy, connectors, about) live in **Control Center**, a desktop app, not in a per-chat dialog.
 
@@ -56,10 +56,10 @@ Always present, whatever is open (the "shell" tool group): `desktop_state`, `des
 
 Two channels reach the agent and both are gated by one `AppToolPolicy` (pure function: open app kinds -> enabled `ToolGroup`s).
 
-1. **MCP tools** (the Agent7 MCP server, renamed from `agent7-a2ui` to `agent7`). The server asks the bridge for the tool list on every `tools/list`. When the set of open apps on the desktop changes, the bridge pushes `toolsChanged` to every connected server of that desktop, which sends MCP `notifications/tools/list_changed`. A call to a tool whose app closed mid-turn returns an MCP error result: "The Terminal app is closed. Call desktop_open_app with app \"terminal\" to open it."
-2. **ACP client methods** (`fs/*`, `terminal/*`). ACP fixes `clientCapabilities` at `initialize`, so Agent7 keeps declaring them and refuses the request with a JSON-RPC error carrying the same message when the app is closed.
+1. **MCP tools** (the AgentXP MCP server, renamed from `agentxp-a2ui` to `agentxp`). The server asks the bridge for the tool list on every `tools/list`. When the set of open apps on the desktop changes, the bridge pushes `toolsChanged` to every connected server of that desktop, which sends MCP `notifications/tools/list_changed`. A call to a tool whose app closed mid-turn returns an MCP error result: "The Terminal app is closed. Call desktop_open_app with app \"terminal\" to open it."
+2. **ACP client methods** (`fs/*`, `terminal/*`). ACP fixes `clientCapabilities` at `initialize`, so AgentXP keeps declaring them and refuses the request with a JSON-RPC error carrying the same message when the app is closed.
 
-Honest limit, stated in the README: an agent's *own* built-in tools (for example a CLI agent shelling out without ACP terminals) bypass the client. Agent7 cannot stop those. Claude Code routes file reads/writes and Bash through ACP when the client offers them, so for it the gating holds.
+Honest limit, stated in the README: an agent's *own* built-in tools (for example a CLI agent shelling out without ACP terminals) bypass the client. AgentXP cannot stop those. Claude Code routes file reads/writes and Bash through ACP when the client offers them, so for it the gating holds.
 
 ## 4. Desktop state: what the agent sees
 
@@ -90,14 +90,14 @@ Flow:
 2. Main (`DesktopService`) is the source of truth. It persists window rows, recomputes `DesktopState`, and:
    - pushes it to every chat of that desktop as AG-UI `STATE_DELTA` under `state.desktop` (shared state already used for tasks/changes),
    - tells the MCP bridge so `tools/list_changed` fires when `tools` changed.
-3. On every run the AG-UI client sends the current desktop as `RunAgentInput.context[{ description: "agent7.desktop", value: <JSON> }]`. `AguiRunCoordinator` turns that context into an ACP `resource` content block (`uri: agent7://desktop/state`, `mimeType: application/json`) placed before the user's text, so the agent starts each turn knowing what is on screen.
+3. On every run the AG-UI client sends the current desktop as `RunAgentInput.context[{ description: "agentxp.desktop", value: <JSON> }]`. `AguiRunCoordinator` turns that context into an ACP `resource` content block (`uri: agentxp://desktop/state`, `mimeType: application/json`) placed before the user's text, so the agent starts each turn knowing what is on screen.
 4. Mid-turn the agent calls `desktop_state` for a fresh copy.
 
 ## 5. Windows, sessions and processes
 
 - One `BrowserWindow` per open desktop, loading the renderer with `?desktop=<id>`. `File -> New Desktop` (Start menu) picks a folder and opens a new OS window. Last open desktops reopen at launch.
 - AG-UI runs, `session.changed` and desktop events are sent only to the `webContents` of the owning desktop.
-- One agent process per (desktop, agent) via the existing `AgentConnectionPool`; each chat is an ACP session on it. MCP servers are passed per ACP session with `AGENT7_DESKTOP_ID` and `AGENT7_SESSION_KEY`.
+- One agent process per (desktop, agent) via the existing `AgentConnectionPool`; each chat is an ACP session on it. MCP servers are passed per ACP session with `AGENTXP_DESKTOP_ID` and `AGENTXP_SESSION_KEY`.
 
 ## 6. Shell (renderer)
 
@@ -105,11 +105,11 @@ Built from kit organisms, matching the mockup:
 
 - **Desktop surface** - wallpaper, icons (Workspace W:, Chats, Control Center, Recycle Bin = reverted changes, Code), double click opens.
 - **Window manager** - z-order, focus, drag by title bar, resize by edges, minimise/maximise/restore, snap to top = maximise. Window chrome is the kit `Form` with `TitleBar`.
-- **Top bar** (mockup's agent strip) - "Agent7 desktop · Working: <task>" plus **Pause** (cancels running turns, blocks new tool calls until resumed) and **Take control** (every tool call needs permission while on).
-- **Taskbar** - Start orb (Agent7 mark), one button per window, tray with clock and Action Center flag.
+- **Top bar** (mockup's agent strip) - "AgentXP desktop · Working: <task>" plus **Pause** (cancels running turns, blocks new tool calls until resumed) and **Take control** (every tool call needs permission while on).
+- **Taskbar** - Start orb (AgentXP mark), one button per window, tray with clock and Action Center flag.
 - **Start menu** - apps, Recent chats, New chat, New desktop, Control Center, search box.
 - **Action Center** (tray popup) - pending permission requests from every chat on the desktop, newest first, each with **Review** -> UAC style dialog (dimmed desktop, shield, reason text such as "Writing files is set to Ask in Control Center").
-- **Gadgets** (right column, can be hidden) - context meter per active chat, activity feed (last tool calls), session clock.
+- **TaskPanes** (right column, can be hidden) - context meter per active chat, activity feed (last tool calls), session clock.
 
 ## 7. Apps (renderer)
 
@@ -121,13 +121,13 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 - **Code** - file tree, tabs, `CodeViewer`, changes list with `DiffViewer`, Revert. "Agent is editing" marker when a tool call targets the open file.
   Laid out like Code::Blocks (menu bar, icon toolbar, docked Management / Logs & others panes, status bar). Git awareness (`src/shared/git.ts`, `GitService` in main): `git.status` / `lineChanges` / `headText` / `revertHunk` run the `git` CLI (`execFile`, no shell, `LC_ALL=C`, `GIT_OPTIONAL_LOCKS=0`) in the real path of a VPath, so every drive works and a non-repository or missing git answers null / []. `git.changed { desktopId, root }` is pushed (debounced) after agent changes, user saves and a 5 s poll that only runs while a Code window is open. The tree shows status letters and folder dots, the kit `CodeViewer` a gutter, overview ruler and inline peek (`gutterMarks`); `revertHunk` rewrites the working file through the user write path (no agent change recorded).
 - **Terminal** - `ConsoleView` showing the ACP terminals of the desktop plus an interactive user shell row.
-- **Browser** - address bar, Back/Forward/Refresh/Stop, an IE9-style tab strip (new tab, close tab; one `<webview>` per tab, all in partition `persist:agent7-browser`, the app's `tabs` request lets the agent list/open/switch/close tabs) and an "Agent is using this page" bar with a highlight ring and a Take control button (the `activity` request). Each tab's `webContents` is reported with `desktop.attachBrowser`; the one attached last is the active tab. Main drives it through the Chrome DevTools Protocol (`webContents.debugger`, attached once per guest, detached on destroy):
+- **Browser** - address bar, Back/Forward/Refresh/Stop, an IE9-style tab strip (new tab, close tab; one `<webview>` per tab, all in partition `persist:agentxp-browser`, the app's `tabs` request lets the agent list/open/switch/close tabs) and an "Agent is using this page" bar with a highlight ring and a Take control button (the `activity` request). Each tab's `webContents` is reported with `desktop.attachBrowser`; the one attached last is the active tab. Main drives it through the Chrome DevTools Protocol (`webContents.debugger`, attached once per guest, detached on destroy):
   - **Read**: `Accessibility.getFullAXTree` of every frame (`Page.getFrameTree`, `frameId`; iframe owners resolved with `DOM.describeNode`; shadow roots are part of the AX tree), `DOMSnapshot.captureSnapshot` for off-screen marks. `browser_read` returns outline or text lines, paged (150 lines / 12k characters per page, `nextOffset`).
   - **Refs**: one number per DOM node (frame id + `backendNodeId`), stable across reads, reset when the page navigates; stale ones give a readable error.
   - **Input**: `DOM.scrollIntoViewIfNeeded` + `DOM.getBoxModel`, then trusted `Input.dispatchMouseEvent` at the box centre; `Input.dispatchKeyEvent` for `browser_press` (chords such as `Control+K`); `browser_type` focuses the node, selects all and calls `Input.insertText`, so contenteditable and React inputs work; the wheel (`mouseWheel`) scrolls pages and containers. Only `<select>` choice and the password-focus check use a page script.
   - **Safety**: password values are never returned and typing into a password field is refused; only http(s) navigation; the webview lockdown is unchanged; actions check `paused` and `userInControl` between steps (the tool gate already refuses or asks first).
   - `capturePage` PNG is still returned as MCP image content.
-- **Control Center** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (gadgets on/off), About.
+- **Control Center** - pages: Agents (the old Options Agents tab), Permissions (per tool group Allow / Ask / Deny, Agent may open apps), Appearance (taskpanes on/off), About.
 - **Agent Manager** - running agent processes, chats per process, status, context use, **End process**.
 
 ### Code Review and the embedded chat
@@ -138,14 +138,14 @@ Each app is a Svelte component in `src/renderer/src/lib/apps/<kind>/` registered
 - **Tools** - the `review` tool group is enabled desktop-wide while a Code Review window is open, so every handler resolves its window with `ReviewService.requireWindow`. The review session acts on its own window. Any other session of the desktop (a chat, or the `aside` chat pane of the Code window) acts on the Code Review window of its project (`sameProject` with the session `cwd`; the focused one, else the last opened), so "review this" asked in the IDE chat puts real comments into the window: they are stored under that window's review session (`ReviewTarget.reviewSessionId`). `review_open` (group `shell`, so it is always listed; it follows the "Agent may open apps" policy) opens or reuses the window. With no window the error tells the agent to call `review_open`. `review_submit` from a chat returns the verdict and the comment list (`formatReviewHandback`), so the answer lands in the chat the user asked in. Sessions of another desktop are refused. The review session stays read only (UX-37).
 - **View** - the left margin bar shows removed lines red and added lines yellow (`src/shared/windiff.ts`, pure), F7 / Shift+F7 step through the change regions across files, outline and expanded views, unified or side by side. A gutter click adds a user comment; threads show Resolve, Reply, Delete and Send to chat. The window sends the first prompt (`reviewKickoffPrompt`) when its transcript is empty.
 - **Send to chat** - `formatReviewPrompt` builds the prompt (verdict, `path:line [severity] body`, replies indented); the dialog picks an existing chat or a new one, the comments become `sent`.
-- **EmbeddedChat** (`apps/shared/EmbeddedChat.svelte`) - the reusable right-aside chat panel: props `host`, `sessionId`, `contextProvider`, `role` (`chat` | `review` | `aside`), `collapsible`, `collapsed` / `width` (bindable), `resizable`, `compact`, `contained`, and for the chat pane `onstart`, `onnew`, `suggestions`, `prefill`; it shares the desktop's `SessionAgentStore`, and the provider's `appContext` is added to the `agent7.desktop` context entry. ChatApp, Code Review and the chat pane of section 12 use it. See `manuals/embedded-chat.md`.
+- **EmbeddedChat** (`apps/shared/EmbeddedChat.svelte`) - the reusable right-aside chat panel: props `host`, `sessionId`, `contextProvider`, `role` (`chat` | `review` | `aside`), `collapsible`, `collapsed` / `width` (bindable), `resizable`, `compact`, `contained`, and for the chat pane `onstart`, `onnew`, `suggestions`, `prefill`; it shares the desktop's `SessionAgentStore`, and the provider's `appContext` is added to the `agentxp.desktop` context entry. ChatApp, Code Review and the chat pane of section 12 use it. See `manuals/embedded-chat.md`.
 - **Menu bar** - Code Review uses the standard helpers (`AppHelp`, `helpMenu`, `closeItems`, `menuBar`) like every app: its test ids are `code-review-menu-close`, `code-review-menu-help` and `code-review-menu-about`. Its reviewer panel stays.
 
 ## 7b. Help and context menus
 
 Every app has in-app Help and a context menu.
 
-**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `Agent7 Help and Support: Using <App>`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
+**Help.** Each app window shows the classic menu bar with `File`, `Edit`, `View`, its own menus and `Help` last. Only menus that have real items appear. `Help` has `View Help` (F1), a separator and `About <App>`. View Help opens the single Help and Support window on the topic of the app and titles it `AgentXP Help and Support: Using <App>`; the Start menu entry keeps the title `Help and Support`. F1 on the desktop opens the topic of the focused window, also while the focus is in a text box. `AppHelp` and `AppAbout` (lib/apps/shared) and `standardMenu.ts` (kit) build the shared parts.
 
 **Context menus.** Right-click, the Menu key and Shift+F10 open a kit `ContextMenuStrip` in every app, on rows and items first and on the window background otherwise. The renderer cancels the browser's own `contextmenu` event on the desktop and the launcher. The taskbar button has its own menu: Restore, Minimize, Close window.
 
@@ -216,7 +216,7 @@ The Event Viewer's events are not persisted: an in-memory ring buffer of 5,000 e
 
 ## 8b. Virtual file system and launcher (migration 004)
 
-A desktop is a long-lived virtual Windows 7 PC, not a view of one folder. Contract: `src/shared/vfs.ts`.
+A desktop is a long-lived virtual Windows XP PC, not a view of one folder. Contract: `src/shared/vfs.ts`.
 
 **Paths.** The agent and the UI use *VPaths*: `C:\Users\Agent`, `E:\src\a.ts` (backslashes, upper-case drive letter, the drive
 root keeps its trailing `\`). `parseVPath` / `normaliseVPath` / `joinVPath` / `vpathParent` / `vpathName` are pure; relative paths
@@ -245,12 +245,12 @@ The drive letter is looked up when a row is read, so a project plugged in again 
 **Launcher** ("Remote Desktop Connection"). A fixed 520x600 frameless window (`?launcher=1`) opens at app start. A desktop is *connected* while an OS window
 (`?desktop=<id>`) shows it; `desktops.is_open` means connected and is reset at start. Closing a desktop window (or `launcher.disconnect`) only disconnects:
 agents, turns and permission requests keep running in main. A pending approval on a disconnected desktop raises an OS notification
-"Agent7: <desktop> needs your approval" (click connects) and a `launcher.changed` push. `runState` = awaiting_approval > working > error > idle, derived from session
+"AgentXP: <desktop> needs your approval" (click connects) and a `launcher.changed` push. `runState` = awaiting_approval > working > error > idle, derived from session
 statuses and the `PermissionBroker`. `launcher.remove` stops the agents, deletes the rows (cascade) and the desktop's app-data folder; plugged-in project folders are only ejected.
 
 **Thumbnails.** `capturePage` resized to 320 px wide, written to `<userData>/desktops/<id>/thumbnail.png` on disconnect and every 60 s while connected
-(`ThumbnailService`, `FileThumbnailStore`). The launcher loads `agent7-thumb://desktop/<id>.png?v=<mtime>`, served by a custom protocol handler;
-the renderer's CSP must allow `agent7-thumb:` in `img-src`.
+(`ThumbnailService`, `FileThumbnailStore`). The launcher loads `agentxp-thumb://desktop/<id>.png?v=<mtime>`, served by a custom protocol handler;
+the renderer's CSP must allow `agentxp-thumb:` in `img-src`.
 
 ```sql
 CREATE TABLE desktop_drives (
@@ -315,9 +315,9 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 
 **Not a chat.** Launcher counts (`chatCount`), `DesktopController.chats` (Start menu recents, the newest chat) and the "New chat" lists count `role: 'chat'` only. Task Manager lists every session that runs, so an aside shows there while its window is open and disappears with it.
 
-**The agent.** An aside is an ordinary session of the desktop: its prompts carry the desktop state (`agent7://desktop/state`) and it gets the tools of the open apps through the usual tool gate, so the Browser's aside can use the `browser_*` tools on the page. The desktop context of an aside carries `appContext` with the window id, the app, the title and what the app registered. `DESKTOP_INSTRUCTIONS` (`tools/catalog.ts`) tells the agent to keep answers short and local to `appContext` and to pass `window` = `appContext.windowId` to tools that take a window.
+**The agent.** An aside is an ordinary session of the desktop: its prompts carry the desktop state (`agentxp://desktop/state`) and it gets the tools of the open apps through the usual tool gate, so the Browser's aside can use the `browser_*` tools on the page. The desktop context of an aside carries `appContext` with the window id, the app, the title and what the app registered. `DESKTOP_INSTRUCTIONS` (`tools/catalog.ts`) tells the agent to keep answers short and local to `appContext` and to pass `window` = `appContext.windowId` to tools that take a window.
 
-**The shell.** `AppWindowFrame` puts the app and `AppChatPane` side by side (`.hosted`). `AppChatPane` shows a slim edge toggle (`chat-pane-toggle`) while collapsed and an `EmbeddedChat` with `role="aside"` while open. `DesktopController` owns what a pane needs: `paneOf` / `setChatPane` / `toggleChatPane` / `setPaneWidth` (collapsed state and width per window, remembered in `localStorage` under `agent7.chatpane.<desktopId>.<windowId>` with a try/catch, `desktop/chatPane.ts`), `openAside` / `closeAside`, the `prefills` of the composer and the app contexts. A window starts collapsed. Ctrl+Shift+C is handled by the frame, so it works in every app. The apps list `View -> Chat pane` with `help.paneItem(win.id)` (`chatPaneItem` in `standardMenu.ts`, test id `<app>-menu-chat-pane`). An app without a View menu gets one with `help.viewMenu(win.id)`.
+**The shell.** `AppWindowFrame` puts the app and `AppChatPane` side by side (`.hosted`). `AppChatPane` shows a slim edge toggle (`chat-pane-toggle`) while collapsed and an `EmbeddedChat` with `role="aside"` while open. `DesktopController` owns what a pane needs: `paneOf` / `setChatPane` / `toggleChatPane` / `setPaneWidth` (collapsed state and width per window, remembered in `localStorage` under `agentxp.chatpane.<desktopId>.<windowId>` with a try/catch, `desktop/chatPane.ts`), `openAside` / `closeAside`, the `prefills` of the composer and the app contexts. A window starts collapsed. Ctrl+Shift+C is handled by the frame, so it works in every app. The apps list `View -> Chat pane` with `help.paneItem(win.id)` (`chatPaneItem` in `standardMenu.ts`, test id `<app>-menu-chat-pane`). An app without a View menu gets one with `help.viewMenu(win.id)`.
 
 **Context.** An app calls `useAppContext(host, () => win.id, () => ({ ... }))` (`apps/shared/appContext.svelte.ts`), which registers a provider with `host.setContext(windowId, provider)` and removes it when the app goes away. The provider runs when a prompt is sent and for the suggestion chips, so it must be cheap. `composeAppContext` adds `windowId`, `app` and `title`. What each app gives:
 
@@ -345,6 +345,6 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 1. Contracts: `src/shared/desktop.ts`, IPC additions, tool group table. (orchestrator)
 2. In parallel:
    - **Backend**: migration, repositories, `DesktopService`, `AppToolPolicy`, multi-window, bridge + MCP server tools and `list_changed`, ACP refusal, desktop state in AG-UI state and run context, browser driver.
-   - **Shell**: desktop surface, window manager, taskbar, start menu, top bar, Action Center + UAC, gadgets, Storybook stories.
+   - **Shell**: desktop surface, window manager, taskbar, start menu, top bar, Action Center + UAC, taskpanes, Storybook stories.
    - **Apps**: the eight apps against `fakeApi`, with stories.
 3. Integrate, smoke test, README chapter rewrite and new screenshots, merge.

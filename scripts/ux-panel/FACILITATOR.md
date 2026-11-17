@@ -165,7 +165,7 @@ own session.
 ## Where things are
 
 `scripts/ux-panel/tasks.mjs` maps every task to a preset. Presets: `scripts/ux-panel/presets/*.mjs` (setup only, through
-`window.agent7`). Checkers: `scripts/ux-panel/checks/*.mjs`. Scripted-agent scripts for the tasks:
+`window.agentxp`). Checkers: `scripts/ux-panel/checks/*.mjs`. Scripted-agent scripts for the tasks:
 `scripts/ux-panel/scripts/*.json` (plus `agents/scripted-agent/scripts`).
 `node scripts/ux-panel/presets-smoke.mjs [task...]` starts every start state and runs its checker once (a regression test
 of the harness itself; most untouched start states must say FAIL, that is expected).
@@ -192,7 +192,7 @@ Debugging a start state: `UX_KEEP=1 node scripts/ux-panel/session.mjs start ...`
 - H-101: for T01.1 and T02.1 the server runs the check after every action and marks the log line on which it first held (`checkHeld`); `check` takes `stepsToPass` from it unless `--steps-to-pass` is given.
 - H-104: a session's sandbox is `<parent>/a7ux-XXXX/home/Documents`. The parent is `UX_SANDBOX_ROOT`, else `~/.ux-panel`, else the system temp folder, so the folder field no longer shows `/tmp/...` where the home folder is writable. The app shows the host path, so it still reads as a test path (`a7ux-...`); the panelist briefing says that such paths are test paths. A real Windows-style path needs a product change (a virtual home) and is not done here.
 - T23.1 starts at the first crash and asserts that the red box offers "Restart and send again" (H-58); `T23.1b` is the second failure ("It stopped again", plain Restart) as its own task.
-- `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "Agent7" (H-43).
+- `ux windows` lists each window with its kind (`[launcher]` or `[desktop]`), because every title is "AgentXP" (H-43).
 - T29.1 opens `{TEST_PAGE_URL}second` (the per-session port); the server answers `/second` with the title "Second page".
 - Folder pickers: the start states stub the native folder dialog (answers docs-site; login-app in launcher states). The stub
   only answers folder pickers and cancels file pickers (Attach). The in-app Browse For Folder dialog is not stubbed.

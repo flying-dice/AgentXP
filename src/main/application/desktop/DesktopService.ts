@@ -146,7 +146,7 @@ export class DesktopService implements DesktopStates {
     return desktopId == null ? null : this.state(desktopId)
   }
 
-  /** The desktop state as the JSON text of the prompt's `agent7://desktop/state` resource. */
+  /** The desktop state as the JSON text of the prompt's `agentxp://desktop/state` resource. */
   contextOfSession(sessionId: Id): string | null {
     const state = this.stateOfSession(sessionId)
     return state ? JSON.stringify(state) : null

@@ -2,7 +2,7 @@
 
 Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 (`desktop.png`, `start.png`, `tray.png` screenshots, `Desktop.dc.html` markup + behaviour of the mockup, its README),
-`docs/design/win7.css` (the mockup's control CSS). Tokens: `src/renderer/src/lib/kit/tokens.css`.
+`docs/design/XP_DESIGN_LANGUAGE.md` (the Luna rules). Tokens: `src/renderer/src/lib/kit/tokens.css`.
 
 ## Svelte / kit
 
@@ -13,15 +13,15 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 - One component per file, PascalCase, WinForms control names. Layout:
   `src/renderer/src/lib/kit/<level>/<Name>.svelte` + `<Name>.stories.svelte` next to it.
   Pure helpers in `<Name>.ts` next to it when needed.
-- Visuals: scoped `<style>` in the component using the `--w7-*` tokens. Add new tokens
+- Visuals: scoped `<style>` in the component using the `--xp-*` tokens. Add new tokens
   to `tokens.css` (append only, grouped with a comment) rather than hard-coding a colour
   that will be reused. No Tailwind, no CSS frameworks.
 - Behaviour/accessibility: pure Svelte 5. No third-party UI libraries (no bits-ui, no
   shadcn). Popups, keyboard handling and ARIA are implemented in the kit; shared
   behaviour lives in `src/renderer/src/lib/kit/actions/` (Svelte actions/attachments).
-- Era honesty: Windows 7 Aero Basic / WinForms. 12px Segoe UI, 23px buttons, gradient
+- Era honesty: Windows XP Luna (Blue) / WinForms. 12px Segoe UI, 23px buttons, gradient
   faces, dotted focus rectangles, no rounded "modern" cards, no transitions beyond
-  what Win7 had (hover glow fade is fine), no emoji.
+  what WinXP had (hover glow fade is fine), no emoji.
 - Every component: a Storybook story file using `@storybook/addon-svelte-csf` v5
   (`defineMeta` in `<script module>`), title `Atoms/<Name>`, `Molecules/<Name>`, etc.,
   covering default, disabled and each meaningful variant/state, with `argTypes` so
@@ -47,7 +47,7 @@ Read `docs/ARCHITECTURE.md` first. Reference design: `docs/design/desktop/`
 Every app has in-app Help and a context menu. A new app is not finished without both.
 
 - **Menu bar.** Every app window has a classic menu bar (kit `MenuStrip`): `File`, `Edit`, `View`, app menus, and `Help`, in that order. Include only the menus that have real items. `Help` is always last: `View Help` (F1), a separator, `About <App>`. Build the menus with `menuBar([...])`, `closeItems(app, close)` (File > Close, Alt+F4) and `editItems(prefix, ops, state)` from `kit/molecules/standardMenu.ts`.
-- **Help.** `new AppHelp(host, '<appKind>')` (`lib/apps/shared/AppHelp.svelte.ts`) gives `help.menu()` (the Help menu) and the About state; render `<AppAbout {help} />`. View Help opens the one Help window on the topic of the app; the window is titled `Agent7 Help and Support: Using <App>` (`helpWindowTitle` in `@shared/desktop-views`). F1 on the focused window does the same, also inside the app's own inputs.
+- **Help.** `new AppHelp(host, '<appKind>')` (`lib/apps/shared/AppHelp.svelte.ts`) gives `help.menu()` (the Help menu) and the About state; render `<AppAbout {help} />`. View Help opens the one Help window on the topic of the app; the window is titled `AgentXP Help and Support: Using <App>` (`helpWindowTitle` in `@shared/desktop-views`). F1 on the focused window does the same, also inside the app's own inputs.
 - **Context menu.** `const ctx = new ContextMenu()` (`lib/apps/shared/ContextMenu.svelte.ts`) with the kit `ContextMenuStrip`: `oncontextmenu={(e) => ctx.show(e, items())}` and `onkeydown={(e) => ctx.key(e, items)}` on the app root (Menu key and Shift+F10 open it; arrows, Enter and Esc work in the strip). Put the handler on the root so the whole window has a menu, and on rows or items that have their own. The browser's own menu never shows on the desktop. Items are built by pure functions (`explorerContext.ts`, `shared/contextItems.ts`) with tests.
 - **Ask chat.** Items that hand text or a location to a chat call `host.askChat({ app, windowId, kind, text?, path?, range?, url?, title? })` and nothing else; the prompt format lives in `lib/apps/askChat.ts`.
 - **Test ids.** Menu bar items `<app>-menu-<action>`, context items `<app>-ctx-<action>`, About `<app>-about` and `<app>-about-ok`. Document them in `manuals/<app>.md`.
@@ -117,10 +117,10 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
 Windows (or Linux with `DISPLAY` set) it runs directly and windows appear on screen. Extras:
 `npm run test:e2e -- e2e/chat.e2e.ts` runs one spec; `A7_E2E_SKIP_BUILD=1` reuses `out/`.
 
-Layout: `e2e/fixtures/launch.ts` (`launchAgent7({ userData? })`: private user-data dir, built app),
+Layout: `e2e/fixtures/launch.ts` (`launchAgentXP({ userData? })`: private user-data dir, built app),
 `e2e/fixtures/pages/*` (page objects: `LauncherPage`, `DesktopPage`, `ChatWindow`, `ExplorerWindow`,
 `CodeWindow`, `TerminalWindow`; test ids only), `e2e/fixtures/expect.ts` (`see.*` auto-retrying assertions),
-`e2e/fixtures/setup.ts` and `session.ts`. **Setup only** may call `window.agent7` through `page.evaluate`
+`e2e/fixtures/setup.ts` and `session.ts`. **Setup only** may call `window.agentxp` through `page.evaluate`
 (registering the fake agent, adding a temp workspace, plugging it in as a USB drive, setting the terminal
 policy, reading a desktop id); everything a test asserts or clicks goes through the UI. Specs never sleep:
 they wait on test ids and states.

@@ -92,15 +92,15 @@ describe('numberDuplicateTitles', () => {
 
 describe('helpWindowTitle', () => {
   it('titles a help window after the app of its topic', () => {
-    expect(helpWindowTitle('notepad')).toBe('Agent7 Help and Support: Using Notepad')
-    expect(helpWindowTitle('agent-manager')).toBe('Agent7 Help and Support: Using Task Manager')
-    expect(helpWindowTitle('explorer')).toBe('Agent7 Help and Support: Using Explorer')
-    expect(helpWindowTitle('browser#troubleshooting')).toBe('Agent7 Help and Support: Using Browser')
-    expect(helpWindowTitle('nonsense#top')).toBe('Agent7 Help and Support')
+    expect(helpWindowTitle('notepad')).toBe('AgentXP Help and Support: Using Notepad')
+    expect(helpWindowTitle('agent-manager')).toBe('AgentXP Help and Support: Using Task Manager')
+    expect(helpWindowTitle('explorer')).toBe('AgentXP Help and Support: Using Explorer')
+    expect(helpWindowTitle('browser#troubleshooting')).toBe('AgentXP Help and Support: Using Browser')
+    expect(helpWindowTitle('nonsense#top')).toBe('AgentXP Help and Support')
   })
 
   it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
-    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Agent7 Help and Support')
+    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('AgentXP Help and Support')
   })
 
   it('names the Chats window after its icon (UX-180)', () => {
@@ -111,7 +111,7 @@ describe('helpWindowTitle', () => {
 
   it('is what windowTitle gives a help view', () => {
     expect(windowTitle({ app: 'event-viewer', sessionId: null, level: 'all', selectedEventId: null })).toBe('Event Viewer') // the same words as the root of its tree
-    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Agent7 Help and Support: Using Terminal')
+    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('AgentXP Help and Support: Using Terminal')
   })
 })
 

@@ -8,7 +8,7 @@ export interface DesktopContext {
   inbox: PermissionInbox
 }
 
-const KEY = Symbol('agent7.desktop')
+const KEY = Symbol('agentxp.desktop')
 
 export const setDesktopContext = (context: DesktopContext): DesktopContext => setContext(KEY, context)
 

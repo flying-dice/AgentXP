@@ -1,8 +1,8 @@
-# Agent7 Documentation Style Guide
+# AgentXP Documentation Style Guide
 
-This guide tells you how to write user documentation for Agent7. It covers the README, the guides in `docs/`, and the text in Help dialogs.
+This guide tells you how to write user documentation for AgentXP. It covers the README, the guides in `docs/`, and the text in Help dialogs.
 
-Agent7 documentation looks and reads like the printed "Introduction to Windows 7" guides and the Microsoft Office "Getting Started" booklets from the same period. The sentences follow the plain English rules of [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), which come from ASD-STE100 Simplified Technical English.
+AgentXP documentation looks and reads like the printed "Introduction to Windows XP" guides and the Microsoft Office "Getting Started" booklets from the same period. The sentences follow the plain English rules of [SimpleEnglish](https://github.com/AminBlg/SimpleEnglish), which come from ASD-STE100 Simplified Technical English.
 
 ## Table of Contents
 
@@ -20,9 +20,9 @@ Agent7 documentation looks and reads like the printed "Introduction to Windows 7
 
 ## 1 - About This Guide
 
-The reader of Agent7 documentation is a new user. This reader knows how to use a computer. This reader does not know ACP, A2UI, or how Agent7 works inside.
+The reader of AgentXP documentation is a new user. This reader knows how to use a computer. This reader does not know ACP, A2UI, or how AgentXP works inside.
 
-Write each page so that this reader can do the task on the first read. Write to "you". Write about the product as "Agent7".
+Write each page so that this reader can do the task on the first read. Write to "you". Write about the product as "AgentXP".
 
 The tone is that of a friendly help desk in 2009. The help desk is patient and exact, and it does not joke. It does not sell the product. It tells you where to click.
 
@@ -30,7 +30,7 @@ The tone is that of a friendly help desk in 2009. The help desk is patient and e
 
 Every document has the same parts, in this order:
 
-1. A title in the form "Introduction to Agent7" or "Using the Changes Pane".
+1. A title in the form "Introduction to AgentXP" or "Using the Changes Pane".
 2. A Table of Contents. List each numbered chapter. Indent the sections under each chapter.
 3. Numbered chapters. Write the number, a space, a hyphen, a space, and the name: `## 3 - The Desktop`.
 4. Sections inside a chapter, as `###` headings with no number: `### The Taskbar`.
@@ -50,8 +50,8 @@ These rules come from SimpleEnglish. They apply to all prose in the documentatio
 2. In a procedure, use the imperative mood. Write one instruction per sentence and 20 words at most.
 3. In a description, use simple tenses. Write 25 words at most per sentence. Write one topic per paragraph and six sentences per paragraph at most.
 4. Write the condition before the command, with a comma: "If the agent asks for permission, click **Allow**."
-5. Use active voice and name the actor: "Agent7 saves the chat." Do not write "The chat is saved."
-6. Do not use the present perfect. Write "Agent7 created the file", not "has created".
+5. Use active voice and name the actor: "AgentXP saves the chat." Do not write "The chat is saved."
+6. Do not use the present perfect. Write "AgentXP created the file", not "has created".
 7. Use only these modal verbs: can, will, must. Do not use should, would, may, might, or could.
 8. Do not use contractions. Keep the articles ("the", "a") and keep "that".
 9. Do not use semicolons or em-dashes. Write two sentences.
@@ -82,7 +82,7 @@ These rules come from SimpleEnglish. They apply to all prose in the documentatio
 | Your files (C:) | private C: drive, private disk, local disk (the C: drive of a desktop) |
 | Demo assistant | scripted demo, scripted agent (the practice agent that gives fixed sample answers) |
 | agent | bot, AI, assistant, model |
-| window | screen, view (for an Agent7 window) |
+| window | screen, view (for an AgentXP window) |
 | pane | panel, sidebar, section (for a part of a window) |
 | dialog box | popup, modal |
 
@@ -139,7 +139,7 @@ Use a callout for information that is not a step. Start the paragraph with the l
 
 Write a caution with the command or condition first, then the risk:
 
-> **Caution:** Do not click **Revert** if you want to keep the change. Agent7 writes the original file back to the drive.
+> **Caution:** Do not click **Revert** if you want to keep the change. AgentXP writes the original file back to the drive.
 
 > **Tip:** Press Ctrl+Esc to open the Start menu.
 
@@ -150,11 +150,11 @@ Use one callout per section at most. Do not put a callout inside a numbered list
 Each chapter that describes a window has a screenshot of that window.
 
 1. Take the screenshot of the real application or of the Storybook story. Do not use a mock-up.
-2. Show the whole window, including the title bar, on the Windows 7 blue desktop or on a plain background. A dialog box or a menu can have a tight crop.
+2. Show the whole window, including the title bar, on the Windows XP blue desktop or on a plain background. A dialog box or a menu can have a tight crop.
 3. Use sample data that looks real: a project named `claude-code-win`, a chat named "Fix login redirect bug".
 4. Save the image as PNG in `docs/images/`. Use a lowercase name with hyphens: `start-menu.png`.
 5. Put the image after the first paragraph of the chapter.
-6. Write alt text that names the window and its state: "The Agent7 desktop with one chat open".
+6. Write alt text that names the window and its state: "The AgentXP desktop with one chat open".
 7. Do not add arrows, circles, or text to an image. Describe the location in the text.
 
 ## 8 - Formatting Reference

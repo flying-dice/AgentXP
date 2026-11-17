@@ -238,7 +238,7 @@ describe('ElectronBrowserDriver', () => {
     let calls = 0
     await expect(
       driver.wait(7, { text: 'never there', timeoutMs: 5000 }, () => {
-        if (++calls > 2) throw new Error('Agent7 is paused by the user.')
+        if (++calls > 2) throw new Error('AgentXP is paused by the user.')
       })
     ).rejects.toThrow(/paused/)
   })

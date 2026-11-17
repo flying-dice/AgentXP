@@ -12,7 +12,7 @@
   let { children, sizeGrip = true, class: className = '' }: Props = $props()
 </script>
 
-<div class="w7-statusstrip {className}" role="status">
+<div class="xp-statusstrip {className}" role="status">
   {@render children()}
   {#if sizeGrip}
     <svg class="grip" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -22,7 +22,7 @@
 </div>
 
 <style>
-  .w7-statusstrip {
+  .xp-statusstrip {
     flex: none;
     display: flex;
     align-items: center;

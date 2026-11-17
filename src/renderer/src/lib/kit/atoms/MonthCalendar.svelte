@@ -96,7 +96,7 @@
   }
 </script>
 
-<div class="w7-cal {className}" class:disabled>
+<div class="xp-cal {className}" class:disabled>
   <div class="head">
     <button type="button" class="nav" aria-label="Previous" {disabled} onclick={() => step(-1)}>
       <svg width="6" height="9"><path d="M6 0 0 4.5 6 9z" fill="currentColor" /></svg>
@@ -163,26 +163,26 @@
 </div>
 
 <style>
-  .w7-cal {
+  .xp-cal {
     display: inline-block;
     width: 196px;
     box-sizing: border-box;
     padding: 0;
     background: #fff;
-    border: 1px solid var(--w7-list-border);
-    font: var(--w7-font);
-    color: var(--w7-text);
+    border: 1px solid var(--xp-list-border);
+    font: var(--xp-font);
+    color: var(--xp-text);
   }
-  .w7-cal.disabled {
-    color: var(--w7-text-disabled);
+  .xp-cal.disabled {
+    color: var(--xp-text-disabled);
   }
   .head {
     display: flex;
     align-items: center;
     height: 28px;
     padding: 0 3px;
-    background: var(--w7-calendar-header);
-    border-bottom: 1px solid #d5dfe5;
+    background: var(--xp-calendar-header);
+    border-bottom: 1px solid #d0d0bf;
   }
   .nav,
   .title {
@@ -206,19 +206,19 @@
   }
   .nav:hover:not(:disabled),
   .title:hover:not(:disabled) {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .nav:active:not(:disabled) {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .body {
     padding: 4px 6px;
     outline: none;
   }
   .body:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
   .row {
@@ -230,7 +230,7 @@
     line-height: 20px;
     text-align: center;
     color: #1e395b;
-    border-bottom: 1px solid #d5dfe5;
+    border-bottom: 1px solid #d0d0bf;
   }
   .heads {
     margin-bottom: 2px;
@@ -252,18 +252,18 @@
   }
   .day:hover:not(:disabled),
   .tile:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .day.today {
-    border-color: var(--w7-calendar-today);
-    background: linear-gradient(#5b9be0, var(--w7-calendar-today));
+    border-color: var(--xp-calendar-today);
+    background: linear-gradient(#5b9be0, var(--xp-calendar-today));
     color: #fff;
   }
   .day.selected,
   .tile.selected {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
     color: #000;
   }
   .day.today.selected {
@@ -273,11 +273,11 @@
   }
   .day.focus:focus-visible,
   .body:focus-visible .day.focus {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .day:disabled {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
     opacity: 0.6;
   }
   .tiles {
@@ -302,19 +302,19 @@
     height: 22px;
     padding: 0 8px;
     border: 0;
-    border-top: 1px solid #d5dfe5;
+    border-top: 1px solid #d0d0bf;
     background: transparent;
     cursor: default;
     text-align: left;
   }
   .foot:hover:not(:disabled) {
-    background: var(--w7-hot-face);
+    background: var(--xp-hot-face);
   }
   .todaybox {
     width: 12px;
     height: 12px;
-    border: 1px solid var(--w7-calendar-today);
+    border: 1px solid var(--xp-calendar-today);
     border-radius: 2px;
-    background: linear-gradient(#5b9be0, var(--w7-calendar-today));
+    background: linear-gradient(#5b9be0, var(--xp-calendar-today));
   }
 </style>

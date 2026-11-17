@@ -93,7 +93,7 @@
 />
 
 <style>
-  :global(.w7-tree.file-tree.file-tree) {
+  :global(.xp-tree.file-tree.file-tree) {
     flex: 1;
     border: 0;
   }

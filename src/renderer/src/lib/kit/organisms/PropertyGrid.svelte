@@ -120,12 +120,12 @@
   </svg>
 {/snippet}
 
-<div class="w7-propgrid {className}">
+<div class="xp-propgrid {className}">
   <ToolStrip class="pgtools" aria-label="Property grid tools">
     <ToolStripButton glyph={catGlyph} title="Categorized" checked={categorized} onclick={() => (sort = 'categorized')} />
     <ToolStripButton glyph={azGlyph} title="Alphabetical" checked={!categorized} onclick={() => (sort = 'alphabetical')} />
   </ToolStrip>
-  <div class="grid w7-scroll" role="treegrid" tabindex="0" aria-label={ariaLabel} aria-activedescendant={active ? domId(active.id) : undefined} bind:this={body} {onkeydown}>
+  <div class="grid xp-scroll" role="treegrid" tabindex="0" aria-label={ariaLabel} aria-activedescendant={active ? domId(active.id) : undefined} bind:this={body} {onkeydown}>
     <div class="content">
       {#each entries as entry (entry.id)}
         {#if entry.kind === 'category'}
@@ -187,24 +187,24 @@
 </div>
 
 <style>
-  .w7-propgrid {
+  .xp-propgrid {
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
     min-height: 0;
-    background: var(--w7-face);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-face);
+    border: 1px solid var(--xp-list-border);
   }
-  .w7-propgrid :global(.pgtools) {
+  .xp-propgrid :global(.pgtools) {
     height: 30px;
-    border-bottom-color: var(--w7-border-light);
+    border-bottom-color: var(--xp-border-light);
   }
   .grid {
     flex: 1;
     min-height: 0;
-    background: var(--w7-window);
-    border-top: 1px solid var(--w7-border-light);
+    background: var(--xp-window);
+    border-top: 1px solid var(--xp-border-light);
     outline: none;
   }
   .content {
@@ -217,13 +217,13 @@
     gap: 3px;
     height: 21px;
     padding-left: 3px;
-    background: var(--w7-face);
+    background: var(--xp-face);
     border-bottom: 1px solid #ededed;
     font-weight: 700;
     cursor: default;
   }
   .cat.selected {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .box {
@@ -245,8 +245,8 @@
     width: 4px;
     display: flex;
   }
-  .divider :global(.w7-splitter),
-  .divider :global(.w7-splitter:not(:hover)::before) {
+  .divider :global(.xp-splitter),
+  .divider :global(.xp-splitter:not(:hover)::before) {
     background: transparent !important;
   }
   .desc {
@@ -254,16 +254,16 @@
     height: 54px;
     padding: 4px 6px;
     overflow: hidden;
-    background: var(--w7-face);
-    border-top: 1px solid var(--w7-border-light);
+    background: var(--xp-face);
+    border-top: 1px solid var(--xp-border-light);
   }
   .dtitle {
     font-weight: 700;
   }
   .dtext {
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
-  .w7-propgrid :global(.pgr.selected .editor) {
-    background: var(--w7-window);
+  .xp-propgrid :global(.pgr.selected .editor) {
+    background: var(--xp-window);
   }
 </style>

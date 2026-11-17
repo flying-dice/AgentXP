@@ -10,16 +10,16 @@ import { parseThumbnailUrl, thumbnailUrl, THUMBNAIL_WIDTH } from './thumbnailUrl
 describe('thumbnailUrl', () => {
   it('round-trips the desktop id and carries the version', () => {
     const url = thumbnailUrl(7, 1234.9)
-    expect(url).toBe('agent7-thumb://desktop/7.png?v=1234')
+    expect(url).toBe('agentxp-thumb://desktop/7.png?v=1234')
     expect(parseThumbnailUrl(url)).toBe(7)
-    expect(parseThumbnailUrl('agent7-thumb://desktop/12.png')).toBe(12)
+    expect(parseThumbnailUrl('agentxp-thumb://desktop/12.png')).toBe(12)
   })
 
   it('rejects other URLs', () => {
     expect(parseThumbnailUrl('https://desktop/7.png')).toBeNull()
-    expect(parseThumbnailUrl('agent7-thumb://other/7.png')).toBeNull()
-    expect(parseThumbnailUrl('agent7-thumb://desktop/..%2f7.png')).toBeNull()
-    expect(parseThumbnailUrl('agent7-thumb://desktop/x.png')).toBeNull()
+    expect(parseThumbnailUrl('agentxp-thumb://other/7.png')).toBeNull()
+    expect(parseThumbnailUrl('agentxp-thumb://desktop/..%2f7.png')).toBeNull()
+    expect(parseThumbnailUrl('agentxp-thumb://desktop/x.png')).toBeNull()
   })
 })
 
@@ -62,7 +62,7 @@ describe('ThumbnailService', () => {
     expect(capturer.capturePng).toHaveBeenCalledWith(1, THUMBNAIL_WIDTH)
     expect(writes).toHaveLength(1)
     expect(updated).toHaveBeenCalledWith(1)
-    expect(service.urlOf(1)).toBe('agent7-thumb://desktop/1.png?v=1000')
+    expect(service.urlOf(1)).toBe('agentxp-thumb://desktop/1.png?v=1000')
   })
 
   it('keeps the old thumbnail when there is no window, an empty image or the capture throws', async () => {

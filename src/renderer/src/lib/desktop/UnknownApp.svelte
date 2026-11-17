@@ -13,11 +13,11 @@
   .unknown {
     flex: 1;
     padding: 16px;
-    background: var(--w7-window);
-    color: var(--w7-text);
+    background: var(--xp-window);
+    color: var(--xp-text);
   }
   p {
     margin: 6px 0 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

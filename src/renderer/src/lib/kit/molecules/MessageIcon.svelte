@@ -14,7 +14,7 @@
 </script>
 
 <svg
-  class="w7-message-icon {className}"
+  class="xp-message-icon {className}"
   width={size}
   height={size}
   viewBox="0 0 32 32"
@@ -59,7 +59,7 @@
 </svg>
 
 <style>
-  .w7-message-icon {
+  .xp-message-icon {
     display: inline-block;
     flex: none;
   }

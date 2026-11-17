@@ -92,7 +92,7 @@
     height: 100vh;
     padding: 24px;
     box-sizing: border-box;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
     color: #fff;
   }
   .hint {

@@ -1,6 +1,6 @@
-# Keyboard: Use Agent7 Without a Mouse
+# Keyboard: Use AgentXP Without a Mouse
 
-This topic lists the keys that move you around the desktop, the windows, and the menus. You can do every task in Agent7 with the keyboard.
+This topic lists the keys that move you around the desktop, the windows, and the menus. You can do every task in AgentXP with the keyboard.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ The desktop has a few parts: the desktop icons, the active window, the Workspace
 - **Ctrl+Esc** – Opens or closes the Start menu. Use the Up and Down arrow keys and Enter inside it.
 - **Ctrl+N** – Starts a new chat on the default drive. It works on the desktop and in Code, Explorer, and Chat. In Notepad, WordPad, and Paint it keeps its own meaning, New.
 - **Ctrl+Alt+Tab** – Switches to the next window on the desktop. Press Ctrl+Alt+Shift+Tab to go back.
-- **Alt+Tab** – Does the same when your computer passes the key to Agent7. If nothing happens, use Ctrl+Alt+Tab.
+- **Alt+Tab** – Does the same when your computer passes the key to AgentXP. If nothing happens, use Ctrl+Alt+Tab.
 - **Arrow keys** – Move between desktop icons or taskbar buttons.
 - **Enter or Space** – Opens the selected icon or button.
 

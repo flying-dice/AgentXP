@@ -21,15 +21,15 @@
       },
       "steps": [
         { "type": "message", "text": "Looking at the changes.\n" },
-        { "type": "mcpCall", "server": "agent7", "tool": "review_open", "saveAs": "opened", "arguments": {} },
+        { "type": "mcpCall", "server": "agentxp", "tool": "review_open", "saveAs": "opened", "arguments": {} },
         { "type": "expect", "from": "opened.isError", "equals": "false" },
-        { "type": "mcpCall", "server": "agent7", "tool": "review_list_changes", "saveAs": "list", "arguments": {} },
+        { "type": "mcpCall", "server": "agentxp", "tool": "review_list_changes", "saveAs": "list", "arguments": {} },
         { "type": "expect", "from": "list.isError", "equals": "false" },
-        { "type": "mcpCall", "server": "agent7", "tool": "review_read_diff", "saveAs": "diff", "arguments": { "path": "notes.txt" } },
+        { "type": "mcpCall", "server": "agentxp", "tool": "review_read_diff", "saveAs": "diff", "arguments": { "path": "notes.txt" } },
         { "type": "expect", "from": "diff.isError", "equals": "false" },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_add_comment",
           "saveAs": "first",
           "arguments": { "path": "notes.txt", "line": 1, "severity": "minor", "body": "A stray zero line was added at the top. Is it needed?" }
@@ -37,7 +37,7 @@
         { "type": "expect", "from": "first.isError", "equals": "false" },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_add_comment",
           "saveAs": "second",
           "arguments": { "path": "notes.txt", "line": 4, "severity": "blocker", "body": "THREE is shouted in capitals; this breaks the naming of the other lines." }
@@ -45,7 +45,7 @@
         { "type": "expect", "from": "second.isError", "equals": "false" },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_submit",
           "saveAs": "verdict",
           "arguments": { "verdict": "request_changes", "body": "Two remarks, one of them a blocker." }

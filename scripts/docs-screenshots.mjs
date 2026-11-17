@@ -34,7 +34,7 @@ async function main() {
 
   const userData = await mkdtemp(join(tmpdir(), 'a7-docs-data-'))
   // A short, tidy host path: the chat shows real paths of the host.
-  const parent = join(tmpdir(), 'agent7-docs')
+  const parent = join(tmpdir(), 'agentxp-docs')
   await rm(parent, { recursive: true, force: true })
   const workspace = join(parent, 'projects', 'claude-code-win')
   for (const [relative, text] of Object.entries(sampleFiles)) {
@@ -47,7 +47,7 @@ async function main() {
     executablePath: require('electron'),
     args: [join(root, 'out/main/index.js'), '--no-sandbox'],
     cwd: root,
-    env: { ...process.env, AGENT7_USER_DATA: userData }
+    env: { ...process.env, AGENTXP_USER_DATA: userData }
   })
   app.context().setDefaultTimeout(30_000)
   const written = []
@@ -90,7 +90,7 @@ async function main() {
   }
   const pause = (ms) => new Promise((r) => setTimeout(r, ms))
   const ready = async (page) => {
-    await page.waitForFunction(() => Boolean(window.agent7))
+    await page.waitForFunction(() => Boolean(window.agentxp))
     return page
   }
 
@@ -108,7 +108,7 @@ async function main() {
     // ---- setup: the built-in Scripted Agent runs the documentation script ------------------------------------
     const setup = await launcher.evaluate(
       async ({ workspace, script }) => {
-        const api = window.agent7
+        const api = window.agentxp
         const agents = await api.agents.list()
         const scripted = agents.find((a) => a.name === 'Scripted Agent')
         if (!scripted) throw new Error('the built-in Scripted Agent is missing')
@@ -135,15 +135,15 @@ async function main() {
     await dialog.getByTestId('dialog-button-ok').click()
     const row = launcher.getByTestId('launcher-desktop-row').filter({ has: launcher.getByTestId('launcher-desktop-name').filter({ hasText: 'Fix login redirect' }) })
     await row.waitFor()
-    const desktopId = await launcher.evaluate(async () => (await window.agent7.launcher.list()).find((d) => d.title === 'Fix login redirect').id)
+    const desktopId = await launcher.evaluate(async () => (await window.agentxp.launcher.list()).find((d) => d.title === 'Fix login redirect').id)
 
     // Give the two other desktops a thumbnail: connect, wait, disconnect.
     for (const id of setup.other) {
-      await launcher.evaluate((i) => window.agent7.launcher.connect(i), id)
+      await launcher.evaluate((i) => window.agentxp.launcher.connect(i), id)
       const w = await desktopWindow(id)
       await w.getByTestId('taskbar').waitFor()
       await pause(1200)
-      await launcher.evaluate((i) => window.agent7.launcher.disconnect(i), id)
+      await launcher.evaluate((i) => window.agentxp.launcher.disconnect(i), id)
       await pause(800)
     }
 
@@ -156,7 +156,7 @@ async function main() {
     const api = (fn, arg) => page.evaluate(fn, arg)
     // Shell commands that run chats without prompts for read/terminal (write stays on Ask).
     const defaultPolicy = await api(async () => {
-      const a = window.agent7
+      const a = window.agentxp
       const policy = await a.desktop.policy()
       await a.desktop.setPolicy({ ...policy, groups: { ...policy.groups, terminal: 'allow' } })
       return policy
@@ -165,7 +165,7 @@ async function main() {
     // ---- plug in the project: AutoPlay --------------------------------------------------------------------------
     console.log('usb')
     await api(async ({ desktopId, folderId }) => {
-      await window.agent7.drives.plugIn(desktopId, folderId)
+      await window.agentxp.drives.plugIn(desktopId, folderId)
     }, { desktopId, folderId: setup.folderId })
     const autoplay = page.getByTestId('autoplay-dialog')
     await autoplay.waitFor()
@@ -177,16 +177,16 @@ async function main() {
 
     // ---- arrange the desktop -------------------------------------------------------------------------------------
     const windowId = async (app, nth = 0) => Number(await page.getByTestId(`window-${app}`).nth(nth).getAttribute('data-window-id'))
-    const place = async (app, bounds, nth = 0) => api(({ id, bounds }) => window.agent7.desktop.setBounds(id, bounds), { id: await windowId(app, nth), bounds })
+    const place = async (app, bounds, nth = 0) => api(({ id, bounds }) => window.agentxp.desktop.setBounds(id, bounds), { id: await windowId(app, nth), bounds })
     const open = async (app, extra = {}) => {
-      const state = await api(({ desktopId, app, extra }) => window.agent7.desktop.openWindow({ desktopId, app, ...extra }), { desktopId, app, extra })
+      const state = await api(({ desktopId, app, extra }) => window.agentxp.desktop.openWindow({ desktopId, app, ...extra }), { desktopId, app, extra })
       await page.getByTestId(`window-${app}`).last().waitFor()
       return state
     }
     await api(async () => {
-      const s = await window.agent7.desktop.current()
+      const s = await window.agentxp.desktop.current()
       const chat = s.windows.find((w) => w.app === 'chat')
-      await window.agent7.sessions.rename(chat.view.sessionId, 'Fix login redirect bug')
+      await window.agentxp.sessions.rename(chat.view.sessionId, 'Fix login redirect bug')
     })
     await place('chat', { x: 20, y: 64, width: 520, height: 640 })
     await open('explorer', { path: 'E:\\src\\auth' })
@@ -202,14 +202,14 @@ async function main() {
     const chat = page.getByTestId('window-chat').first()
     await say(chat, 'Fix the login redirect bug so that deep links survive sign-in')
     await page.getByTestId('topbar-status').filter({ hasText: 'Working: Search' }).waitFor({ timeout: 60_000 })
-    // The agent opened Sticky Notes and added its plan: park the note under the gadgets and minimize the app window.
-    await page.waitForFunction(async () => (await window.agent7.notes.list(window.agent7 && (await window.agent7.desktop.current()).desktopId)).length > 0)
+    // The agent opened Sticky Notes and added its plan: park the note under the taskpanes and minimize the app window.
+    await page.waitForFunction(async () => (await window.agentxp.notes.list(window.agentxp && (await window.agentxp.desktop.current()).desktopId)).length > 0)
     await api(async () => {
-      const state = await window.agent7.desktop.current()
-      const notes = await window.agent7.notes.list(state.desktopId)
-      await window.agent7.notes.update(notes[0].id, { bounds: { x: 1066, y: 440, width: 196, height: 190 } })
+      const state = await window.agentxp.desktop.current()
+      const notes = await window.agentxp.notes.list(state.desktopId)
+      await window.agentxp.notes.update(notes[0].id, { bounds: { x: 1066, y: 440, width: 196, height: 190 } })
       const app = state.windows.find((w) => w.app === 'sticky-notes')
-      if (app) await window.agent7.desktop.setWindowState(app.id, 'minimized')
+      if (app) await window.agentxp.desktop.setWindowState(app.id, 'minimized')
     })
     await pause(900)
     await pageShot('desktop', page)
@@ -239,17 +239,17 @@ async function main() {
     await chat.getByTestId('chat-transcript').and(page.locator('[data-running="false"]')).waitFor({ timeout: 60_000 })
     await pause(600)
 
-    await api((policy) => window.agent7.desktop.setPolicy(policy), defaultPolicy)
+    await api((policy) => window.agentxp.desktop.setPolicy(policy), defaultPolicy)
 
     // ---- a second chat: the form --------------------------------------------------------------------------------------
     console.log('a2ui')
-    await api(({ desktopId }) => window.agent7.desktop.newChat(desktopId), { desktopId })
+    await api(({ desktopId }) => window.agentxp.desktop.newChat(desktopId), { desktopId })
     const chat2 = page.getByTestId('window-chat').nth(1)
     await chat2.waitFor()
     await api(async () => {
-      const s = await window.agent7.desktop.current()
+      const s = await window.agentxp.desktop.current()
       const last = s.windows.filter((w) => w.app === 'chat').at(-1)
-      await window.agent7.sessions.rename(last.view.sessionId, 'Deploy the fix')
+      await window.agentxp.sessions.rename(last.view.sessionId, 'Deploy the fix')
     })
     await place('chat', { x: 20, y: 70, width: 520, height: 600 }, 1)
     await say(chat2, 'Show me a form for the deployment')
@@ -270,8 +270,8 @@ async function main() {
       height: Math.ceil(Math.max(chatBox.y + chatBox.height, formBox.y + formBox.height)) + 8 - Math.max(0, y0)
     })
     await api(async () => {
-      const s = await window.agent7.desktop.current()
-      await window.agent7.desktop.closeWindow(s.windows.find((w) => w.app === 'surface').id)
+      const s = await window.agentxp.desktop.current()
+      await window.agentxp.desktop.closeWindow(s.windows.find((w) => w.app === 'surface').id)
     })
 
     // ---- the same chat with a sidebar: the chat's extended surface ---------------------------------------------------
@@ -283,9 +283,9 @@ async function main() {
     await pause(800)
     await shot('a2ui-sidebar', chat2)
     await api(async () => {
-      const s = await window.agent7.desktop.current()
+      const s = await window.agentxp.desktop.current()
       const last = s.windows.filter((w) => w.app === 'chat').at(-1)
-      await window.agent7.a2ui.setSidebarHidden(last.view.sessionId, 'checklist', true)
+      await window.agentxp.a2ui.setSidebarHidden(last.view.sessionId, 'checklist', true)
     })
     await place('chat', { x: 300, y: 70, width: 520, height: 600 }, 1)
 
@@ -347,9 +347,9 @@ async function main() {
     await page.getByTestId('window-control-centre').getByTestId('window-close').click()
     await say(chat, 'Take another look at the sign-in handler')
     await page.getByTestId('action-center-flag').waitFor()
-    await page.waitForFunction(async () => (await window.agent7.launcher.list()).some((d) => d.runState === 'awaiting_approval'), undefined, { timeout: 60_000 })
+    await page.waitForFunction(async () => (await window.agentxp.launcher.list()).some((d) => d.runState === 'awaiting_approval'), undefined, { timeout: 60_000 })
     await pause(500)
-    await launcher.evaluate((i) => window.agent7.launcher.disconnect(i), desktopId)
+    await launcher.evaluate((i) => window.agentxp.launcher.disconnect(i), desktopId)
     await pause(1500)
     await launcher.bringToFront()
     await launcher.getByTestId('launcher-desktop-row').first().click()
@@ -360,7 +360,7 @@ async function main() {
 
     // ---- Start menu: needs a connected desktop with some recent chats --------------------------------------------------------------
     console.log('start menu')
-    await launcher.evaluate((i) => window.agent7.launcher.connect(i), desktopId)
+    await launcher.evaluate((i) => window.agentxp.launcher.connect(i), desktopId)
     const page2 = await desktopWindow(desktopId)
     await page2.getByTestId('taskbar').waitFor()
     await pause(1200)
@@ -372,8 +372,8 @@ async function main() {
     await pageClip('start-menu', page2, { x: 0, y: Math.floor(menu.y) - 6, width: Math.ceil(menu.x + menu.width) + 160, height: size.height - Math.floor(menu.y) + 6 })
   } catch (error) {
     // Keep a picture of every window, to see what the script was waiting for.
-    for (const [i, w] of app.windows().entries()) await w.screenshot({ path: join(tmpdir(), `agent7-docs-failure-${i}.png`) }).catch(() => undefined)
-    console.error(`failure screenshots: ${join(tmpdir(), 'agent7-docs-failure-*.png')}`)
+    for (const [i, w] of app.windows().entries()) await w.screenshot({ path: join(tmpdir(), `agentxp-docs-failure-${i}.png`) }).catch(() => undefined)
+    console.error(`failure screenshots: ${join(tmpdir(), 'agentxp-docs-failure-*.png')}`)
     throw error
   } finally {
     await app.close().catch(() => undefined)
@@ -381,7 +381,7 @@ async function main() {
     await rm(parent, { recursive: true, force: true })
   }
 
-  // Reduce the files: 256 colors keep a Windows 7 screenshot sharp and small.
+  // Reduce the files: 256 colors keep a Windows XP screenshot sharp and small.
   const py = spawnSync(
     'python3',
     [

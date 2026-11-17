@@ -140,7 +140,7 @@
     try {
       await host.api.sessions.cancel(Number(chat.id))
     } catch (e) {
-      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'Agent7 Task Manager', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'AgentXP Task Manager', buttons: 'OK', icon: 'error' })
     }
     await refresh()
   }
@@ -150,7 +150,7 @@
     if (!proc) return
     const answer = await showMessageBox({
       text: `End '${proc.agent}'? Its ${proc.chats} chat${proc.chats === 1 ? '' : 's'} will stop and work in progress is lost. The chats and their messages stay.`,
-      caption: 'Agent7 Task Manager',
+      caption: 'AgentXP Task Manager',
       buttons: 'YesNo',
       icon: 'warning'
     })
@@ -158,7 +158,7 @@
     try {
       await host.api.processes.end(proc.agentId, proc.desktopId)
     } catch (e) {
-      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'Agent7 Task Manager', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: e instanceof Error ? e.message : String(e), caption: 'AgentXP Task Manager', buttons: 'OK', icon: 'error' })
     }
     await refresh()
   }
@@ -242,7 +242,7 @@
 <div class="am" data-testid="agent-manager-app" {onkeydown} oncontextmenu={(e) => ctx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Task Manager menu" />
   <div class="tabs">
-    <TabControl {tabs} bind:selected={tab} aria-label="Agent7 Task Manager">
+    <TabControl {tabs} bind:selected={tab} aria-label="AgentXP Task Manager">
       {#snippet panel(t)}
         <div class="page">
           {#if t.id === 'processes'}
@@ -269,7 +269,7 @@
               <ListView columns={terminalColumns} rows={termRows} aria-label="Terminals" emptyText="No chat has opened a terminal yet." />
             </div>
           {:else}
-            <div class="perf w7-scroll" aria-label="Context use per chat">
+            <div class="perf xp-scroll" aria-label="Context use per chat">
               <div class="caption">Context window use</div>
               {#each sessions as s (s.id)}
                 {@const row = chats.find((c) => c.id === String(s.id))!}
@@ -305,7 +305,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .tabs {
     flex: 1;
@@ -330,8 +330,8 @@
     display: flex;
     flex-direction: column;
   }
-  .grid :global(.w7-listview),
-  .grid :global(.w7-grid) {
+  .grid :global(.xp-listview),
+  .grid :global(.xp-grid) {
     flex: 1;
     min-height: 0;
   }
@@ -340,7 +340,7 @@
     left: 8px;
     right: 8px;
     top: 34px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .empty.static {
     position: static;
@@ -348,7 +348,7 @@
   .hint {
     flex: none;
     margin: 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .buttons {
     flex: none;
@@ -357,7 +357,7 @@
     justify-content: flex-end;
     gap: 10px;
   }
-  .buttons :global(.w7-reason) {
+  .buttons :global(.xp-reason) {
     flex: 1;
     min-width: 0;
     order: -1;
@@ -366,8 +366,8 @@
     flex: 1;
     min-height: 0;
     padding: 6px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .caption {
     margin-bottom: 8px;
@@ -392,7 +392,7 @@
     text-align: right;
   }
   .tokens {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     text-align: right;
   }
 </style>

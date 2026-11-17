@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** A Win7 notification-area balloon: pale yellow, rounded, with a tail pointing down at the tray. */
+  /** A WinXP notification-area balloon: pale yellow, rounded, with a tail pointing down at the tray. */
   import Icon from '../kit/atoms/Icon.svelte'
   import type { IconName } from '../kit/atoms/icons'
 
@@ -42,7 +42,7 @@
     background: linear-gradient(#fffff0, #ffffe1);
     box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.35);
     color: #000;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
   .balloon::before,
   .balloon::after {
@@ -89,7 +89,7 @@
     display: block;
     margin: 8px 0 0 22px;
     padding: 2px 10px;
-    font: var(--w7-font);
+    font: var(--xp-font);
     cursor: default;
   }
   p {

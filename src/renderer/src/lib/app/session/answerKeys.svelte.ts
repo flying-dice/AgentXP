@@ -1,6 +1,6 @@
 /** Keyboard behaviour both permission dialogs share: Alt shows the access keys, Left and Right move between the answers. */
 
-/** True while Alt is held (the dialogs underline the access keys then, like a Windows 7 dialog box). */
+/** True while Alt is held (the dialogs underline the access keys then, like a Windows XP dialog box). */
 export class AltHeld {
   held = $state(false)
 

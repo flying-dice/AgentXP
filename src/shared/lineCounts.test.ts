@@ -25,8 +25,8 @@ describe('changeCounts', () => {
   })
   it('names the file, and says why when another program holds it', () => {
     const counts = changeCounts(null, 'x\n')
-    expect(changeCountsText(counts, { path: 'E:\\src\\auth\\redirect.ts', error: 'in_use' })).toBe('Agent7 cannot read E:\\src\\auth\\redirect.ts: it is in use.')
-    expect(changeCountsText(counts, { path: 'E:\\a.ts', error: 'unreadable' })).toBe('Agent7 cannot read E:\\a.ts, so it cannot show what changes.')
+    expect(changeCountsText(counts, { path: 'E:\\src\\auth\\redirect.ts', error: 'in_use' })).toBe('AgentXP cannot read E:\\src\\auth\\redirect.ts: it is in use.')
+    expect(changeCountsText(counts, { path: 'E:\\a.ts', error: 'unreadable' })).toBe('AgentXP cannot read E:\\a.ts, so it cannot show what changes.')
     expect(changeCountsText(counts, { path: 'E:\\a.ts' })).not.toMatch(/could not read/)
   })
   it('uses the singular for one line', () => {

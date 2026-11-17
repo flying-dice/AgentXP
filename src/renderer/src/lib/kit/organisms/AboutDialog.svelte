@@ -43,7 +43,7 @@
     display: flex;
     gap: 14px;
     padding: 14px 16px 6px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .name {
     font-size: 16px;

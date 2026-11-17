@@ -1,17 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Page } from 'playwright'
-import { addProject, createWorkspace, launchAgent7, LauncherPage, registerAgent, registerFakeAgent, see, type Agent7Instance, type Workspace } from './fixtures'
+import { addProject, createWorkspace, launchAgentXP, LauncherPage, registerAgent, registerFakeAgent, see, type AgentXPInstance, type Workspace } from './fixtures'
 
 /** UX-54 (a taken desktop name gets a suggestion that fits) and UX-58 (a start error on the row, what you can do). */
 describe('launcher: empty text, name suggestions and a start error on the row', () => {
-  let app: Agent7Instance
+  let app: AgentXPInstance
   let page: Page
   let launcher: LauncherPage
   let workspace: Workspace
 
   beforeAll(async () => {
     workspace = await createWorkspace({ 'README.md': '# Docs\n' })
-    app = await launchAgent7()
+    app = await launchAgentXP()
     page = await app.launcherWindow()
     launcher = new LauncherPage(page)
     await registerFakeAgent(page)
@@ -74,13 +74,13 @@ describe('launcher: empty text, name suggestions and a start error on the row', 
   })
 
   it('a desktop whose agent program is missing shows "Agent problem" on its row', async () => {
-    await registerAgent(page, { name: 'Missing agent', command: 'agent7-test-no-such-program', args: [], env: {} })
+    await registerAgent(page, { name: 'Missing agent', command: 'agentxp-test-no-such-program', args: [], env: {} })
     // The New desktop dialog reads the agents when the launcher opens, so open it again to see the new default agent.
     await page.reload()
     await launcher.createDesktop('Docs site')
     // No reload: the launcher looks for the program again when a desktop is created (UX-87).
     const state = launcher.row('Docs site').getByTestId('launcher-desktop-state')
-    await see.text(state, "Agent problem: The program 'agent7-test-no-such-program' was not found.")
+    await see.text(state, "Agent problem: The program 'agentxp-test-no-such-program' was not found.")
     await see.attribute(state, 'data-state', 'error')
     await see.attribute(state, 'title', 'Open the desktop, then Control Center > Agents, to change the command.')
   })

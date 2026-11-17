@@ -70,11 +70,11 @@ describe('skills and MCP servers reach the agent', () => {
 
     await app.api.sessions.prompt({ sessionId: session.id, text: 'hello', attachments: [] })
     const blocks = connector.connections[0].prompts[0]
-    expect(blocks[0]).toMatchObject({ kind: 'resource', uri: 'agent7://briefing' })
+    expect(blocks[0]).toMatchObject({ kind: 'resource', uri: 'agentxp://briefing' })
     expect(blocks[0].kind === 'resource' && blocks[0].text).toContain('tidy: Keep the code tidy')
     // The briefing is plumbing: the transcript the user sees has only what they typed.
     await app.api.sessions.prompt({ sessionId: session.id, text: 'again', attachments: [] })
-    expect(connector.connections[0].prompts[1].some((b) => b.kind === 'resource' && b.uri === 'agent7://briefing')).toBe(false)
+    expect(connector.connections[0].prompts[1].some((b) => b.kind === 'resource' && b.uri === 'agentxp://briefing')).toBe(false)
   })
 })
 
@@ -95,7 +95,7 @@ describe('a team room', () => {
     const state = (await app.api.rooms.state(room.id)) as RoomStateDto
     expect(state.members.map((m) => m.name)).toEqual(['Planner', 'Coder'])
     const prompt = connector.connections[0].prompts[0]
-    expect(prompt[0]).toMatchObject({ kind: 'resource', uri: 'agent7://briefing' })
+    expect(prompt[0]).toMatchObject({ kind: 'resource', uri: 'agentxp://briefing' })
     const briefing = prompt[0].kind === 'resource' ? (prompt[0].text ?? '') : ''
     expect(briefing).toContain('You are Coder')
     expect(briefing).toContain('Be brief.')

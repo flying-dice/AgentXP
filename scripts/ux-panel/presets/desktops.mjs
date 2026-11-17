@@ -13,7 +13,7 @@ export const presets = {
       await ctx.sendPrompt(ideas.id, chat.sessionId, 'hello')
       await ctx.waitAgentMessages(chat.sessionId, 1)
       await ctx.waitIdle(chat.sessionId)
-      await ctx.eval((id) => window.agent7.launcher.disconnect(id), ideas.id)
+      await ctx.eval((id) => window.agentxp.launcher.disconnect(id), ideas.id)
       await ctx.waitFor(async () => !(await ctx.desktopState(ideas.id)), 'the desktop window closed')
       ctx.state.sessionId = chat.sessionId
     }
@@ -28,18 +28,18 @@ export const presets = {
     const { desktop } = await projectDesktop(ctx, { title: 'Fix login redirect', script: 'fix-redirect' })
     await chatWithPendingRequest(ctx, desktop.id, PROMPT_FIX)
     await ctx.dismissDialogs(desktop.id)
-    await ctx.eval((id) => window.agent7.launcher.disconnect(id), desktop.id)
+    await ctx.eval((id) => window.agentxp.launcher.disconnect(id), desktop.id)
     await ctx.waitFor(async () => !(await ctx.desktopState(desktop.id)), 'the desktop window closed')
 
     const demo = ctx.agents.values().next().value
-    const bad = await ctx.eval(() => window.agent7.agents.create({ name: 'Broken assistant', command: 'not-a-real-command', args: [], env: {} }).then((a) => a.id))
+    const bad = await ctx.eval(() => window.agentxp.agents.create({ name: 'Broken assistant', command: 'not-a-real-command', args: [], env: {} }).then((a) => a.id))
     const broken = await ctx.createDesktop({ title: 'Docs site', projects: [ctx.fixtures.docsSite], connect: false, agentId: bad })
-    await ctx.eval(({ id, agent }) => window.agent7.sessions.create(id, agent).catch(() => null), { id: broken.id, agent: bad })
+    await ctx.eval(({ id, agent }) => window.agentxp.sessions.create(id, agent).catch(() => null), { id: broken.id, agent: bad })
     await ctx.createDesktop({ title: 'Try new ideas', connect: false, agentId: demo.id })
     await ctx.createDesktop({ title: 'Scratch pad', connect: false, agentId: demo.id })
     // H-51: all desktops exist now; check the agents of every row and wait until the broken one shows its problem, so the
     // launcher does not read "Idle" for it for the first 30 s (the check ran at mount, before the row existed).
-    await ctx.eval(() => window.agent7.launcher.checkAgents())
+    await ctx.eval(() => window.agentxp.launcher.checkAgents())
     await ctx.waitFor(async () => Boolean((await ctx.launcherList()).find((d) => d.id === broken.id)?.agentProblem), 'the agent problem on the Docs site row')
     // H-73: the launcher preselects the row that waits for approval, which answers the task for the panelist. Select the
     // "Scratch pad" row (an idle one) so that the panelist has to read the rows to find the waiting desktop.
@@ -57,18 +57,18 @@ export const presets = {
    */
   async 'bad-default-agent'(ctx) {
     const bad = await ctx.eval(async () => {
-      const a = await window.agent7.agents.create({ name: 'My assistant', command: 'not-a-real-command', args: [], env: {} })
-      await window.agent7.agents.setDefault(a.id)
+      const a = await window.agentxp.agents.create({ name: 'My assistant', command: 'not-a-real-command', args: [], env: {} })
+      await window.agentxp.agents.setDefault(a.id)
       return a.id
     })
     const helper = await ctx.useScript('demo', { makeDefault: false, name: 'Helper assistant' })
     // H-107: the built-in Claude Code row starts with `npx`, which is not installed here, so it looked usable and failed. Remove it:
     // every row that is left either fails for the stated reason or answers.
     await ctx.eval(async () => {
-      for (const a of await window.agent7.agents.list()) if (a.name === 'Claude Code') await window.agent7.agents.remove(a.id)
+      for (const a of await window.agentxp.agents.list()) if (a.name === 'Claude Code') await window.agentxp.agents.remove(a.id)
     })
     const d = await ctx.createDesktop({ title: 'Fix login redirect', projects: [ctx.fixtures.loginApp], agentId: bad })
-    const attempt = await ctx.eval(({ id, bad }) => window.agent7.desktop.newChat(id, bad).then(() => 'chat opened', (e) => String(e?.message ?? e)), { id: d.id, bad }).catch((e) => String(e))
+    const attempt = await ctx.eval(({ id, bad }) => window.agentxp.desktop.newChat(id, bad).then(() => 'chat opened', (e) => String(e?.message ?? e)), { id: d.id, bad }).catch((e) => String(e))
     await ctx.answerFolderPicker(ctx.fixtures.docsSite)
     Object.assign(ctx.state, { desktopId: d.id, badAgentId: bad, helperAgentId: helper.id, attempt, appPid: ctx.app.process().pid })
     ctx.saveState()

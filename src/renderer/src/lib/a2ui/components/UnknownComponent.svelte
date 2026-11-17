@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** Win7-style placeholder for a component the renderer has no wrapper for. */
+  /** WinXP-style placeholder for a component the renderer has no wrapper for. */
   let { name, reason = 'not available in this renderer' }: { name: string; reason?: string } = $props()
 </script>
 
@@ -20,7 +20,7 @@
     padding: 3px 8px 3px 5px;
     border: 1px solid #c9b46a;
     background: linear-gradient(#fffbe8, #f6edc4);
-    color: var(--w7-text);
-    font: var(--w7-font);
+    color: var(--xp-text);
+    font: var(--xp-font);
   }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** One sticky note: a Win7 sticky on the desktop. Presentational; the layer owns the data. */
+  /** One sticky note: a WinXP sticky on the desktop. Presentational; the layer owns the data. */
   import { untrack } from 'svelte'
   import type { Bounds, StickyColor, StickyNoteDto } from '@shared/desktop'
   import type { TaskDto } from '@shared/models'
@@ -98,12 +98,12 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -- the title bar is a pointer-only drag handle; the note has its own keyboard-reachable buttons -->
   <header class="bar" onpointerdown={(e) => down('move', e)} onpointermove={move} onpointerup={up} onpointercancel={up}>
     <button type="button" class="btn" data-testid="notes-sticky-add" title="New note" aria-label="New note" onpointerdown={(e) => e.stopPropagation()} onclick={onadd}>+</button>
-    {#if note.author === 'agent'}<span class="by" title="Written by the agent">Agent7</span>{/if}
+    {#if note.author === 'agent'}<span class="by" title="Written by the agent">AgentXP</span>{/if}
     <span class="spring"></span>
     <button type="button" class="btn" data-testid="notes-sticky-delete" title="Delete note" aria-label="Delete note" onpointerdown={(e) => e.stopPropagation()} onclick={onremove}>×</button>
   </header>
   {#if isPlan}
-    <div class="plan w7-scroll" role="list" aria-label="Tasks">
+    <div class="plan xp-scroll" role="list" aria-label="Tasks">
       <div class="head">{chatTitle ?? 'Plan'}</div>
       {#each items as item (item.id)}
         <div class="item" role="listitem" class:done={item.done} class:active={item.active}>
@@ -116,7 +116,7 @@
     </div>
   {:else}
     <textarea
-      class="text w7-scroll"
+      class="text xp-scroll"
       data-testid="notes-sticky-text"
       bind:value={draft}
       aria-label="Note text"

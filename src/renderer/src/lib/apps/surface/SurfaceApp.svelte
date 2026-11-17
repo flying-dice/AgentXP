@@ -20,7 +20,7 @@
   const surface = $derived(store?.activities.get(surfaceId))
 </script>
 
-<div class="surface-app w7-scroll" data-testid="surface-app" data-surface-id={surfaceId}>
+<div class="surface-app xp-scroll" data-testid="surface-app" data-surface-id={surfaceId}>
   {#if surface}
     <A2uiSurface messages={surface.messages} {sessionId} busy={store?.running} reply={lastReply(store?.messages ?? [])} onaction={(event) => void store?.sendA2uiAction(event)} />
   {:else}
@@ -34,9 +34,9 @@
     min-height: 0;
     overflow: auto;
     padding: 8px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .blank {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

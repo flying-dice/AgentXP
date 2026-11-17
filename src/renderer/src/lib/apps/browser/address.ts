@@ -27,4 +27,4 @@ export const isSecure = (url: string): boolean => url.startsWith('https://')
 
 /** True when running inside Electron, where the real `<webview>` is available. */
 export const inElectron = (): boolean =>
-  typeof window !== 'undefined' && 'agent7' in window && typeof navigator !== 'undefined' && navigator.userAgent.includes('Electron')
+  typeof window !== 'undefined' && 'agentxp' in window && typeof navigator !== 'undefined' && navigator.userAgent.includes('Electron')

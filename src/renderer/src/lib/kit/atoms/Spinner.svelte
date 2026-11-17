@@ -1,75 +1,68 @@
 <script lang="ts">
   type Props = {
-    variant?: 'ring' | 'aero'
+    /** `blocks`: three green blocks marching along (the XP progress marquee). `hourglass`: the XP busy hourglass. */
+    variant?: 'blocks' | 'hourglass'
     size?: number
     label?: string
     class?: string
   }
-  let { variant = 'ring', size = 14, label = 'Working', class: className = '' }: Props = $props()
-  const dots = Array.from({ length: 8 }, (_, i) => i)
+  let { variant = 'blocks', size = 14, label = 'Working', class: className = '' }: Props = $props()
 </script>
 
-{#if variant === 'ring'}
-  <span
-    role="status"
-    aria-label={label}
-    class="ring {className}"
-    style="width:{size}px;height:{size}px"
-  ></span>
+{#if variant === 'blocks'}
+  <span role="status" aria-label={label} class="blocks {className}" style="--s:{size}px">
+    <i></i><i></i><i></i>
+  </span>
 {:else}
-  <svg
-    role="status"
-    aria-label={label}
-    class="aero {className}"
-    width={size}
-    height={size}
-    viewBox="-16 -16 32 32"
-  >
-    {#each dots as i (i)}
-      <circle
-        r={3 + (i / 7) * 1.5}
-        cx="0"
-        cy="-11"
-        transform="rotate({i * 45})"
-        style="animation-delay:{-0.96 + i * 0.12}s"
-      />
-    {/each}
+  <svg role="status" aria-label={label} class="glass {className}" width={size} height={size} viewBox="0 0 16 16">
+    <path d="M3 1.5h10M3 14.5h10" stroke="#5a5a5a" stroke-width="1.6" />
+    <path d="M4 2l8 0c0 3-2.500 4.500-4 6 -1.500-1.500-4-3-4-6z" fill="#cfe1ff" stroke="#003c74" stroke-linejoin="round" />
+    <path d="M4 14l8 0c0-3-2.500-4.500-4-6 -1.500 1.500-4 3-4 6z" fill="#cfe1ff" stroke="#003c74" stroke-linejoin="round" />
+    <path d="M5.500 12.800h5L8 10z" fill="#d8a020" />
   </svg>
 {/if}
 
 <style>
-  .ring {
-    display: inline-block;
-    border-radius: 50%;
-    border: 2px solid #b9d3ee;
-    border-top-color: #2a6ebb;
-    box-sizing: border-box;
-    animation: spin 0.8s linear infinite;
-  }
-  .aero {
-    display: inline-block;
+  .blocks {
+    display: inline-flex;
+    gap: 1px;
     vertical-align: middle;
+    height: calc(var(--s) * 0.6);
+    width: calc(var(--s) * 1.6);
+    padding: 1px;
+    box-sizing: border-box;
+    border: 1px solid #686868;
+    background: #fff;
+    overflow: hidden;
   }
-  .aero circle {
-    fill: #2f7fd8;
-    stroke: #fff;
-    stroke-width: 0.8;
-    opacity: 0.25;
-    animation: aero 0.96s linear infinite;
+  .blocks i {
+    flex: none;
+    width: calc(var(--s) * 0.38);
+    background: #37c037;
+    animation: march 1.2s linear infinite;
   }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  .blocks i:nth-child(2) {
+    animation-delay: 0.1s;
   }
-  @keyframes aero {
+  .blocks i:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  @keyframes march {
     0% {
-      opacity: 1;
-      fill: #8fd0ff;
+      transform: translateX(calc(var(--s) * -1.4));
     }
     100% {
-      opacity: 0.2;
-      fill: #2f7fd8;
+      transform: translateX(calc(var(--s) * 1.6));
+    }
+  }
+  .glass {
+    display: inline-block;
+    vertical-align: middle;
+    animation: flip 1.6s steps(1, end) infinite;
+  }
+  @keyframes flip {
+    50% {
+      transform: rotate(180deg);
     }
   }
 </style>

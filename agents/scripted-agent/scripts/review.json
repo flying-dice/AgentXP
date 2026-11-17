@@ -33,7 +33,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_add_comment",
           "saveAs": "first",
           "arguments": {
@@ -50,7 +50,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_add_comment",
           "saveAs": "second",
           "arguments": {
@@ -67,7 +67,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "review_submit",
           "saveAs": "verdict",
           "arguments": {

@@ -1,6 +1,6 @@
 /**
  * The typed contract between renderer and main. The preload script exposes
- * an object implementing `Agent7Api` as `window.agent7`. Every invoke
+ * an object implementing `AgentXPApi` as `window.agentxp`. Every invoke
  * method maps 1:1 to an `ipcMain.handle` channel named after the key path
  * (e.g. `sessions.create`); every event maps to a `webContents.send` channel.
  */
@@ -74,7 +74,7 @@ export interface WindowApi {
   onStateChanged(listener: (state: WindowStateDto) => void): () => void
 }
 
-export interface Agent7Api {
+export interface AgentXPApi {
   agents: {
     list(): Promise<AgentDto[]>
     create(input: AgentInput): Promise<AgentDto>
@@ -86,7 +86,7 @@ export interface Agent7Api {
   }
   folders: {
     list(): Promise<FolderDto[]>
-    /** Shows the native folder dialog (only with `AGENT7_NATIVE_PICKER=1`; the app uses `fs.browse`); returns null when cancelled. */
+    /** Shows the native folder dialog (only with `AGENTXP_NATIVE_PICKER=1`; the app uses `fs.browse`); returns null when cancelled. */
     pick(): Promise<FolderDto | null>
     add(path: string): Promise<FolderDto>
     remove(id: Id): Promise<void>
@@ -144,7 +144,7 @@ export interface Agent7Api {
     browse(path: string): Promise<BrowseListingDto>
     /** Creates a folder below `parent` (named `name`, made unique) and resolves its path. */
     makeFolder(parent: string, name: string): Promise<string>
-    /** True when the native folder dialog replaces the in-app Browse For Folder dialog (`AGENT7_NATIVE_PICKER=1`). */
+    /** True when the native folder dialog replaces the in-app Browse For Folder dialog (`AGENTXP_NATIVE_PICKER=1`). */
     nativePicker(): Promise<boolean>
   }
   dialogs: {
@@ -179,7 +179,7 @@ export interface Agent7Api {
   }
   window: WindowApi
   agui: AguiApi
-  on<K extends keyof Agent7Events>(event: K, listener: (payload: Agent7Events[K]) => void): () => void
+  on<K extends keyof AgentXPEvents>(event: K, listener: (payload: AgentXPEvents[K]) => void): () => void
 }
 
 /**
@@ -187,7 +187,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents {
+export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]
@@ -196,4 +196,4 @@ export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, 
   'transcript.cleared': { sessionId: Id }
 }
 
-export type Agent7EventName = keyof Agent7Events
+export type AgentXPEventName = keyof AgentXPEvents

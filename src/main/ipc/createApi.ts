@@ -64,7 +64,7 @@ export interface ApiServices {
 /** Calls that depend on the calling window are answered per window (see `registerDesktopHandlers`). */
 const perWindow = (channel: string) => (): Promise<never> => Promise.reject(new Error(`${channel} is answered per window`))
 
-/** Adapts the application services to the renderer-facing `Agent7Api` (minus `on`). */
+/** Adapts the application services to the renderer-facing `AgentXPApi` (minus `on`). */
 export function createApi(s: ApiServices): InvokeApi {
   return {
     agents: {

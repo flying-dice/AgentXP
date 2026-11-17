@@ -168,7 +168,7 @@
 
 <div
   bind:this={root}
-  class="w7-tree w7-scroll {className}"
+  class="xp-tree xp-scroll {className}"
   data-testid={testid}
   role="tree"
   tabindex="0"
@@ -218,13 +218,13 @@
 </div>
 
 <style>
-  .w7-tree {
+  .xp-tree {
     width: 100%;
     height: 100%;
     min-height: 0;
     padding: 3px 2px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
     outline: none;
   }
 </style>

@@ -1,5 +1,5 @@
 /**
- * A tiny stdio MCP server standing in for Agent7's `agent7` server in tests.
+ * A tiny stdio MCP server standing in for AgentXP's `agentxp` server in tests.
  * Tools: `echo` (returns its text), `refuse` (an error result saying the Terminal app is closed).
  */
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'

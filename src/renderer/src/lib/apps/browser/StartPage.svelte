@@ -12,7 +12,7 @@
     inset: 0;
     display: grid;
     place-items: center;
-    background: var(--w7-window);
+    background: var(--xp-window);
     color: #4a5a73;
     font-size: 15px;
   }

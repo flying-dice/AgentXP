@@ -43,7 +43,7 @@ export function createAppMenus(): MenuDef[] {
     },
     { label: 'S&ession', items: [{ label: '&Compact', icon: 'compact' }, { label: '&Stop', icon: 'stop', shortcut: 'Esc' }] },
     { label: '&Tools', items: [{ label: '&Options...', icon: 'options' }] },
-    { label: '&Help', items: [{ label: '&Contents', icon: 'help', shortcut: 'F1' }, { separator: true }, { label: '&About Agent7', icon: 'info' }] }
+    { label: '&Help', items: [{ label: '&Contents', icon: 'help', shortcut: 'F1' }, { separator: true }, { label: '&About AgentXP', icon: 'info' }] }
   ]
 }
 

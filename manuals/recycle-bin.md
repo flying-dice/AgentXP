@@ -21,7 +21,7 @@ This manual describes Recycle Bin. Recycle Bin keeps the changes that you revert
 
 ## 1 - What It Is For
 
-When you revert a change of the agent, Agent7 does not lose the text. It puts the change in the Recycle Bin. Use the Recycle Bin to bring the change back or to delete it for good. Only one window exists on a desktop.
+When you revert a change of the agent, AgentXP does not lose the text. It puts the change in the Recycle Bin. Use the Recycle Bin to bring the change back or to delete it for good. Only one window exists on a desktop.
 
 ## 2 - Open It
 
@@ -102,7 +102,7 @@ To delete all items for good, follow the steps below:
 1. Click **Empty the Recycle Bin**. A question appears.
 2. Click **Yes**.
 
-**Caution:** Do not click **Yes** if you want to keep the items. Agent7 cannot restore them after that.
+**Caution:** Do not click **Yes** if you want to keep the items. AgentXP cannot restore them after that.
 
 ## 6 - Troubleshooting
 

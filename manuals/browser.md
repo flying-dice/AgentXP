@@ -127,10 +127,10 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 To open a page, follow the steps below:
 
 1. Click the address box.
-2. Type a web address, for example `example.com`. Agent7 adds `https://`.
+2. Type a web address, for example `example.com`. AgentXP adds `https://`.
 3. Press Enter.
 
-To search, type words instead of an address. Agent7 searches with DuckDuckGo.
+To search, type words instead of an address. AgentXP searches with DuckDuckGo.
 
 To stop a page that loads, click **Stop**.
 
@@ -141,7 +141,7 @@ To open a second page, click **New tab**. Click a tab to show it. Click the x on
 The agent can use a web app such as a team chat, mail, or documents. Follow the steps below:
 
 1. Open the web app in Browser.
-2. Sign in yourself. Agent7 keeps you signed in. The agent never types a password.
+2. Sign in yourself. AgentXP keeps you signed in. The agent never types a password.
 3. Ask the agent to read or send messages.
 
 While the agent works, the Browser window comes to the front and a yellow bar shows "Agent is using this page". When the agent finished reading, the bar says "The agent read this page." and goes after 5 seconds. An orange frame shows the item the agent used. The bar sits above the page, so it covers no text of the page. It stays while the agent works, also when it only reads. When the chat has given its answer, it says "The agent stopped using this page." for 5 seconds and goes. It says what the agent does, for example "Typing into the message box". To use the page yourself, click **Take over**. The bar then says "You have the page. The agent waits. Click Give back to let it continue." and stays. The agent stops and asks before it uses the page again. Click **Give back** in the bar, or **Resume** on the top bar, to let the agent go on. You can also click **Pause all agents** on the top bar.
@@ -150,7 +150,7 @@ The chip **Browser** on the top bar and the part **Agent:** in the status bar of
 
 ### What the Agent Can Do
 
-The agent reads the whole page, also below the fold, in frames, and in shadow roots. It clicks, types (also in rich text boxes), presses keys such as Enter and Control+K, scrolls to load older items, waits for text, picks drop-down options, and manages tabs. Agent7 never gives the value of a password box to the agent.
+The agent reads the whole page, also below the fold, in frames, and in shadow roots. It clicks, types (also in rich text boxes), presses keys such as Enter and Control+K, scrolls to load older items, waits for text, picks drop-down options, and manages tabs. AgentXP never gives the value of a password box to the agent.
 
 | Tool | What it does |
 |---|---|

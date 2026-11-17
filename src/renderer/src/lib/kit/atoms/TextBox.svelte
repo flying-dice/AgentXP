@@ -26,7 +26,7 @@
 
 {#if multiline}
   <textarea
-    class="w7-textbox multiline {className}"
+    class="xp-textbox multiline {className}"
     bind:this={ref}
     bind:value
     {readonly}
@@ -35,7 +35,7 @@
   ></textarea>
 {:else}
   <input
-    class="w7-textbox {className}"
+    class="xp-textbox {className}"
     bind:this={ref}
     bind:value
     type={password ? 'password' : 'text'}
@@ -45,36 +45,36 @@
 {/if}
 
 <style>
-  .w7-textbox {
+  .xp-textbox {
     height: 21px;
     padding: 2px 3px;
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
+    border: 1px solid var(--xp-input-border);
+    border-top-color: var(--xp-input-border-top);
     border-radius: 0;
-    background: var(--w7-window);
-    color: var(--w7-text);
+    background: var(--xp-window);
+    color: var(--xp-text);
     font: inherit;
     outline: none;
     user-select: text;
     cursor: text;
   }
-  .w7-textbox:hover:not(:disabled) {
+  .xp-textbox:hover:not(:disabled) {
     border-color: #3d7bad;
     border-top-color: #3d7bad;
   }
-  .w7-textbox:focus {
+  .xp-textbox:focus {
     border-color: #569de5;
     border-top-color: #569de5;
   }
-  .w7-textbox:disabled {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
-    color: var(--w7-text-disabled);
+  .xp-textbox:disabled {
+    border-color: var(--xp-border-disabled);
+    background: #f4f2e8;
+    color: var(--xp-text-disabled);
   }
-  .w7-textbox:read-only:not(:disabled) {
-    background: var(--w7-face);
+  .xp-textbox:read-only:not(:disabled) {
+    background: var(--xp-face);
   }
-  .w7-textbox::placeholder {
+  .xp-textbox::placeholder {
     color: #8a8a8a;
   }
   .multiline {
@@ -88,15 +88,15 @@
     height: 17px;
   }
   .multiline::-webkit-scrollbar-track {
-    background: #f0f0f0;
+    background: #ece9d8;
     border-left: 1px solid #e2e2e2;
   }
   .multiline::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #f4f4f4, #dcdcdc 50%, #cfcfcf);
-    border: 1px solid #979797;
+    background: linear-gradient(90deg, #f4f2e8, #d6d0c5 50%, #d6d0c5);
+    border: 1px solid #aca899;
     border-radius: 2px;
   }
   .multiline::-webkit-scrollbar-corner {
-    background: #f0f0f0;
+    background: #ece9d8;
   }
 </style>

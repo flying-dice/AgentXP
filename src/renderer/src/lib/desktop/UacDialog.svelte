@@ -115,10 +115,10 @@
     max-height: calc(100% - 24px);
     overflow-y: auto;
     border: 1px solid #1c3a64;
-    background: var(--w7-face);
+    background: var(--xp-face);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), 0 12px 40px rgba(0, 0, 0, 0.7);
-    font: var(--w7-font);
-    color: var(--w7-text);
+    font: var(--xp-font);
+    color: var(--xp-text);
     outline: none;
   }
   .band {
@@ -126,11 +126,11 @@
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: var(--w7-uac-band);
+    background: var(--xp-uac-band);
     color: #fff;
   }
   .band.risky {
-    background: var(--w7-uac-band-warn);
+    background: var(--xp-uac-band-warn);
     color: #2b1d00;
   }
   h2 {
@@ -163,13 +163,13 @@
   }
   .queue {
     margin-bottom: 4px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 12px;
   }
   .hint {
     margin: 0;
     font-size: 12px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .bar {
     display: flex;
@@ -177,7 +177,7 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 12px 14px;
-    background: var(--w7-face);
+    background: var(--xp-face);
     border-top: 1px solid #dfdfdf;
   }
 </style>

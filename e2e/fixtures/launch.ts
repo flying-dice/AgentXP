@@ -16,7 +16,7 @@ export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../
 /** Default timeout of every Playwright wait (auto-waiting locators, `expect(...).toBeVisible()`). */
 export const WAIT_MS = 20_000
 
-export interface Agent7Instance {
+export interface AgentXPInstance {
   readonly app: ElectronApplication
   /** The user-data directory of this run. */
   readonly userData: string
@@ -35,21 +35,21 @@ export interface LaunchOptions {
   userData?: string
 }
 
-export async function launchAgent7(options: LaunchOptions = {}): Promise<Agent7Instance> {
+export async function launchAgentXP(options: LaunchOptions = {}): Promise<AgentXPInstance> {
   const ownsUserData = !options.userData
   const userData = options.userData ?? (await mkdtemp(join(tmpdir(), 'a7-e2e-data-')))
   const app = await electron.launch({
     executablePath: require('electron') as string,
     args: [join(projectRoot, 'out/main/index.js'), '--no-sandbox'],
     cwd: projectRoot,
-    env: { ...process.env, AGENT7_USER_DATA: userData } as Record<string, string>
+    env: { ...process.env, AGENTXP_USER_DATA: userData } as Record<string, string>
   })
   app.context().setDefaultTimeout(WAIT_MS)
   // The specs look at tool cards and narration, which the app folds by default (View > Show thinking and tool details).
-  await app.context().addInitScript(() => window.localStorage.setItem('agent7.transcript.detail', 'all'))
+  await app.context().addInitScript(() => window.localStorage.setItem('agentxp.transcript.detail', 'all'))
 
   const ready = async (page: Page): Promise<Page> => {
-    await page.waitForFunction(() => Boolean((window as unknown as { agent7?: unknown }).agent7))
+    await page.waitForFunction(() => Boolean((window as unknown as { agentxp?: unknown }).agentxp))
     return page
   }
   const findDesktopWindow = (id: number): Page | undefined => app.windows().find((w) => w.url().includes(`desktop=${id}`))

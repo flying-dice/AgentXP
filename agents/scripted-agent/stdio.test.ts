@@ -23,7 +23,7 @@ function spawnAgent(args: string[], env: Record<string, string> = {}): ChildProc
 describe('scripted agent process', () => {
   it('runs a bundled script by name and is stepped through the control socket', async () => {
     const control = socketPath()
-    const proc = spawnAgent(['--script', 'stepping'], { AGENT7_SCRIPT_CONTROL: control })
+    const proc = spawnAgent(['--script', 'stepping'], { AGENTXP_SCRIPT_CONTROL: control })
     const updates: SessionNotification['update'][] = []
     const connection = client({ name: 'test' })
       .onNotification(methods.client.session.update, ({ params }) => void updates.push(params.update))
@@ -48,7 +48,7 @@ describe('scripted agent process', () => {
   it('numbers sessions uniquely across processes (the app stores UNIQUE(agent_id, acp_session_id))', async () => {
     const ids: string[] = []
     for (let i = 0; i < 2; i++) {
-      const proc = spawnAgent(['--script', 'stepping'], { AGENT7_SCRIPT_CONTROL: socketPath() })
+      const proc = spawnAgent(['--script', 'stepping'], { AGENTXP_SCRIPT_CONTROL: socketPath() })
       const connection = client({ name: 'test' }).connect(ndJsonStream(Writable.toWeb(proc.stdin!) as WritableStream<Uint8Array>, Readable.toWeb(proc.stdout!) as ReadableStream<Uint8Array>))
       await connection.agent.request(methods.agent.initialize, { protocolVersion: PROTOCOL_VERSION })
       const first = await connection.agent.request(methods.agent.session.new, { cwd: process.cwd(), mcpServers: [] })

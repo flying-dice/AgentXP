@@ -65,7 +65,7 @@
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <div
   bind:this={root}
-  class="w7-radio-group {orientation} {className}"
+  class="xp-radio-group {orientation} {className}"
   role="radiogroup"
   aria-label={ariaLabel}
   aria-orientation={orientation}
@@ -76,7 +76,7 @@
 </div>
 
 <style>
-  .w7-radio-group {
+  .xp-radio-group {
     display: flex;
     gap: 6px;
   }

@@ -21,11 +21,11 @@ export const isContinueMessage = (text: string): boolean => text.trim() === CONT
 export const stoppedLine = (title: string): string => `In chat '${title}': Paused. The step that was running was stopped. Resume agents and continue carries it on.`
 export const resumedLine = (title: string): string => `In chat '${title}': ${RESUMED_NOTE}`
 
-/** Who a message that Agent7 wrote itself (the one Resume sends) is labelled as, instead of "You". */
-export const AUTOMATIC_SENDER = 'Agent7 (automatic)'
+/** Who a message that AgentXP wrote itself (the one Resume sends) is labelled as, instead of "You". */
+export const AUTOMATIC_SENDER = 'AgentXP (automatic)'
 
 /** The line in the chat after Restart when the last request was not sent again, and its button. */
-export const RESTARTED_LEAD = 'Agent7 restarted. Your last request was not sent again:'
+export const RESTARTED_LEAD = 'AgentXP restarted. Your last request was not sent again:'
 export const RESTARTED_RESEND = 'Send it again'
 
 const QUOTE_LIMIT = 160

@@ -48,7 +48,7 @@
   {role}
   closable={actions ? actions.length > 0 : cancel !== undefined}
   onclose={() => (actions ? actions.length > 0 && onresult?.(actions[actions.length - 1]!.id) : cancel && onresult?.(cancel))}
-  class="w7-messagebox"
+  class="xp-messagebox"
 >
   <div class="message">
     {#if icon !== 'none'}<MessageIcon kind={icon} />{/if}
@@ -68,7 +68,7 @@
 </Dialog>
 
 <style>
-  :global(.w7-messagebox) {
+  :global(.xp-messagebox) {
     min-width: 260px;
     max-width: 520px;
   }
@@ -78,7 +78,7 @@
     gap: 14px;
     padding: 20px 22px 20px 18px;
     min-height: 62px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .actions {
     display: flex;
@@ -86,7 +86,7 @@
     justify-content: flex-end;
     gap: 6px;
   }
-  .actions :global(.w7-btn) {
+  .actions :global(.xp-btn) {
     min-width: 75px;
     width: auto;
   }

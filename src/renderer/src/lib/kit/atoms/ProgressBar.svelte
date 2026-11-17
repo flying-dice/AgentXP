@@ -31,7 +31,7 @@
   aria-valuemin={min}
   aria-valuemax={max}
   aria-valuenow={marquee ? undefined : value}
-  class="w7-progress {state} {className}"
+  class="xp-progress {state} {className}"
   style="width:{dim}"
 >
   {#if marquee}
@@ -42,23 +42,23 @@
 </div>
 
 <style>
-  :global(.w7-progress) {
-    --fill: var(--w7-progress-fill);
+  :global(.xp-progress) {
+    --fill: var(--xp-progress-fill);
     position: relative;
     display: block;
     height: 15px;
     box-sizing: border-box;
     overflow: hidden;
-    border: 1px solid var(--w7-progress-border);
+    border: 1px solid var(--xp-progress-border);
     border-radius: 2px;
-    background: linear-gradient(#e0e0e0, var(--w7-progress-track) 30%, #f1f1f1);
+    background: linear-gradient(#e0e0e0, var(--xp-progress-track) 30%, #f1f1f1);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.12);
   }
-  :global(.w7-progress.paused) {
-    --fill: var(--w7-progress-fill-paused);
+  :global(.xp-progress.paused) {
+    --fill: var(--xp-progress-fill-paused);
   }
-  :global(.w7-progress.error) {
-    --fill: var(--w7-progress-fill-error);
+  :global(.xp-progress.error) {
+    --fill: var(--xp-progress-fill-error);
   }
   .fill {
     position: relative;
@@ -68,13 +68,13 @@
     box-sizing: border-box;
     overflow: hidden;
   }
-  :global(.w7-progress.paused) .fill {
+  :global(.xp-progress.paused) .fill {
     border-right-color: rgba(120, 90, 0, 0.35);
   }
-  :global(.w7-progress.error) .fill {
+  :global(.xp-progress.error) .fill {
     border-right-color: rgba(120, 0, 0, 0.35);
   }
-  /* Moving Aero glow. */
+  /* Moving Luna glow. */
   .fill::after {
     content: '';
     position: absolute;
@@ -85,8 +85,8 @@
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 60%, transparent);
     animation: glow 2s linear infinite;
   }
-  :global(.w7-progress.paused) .fill::after,
-  :global(.w7-progress.error) .fill::after {
+  :global(.xp-progress.paused) .fill::after,
+  :global(.xp-progress.error) .fill::after {
     animation: none;
     display: none;
   }

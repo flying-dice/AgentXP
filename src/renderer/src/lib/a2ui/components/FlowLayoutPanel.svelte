@@ -21,6 +21,6 @@
 <style>
   .flow {
     display: flex;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
 </style>

@@ -46,7 +46,7 @@ export const presets = {
       await ctx.waitAgentMessages(chat.sessionId, i + 1)
       await ctx.waitIdle(chat.sessionId)
     }
-    await desktop.page.evaluate((id) => window.agent7.desktop.closeWindow(id), chat.windowId)
+    await desktop.page.evaluate((id) => window.agentxp.desktop.closeWindow(id), chat.windowId)
     Object.assign(ctx.state, { sessionId: chat.sessionId })
     ctx.saveState()
   }

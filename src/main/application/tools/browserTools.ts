@@ -100,7 +100,7 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
     desktops.updateView(id, { ...current.view, url: page.url ?? current.view.url, title: page.title ?? current.view.title, loading })
   }
 
-  /** The user can pause Agent7 or take control while an action runs: the driver checks this between its steps. */
+  /** The user can pause AgentXP or take control while an action runs: the driver checks this between its steps. */
   const guardFor = (desktopId: Id): BrowserGuard => {
     const startedInControl = desktops.state(desktopId).userInControl
     return () => {

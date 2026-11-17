@@ -56,7 +56,7 @@ export async function useScriptedAgent(page: Page, options: ScriptedAgentOptions
     name: options.name ?? `Scripted ${options.script}`,
     command: require('electron') as string,
     args: [join(projectRoot, 'out/main/scripted-agent.js'), '--script', file],
-    env: { ELECTRON_RUN_AS_NODE: '1', AGENT7_SCRIPT_CONTROL: socketPath }
+    env: { ELECTRON_RUN_AS_NODE: '1', AGENTXP_SCRIPT_CONTROL: socketPath }
   })
   let client: Promise<ControlClient> | null = null
   const open = async (): Promise<ControlClient> => {

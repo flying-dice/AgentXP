@@ -72,7 +72,7 @@ describe('text', () => {
 
 describe('source hints', () => {
   it('explain the log names in plain words and sit on the tree nodes', () => {
-    expect(SOURCE_HINT.acp).toBe('ACP: how Agent7 talks to the agent')
+    expect(SOURCE_HINT.acp).toBe('ACP: how AgentXP talks to the agent')
     const acp = logTree([]).flatMap((n) => n.children ?? []).flatMap((n) => n.children ?? []).find((n) => n.id === 'source:acp')
     expect(acp?.title).toBe(SOURCE_HINT.acp)
   })

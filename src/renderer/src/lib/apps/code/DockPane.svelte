@@ -27,8 +27,8 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-face);
+    border: 1px solid var(--xp-panel-border);
   }
   header {
     flex: none;
@@ -36,7 +36,7 @@
     align-items: center;
     height: 24px;
     padding: 0 0 0 6px;
-    background: linear-gradient(#f4f7fb, #d5dfee);
+    background: linear-gradient(#f4f2e8, #d5dfee);
     border-bottom: 1px solid #aab7cb;
   }
   .title {

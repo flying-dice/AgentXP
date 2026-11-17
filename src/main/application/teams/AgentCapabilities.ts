@@ -7,8 +7,8 @@ import type { McpProxyLaunch } from './ports'
 import { toMcpConfig } from './McpServerService'
 
 /** Environment of the filtering proxy: the real server (JSON of `McpServerConfig`) and the tools it hides (JSON array). */
-export const ENV_PROXY_TARGET = 'AGENT7_MCP_TARGET'
-export const ENV_PROXY_HIDE = 'AGENT7_MCP_HIDE'
+export const ENV_PROXY_TARGET = 'AGENTXP_MCP_TARGET'
+export const ENV_PROXY_HIDE = 'AGENTXP_MCP_HIDE'
 
 export interface AgentCapabilitiesDeps {
   skills: SkillRepository

@@ -99,13 +99,13 @@
     <ToolStripDropDownButton icon="tasks" text="Plan note" items={planItems} />
   </ToolStrip>
   <!-- Only a list with items is a list: the empty message is not a list item (UX-83). -->
-  <div class="list w7-scroll" role={notes.length > 0 ? 'list' : undefined} aria-label={notes.length > 0 ? 'Notes' : undefined}>
+  <div class="list xp-scroll" role={notes.length > 0 ? 'list' : undefined} aria-label={notes.length > 0 ? 'Notes' : undefined}>
     {#each notes as note (note.id)}
       <div class="row" role="listitem" class:sel={selected === note.id} oncontextmenu={(e) => ((selected = note.id), ctx.show(e, contextItems()))}>
         <button type="button" class="pick" onclick={() => (selected = note.id)}>
           <span class="swatch" style:background={NOTE_THEME[note.color].paper} style:border-color={NOTE_THEME[note.color].border}></span>
           <span class="title">{noteTitle(note, chatTitle(note.planSessionId))}</span>
-          {#if note.author === 'agent'}<span class="by">Agent7</span>{/if}
+          {#if note.author === 'agent'}<span class="by">AgentXP</span>{/if}
         </button>
         <button type="button" class="del" aria-label="Delete note" title="Delete note" onclick={() => void host.api.notes.remove(note.id)}>×</button>
       </div>
@@ -127,15 +127,15 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .list {
     flex: 1;
     min-height: 0;
     margin: 6px;
     overflow: auto;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .row {
     display: flex;
@@ -143,12 +143,12 @@
     border: 1px solid transparent;
   }
   .row.sel {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .row:hover:not(.sel) {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .pick {
     flex: 1;
@@ -178,7 +178,7 @@
     white-space: nowrap;
   }
   .by {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .del {
@@ -192,20 +192,20 @@
     cursor: default;
   }
   .del:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
     color: #000;
   }
   .empty {
     margin: 0;
     padding: 10px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .hint {
     flex: none;
     margin: 0;
     padding: 0 8px 6px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
 </style>

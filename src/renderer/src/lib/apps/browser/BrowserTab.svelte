@@ -187,7 +187,7 @@
 
 <div class="tabpage" class:hidden={!active} data-testid={testId} data-active={active}>
   {#if electron}
-    <webview bind:this={view} class="webview" src={firstUrl} partition="persist:agent7-browser"></webview>
+    <webview bind:this={view} class="webview" src={firstUrl} partition="persist:agentxp-browser"></webview>
   {:else}
     <PlaceholderPage {url} {loading} />
   {/if}

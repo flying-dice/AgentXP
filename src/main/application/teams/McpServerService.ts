@@ -7,7 +7,7 @@ import type { McpProber } from './ports'
 
 const NAME = /^[A-Za-z0-9_-]+$/
 /** Names the harness uses itself. */
-const RESERVED = new Set(['agent7', 'a2ui'])
+const RESERVED = new Set(['agentxp', 'a2ui'])
 
 /** What the agent is given for a saved server (the proxy that hides switched-off tools is added by `AgentCapabilities`). */
 export function toMcpConfig(server: Pick<McpServerDto, 'name' | 'transport' | 'command' | 'args' | 'url' | 'vars'>): McpServerConfig {
@@ -21,7 +21,7 @@ const clean = (input: McpServerInput): McpServerInput => {
   const name = input.name.trim()
   if (!name) throw new AppError('The server needs a name')
   if (!NAME.test(name)) throw new AppError('The name can only have letters, digits, - and _ (agents use it to tell servers apart).')
-  if (RESERVED.has(name.toLowerCase())) throw new AppError(`"${name}" is used by Agent7 itself. Choose another name.`)
+  if (RESERVED.has(name.toLowerCase())) throw new AppError(`"${name}" is used by AgentXP itself. Choose another name.`)
   const command = input.command.trim()
   const url = input.url.trim()
   if (input.transport === 'stdio' && !command) throw new AppError('The server needs a command')

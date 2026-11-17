@@ -1,5 +1,5 @@
 import type { GitStatusDto } from '@shared/git'
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { FileChangeDto, Id } from '@shared/models'
 import type { DriveLetter } from '@shared/vfs'
 import { changeDrives, driveRootOf, uncommittedChanges } from './uncommitted'
@@ -10,7 +10,7 @@ import { changeDrives, driveRootOf, uncommittedChanges } from './uncommitted'
  * focus (a commit made in a terminal), and on `refresh()`. Call it while a component starts.
  */
 export function useUncommittedChanges(
-  api: Pick<Agent7Api, 'git' | 'on'>,
+  api: Pick<AgentXPApi, 'git' | 'on'>,
   desktopId: () => Id,
   changes: () => readonly FileChangeDto[]
 ): { readonly list: FileChangeDto[]; refresh(): Promise<void> } {

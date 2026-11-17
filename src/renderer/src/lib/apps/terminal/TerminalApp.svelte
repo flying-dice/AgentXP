@@ -178,7 +178,7 @@
     <div class="notice" class:flash data-testid="terminal-readonly-notice" data-flash={flash} role="status">{READ_ONLY_NOTICE}</div>
   {/if}
   <div class="head">
-    <span class="title">Agent7 shell - cmd.exe</span>
+    <span class="title">AgentXP shell - cmd.exe</span>
     <span class="spring"></span>
     {#if several}
       <span>Terminal:</span>
@@ -194,7 +194,7 @@
   </div>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="screen" data-testid="terminal-output" data-running={current?.running ?? false} bind:this={screen} onpointerdown={showNotice}>
-    <ConsoleView {text} running={current?.running ?? false} label="Agent7 shell" lockedCursor />
+    <ConsoleView {text} running={current?.running ?? false} label="AgentXP shell" lockedCursor />
   </div>
   <ContextMenuStrip bind:open={ctx.open} x={ctx.x} y={ctx.y} items={ctx.items} label="Terminal" />
   <AppAbout {help} />
@@ -210,7 +210,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .head {
     flex: none;
@@ -219,7 +219,7 @@
     gap: 6px;
     height: 28px;
     padding: 0 6px;
-    background: linear-gradient(#fafcfe, #dce6f4);
+    background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .title {
@@ -234,7 +234,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-console-bg);
+    background: var(--xp-console-bg);
   }
   .notice {
     flex: none;
@@ -242,7 +242,7 @@
     background: #2b2b2b;
     border-bottom: 1px solid #6b6b6b;
     color: #ffd866;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
   /* The key press the note answers: a bright block for a second. */
   .notice.flash {
@@ -252,7 +252,7 @@
     outline-offset: -2px;
     font-weight: 700;
   }
-  .screen :global(.w7-console) {
+  .screen :global(.xp-console) {
     flex: 1;
     border: 0;
   }

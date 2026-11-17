@@ -33,7 +33,7 @@ export interface BridgePush {
   groups: ToolGroup[]
 }
 
-export const ENV_SOCKET = 'AGENT7_A2UI_SOCKET'
-export const ENV_SESSION_KEY = 'AGENT7_SESSION_KEY'
-export const ENV_DESKTOP_ID = 'AGENT7_DESKTOP_ID'
-export const MCP_SERVER_NAME = 'agent7'
+export const ENV_SOCKET = 'AGENTXP_A2UI_SOCKET'
+export const ENV_SESSION_KEY = 'AGENTXP_SESSION_KEY'
+export const ENV_DESKTOP_ID = 'AGENTXP_DESKTOP_ID'
+export const MCP_SERVER_NAME = 'agentxp'

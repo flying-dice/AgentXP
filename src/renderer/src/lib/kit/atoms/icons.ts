@@ -1,5 +1,5 @@
 /**
- * Win7-flavoured 16x16 icon set. Each entry is the inner SVG markup (viewBox 0 0 16 16).
+ * WinXP-flavoured 16x16 icon set. Each entry is the inner SVG markup (viewBox 0 0 16 16).
  * Gradient ids are namespaced per icon (`ix-<name>-…`) so identical markup can repeat on a page.
  */
 
@@ -9,7 +9,7 @@ export const iconNames = [
   'shield', 'terminal', 'search', 'edit', 'check', 'close', 'minimize', 'maximize', 'restore',
   'chevron-down', 'chevron-right', 'chevron-up', 'chevron-left', 'plus', 'minus', 'refresh',
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
-  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agent7',
+  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agentxp',
   'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
   'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban'
 ] as const
@@ -364,13 +364,9 @@ const markup: Record<IconName, string> = {
       '<path d="M9.200 3l3 -.8 2.300 10.800-3 .8z" fill="#f0c04e" stroke="#b8902c" stroke-linejoin="round"/>' +
       '<path d="M1.500 13.500h13" stroke="#6b7886"/>'
   ),
-  agent7: defs(
-    vg('b', '#7cc3ff', '#3f9bf0', '#2f86e0') + vg('c', '#8fe9ff', '#3cc8ee', '#22b8e0') + vg('a', '#ffe08a', '#ffb84d', '#f6a93a'),
-    '<g transform="scale(.25)" stroke-width="3" stroke-linejoin="round">' +
-      '<rect x="4" y="4" width="26" height="26" rx="3" fill="url(#~b)" stroke="#124a8c"/>' +
-      '<rect x="34" y="4" width="26" height="26" rx="3" fill="url(#~c)" stroke="#0b6a8a"/>' +
-      '<rect x="34" y="34" width="26" height="26" rx="3" fill="url(#~a)" stroke="#9a5a06"/></g>' +
-      '<g fill="#fff" opacity=".4"><rect x="1.5" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="9" width="5.5" height="2.6" rx=".5"/></g>'
+  agentxp: defs(
+    '<linearGradient id="~r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a73"/><stop offset=".55" stop-color="#f0501f"/><stop offset="1" stop-color="#d23a10"/></linearGradient><linearGradient id="~g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be26a"/><stop offset=".55" stop-color="#52b52a"/><stop offset="1" stop-color="#3a9a18"/></linearGradient><linearGradient id="~b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ab0ff"/><stop offset=".55" stop-color="#2f6fe6"/><stop offset="1" stop-color="#1f55c8"/></linearGradient><linearGradient id="~y" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe36b"/><stop offset=".55" stop-color="#f8bf1f"/><stop offset="1" stop-color="#e8a406"/></linearGradient>',
+    '<g transform="scale(.25)"><g stroke-linejoin="round" stroke-width="2.5"><path d="M6 12 C14 6 22 18 30 12 L28 30 C20 36 12 24 4 30 Z" fill="url(#~r)" stroke="#8c1d08"/><path d="M34 11 C42 5 50 16 58 9 L55 27 C47 34 40 22 32 29 Z" fill="url(#~g)" stroke="#2b6a12"/><path d="M4 34 C12 28 20 40 28 34 L26 53 C18 59 10 48 2 53 Z" fill="url(#~b)" stroke="#0b3f9c"/><path d="M32 33 C40 27 48 38 56 32 L53 51 C45 57 38 46 30 52 Z" fill="url(#~y)" stroke="#9a6a00"/></g><path d="M38 37 l7 5 -7 5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="square" opacity=".95"/></g>'
   )
 }
 

@@ -53,8 +53,8 @@
   }
 </script>
 
-<div class="w7-dtp-wrap" use:clickOutside={{ handler: () => (open = false) }}>
-  <div class="w7-dtp {className}" class:disabled class:open style="width:{width}px">
+<div class="xp-dtp-wrap" use:clickOutside={{ handler: () => (open = false) }}>
+  <div class="xp-dtp {className}" class:disabled class:open style="width:{width}px">
     <span
       class="field"
       role="spinbutton"
@@ -89,24 +89,24 @@
 </div>
 
 <style>
-  .w7-dtp {
+  .xp-dtp {
     display: inline-flex;
     align-items: stretch;
     box-sizing: border-box;
     height: 21px;
     background: #fff;
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
-    font: var(--w7-font);
+    border: 1px solid var(--xp-input-border);
+    border-top-color: var(--xp-input-border-top);
+    font: var(--xp-font);
   }
-  .w7-dtp:hover:not(.disabled),
-  .w7-dtp.open {
-    border-color: #3c7fb1;
+  .xp-dtp:hover:not(.disabled),
+  .xp-dtp.open {
+    border-color: #003c74;
   }
-  .w7-dtp.disabled {
-    background: var(--w7-face);
-    color: var(--w7-text-disabled);
-    border-color: var(--w7-border-disabled);
+  .xp-dtp.disabled {
+    background: var(--xp-face);
+    color: var(--xp-text-disabled);
+    border-color: var(--xp-border-disabled);
   }
   .field {
     flex: 1;
@@ -118,7 +118,7 @@
     outline: none;
   }
   .field:focus-visible {
-    background: var(--w7-list-select-face);
+    background: var(--xp-list-select-face);
     color: #fff;
   }
   .drop {
@@ -133,10 +133,10 @@
     color: #3c4a60;
   }
   .drop:hover:not(:disabled) {
-    background: var(--w7-btn-hover-face);
+    background: var(--xp-btn-hover-face);
   }
   .drop:disabled {
-    background: #f4f4f4;
+    background: #f4f2e8;
     color: #999;
   }
   .pop {
@@ -144,9 +144,9 @@
     left: 0;
     top: 100%;
     z-index: 50;
-    box-shadow: var(--w7-shadow-popup);
+    box-shadow: var(--xp-shadow-popup);
   }
-  .w7-dtp-wrap {
+  .xp-dtp-wrap {
     position: relative;
     display: inline-block;
   }

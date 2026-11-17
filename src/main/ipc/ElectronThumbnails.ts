@@ -6,12 +6,12 @@ import { THUMBNAIL_SCHEME, parseThumbnailUrl } from '../application/launcher/thu
 import type { ThumbnailCapturer } from '../application/launcher/ThumbnailService'
 import type { FileThumbnailStore } from '../infrastructure/fs/FileThumbnailStore'
 
-/** Must run before the app is ready: the launcher renderer loads `<img src="agent7-thumb://...">`. */
+/** Must run before the app is ready: the launcher renderer loads `<img src="agentxp-thumb://...">`. */
 export function registerThumbnailScheme(): void {
   protocol.registerSchemesAsPrivileged([{ scheme: THUMBNAIL_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 }
 
-/** Serves `agent7-thumb://desktop/<id>.png` from the thumbnail files; nothing else. Call after the app is ready. */
+/** Serves `agentxp-thumb://desktop/<id>.png` from the thumbnail files; nothing else. Call after the app is ready. */
 export function handleThumbnailScheme(store: FileThumbnailStore): void {
   protocol.handle(THUMBNAIL_SCHEME, (request) => {
     const id = parseThumbnailUrl(request.url)

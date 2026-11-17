@@ -46,12 +46,12 @@
 <style>
   .who {
     font-weight: 700;
-    color: var(--w7-accent-user, #1b3f8b);
+    color: var(--xp-accent-user, #1b3f8b);
     margin-bottom: 2px;
   }
   .automatic .who,
   .automatic .body {
-    color: var(--w7-text-muted, #555);
+    color: var(--xp-text-muted, #555);
   }
   .resumed {
     margin-bottom: 2px;
@@ -75,9 +75,9 @@
   }
   .file {
     padding: 0 6px;
-    border: 1px solid var(--w7-hot-border);
-    background: var(--w7-hot-face);
-    color: var(--w7-text-muted);
+    border: 1px solid var(--xp-hot-border);
+    background: var(--xp-hot-face);
+    color: var(--xp-text-muted);
     line-height: 17px;
   }
   .notice {
@@ -93,7 +93,7 @@
   .label.stopped {
     color: #555;
   }
-  .notice :global(.w7-btn) {
+  .notice :global(.xp-btn) {
     min-width: 0;
     padding: 0 10px;
   }

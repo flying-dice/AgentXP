@@ -93,17 +93,17 @@ export class SocketBridgeClient implements BridgeClient {
       const socket = connect(this.socketPath)
       const splitter = new LineSplitter()
       socket.setEncoding('utf8')
-      if (timeoutMs > 0) socket.setTimeout(timeoutMs, () => fail('timed out waiting for Agent7'))
+      if (timeoutMs > 0) socket.setTimeout(timeoutMs, () => fail('timed out waiting for AgentXP'))
       socket.on('connect', () => socket.write(JSON.stringify(request) + '\n'))
       socket.on('data', (chunk: string) =>
         splitter.push(chunk, (line) => {
           const res = parseLine(line) as BridgeResponse | undefined
-          if (!res) return fail('invalid response from Agent7')
+          if (!res) return fail('invalid response from AgentXP')
           socket.end()
           resolve(res)
         })
       )
-      socket.on('error', (e) => fail(`cannot reach Agent7: ${e.message}`))
+      socket.on('error', (e) => fail(`cannot reach AgentXP: ${e.message}`))
     })
   }
 }

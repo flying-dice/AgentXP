@@ -1,12 +1,12 @@
 /** Reads what a script needs from an ACP prompt: its text and the desktop-state resource. */
 import type { ContentBlock } from '@agentclientprotocol/sdk'
 
-export const DESKTOP_RESOURCE_URI = 'agent7://desktop/state'
+export const DESKTOP_RESOURCE_URI = 'agentxp://desktop/state'
 
 export interface ParsedPrompt {
   /** The text blocks, joined with newlines. Resources and images do not take part in matching. */
   text: string
-  /** The text of the `agent7://desktop/state` resource; empty when the prompt has none. */
+  /** The text of the `agentxp://desktop/state` resource; empty when the prompt has none. */
   desktop: string
 }
 

@@ -31,7 +31,7 @@
     <span class="sentcol" aria-hidden="true">Sent</span>
   </div>
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="list w7-scroll" role="group" tabindex="0" aria-label="Comments">
+  <div class="list xp-scroll" role="group" tabindex="0" aria-label="Comments">
     {#each roots as c (c.id)}
       <button type="button" class="row" class:selected={c.id === selectedId} data-testid="review-comment-row" data-comment-id={c.id} data-state={c.state} data-severity={c.severity} onclick={() => onselect(c)}>
         <span class="head">
@@ -62,8 +62,8 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
   .title {
     flex: none;
@@ -72,10 +72,10 @@
     justify-content: space-between;
     padding: 3px 8px;
     background: linear-gradient(#fff, #e8eef6);
-    border-bottom: 1px solid var(--w7-panel-border);
+    border-bottom: 1px solid var(--xp-panel-border);
   }
   .counts {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .filter {
     flex: none;
@@ -103,13 +103,13 @@
     cursor: default;
   }
   .row:hover {
-    background: var(--w7-hot-face);
+    background: var(--xp-hot-face);
   }
   .row.selected {
-    background: var(--w7-select-face, #dcebfc);
+    background: var(--xp-select-face, #d6dff7);
   }
   .row[data-state='resolved'] .text {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .sent {
     flex: none;
@@ -122,7 +122,7 @@
     float: right;
     width: 34px;
     text-align: center;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .head {
     display: flex;
@@ -134,7 +134,7 @@
     font-weight: bold;
   }
   .loc {
-    font-family: var(--w7-font-mono);
+    font-family: var(--xp-font-mono);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -158,7 +158,7 @@
   }
   .state,
   .rep {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   /* The words of a comment wrap: a short remark is read whole (UX-167). */
@@ -168,16 +168,16 @@
   }
   .empty {
     padding: 10px 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .foot {
     flex: none;
     padding: 6px;
-    border-top: 1px solid var(--w7-panel-border);
+    border-top: 1px solid var(--xp-panel-border);
     display: flex;
     justify-content: center;
   }
-  .foot :global(.w7-btn) {
+  .foot :global(.xp-btn) {
     min-width: 0;
   }
 </style>

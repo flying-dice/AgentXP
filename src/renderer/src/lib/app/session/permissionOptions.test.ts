@@ -22,7 +22,7 @@ it('falls back to the other variant and to null', () => {
   expect(optionFor(onlyAlways, 'deny', false)).toBeNull()
 })
 
-it('captions buttons like the Win7 dialog', () => {
+it('captions buttons like the WinXP dialog', () => {
   expect(captionFor(all, 'allow', false)).toBe('Allow')
   expect(captionFor(all, 'allow', true)).toBe('Always allow')
   expect(captionFor(all, 'deny', false)).toBe('Deny')

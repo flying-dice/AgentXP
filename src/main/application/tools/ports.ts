@@ -48,7 +48,7 @@ export interface WaitQuery {
   timeoutMs: number
 }
 
-/** Called between the steps of an action and while waiting; throws when the user paused Agent7 or took control. */
+/** Called between the steps of an action and while waiting; throws when the user paused AgentXP or took control. */
 export type BrowserGuard = () => void
 
 export type ScrollDirection = 'up' | 'down' | 'left' | 'right' | 'top' | 'bottom'

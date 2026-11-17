@@ -42,7 +42,7 @@ The **Chats** tab has no chat pane: the list is where you open a chat. The other
 
 ### The Processes Tab
 
-The tab lists the agent programs with the columns **Agent**, **PID**, **Desktop**, **Chats**, **Memory**, and **CPU**. **Memory** and **CPU** show what the program uses now. A dash means that Agent7 cannot read it. **End process** stops the selected program. Its chats close, and work in progress is lost.
+The tab lists the agent programs with the columns **Agent**, **PID**, **Desktop**, **Chats**, **Memory**, and **CPU**. **Memory** and **CPU** show what the program uses now. A dash means that AgentXP cannot read it. **End process** stops the selected program. Its chats close, and work in progress is lost.
 
 ### The Terminals Tab
 

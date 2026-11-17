@@ -484,7 +484,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .nav {
     flex: none;
@@ -493,7 +493,7 @@
     gap: 2px;
     height: 34px;
     padding: 0 6px;
-    background: linear-gradient(#fafcfe, #dce6f4);
+    background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .commands {
@@ -503,7 +503,7 @@
     gap: 2px;
     height: 28px;
     padding: 0 6px;
-    background: linear-gradient(#fdfeff, #eef3fa 50%, #e4ecf7 51%, #eaf1fa);
+    background: linear-gradient(#fff, #eef3fa 50%, #e4ecf7 51%, #eaf1fa);
     border-bottom: 1px solid #c5d0e0;
   }
   .split {
@@ -512,7 +512,7 @@
     display: flex;
     padding: 4px;
   }
-  .split :global(.w7-split) {
+  .split :global(.xp-split) {
     flex: 1;
   }
   .list {
@@ -522,17 +522,17 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
-  :global(.w7-tree.folders) {
+  :global(.xp-tree.folders) {
     height: 100%;
   }
   .reason {
     align-self: center;
     margin-left: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     white-space: nowrap;
   }
 </style>

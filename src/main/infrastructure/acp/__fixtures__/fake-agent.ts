@@ -36,7 +36,7 @@ const app = agent({ name: 'fake-agent' })
     agentCapabilities: { loadSession: false }
   }))
   .onRequest(methods.agent.session.new, ({ params }) => {
-    // Unit tests expect the fixed id. The e2e fixture sets FAKE_AGENT_UNIQUE_SESSIONS: Agent7 keeps (agent, ACP session id)
+    // Unit tests expect the fixed id. The e2e fixture sets FAKE_AGENT_UNIQUE_SESSIONS: AgentXP keeps (agent, ACP session id)
     // unique, and every chat of one registered agent starts a new process of this file, so a fixed id would collide.
     const sessionId = process.env['FAKE_AGENT_UNIQUE_SESSIONS'] ? `fake-session-${randomUUID()}` : 'fake-session'
     cwds.set(sessionId, params.cwd)

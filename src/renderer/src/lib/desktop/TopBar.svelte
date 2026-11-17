@@ -55,7 +55,7 @@
   const mode = $derived(view.state)
 </script>
 
-<div class="w7-topbar" class:folded={!pinned} data-testid="topbar" data-state={mode} role="region" aria-label="Agent strip">
+<div class="xp-topbar" class:folded={!pinned} data-testid="topbar" data-state={mode} role="region" aria-label="Agent strip">
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} class:control={mode === 'control'} class:waiting={mode === 'waiting'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
@@ -91,14 +91,14 @@
 </div>
 
 <style>
-  .w7-topbar {
+  .xp-topbar {
     position: absolute;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100000;
     box-sizing: border-box;
-    /* As wide as its content (one row of chips) up to the room the gadget column leaves. */
+    /* As wide as its content (one row of chips) up to the room the taskpane column leaves. */
     width: max-content;
     min-width: 560px;
     max-width: calc(100% - 340px);
@@ -109,7 +109,7 @@
     overflow: hidden;
     background: linear-gradient(#fdfefe, #e6edf7 55%, #d8e3f2);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 2px 8px rgba(0, 0, 0, 0.45);
-    font: var(--w7-font);
+    font: var(--xp-font);
     color: #000;
     user-select: none;
   }
@@ -119,11 +119,11 @@
     gap: 6px;
     padding-top: 2px;
   }
-  .w7-topbar.folded .body {
+  .xp-topbar.folded .body {
     display: none;
   }
-  .w7-topbar.folded:hover .body,
-  .w7-topbar.folded:has(:focus-visible) .body {
+  .xp-topbar.folded:hover .body,
+  .xp-topbar.folded:has(:focus-visible) .body {
     display: flex;
   }
   .problem {
@@ -176,7 +176,7 @@
   }
   .lead,
   .none {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   /* Buttons that show the state: a border and a hover face say they can be clicked, and a click opens Permissions (UX-142). */
   .chip {
@@ -190,7 +190,7 @@
     line-height: 20px;
     border: 1px solid #8fa3c0;
     border-radius: 8px;
-    background: linear-gradient(#fdfeff, #e3ecf8);
+    background: linear-gradient(#fff, #e3ecf8);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
     color: #1d3a63;
     font: inherit;
@@ -198,11 +198,11 @@
     cursor: pointer;
   }
   .chip:hover {
-    background: var(--w7-btn-hover-face, #eaf6fd);
+    background: var(--xp-btn-hover-face, #eaf6fd);
     text-decoration: underline;
   }
   .chip:active {
-    background: var(--w7-select-face, #c4e5f6);
+    background: var(--xp-select-face, #c4e5f6);
   }
   .chip[data-state='asks'] {
     border-color: #d9b44a;
@@ -219,10 +219,10 @@
     border-style: dashed;
   }
   .chip:hover {
-    border-color: var(--w7-hot-border);
+    border-color: var(--xp-hot-border);
   }
   .chip:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: 1px;
   }
   .status.alert {
@@ -241,7 +241,7 @@
     cursor: pointer;
   }
   .link:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: 1px;
   }
   .give-back {
@@ -259,11 +259,11 @@
     cursor: pointer;
   }
   .give-back:hover {
-    border-color: var(--w7-hot-border);
+    border-color: var(--xp-hot-border);
     text-decoration: underline;
   }
   .give-back:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: 1px;
   }
   /* The two controls keep their place when their text changes. */
@@ -271,7 +271,7 @@
     flex: none;
     width: 176px;
   }
-  .pause-slot :global(.w7-btn) {
+  .pause-slot :global(.xp-btn) {
     width: 100%;
     min-width: 0;
   }

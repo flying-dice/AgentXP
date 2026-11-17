@@ -1,4 +1,4 @@
-/** The context menu of a taskbar button (Win7 system menu subset): Restore, Minimize, Close window. */
+/** The context menu of a taskbar button (WinXP system menu subset): Restore, Minimize, Close window. */
 import type { WindowState } from '@shared/desktop'
 import type { MenuItemDef } from '../kit/molecules/MenuItem'
 

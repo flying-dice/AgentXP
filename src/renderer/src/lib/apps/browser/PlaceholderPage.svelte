@@ -25,7 +25,7 @@
   {:else}
     <div class="generic">
       <h1>{hostOf(url)}</h1>
-      <p>The page appears here in Agent7. This preview is shown because Storybook runs outside Electron, where the real web view is not available.</p>
+      <p>The page appears here in AgentXP. This preview is shown because Storybook runs outside Electron, where the real web view is not available.</p>
       <code>{url}</code>
     </div>
   {/if}

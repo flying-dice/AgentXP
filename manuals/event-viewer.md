@@ -1,6 +1,6 @@
 # Using Event Viewer
 
-This manual describes Event Viewer. Event Viewer lists the messages between Agent7 and the agents, as they happen.
+This manual describes Event Viewer. Event Viewer lists the messages between AgentXP and the agents, as they happen.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ Click **Start -> Event Viewer**. You can also click **Tools -> Event Viewer** in
 
 ### The Log Tree
 
-The tree is at the left. **Agent7 Logs** has the logs **ACP**, **AG-UI**, and **MCP**. **Chats** has one entry for each chat. Select an entry to show only its events. Point at **ACP**, **AG-UI**, or **MCP** to read what the log is. ACP is how Agent7 talks to the agent.
+The tree is at the left. **AgentXP Logs** has the logs **ACP**, **AG-UI**, and **MCP**. **Chats** has one entry for each chat. Select an entry to show only its events. Point at **ACP**, **AG-UI**, or **MCP** to read what the log is. ACP is how AgentXP talks to the agent.
 
 ### The Event List
 
@@ -71,9 +71,9 @@ Each Event Viewer window has a chat pane at its right edge. The pane starts clos
 | Show all | Shows the other events too. Off, the list shows only warnings and errors. | `event-viewer-show-all` |
 | Other events hidden: Show all | A link in the heading that shows the events that the list leaves out. It shows how many. | `event-viewer-show-hidden` |
 | Show all (n) | A link in an empty list. It clears the filter and shows every event. | `event-viewer-empty-show-all` |
-| Last problem | The last warning or error in the Activity list on the desktop, in plain words. An error goes away when the same chat finishes a later turn. A warning stays. | `gadget-activity-problem` |
-| Working line | The Activity list says **Working:** with what the agent does while it works. | `gadget-activity-working` |
-| Last finished | The Activity list says what finished last when it has nothing else to show. | `gadget-activity-last` |
+| Last problem | The last warning or error in the Activity list on the desktop, in plain words. An error goes away when the same chat finishes a later turn. A warning stays. | `taskpane-activity-problem` |
+| Working line | The Activity list says **Working:** with what the agent does while it works. | `taskpane-activity-working` |
+| Last finished | The Activity list says what finished last when it has nothing else to show. | `taskpane-activity-last` |
 | What happened | The plain sentence of the selected warning or error, first line of the General tab. | `event-viewer-what-happened` |
 | What to do | One step to take, under the sentence of the General tab. | `event-viewer-what-to-do` |
 | Raw names | The log, event, and direction of the selected event, on the Details tab. | `event-viewer-raw` |
@@ -145,7 +145,7 @@ To find a word, click **Find...**, type the word, and click **OK**.
 
 - **The list is empty.** The window says **No events** when the log is empty. Start a chat. When it says **Nothing to show with this filter**, click **Show all**.
 - **New events do not appear at the bottom.** Select **Autoscroll**.
-- **I cleared the log by mistake.** Agent7 cannot restore deleted events.
+- **I cleared the log by mistake.** AgentXP cannot restore deleted events.
 - **Find says that it cannot find the text.** No event in the current list contains the text.
 
 ## 7 - Need Help?

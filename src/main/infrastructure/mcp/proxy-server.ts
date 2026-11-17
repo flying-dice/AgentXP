@@ -9,7 +9,7 @@ import { transportFor } from './SdkMcpProber'
  * Skills and MCP Servers). Agents get it instead of the real server when at least one of its tools is off.
  */
 export async function createFilteringProxy(target: McpServerConfig, hidden: readonly string[]): Promise<{ server: Server; client: Client }> {
-  const client = new Client({ name: 'agent7-proxy', version: '1.0.0' })
+  const client = new Client({ name: 'agentxp-proxy', version: '1.0.0' })
   await client.connect(transportFor(target))
   const off = new Set(hidden)
   const server = new Server({ name: target.name, version: '1.0.0' }, { capabilities: { tools: {} } })

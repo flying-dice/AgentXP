@@ -1,7 +1,7 @@
 /**
  * Tiny client of the scripted agent's control socket (see README), for Playwright/vitest e2e tests:
  *
- *   const control = await connect(process.env.AGENT7_SCRIPT_CONTROL!)
+ *   const control = await connect(process.env.AGENTXP_SCRIPT_CONTROL!)
  *   await control.setMode('manual')
  *   ...send a prompt in the UI...
  *   const paused = await control.waitForPause()   // { stepIndex: 0, label: '...' }
@@ -115,7 +115,7 @@ export class ControlClient {
   }
 }
 
-/** Connects to the Unix socket path or Windows named pipe the agent listens on (`AGENT7_SCRIPT_CONTROL`). */
+/** Connects to the Unix socket path or Windows named pipe the agent listens on (`AGENTXP_SCRIPT_CONTROL`). */
 export function connect(path: string): Promise<ControlClient> {
   return new Promise((resolve, reject) => {
     const socket = netConnect(path)

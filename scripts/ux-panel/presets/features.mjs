@@ -57,7 +57,7 @@ async function reviewDesktop(ctx, options) {
   ctx.fixtures.reviewNotes = createReviewNotes(ctx.fixtures.base)
   const { desktop } = await projectDesktop(ctx, { script: options.script ?? 'review', projects: ['reviewNotes'], open: [] })
   const chat = await ctx.newChat(desktop.id)
-  const window = await desktop.page.evaluate(({ id, root }) => window.agent7.desktop.openReview(id, root), { id: desktop.id, root: await driveLetter(ctx, desktop.id) })
+  const window = await desktop.page.evaluate(({ id, root }) => window.agentxp.desktop.openReview(id, root), { id: desktop.id, root: await driveLetter(ctx, desktop.id) })
   const reviewSessionId = window.view.sessionId
   // Code Review starts no agent by itself (UX-37): press "Ask the agent to review..." like a user would.
   const ask = desktop.page.getByTestId('window-code-review').getByTestId('review-ask-agent')
@@ -66,7 +66,7 @@ async function reviewDesktop(ctx, options) {
   await ask.click()
   await ctx.dismissDialogs(desktop.id)
   await ctx.waitFor(async () => {
-    const state = await desktop.page.evaluate((id) => window.agent7.review.state(id), reviewSessionId)
+    const state = await desktop.page.evaluate((id) => window.agentxp.review.state(id), reviewSessionId)
     return state.summary && state.comments.length >= 2
   }, 'the reviewer comments', 40_000)
   await ctx.dismissDialogs(desktop.id)
@@ -80,7 +80,7 @@ async function chatReviewDesktop(ctx) {
   ctx.fixtures.reviewNotes = createReviewNotes(ctx.fixtures.base)
   const { desktop } = await projectDesktop(ctx, { script: 'chat-review', projects: ['reviewNotes'], open: [] })
   const chat = await ctx.newChat(desktop.id)
-  const window = await desktop.page.evaluate(({ id, root }) => window.agent7.desktop.openReview(id, root), { id: desktop.id, root: await driveLetter(ctx, desktop.id) })
+  const window = await desktop.page.evaluate(({ id, root }) => window.agentxp.desktop.openReview(id, root), { id: desktop.id, root: await driveLetter(ctx, desktop.id) })
   await desktop.page.getByTestId('window-code-review').getByTestId('review-ask-agent').waitFor({ timeout: 30_000 })
   await ctx.dismissDialogs(desktop.id)
   Object.assign(ctx.state, { sessionId: chat.sessionId, chatWindowId: chat.windowId, reviewSessionId: window.view.sessionId, reviewWindowId: window.id })

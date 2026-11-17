@@ -1,5 +1,5 @@
 /**
- * The standard items of a classic Win7 menu bar, shared by every app (File > Close, Edit, Help). Each app builds its
+ * The standard items of a classic WinXP menu bar, shared by every app (File > Close, Edit, Help). Each app builds its
  * own menus around them; the ids and test ids follow `<app>-menu-<action>` (docs/CONVENTIONS.md).
  */
 import type { IconName } from '../atoms/icons'
@@ -65,7 +65,7 @@ export interface EditState {
 }
 
 /**
- * Edit menu items in the Win7 order: Undo | Cut, Copy, Paste, Delete | Select All. An item whose operation is not
+ * Edit menu items in the WinXP order: Undo | Cut, Copy, Paste, Delete | Select All. An item whose operation is not
  * given is left out (with its separator); `idPrefix` is `<app>-menu` for a menu bar or `<app>-ctx` for a context menu.
  */
 export function editItems(idPrefix: string, ops: EditOps, state: EditState = {}): MenuItemDef[] {

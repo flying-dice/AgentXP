@@ -2,7 +2,7 @@
  * The virtual file system of a desktop and the launcher contract.
  *
  * Every desktop is a long-lived virtual machine:
- *  - `C:` is its private system disk, a real directory in Agent7's app data
+ *  - `C:` is its private system disk, a real directory in AgentXP's app data
  *    (`<userData>/desktops/<id>/C`), seeded with Users\Agent\{Desktop,Documents,Downloads}
  *    and Temp. Deleting the desktop deletes it.
  *  - Projects are plugged in as removable USB drives (E:, F:, ...). A drive maps to a
@@ -22,7 +22,7 @@ export type VPath = string
 
 export type DriveLetter = string // 'C' | 'E'..'Z'
 export const SYSTEM_DRIVE: DriveLetter = 'C'
-/** Removable drives get the first free letter from E. (D: is skipped, like a Win7 DVD drive.) */
+/** Removable drives get the first free letter from E. (D: is skipped, like a WinXP DVD drive.) */
 export const FIRST_REMOVABLE_LETTER: DriveLetter = 'E'
 
 export interface DriveDto {

@@ -133,8 +133,8 @@
   }
 
   // ---- drag and drop
-  const DRAG_CARD = 'application/x-agent7-kanban-card'
-  const DRAG_COLUMN = 'application/x-agent7-kanban-column'
+  const DRAG_CARD = 'application/x-agentxp-kanban-card'
+  const DRAG_COLUMN = 'application/x-agentxp-kanban-column'
 
   function startDrag(event: DragEvent, kind: 'card' | 'column', id: number): void {
     event.stopPropagation()
@@ -330,7 +330,7 @@
   {#if error}<p class="error" role="alert" data-testid="kanban-error">{error}</p>{/if}
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="canvas w7-scroll" data-testid="kanban-board" ondragover={overCanvas} ondrop={dropOnCanvas}>
+  <div class="canvas xp-scroll" data-testid="kanban-board" ondragover={overCanvas} ondrop={dropOnCanvas}>
     {#if board}
       {#each board.columns as col, ci (col.id)}
         {#if over?.kind === 'column' && over.index === ci}<div class="col-gap" data-testid="kanban-drop-column"></div>{/if}
@@ -422,7 +422,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .bar {
     flex: none;
@@ -449,7 +449,7 @@
     padding: 8px;
     overflow: auto;
     background: linear-gradient(#e9eff7, #d7e1ee);
-    border: 1px solid var(--w7-list-border);
+    border: 1px solid var(--xp-list-border);
   }
   .col {
     flex: none;
@@ -485,7 +485,7 @@
     white-space: nowrap;
   }
   .count {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .more {
@@ -499,8 +499,8 @@
     cursor: default;
   }
   .more:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .cards {
     flex: 0 1 auto;
@@ -526,7 +526,7 @@
     right: 0;
     top: -1px;
     height: 3px;
-    background: var(--w7-select-border);
+    background: var(--xp-select-border);
   }
   .col-gap {
     flex: none;
@@ -543,7 +543,7 @@
     bottom: 0;
     left: -1px;
     width: 3px;
-    background: var(--w7-select-border);
+    background: var(--xp-select-border);
   }
   .add,
   .add-col {
@@ -558,7 +558,7 @@
   }
   .add:hover,
   .add-col:hover {
-    background: var(--w7-hot-face);
+    background: var(--xp-hot-face);
     text-decoration: underline;
   }
   .add-col {

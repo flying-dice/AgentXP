@@ -1,5 +1,5 @@
-appId: com.flyingdice.agent7
-productName: Agent7
+appId: com.flyingdice.agentxp
+productName: AgentXP
 directories:
   buildResources: resources
 files:

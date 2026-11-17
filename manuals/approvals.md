@@ -19,12 +19,12 @@ By default, the agent can read files without asking. It asks before it writes a 
 
 There are two ways to make the agent ask. They differ in how long they last:
 
-- **For this desktop only.** Select the check box **Ask before every action (this session only)** in the top bar. Every tool asks first. This is not saved. When you clear the box, click **Resume**, or restart Agent7, the agent goes back to the settings of Control Center. The bar says so: **You are in control. All tools ask first until you click Resume. This is not saved.** Under it, **To keep a tool on Ask, change it in Control Center.**
-- **Always.** Set the tool to **Ask** or **Deny** in Control Center, on the **Permissions** page. Agent7 keeps this setting.
+- **For this desktop only.** Select the check box **Ask before every action (this session only)** in the top bar. Every tool asks first. This is not saved. When you clear the box, click **Resume**, or restart AgentXP, the agent goes back to the settings of Control Center. The bar says so: **You are in control. All tools ask first until you click Resume. This is not saved.** Under it, **To keep a tool on Ask, change it in Control Center.**
+- **Always.** Set the tool to **Ask** or **Deny** in Control Center, on the **Permissions** page. AgentXP keeps this setting.
 
 ## 2 - Make the Agent Ask
 
-To keep the agent asking, also after you restart Agent7, follow the steps below. To ask only for a while, select **Ask before every action (this session only)** in the top bar instead.
+To keep the agent asking, also after you restart AgentXP, follow the steps below. To ask only for a while, select **Ask before every action (this session only)** in the top bar instead.
 
 A chip that asks reads **Ask first**, for example **Run commands: Ask first**. While the box is selected, a chip that is not on **Ask** in Control Center reads **Ask first (now)**. Point to the chip to read the saved setting, for example **Saved setting: Allow.** If the app that gives the tool is closed, the tooltip says so, for example **The agent cannot use it yet because no Terminal is open.** The link **Control Center** in the line **To keep a tool on Ask...** opens the Permissions page.
 
@@ -43,7 +43,7 @@ To answer a request, follow the steps below:
 2. Read the box above the message box. It shows the file or the command. If the text is long, scroll inside the box. **Allow** and **Deny** always stay in the window. When a change has more rows than the box shows, and the window has room, the link **Show the whole change** makes the change bigger and the chat above it smaller. The link then reads **Show fewer lines**. In a window with no room to grow, the link does not show.
 3. Click **Allow** to let the agent go on, or click **Deny** to stop the action. You can also press A to allow. The Left and Right arrow keys move between the two choices.
 
-The focus starts on **Deny**, because Deny is the safe answer. Enter denies. The line **Enter denies. Press A to allow.** shows beside the two choices. When Agent7 asks because of a setting, for example **Run commands is set to Ask in Control Center.**, the box shows this on its own line under the command. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
+The focus starts on **Deny**, because Deny is the safe answer. Enter denies. The line **Enter denies. Press A to allow.** shows beside the two choices. When AgentXP asks because of a setting, for example **Run commands is set to Ask in Control Center.**, the box shows this on its own line under the command. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
 
 If you click **Deny**, the agent tells you that it could not do the action. The request leaves the Action Center.
 
@@ -55,14 +55,14 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 | Keys line (chat) | The same line in the permission box of a chat. | `permission-hint` |
 | Waiting count | The line **1 of 2 waiting** in the box, when more than one request waits. | `permission-queue` |
 | Waiting count (Action Center) | The same line in the permission dialog box of the Action Center. | `uac-queue` |
-| Setting line | The setting that made Agent7 ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
+| Setting line | The setting that made AgentXP ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
 | Change preview | The lines that change in the permission box of a chat. It shows at least 9 rows and up to 14, then it scrolls. When more rows follow, the last row is cut in half, so you see that there is more. It is the only part of the box that scrolls. The chat above the box keeps one row at least. | `permission-detail-view` |
 | Show all lines | Shows every line of a long change. When the chat window is too small for 9 rows it reads **Show the whole change**. After the click it reads **Show fewer lines**. It does not show when a click could not show more rows. | `permission-detail-more` |
 | Check box label | The label of the check box in the top bar: **Ask before every action (this session only)**. | `topbar-ask-slot` |
 | Not saved line | The line in the top bar while you are in control: **To keep a tool on Ask, change it in Control Center.** The status above it says **This is not saved.** | `topbar-control-note` |
 | Not saved link (top bar) | The words **Control Center** in that line. It opens the Permissions page. | `topbar-control-note-link` |
-| Not saved line (Activity) | The same sentence in the Activity list, under **You are in control... This is not saved.** | `gadget-activity-not-saved` |
-| Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `gadget-activity-open-permissions` |
+| Not saved line (Activity) | The same sentence in the Activity list, under **You are in control... This is not saved.** | `taskpane-activity-not-saved` |
+| Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `taskpane-activity-open-permissions` |
 | Chip help line | Shows the help text of a tool chip while the chip has the keyboard focus. | `topbar-chip-tip` |
 | Change preview (Action Center) | The same preview in the permission dialog box of the Action Center. | `uac-detail-view` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |

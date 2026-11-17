@@ -32,6 +32,6 @@
   .frame {
     padding: 6px;
     border-radius: 3px;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
 </style>

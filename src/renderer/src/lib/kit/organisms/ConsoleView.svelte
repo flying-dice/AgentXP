@@ -37,10 +37,10 @@
   })
 </script>
 
-<div class="w7-console {className}" style:max-height={maxHeight}>
+<div class="xp-console {className}" style:max-height={maxHeight}>
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
-    class="scroll w7-scroll"
+    class="scroll xp-scroll"
     bind:this={scroller}
     onscroll={onScroll}
     role="log"
@@ -59,19 +59,19 @@
 </div>
 
 <style>
-  .w7-console {
+  .xp-console {
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    background: var(--w7-console-bg);
+    background: var(--xp-console-bg);
     border: 1px solid #000;
   }
   .scroll {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    background: var(--w7-console-bg);
+    background: var(--xp-console-bg);
     color-scheme: light;
   }
   .scroll:focus-visible {
@@ -82,9 +82,9 @@
     margin: 0;
     padding: 6px 8px;
     min-height: 100%;
-    background: var(--w7-console-bg);
-    color: var(--w7-console-fg);
-    font: var(--w7-font-mono);
+    background: var(--xp-console-bg);
+    color: var(--xp-console-fg);
+    font: var(--xp-font-mono);
     line-height: 1.4;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -97,7 +97,7 @@
     height: 1.1em;
     margin-left: 1px;
     vertical-align: text-bottom;
-    background: var(--w7-console-fg);
+    background: var(--xp-console-fg);
   }
   .cursor.blink {
     animation: blink 1s steps(1) infinite;
@@ -106,7 +106,7 @@
   .cursor.locked {
     box-sizing: border-box;
     background: transparent;
-    border: 1px solid var(--w7-console-fg);
+    border: 1px solid var(--xp-console-fg);
   }
   @keyframes blink {
     50% {

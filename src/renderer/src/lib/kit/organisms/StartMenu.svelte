@@ -84,14 +84,14 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="w7-start" data-testid="start-menu" role="group" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
-  <div class="tile" aria-hidden="true"><Icon name="agent7" size={40} /></div>
+<div class="xp-start" data-testid="start-menu" role="group" tabindex="-1" aria-label="Start menu" onkeydown={onKeydown} use:clickOutside={{ handler: () => onclose?.(), ignore }}>
+  <div class="header"><div class="tile" aria-hidden="true"><Icon name="agentxp" size={40} /></div><span class="user">AgentXP</span></div>
   <div class="left">
     <ul class="programs" role="menu" aria-label="Programs">
       {#each shownPrograms as item (item.id)}
         <li role="none">
           <button type="button" role="menuitem" class="entry" class:hot={hotKey === `p:${item.id}`} data-hot={hotKey === `p:${item.id}`} id="sm-p:{item.id}" data-testid="start-menu-item-{item.id}" title={item.description} onclick={() => onrun?.(item.id)}>
-            {#if item.icon}<Icon name={item.icon} size={32} />{/if}
+            {#if item.icon}<Icon name={item.icon} size={28} />{/if}
             <span class="text"><span class="title">{item.title}</span></span>
           </button>
         </li>
@@ -154,84 +154,90 @@
         <li role="none"><button type="button" role="menuitem" class="place" data-testid="start-menu-place-{item.id}" onclick={() => onplace?.(item.id)}>{item.title}</button></li>
       {/each}
     </ul>
+  </div>
+  <div class="footer">
     <div class="power">
-      <button type="button" class="power-btn" data-testid="start-menu-power" onclick={() => onpower?.()}><Icon name={powerLabel.startsWith('Resume') ? 'play' : 'pause'} size={14} />{powerLabel}</button>
-    </div>
-    {#if ondisconnect}
-      <div class="shutdown">
-        <button type="button" class="power-btn main" data-testid="start-menu-disconnect" title="Close this window. The agents keep running." onclick={() => pick(ondisconnect)}>Disconnect</button><button
-          type="button"
-          class="power-btn arrow"
-          data-testid="start-menu-disconnect-arrow"
-          aria-haspopup="menu"
-          aria-expanded={shutdownOpen}
-          aria-label="Disconnect options"
-          onclick={() => (shutdownOpen = !shutdownOpen)}>▸</button
-        >
-        {#if shutdownOpen}
-          <ul class="shutdown-menu" role="menu" data-testid="start-menu-disconnect-menu">
-            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-disconnect" onclick={() => pick(ondisconnect)}>Disconnect</button></li>
-            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-switch" onclick={() => pick(onswitch)}>Switch desktop…</button></li>
-            <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-delete" onclick={() => pick(ondelete)}>Delete desktop…</button></li>
-          </ul>
-        {/if}
+        <button type="button" class="power-btn" data-testid="start-menu-power" onclick={() => onpower?.()}><Icon name={powerLabel.startsWith('Resume') ? 'play' : 'pause'} size={14} />{powerLabel}</button>
       </div>
-    {/if}
+      {#if ondisconnect}
+        <div class="shutdown">
+          <button type="button" class="power-btn main" data-testid="start-menu-disconnect" title="Close this window. The agents keep running." onclick={() => pick(ondisconnect)}>Disconnect</button><button
+            type="button"
+            class="power-btn arrow"
+            data-testid="start-menu-disconnect-arrow"
+            aria-haspopup="menu"
+            aria-expanded={shutdownOpen}
+            aria-label="Disconnect options"
+            onclick={() => (shutdownOpen = !shutdownOpen)}>▸</button
+          >
+          {#if shutdownOpen}
+            <ul class="shutdown-menu" role="menu" data-testid="start-menu-disconnect-menu">
+              <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-disconnect" onclick={() => pick(ondisconnect)}>Disconnect</button></li>
+              <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-switch" onclick={() => pick(onswitch)}>Switch desktop…</button></li>
+              <li role="none"><button type="button" role="menuitem" data-testid="start-menu-shutdown-delete" onclick={() => pick(ondelete)}>Delete desktop…</button></li>
+            </ul>
+          {/if}
+        </div>
+      {/if}
   </div>
 </div>
 
 <style>
-  .w7-start {
+  /* The XP Start menu: a blue frame, a header with the user tile, a white programs column, a pale blue places column, a footer with the power buttons. */
+  .xp-start {
     position: relative;
     box-sizing: border-box;
-    width: 410px;
-    height: 500px;
-    display: flex;
-    padding: 3px;
-    border: 1px solid var(--w7-glass-border);
-    border-radius: 8px;
-    isolation: isolate;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 2px 2px 14px rgba(0, 0, 0, 0.55);
-    font: var(--w7-font);
+    width: 380px;
+    height: 520px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 54px 1fr 38px;
+    padding: 0;
+    border: 1px solid #0831d9;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    background: var(--xp-start-header);
+    box-shadow: 3px 0 6px rgba(0, 0, 0, 0.45), 0 -2px 6px rgba(0, 0, 0, 0.35);
+    font: var(--xp-font);
     user-select: none;
   }
-  .w7-start::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: var(--w7-glass-face);
-    backdrop-filter: var(--w7-glass-blur);
-    pointer-events: none;
+  .header {
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    color: #fff;
+    background: linear-gradient(180deg, #1f55c6 0, #1941a5 100%);
+    border-bottom: 2px solid #f09a30;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .user {
+    font: bold 17px/1 Tahoma, 'Segoe UI', sans-serif;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
   }
   .tile {
-    position: absolute;
-    right: 40px;
-    top: -26px;
-    width: 62px;
-    height: 62px;
+    width: 44px;
+    height: 44px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(235, 244, 255, 0.95);
-    border-radius: 6px;
+    border: 2px solid #fff;
+    border-radius: 4px;
     background: linear-gradient(#f9fcff, #bcd5f0);
-    box-shadow: 0 0 0 1px rgba(20, 44, 84, 0.8), 0 2px 8px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 1px rgba(0, 20, 80, 0.5);
   }
   .left {
-    flex: none;
-    width: 252px;
-    margin: 20px 0 0 4px;
+    grid-column: 1;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     background: #fff;
-    border: 1px solid rgba(20, 44, 84, 0.7);
-    border-radius: 5px;
-    padding: 6px 4px 6px;
+    border-right: 1px solid #95bdee;
+    padding: 6px 4px;
     overflow: hidden;
+    min-height: 0;
   }
   ul {
     list-style: none;
@@ -246,10 +252,10 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 2px 6px;
-    border: 1px solid transparent;
-    border-radius: 3px;
+    gap: 7px;
+    padding: 3px 6px;
+    border: 0;
+    border-radius: 0;
     background: transparent;
     font: inherit;
     color: #000;
@@ -257,38 +263,42 @@
     cursor: default;
   }
   .entry.small {
-    gap: 7px;
-    padding: 3px 6px;
+    gap: 6px;
+    padding: 2px 6px;
   }
   .entry:hover,
   .entry.hot,
   .entry:focus-visible {
     outline: none;
-    border-color: #b8d6fb;
-    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(214, 232, 252, 0.9));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    background: var(--xp-highlight);
+    color: #fff;
   }
-  /* The keyboard focus ring: 2 px dotted, dark on the white column and white on the glass (3:1 or better on both). */
   .entry:focus-visible {
-    outline: 2px dotted #000;
-    outline-offset: -3px;
+    outline: 1px dotted #fff;
+    outline-offset: -2px;
   }
   .all {
     margin-top: 4px;
-    padding: 4px 6px;
+    padding: 5px 6px;
     gap: 12px;
+    justify-content: center;
+    font-weight: bold;
+    border-top: 1px solid #d3e5fa;
   }
   .tri {
     width: 0;
     height: 0;
-    margin: 0 5px 0 4px;
+    margin: 0 4px 0 2px;
     border-style: solid;
-    border-width: 4px 0 4px 6px;
-    border-color: transparent transparent transparent #000;
+    border-width: 5px 0 5px 7px;
+    border-color: transparent transparent transparent #1f8a1f;
+  }
+  .entry:hover .tri {
+    border-left-color: #fff;
   }
   .tri.open {
-    border-width: 6px 4px 0 4px;
-    border-color: #000 transparent transparent transparent;
+    border-width: 7px 5px 0 5px;
+    border-color: #1f8a1f transparent transparent transparent;
     margin: 2px 4px 0 3px;
   }
   .text {
@@ -301,17 +311,20 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .programs .title {
+    font-weight: bold;
+  }
   .heading {
-    margin: 8px 6px 2px;
+    margin: 6px 6px 2px;
     padding-top: 6px;
-    border-top: 1px solid #d5dfe5;
-    color: #3d5d8a;
+    border-top: 1px solid #d3e5fa;
+    color: #6b7a90;
     font-size: 11px;
   }
   .groups {
     flex: none;
     margin-top: 4px;
-    border-top: 1px solid #d5dfe5;
+    border-top: 1px solid #d3e5fa;
     padding-top: 4px;
     max-height: 190px;
     overflow: auto;
@@ -321,7 +334,6 @@
   }
   .caret {
     margin-left: auto;
-    color: #6b7a90;
     font-size: 10px;
   }
   .caret.open {
@@ -334,12 +346,12 @@
   }
   .none {
     padding: 10px 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .hint {
     margin: 6px 2px 0;
     color: #3a4656;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.3;
   }
   .search {
@@ -356,11 +368,9 @@
   input {
     width: 100%;
     box-sizing: border-box;
-    height: 23px;
+    height: 22px;
     padding: 0 24px 0 6px;
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
-    border-radius: 2px;
+    border: 1px solid var(--xp-input-border);
     font: inherit;
     background: #fff;
   }
@@ -368,13 +378,15 @@
     display: none;
   }
   .right {
-    flex: 1;
+    grid-column: 2;
     min-width: 0;
-    margin-top: 28px;
-    padding: 0 6px 0 14px;
+    min-height: 0;
+    padding: 6px 4px;
     display: flex;
     flex-direction: column;
-    color: #fff;
+    background: var(--xp-start-right);
+    color: #1b2a57;
+    overflow: auto;
   }
   .right ul {
     flex: 1;
@@ -383,79 +395,74 @@
     width: 100%;
     box-sizing: border-box;
     padding: 5px 8px;
-    border: 1px solid transparent;
-    border-radius: 3px;
+    border: 0;
     background: transparent;
     font: inherit;
-    color: #fff;
+    font-weight: bold;
+    color: #1b2a57;
     text-align: left;
     cursor: default;
-  }
-  .right li + li {
-    margin-top: 1px;
   }
   .place:focus-visible,
   .power-btn:focus-visible,
   .shutdown-menu button:focus-visible {
-    outline: 2px dotted #fff;
+    outline: 1px dotted #fff;
     outline-offset: -3px;
   }
   .place:hover,
   .place:focus-visible {
-    border-color: rgba(255, 255, 255, 0.55);
-    background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    background: var(--xp-highlight);
+    color: #fff;
   }
-  .power {
-    padding-bottom: 6px;
+  .footer {
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 0 10px;
+    background: var(--xp-start-footer);
+    border-top: 1px solid #5f8fdd;
+  }
+  .power,
+  .shutdown {
+    position: relative;
+    display: flex;
+    padding: 0;
   }
   .power-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     height: 24px;
-    padding: 0 12px;
-    border: 1px solid rgba(8, 24, 52, 0.85);
-    border-radius: 3px;
-    background: linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 50%, rgba(0, 20, 60, 0.18) 52%, rgba(255, 255, 255, 0.12));
+    padding: 0 8px;
+    border: 0;
+    border-radius: 2px;
+    background: transparent;
     color: #fff;
     font: inherit;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
     cursor: default;
   }
-  .shutdown {
-    position: relative;
-    display: flex;
-    padding-bottom: 8px;
-  }
-  .power-btn.main {
-    flex: 1;
-    justify-content: center;
-    border-radius: 3px 0 0 3px;
-  }
   .power-btn.arrow {
-    width: 24px;
+    width: 18px;
     padding: 0;
     justify-content: center;
-    border-left-color: rgba(255, 255, 255, 0.5);
-    border-radius: 0 3px 3px 0;
   }
   .shutdown-menu {
     position: absolute;
     right: 0;
-    bottom: 34px;
+    bottom: 30px;
     z-index: 1;
-    min-width: 140px;
+    min-width: 150px;
     padding: 2px;
-    border: 1px solid var(--w7-menu-border, #979797);
-    background: var(--w7-menu-face, #f0f0f0);
+    border: 1px solid #0831d9;
+    background: #fff;
     box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
   }
   .shutdown-menu button {
     width: 100%;
     padding: 4px 22px 4px 10px;
-    border: 1px solid transparent;
-    border-radius: 2px;
+    border: 0;
     background: transparent;
     font: inherit;
     color: #000;
@@ -465,12 +472,11 @@
   .shutdown-menu button:hover,
   .shutdown-menu button:focus-visible {
     outline: none;
-    border-color: var(--w7-menu-hot-border);
-    background: var(--w7-menu-hot-face);
+    background: var(--xp-highlight);
+    color: #fff;
   }
   .power-btn:hover {
-    background: linear-gradient(rgba(190, 235, 255, 0.6), rgba(120, 190, 240, 0.3) 50%, rgba(40, 120, 200, 0.35) 52%, rgba(150, 215, 255, 0.45));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 6px rgba(150, 220, 255, 0.7);
+    background: rgba(255, 255, 255, 0.22);
   }
   .power-btn:active {
     filter: brightness(0.85);

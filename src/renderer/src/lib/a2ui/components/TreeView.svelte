@@ -34,7 +34,7 @@
     display: flex;
     height: 160px;
   }
-  .tree :global(.w7-tree) {
+  .tree :global(.xp-tree) {
     flex: 1;
   }
 </style>

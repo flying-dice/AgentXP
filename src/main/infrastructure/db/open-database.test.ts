@@ -16,7 +16,7 @@ describe('openDatabase', () => {
   })
 
   it('uses WAL for file databases and creates parent directories', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'agent7-db-'))
+    const dir = mkdtempSync(join(tmpdir(), 'agentxp-db-'))
     try {
       const db = openDatabase(join(dir, 'nested', 'app.db'))
       expect(readPragma(db, 'journal_mode')).toBe('wal')

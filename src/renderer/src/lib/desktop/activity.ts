@@ -201,10 +201,10 @@ export function controlText(closedApps: readonly string[] = []): string {
   const closed = closedApps.length === 0 ? '' : ` ${closedApps.length === 1 ? closedApps[0] : `${closedApps.slice(0, -1).join(', ')} and ${closedApps[closedApps.length - 1]}`} ${closedApps.length === 1 ? 'is' : 'are'} not open.`
   return `${CONTROL_SENTENCE}${closed} ${NOT_KEPT}`
 }
-/** The first line of the Activity gadget while the user is in control and a step was running (UX-178: no "Stopped:"). */
+/** The first line of the Activity taskpane while the user is in control and a step was running (UX-178: no "Stopped:"). */
 export const CONTROL_NOTE = `You are in control. The agent asks first. ${NOT_KEPT}`
 /**
- * What the box does not do (UX-173): it is not a saved setting. The bar and the Activity gadget show it next to the
+ * What the box does not do (UX-173): it is not a saved setting. The bar and the Activity taskpane show it next to the
  * link that opens Permissions: `before`, the link text, `after`.
  */
 export const NOT_SAVED_NOTE = { before: 'To keep a tool on Ask, change it in ', link: 'Control Center', after: '.' } as const
@@ -222,7 +222,7 @@ export const TAKE_OVER_TIP = CONTROL_SENTENCE
 export const RESUME_CONTROL_BUTTON = 'Resume'
 export const RESUME_CONTROL_TIP = 'The agent goes back to the settings in Control Center and no longer asks before every action.'
 
-/** The first line of the Activity gadget: null when the user is not in control; "Stopped" only when a step was running (`stoppedStep`: a chat was busy when control was taken) or was stopped. */
+/** The first line of the Activity taskpane: null when the user is not in control; "Stopped" only when a step was running (`stoppedStep`: a chat was busy when control was taken) or was stopped. */
 export function controlNote(userInControl: boolean, feed: readonly FeedItem[], stoppedStep = false): string | null {
   if (!userInControl) return null
   return stoppedStep || feed.some((f) => f.status === 'pending' || f.status === 'in_progress' || f.status === 'cancelled') ? CONTROL_NOTE : CONTROL_IDLE_NOTE

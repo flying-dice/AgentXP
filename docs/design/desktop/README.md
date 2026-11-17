@@ -1,3 +1,5 @@
+> **Superseded.** This mockup is the old Windows 7 look. The design language is now Windows XP (Luna), see `../XP_DESIGN_LANGUAGE.md`. Keep this folder only for layout and behaviour, never for colours or chrome.
+
 # Claude's desktop (interactive) — design reference
 
 This is a design mockup created in a visual design tool, exported as a

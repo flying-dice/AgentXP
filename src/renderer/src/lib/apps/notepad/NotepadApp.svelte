@@ -246,7 +246,7 @@
 <div class="notepad" data-testid="notepad-app" oncontextmenu={(e) => ctx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Notepad menu" />
   <textarea
-    class="pad w7-scroll"
+    class="pad xp-scroll"
     data-testid="notepad-text"
     bind:this={area}
     bind:value={text}
@@ -309,7 +309,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .pad {
     flex: 1;
@@ -317,10 +317,10 @@
     margin: 0;
     padding: 2px 4px;
     border: 0;
-    border-top: 1px solid #d5dfe5;
+    border-top: 1px solid #d0d0bf;
     outline: 0;
     resize: none;
-    background: var(--w7-window);
+    background: var(--xp-window);
     color: #000;
     font: 13px/1.3 'Lucida Console', Consolas, 'DejaVu Sans Mono', monospace;
     tab-size: 8;

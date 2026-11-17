@@ -11,23 +11,23 @@
 <div
   role="separator"
   aria-orientation={orientation}
-  class="w7-sep {orientation} {variant} {className}"
+  class="xp-sep {orientation} {variant} {className}"
 ></div>
 
 <style>
-  .w7-sep {
+  .xp-sep {
     flex: none;
   }
   .toolbar.vertical {
     width: 2px;
     height: 22px;
     margin: 0 4px;
-    background: linear-gradient(90deg, var(--w7-etched-dark) 50%, #fff 50%);
+    background: linear-gradient(90deg, var(--xp-etched-dark) 50%, #fff 50%);
   }
   .toolbar.horizontal {
     height: 2px;
     margin: 4px 0;
-    background: linear-gradient(var(--w7-etched-dark) 50%, #fff 50%);
+    background: linear-gradient(var(--xp-etched-dark) 50%, #fff 50%);
   }
   .menu.horizontal {
     height: 2px;

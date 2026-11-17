@@ -72,7 +72,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    font: var(--w7-font);
-    color: var(--w7-text);
+    font: var(--xp-font);
+    color: var(--xp-text);
   }
 </style>

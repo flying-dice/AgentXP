@@ -11,8 +11,8 @@ describe('resume notes', () => {
     expect(stoppedLine('login-app')).toBe("In chat 'login-app': Paused. The step that was running was stopped. Resume agents and continue carries it on.")
     expect(resumedLine('login-app')).toBe(`In chat 'login-app': ${RESUMED_NOTE}`)
   })
-  it('labels the message Resume sends as written by Agent7, not by the user', () => {
-    expect(AUTOMATIC_SENDER).toBe('Agent7 (automatic)')
+  it('labels the message Resume sends as written by AgentXP, not by the user', () => {
+    expect(AUTOMATIC_SENDER).toBe('AgentXP (automatic)')
     expect(AUTOMATIC_SENDER).not.toMatch(/^You/)
   })
   it('quotes the request after a restart on one line, cut when long', () => {

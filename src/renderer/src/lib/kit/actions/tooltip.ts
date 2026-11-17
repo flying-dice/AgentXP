@@ -1,5 +1,5 @@
 /**
- * A Win7 tooltip for any element without a wrapper: `use:tooltip={'Save the file'}`.
+ * A WinXP tooltip for any element without a wrapper: `use:tooltip={'Save the file'}`.
  *
  * The browser's own `title` tooltip waits one second or more. This one shows after `TOOLTIP_DELAY_MS` (under half a
  * second, UX-45), follows the same look as the kit `ToolTip` atom, hides on leave, press, Escape and blur, and stays
@@ -35,7 +35,7 @@ export function tooltip(node: HTMLElement, text: string | undefined): { update(n
       background: 'linear-gradient(#fff, #e4e5f0)',
       boxShadow: '2px 2px 3px rgba(0, 0, 0, 0.25)',
       color: '#575757',
-      font: 'var(--w7-font)',
+      font: 'var(--xp-font)',
       pointerEvents: 'none',
       whiteSpace: 'pre-wrap',
       left: '0px',

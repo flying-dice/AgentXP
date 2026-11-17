@@ -63,7 +63,7 @@
   <div class="form">
     <div class="field">
       <DesktopNameField bind:value={name} label="Desktop name:" {existingNames} idPrefix="new-desktop" project={firstProject} />
-      <p class="opens" data-testid="new-desktop-opens-note">Agent7 opens the new desktop when you click Create.</p>
+      <p class="opens" data-testid="new-desktop-opens-note">AgentXP opens the new desktop when you click Create.</p>
     </div>
     <div class="field">
       <Label text="Projects the agent can use (each project appears as a drive):" />
@@ -97,7 +97,7 @@
   }
   .opens {
     margin: 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .field.inline {
     flex-direction: row;
@@ -109,7 +109,7 @@
     gap: 8px;
     align-items: flex-start;
   }
-  .projects :global(.w7-checkedlist),
+  .projects :global(.xp-checkedlist),
   .projects > :global(*:first-child) {
     flex: 1;
     min-width: 0;

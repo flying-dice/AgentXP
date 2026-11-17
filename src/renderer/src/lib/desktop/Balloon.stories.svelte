@@ -15,13 +15,13 @@
   {#snippet template(args)}<div class="stage"><Balloon {...args} /></div>{/snippet}
 </Story>
 
-<Story name="Information" args={{ title: 'Agent7', text: 'The agent finished the task.', icon: 'info' }}>
+<Story name="Information" args={{ title: 'AgentXP', text: 'The agent finished the task.', icon: 'info' }}>
   {#snippet template(args)}<div class="stage"><Balloon {...args} /></div>{/snippet}
 </Story>
 
 <style>
   .stage {
     padding: 24px 24px 40px;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

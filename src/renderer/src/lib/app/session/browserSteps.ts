@@ -9,7 +9,7 @@ type Input = Record<string, unknown>
 
 const BROWSER_TOOL = /(?:^|[.\s]|__)(browser_[a-z]+)(?![a-z_])/
 
-/** `agent7.browser_click` and `mcp__agent7__browser_click` give `browser_click`; any other tool gives null. */
+/** `agentxp.browser_click` and `mcp__agentxp__browser_click` give `browser_click`; any other tool gives null. */
 export function browserToolName(name: string): string | null {
   return BROWSER_TOOL.exec(name.trim())?.[1] ?? null
 }

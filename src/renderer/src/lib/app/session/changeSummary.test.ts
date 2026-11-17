@@ -14,8 +14,8 @@ describe('changeSummary', () => {
 
   it('says it cannot show the change when the old text is unknown, and does not claim a replacement', () => {
     const s = changeSummary(null, 'x\ny\n')
-    expect(s).toMatchObject({ unreadable: true, text: 'Agent7 cannot read the file, so it cannot show what changes.' })
-    expect(changeSummary(null, 'x\n', { path: 'E:\\a.ts', error: 'in_use' }).text).toBe('Agent7 cannot read E:\\a.ts: it is in use.')
+    expect(s).toMatchObject({ unreadable: true, text: 'AgentXP cannot read the file, so it cannot show what changes.' })
+    expect(changeSummary(null, 'x\n', { path: 'E:\\a.ts', error: 'in_use' }).text).toBe('AgentXP cannot read E:\\a.ts: it is in use.')
     expect(s.text).not.toMatch(/whole file/)
   })
   it('claims a whole-file replacement only when every line changes', () => {

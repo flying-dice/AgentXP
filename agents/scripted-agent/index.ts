@@ -1,10 +1,10 @@
 /**
- * Scripted ACP agent for end-to-end tests of Agent7. Speaks ACP over stdio.
+ * Scripted ACP agent for end-to-end tests of AgentXP. Speaks ACP over stdio.
  *
  *   node --experimental-strip-types --no-warnings agents/scripted-agent/index.ts --script demo
  *   ELECTRON_RUN_AS_NODE=1 electron out/main/scripted-agent.js --script <file>
  *
- * Script: `--script <path|name>` or env AGENT7_SCRIPT (default `demo`). Control socket: env AGENT7_SCRIPT_CONTROL.
+ * Script: `--script <path|name>` or env AGENTXP_SCRIPT (default `demo`). Control socket: env AGENTXP_SCRIPT_CONTROL.
  */
 import { Readable, Writable } from 'node:stream'
 import { ndJsonStream } from '@agentclientprotocol/sdk'
@@ -14,8 +14,8 @@ import { loadScript } from './script.ts'
 import { resolveScriptPath } from './scriptPath.ts'
 import { ScriptHost } from './scriptHost.ts'
 
-const ENV_SCRIPT = 'AGENT7_SCRIPT'
-const ENV_CONTROL = 'AGENT7_SCRIPT_CONTROL'
+const ENV_SCRIPT = 'AGENTXP_SCRIPT'
+const ENV_CONTROL = 'AGENTXP_SCRIPT_CONTROL'
 
 function scriptArg(argv: string[]): string {
   const at = argv.indexOf('--script')

@@ -54,9 +54,9 @@
     padding: 0 8px;
   }
   .bl {
-    border-left: 1px solid var(--w7-etched-dark);
+    border-left: 1px solid var(--xp-etched-dark);
   }
   .br {
-    border-right: 1px solid var(--w7-etched-dark);
+    border-right: 1px solid var(--xp-etched-dark);
   }
 </style>

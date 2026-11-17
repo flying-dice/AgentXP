@@ -118,7 +118,7 @@
   aria-multiselectable={selectionMode !== 'One'}
   aria-disabled={disabled}
   aria-activedescendant={active >= 0 ? `${uid}-${active}` : undefined}
-  class="w7-listbox w7-scroll {className}"
+  class="xp-listbox xp-scroll {className}"
   class:disabled
   class:focused
   style="width:{dim(width)};height:{dim(height)}"
@@ -150,21 +150,21 @@
 </div>
 
 <style>
-  .w7-listbox {
+  .xp-listbox {
     display: block;
     box-sizing: border-box;
     padding: 1px 0;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
-    font: var(--w7-font);
-    color: var(--w7-text);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
+    font: var(--xp-font);
+    color: var(--xp-text);
     outline: none;
     overflow-x: hidden;
   }
-  .w7-listbox.disabled {
-    background: var(--w7-face);
-    color: var(--w7-text-disabled);
-    border-color: var(--w7-border-disabled);
+  .xp-listbox.disabled {
+    background: var(--xp-face);
+    color: var(--xp-text-disabled);
+    border-color: var(--xp-border-disabled);
   }
   .item {
     display: flex;
@@ -181,18 +181,18 @@
     text-overflow: ellipsis;
   }
   .item.off {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
   /* Selected, list not focused: classic inactive grey highlight. */
   .item.selected {
     background: #d9d9d9;
   }
   .focused .item.selected {
-    background: var(--w7-list-select-face);
-    color: var(--w7-list-select-text);
+    background: var(--xp-list-select-face);
+    color: var(--xp-list-select-text);
   }
   .item.active {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -1px;
   }
   .focused .item.selected.active {

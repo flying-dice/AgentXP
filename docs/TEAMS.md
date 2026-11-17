@@ -8,9 +8,9 @@ How agents get capabilities and how a team works in a chat room. Types live in `
 - An **MCP server** is a stdio command or an HTTP URL, with env vars or headers (a var can be secret) and a switch per tool.
   `test` connects with the MCP SDK client, lists the tools and stores them.
 - A plain chat gets every enabled skill and server. `AgentCapabilities` builds the `mcpServers` list of `session/new` and `session/load`.
-- Skills reach the agent as a hidden resource block (`agent7://briefing`) on the first prompt of a session. The transcript hides it.
+- Skills reach the agent as a hidden resource block (`agentxp://briefing`) on the first prompt of a session. The transcript hides it.
 - When tools of a server are switched off, the server is launched behind a stdio filtering proxy
-  (`infrastructure/mcp/proxy-entry.ts`, Electron in node mode, env `AGENT7_MCP_TARGET` and `AGENT7_MCP_HIDE`).
+  (`infrastructure/mcp/proxy-entry.ts`, Electron in node mode, env `AGENTXP_MCP_TARGET` and `AGENTXP_MCP_HIDE`).
 
 ## Profiles and teams
 

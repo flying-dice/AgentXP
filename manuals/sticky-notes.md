@@ -40,7 +40,7 @@ The toolbar has **New note**, **Color**, and **Plan note**.
 
 ### The Note List
 
-The list shows one row for each note. A row has the color, the first line of the note, and the label **Agent7** if the agent wrote it. Click the **x** at the end of a row to delete the note.
+The list shows one row for each note. A row has the color, the first line of the note, and the label **AgentXP** if the agent wrote it. Click the **x** at the end of a row to delete the note.
 
 ### The Notes on the Desktop
 
@@ -100,7 +100,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 To add a note, follow the steps below:
 
 1. Click **New note**. A note appears on the desktop.
-2. Click in the note and type your text. Agent7 saves it while you type.
+2. Click in the note and type your text. AgentXP saves it while you type.
 
 To change the color of a note, right-click the note and select a color.
 

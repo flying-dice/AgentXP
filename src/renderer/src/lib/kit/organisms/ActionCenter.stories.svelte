@@ -42,6 +42,6 @@
     height: 100vh;
     box-sizing: border-box;
     padding: 0 12px 12px 0;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

@@ -8,7 +8,7 @@
     title?: string
     iconName?: IconName
     icon?: Snippet
-    /** Active windows get the saturated Aero frame, inactive ones the pale one. */
+    /** Active windows get the saturated Luna frame, inactive ones the pale one. */
     active?: boolean
     windowState?: WindowState
     /** Render only the client chrome, for use inside a real window that already has a frame. */
@@ -90,12 +90,12 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-  class="w7-form {className}"
+  class="xp-form {className}"
   class:frameless
   class:inactive={!active}
   class:maximized
   class:dialog
-  data-w7-form
+  data-xp-form
   data-testid={testid}
   role={role ?? (dialog ? 'dialog' : 'group')}
   aria-modal={ariaModal}
@@ -139,63 +139,28 @@
 </div>
 
 <style>
-  .w7-form {
+  /* A Luna window: a blue title bar and a 4 px blue frame with rounded top corners, around the client area. */
+  .xp-form {
     position: relative;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 0 8px 8px;
-    border: 1px solid var(--w7-frame-border);
-    border-radius: 7px;
-    isolation: isolate;
-    box-shadow: var(--w7-frame-shadow);
-    font: var(--w7-font);
-    color: var(--w7-text);
+    padding: 0 var(--xp-frame-width) var(--xp-frame-width);
+    border: 1px solid var(--xp-frame-border);
+    border-radius: 8px 8px 0 0;
+    background: var(--xp-frame-active);
+    box-shadow: var(--xp-frame-shadow);
+    font: var(--xp-font);
+    color: var(--xp-text);
     min-width: 0;
     min-height: 0;
   }
-  /*
-   * The frame glass is a layer behind the content, not a backdrop-filter on the frame itself: a backdrop-filter makes
-   * its element the containing block of position:fixed descendants, which moved every popup (combo lists, menus) of the
-   * window to the wrong place.
-   */
-  .w7-form::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: var(--w7-frame-active);
-    backdrop-filter: var(--w7-glass-blur);
-    pointer-events: none;
+  .xp-form.inactive {
+    border-color: var(--xp-frame-inactive-border);
+    background: var(--xp-frame-inactive);
+    box-shadow: var(--xp-frame-shadow-inactive);
   }
-  .w7-form.inactive {
-    border-color: var(--w7-frame-inactive-border);
-    box-shadow: var(--w7-frame-shadow-inactive);
-  }
-  .w7-form.inactive::before {
-    background: var(--w7-frame-inactive);
-    backdrop-filter: none;
-  }
-  .w7-form.maximized::before {
-    backdrop-filter: none;
-  }
-  .w7-form.frameless::before {
-    display: none;
-  }
-  .w7-form.maximized {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
-    padding: 0 0 0;
-    border: 0;
-    border-radius: 0;
-  }
-  .w7-form.maximized :global(.form-title) {
-    padding-left: 6px;
-  }
-  .w7-form.frameless {
+  .xp-form.frameless {
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -204,22 +169,34 @@
     width: 100%;
     height: 100%;
   }
+  .xp-form.maximized {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .xp-form.maximized :global(.form-title) {
+    padding-left: 6px;
+  }
   .client {
     position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
-    border: 1px solid var(--w7-client-border);
+    background: var(--xp-face);
+    border: 1px solid var(--xp-client-border);
   }
   .client.window {
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
-  .w7-form.frameless .client {
+  .xp-form.frameless .client {
     border: 0;
   }
-  .w7-form.maximized .client {
+  .xp-form.maximized .client {
     border-left: 0;
     border-right: 0;
     border-bottom: 0;

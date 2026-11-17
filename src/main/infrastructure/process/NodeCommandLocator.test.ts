@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { NodeCommandLocator } from './NodeCommandLocator'
 
-const dir = mkdtempSync(join(tmpdir(), 'agent7-locator-'))
+const dir = mkdtempSync(join(tmpdir(), 'agentxp-locator-'))
 const tool = join(dir, 'my-tool')
 writeFileSync(tool, '#!/bin/sh\n')
 chmodSync(tool, 0o755)

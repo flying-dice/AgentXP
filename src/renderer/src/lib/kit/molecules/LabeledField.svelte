@@ -39,8 +39,8 @@
     align-items: center;
     gap: 6px;
   }
-  .control > :global(.w7-textbox),
-  .control > :global(.w7-combo) {
+  .control > :global(.xp-textbox),
+  .control > :global(.xp-combo) {
     flex: 1;
     min-width: 0;
   }

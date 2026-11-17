@@ -21,7 +21,7 @@
     flex-direction: column;
     width: 330px;
     height: 300px;
-    border: 1px solid var(--w7-panel-border);
-    background: var(--w7-window);
+    border: 1px solid var(--xp-panel-border);
+    background: var(--xp-window);
   }
 </style>

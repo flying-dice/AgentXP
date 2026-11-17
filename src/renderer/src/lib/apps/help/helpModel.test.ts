@@ -4,7 +4,7 @@ import { back, forward, indexSections, markWords, parseTopics, plainText, queryW
 const files = {
   '/manuals/paint.md': '# Using Agent Paint\n\nDraw with the **Pencil**.',
   '/manuals/notepad.md': '# Using Notepad\n\nSave a text file with Ctrl+S.',
-  '/manuals/index.md': '# Agent7 Help and Support\n\nPress F1.',
+  '/manuals/index.md': '# AgentXP Help and Support\n\nPress F1.',
   '/manuals/desktop.md': '# Using the Desktop\n\nThe taskbar.',
   '/manuals/zzz.md': 'No heading here'
 }
@@ -89,7 +89,7 @@ describe('history', () => {
 
 describe('search that finds the answer (UX-44)', () => {
   const topics = parseTopics({
-    '/manuals/index.md': '# Agent7 Help and Support\n\nHome.',
+    '/manuals/index.md': '# AgentXP Help and Support\n\nHome.',
     '/manuals/agent-does-not-start.md': '# The agent does not start\n\n## Troubleshooting\n\nIf the chat gives no answer, the page stays blank. Click **Restart**.',
     '/manuals/notepad.md': '# Using Notepad\n\n## 3 - The Window\n\nThe page has a menu bar.'
   })

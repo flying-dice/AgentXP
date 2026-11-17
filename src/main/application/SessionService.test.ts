@@ -169,7 +169,7 @@ describe('SessionService.prompt', () => {
 
 describe('SessionService.prompt desktop context', () => {
   const json = '{"desktopId":1}'
-  const resource = { kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json', text: json }
+  const resource = { kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json', text: json }
 
   it('puts the client\'s desktop state before the user\'s text and stores it with the message', async () => {
     const session = await service.create(f.desktop.id)

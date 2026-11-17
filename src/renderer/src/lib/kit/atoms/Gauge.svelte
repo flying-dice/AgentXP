@@ -21,7 +21,7 @@
   const arc = (from: number, to: number, r: number): string => `M${point(from, r)} A${r},${r} 0 ${to - from > 180 ? 1 : 0} 1 ${point(to, r)}`
 </script>
 
-<svg class="w7-gauge" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="{label ?? 'Gauge'}: {Math.round(v * 100)}%">
+<svg class="xp-gauge" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="{label ?? 'Gauge'}: {Math.round(v * 100)}%">
   <defs>
     <radialGradient id="gauge-face" cx="50%" cy="40%" r="65%"><stop offset="0" stop-color="#3d4a5c" /><stop offset="1" stop-color="#10161f" /></radialGradient>
   </defs>
@@ -38,7 +38,7 @@
 </svg>
 
 <style>
-  .w7-gauge {
+  .xp-gauge {
     display: block;
     flex: none;
   }

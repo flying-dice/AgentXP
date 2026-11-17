@@ -108,7 +108,7 @@
   function scrollToTarget(heading: HTMLElement): void {
     if (!article) return
     const top = heading.getBoundingClientRect().top - article.getBoundingClientRect().top + article.scrollTop
-    const tail = article.querySelector<HTMLElement>('.w7-help-md')
+    const tail = article.querySelector<HTMLElement>('.xp-help-md')
     if (tail) {
       const own = parseFloat(tail.style.paddingBottom) || 0
       tail.style.paddingBottom = `${tailPadding(top, article.scrollHeight, article.clientHeight, own)}px`
@@ -265,7 +265,7 @@
   </div>
   <div class="body">
     {#if contentsOpen}
-    <nav class="topics w7-scroll" aria-label="Help topics" data-testid="help-topics">
+    <nav class="topics xp-scroll" aria-label="Help topics" data-testid="help-topics">
       <div class="caption">{searching ? 'Search results' : 'Help topics'}</div>
       <ul>
         {#if searching}
@@ -294,9 +294,9 @@
     {/if}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <article class="article w7-scroll" data-testid="help-article" data-topic={topic} aria-label={current?.title ?? 'Help'} tabindex="0" bind:this={article} onclick={onArticleClick}>
+    <article class="article xp-scroll" data-testid="help-article" data-topic={topic} aria-label={current?.title ?? 'Help'} tabindex="0" bind:this={article} onclick={onArticleClick}>
       {#if current}
-        <div class="w7-help-md">{@html html}</div>
+        <div class="xp-help-md">{@html html}</div>
       {:else}
         <p data-testid="help-missing">This topic does not exist. Click <b>Home</b> to see all topics.</p>
       {/if}
@@ -316,7 +316,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .bar {
     flex: none;
@@ -356,7 +356,7 @@
     gap: 4px;
     width: 220px;
   }
-  .search :global(.w7-textbox) {
+  .search :global(.xp-textbox) {
     flex: 1;
     min-width: 0;
   }
@@ -389,12 +389,12 @@
   }
   .snippet {
     padding-left: 22px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
     line-height: 1.35;
   }
   .snippet :global(mark),
-  .w7-help-md :global(mark) {
+  .xp-help-md :global(mark) {
     background: #ffe97a;
     color: inherit;
   }
@@ -404,7 +404,7 @@
   }
   .where {
     padding-left: 22px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .topic {
@@ -427,11 +427,11 @@
   }
   .topic.on {
     background: linear-gradient(#e7f2fe, #c6dcf6);
-    border-color: #7da2ce;
+    border-color: #316ac5;
   }
   .none {
     padding: 6px 10px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .article {
     flex: 1;
@@ -442,19 +442,19 @@
     user-select: text;
     cursor: auto;
   }
-  .w7-help-md {
-    font: var(--w7-font);
-    color: var(--w7-text);
+  .xp-help-md {
+    font: var(--xp-font);
+    color: var(--xp-text);
     line-height: 1.5;
     overflow-wrap: anywhere;
   }
-  .w7-help-md :global(h1) {
+  .xp-help-md :global(h1) {
     margin: 4px 0 8px;
     font-size: 21px;
     font-weight: normal;
     color: #003399;
   }
-  .w7-help-md :global(h2) {
+  .xp-help-md :global(h2) {
     margin: 18px 0 6px;
     padding-bottom: 2px;
     font-size: 17px;
@@ -463,96 +463,96 @@
     border-bottom: 1px solid #d5dfee;
   }
   /* The chapters of the Table of Contents other than the current one show their title only (UX-132). */
-  .w7-help-md :global(li.toc-collapsed > ul) {
+  .xp-help-md :global(li.toc-collapsed > ul) {
     display: none;
   }
-  .w7-help-md :global(.target) {
+  .xp-help-md :global(.target) {
     background: #fff3b0;
   }
-  .w7-help-md :global(.flash) {
+  .xp-help-md :global(.flash) {
     background: #ffe97a;
     outline: 1px solid #e0b800;
   }
-  .w7-help-md :global(h3) {
+  .xp-help-md :global(h3) {
     margin: 12px 0 4px;
     font-size: 14px;
     font-weight: normal;
     color: #1d3f7a;
   }
-  .w7-help-md :global(p),
-  .w7-help-md :global(ul),
-  .w7-help-md :global(ol),
-  .w7-help-md :global(table),
-  .w7-help-md :global(pre),
-  .w7-help-md :global(blockquote) {
+  .xp-help-md :global(p),
+  .xp-help-md :global(ul),
+  .xp-help-md :global(ol),
+  .xp-help-md :global(table),
+  .xp-help-md :global(pre),
+  .xp-help-md :global(blockquote) {
     margin: 0 0 10px;
   }
-  .w7-help-md :global(ul) {
+  .xp-help-md :global(ul) {
     padding-left: 22px;
     list-style: disc;
   }
-  .w7-help-md :global(ol) {
+  .xp-help-md :global(ol) {
     padding-left: 24px;
     list-style: decimal;
   }
-  .w7-help-md :global(li) {
+  .xp-help-md :global(li) {
     margin: 2px 0;
   }
   /* A link is at least 24 px high: padding adds to the hit area without moving the text (UX-83). */
-  .w7-help-md :global(a) {
+  .xp-help-md :global(a) {
     padding: 5px 0;
-    color: var(--w7-link);
+    color: var(--xp-link);
     text-decoration: underline;
     cursor: pointer;
   }
-  .w7-help-md :global(li > a:only-child) {
+  .xp-help-md :global(li > a:only-child) {
     display: inline-block;
     min-height: 24px;
     padding: 3px 0;
     line-height: 18px;
   }
-  .w7-help-md :global(.external) {
-    color: var(--w7-text-muted);
+  .xp-help-md :global(.external) {
+    color: var(--xp-text-muted);
   }
-  .w7-help-md :global(hr) {
+  .xp-help-md :global(hr) {
     border: 0;
     border-top: 1px solid #d5d5d5;
     border-bottom: 1px solid #fff;
     margin: 12px 0;
   }
-  .w7-help-md :global(code) {
+  .xp-help-md :global(code) {
     font-family: Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
     font-size: 12px;
     padding: 0 3px;
     background: #f3f3f3;
     border: 1px solid #e1e1e1;
   }
-  .w7-help-md :global(pre) {
+  .xp-help-md :global(pre) {
     padding: 6px 8px;
     background: #fff;
     border: 1px solid #c8d3e3;
     overflow: auto;
   }
-  .w7-help-md :global(pre code) {
+  .xp-help-md :global(pre code) {
     padding: 0;
     border: 0;
     background: none;
     white-space: pre;
   }
-  .w7-help-md :global(table) {
+  .xp-help-md :global(table) {
     border-collapse: collapse;
     display: block;
     overflow-x: auto;
   }
-  .w7-help-md :global(th),
-  .w7-help-md :global(td) {
+  .xp-help-md :global(th),
+  .xp-help-md :global(td) {
     border: 1px solid #a0a0a0;
     padding: 3px 8px;
     text-align: left;
     vertical-align: top;
   }
-  .w7-help-md :global(th) {
-    background: linear-gradient(#fff, #f1f1f1 90%, #e6e6e6);
+  .xp-help-md :global(th) {
+    background: linear-gradient(#fff, #f1f1f1 90%, #ece9d8);
     font-weight: normal;
   }
 </style>

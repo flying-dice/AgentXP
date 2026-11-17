@@ -22,7 +22,7 @@
 <button
   type="button"
   data-testid={testid}
-  class="w7-desktop-icon"
+  class="xp-desktop-icon"
   class:selected
   data-desktop-icon
   {title}
@@ -43,7 +43,7 @@
 </button>
 
 <style>
-  .w7-desktop-icon {
+  .xp-desktop-icon {
     width: 86px;
     box-sizing: border-box;
     padding: 4px 2px 3px;
@@ -55,7 +55,7 @@
     border-radius: 3px;
     background: transparent;
     color: #fff;
-    font: var(--w7-font);
+    font: var(--xp-font);
     text-align: center;
     text-shadow: 0 0 4px #000, 0 1px 2px #000;
     cursor: default;
@@ -69,17 +69,17 @@
     overflow-wrap: anywhere;
     line-height: 1.2;
   }
-  .w7-desktop-icon:hover {
+  .xp-desktop-icon:hover {
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.16);
   }
-  .w7-desktop-icon.selected,
-  .w7-desktop-icon:focus-visible {
+  .xp-desktop-icon.selected,
+  .xp-desktop-icon:focus-visible {
     border-color: rgba(255, 255, 255, 0.7);
     background: rgba(120, 175, 235, 0.42);
   }
   /* The dotted focus rectangle stays visible on the blue desktop (white on blue, over 3:1). */
-  .w7-desktop-icon:focus-visible {
+  .xp-desktop-icon:focus-visible {
     outline: 2px dotted #fff;
     outline-offset: -2px;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);

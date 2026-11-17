@@ -23,7 +23,7 @@ This manual describes Control Center. Control Center sets the agents, the permis
 
 ## 1 - What It Is For
 
-Use Control Center to add an agent, to choose when Agent7 asks you before the agent acts, and to hide the gadgets.
+Use Control Center to add an agent, to choose when AgentXP asks you before the agent acts, and to hide the taskpanes.
 
 ## 2 - Open It
 
@@ -37,11 +37,11 @@ Only one Control Center window exists on a desktop.
 
 ### The Task List
 
-The list is at the left under the title **Control Center Home**. It has **Agents**, **Permissions**, **Skills and MCP**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
+The list is at the left under the title **Control Center Home**. It has **Agents**, **Permissions**, **Skills and MCP**, **Appearance**, and **About AgentXP**. A heading at the top of the right side names the page.
 
 ### The Agents Page
 
-The page lists the agents. The columns are **Name**, **About** (one plain sentence, for example that the Scripted Agent is a practice agent that gives fixed sample answers and does not use an AI model), **Command**, and **Default**. For an agent that you added, **About** shows the command. When the page opens, it looks for the program of each agent. For an agent whose program is missing, **About** says **Not installed** (an agent that Agent7 knows) or **Not found** (an agent that you added). The default agent shows the same words. **Set as Default** on such a row asks **This program was not found. Make it the default anyway?** The answer **No** is the default. The name comes first and a long command is cut short; point at a row to see its full command. When you open the page with **Open Agents** from a chat whose agent did not start, that agent is already selected and in view. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
+The page lists the agents. The columns are **Name**, **About** (one plain sentence, for example that the Scripted Agent is a practice agent that gives fixed sample answers and does not use an AI model), **Command**, and **Default**. For an agent that you added, **About** shows the command. When the page opens, it looks for the program of each agent. For an agent whose program is missing, **About** says **Not installed** (an agent that AgentXP knows) or **Not found** (an agent that you added). The default agent shows the same words. **Set as Default** on such a row asks **This program was not found. Make it the default anyway?** The answer **No** is the default. The name comes first and a long command is cut short; point at a row to see its full command. When you open the page with **Open Agents** from a chat whose agent did not start, that agent is already selected and in view. New desktops use the default agent. A chat uses the agent of the desktop it is on. The buttons are at the right of the list:
 
 - **Add...** – Opens the **Add Agent** dialog box.
 - **Edit...** – Opens the **Edit Agent** dialog box for the selected agent.
@@ -51,7 +51,7 @@ The page lists the agents. The columns are **Name**, **About** (one plain senten
 The agent dialog box has these parts:
 
 - **Name** – Optional. Without a name, the agent is listed by its command, for example `node my-agent.js`.
-- **Command** – The program to run, for example `node`. Click **Test** to see if Agent7 finds the program. The line under the box says **Found 'node'.** or **Could not find 'node'.**
+- **Command** – The program to run, for example `node`. Click **Test** to see if AgentXP finds the program. The line under the box says **Found 'node'.** or **Could not find 'node'.**
 - **Arguments** – One per line, for example `my-agent.js`.
 - **Environment** – KEY=VALUE, one per line.
 - **Start mode** – The mode that every new chat of the agent starts in. See below.
@@ -92,7 +92,7 @@ The page has two lists. A **skill** is a folder with a SKILL.md file that tells 
 
 The **Skills** list has the columns **Name**, **Description**, and **State**. The buttons are at the right of the list:
 
-- **Install...** – Asks for a skill folder. The folder must have a SKILL.md file that starts with a **name** and a **description**. Agent7 keeps a copy.
+- **Install...** – Asks for a skill folder. The folder must have a SKILL.md file that starts with a **name** and a **description**. AgentXP keeps a copy.
 - **Remove** – Removes the selected skill after a question. Profiles and teams lose it.
 - **Turn Off** or **Turn On** – Switches the selected skill.
 
@@ -116,11 +116,11 @@ The server dialog box has these parts:
 
 ### The Appearance Page
 
-The page has the option **Show gadgets on the desktop**. The gadgets are the context meter, the desktop clock, and the activity list. The theme is Windows 7 Aero Basic. You cannot change it.
+The page has the option **Show taskpanes on the desktop**. The taskpanes are the context meter, the desktop clock, and the activity list. The theme is Windows XP Luna (Blue). You cannot change it.
 
 ### The About Page
 
-The page shows the version of Agent7. The version is the one in the package, also when Agent7 runs from a build folder.
+The page shows the version of AgentXP. The version is the one in the package, also when AgentXP runs from a build folder.
 
 ### The Chat Pane
 
@@ -133,7 +133,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Control Center window | The root of the window. | `control-centre-app` |
 | Page button | Opens a page. The name ends with `agents`, `permissions`, `skills`, `appearance`, or `about`. | `control-centre-page-*` |
 | Heading | Names the page. | `control-centre-heading` |
-| Version | Shows the version of Agent7. | `control-centre-version` |
+| Version | Shows the version of AgentXP. | `control-centre-version` |
 | Agents | The list of agents. | `agents-list` |
 | Agent row | One agent. | `agents-row` |
 | Add... | Adds an agent. | `agents-add` |
@@ -199,7 +199,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | OK | Saves the permissions and brings back the window that opened Control Center. | `permissions-ok` |
 | Apply | Saves the permissions. | `permissions-apply` |
 | Cancel | Drops the changes. | `permissions-cancel` |
-| Show gadgets on the desktop | Shows or hides the gadgets. | none |
+| Show taskpanes on the desktop | Shows or hides the taskpanes. | none |
 
 ### Menu Bar and Context Menu
 
@@ -222,18 +222,18 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 To add an agent, follow the steps below:
 
 1. Click **Agents**, then **Add...** The **Add Agent** dialog box appears.
-2. Type the program in **Command**, for example `node`. Click **Test** to see if Agent7 finds it.
+2. Type the program in **Command**, for example `node`. Click **Test** to see if AgentXP finds it.
 3. Type each argument on its own line in **Arguments**, for example `my-agent.js`.
 4. Keep **Make this the default agent for new desktops and chats** on, or clear it.
 5. Click **OK**. The agent appears in the list. The name is optional.
 
-To make Agent7 ask before the agent writes files, follow the steps below:
+To make AgentXP ask before the agent writes files, follow the steps below:
 
 1. Click **Permissions**.
 2. Select **Ask** in the list of the row **Write files**.
 3. Click **Apply**.
 
-To make Agent7 ask before every action, even reading, tick **Ask before every action** in the top bar. See **[The Desktop](desktop.md)**.
+To make AgentXP ask before every action, even reading, tick **Ask before every action** in the top bar. See **[The Desktop](desktop.md)**.
 
 To stop the agent from opening apps, select **Deny** in the row **Agent may open apps** and click **Apply**.
 

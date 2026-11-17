@@ -2,7 +2,7 @@
 // Must not import electron.
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { SocketBridgeClient } from './bridge-client'
-import { createAgent7McpServer } from './mcp-tools'
+import { createAgentXPMcpServer } from './mcp-tools'
 import { ENV_DESKTOP_ID, ENV_SESSION_KEY, ENV_SOCKET } from './protocol'
 
 async function main(): Promise<void> {
@@ -13,7 +13,7 @@ async function main(): Promise<void> {
     process.exit(1)
   }
   const client = new SocketBridgeClient(socketPath, sessionKey, process.env[ENV_DESKTOP_ID] ?? '')
-  await createAgent7McpServer(client).connect(new StdioServerTransport())
+  await createAgentXPMcpServer(client).connect(new StdioServerTransport())
 }
 
 main().catch((e) => {

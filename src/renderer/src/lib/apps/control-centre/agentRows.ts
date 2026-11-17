@@ -8,7 +8,7 @@ export const commandOf = (agent: Pick<AgentDto, 'command' | 'args'>): string => 
 /** Whether the program of an agent exists on this computer: `unknown` until the page has looked (UX-197). */
 export type ProgramState = 'found' | 'missing' | 'unknown'
 
-/** The word for an agent whose program is missing: "Not installed" for an agent Agent7 knows, "Not found" for one you added. */
+/** The word for an agent whose program is missing: "Not installed" for an agent AgentXP knows, "Not found" for one you added. */
 export const missingWord = (agent: Pick<AgentDto, 'name' | 'command' | 'args'>): string => (describeAgent(agent) ? 'Not installed' : 'Not found')
 
 /**

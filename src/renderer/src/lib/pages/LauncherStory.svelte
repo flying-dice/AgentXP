@@ -46,6 +46,6 @@
     position: relative;
     margin: 16px;
     overflow: hidden;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

@@ -19,7 +19,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_navigate",
           "arguments": {
             "url": "{{match.1}}"
@@ -33,7 +33,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -43,7 +43,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -57,7 +57,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -67,7 +67,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -81,7 +81,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -91,7 +91,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -105,7 +105,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -115,7 +115,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -129,7 +129,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -139,7 +139,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -153,7 +153,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -163,7 +163,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -177,7 +177,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -187,7 +187,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -201,7 +201,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -211,7 +211,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -225,7 +225,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -235,7 +235,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -249,7 +249,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -259,7 +259,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -273,7 +273,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -283,7 +283,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -297,7 +297,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -307,7 +307,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -321,7 +321,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -331,7 +331,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -345,7 +345,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -355,7 +355,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -369,7 +369,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -379,7 +379,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -393,7 +393,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -403,7 +403,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -417,7 +417,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -427,7 +427,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -441,7 +441,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -451,7 +451,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -465,7 +465,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -475,7 +475,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -489,7 +489,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -499,7 +499,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -513,7 +513,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -523,7 +523,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -537,7 +537,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -547,7 +547,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -561,7 +561,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -571,7 +571,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -585,7 +585,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -595,7 +595,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -609,7 +609,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -619,7 +619,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -633,7 +633,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -643,7 +643,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -657,7 +657,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -667,7 +667,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -681,7 +681,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -691,7 +691,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -705,7 +705,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -715,7 +715,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"
@@ -729,7 +729,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -739,7 +739,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "direction": "top"

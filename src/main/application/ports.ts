@@ -13,7 +13,7 @@ import type {
   TerminalDto,
   TranscriptEntryDto
 } from '@shared/models'
-import type { Agent7Events } from '@shared/ipc'
+import type { AgentXPEvents } from '@shared/ipc'
 import type { AgentSessionEventSink } from '../domain/agent/AgentSessionEventSink'
 import type { FileAccess, FileAccessProvider } from '../domain/agent/FileAccess'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
@@ -35,7 +35,7 @@ export interface InternalEvents {
 }
 
 /** Every event services publish: the renderer-facing ones plus the internal ones. */
-export type AppEvents = Agent7Events & InternalEvents
+export type AppEvents = AgentXPEvents & InternalEvents
 export type AppEventName = keyof AppEvents
 
 /** Publishes application events (the Electron adapter forwards the renderer-facing ones to windows). */
@@ -100,7 +100,7 @@ export interface TerminalActivity {
   exitStatus: { exitCode: number | null; signal: string | null } | null
 }
 
-/** Sees every JSON-RPC message of one ACP connection. `in`: agent to Agent7, `out`: Agent7 to the agent. */
+/** Sees every JSON-RPC message of one ACP connection. `in`: agent to AgentXP, `out`: AgentXP to the agent. */
 export type ProtocolTap = (direction: 'in' | 'out', message: unknown) => void
 
 /** Captures what the desktop window shows. */

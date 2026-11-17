@@ -110,7 +110,7 @@
 
 <div
   bind:this={root}
-  class="w7-menustrip {className}"
+  class="xp-menustrip {className}"
   role="menubar"
   aria-label={ariaLabel}
   tabindex="-1"
@@ -155,13 +155,13 @@
 </div>
 
 <style>
-  .w7-menustrip {
+  .xp-menustrip {
     flex: none;
     display: flex;
     align-items: center;
     height: 24px;
     padding: 0 2px;
-    background: var(--w7-menubar-face);
+    background: var(--xp-menubar-face);
     border-bottom: 1px solid #b4bfcf;
     outline: none;
   }
@@ -171,21 +171,21 @@
     padding: 0 8px;
     border: 1px solid transparent;
     background: transparent;
-    color: var(--w7-text);
+    color: var(--xp-text);
     cursor: default;
     outline: none;
   }
   .mb:hover,
   .mb:focus-visible,
   .mb.open {
-    border-color: var(--w7-menubar-hot-border);
-    background: var(--w7-menubar-hot-face);
+    border-color: var(--xp-menubar-hot-border);
+    background: var(--xp-menubar-hot-face);
   }
   .mb.open {
     border-bottom-color: transparent;
-    background: var(--w7-menu-face);
-    border-color: var(--w7-menu-border);
-    border-bottom-color: var(--w7-menu-face);
+    background: var(--xp-menu-face);
+    border-color: var(--xp-menu-border);
+    border-bottom-color: var(--xp-menu-face);
     position: relative;
     z-index: 101;
   }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** The Win7 Explorer address bar: a breadcrumb trail that turns into a text box when you click past it (or press F4). */
+  /** The WinXP Explorer address bar: a breadcrumb trail that turns into a text box when you click past it (or press F4). */
   import { tick } from 'svelte'
   import { parseVPath, type DriveDto, type VPath } from '@shared/vfs'
   import type { IconName } from '../../kit/atoms/icons'
@@ -92,12 +92,12 @@
     height: 22px;
     margin: 0 4px;
     padding: 0 4px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-input-border);
+    border-top-color: var(--xp-input-border-top);
   }
   .address.editing {
-    border-color: #3399ff;
+    border-color: #316ac5;
   }
   .trail {
     flex: 1;
@@ -119,12 +119,12 @@
     cursor: default;
   }
   .crumb:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .crumb:active {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .sep {
     flex: none;

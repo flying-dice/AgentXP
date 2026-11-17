@@ -1,6 +1,6 @@
 # Using Help and Support
 
-This manual describes Help and Support. Help and Support shows the manuals of Agent7.
+This manual describes Help and Support. Help and Support shows the manuals of AgentXP.
 
 ## Table of Contents
 

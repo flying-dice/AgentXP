@@ -172,7 +172,7 @@
       <ToolStripButton icon="copy" text="Copy" disabled={!image} onclick={() => void copy()} />
     {/snippet}
   </ToolStrip>
-  <div class="view w7-scroll" aria-label="Snip">
+  <div class="view xp-scroll" aria-label="Snip">
     {#if image}
       <img src={image} alt="The last snip" width={size?.width} height={size?.height} />
     {:else}
@@ -206,15 +206,15 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .view {
     flex: 1;
     min-height: 0;
     margin: 6px;
     overflow: auto;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
     display: flex;
   }
   img {
@@ -227,7 +227,7 @@
     margin: auto;
     padding: 10px 16px;
     max-width: 320px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     text-align: center;
   }
   .opts {
@@ -238,6 +238,6 @@
   }
   .note {
     margin: 6px 0 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

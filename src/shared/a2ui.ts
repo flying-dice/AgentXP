@@ -8,8 +8,8 @@
  */
 import type { A2uiMessage } from '@a2ui/web_core/v0_9'
 
-/** Id of the Agent7 WinForms catalog; equals `catalogId` in `a2ui/winforms-catalog.json`. */
-export const A2UI_CATALOG_ID = 'https://agent7.dev/a2ui/catalogs/winforms/v1'
+/** Id of the AgentXP WinForms catalog; equals `catalogId` in `a2ui/winforms-catalog.json`. */
+export const A2UI_CATALOG_ID = 'https://agentxp.dev/a2ui/catalogs/winforms/v1'
 
 /**
  * Where a surface is shown. `inline` draws it in the transcript (default); `sidebar` puts it in a panel

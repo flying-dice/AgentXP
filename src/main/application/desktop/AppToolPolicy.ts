@@ -1,7 +1,7 @@
 import { closedAppMessage, type DesktopState, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 import type { GatedToolGroup } from '../../domain/agent/ToolGate'
 
-export const PAUSED_MESSAGE = 'Agent7 is paused by the user.'
+export const PAUSED_MESSAGE = 'AgentXP is paused by the user.'
 
 export type ToolAccess =
   | { kind: 'allow' }

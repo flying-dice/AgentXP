@@ -36,7 +36,7 @@
 </script>
 
 <a
-  class="w7-link {className}"
+  class="xp-link {className}"
   class:visited
   class:disabled
   {href}
@@ -49,26 +49,26 @@
 </a>
 
 <style>
-  .w7-link {
-    color: var(--w7-link);
+  .xp-link {
+    color: var(--xp-link);
     text-decoration: underline;
     cursor: pointer;
   }
-  .w7-link:hover {
+  .xp-link:hover {
     color: #ff0000;
   }
-  .w7-link:active {
+  .xp-link:active {
     color: #ff0000;
   }
-  .w7-link.visited {
+  .xp-link.visited {
     color: #800080;
   }
-  .w7-link.disabled {
-    color: var(--w7-text-disabled);
+  .xp-link.disabled {
+    color: var(--xp-text-disabled);
     cursor: default;
     text-decoration: none;
   }
-  .w7-link:focus-visible {
-    outline: var(--w7-focus-outline);
+  .xp-link:focus-visible {
+    outline: var(--xp-focus-outline);
   }
 </style>

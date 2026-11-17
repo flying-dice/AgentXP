@@ -30,7 +30,7 @@
 <Story name="AutoScroll" args={{ autoScroll: true, borderStyle: 'Fixed3D' }}>
   {#snippet template(args)}
     <Panel {...args} style="width:200px;height:100px;background:#fff">
-      <div style="width:400px;height:300px;padding:6px">Content larger than the panel scrolls with Win7 scrollbars.</div>
+      <div style="width:400px;height:300px;padding:6px">Content larger than the panel scrolls with WinXP scrollbars.</div>
     </Panel>
   {/snippet}
 </Story>

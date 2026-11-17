@@ -10,7 +10,7 @@
   const m = $derived((time.getMinutes() + time.getSeconds() / 60) * 6)
 </script>
 
-<svg class="w7-analog-clock" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Clock {time.getHours()}:{String(time.getMinutes()).padStart(2, '0')}">
+<svg class="xp-analog-clock" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Clock {time.getHours()}:{String(time.getMinutes()).padStart(2, '0')}">
   <circle cx="50" cy="50" r="47" fill="#f7f9fc" stroke="#8a97ab" stroke-width="3" />
   {#each Array.from({ length: 12 }, (_, i) => i) as i (i)}
     <line x1="50" y1="9" x2="50" y2={i % 3 === 0 ? 17 : 13} stroke="#2a3446" stroke-width={i % 3 === 0 ? 3 : 1.5} transform="rotate({i * 30} 50 50)" />
@@ -21,7 +21,7 @@
 </svg>
 
 <style>
-  .w7-analog-clock {
+  .xp-analog-clock {
     display: block;
     flex: none;
   }

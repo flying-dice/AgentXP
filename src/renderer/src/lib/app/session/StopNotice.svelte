@@ -28,7 +28,7 @@
   }
   .stop-notice[data-reason='cancelled'] {
     border-color: #b9c7da;
-    background: #f4f7fb;
+    background: #f4f2e8;
     color: #1d3a63;
   }
   .text {

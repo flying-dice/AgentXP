@@ -9,7 +9,7 @@ async function overlap(a: Locator, b: Locator): Promise<boolean> {
   return x.x < y.x + y.width && y.x < x.x + x.width && x.y < y.y + y.height && y.y < x.y + x.height
 }
 
-/** desktop.json: the agent calls the agent7 MCP tools, which follow the apps that are open on the desktop. */
+/** desktop.json: the agent calls the agentxp MCP tools, which follow the apps that are open on the desktop. */
 describe('scripted agent: tools follow apps (desktop.json)', () => {
   let ctx: ScriptedDesktop
   let sessionId: number

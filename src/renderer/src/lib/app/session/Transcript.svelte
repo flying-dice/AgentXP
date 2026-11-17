@@ -247,7 +247,7 @@
 
 <div class="wrap">
 <VirtualList
-  class="transcript w7-scroll"
+  class="transcript xp-scroll"
   data-testid="chat-transcript"
   data-running={running}
   bind:scroller
@@ -338,7 +338,7 @@
     padding: 2px 12px;
     border: 1px solid #7a9cc9;
     border-radius: 3px;
-    background: linear-gradient(#fdfeff, #dbe8f8);
+    background: linear-gradient(#fff, #dbe8f8);
     font: inherit;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
@@ -354,7 +354,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 6px 8px;
-    background: #f4f7fb;
+    background: #f4f2e8;
     color: #1d3a63;
   }
   .restarted .quote {
@@ -363,14 +363,14 @@
     font-style: italic;
   }
   .more:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .wrap :global(.transcript) {
     flex: 1;
     min-height: 0;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
     user-select: text;
     cursor: text;
   }

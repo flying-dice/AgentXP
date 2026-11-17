@@ -1,12 +1,12 @@
-import type { AgentInput, Agent7Api } from '@shared/ipc'
+import type { AgentInput, AgentXPApi } from '@shared/ipc'
 import type { AgentDto, Id } from '@shared/models'
 
 /** The configured ACP agents. */
 export class AgentsStore {
   items = $state.raw<AgentDto[]>([])
-  private readonly api: Agent7Api['agents']
+  private readonly api: AgentXPApi['agents']
 
-  constructor(api: Agent7Api['agents']) {
+  constructor(api: AgentXPApi['agents']) {
     this.api = api
   }
 

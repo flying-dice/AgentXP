@@ -292,8 +292,8 @@
     })
   })
 
-  const scroller = (): HTMLElement | null => host_el?.querySelector<HTMLElement>('.w7-codeviewer .scroll') ?? null
-  const lineHeight = (): number => host_el?.querySelector<HTMLElement>('.w7-codeviewer .row')?.offsetHeight || 17
+  const scroller = (): HTMLElement | null => host_el?.querySelector<HTMLElement>('.xp-codeviewer .scroll') ?? null
+  const lineHeight = (): number => host_el?.querySelector<HTMLElement>('.xp-codeviewer .row')?.offsetHeight || 17
 
   async function reveal(line: number): Promise<void> {
     await tick()
@@ -696,7 +696,7 @@
   }
   const copySelection = (): void => void document.execCommand('copy')
   const selectAllText = (): void => {
-    const code = host_el?.querySelector('.w7-codeviewer .scroll')
+    const code = host_el?.querySelector('.xp-codeviewer .scroll')
     if (code) window.getSelection()?.selectAllChildren(code)
   }
 
@@ -1106,7 +1106,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .code :global(.cb-tools) {
     height: auto;
@@ -1135,7 +1135,7 @@
     display: flex;
     padding: 4px;
   }
-  .work :global(.w7-split) {
+  .work :global(.xp-split) {
     flex: 1;
   }
   .work :global(.tree-tools) {
@@ -1147,16 +1147,16 @@
   .plug-hint {
     flex: none;
     padding: 4px 6px;
-    color: var(--w7-text-muted);
-    background: var(--w7-window);
-    border-bottom: 1px solid var(--w7-list-border);
+    color: var(--xp-text-muted);
+    background: var(--xp-window);
+    border-bottom: 1px solid var(--xp-list-border);
   }
   .plug-link {
     min-height: 24px;
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--w7-link);
+    color: var(--xp-link);
     font: inherit;
     text-decoration: underline;
     cursor: default;
@@ -1166,7 +1166,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .editor {
     flex: 1;
@@ -1184,7 +1184,7 @@
     height: 28px;
     padding: 0 4px;
     background: linear-gradient(#e9eff8, #d7e1f0);
-    border: 1px solid var(--w7-list-border);
+    border: 1px solid var(--xp-list-border);
     border-bottom: 0;
     overflow: hidden;
   }
@@ -1193,15 +1193,15 @@
     align-items: center;
     height: 25px;
     padding: 0 2px 0 4px;
-    background: linear-gradient(#f4f7fb, #dbe4f1);
+    background: linear-gradient(#f4f2e8, #dbe4f1);
     border: 1px solid #98a8c0;
     border-bottom: 0;
     border-radius: 3px 3px 0 0;
   }
   .tab.on {
     height: 27px;
-    background: var(--w7-window);
-    border-top: 2px solid var(--w7-tab-accent);
+    background: var(--xp-window);
+    border-top: 2px solid var(--xp-tab-accent);
   }
   .name,
   .x {
@@ -1236,7 +1236,7 @@
     align-items: center;
     gap: 6px;
     padding: 3px 6px;
-    background: linear-gradient(#f4f7fb, #dbe4f1);
+    background: linear-gradient(#f4f2e8, #dbe4f1);
     border-bottom: 1px solid #b6c4d8;
   }
   .peek-title {
@@ -1249,7 +1249,7 @@
   .peek-lines {
     max-height: 110px;
     overflow: auto;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
     font-size: 12px;
   }
   .pl {
@@ -1268,10 +1268,10 @@
     user-select: none;
   }
   .pl.old {
-    background: var(--w7-git-old-bg);
+    background: var(--xp-git-old-bg);
   }
   .pl.new {
-    background: var(--w7-git-new-bg);
+    background: var(--xp-git-new-bg);
   }
   .gitpane {
     flex: 1;
@@ -1286,13 +1286,13 @@
     display: flex;
     flex-direction: column;
     overflow: auto;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
-  .gitdiff :global(.w7-diffviewer) {
+  .gitdiff :global(.xp-diffviewer) {
     flex: 1;
   }
-  .gitpane :global(.w7-listview) {
+  .gitpane :global(.xp-listview) {
     flex: 1;
     min-height: 60px;
   }
@@ -1303,8 +1303,8 @@
     align-items: center;
     gap: 4px;
     padding: 3px 6px;
-    background: var(--w7-face);
-    border-bottom: 1px solid var(--w7-border-light);
+    background: var(--xp-face);
+    border-bottom: 1px solid var(--xp-border-light);
   }
   .view {
     flex: 1;
@@ -1312,21 +1312,21 @@
     display: flex;
     flex-direction: column;
   }
-  .view :global(.w7-codeviewer) {
+  .view :global(.xp-codeviewer) {
     flex: 1;
   }
   .hint {
     flex: 1;
     padding: 8px;
-    color: var(--w7-text-muted);
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    color: var(--xp-text-muted);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .changes {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
 </style>

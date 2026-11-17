@@ -15,7 +15,7 @@
 </script>
 
 <Dialog testid="launcher-help" title="Help and Support" iconName="help" width="470px" height="470px" fill contained {onclose}>
-  <div class="article w7-scroll" data-testid="launcher-help-article">
+  <div class="article xp-scroll" data-testid="launcher-help-article">
     <MarkdownView {source} label="Desktop Connection manual" />
   </div>
   {#snippet buttons()}
@@ -31,7 +31,7 @@
     margin: 10px 14px 0;
     padding: 8px 12px;
     background: #fff;
-    border: 1px solid var(--w7-list-border);
+    border: 1px solid var(--xp-list-border);
     user-select: text;
   }
 </style>

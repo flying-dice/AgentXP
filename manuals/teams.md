@@ -40,7 +40,7 @@ The tab lists the teams with the columns **Team**, **Members**, and **Skills**. 
 - **New...** – Opens the **New Team** dialog box.
 - **Edit...** – Opens the **Edit Team** dialog box for the selected team.
 - **Delete** – Deletes the selected team after a question. Its chat rooms go with it.
-- **Start chat room...** – Asks for the folder that the members work in. Then Agent7 makes a chat room for the selected team and opens it in a **Team Chat** window.
+- **Start chat room...** – Asks for the folder that the members work in. Then AgentXP makes a chat room for the selected team and opens it in a **Team Chat** window.
 
 ### The Profiles Tab
 
@@ -72,7 +72,7 @@ The dialog box has these parts:
 - **Instructions** – Every member gets these instructions before its own.
 - **Members** – The profiles of the team. The member that you tick first answers a message without an @mention.
 - **Skills** – Skills that every member gets, in addition to its own.
-- **Board** – Optional. A Kanban board of this desktop. Agent7 tells the members the board and its id, so they can use the board tools on it.
+- **Board** – Optional. A Kanban board of this desktop. AgentXP tells the members the board and its id, so they can use the board tools on it.
 
 ## 4 - Controls Reference
 

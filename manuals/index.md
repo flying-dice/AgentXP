@@ -1,6 +1,6 @@
-# Agent7 Help and Support
+# AgentXP Help and Support
 
-This is the home page of the manuals of Agent7. Each app has its own manual. Each manual lists every button, input, and menu item of the app and says what it does. Start with the topic that fits your question, or type a word in the search box.
+This is the home page of the manuals of AgentXP. Each app has its own manual. Each manual lists every button, input, and menu item of the app and says what it does. Start with the topic that fits your question, or type a word in the search box.
 
 ## Table of Contents
 
@@ -27,7 +27,7 @@ This chapter explains the parts of a manual. Each manual has the same chapters, 
 ### Words Used in the Manuals
 
 - **App** – A program that opens as a window on a desktop.
-- **Desktop** – A virtual Windows 7 computer for one or more projects.
+- **Desktop** – A virtual Windows XP computer for one or more projects.
 - **Drive** – A place for files on a desktop, for example C: or a USB drive.
 - **Agent** – A program that writes and changes code for you.
 
@@ -54,7 +54,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 - **[Teams](teams.md)** – Profiles and teams of agents, and their chat rooms.
 - **[Team Chat](team-chat.md)** – A chat room where a team of agents answers under its own names.
 - **[Task Manager](agent-manager.md)** – Chats, agent processes, terminals, and context use.
-- **[Event Viewer](event-viewer.md)** – The messages between Agent7 and the agent, as they happen.
+- **[Event Viewer](event-viewer.md)** – The messages between AgentXP and the agent, as they happen.
 
 ### Files and Code
 

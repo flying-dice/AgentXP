@@ -125,7 +125,7 @@ export interface ComposeOptions {
   directories?: DirectoryBrowser
   /** Looks agent commands up for the launcher's start-error check; defaults to the PATH of this process. */
   programs?: ProgramFinder
-  /** `AGENT7_NATIVE_PICKER=1`: the renderer asks the native dialog instead of the in-app one. */
+  /** `AGENTXP_NATIVE_PICKER=1`: the renderer asks the native dialog instead of the in-app one. */
   nativePicker?: boolean
   saver: TextFileSaver
   opener: PathOpener
@@ -237,7 +237,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     proxy: options.mcpProxy
   })
   const fileSystem = new NodeWorkspaceFileSystem()
-  const desktopsDir = options.desktopsDir ?? mkdtempSync(join(tmpdir(), 'agent7-desktops-'))
+  const desktopsDir = options.desktopsDir ?? mkdtempSync(join(tmpdir(), 'agentxp-desktops-'))
   const hostFiles = new NodeHostFiles()
   const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const drives = new DriveService({ drives: repos.drives, folders: repos.folders, desktops: repos.desktops, pickFolder: () => folderService.pick() })
@@ -461,7 +461,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     eventLog,
     recycle,
     screen,
-    skills: new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agent7-skills-'))),
+    skills: new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agentxp-skills-'))),
     mcp: new McpServerService(repos.mcpServers, options.mcpProber ?? new SdkMcpProber()),
     teamService: new TeamService(repos.profiles, repos.teams),
     rooms,

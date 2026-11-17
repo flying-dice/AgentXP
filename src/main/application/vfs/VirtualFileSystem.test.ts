@@ -56,7 +56,7 @@ describe('escapes', () => {
   })
 
   it('refuses a symlink that points outside the drive', async () => {
-    const outside = tempDir('agent7-outside-')
+    const outside = tempDir('agentxp-outside-')
     await writeFile(join(outside, 'secret.txt'), 'secret')
     await symlink(outside, join(f.projectDir, 'link'))
     await expect(f.vfs.readFile(id, 'E:\\link\\secret.txt')).rejects.toThrow()

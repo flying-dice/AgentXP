@@ -54,7 +54,7 @@ describe('Browser agent: a local chat web app', () => {
     await see.visible(browser.getByTestId('browser-agent-bar'))
     await see.text(browser.getByTestId('browser-agent-bar'), 'Agent is using this page')
     // UX-170: the status text never shows a tool id; a step is a plain sentence.
-    expect(await ctx.desktop.status.innerText()).not.toMatch(/browser_|agent7/)
+    expect(await ctx.desktop.status.innerText()).not.toMatch(/browser_|agentxp/)
     // The status bar says whether the agent can see the page.
     await see.visible(browser.getByTestId('browser-assistant-status'))
 
@@ -97,7 +97,7 @@ describe('Browser agent: a local chat web app', () => {
     await see.eventually(async () => expect(await aside.composer.inputValue()).toContain('What does this page say?'))
     // UX-172: the box holds the whole text that will be sent, the line that names the page too.
     expect(await aside.composer.inputValue()).toContain('I have a question about the page')
-    expect(await chat.transcript.innerText()).not.toMatch(/agent7\.browser_/)
+    expect(await chat.transcript.innerText()).not.toMatch(/agentxp\.browser_/)
     await see.count(aside.userMessages, 0)
 
     // The page the agent drove is the page of the window.

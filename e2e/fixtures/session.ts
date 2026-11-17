@@ -1,11 +1,11 @@
 import type { Page } from 'playwright'
 import { DesktopPage } from './pages/DesktopPage'
 import { LauncherPage } from './pages/LauncherPage'
-import { launchAgent7, type Agent7Instance } from './launch'
+import { launchAgentXP, type AgentXPInstance } from './launch'
 import { addProject, desktopIdByTitle, registerFakeAgent, type Workspace } from './setup'
 
 export interface ConnectedDesktop {
-  readonly app: Agent7Instance
+  readonly app: AgentXPInstance
   readonly launcherPage: Page
   readonly launcher: LauncherPage
   readonly desktopPage: Page
@@ -19,7 +19,7 @@ export interface ConnectedDesktop {
  */
 export async function startConnectedDesktop(options: { title?: string; workspace?: Workspace; userData?: string; /** Registers the agent of the run (default: the fake agent). */ agent?: (launcherPage: Page) => Promise<unknown> } = {}): Promise<ConnectedDesktop> {
   const title = options.title ?? 'E2E desktop'
-  const app = await launchAgent7({ userData: options.userData })
+  const app = await launchAgentXP({ userData: options.userData })
   const launcherPage = await app.launcherWindow()
   const launcher = new LauncherPage(launcherPage)
   await (options.agent ?? registerFakeAgent)(launcherPage)

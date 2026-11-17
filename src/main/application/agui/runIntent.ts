@@ -31,7 +31,7 @@ function attachmentsOf(parts: ContentPart[]): string[] {
   })
 }
 
-/** The desktop state the client sent along (`context` entry `agent7.desktop`), as JSON text. */
+/** The desktop state the client sent along (`context` entry `agentxp.desktop`), as JSON text. */
 function desktopContextOf(input: RunAgentInput): string | null {
   const entry = input.context?.find((c) => c.description === DESKTOP_CONTEXT_DESCRIPTION)
   return entry?.value ? entry.value : null

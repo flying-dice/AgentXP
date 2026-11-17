@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Windows 7 "Browse For Folder": a tree of folders (Computer at the root, shortcuts above it), a Folder box
+   * Windows XP "Browse For Folder": a tree of folders (Computer at the root, shortcuts above it), a Folder box
    * that follows the selection and accepts a typed path, Make New Folder, OK and Cancel. Resizable.
    */
   import { onMount } from 'svelte'
@@ -220,7 +220,7 @@
   .status {
     margin: 0;
     min-height: 15px;
-    color: var(--w7-text-muted, #444);
+    color: var(--xp-text-muted, #444);
   }
   .status.error {
     color: #a01408;
@@ -230,7 +230,7 @@
     align-items: center;
     gap: 6px;
   }
-  .folder :global(.w7-textbox) {
+  .folder :global(.xp-textbox) {
     flex: 1;
     min-width: 0;
   }

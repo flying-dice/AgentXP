@@ -62,7 +62,7 @@
         </div>
       {/each}
     </div>
-    <div class="body w7-scroll" role="tabpanel">
+    <div class="body xp-scroll" role="tabpanel">
       {#key current.surfaceId}
         <A2uiSurface messages={current.messages} {sessionId} {onaction} busy={running} {reply} />
       {/key}
@@ -83,7 +83,7 @@
   }
   .resizer:hover,
   .resizer:focus-visible {
-    background: var(--w7-panel-border) content-box;
+    background: var(--xp-panel-border) content-box;
   }
   .sidebar {
     flex: none;
@@ -102,13 +102,13 @@
   .tab {
     display: flex;
     align-items: center;
-    border: 1px solid var(--w7-panel-border);
+    border: 1px solid var(--xp-panel-border);
     border-bottom: 0;
     background: #e6edf7;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
   .tab.active {
-    background: var(--w7-window);
+    background: var(--xp-window);
     font-weight: 600;
   }
   .label,
@@ -132,7 +132,7 @@
     min-height: 0;
     overflow: auto;
     padding: 8px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
 </style>

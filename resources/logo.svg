@@ -1,37 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <title>Agent7</title>
-  <defs>
-    <linearGradient id="a7-blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7cc3ff"/>
-      <stop offset="0.5" stop-color="#2f86e0"/>
-      <stop offset="0.5" stop-color="#1f6fcc"/>
-      <stop offset="1" stop-color="#3f9bf0"/>
-    </linearGradient>
-    <linearGradient id="a7-cyan" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#8fe9ff"/>
-      <stop offset="0.5" stop-color="#22b8e0"/>
-      <stop offset="0.5" stop-color="#109fca"/>
-      <stop offset="1" stop-color="#3cc8ee"/>
-    </linearGradient>
-    <linearGradient id="a7-amber" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffe08a"/>
-      <stop offset="0.5" stop-color="#f6a93a"/>
-      <stop offset="0.5" stop-color="#e88f17"/>
-      <stop offset="1" stop-color="#ffb84d"/>
-    </linearGradient>
-    <linearGradient id="a7-gloss" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff" stop-opacity="0.75"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0.08"/>
-    </linearGradient>
-  </defs>
-  <g stroke-width="1.5" stroke-linejoin="round">
-    <rect x="4" y="4" width="26" height="26" rx="3" fill="url(#a7-blue)" stroke="#124a8c"/>
-    <rect x="34" y="4" width="26" height="26" rx="3" fill="url(#a7-cyan)" stroke="#0b6a8a"/>
-    <rect x="34" y="34" width="26" height="26" rx="3" fill="url(#a7-amber)" stroke="#9a5a06"/>
-  </g>
-  <g fill="url(#a7-gloss)">
-    <rect x="6" y="6" width="22" height="11" rx="2"/>
-    <rect x="36" y="6" width="22" height="11" rx="2"/>
-    <rect x="36" y="36" width="22" height="11" rx="2"/>
-  </g>
+  <title>AgentXP</title>
+  <defs><linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a73"/><stop offset=".55" stop-color="#f0501f"/><stop offset="1" stop-color="#d23a10"/></linearGradient><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be26a"/><stop offset=".55" stop-color="#52b52a"/><stop offset="1" stop-color="#3a9a18"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ab0ff"/><stop offset=".55" stop-color="#2f6fe6"/><stop offset="1" stop-color="#1f55c8"/></linearGradient><linearGradient id="y" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe36b"/><stop offset=".55" stop-color="#f8bf1f"/><stop offset="1" stop-color="#e8a406"/></linearGradient></defs>
+<g stroke-linejoin="round" stroke-width="2.5">
+<path d="M6 12 C14 6 22 18 30 12 L28 30 C20 36 12 24 4 30 Z" fill="url(#r)" stroke="#8c1d08"/>
+<path d="M34 11 C42 5 50 16 58 9 L55 27 C47 34 40 22 32 29 Z" fill="url(#g)" stroke="#2b6a12"/>
+<path d="M4 34 C12 28 20 40 28 34 L26 53 C18 59 10 48 2 53 Z" fill="url(#b)" stroke="#0b3f9c"/>
+<path d="M32 33 C40 27 48 38 56 32 L53 51 C45 57 38 46 30 52 Z" fill="url(#y)" stroke="#9a6a00"/></g>
+<path d="M38 37 l7 5 -7 5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="square" opacity=".95"/>
 </svg>

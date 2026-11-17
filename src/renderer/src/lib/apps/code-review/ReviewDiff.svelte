@@ -192,7 +192,7 @@
   {/if}
   <!-- A scrolling region is reachable by keyboard (tabindex) and has a name. -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="rows w7-scroll" bind:this={scroller} {onscroll} onkeydown={onrowskey} role="region" tabindex={flow ? -1 : 0} aria-label="Diff of {file.path}">
+  <div class="rows xp-scroll" bind:this={scroller} {onscroll} onkeydown={onrowskey} role="region" tabindex={flow ? -1 : 0} aria-label="Diff of {file.path}">
     {#if file.binary}
       <div class="note">Binary file: there is no text diff.</div>
     {:else if file.tooLarge}
@@ -274,15 +274,15 @@
     min-width: 0;
     min-height: 0;
     display: flex;
-    background: var(--w7-code-bg, #fff);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-code-bg, #fff);
+    border: 1px solid var(--xp-panel-border);
   }
   .margin {
     position: relative;
     flex: none;
     width: 14px;
     background: #eef1f6;
-    border-right: 1px solid var(--w7-panel-border);
+    border-right: 1px solid var(--xp-panel-border);
   }
   .block {
     position: absolute;
@@ -321,8 +321,8 @@
     flex: none;
     display: flex;
     background: linear-gradient(#fff, #e8eef6);
-    border-bottom: 1px solid var(--w7-panel-border);
-    color: var(--w7-text-muted);
+    border-bottom: 1px solid var(--xp-panel-border);
+    color: var(--xp-text-muted);
     line-height: 17px;
   }
   .cols .no {
@@ -341,7 +341,7 @@
     flex: 1;
     min-width: 0;
     overflow: auto;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
   }
   .flow {
     flex: none;
@@ -363,7 +363,7 @@
     background: #fde0dd;
   }
   .row.selected {
-    outline: 1px solid var(--w7-select-border, #7da2ce);
+    outline: 1px solid var(--xp-select-border, #316ac5);
     outline-offset: -1px;
   }
   .no {
@@ -374,8 +374,8 @@
     margin: -4px 0;
     padding: 0 6px 0 0;
     border: 0;
-    background: var(--w7-code-gutter-bg, #f3f3f3);
-    color: var(--w7-code-gutter, #808080);
+    background: var(--xp-code-gutter-bg, #f3f3f3);
+    color: var(--xp-code-gutter, #808080);
     font: inherit;
     text-align: right;
     cursor: default;
@@ -432,7 +432,7 @@
     flex: none;
     width: 16px;
     text-align: center;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .text {
     flex: 1;
@@ -448,7 +448,7 @@
     overflow: hidden;
   }
   .half + .half {
-    border-left: 1px solid var(--w7-panel-border);
+    border-left: 1px solid var(--xp-panel-border);
   }
   .half.add {
     background: #fff7c2;
@@ -457,20 +457,20 @@
     background: #fde0dd;
   }
   .half.blank {
-    background: #f4f4f4;
+    background: #f4f2e8;
   }
   .inline {
     margin: 4px 8px 6px 64px;
     max-width: 640px;
-    font: var(--w7-font);
+    font: var(--xp-font);
     white-space: normal;
   }
   .note {
     padding: 8px 12px;
-    color: var(--w7-text-muted);
-    font: var(--w7-font);
+    color: var(--xp-text-muted);
+    font: var(--xp-font);
   }
   .orphans {
-    border-top: 1px dashed var(--w7-panel-border);
+    border-top: 1px dashed var(--xp-panel-border);
   }
 </style>

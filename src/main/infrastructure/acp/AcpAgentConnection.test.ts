@@ -179,7 +179,7 @@ describe('AcpAgentConnection tool gate', () => {
   })
 
   it('refuses terminal/create but lets the earlier write through', async () => {
-    const gate = refusing('terminal', 'Agent7 is paused by the user.')
+    const gate = refusing('terminal', 'AgentXP is paused by the user.')
     start(allow, gate)
     await connection!.initialize()
     const { acpSessionId } = await connection!.newSession(workspace)

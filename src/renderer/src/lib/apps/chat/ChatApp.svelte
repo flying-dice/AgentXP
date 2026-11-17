@@ -145,7 +145,7 @@
   async function deleteSurface(s: SurfaceActivity): Promise<void> {
     const answer = await showMessageBox({
       text: 'Delete this surface?\n\nIt is removed from the chat and its window closes. The agent can draw it again.',
-      caption: 'Agent7',
+      caption: 'AgentXP',
       buttons: 'YesNo',
       icon: 'warning'
     })
@@ -153,7 +153,7 @@
     try {
       await resync(host.api.a2ui.deleteSurface(sessionId, s.surfaceId))
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'AgentXP', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -205,7 +205,7 @@
   })()
   onDestroy(() => {
     const gone = !host.state.windows.some((w) => w.id === win.id)
-    if (gone && store?.running) desktopShell?.showBalloon({ title: 'Agent7', text: `'${ownTitle}' is still running in the background. Open Chats to see it.`, icon: 'info' })
+    if (gone && store?.running) desktopShell?.showBalloon({ title: 'AgentXP', text: `'${ownTitle}' is still running in the background. Open Chats to see it.`, icon: 'info' })
   })
 
   // The window title follows the chat title.
@@ -216,7 +216,7 @@
   async function revert(change: (typeof changes)[number]): Promise<void> {
     const answer = await showMessageBox({
       text: revertConfirmText(change.path),
-      caption: 'Agent7',
+      caption: 'AgentXP',
       buttons: 'YesNo',
       icon: 'warning'
     })
@@ -227,7 +227,7 @@
       selectedChangeId = null
       lastWasRevert = true
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'AgentXP', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -242,14 +242,14 @@
       await host.api.recycle.restore(newest.id)
       await store?.connect()
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'AgentXP', buttons: 'OK', icon: 'error' })
     }
   }
 
   async function clearTranscript(): Promise<void> {
     const answer = await showMessageBox({
       text: 'Clear the transcript of this chat?\n\nThe messages and tool cards are removed from the window. The agent keeps its own memory of the conversation.',
-      caption: 'Agent7',
+      caption: 'AgentXP',
       buttons: 'YesNo',
       icon: 'warning'
     })
@@ -257,7 +257,7 @@
     try {
       await host.api.sessions.clearTranscript(sessionId)
     } catch (error) {
-      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'Agent7', buttons: 'OK', icon: 'error' })
+      await showMessageBox({ text: error instanceof Error ? error.message : String(error), caption: 'AgentXP', buttons: 'OK', icon: 'error' })
     }
   }
 
@@ -453,7 +453,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .bar {
     flex: none;
@@ -462,7 +462,7 @@
     gap: 6px;
     height: 30px;
     padding: 0 6px;
-    background: linear-gradient(#fafcfe, #dce6f4);
+    background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .spring {
@@ -509,7 +509,7 @@
     padding: 0 6px;
     border: 1px solid #9aa9bf;
     border-radius: 2px;
-    background: linear-gradient(#fdfeff, #e6eef8);
+    background: linear-gradient(#fff, #e6eef8);
     font: inherit;
   }
   .pct {

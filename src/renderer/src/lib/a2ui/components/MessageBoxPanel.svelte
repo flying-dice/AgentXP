@@ -29,9 +29,9 @@
   .box {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--w7-panel-border);
-    background: var(--w7-window);
-    font: var(--w7-font);
+    border: 1px solid var(--xp-panel-border);
+    background: var(--xp-window);
+    font: var(--xp-font);
   }
   .body {
     display: flex;
@@ -50,7 +50,7 @@
     justify-content: flex-end;
     gap: 6px;
     padding: 10px 12px;
-    border-top: 1px solid var(--w7-border-light);
-    background: var(--w7-face);
+    border-top: 1px solid var(--xp-border-light);
+    background: var(--xp-face);
   }
 </style>

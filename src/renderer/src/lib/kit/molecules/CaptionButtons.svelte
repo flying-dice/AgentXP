@@ -38,10 +38,10 @@
   const toggle = (): void => (maximized ? onrestore?.() : onmaximize?.())
 </script>
 
-<div class="w7-caption {className}" class:inactive={!active} role="group" aria-label="Window controls">
+<div class="xp-caption {className}" class:inactive={!active} role="group" aria-label="Window controls">
   {#if minimizeBox || maximizeBox}
     <button type="button" class="cb min" data-testid="window-minimize" aria-label="Minimize" title="Minimize" disabled={!minimizeBox} onclick={() => onminimize?.()}>
-      <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><rect x="1" y="5" width="8" height="2.2" fill="#fff" stroke="#3a4f6e" stroke-width=".8" /></svg>
+      <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true"><rect x="1.5" y="7" width="6" height="3" fill="#fff" /></svg>
     </button>
     <button
       type="button"
@@ -53,105 +53,76 @@
       onclick={toggle}
     >
       {#if maximized}
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <g fill="none" stroke="#3a4f6e" stroke-width="1.4"><rect x="3.2" y="1" width="5.8" height="5" /><rect x="1" y="3.6" width="5.8" height="5.4" fill="#c3d4ea" /></g>
-          <rect x="1" y="3.6" width="5.8" height="1.6" fill="#fff" stroke="#3a4f6e" stroke-width=".5" />
+        <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true">
+          <g fill="none" stroke="#fff"><path d="M4 1.5h6v5.5" stroke-width="1" /><path d="M4 1.5v1.5" stroke-width="2" /></g>
+          <g fill="none" stroke="#fff"><rect x="1.5" y="4.5" width="6" height="5" stroke-width="1" /><path d="M1 4.5h7" stroke-width="2" /></g>
         </svg>
       {:else}
-        <svg width="10" height="9" viewBox="0 0 10 9" aria-hidden="true">
-          <rect x="1" y="1" width="8" height="7" fill="none" stroke="#3a4f6e" stroke-width="1.6" />
-          <rect x="1" y="1" width="8" height="2" fill="#fff" stroke="#3a4f6e" stroke-width=".6" />
+        <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true">
+          <g fill="none" stroke="#fff"><rect x="1.5" y="1.5" width="8" height="8" stroke-width="1" /><path d="M1 2h9" stroke-width="2" /></g>
         </svg>
       {/if}
     </button>
   {/if}
   {#if closeBox}
     <button type="button" class="cb close" data-testid="window-close" aria-label="Close" title="Close" disabled={!closeEnabled} onclick={() => onclose?.()}>
-      <svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true">
-        <g stroke="#5a1710" stroke-width="3.4" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5" /><line x1="10" y1="1.5" x2="2" y2="8.5" /></g>
-        <g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="1.5" x2="10" y2="8.5" /><line x1="10" y1="1.5" x2="2" y2="8.5" /></g>
+      <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true">
+        <g stroke="#fff" stroke-width="2" stroke-linecap="square"><line x1="2" y1="2" x2="9" y2="9" /><line x1="9" y1="2" x2="2" y2="9" /></g>
       </svg>
     </button>
   {/if}
 </div>
 
 <style>
-  /* The face of a button is 19 px high; its hit area is 24 px (the extra 5 px are transparent), so the buttons meet the 24 px target size (UX-83). */
-  .w7-caption {
+  /* Luna caption buttons: 21 px rounded squares with a white border; the close box is red. */
+  .xp-caption {
     position: relative;
     z-index: 2;
     display: inline-flex;
-    align-self: flex-start;
-    margin-top: -1px;
-    border: 1px solid var(--w7-caption-border);
-    border-top: 0;
-    border-radius: 0 0 5px 5px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    align-self: center;
+    gap: 2px;
+    margin-right: 0;
     -webkit-app-region: no-drag;
   }
   .cb {
     position: relative;
-    width: 29px;
-    height: 24px;
-    margin-bottom: -5px;
-    padding: 0 0 5px;
-    border: 0;
-    background: transparent;
+    width: 21px;
+    height: 21px;
+    padding: 0;
+    border: 1px solid var(--xp-caption-border);
+    border-radius: 3px;
+    background: var(--xp-caption-face);
+    box-shadow: inset 0 0 1px 1px rgba(255, 255, 255, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: default;
     -webkit-app-region: no-drag;
   }
-  .cb::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 5px 0;
-    border-right: 1px solid var(--w7-caption-border);
-    background: var(--w7-caption-face);
-  }
-  .cb:first-child::before {
-    border-bottom-left-radius: 4px;
-  }
-  .cb:last-child::before {
-    border-bottom-right-radius: 4px;
-  }
-  .cb > :global(svg) {
-    position: relative;
-  }
   .cb.close {
-    width: 47px;
+    background: var(--xp-caption-close-face);
   }
-  .cb.close::before {
-    border-right: 0;
-    background: var(--w7-caption-close-face);
+  .cb:hover:not(:disabled) {
+    background: var(--xp-caption-hover-face);
   }
-  .cb:hover:not(:disabled)::before {
-    background: var(--w7-caption-hover-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  .cb.close:hover:not(:disabled) {
+    background: var(--xp-caption-close-hover-face);
   }
-  .cb.close:hover:not(:disabled)::before {
-    background: var(--w7-caption-close-hover-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 8px 2px rgba(255, 120, 90, 0.9);
-  }
-  .cb:active:not(:disabled)::before {
+  .cb:active:not(:disabled) {
     filter: brightness(0.82);
   }
-  .cb.close:active:not(:disabled)::before {
-    background: var(--w7-caption-close-active-face);
+  .cb.close:active:not(:disabled) {
+    background: var(--xp-caption-close-active-face);
     filter: none;
   }
   .cb:focus-visible {
-    outline: var(--w7-focus-outline);
-    outline-offset: -3px;
+    outline: 1px dotted #fff;
+    outline-offset: -4px;
   }
   .cb:disabled {
-    opacity: 0.55;
+    opacity: 0.6;
   }
   .inactive .cb:not(:hover) {
-    opacity: 0.7;
-  }
-  .inactive .cb.close:not(:hover)::before {
-    background: linear-gradient(#e6cfcb 0, #cf9d96 48%, #bf7a71 50%, #cfa098 100%);
+    opacity: 0.75;
   }
 </style>

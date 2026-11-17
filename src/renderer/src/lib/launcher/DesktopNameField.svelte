@@ -108,6 +108,6 @@
     cursor: pointer;
   }
   .use:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
   }
 </style>

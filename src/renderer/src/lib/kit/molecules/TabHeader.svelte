@@ -48,31 +48,33 @@
     height: 24px;
     margin: 1px -1px 0 0;
     padding: 0 12px;
-    border: 1px solid var(--w7-panel-border);
+    border: 1px solid var(--xp-panel-border);
     border-bottom: 0;
     border-radius: 3px 3px 0 0;
-    background: linear-gradient(#f6f6f6, #e4e4e4);
-    color: var(--w7-text);
+    border-color: var(--xp-tab-border);
+    background: linear-gradient(#fff, #f2f1ea 60%, #e0dccb);
+    color: var(--xp-text);
     cursor: default;
     outline: none;
   }
   .tab:hover:not(.selected):not(:disabled) {
-    background: linear-gradient(#f2fafe, #d4ecfa);
-    border-color: #7eb4ea;
+    background: linear-gradient(#fff, #f2f1ea 60%, #e0dccb);
+    border-top: 2px solid var(--xp-tab-accent);
+    padding-top: 0;
   }
   .tab.selected {
     height: 27px;
     margin-top: -2px;
     margin-bottom: -1px;
-    border-top: 2px solid var(--w7-tab-accent);
-    background: var(--w7-window);
+    border-top: 2px solid var(--xp-tab-accent);
+    background: var(--xp-tab-face);
     z-index: 2;
   }
   .tab:focus-visible > span {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: 1px;
   }
   .tab:disabled {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
 </style>

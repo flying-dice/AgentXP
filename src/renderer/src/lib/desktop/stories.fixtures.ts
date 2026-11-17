@@ -1,6 +1,6 @@
 /** Story helpers: a fake backend with a few windows open, and a controller prepared for a screenshot. */
 import type { DesktopState } from '@shared/desktop'
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import { createFakeApi } from '../app/fakeApi'
 import { FakeSessionStore } from '../app/session/FakeSessionStore.svelte'
 import { permissionTurn, runningTurn } from '../app/session/session.fixtures'
@@ -11,7 +11,7 @@ import { DesktopController } from './DesktopController.svelte'
 const markAgentOpened = (state: DesktopState): DesktopState => ({ ...state, windows: state.windows.map((w) => (w.app === 'browser' ? { ...w, openedBy: 'agent' as const } : w)) })
 
 export interface PreparedDesktop {
-  api: Agent7Api
+  api: AgentXPApi
   controller: DesktopController
 }
 
@@ -28,7 +28,7 @@ export interface PrepareOptions {
   firstRun?: boolean
   paused?: boolean
   agentOpened?: boolean
-  gadgets?: boolean
+  taskpanes?: boolean
   /** The Safely Remove menu of the USB tray icon is open. */
   usbMenu?: boolean
   /** The "Project removed" balloon is showing (as after an eject). */
@@ -52,7 +52,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
     // The fake backend always says openedBy 'user'; the real one remembers who opened a window.
     const on = api.on.bind(api) as (event: string, listener: (payload: DesktopState) => void) => () => void
     api.on = ((event: string, listener: (payload: never) => void) =>
-      event === 'desktop.changed' ? on(event, (s) => (listener as (s: DesktopState) => void)(markAgentOpened(s))) : on(event, listener as never)) as Agent7Api['on']
+      event === 'desktop.changed' ? on(event, (s) => (listener as (s: DesktopState) => void)(markAgentOpened(s))) : on(event, listener as never)) as AgentXPApi['on']
   }
   const d = api.desktop
   const desktopId = 1
@@ -92,7 +92,7 @@ export async function prepareDesktop(options: PrepareOptions = {}): Promise<Prep
   }
   controller.startOpen = !!options.startOpen
   controller.actionCenterOpen = !!options.actionCenter
-  controller.gadgetsVisible = options.gadgets !== false
+  controller.taskpanesVisible = options.taskpanes !== false
   controller.messages = options.actionCenter || options.review ? [
     { id: 1, text: 'Context is at 6%. The agent compacts automatically at 80%.', at: new Date() },
     { id: 2, text: 'Opened E:\\', at: new Date() }

@@ -13,7 +13,7 @@ export type Source = ProtocolEventDto['source']
 export const SOURCE_LABEL: Record<Source, string> = { acp: 'ACP', 'ag-ui': 'AG-UI', mcp: 'MCP' }
 /** What each log is, for the tooltip of its name (the names ACP, AG-UI and MCP mean nothing to most people). */
 export const SOURCE_HINT: Record<Source, string> = {
-  acp: 'ACP: how Agent7 talks to the agent',
+  acp: 'ACP: how AgentXP talks to the agent',
   'ag-ui': 'AG-UI: how the agent shows its answer in the chat',
   mcp: 'MCP: how the agent uses the tools of the desktop'
 }
@@ -111,7 +111,7 @@ export function logTree(sessions: readonly Pick<SessionDto, 'id' | 'title'>[]): 
       children: [
         {
           id: ALL_NODE,
-          text: 'Agent7 Logs',
+          text: 'AgentXP Logs',
           icon: 'folder',
           expanded: true,
           children: (Object.keys(SOURCE_LABEL) as Source[]).map((s) => ({ id: sourceNode(s), text: SOURCE_LABEL[s], title: SOURCE_HINT[s], icon: 'file-text' as const }))
@@ -135,7 +135,7 @@ export function nodeScope(id: string | null): { source: Source | null; sessionId
     return { source, sessionId: null, title: SOURCE_LABEL[source] ?? id }
   }
   if (id?.startsWith('chat:')) return { source: null, sessionId: Number(id.slice(5)), title: 'Chat' }
-  return { source: null, sessionId: null, title: 'Agent7 Logs' }
+  return { source: null, sessionId: null, title: 'AgentXP Logs' }
 }
 
 /** The raw names of an event (log, message, direction): the Details tab shows them above the message (UX-213). */
@@ -246,7 +246,7 @@ const recovered = (events: readonly ProtocolEventDto[], e: ProtocolEventDto): bo
   e.sessionId !== null && events.some((o) => o.id > e.id && o.sessionId === e.sessionId && o.name === 'RUN_FINISHED' && o.level === 'info')
 
 /**
- * The newest warning or error of the log that is still current, for the Activity gadget; null when there is none.
+ * The newest warning or error of the log that is still current, for the Activity taskpane; null when there is none.
  * An error of a chat is dropped once the same chat has a later successful turn. A warning stays: a later event of
  * another kind never hides a warning that Event Viewer lists (UX-212). `events` is oldest first.
  */
@@ -256,7 +256,7 @@ export function lastProblem(events: readonly ProtocolEventDto[]): ProblemLine | 
 }
 
 /**
- * The last thing that finished, for the Activity gadget when it has no problem, no running job and no step to list: an error that
+ * The last thing that finished, for the Activity taskpane when it has no problem, no running job and no step to list: an error that
  * the chat recovered from, else the last finished turn, else that the agent is ready; null only for a log with no event (UX-212).
  */
 export function lastFinished(events: readonly ProtocolEventDto[]): string | null {

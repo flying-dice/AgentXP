@@ -83,7 +83,7 @@ afterEach(() => {
 })
 
 /** A fresh temp directory removed after the test. */
-export function tempDir(prefix = 'agent7-test-'): string {
+export function tempDir(prefix = 'agentxp-test-'): string {
   const dir = mkdtempSync(join(tmpdir(), prefix))
   tempDirs.push(dir)
   return dir
@@ -95,8 +95,8 @@ export function tempDir(prefix = 'agent7-test-'): string {
  */
 export async function createVfsFixture(options: { plugProject?: boolean } = {}) {
   const base = createAppFixture()
-  const desktopsDir = tempDir('agent7-desktops-')
-  const projectDir = tempDir('agent7-project-')
+  const desktopsDir = tempDir('agentxp-desktops-')
+  const projectDir = tempDir('agentxp-project-')
   const drives = new DriveService({
     drives: base.repos.drives,
     folders: base.repos.folders,

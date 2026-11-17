@@ -51,7 +51,7 @@ export class AppRequestBroker {
   dispose(): void {
     for (const [id, entry] of this.pending) {
       clearTimeout(entry.timer)
-      entry.reject(new AppError('Agent7 is shutting down'))
+      entry.reject(new AppError('AgentXP is shutting down'))
       this.pending.delete(id)
     }
   }

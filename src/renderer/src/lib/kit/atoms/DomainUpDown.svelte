@@ -55,7 +55,7 @@
   }
 </script>
 
-<span class="w7-updown {className}" class:disabled {style}>
+<span class="xp-updown {className}" class:disabled {style}>
   <input
     type="text"
     role="spinbutton"
@@ -78,24 +78,24 @@
 </span>
 
 <style>
-  .w7-updown {
+  .xp-updown {
     display: inline-flex;
     align-items: stretch;
     height: 21px;
     width: 120px;
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
-    background: var(--w7-window);
+    border: 1px solid var(--xp-input-border);
+    border-top-color: var(--xp-input-border-top);
+    background: var(--xp-window);
   }
-  .w7-updown:hover:not(.disabled) {
+  .xp-updown:hover:not(.disabled) {
     border-color: #3d7bad;
   }
-  .w7-updown:focus-within {
+  .xp-updown:focus-within {
     border-color: #569de5;
   }
-  .w7-updown.disabled {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
+  .xp-updown.disabled {
+    border-color: var(--xp-border-disabled);
+    background: #f4f2e8;
   }
   input {
     flex: 1;
@@ -105,14 +105,14 @@
     outline: none;
     background: transparent;
     font: inherit;
-    color: var(--w7-text);
+    color: var(--xp-text);
     cursor: default;
   }
   input:focus {
-    background: #3399ff;
+    background: #316ac5;
     color: #fff;
   }
   input:disabled {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
 </style>

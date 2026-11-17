@@ -126,7 +126,7 @@
     gap: 4px;
     align-items: center;
   }
-  .var :global(.w7-textbox) {
+  .var :global(.xp-textbox) {
     flex: 1;
     min-width: 0;
   }

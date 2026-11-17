@@ -68,7 +68,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
     color: #222;
   }
   .state {
@@ -88,7 +88,7 @@
     padding: 0;
     border: 0;
     background: none;
-    color: var(--w7-link, #0066cc);
+    color: var(--xp-link, #0066cc);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
@@ -98,7 +98,7 @@
     align-items: center;
     gap: 6px;
     margin: 2px 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .earlier::before,

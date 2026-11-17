@@ -8,7 +8,7 @@
   interface Props {
     title?: string
     iconName?: IconName
-    /** Window has focus: saturated Aero frame. */
+    /** Window has focus: saturated Luna frame. */
     active?: boolean
     windowState?: WindowState
     /** Title bar is an Electron drag region. */
@@ -40,7 +40,7 @@
 
   let {
     title = '',
-    iconName = 'agent7',
+    iconName = 'agentxp',
     active = true,
     windowState = $bindable('Normal'),
     draggable = true,
@@ -99,7 +99,7 @@
   {onrestore}
   {onclose}
   {onactivate}
-  class="w7-mainwindow {className}"
+  class="xp-mainwindow {className}"
 >
   <div class="panes" bind:clientWidth={bodyWidth}>
     <section class="pane left" style="width:{leftWidth}px" aria-label="Explorer">{@render left()}</section>

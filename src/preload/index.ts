@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Agent7Api, Agent7EventName, Agent7Events, AguiApi, AguiEventMessage, WindowApi, WindowStateDto } from '../shared/ipc'
+import type { AgentXPApi, AgentXPEventName, AgentXPEvents, AguiApi, AguiEventMessage, WindowApi, WindowStateDto } from '../shared/ipc'
 import { AGUI_CHANNELS, INVOKE_CHANNELS, WINDOW_CHANNELS, readableIpcError, type InvokeApi } from '../shared/ipc-channels'
 
 type Invoker = (...args: unknown[]) => Promise<unknown>
@@ -24,8 +24,8 @@ function buildInvokeApi(): InvokeApi {
   return groups as unknown as InvokeApi
 }
 
-const on: Agent7Api['on'] = <K extends Agent7EventName>(event: K, listener: (payload: Agent7Events[K]) => void) => {
-  const handler = (_event: Electron.IpcRendererEvent, payload: Agent7Events[K]): void => listener(payload)
+const on: AgentXPApi['on'] = <K extends AgentXPEventName>(event: K, listener: (payload: AgentXPEvents[K]) => void) => {
+  const handler = (_event: Electron.IpcRendererEvent, payload: AgentXPEvents[K]): void => listener(payload)
   ipcRenderer.on(event, handler)
   return () => {
     ipcRenderer.removeListener(event, handler)
@@ -64,6 +64,6 @@ const windowApi: WindowApi = {
   }
 }
 
-const api: Agent7Api = { ...buildInvokeApi(), window: windowApi, agui, on }
+const api: AgentXPApi = { ...buildInvokeApi(), window: windowApi, agui, on }
 
-contextBridge.exposeInMainWorld('agent7', api)
+contextBridge.exposeInMainWorld('agentxp', api)

@@ -14,7 +14,7 @@
     component: MainWindowTemplate,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
     args: {
-      title: 'Fix login redirect bug - Agent7',
+      title: 'Fix login redirect bug - AgentXP',
       active: true,
       windowState: 'Normal',
       draggable: false,
@@ -59,7 +59,7 @@
 
 <Story name="Default">
   {#snippet template(args)}
-    <div style="position:relative;height:100vh;background:var(--w7-desktop)">
+    <div style="position:relative;height:100vh;background:var(--xp-desktop)">
       <MainWindowTemplate {...args} {menu} {toolbar} {statusbar} {left} {center} {right} />
     </div>
   {/snippet}
@@ -67,7 +67,7 @@
 
 <Story name="Inactive" args={{ active: false }}>
   {#snippet template(args)}
-    <div style="position:relative;height:100vh;background:var(--w7-desktop)">
+    <div style="position:relative;height:100vh;background:var(--xp-desktop)">
       <MainWindowTemplate {...args} {menu} {toolbar} {statusbar} {left} {center} {right} />
     </div>
   {/snippet}
@@ -75,7 +75,7 @@
 
 <Story name="Maximized" args={{ windowState: 'Maximized' }}>
   {#snippet template(args)}
-    <div style="position:relative;height:100vh;background:var(--w7-desktop)">
+    <div style="position:relative;height:100vh;background:var(--xp-desktop)">
       <MainWindowTemplate {...args} {menu} {toolbar} {statusbar} {left} {center} {right} />
     </div>
   {/snippet}
@@ -87,8 +87,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
-    color: var(--w7-text-muted);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
+    color: var(--xp-text-muted);
   }
 </style>

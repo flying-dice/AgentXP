@@ -22,7 +22,7 @@ describe('scripted agent: paths and clearing the transcript', () => {
     await see.count(chat.toolCalls, 1)
     await see.text(chat.toolCalls, 'C:\\Users\\Agent\\notes.txt')
     const text = await chat.toolCalls.first().innerText()
-    expect(text).not.toContain('agent7-desktops')
+    expect(text).not.toContain('agentxp-desktops')
     expect(text).not.toMatch(/[\\/](tmp|var|home)[\\/]/)
   })
 

@@ -30,6 +30,6 @@
   }
   .sent {
     margin-top: 2px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

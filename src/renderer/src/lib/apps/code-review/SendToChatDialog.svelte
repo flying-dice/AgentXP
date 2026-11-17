@@ -58,7 +58,7 @@
 <style>
   .body {
     padding: 12px 16px 8px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   p {
     margin: 0 0 8px;
@@ -86,13 +86,13 @@
   }
   .option:hover,
   .option:focus-visible {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
     outline: 0;
   }
   .option.on {
-    border-color: var(--w7-select-border, #7da2ce);
-    background: var(--w7-select-face, #dcebfc);
+    border-color: var(--xp-select-border, #316ac5);
+    background: var(--xp-select-face, #d6dff7);
   }
   .text {
     display: flex;
@@ -103,7 +103,7 @@
     color: #0b3b9c;
   }
   .sub {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
