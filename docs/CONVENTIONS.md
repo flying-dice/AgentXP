@@ -117,6 +117,9 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   (`scripts/check-help-coverage.mjs`) fails when a static id of `src/renderer/src/lib/{apps,desktop,launcher,pages}`
   is in no manual. A template id is written with its static prefix and `*` (`chat-message-*`). Kit internals
   that need no manual go on the ignore list of the script, with a reason.
+  It also fails the other way round: when a control is deleted, its row must go too. An id in a Controls reference
+  table that no renderer source can produce any more fails the check (ids built in ways it cannot read go on its
+  `DYNAMIC_DOC_IDS` list, with a reason).
 
 **Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled` | `denied`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry
