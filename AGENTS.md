@@ -29,4 +29,6 @@ missing or the screenshots do not show the change working.
   `testid` or `data-testid` prop), anything clickable, and every menu item (`testid:` or `id:`). Open menus are
   findable too (`menubar-<menu>-menu`, `<button>-menu`, `context-menu`). `npm run testids` fails when one is
   missing; document each id in the app's manual (Controls Reference, `npm run help:coverage`).
+- Agent tools and anything that reacts to agent activity: `.claude/skills/agent-presence-ux/SKILL.md` (classify each
+  action as Work, Show or Output; the desktop is the operator's environment, see `docs/AGENT_PRESENCE.md`).
 - Design language: hard XP Luna. No Vista/Win7 glass, no rounded modern cards, no emoji.

@@ -130,21 +130,23 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Success check: `redirect.ts` on disk equals the agent's version; the Recycle Bin is empty.
 - Min 4 (open bin, select, Restore, close). Budget 12 / 16.
 
-### J10 Tools follow apps
+### J10 Agents work quietly [planned]
 
-**T10.1 - Take away the command line**
-- Scenario: "You want to be sure that, right now, the assistant cannot run commands. Make that true, and show me how you can tell."
-- Start state: Terminal window open on the desktop.
-- Success check: the assistant cannot run commands: either no Terminal window is open and the Workspace bar ("Agent can use") has no Terminal chip, or the Terminal permission is Deny; the panelist names the chip list, the closed Terminal or the Deny policy as the proof (answer check).
-- Answer: how the panelist can see that the assistant cannot run commands.
-- Min 1 (close Terminal; the Permissions route is longer). Budget 8 / 10.
+Run after PR 1 of `docs/AGENT_PRESENCE.md`. The old T10.1 and T10.2 (closing the Terminal, reading chips that follow open apps) are retired with "tools follow apps".
 
-**T10.2 - What can it touch?**
-- Scenario: "Without asking the assistant, tell me which of these it can do now: read files, run commands, browse the web."
-- Start state: Explorer and Browser open, Terminal closed.
-- Success check: the answer is exactly: read files yes, run commands no, browse yes (researcher check).
-- Answer: read files yes, run commands no, browse the web yes.
-- Min 0 (look only, the answer takes no action). Budget 3 / 4.
+**T10.1 - What did it just do? [planned]**
+- Scenario: "The assistant just finished a job. Without asking it, find out which file it looked at first, and show me the part of that file it read."
+- Start state: scripted agent `quiet-work` finished a turn that read `src/auth/redirect.ts` lines 10-24, searched, edited `src/auth/login.ts` and ran a command; no Code, Explorer or Terminal window open.
+- Success check: Code is open with `src/auth/redirect.ts` active and lines 10-24 highlighted; the panelist names `redirect.ts` (answer check).
+- Answer: `src/auth/redirect.ts`, and Code shows the lines it read.
+- Min 2 (open the chat from the top bar or InfoPanels, **Show in Code** on the first read row). Budget 6 / 8.
+
+**T10.2 - Stop it running commands [planned]**
+- Scenario: "You want to be sure that, from now on, the assistant cannot run commands. Make that true, and show me how you can tell."
+- Start state: a connected desktop, all permissions default, no Terminal window open.
+- Success check: the Terminal permission is Deny; the panelist names the Control Center row or the top-bar chip as the proof (answer check).
+- Answer: the Terminal permission is set to Deny, seen in Control Center or on the chip.
+- Min 4 (Start, Control Center, Permissions, Deny on Terminal). Budget 12 / 16.
 
 ### J11 Pause and take control
 
@@ -466,6 +468,44 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 - Answer: why typing does nothing in the Terminal (it is read only).
 - Min 2. Budget 6 / 8.
 
+### J32 An agent shows you something [planned]
+
+**T32.1 - Why this line? [planned]**
+- Scenario: "You asked the assistant where the login redirect is checked. It is pointing something out to you. Find out what it wants you to see and why, and tell it that you agree."
+- Start state: scripted agent `show-file` in the foreground chat calls `show` on `src/auth/redirect.ts:12-20` with a note.
+- Success check: the chat has a new user message that quotes the note (Reply was used) or a typed reply; the panelist states the reason from the note (answer check).
+- Answer: the reason in the note ("the redirect target is not checked here").
+- Min 2 (**Reply**, type and send). Budget 6 / 8.
+
+**T32.2 - Someone else wants your attention [planned]**
+- Scenario: "You are reading code. One of your team's assistants wants to show you something. Have a look at it when you are ready."
+- Start state: a team room; scripted member `Reviewer` calls `show` on a review comment from the background; the panelist's focus is in Code.
+- Success check: Code Review is open on that comment; the operator's view did not change before the panelist acted (`data-show-state` log).
+- Min 1 (**Show** on the balloon, or from the Action Center). Budget 3 / 4.
+
+### J33 Hear about what the agents made [planned]
+
+**T33.1 - What happened while I was busy? [planned]**
+- Scenario: "Two assistants worked while you were in a meeting. Find out what each one did, and open the review comments one of them left."
+- Start state: scripted team run `two-agent-output` finished: Reviewer left 4 comments, Builder changed 6 files and ran tests; balloons have timed out.
+- Success check: Code Review is open on the first new comment; the panelist names both results (answer check).
+- Answer: Reviewer left 4 comments; Builder changed 6 files and ran tests.
+- Min 2 (tray flag, **Open review**). Budget 6 / 8.
+
+**T33.2 - Do not disturb me [planned]**
+- Scenario: "Type a short note in Notepad while the assistant draws a diagram. Then look at the diagram."
+- Start state: scripted agent `diagram-output` opens Agent Diagrams and draws while Notepad has focus.
+- Success check: the Notepad text was typed without lost keys (focus never moved); the Diagrams window is focused at the end.
+- Min 3 (type, click the flashing taskbar button, look). Budget 9 / 12.
+
+### J34 Follow an agent as it works [planned]
+
+**T34.1 - Watch the builder [planned]**
+- Scenario: "You want to watch the Builder assistant work on the bug for a while, then stop watching."
+- Start state: a team room with `Builder` running scripted agent `follow-steps` (several reads and edits).
+- Success check: Follow was on for Builder for at least one projected step, then off (`data-following` log).
+- Min 2 (**Follow**, **Stop following**). Budget 6 / 8.
+
 ## Coverage table
 
 | Journey | Tasks |
@@ -501,6 +541,9 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 | J29 | T29.1 |
 | J30 | T30.1, T30.2 |
 | J31 | T31.1, T31.2 |
+| J32 | T32.1, T32.2 |
+| J33 | T33.1, T33.2 |
+| J34 | T34.1 |
 
 ## Result table (filled during the sprint)
 

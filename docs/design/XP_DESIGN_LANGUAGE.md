@@ -31,6 +31,18 @@ AgentXP is hard Windows XP. Nothing in the UI may borrow from Vista or Windows 7
 - Event Viewer is a tree and a list with a toolbar above it (no Actions pane).
 - Explorer, Notepad, WordPad, Control Panel style pages and dialogs follow their XP layout: menu bar, toolbar, address bar, status bar.
 
+## Motion
+
+Windows XP had almost no motion: menus faded or slid in, the hover glow faded, the busy marquee ran. Keep to that.
+There is one deliberate exception:
+
+- **The agent cursor glides.** When an agent shows the operator something, follows its work in Follow mode or clicks
+  in the Browser, its cursor (`AgentCursor`) glides to the target in about 300 ms, ease-out. It tells the operator
+  "an agent is doing this for you to watch" (see `docs/AGENT_PRESENCE.md`). With `prefers-reduced-motion` it jumps and
+  shows a short pulse ring instead.
+
+Do not add other motion without updating this section.
+
 ## Icons and logo
 
 The icons are our own 16 px art drawn in `kit/atoms/icons.ts`, in the XP style (bright, outlined, soft gradients). Do not copy Microsoft bitmaps. The logo (`resources/logo.svg`) is a glossy Luna-blue rounded badge with a white prompt chevron and a green cursor block. It must never use the four-colour flag or any other Microsoft mark.

@@ -1,6 +1,6 @@
 # AgentXP Desktop Design
 
-Status: accepted, being built. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
+Status: accepted, being built. **Being replaced in part:** "tools follow apps" (section 1, section 3 "How gating works") is retired by `docs/AGENT_PRESENCE.md` (Work, Show, Output). Until PR 1 of that plan merges, the code still behaves as written here. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
 
 ## 1. Idea
 
@@ -9,7 +9,7 @@ The agent does not live in one window. It lives on a **desktop**, a small virtua
 - A **desktop** is one Electron `BrowserWindow`. It belongs to one folder (the workspace, shown as drive `W:`) and one default agent. You can have several desktops open at once, each in its own OS window.
 - A **chat** is one ACP session. A desktop holds many chats. Each chat is shown by a **Chat app** window. Closing the window hides the chat; it stays in **Start -> Recent chats** and **File -> Open Recent** of every Chat window, and the agent reaches it with `chats_list`, `chat_read` and `chat_open`. Reopening shows the persisted transcript; the agent resumes its ACP session with `session/load` when it supports it, else a fresh session gets the conversation so far with the next prompt (`agentxp://chat/history`, `historyBlock.ts`, not stored).
 - An **app** is a virtual program: Chat, Explorer, Notepad, Code, Terminal, Browser, Control Center, Agent Manager. Apps are windows inside the desktop window (our own Luna chrome, draggable, resizable, minimise to the taskbar).
-- **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`.
+- **Tools follow apps.** An agent tool exists only while the app that provides it is open on that desktop. Close Terminal and the agent loses its terminal. Open Browser and the agent gains `browser_*`. *(Being retired: agents will work headless and gated by policy only; the desktop becomes the operator's environment. See `docs/AGENT_PRESENCE.md`.)*
 - **System level** settings (agents, permission policy, connectors, about) live in **Control Center**, a desktop app, not in a per-chat dialog.
 
 ## 2. Vocabulary in code
@@ -55,6 +55,8 @@ Always present, whatever is open (the "shell" tool group): `desktop_state`, `des
 `desktop_open_app` is governed by the Control Center policy **Agent may open apps**: Always (default), Ask (permission dialog), Never.
 
 ### How gating works
+
+*Being retired by `docs/AGENT_PRESENCE.md` section 10: the closed-app step goes, policy and scope remain.*
 
 Two channels reach the agent and both are gated by one `AppToolPolicy` (pure function: open app kinds -> enabled `ToolGroup`s).
 
