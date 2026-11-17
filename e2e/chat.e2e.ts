@@ -35,20 +35,13 @@ describe('chat turn with the fake agent', () => {
     await chat.send('Write the output file')
     await see.text(chat.userMessages, 'Write the output file')
     await see.visible(chat.permissionDialog)
-    // UX-138: the box is a part of the chat layout, so Allow and Deny are inside the chat window; the command line carries no setting note.
-    await see.visible(chat.permissionDialog.getByTestId('permission-option-allow'))
-    await see.visible(chat.permissionDialog.getByTestId('permission-option-reject'))
-    await see.eventually(async () => {
-      const window = await chat.frame.boundingBox()
-      const box = await chat.permissionDialog.boundingBox()
-      const hint = await chat.permissionHint.boundingBox()
-      expect(window && box && hint).toBeTruthy()
-      expect(box!.y).toBeGreaterThanOrEqual(window!.y)
-      expect(box!.y + box!.height).toBeLessThanOrEqual(window!.y + window!.height)
-      expect(hint!.y + hint!.height).toBeLessThanOrEqual(window!.y + window!.height)
-      expect(box!.height).toBeLessThanOrEqual(window!.height * 0.4 + 2)
-    })
-    expect(await chat.permissionDialog.innerText()).not.toMatch(/set to Ask in Control Center/)
+    // The request pops up over the whole desktop, with Allow and Deny in it; "Not now" would leave it in the Action Center.
+    await see.visible(ctx.desktopPage.getByTestId('uac-allow'))
+    await see.visible(ctx.desktopPage.getByTestId('uac-option-reject'))
+    await see.visible(ctx.desktopPage.getByTestId('uac-not-now'))
+    // Put off, it still waits: the bar link and the Action Center keep it.
+    await ctx.desktopPage.getByTestId('uac-not-now').click()
+    await see.gone(chat.permissionDialog)
     // UX-138: the link on the top bar names the chat, and it brings that chat forward.
     await see.text(ctx.desktopPage.getByTestId('topbar-waiting-link'), ' is waiting: ')
     await see.text(ctx.desktop.actionCenterFlag, '1')
@@ -60,6 +53,9 @@ describe('chat turn with the fake agent', () => {
     await see.attribute(ctx.desktop.actionCenterFlag, 'title', '1 request is waiting for you.')
     // The taskbar buttons are icon-only (Luna): the caption is the tooltip.
     await see.attribute(ctx.desktop.taskbarItem('chat'), 'title', /^Waiting: /)
+    // The link on the bar brings the popup back.
+    await ctx.desktopPage.getByTestId('topbar-waiting-link').click()
+    await see.visible(chat.permissionDialog)
   })
 
   it('allowing the request completes the tool call (status done)', async () => {
@@ -85,6 +81,8 @@ describe('chat turn with the fake agent', () => {
     const chat = ctx.desktop.chat()
     await chat.send('Write it again')
     await see.visible(chat.permissionDialog)
+    await ctx.desktopPage.getByTestId('uac-not-now').click()
+    await see.gone(chat.permissionDialog)
     await ctx.desktop.openActionCenter()
     await see.count(ctx.desktop.approvals, 1)
     await ctx.desktopPage.getByTestId('action-center-review').click()
@@ -103,15 +101,15 @@ describe('chat turn with the fake agent', () => {
     await see.text(chat.permissionResult, 'You allowed: ')
   })
 
-  it('the permission dialog of the chat answers by key: Alt+D denies, Alt+A allows, and the chat says so', async () => {
+  it('the permission popup answers by key: Alt+D denies, Alt+A allows, and the chat says so', async () => {
     const chat = ctx.desktop.chat()
     await chat.send('Write it a third time')
     await see.visible(chat.permissionDialog)
     await see.text(chat.permissionHint, 'Enter denies. Press A to allow.')
     // Deny keeps the first focus (the safe answer); Left and Right move to Allow and back.
-    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
+    await see.eventually(async () => expect(await ctx.desktopPage.getByTestId('uac-option-reject').evaluate((el) => el === document.activeElement)).toBe(true))
     await ctx.desktopPage.keyboard.press('ArrowLeft')
-    await see.eventually(async () => expect(await chat.permissionDialog.getByTestId('permission-option-allow').evaluate((el) => el === document.activeElement)).toBe(true))
+    await see.eventually(async () => expect(await ctx.desktopPage.getByTestId('uac-allow').evaluate((el) => el === document.activeElement)).toBe(true))
     await ctx.desktopPage.keyboard.press('Alt+d')
     await see.gone(chat.permissionDialog)
     await see.text(chat.permissionResult, 'You denied: ')

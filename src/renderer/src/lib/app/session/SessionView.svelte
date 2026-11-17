@@ -1,15 +1,12 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte'
   import { effectiveStatus, isStarting } from '../sessionStatus'
-  import { useWaitingText } from '../../desktop/waitingQueue'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'
   import Composer from './Composer.svelte'
   import type { ChatSuggestion } from './chatPaneText'
   import { describeProblem, sendStateOf, ENDED_SEND_OFF, type ProblemActionId, type SendState } from './chatProblem'
   import { settleStaleSteps } from './staleSteps'
-  import PermissionDialog from './PermissionDialog.svelte'
   import { PAUSED_NOTE, STOPPED_BY_PAUSE_NOTE } from './resumeNote'
-  import { permissionMetadata } from './permissionOptions'
   import SessionHeader from './SessionHeader.svelte'
   import type { SessionStoreLike } from './SessionStoreLike'
   import type { SurfaceControls } from './surfaceRow'
@@ -28,7 +25,7 @@
     /** Overrides for the IPC calls (stories, tests); default to `window.agentxp`. */
     setMode?: (sessionId: number, modeId: string) => Promise<void>
     pickFiles?: () => Promise<string[]>
-    /** Not used any more: the permission box is a part of the chat layout, never an overlay (UX-138). Kept so hosts need no change. */
+    /** Not used any more (permission requests pop up over the desktop). Kept so hosts need no change. */
     contained?: boolean
     /** Open, close, delete and move for the surface rows (the Chat app). */
     surfaceControls?: SurfaceControls
@@ -95,11 +92,8 @@
   const modes = $derived(info.modes.length > 0 ? info.modes : session.modes)
   const modeId = $derived(info.currentModeId ?? session.currentModeId)
   const request = $derived(store.pendingInterrupt)
-  const permission = $derived(request ? permissionMetadata(request.metadata) : null)
   const waitingToolCallId = $derived(request?.toolCallId ?? null)
   const starting = $derived(isStarting(effectiveStatus(info.status, session.status)))
-  const waitingText = useWaitingText(() => session.id)
-  const queueText = $derived(waitingText())
 
   // ---- what went wrong: the error row, the state of the failed message -------------------------------------
   const problem = $derived(describeProblem({ error: store.error, problem: session.problem, failed: store.failedSend, newDefaultAgent, agentName: agent?.name }))
@@ -239,8 +233,7 @@
 </script>
 
 <section class="session-view" aria-label={title}>
-  <!-- While a request waits, the box gets the room of the title row: the window title already names the chat (UX-177). -->
-  {#if !compact && !request}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
+  {#if !compact}<SessionHeader {title} path={folderText ?? folder?.path} fullPath={folder?.path} />{/if}
   <Transcript
     messages={store.messages}
     agentState={settledState}
@@ -283,18 +276,6 @@
   {/if}
   {#if paused}
     <div class="paused" role="status" data-testid="chat-paused-banner" data-stopped={stoppedByPause}>{stoppedByPause ? STOPPED_BY_PAUSE_NOTE : PAUSED_NOTE}</div>
-  {/if}
-  {#if request && permission}
-    {#key request.id}
-      <PermissionDialog
-        {agentName}
-        title={permission.title}
-        options={permission.options}
-        toolCall={request.toolCallId ? store.state.toolCalls[request.toolCallId] : undefined}
-        {queueText}
-        onanswer={(optionId) => void store.resolveInterrupt(optionId, request.id)}
-      />
-    {/key}
   {/if}
   <Composer
     {agentName}

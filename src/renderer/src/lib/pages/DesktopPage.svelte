@@ -165,7 +165,10 @@
   })
 
   const approvals = $derived(desktop.inbox.pending)
-  const reviewing = $derived(desktop.reviewing && approvals.some((a) => a.key === desktop.reviewing?.key) ? desktop.reviewing : null)
+  const popup = $derived(desktop.popup)
+  $effect(() => {
+    if (popup && !desktop.policy && !desktop.state.policy) void desktop.loadPolicy()
+  })
   const centreApprovals = $derived(
     approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt) }))
   )
@@ -336,13 +339,16 @@
         />
       </div>
     {/if}
-    {#if reviewing}
-      <UacDialog
-        approval={reviewing}
-        reason={approvalReason(reviewing.toolKind, policy, desktop.state.userInControl)}
-        onanswer={(optionId) => void desktop.answerReview(optionId)}
-        onclose={() => (desktop.reviewing = null)}
-      />
+    {#if popup}
+      {#key popup.key}
+        <UacDialog
+          approval={popup}
+          reason={approvalReason(popup.toolKind, policy, desktop.state.userInControl)}
+          queueText={approvals.length > 1 ? `1 of ${approvals.length} waiting` : null}
+          onanswer={(optionId) => void desktop.answerReview(optionId)}
+          onclose={() => desktop.closePopup()}
+        />
+      {/key}
     {/if}
     {#if desktop.needsDesktop}
       <WelcomeDialog onopen={() => void desktop.showLauncher()} />

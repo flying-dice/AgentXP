@@ -186,6 +186,7 @@ beforeEach(async () => {
   const runner: CommandRunner = {
     run: async (command, options) => {
       ran.push({ command, cwd: options.cwd })
+      if (command === 'close-terminal') for (const w of desktops.windowsOf(desktopId, 'terminal')) desktops.closeWindow(w.id)
       options.onOutput?.('line1\n')
       options.onOutput?.('line2\n')
       return { exitCode: command === 'fail' ? 2 : 0, timedOut: false, output: 'line1\nline2\n' }
@@ -551,6 +552,13 @@ describe('terminal tools', () => {
     const res = await run('terminal_run', { command: 'fail' })
     expect(res.isError).toBe(true)
     expect(textOf(res)).toContain('[exit code 2]')
+  })
+
+  it('finishes the run when the Terminal window is closed meanwhile, still recording the output for the chat', async () => {
+    const res = await run('terminal_run', { command: 'close-terminal' })
+    expect(textOf(res)).toBe('line1\nline2\n[exit code 0]')
+    expect(desktops.windowsOf(desktopId, 'terminal')).toEqual([])
+    expect(recorded.map(([, a]) => a.delta)).toEqual(['', 'line1\n', 'line2\n', ''])
   })
 
   it('says so when nothing ran yet', async () => {

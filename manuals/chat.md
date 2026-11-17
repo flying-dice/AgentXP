@@ -101,9 +101,9 @@ The status bar shows the working folder, the use of the context window, and the 
 
 ### Permission Requests
 
-If you set an action to **Ask**, a box above the message box asks you. It is a part of the chat: it does not cover the messages, and it scrolls when the request is long. It has the question, the command or the diff, and two choices. Click the first choice to allow the action. Click the second to refuse it. When more than one request waits, the box says, for example, **1 of 2 waiting**. Select **Don't ask again for this kind of action** to save your answer for the next time.
+If you set an action to **Ask**, a permission box opens over the desktop and dims it, whichever window or chat the request came from, so you cannot miss it. It has the question, the command or the diff, and the choices. Click the first choice to allow the action. Click the second to refuse it. Click **Not now** or press Esc to close the box without an answer: the request stays in the Action Center, and the link on the top bar brings the box back. When more than one request waits, the box says, for example, **1 of 2 waiting**. See **[Desktop](desktop.md)** for the box.
 
-The focus starts on **Deny**, because Deny is the safe answer. You can answer with the keyboard: Enter denies, and A allows. Alt+A and Alt+D work too. The Left and Right arrow keys move between the two choices. The line beside the choices says the same. After you answer, a line in the chat tells what you chose, for example **You allowed: Change NOTE.md.** or **You denied: Run a command.**
+The focus starts on **Deny**, because Deny is the safe answer. You can answer with the keyboard: Enter denies, and A allows. Alt+A and Alt+D work too. The Left and Right arrow keys move between the choices. After you answer, a line in the chat tells what you chose, for example **You allowed: Change NOTE.md.** or **You denied: Run a command.**
 
 ### When the Agent Does Not Start
 
@@ -225,18 +225,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Move to Inline, Sidebar, Window | Moves the form. | `chat-surface-move-*` |
 | Working folder | Shows the folder of the chat. | `chat-cwd` |
 | Problem line | Replaces the folder in the status bar while something is wrong. It says what happened and what to click, in a short line that fits, for example "The agent stopped. Click Send again." | `chat-problem-line` |
-| Connection state | Shows the state of the connection. While a permission box is open it reads **Waiting for your answer**. | `chat-status` |
+| Connection state | Shows the state of the connection. While a permission request waits it reads **Waiting for your answer**. | `chat-status` |
 | Not responding link | Shows in the status bar when the chat has worked for more than 20 seconds. It opens Task Manager on the Processes tab. | `chat-end-agent-link` |
 | Continued note | Says **Continued in a new chat.** in grey in the old chat after **Start a new chat**. The old chat shows no red box. | `chat-continued-note` |
-| Permission box | Asks if the agent can act. It is a part of the chat, above the message box. It takes up to half of the chat window. Only the lines of a change scroll inside it, and the two choices stay in the window. | `permission-dialog` |
-| Allow or refuse | The two choices. The name ends with the id of the choice. A allows. Enter denies, because Deny has the focus. | `permission-option-*` |
-| Keys line | Tells which keys answer: Enter denies, A allows. | `permission-hint` |
-| Waiting count | Says **1 of 2 waiting** when more than one request waits on the desktop. | `permission-queue` |
 | Retry line | Says **Press Send to try again.** above the message box while the text of a message that did not go through is in the box. It goes away when a send works. When you send the same text again, the first copy is replaced, so the chat shows the message once. | `chat-retry-hint` |
-| Setting line | The setting that made AgentXP ask, under the command. | `permission-detail-setting` |
-| Change preview | The lines that change, at least 9 rows. | `permission-detail-view` |
-| Show all lines | Shows every line of a long change, or the whole change in a small window. | `permission-detail-more` |
-| Don't ask again for this kind of action | Saves your answer. | `permission-remember` |
 | Project tree | The tree of files, shown in Code. | `file-tree` |
 | Sidebar tab label | Shows the surface of the tab in the sidebar. | `chat-sidebar-tab-label` |
 

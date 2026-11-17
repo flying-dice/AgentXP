@@ -109,16 +109,14 @@ Click the flag to open the Action Center. Point at the flag to see how many requ
 
 ### Permission Prompts
 
-AgentXP asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
+AgentXP asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. The permission dialog box opens by itself over the whole desktop and dims it, whichever window or chat asked, and it waits for your answer. The oldest request comes first. A request also appears in the Action Center, where **Review** opens its box again.
 
 - The title asks in plain words if the agent can do the action, for example **Allow the agent to change src/auth/redirect.ts?**
 - The line **Reason:** tells why AgentXP asks, for example that Running commands is set to Ask.
 - The box shows the command, or the change to the file: the full path, how many lines are added and removed, and the lines. Long lines wrap. **Show all lines** shows a long change in full. If AgentXP cannot read the file, the box says that the change replaces the whole file.
 - The choices answer the request. Each has a second line that tells what happens. The focus starts on the refusal.
 
-Press Esc or click **Not now** to close the dialog box without an answer. The request stays in the Action Center.
-
-A Chat window shows a second kind of permission dialog box, with the same choices. See **[Chat](chat.md)**.
+Press Esc or click **Not now** to close the dialog box without an answer. The request stays in the Action Center, and the link on the top bar brings the box back.
 
 ### Other Dialog Boxes
 

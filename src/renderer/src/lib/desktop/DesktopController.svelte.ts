@@ -130,6 +130,8 @@ export class DesktopController implements DesktopHost {
   actionCenterOpen = $state(false)
   infopanelsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
+  /** Requests whose popup the user closed with "Not now": they stay in the Action Center and in the chat's waiting line. */
+  private dismissed = $state.raw<ReadonlySet<string>>(new Set())
   selectedIcon = $state<string | null>(null)
   /** Set while the Snipping Tool waits for the user to pick a region (dims the desktop). */
   snipOverlay = $state.raw<SnipOverlayState | null>(null)
@@ -1188,10 +1190,8 @@ export class DesktopController implements DesktopHost {
     return projectRootOf(this.state.drives, this.state.home, path)
   }
 
-  /** Opens the UAC-style dialog for an approval (loads the policy for the reason line). */
-  async review(approval: PendingApproval): Promise<void> {
-    this.actionCenterOpen = false
-    this.reviewing = approval
+  /** Loads the Control Center policy for the reason line of the approval popup. */
+  async loadPolicy(): Promise<void> {
     try {
       this.policy = await this.api.desktop.policy()
     } catch {
@@ -1199,20 +1199,42 @@ export class DesktopController implements DesktopHost {
     }
   }
 
+  /** Opens the UAC-style dialog for an approval, also one the user put off with "Not now". */
+  async review(approval: PendingApproval): Promise<void> {
+    this.actionCenterOpen = false
+    this.reviewing = approval
+    await this.loadPolicy()
+  }
+
   /**
-   * The "waiting" link of the bar: goes to the chat of the oldest request, where the box with Allow and Deny is (UX-138).
-   * A request of a session without a chat window (a reviewer) opens the Action Center dialog instead.
+   * The approval the desktop blocks on: the one picked in the Action Center, else the oldest waiting request.
+   * It pops up over the whole desktop, whatever window or chat it came from, until it is answered or put off.
+   */
+  get popup(): PendingApproval | null {
+    const pending = this.inbox.pending
+    const picked = this.reviewing && pending.find((a) => a.key === this.reviewing?.key)
+    if (picked) return picked
+    return nextApproval(pending.filter((a) => !this.dismissed.has(a.key)))
+  }
+
+  /** "Not now" or Esc: closes the popup without answering. */
+  closePopup(): void {
+    const shown = this.popup
+    this.reviewing = null
+    if (shown) this.dismissed = new Set(this.dismissed).add(shown.key)
+  }
+
+  /**
+   * The "waiting" link of the bar: brings the popup of the oldest request back, also after "Not now".
    */
   async openNextRequest(): Promise<void> {
     const next = nextApproval(this.inbox.pending)
-    if (!next) return
-    if (this.sessions.byId(next.sessionId)?.role === 'chat') await this.openApp({ app: 'chat', sessionId: next.sessionId })
-    else await this.review(next)
+    if (next) await this.review(next)
   }
 
   /** The reviewed approval answered (option id) or dismissed without answering (undefined). */
   async answerReview(optionId: string | null): Promise<void> {
-    const approval = this.reviewing
+    const approval = this.popup
     this.reviewing = null
     if (approval) await this.inbox.answer(approval, optionId)
   }

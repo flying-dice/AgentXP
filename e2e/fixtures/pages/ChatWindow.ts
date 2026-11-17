@@ -1,8 +1,9 @@
-import type { Locator } from 'playwright'
+import type { Locator, Page } from 'playwright'
 
 /** One chat window (pass the `window-chat` frame). */
 export class ChatWindow {
-  constructor(readonly frame: Locator) {}
+  /** The permission popup is part of the desktop, not of the chat window: it is found through the page. */
+  constructor(readonly frame: Locator, readonly page: Page = frame.page()) {}
 
   get composer(): Locator {
     return this.frame.getByTestId('chat-composer-input')
@@ -22,9 +23,9 @@ export class ChatWindow {
     return this.frame.getByTestId('chat-permission-result')
   }
 
-  /** The line under the answers of the permission dialog box ("Enter denies. Press A to allow."). */
+  /** The line under the answers of the permission popup ("Enter denies. Press A to allow."). */
   get permissionHint(): Locator {
-    return this.frame.getByTestId('permission-hint')
+    return this.page.getByTestId('uac-hint')
   }
 
   get errors(): Locator {
@@ -88,12 +89,12 @@ export class ChatWindow {
   }
 
   get permissionDialog(): Locator {
-    return this.frame.getByTestId('permission-dialog')
+    return this.page.getByTestId('uac-dialog')
   }
 
   /** Clicks the permission option (the agent's option id, e.g. `allow` / `reject`). */
   async answerPermission(optionId: string): Promise<void> {
-    await this.frame.getByTestId(`permission-option-${optionId}`).click()
+    await this.page.getByTestId(optionId === 'allow' ? 'uac-allow' : `uac-option-${optionId}`).click()
   }
 
   /** Opens the Changes pane and its Changes tab. */

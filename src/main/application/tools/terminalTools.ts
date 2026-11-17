@@ -5,6 +5,7 @@ import type { TerminalActivity } from '../ports'
 import type { VirtualFileSystem } from '../vfs/VirtualFileSystem'
 import type { CommandRunner, DesktopOps } from './ports'
 import type { ToolPaths } from './ToolPaths'
+import { AppError } from '../errors'
 import { attempt, errorResult, textResult } from './types'
 import { pickWindow } from './windows'
 
@@ -12,6 +13,7 @@ const MAX_OUTPUT_CHARS = 20_000
 const VIEW_LINES = 20
 const KEPT_LINES = 500
 const DEFAULT_TIMEOUT_SECONDS = 60
+const MS_PER_SECOND = 1000
 
 const lastLines = (lines: string[], count: number): string[] => lines.slice(-count)
 const tail = (text: string, max: number): string => (text.length <= max ? text : `[...truncated]\n${text.slice(-max)}`)
@@ -36,14 +38,19 @@ export function createTerminalTools({ desktops, runner, vfs, paths, terminals, n
   const buffers = new Map<Id, string[]>()
 
   const showInTerminal = (desktopId: Id, terminalId: string, cwd: string, runningCommand: string | null, lines: string[]): void => {
-    const window = pickWindow(desktops.state(desktopId), 'terminal')
-    desktops.updateView(window.id, {
-      app: 'terminal',
-      terminalId,
-      cwd,
-      runningCommand,
-      lastLines: lastLines(lines, VIEW_LINES)
-    })
+    try {
+      const window = pickWindow(desktops.state(desktopId), 'terminal')
+      desktops.updateView(window.id, {
+        app: 'terminal',
+        terminalId,
+        cwd,
+        runningCommand,
+        lastLines: lastLines(lines, VIEW_LINES)
+      })
+    } catch (error) {
+      // The Terminal window was closed while the command ran: the output is still recorded for the chat and terminal_read.
+      if (!(error instanceof AppError)) throw error
+    }
   }
 
   return {
@@ -62,7 +69,7 @@ export function createTerminalTools({ desktops, runner, vfs, paths, terminals, n
         showInTerminal(desktopId, terminalId, directory, command, lines)
         const result = await runner.run(command, {
           cwd: real,
-          timeoutMs: (timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * 1000,
+          timeoutMs: (timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * MS_PER_SECOND,
           onOutput: (text) => record(text)
         })
         // A timeout or a signal has no exit code; the terminal still has to end (exit code null means "running").
