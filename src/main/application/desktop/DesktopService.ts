@@ -491,8 +491,9 @@ export class DesktopService implements DesktopStates {
       path: record.path || undefined,
       url: record.url ?? undefined,
       sessionId: record.sessionId ?? undefined,
-      baseRef: record.baseRef ?? undefined
-    })
+      baseRef: record.baseRef ?? undefined,
+      roomId: record.app === 'team-chat' ? Number(record.path) : undefined
+    }, 'Team Chat')
     this.views.set(record.id, view)
     return view
   }
@@ -550,6 +551,7 @@ export class DesktopService implements DesktopStates {
       const open = this.deps.windows.findChatWindow(input.sessionId)
       return open?.app === 'code-review' ? open : null
     }
+    if (input.app === 'team-chat') return this.deps.windows.list(input.desktopId).find((w) => w.app === 'team-chat' && w.path === String(input.roomId)) ?? null
     if (!SINGLETON_APPS.includes(input.app)) return null
     return this.deps.windows.list(input.desktopId).find((w) => w.app === input.app) ?? null
   }
@@ -561,6 +563,11 @@ export class DesktopService implements DesktopStates {
       return { sessionId: session.id }
     }
     if (PATH_APPS.includes(input.app)) return { path: input.path ?? null }
+    // A team chat window keeps its room number in the path column (no table of its own).
+    if (input.app === 'team-chat') {
+      if (input.roomId === undefined) throw new AppError('A Team Chat window needs a room')
+      return { path: String(input.roomId) }
+    }
     if (input.app === 'code-review') {
       const session = required(this.deps.sessions.get(input.sessionId ?? 0), 'Session')
       if (session.desktopId !== input.desktopId) throw new AppError('The review belongs to another desktop')

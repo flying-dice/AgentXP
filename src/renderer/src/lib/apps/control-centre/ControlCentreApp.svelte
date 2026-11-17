@@ -16,12 +16,14 @@
   import AgentsPage from './AgentsPage.svelte'
   import AppearancePage from './AppearancePage.svelte'
   import PermissionsPage from './PermissionsPage.svelte'
+  import SkillsPage from './SkillsPage.svelte'
 
   let { window: win, host }: AppProps<'control-centre'> = $props()
 
   const pages: { id: ControlCentrePage; title: string; heading: string; icon: IconName }[] = [
     { id: 'agents', title: 'Agents', heading: 'Agents', icon: 'agent' },
     { id: 'permissions', title: 'Permissions', heading: 'Permissions', icon: 'shield' },
+    { id: 'skills', title: 'Skills and MCP', heading: 'Skills and MCP Servers', icon: 'library' },
     { id: 'appearance', title: 'Appearance', heading: 'Appearance and Personalization', icon: 'options' },
     { id: 'about', title: 'About Agent7', heading: 'About Agent7', icon: 'info' }
   ]
@@ -90,6 +92,8 @@
         <AgentsPage {host} />
       {:else if page === 'permissions'}
         <PermissionsPage {host} windowId={win.id} selectedRow={win.view.row ?? null} />
+      {:else if page === 'skills'}
+        <SkillsPage {host} />
       {:else if page === 'appearance'}
         <AppearancePage />
       {:else}

@@ -13,7 +13,9 @@ export interface FolderBrowserSource {
 /** Instruction line of the dialog for each reason it opens. */
 export const FOLDER_BROWSER_INSTRUCTIONS = {
   desktop: 'Select a folder for the agent to work on.',
-  'plug-in': 'Select the project folder to plug in to this desktop.'
+  'plug-in': 'Select the project folder to plug in to this desktop.',
+  skill: 'Select the skill folder to install. It must have a SKILL.md file in it.',
+  'team-room': 'Select the folder the team works in.'
 } as const
 
 export type FolderBrowserPurpose = keyof typeof FOLDER_BROWSER_INSTRUCTIONS

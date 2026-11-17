@@ -27,7 +27,9 @@ export const APP_KINDS = [
   'recycle-bin',
   'surface',
   'help',
-  'code-review'
+  'code-review',
+  'teams',
+  'team-chat'
 ] as const
 export type AppKind = (typeof APP_KINDS)[number]
 
@@ -58,11 +60,12 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
-  'help'
+  'help',
+  'teams'
 ]
 
 /** Windows that have no chat pane: Chat is the chat, Code Review has its reviewer panel, a surface is the agent's own UI. */
-export const ASIDE_EXCLUDED_APPS: readonly AppKind[] = ['chat', 'code-review', 'surface']
+export const ASIDE_EXCLUDED_APPS: readonly AppKind[] = ['chat', 'code-review', 'surface', 'team-chat']
 export const supportsAside = (app: AppKind): boolean => !ASIDE_EXCLUDED_APPS.includes(app)
 
 /** Does this window offer the chat pane now? Task Manager has none on its Chats tab: that list is where a chat is opened (UX-163). */
@@ -114,13 +117,19 @@ export type AppView =
    * role `review`, owned by this window). `selectedPath` is relative to `root`, with `/`.
    */
   | { app: 'code-review'; root: VPath; baseRef: string; selectedPath: string | null; sessionId: Id }
+  /** Teams: the profile and team lists, with the editor of the selected one. */
+  | { app: 'teams'; tab?: TeamsTab; selectedId?: Id | null }
+  /** A team chat room: the members' messages, who is thinking, and the member whose own session is open in the side panel. */
+  | { app: 'team-chat'; roomId: Id; title: string; openMemberId?: Id | null }
 
 export type PaintTool = 'pencil' | 'brush' | 'line' | 'rect' | 'ellipse' | 'fill' | 'text' | 'eraser' | 'picker'
 export type EventLevel = 'info' | 'warning' | 'error'
 
 /** The tabs of Task Manager. */
 export type TaskManagerTab = 'chats' | 'processes' | 'terminals' | 'performance'
-export type ControlCentrePage = 'agents' | 'permissions' | 'appearance' | 'about'
+export type ControlCentrePage = 'agents' | 'permissions' | 'skills' | 'appearance' | 'about'
+/** The tabs of Teams. */
+export type TeamsTab = 'teams' | 'profiles' | 'rooms'
 
 export type ViewOf<K extends AppKind> = Extract<AppView, { app: K }>
 
@@ -267,7 +276,9 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   'recycle-bin': 'Recycle Bin',
   surface: 'Agent window',
   help: 'Help and Support',
-  'code-review': 'Code Review'
+  'code-review': 'Code Review',
+  teams: 'Teams',
+  'team-chat': 'Team Chat'
 }
 
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
@@ -322,6 +333,8 @@ export interface OpenWindowInput {
   baseRef?: string
   /** The file a `code-review` window shows first (a path below its root, with `/`); default: the first changed file. */
   selectedPath?: string
+  /** The room of a `team-chat` window. */
+  roomId?: Id
   /** Browser: open another window even when one is open (File > New window). Read by the desktop shell; main ignores it. */
   newWindow?: boolean
 }

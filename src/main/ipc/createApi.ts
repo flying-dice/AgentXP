@@ -23,6 +23,10 @@ import type { SessionQueryService } from '../application/SessionQueryService'
 import type { SessionService } from '../application/SessionService'
 import type { ShellService } from '../application/ShellService'
 import type { TranscriptExporter } from '../application/TranscriptExporter'
+import type { McpServerService } from '../application/teams/McpServerService'
+import type { SkillService } from '../application/teams/SkillService'
+import type { TeamRoomService } from '../application/teams/TeamRoomService'
+import type { TeamService } from '../application/teams/TeamService'
 
 export interface ApiServices {
   agents: AgentService
@@ -50,6 +54,10 @@ export interface ApiServices {
   eventLog: ProtocolEventLog
   recycle: RecycleService
   screen: ScreenCapturer
+  skills: SkillService
+  mcp: McpServerService
+  teamService: TeamService
+  rooms: TeamRoomService
   appVersion: string
 }
 
@@ -162,6 +170,43 @@ export function createApi(s: ApiServices): InvokeApi {
       updateCard: async (id, patch) => s.kanban.updateCard(id, patch),
       moveCard: async (id, columnId, index) => s.kanban.moveCard(id, columnId, index),
       deleteCard: async (id) => s.kanban.deleteCard(id)
+    },
+    skills: {
+      list: async () => s.skills.list(),
+      install: (path) => s.skills.install(path),
+      remove: (id) => s.skills.remove(id),
+      setEnabled: async (id, enabled) => s.skills.setEnabled(id, enabled)
+    },
+    mcp: {
+      list: async () => s.mcp.list(),
+      add: async (input) => s.mcp.add(input),
+      update: async (id, input) => s.mcp.update(id, input),
+      remove: async (id) => s.mcp.remove(id),
+      setEnabled: async (id, enabled) => s.mcp.setEnabled(id, enabled),
+      test: (id) => s.mcp.test(id),
+      probe: (input) => s.mcp.probe(input),
+      setToolEnabled: async (id, tool, enabled) => s.mcp.setToolEnabled(id, tool, enabled)
+    },
+    profiles: {
+      list: async () => s.teamService.listProfiles(),
+      create: async (input) => s.teamService.createProfile(input),
+      update: async (id, input) => s.teamService.updateProfile(id, input),
+      remove: async (id) => s.teamService.removeProfile(id)
+    },
+    teams: {
+      list: async () => s.teamService.listTeams(),
+      create: async (input) => s.teamService.createTeam(input),
+      update: async (id, input) => s.teamService.updateTeam(id, input),
+      remove: async (id) => s.teamService.removeTeam(id)
+    },
+    rooms: {
+      list: async (desktopId) => s.rooms.list(desktopId),
+      create: async (desktopId, teamId, cwd) => s.rooms.create(desktopId, teamId, cwd),
+      state: async (roomId) => s.rooms.state(roomId),
+      remove: (roomId) => s.rooms.remove(roomId),
+      rename: async (roomId, title) => s.rooms.rename(roomId, title),
+      say: (roomId, text) => s.rooms.say(roomId, text),
+      stop: (roomId, profileId) => s.rooms.stop(roomId, profileId)
     },
     notes: {
       list: async (desktopId) => s.notes.list(desktopId),

@@ -1,6 +1,6 @@
 # Using Control Center
 
-This manual describes Control Center. Control Center sets the agents, the permissions, and the look of the desktop.
+This manual describes Control Center. Control Center sets the agents, the permissions, the skills and MCP servers, and the look of the desktop.
 
 ## Table of Contents
 
@@ -10,6 +10,7 @@ This manual describes Control Center. Control Center sets the agents, the permis
   - The Task List
   - The Agents Page
   - The Permissions Page
+  - The Skills and MCP Page
   - The Appearance Page
   - The About Page
   - The Chat Pane
@@ -36,7 +37,7 @@ Only one Control Center window exists on a desktop.
 
 ### The Task List
 
-The list is at the left under the title **Control Center Home**. It has **Agents**, **Permissions**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
+The list is at the left under the title **Control Center Home**. It has **Agents**, **Permissions**, **Skills and MCP**, **Appearance**, and **About Agent7**. A heading at the top of the right side names the page.
 
 ### The Agents Page
 
@@ -85,6 +86,34 @@ The top bar shows chips with the same names, for example **Run commands: Ask fir
 
 To set all rows at once, choose a setting in **Set every permission to** and click **Set all**. The note **Not applied yet** shows until you save. Click **OK** or **Apply** to save. The line **Saved. New requests use these settings.** shows for four seconds. Click **Cancel** to drop your changes.
 
+### The Skills and MCP Page
+
+The page has two lists. A **skill** is a folder with a SKILL.md file that tells an agent how to do a kind of work. An **MCP server** is a program or a web address that gives an agent more tools. A plain chat gets every skill and every server that is **On**. A profile in **[Teams](teams.md)** gets only the ones that you give to it.
+
+The **Skills** list has the columns **Name**, **Description**, and **State**. The buttons are at the right of the list:
+
+- **Install...** – Asks for a skill folder. The folder must have a SKILL.md file that starts with a **name** and a **description**. Agent7 keeps a copy.
+- **Remove** – Removes the selected skill after a question. Profiles and teams lose it.
+- **Turn Off** or **Turn On** – Switches the selected skill.
+
+The **MCP servers** list has the columns **Name**, **Type**, **Command or address**, **Tools**, and **State**. The buttons are at the right of the list:
+
+- **Add...** – Opens the **Add MCP Server** dialog box.
+- **Edit...** – Opens the dialog box for the selected server.
+- **Remove** – Removes the selected server after a question.
+- **Turn Off** or **Turn On** – Switches the selected server.
+- **Test connection** – Connects to the server and lists its tools. The line under the list says if it worked.
+- **Tools...** – Shows the tools of the server. Untick a tool to hide it from agents. This button works after a test.
+
+The server dialog box has these parts:
+
+- **Name** – Letters, digits, - and _.
+- **Type** – **Program** starts a program. **Web address** calls an address.
+- **Command** and **Arguments** – The program and one argument per line.
+- **Address** – The address of the server, for example `https://example.com/mcp`.
+- **Environment** or **Headers** – Variables for the program, or headers for the address. Tick **Secret** to hide the value of a variable.
+- **Test connection** – Tries the server with what the dialog box holds.
+
 ### The Appearance Page
 
 The page has the option **Show gadgets on the desktop**. The gadgets are the context meter, the desktop clock, and the activity list. The theme is Windows 7 Aero Basic. You cannot change it.
@@ -102,7 +131,7 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Name | What it does | data-testid |
 |---|---|---|
 | Control Center window | The root of the window. | `control-centre-app` |
-| Page button | Opens a page. The name ends with `agents`, `permissions`, `appearance`, or `about`. | `control-centre-page-*` |
+| Page button | Opens a page. The name ends with `agents`, `permissions`, `skills`, `appearance`, or `about`. | `control-centre-page-*` |
 | Heading | Names the page. | `control-centre-heading` |
 | Version | Shows the version of Agent7. | `control-centre-version` |
 | Agents | The list of agents. | `agents-list` |
@@ -120,6 +149,38 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Agent arguments | One argument per line. | `agents-dialog-args` |
 | Agent environment | KEY=VALUE per line. | `agents-dialog-env` |
 | Make default | Makes the agent the default for new desktops and chats. | `agents-dialog-default` |
+| Skills | The list of skills. | `skills-list` |
+| Skill row | One skill. | `skills-row` |
+| Install... | Installs a skill from a folder. | `skills-install` |
+| Remove skill | Removes the selected skill. | `skills-remove` |
+| Turn skill on or off | Switches the selected skill. | `skills-toggle` |
+| MCP servers | The list of MCP servers. | `mcp-list` |
+| MCP server row | One MCP server. | `mcp-row` |
+| Add MCP server | Adds a server. | `mcp-add` |
+| Edit MCP server | Changes the selected server. | `mcp-edit` |
+| Remove MCP server | Removes the selected server. | `mcp-remove` |
+| Turn server on or off | Switches the selected server. | `mcp-toggle` |
+| Test connection | Connects to the selected server and lists its tools. | `mcp-test` |
+| Tools... | Shows the tools of the selected server. | `mcp-tools` |
+| MCP status | Says what the last test found. | `mcp-status` |
+| MCP reason note | Says why a button is off. | `mcp-reason` |
+| MCP tools dialog box | Switches the tools of a server. | `mcp-tools-dialog` |
+| MCP tool list | The tools, each with a check box. | `mcp-tools-list` |
+| MCP server dialog box | Adds or changes a server. | `mcp-dialog` |
+| MCP server name | The name of the server. | `mcp-dialog-name` |
+| MCP server command | The program to run. | `mcp-dialog-command` |
+| MCP server arguments | One argument per line. | `mcp-dialog-args` |
+| MCP server address | The web address. | `mcp-dialog-url` |
+| MCP server variables | The variables or headers. | `mcp-dialog-vars` |
+| MCP server variable | One variable. | `mcp-dialog-var` |
+| Variable name | The name of a variable. | `mcp-dialog-var-key` |
+| Variable value | The value of a variable. | `mcp-dialog-var-value` |
+| Variable secret | Hides the value. | `mcp-dialog-var-secret` |
+| Remove variable | Removes a variable. | `mcp-dialog-var-remove` |
+| Add variable | Adds a variable. | `mcp-dialog-var-add` |
+| MCP dialog test | Tries the server. | `mcp-dialog-test` |
+| MCP dialog test result | Says if the connection worked. | `mcp-dialog-test-result` |
+| MCP dialog problem | Says what is missing. | `mcp-dialog-problem` |
 | Permission table | The permissions in two blocks. | `permissions-table` |
 | Permissions page | The whole page: help, **Set every permission to**, the list and the buttons. The attribute `data-narrow` is true when the page is narrower than 520 px. The page scrolls when the window is short. | `permissions-page` |
 | Permissions note | The box above the list that says what each row covers, including Code and Notepad, and what the top bar box **Ask before every action (this session only)** does. In a page narrower than 520 px it shows two sentences. | `permissions-callout` |

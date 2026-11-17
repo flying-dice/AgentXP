@@ -432,3 +432,29 @@ describe('DesktopService: the chat pane (aside sessions)', () => {
     expect(chats.removed).not.toContain(chat.view.app === 'chat' ? chat.view.sessionId : -1)
   })
 })
+
+describe('DesktopService: Teams and Team Chat windows', () => {
+  it('opens Teams once per desktop', () => {
+    const first = service.openWindow({ desktopId, app: 'teams' })
+    expect(service.openWindow({ desktopId, app: 'teams' }).id).toBe(first.id)
+    expect(first.view).toMatchObject({ app: 'teams', tab: 'teams' })
+  })
+
+  it('opens one Team Chat window per room, with the room in its view, and remembers it', () => {
+    const one = service.openWindow({ desktopId, app: 'team-chat', roomId: 7 })
+    const two = service.openWindow({ desktopId, app: 'team-chat', roomId: 8 })
+    expect(service.openWindow({ desktopId, app: 'team-chat', roomId: 7 }).id).toBe(one.id)
+    expect(two.id).not.toBe(one.id)
+    expect(one.view).toMatchObject({ app: 'team-chat', roomId: 7 })
+    // A new service over the same rows (a restart) rebuilds the view from the stored room number.
+    const again = new DesktopService(deps())
+    expect(again.state(desktopId).windows.find((w) => w.id === two.id)?.view).toMatchObject({ app: 'team-chat', roomId: 8 })
+    expect(() => service.openWindow({ desktopId, app: 'team-chat' })).toThrow(/needs a room/)
+  })
+
+  it('does not remove the room sessions when a Team Chat window closes', () => {
+    const win = service.openWindow({ desktopId, app: 'team-chat', roomId: 7 })
+    service.closeWindow(win.id)
+    expect(chats.removed).toEqual([])
+  })
+})

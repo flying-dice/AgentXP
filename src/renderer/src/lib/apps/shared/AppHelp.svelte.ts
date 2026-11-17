@@ -29,6 +29,8 @@ export const ABOUT: Record<AppKind, { icon: IconName; description: string }> = {
   'recycle-bin': { icon: 'recycle', description: 'Changes you reverted, ready to restore.' },
   help: { icon: 'help', description: 'Manuals for every app and window.' },
   'code-review': { icon: 'changes', description: 'Review changes with an agent and send its comments to a chat.' },
+  teams: { icon: 'user', description: 'Profiles and teams of agents, and their chat rooms.' },
+  'team-chat': { icon: 'session', description: 'A chat room where a team of agents answers under their own names.' },
   surface: { icon: 'computer', description: 'A window the agent drew with A2UI.' }
 }
 

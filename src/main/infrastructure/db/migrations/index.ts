@@ -11,6 +11,7 @@ import { sql as removedProjects } from './010_removed_projects'
 import { sql as stoppedByPause } from './011_stopped_by_pause'
 import { sql as oldTextError } from './012_old_text_error'
 import { sql as kanban } from './013_kanban'
+import { sql as teams } from './014_teams'
 
 export interface Migration {
   /** Strictly increasing; stored in `PRAGMA user_version`. */
@@ -37,5 +38,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 10, name: 'removed_projects', sql: removedProjects },
   { version: 11, name: 'stopped_by_pause', sql: stoppedByPause },
   { version: 12, name: 'old_text_error', sql: oldTextError },
-  { version: 13, name: 'kanban', sql: kanban }
+  { version: 13, name: 'kanban', sql: kanban },
+  { version: 14, name: 'teams', sql: teams }
 ]

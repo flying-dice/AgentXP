@@ -41,7 +41,9 @@ const RENDERER_EVENTS = {
   'recycle.changed': true,
   'launcher.changed': true,
   'git.changed': true,
-  'review.changed': true
+  'review.changed': true,
+  'room.changed': true,
+  'room.removed': true
 } as const satisfies Record<Agent7EventName, true>
 
 export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
@@ -100,6 +102,11 @@ const INVOKE_METHODS = {
   review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },
   drives: { list: true, plugIn: true, eject: true },
   launcher: { list: true, create: true, connect: true, disconnect: true, rename: true, remove: true, show: true, checkAgents: true },
+  skills: { list: true, install: true, remove: true, setEnabled: true },
+  mcp: { list: true, add: true, update: true, remove: true, setEnabled: true, test: true, probe: true, setToolEnabled: true },
+  profiles: { list: true, create: true, update: true, remove: true },
+  teams: { list: true, create: true, update: true, remove: true },
+  rooms: { list: true, create: true, state: true, remove: true, rename: true, say: true, stop: true },
   notes: { list: true, add: true, update: true, remove: true },
   kanban: { list: true, createBoard: true, renameBoard: true, deleteBoard: true, addColumn: true, renameColumn: true, moveColumn: true, deleteColumn: true, addCard: true, updateCard: true, moveCard: true, deleteCard: true },
   events: { query: true, clear: true },

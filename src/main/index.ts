@@ -54,6 +54,8 @@ async function bootstrap(): Promise<Running> {
     }),
     windows,
     desktopsDir: join(app.getPath('userData'), 'desktops'),
+    skillsDir: join(app.getPath('userData'), 'skills'),
+    mcpProxy: { electronPath: process.execPath, scriptPath: join(__dirname, 'mcp-proxy.js') },
     thumbnailCapturer: new ElectronThumbnailCapturer(windows),
     notifier: new ElectronNotifier((desktopId) => services?.launcher.connect(desktopId)),
     screen: new ElectronScreenCapturer(windows),

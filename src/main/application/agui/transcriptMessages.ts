@@ -3,6 +3,7 @@ import type { A2uiSurfaceDto } from '@shared/a2ui'
 import { A2UI_ACTIVITY_TYPE, a2uiActivityMessageId, type AguiSessionState } from '@shared/agui-state'
 import type { ContentBlockDto, TranscriptEntryDto } from '@shared/models'
 import { isDesktopBlock } from '../desktop/desktopBlock'
+import { isBriefingBlock } from '../teams/briefing'
 import { a2uiSurfaceContent } from './a2uiActivity'
 import { blocksToText } from './contentText'
 import { summariseToolResult } from './toolCallSummary'
@@ -20,7 +21,7 @@ const dataPart = (block: Extract<ContentBlockDto, { kind: 'image' }>): ContentPa
 /** A user message is a plain string, or content parts when it carries images or attachments. */
 function userContent(allBlocks: ContentBlockDto[]): string | ContentPart[] {
   // The desktop state travels with every prompt; the user typed none of it.
-  const blocks = allBlocks.filter((b) => !isDesktopBlock(b))
+  const blocks = allBlocks.filter((b) => !isDesktopBlock(b) && !isBriefingBlock(b))
   if (blocks.every((b) => b.kind === 'text')) return blocksToText(blocks)
   return blocks.map((block): ContentPart => {
     switch (block.kind) {

@@ -17,6 +17,8 @@ import KanbanApp from './kanban/KanbanApp.svelte'
 import StickyNotesApp from './sticky-notes/StickyNotesApp.svelte'
 import WordPadApp from './wordpad/WordPadApp.svelte'
 import SurfaceApp from './surface/SurfaceApp.svelte'
+import TeamChatApp from './team-chat/TeamChatApp.svelte'
+import TeamsApp from './teams/TeamsApp.svelte'
 import TerminalApp from './terminal/TerminalApp.svelte'
 import type { AppDefinition } from './types'
 
@@ -38,5 +40,7 @@ export const appRegistry: Record<AppKind, AppDefinition> = {
   'recycle-bin': { kind: 'recycle-bin', title: 'Recycle Bin', icon: 'recycle', description: 'Changes you reverted, ready to restore', component: RecycleBinApp },
   help: { kind: 'help', title: 'Help and Support', icon: 'help', description: 'Manuals for every app and window', component: HelpApp },
   'code-review': { kind: 'code-review', title: 'Code Review', icon: 'changes', description: 'Review changes with an agent and send its comments to a chat', component: CodeReviewApp },
+  teams: { kind: 'teams', title: 'Teams', icon: 'user', description: 'Profiles and teams of agents, and their chat rooms', component: TeamsApp },
+  'team-chat': { kind: 'team-chat', title: 'Team Chat', icon: 'session', description: 'A chat room where a team of agents answers under their own names', component: TeamChatApp },
   surface: { kind: 'surface', title: 'Agent window', icon: 'computer', description: 'A window the agent drew with A2UI', component: SurfaceApp }
 }
