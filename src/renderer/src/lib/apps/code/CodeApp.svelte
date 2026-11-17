@@ -3,7 +3,8 @@
   import type { FileChangeDto } from '@shared/models'
   import type { ReviewFileDto } from '@shared/review'
   import { formatBranch, gitFileState, type GitLineChange, type GitStatusDto } from '@shared/git'
-  import type { AskChatRequest } from '@shared/desktop'
+  import type { AskChatRequest, CodeSearchView } from '@shared/desktop'
+  import type { TextMatchDto, TextSearchResultDto } from '@shared/search'
   import type { AppProps } from '../types'
   import ChangesPane from '../../app/shell/ChangesPane.svelte'
   import { attachLineSelect } from './lineSelect'
@@ -45,6 +46,8 @@
   import { chatStripHidden } from '../../desktop/chatStrip.svelte'
   import { treeMenu, treeToolbar, type TreeMenuTarget } from './codeContext'
   import DockPane from './DockPane.svelte'
+  import CodeSearchPane from './CodeSearchPane.svelte'
+  import { lookInItems, searchKey } from './codeSearch'
   import { GIT_STATE_WORD, NOT_A_GIT_REPOSITORY, TURN_ON_GIT_TEXT, anchorLine, changeAtLine, countsByPath, gitLinesLabel, gitRowTooltip, gitTabTitle, gitTabTooltip, indexGitStatus, marksOf, relativeToRoot, rowReviewPath, stepChange } from './gitModel'
   import { revertConfirmText } from '../../app/changes/changeFormat'
   import { refreshOnRevert } from '../../app/changes/refreshOnRevert'
@@ -90,14 +93,41 @@
   let revealed = $state.raw<[number, number] | null>(null)
   let host_el = $state<HTMLDivElement | null>(null)
   let reportedVisible: [number, number] | null = null
+  // The Search tab (find in files): the form, the search on screen (also in the view, for the agent) and its results.
+  let searchQuery = $state('')
+  let searchRegex = $state(false)
+  let searchMatchCase = $state(false)
+  let searchInclude = $state('')
+  let searchRoot = $state('')
+  let searchView = $state.raw<CodeSearchView | null>(null)
+  let searchResult = $state.raw<TextSearchResultDto | null>(null)
+  let searching = $state(false)
+  let searchError = $state<string | null>(null)
+  let searchByAgent = $state(false)
+  const searchSync = new ViewSync<CodeSearchView | null>(searchKey)
 
   const sync = new ViewSync<{ tabs: string[]; activePath: string | null; visibleLines: [number, number] | null; selectedChangeId: number | null }>((v) =>
     JSON.stringify([v.tabs, v.activePath, v.visibleLines, v.selectedChangeId])
   )
 
+  const syncedView = (): { tabs: string[]; activePath: string | null; visibleLines: [number, number] | null; selectedChangeId: number | null } => ({
+    tabs: [...tabs],
+    activePath: active,
+    visibleLines: visible ? ([...visible] as [number, number]) : null,
+    selectedChangeId
+  })
+
   function report(): void {
-    const view = { tabs: [...tabs], activePath: active, visibleLines: visible ? ([...visible] as [number, number]) : null, selectedChangeId }
-    if (sync.mark(view)) host.updateView(win.id, { app: 'code', ...view, selection })
+    const view = syncedView()
+    if (sync.mark(view)) host.updateView(win.id, { app: 'code', ...view, selection, search: searchView })
+  }
+
+  /** Tells the view which search the Search tab shows, with the rest of the view as this window has it (never a stale copy). */
+  function reportSearch(): void {
+    if (!searchSync.mark(searchView)) return
+    const view = syncedView()
+    sync.mark(view)
+    host.updateView(win.id, { app: 'code', ...view, selection, search: searchView })
   }
 
   // Everything the agents of this desktop did: all their changes and edit tool calls.
@@ -289,6 +319,71 @@
         visible = view.visibleLines
         void reveal(view.visibleLines[0])
       } else if (changedFile) visible = null
+    })
+  })
+
+  /** Runs a search and shows it in the Search tab: the user's (Search button, Enter) or the agent's (code_search). */
+  let searchRun = 0
+  async function runSearch(next: CodeSearchView): Promise<void> {
+    const run = ++searchRun
+    searchQuery = next.query
+    searchRegex = next.regex
+    searchMatchCase = next.matchCase
+    searchInclude = next.include
+    searchRoot = next.root
+    searchView = next
+    searchByAgent = next.by === 'agent'
+    searching = true
+    searchError = null
+    try {
+      const result = await host.api.vfs.searchText(desktopId, next.root, { query: next.query, regex: next.regex, matchCase: next.matchCase, include: next.include })
+      if (run === searchRun) searchResult = result
+    } catch (error) {
+      if (run !== searchRun) return
+      searchResult = null
+      searchError = errorText(error)
+    } finally {
+      if (run === searchRun) searching = false
+    }
+  }
+
+  /** The Search button: runs the form's search and tells the view (the agent sees what the user searched for). */
+  function searchFromForm(): void {
+    if (searchQuery === '') return
+    const next: CodeSearchView = { query: searchQuery, root: searchRoot || roots[0]?.path || host.state.home, regex: searchRegex, matchCase: searchMatchCase, include: searchInclude.trim(), by: 'user' }
+    void runSearch(next)
+    reportSearch()
+  }
+
+  /** Find in files (Search menu, Ctrl+F): the Search tab, with the cursor in the search box. */
+  async function findInFiles(): Promise<void> {
+    if (focusMode) toggleFocusOnFile()
+    showManagement = true
+    mgmtTab = 'search'
+    if (!searchRoot) searchRoot = active ? rootOf(active) : (roots[0]?.path ?? host.state.home)
+    await tick()
+    document.querySelector<HTMLInputElement>(`[data-window-id="${win.id}"] [data-testid="code-search-query"]`)?.focus()
+  }
+
+  /** A search result: the file opens with the matching line in view and highlighted. */
+  function openMatch(m: TextMatchDto): void {
+    show(m.path)
+    revealed = [m.line, m.line]
+    void reveal(m.line)
+  }
+
+  // The agent searched (code_search), or the window opens again: the search of the view shows in the Search tab (Management opens
+  // when there is room for it).
+  $effect(() => {
+    const search = win.view.search ?? null
+    if (!searchSync.isExternal(search) || search === null) return
+    untrack(() => {
+      mgmtTab = 'search'
+      if (!showManagement && !focusMode) {
+        autoChange = true
+        showManagement = true
+      }
+      void runSearch(search)
     })
   })
 
@@ -538,12 +633,20 @@
     writeLayout(localStore(), layoutKey, { management: showManagement, logs: showLogs, restore: restorePanes })
   })
 
-  /** F11 and Ctrl+Shift+F work from the whole window, also after the panes closed and took the keyboard focus with them. */
+  /**
+   * F11 and Ctrl+Shift+F (focus on the file) and Ctrl+F (find in files) work from the whole window, also after the panes
+   * closed and took the keyboard focus with them.
+   */
   function onFocusKey(event: KeyboardEvent): void {
     if (!focused || event.altKey) return
     const f11 = event.key === 'F11' && !event.ctrlKey && !event.shiftKey
-    const ctrlShiftF = event.key.toLowerCase() === 'f' && event.ctrlKey && event.shiftKey
-    if (!f11 && !ctrlShiftF) return
+    const ctrlF = event.key.toLowerCase() === 'f' && event.ctrlKey
+    if (ctrlF && !event.shiftKey) {
+      event.preventDefault()
+      void findInFiles()
+      return
+    }
+    if (!f11 && !ctrlF) return
     event.preventDefault()
     toggleFocusOnFile()
   }
@@ -779,6 +882,8 @@
     {
       label: '&Search',
       items: [
+        { id: 'code-search-find-in-files', testid: 'code-menu-find-in-files', label: '&Find in files...', icon: 'search', shortcut: 'Ctrl+F', action: () => void findInFiles() },
+        { separator: true },
         { id: 'code-next-change', label: '&Next change', icon: 'chevron-down', shortcut: 'Alt+F5', disabled: lineChanges.length === 0, action: () => step(1) },
         { id: 'code-prev-change', label: '&Previous change', icon: 'chevron-up', shortcut: 'Shift+Alt+F5', disabled: lineChanges.length === 0, action: () => step(-1) }
       ]
@@ -795,7 +900,8 @@
 
   const mgmtTabs = [
     { id: 'projects', title: 'Projects', testid: 'code-mgmt-tab-projects' },
-    { id: 'files', title: 'Files', testid: 'code-mgmt-tab-files' }
+    { id: 'files', title: 'Files', testid: 'code-mgmt-tab-files' },
+    { id: 'search', title: 'Search', testid: 'code-mgmt-tab-search' }
   ]
   // One place to review changes: the Changes tab is the same pane the chat window shows (UX-40).
   const logTabs = $derived([
@@ -936,6 +1042,21 @@
                   <FileTree bind:this={tree} bind:selectedTarget={treeTarget} {roots} readDir={(p) => host.api.vfs.readDir(desktopId, p)} {changedPaths} git={gitIndex} onopen={show} oncontextmenu={(target, e) => treeContext(e, target)} />
                 {/key}
               </div>
+            {:else if tab.id === 'search'}
+              <CodeSearchPane
+                bind:query={searchQuery}
+                bind:regex={searchRegex}
+                bind:matchCase={searchMatchCase}
+                bind:include={searchInclude}
+                bind:root={searchRoot}
+                lookIn={lookInItems(roots, searchRoot)}
+                result={searchResult}
+                {searching}
+                error={searchError}
+                byAgent={searchByAgent}
+                onsearch={searchFromForm}
+                onopen={openMatch}
+              />
             {:else if tab.id === 'files'}
               <ListView
                 columns={fileColumns}

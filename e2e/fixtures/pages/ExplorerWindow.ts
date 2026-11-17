@@ -46,6 +46,49 @@ export class ExplorerWindow {
     await this.frame.getByTestId('explorer-up').click()
   }
 
+  // ---- Search Companion -----------------------------------------------------------------------
+
+  get searchButton(): Locator {
+    return this.frame.getByTestId('explorer-search')
+  }
+
+  /** The Search Companion; `data-searching` is "true" while a search runs. */
+  get searchPane(): Locator {
+    return this.frame.getByTestId('explorer-search-pane')
+  }
+
+  get searchName(): Locator {
+    return this.frame.getByTestId('explorer-search-name')
+  }
+
+  get searchContaining(): Locator {
+    return this.frame.getByTestId('explorer-search-containing')
+  }
+
+  get searchStatus(): Locator {
+    return this.frame.getByTestId('explorer-search-status')
+  }
+
+  get searchResults(): Locator {
+    return this.frame.getByTestId('explorer-search-result')
+  }
+
+  searchResult(name: string): Locator {
+    return this.searchResults.filter({ hasText: name })
+  }
+
+  /** Opens the Search Companion (when closed), fills the criteria and clicks Search. */
+  async find(criteria: { name?: string; containing?: string }): Promise<void> {
+    if (!(await this.searchPane.isVisible())) await this.searchButton.click()
+    await this.searchName.fill(criteria.name ?? '')
+    await this.searchContaining.fill(criteria.containing ?? '')
+    await this.frame.getByTestId('explorer-search-run').click()
+  }
+
+  async closeSearch(): Promise<void> {
+    await this.frame.getByTestId('explorer-search-back').click()
+  }
+
   // ---- Computer: plug in, eject, recently removed -----------------------------------------------
 
   get plugIn(): Locator {

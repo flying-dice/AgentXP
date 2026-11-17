@@ -10,6 +10,7 @@ This manual describes Explorer. Explorer shows the drives and the folders of a d
   - The Navigation Buttons and the Address Bar
   - The Command Bar
   - The Navigation Pane
+  - The Search Companion
   - The File List
   - The Computer Window
   - The Status Bar
@@ -24,7 +25,7 @@ This manual describes Explorer. Explorer shows the drives and the folders of a d
 
 ## 1 - What It Is For
 
-Use Explorer to see the files that the agent can reach, to open a file, to plug in a project as a drive, and to eject it. The **Agent status** column shows which files the agent changed.
+Use Explorer to see the files that the agent can reach, to find files, to open a file, to plug in a project as a drive, and to eject it. The **Agent status** column shows which files the agent changed.
 
 Explorer only shows files. It has no commands to copy, move, rename, or delete them. To change a file, open it with Notepad or Code, or ask the agent.
 
@@ -38,7 +39,7 @@ Explorer only shows files. It has no commands to copy, move, rename, or delete t
 
 ### The Navigation Buttons and the Address Bar
 
-The row at the top has **Back**, **Up**, the address bar, and **Refresh**. The address bar shows the path as a trail of folders. Click a folder in the trail to go there. Click the empty part of the bar, or press F4, to type a path.
+The row at the top has **Back**, **Up**, the address bar, **Refresh**, and **Search**. The address bar shows the path as a trail of folders. Click a folder in the trail to go there. Click the empty part of the bar, or press F4, to type a path.
 
 ### The Command Bar
 
@@ -47,6 +48,18 @@ The command bar appears only in the **Computer** window. It has **Plug in a proj
 ### The Navigation Pane
 
 The pane is at the left. It has **Favorites**, **Libraries**, and **Computer** with its drives. Click an entry to go there.
+
+### The Search Companion
+
+Click **Search**, click **View -> Search**, or press F3 or Ctrl+F. The Search Companion replaces the navigation pane. It finds files and folders by any or all of these criteria:
+
+- **All or part of the file name** – For example `readme`, or `*.test.ts`. A `*` matches any characters.
+- **A word or phrase in the file** – Only files that contain this text are found. Upper and lower case do not matter.
+- **Look in** – The folder or drive to search. It starts with the folder that Explorer shows. You can type a folder.
+
+Click **Search**, or press Enter. The file list becomes **Search Results**, with the columns **Name**, **In Folder**, and **Type**. The line under **Search** says how many files were found. Double-click a file to open it. Double-click a folder to close the search and open the folder. Right-click a result for the same menu as in a folder. Click **Back**, or **Search** again, to close the Search Companion. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
+
+When the agent finds files (`fs_find`), the Search Companion opens with its criteria and shows its results, with the agent icon before the line under **Search**. If no Explorer is open, one opens.
 
 ### The File List
 
@@ -79,6 +92,17 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Folder in the trail | Goes to that folder. | `explorer-crumb` |
 | Address box | Lets you type a path. Press Enter to go. | `explorer-address-field` |
 | Refresh | Reads the folders again. | `explorer-refresh` |
+| Search | Opens or closes the Search Companion. F3. | `explorer-search` |
+| Search Companion | The search pane at the left, in place of the navigation pane. | `explorer-search-pane` |
+| Search criteria | The **Search** section: "Search by any or all of the criteria below." | `explorer-search-section` |
+| All or part of the file name | The name, or part of it, to find. A `*` matches any characters. | `explorer-search-name` |
+| A word or phrase in the file | Finds only files that contain this text. | `explorer-search-containing` |
+| Look in | The folder or drive to search. You can type a folder. | `explorer-search-look-in` |
+| Search (button) | Runs the search. Dimmed until you type a name or a word. | `explorer-search-run` |
+| Back (search) | Closes the Search Companion and its results. | `explorer-search-back` |
+| Search status | Says what to type, "Searching...", how many files were found, or why the search failed. The agent icon shows when the agent ran the search. | `explorer-search-status` |
+| Search Results | The files and folders that the search found. | `explorer-search-results` |
+| Search result | One file or folder that the search found. Double-click it to open it. | `explorer-search-result` |
 | Plug in a project... | Opens the **Browse For Folder** dialog box and plugs the folder in as a drive. | `explorer-plug-in` |
 | Plug in again | Plugs the selected recently removed project in again. | `explorer-plug-in-again` |
 | Open | Opens the selected drive. | `explorer-open` |
@@ -126,6 +150,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Menu: select all | Edit menu: selects all items in the folder. Ctrl+A. | `explorer-menu-select-all` |
 | Menu: up | View menu: goes up one level. Alt+Up. | `explorer-menu-up` |
 | Menu: refresh | View menu: reads the folder again. F5. | `explorer-menu-refresh` |
+| Menu: search | View menu: opens or closes the Search Companion. F3. | `explorer-menu-search` |
 | Context menu: open | Opens the file or folder. A file opens in Notepad (text, markdown, and log files) or in Code (all other files). | `explorer-ctx-open` |
 | Context menu: open with | Files only. Opens a list with the program that **Open** does not use. | `explorer-ctx-open-with` |
 | Context menu: open code | In **Open with** for a text file: opens the file in Code. | `explorer-ctx-open-code` |
@@ -147,6 +172,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 |---|---|---|
 | F4 | Lets you type a path in the address bar. | `explorer-address` |
 | Enter | Opens the selected file or drive. | none |
+| F3 or Ctrl+F | Opens or closes the Search Companion. | none |
 | F1 | Opens this manual. | none |
 
 ### What the Agent Can Do
@@ -157,7 +183,9 @@ The agent uses the tools below when Explorer or Code is open. The permission **R
 |---|---|
 | `drives_list` | Lists the drives of the desktop. C: is the private disk of the agent. USB drives are your projects. |
 | `fs_list` | Lists the files and folders of one folder. It hides `.git` and `node_modules`. |
-| `fs_find` | Finds files and folders by name below a folder. A `*` matches any characters. |
+| `fs_find` | Finds files and folders below a folder by name, by a word or phrase in the file, or both. A `*` in the name matches any characters. The Search Companion shows the search and its results; if no Explorer is open, one opens. |
+
+The agent is told to use `fs_find`, and not its own built-in tools, so that you see what it looks for. To find text inside files line by line, the agent uses `code_search` in **[Code](code.md)**.
 
 ## 5 - Common Tasks
 
@@ -177,6 +205,13 @@ To go to a path, follow the steps below:
 
 To start a chat in a folder, right-click the folder and click **Start a chat here**.
 
+To find a file, follow the steps below:
+
+1. Press F3, or click **Search**. The Search Companion opens.
+2. Type all or part of the file name, a word or phrase in the file, or both.
+3. Click **Search**. The **Search Results** show the files that were found.
+4. Double-click a result to open it.
+
 To remove a project from the desktop, select it in **Computer** and click **Eject (remove from this desktop)**, or right-click it and click the same entry. A balloon with the title **Project removed** says: 'login-app' (E:) was removed from this desktop. Your files are still in the folder. Use Plug in again to add it back. The folder is not deleted.
 
 ## 6 - Troubleshooting
@@ -185,6 +220,8 @@ To remove a project from the desktop, select it in **Computer** and click **Ejec
 - **The window went back to Computer.** Someone ejected the drive that you looked at.
 - **Eject (remove from this desktop) is dimmed.** Select a project. **Your files (C:)** cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
+- **The search finds nothing.** Check **Look in**. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
+- **The search says "Too many folders to search".** Choose a smaller folder in **Look in**.
 
 ## 7 - Need Help?
 

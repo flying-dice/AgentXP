@@ -35,12 +35,12 @@ class AcpLiveConnection implements LiveAgentConnection {
     return Promise.race([this.connection.closed, this.proc.exited.then(() => undefined)])
   }
 
-  newSession(cwd: string, mcpServers: McpServerConfig[]): Promise<OpenedAcpSession> {
-    return this.connection.newSession(cwd, mcpServers)
+  newSession(cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<OpenedAcpSession> {
+    return this.connection.newSession(cwd, mcpServers, systemPrompt)
   }
 
-  loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[]): Promise<AcpSessionState> {
-    return this.connection.loadSession(acpSessionId, cwd, mcpServers)
+  loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<AcpSessionState> {
+    return this.connection.loadSession(acpSessionId, cwd, mcpServers, systemPrompt)
   }
 
   prompt(acpSessionId: string, blocks: ContentBlockDto[]): Promise<StopReason> {

@@ -15,7 +15,55 @@ const windowIdParam = z.number().int().optional().describe('Window id from deskt
 const path = (what: string) =>
   z.string().min(1).describe(`${what}: a full virtual path such as E:\\src\\index.ts or C:\\Users\\Agent\\notes.md, or relative to your working directory`)
 
-/** Told to agents once, when the MCP server starts: how the file system looks. */
+/**
+ * Which tool to reach for. Agents bring their own built-in tools (shell, file search, web fetch, sub-agents); those
+ * stay available but run out of the user's sight, so the agent is told to do the work in the desktop's apps first.
+ */
+export const PREFER_DESKTOP_INSTRUCTIONS =
+  'Prefer AgentXP tools: the user watches you work on this desktop, so do the work in its apps rather than with your own built-in tools, ' +
+  'which run out of sight. Shell commands: terminal_run (the Terminal app shows the command and its output), not your built-in Bash or shell tool, ' +
+  'and never a Bash or shell sub-agent (a sub-agent has no shell here and can only pretend to run commands; do shell work yourself). ' +
+  'Finding files: fs_find (by name and/or a word in the file; Explorer\'s Search Companion shows the results) and fs_list, not Glob, find or ls. ' +
+  'Searching inside files: code_search (the Code app\'s Search tab shows the matches), not your built-in Grep or grep in the terminal. ' +
+  'Reading files: code_read (Code opens the file at the lines you read), not your built-in Read. ' +
+  'Editing files: code_edit for a change and code_write for a new or rewritten file (recorded in the Changes pane and shown in Code), not your built-in Edit or Write. ' +
+  'Pointing at code: code_open for a file, code_reveal for the lines you mean, code_show_diff for a change. ' +
+  'Web pages: the Browser (browser_navigate, browser_read), not WebFetch. Scheduling: scheduler_* (Task Scheduler), never cron, at or schtasks. ' +
+  'Use a built-in tool only when no AgentXP tool can do the job, and say why in the chat. '
+
+/** The shell terminal_run uses on this host, so the agent writes commands it understands. */
+export function hostShellInstructions(platform: string): string {
+  const shell = platform === 'win32' ? 'Windows cmd.exe' : `${platform === 'darwin' ? 'macOS' : 'Linux'} /bin/sh`
+  return (
+    `The desktop looks like Windows, but terminal_run runs in the real ${shell} of the user's computer: write commands for that shell` +
+    `${platform === 'win32' ? '' : ' (ls, grep, git; not dir or schtasks)'}. The shell does not understand drive letters: set cwd to a virtual path ` +
+    'and use paths relative to it inside the command.'
+  )
+}
+
+/**
+ * Which tools to prefer, how the desktop and its file system look. Agents get it three ways, because not every agent
+ * reads every channel: appended to their system prompt (ACP `_meta.systemPrompt`), as the agentxp MCP server's
+ * instructions, and (the tool preference part) in the briefing of a chat's first prompt.
+ */
+export function desktopInstructions(platform: string): string {
+  return `${PREFER_DESKTOP_INSTRUCTIONS}${hostShellInstructions(platform)} ${DESKTOP_INSTRUCTIONS}`
+}
+
+/** The system prompt addition of a desktop chat: a heading, so the agent sees where AgentXP's part starts. */
+export function desktopSystemPrompt(platform: string): string {
+  return `# Working on the AgentXP desktop
+
+${desktopInstructions(platform)}`
+}
+
+/** The part of the first prompt's briefing that every agent reads, even one that ignores system prompt additions and MCP instructions. */
+export function desktopBriefing(platform: string): string {
+  return `## Working on the AgentXP desktop
+${PREFER_DESKTOP_INSTRUCTIONS}${hostShellInstructions(platform)}`
+}
+
+/** How the desktop and its file system look, and how to use its apps. */
 export const DESKTOP_INSTRUCTIONS =
   'You work on a virtual Windows desktop. All paths are virtual paths with a drive letter and backslashes: C:\\ is your private system disk ' +
   '(your home is C:\\Users\\Agent) and projects are USB drives the user plugs in (E:\\, F:\\, ...). Call drives_list to see which drives exist. ' +
@@ -201,14 +249,18 @@ export const TOOL_DEFS = {
   },
   fs_list: {
     group: 'fs.read',
-    description: 'List one directory (folders first; .git and node_modules are hidden). Needs the Explorer or Code app.',
+    description: 'List one directory (folders first; .git and node_modules are hidden). Needs the Explorer or Code app. Use this instead of ls or your built-in directory listing.',
     input: z.object({ path: z.string().optional().describe('Directory as a virtual path or relative to your working directory; default: your working directory') })
   },
   fs_find: {
     group: 'fs.read',
-    description: 'Find files and folders by name below a directory (.git and node_modules are skipped). Case-insensitive; `*` matches any characters. Needs the Explorer or Code app.',
+    description:
+      'Find files and folders below a directory by name, by a word or phrase in the file, or both (.git and node_modules are skipped). ' +
+      'Case-insensitive; `*` in the name matches any characters. The results appear in Explorer\'s Search Companion (an Explorer window opens when none is open). ' +
+      'Needs the Explorer or Code app. Use this instead of your built-in Glob or find.',
     input: z.object({
-      pattern: z.string().min(1).describe('Name or glob such as "*.test.ts" or "readme"'),
+      pattern: z.string().optional().describe('All or part of the file name, or a glob such as "*.test.ts" or "readme"'),
+      containing: z.string().optional().describe('A word or phrase in the file (plain text, not case-sensitive); only files that contain it are found'),
       path: z.string().optional().describe('Directory to search, as a virtual path or relative to your working directory; default: your working directory'),
       limit: z.number().int().min(1).max(500).optional().describe('Maximum results (default 100)')
     })
@@ -238,9 +290,60 @@ export const TOOL_DEFS = {
     description: 'Show the recorded change of a file you edited in the Code app\'s changes list.',
     input: z.object({ path: path('File') })
   },
+  code_read: {
+    group: 'fs.read',
+    description:
+      'Read a text file, or a range of its lines, with line numbers ("12\\tline text"). The Code app opens the file and highlights the lines you read, ' +
+      'so the user sees what you are reading (Code opens when needed). Use this instead of your built-in Read tool.',
+    input: z.object({
+      path: path('File'),
+      startLine: z.number().int().min(1).optional().describe('First line to read (default 1)'),
+      endLine: z.number().int().min(1).optional().describe('Last line to read (default: the end of the file, at most 2000 lines from startLine)')
+    })
+  },
+  code_search: {
+    group: 'fs.read',
+    description:
+      'Find in files: every line below a folder (or in one file) that contains the text or matches the regular expression, as "path:line:column: text". ' +
+      'The results appear in the Search tab of the Code app (Code opens when needed), where the user can open each match. ' +
+      '.git and node_modules are skipped, and big or binary files too. Use this instead of your built-in Grep and instead of grep in the terminal.',
+    input: z.object({
+      query: z.string().min(1).describe('The text to find, or a JavaScript regular expression when regex is true'),
+      path: z.string().optional().describe('Folder (or file) to search, as a virtual path or relative to your working directory; default: your working directory'),
+      regex: z.boolean().optional().describe('Treat query as a regular expression (default false)'),
+      matchCase: z.boolean().optional().describe('Match upper and lower case exactly (default false)'),
+      include: z.string().optional().describe('Only files whose name matches one of these comma-separated names or globs, such as "*.ts, *.svelte"'),
+      limit: z.number().int().min(1).max(1000).optional().describe('Maximum matching lines (default 200)')
+    })
+  },
+  code_edit: {
+    group: 'fs.write',
+    description:
+      'Edit a text file in the Code app: replace oldText with newText. oldText must match the file exactly (spaces and line breaks too) and only once, ' +
+      'unless replaceAll is true. The change is recorded in the Changes pane and the Code app shows it (Code opens when needed). ' +
+      'Read the file first (code_read). Use this instead of your built-in Edit tool.',
+    input: z.object({
+      path: path('File'),
+      oldText: z.string().min(1).describe('The exact text to replace'),
+      newText: z.string().describe('The text to put in its place (empty deletes oldText)'),
+      replaceAll: z.boolean().optional().describe('Replace every occurrence of oldText (default false: it must occur once)')
+    })
+  },
+  code_write: {
+    group: 'fs.write',
+    description:
+      'Create a text file, or replace all of its text, in the Code app. The change is recorded in the Changes pane and the Code app shows the file ' +
+      '(Code opens when needed). For a small change to an existing file use code_edit. Use this instead of your built-in Write tool.',
+    input: z.object({
+      path: path('File'),
+      text: z.string().describe('The whole new text of the file')
+    })
+  },
   terminal_run: {
     group: 'terminal',
-    description: 'Run a shell command and wait for it (it runs in a real folder behind a drive; ejected drives are refused). Output appears in the Terminal app and is returned (last 20k characters).',
+    description:
+      'Run a shell command and wait for it (it runs in a real folder behind a drive; ejected drives are refused). Output appears in the Terminal app and is returned (last 20k characters). ' +
+      'Use this instead of your built-in Bash or shell tool and instead of a shell sub-agent, so the user sees the command run.',
     input: z.object({
       command: z.string().min(1),
       cwd: z.string().optional().describe('Working directory as a virtual path or relative to your working directory; default: your working directory'),
@@ -255,7 +358,7 @@ export const TOOL_DEFS = {
   browser_navigate: {
     group: 'browser',
     description:
-      'Load a web page (http or https) in a Browser window and wait until it has loaded. Using a web app (chat, mail, docs): navigate once, then loop browser_read (mode tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. The user signs in themselves in the window (the session is kept); never type passwords.',
+      'Load a web page (http or https) in a Browser window and wait until it has loaded. Use the Browser instead of your built-in WebFetch, so the user sees the page. Using a web app (chat, mail, docs): navigate once, then loop browser_read (mode tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. The user signs in themselves in the window (the session is kept); never type passwords.',
     input: z.object({ url: z.string().min(1), window: windowId })
   },
   browser_read: {

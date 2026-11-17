@@ -185,8 +185,9 @@ export interface LiveAgentConnection {
   readonly pid?: number | null
   /** Resolves when the agent went away (crash or dispose). */
   readonly closed: Promise<void>
-  newSession(cwd: string, mcpServers: McpServerConfig[]): Promise<OpenedAcpSession>
-  loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[]): Promise<AcpSessionState>
+  /** `systemPrompt` is appended to the agent's own system prompt where the agent supports it (ACP `_meta.systemPrompt`). */
+  newSession(cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<OpenedAcpSession>
+  loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<AcpSessionState>
   prompt(acpSessionId: string, blocks: ContentBlockDto[]): Promise<StopReason>
   cancel(acpSessionId: string): Promise<void>
   setMode(acpSessionId: string, modeId: string): Promise<void>

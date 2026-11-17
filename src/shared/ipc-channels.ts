@@ -100,7 +100,7 @@ const INVOKE_METHODS = {
     raiseWindow: true,
     userActive: true
   },
-  vfs: { readDir: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
+  vfs: { readDir: true, searchText: true, find: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },
   scheduler: { list: true, create: true, update: true, remove: true, setEnabled: true, run: true, end: true, history: true, clearHistory: true },
   review: { changes: true, file: true, state: true, addComment: true, setState: true, remove: true, markSent: true },

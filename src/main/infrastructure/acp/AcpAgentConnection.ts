@@ -90,6 +90,13 @@ const toMcpServer = (config: McpServerConfig): McpServer =>
         headers: Object.entries(config.headers).map(([name, value]) => ({ name, value }))
       }
 
+/**
+ * Adds our instructions to the agent's own system prompt. `_meta.systemPrompt.append` is read by the Claude Code ACP
+ * adapter (a string there would replace its whole prompt, so we always append); other agents ignore unknown `_meta`.
+ */
+export const systemPromptMeta = (systemPrompt?: string | null): { _meta?: { systemPrompt: { append: string } } } =>
+  systemPrompt ? { _meta: { systemPrompt: { append: systemPrompt } } } : {}
+
 const toOptionDto = (o: PermissionOption): PermissionOptionDto => ({ optionId: o.optionId, name: o.name, kind: o.kind })
 
 /** The client side of one ACP connection (one per agent process). */
@@ -131,21 +138,22 @@ export class AcpAgentConnection {
     await this.connection.agent.request(methods.agent.authenticate, { methodId })
   }
 
-  async newSession(cwd: string, mcpServers: McpServerConfig[] = []): Promise<NewSessionResult> {
+  async newSession(cwd: string, mcpServers: McpServerConfig[] = [], systemPrompt?: string | null): Promise<NewSessionResult> {
     const response = await this.withAuthCheck(() =>
-      this.connection.agent.request(methods.agent.session.new, { cwd, mcpServers: mcpServers.map(toMcpServer) })
+      this.connection.agent.request(methods.agent.session.new, { cwd, mcpServers: mcpServers.map(toMcpServer), ...systemPromptMeta(systemPrompt) })
     )
     return { acpSessionId: response.sessionId, ...this.rememberState(response.sessionId, response) }
   }
 
   /** Replays history as session updates, then resolves. Needs the `loadSession` capability. */
-  async loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[] = []): Promise<LoadSessionResult> {
+  async loadSession(acpSessionId: string, cwd: string, mcpServers: McpServerConfig[] = [], systemPrompt?: string | null): Promise<LoadSessionResult> {
     if (!this.init?.canLoadSession) throw new Error('The agent does not support loading sessions')
     const response = await this.withAuthCheck(() =>
       this.connection.agent.request(methods.agent.session.load, {
         sessionId: acpSessionId,
         cwd,
-        mcpServers: mcpServers.map(toMcpServer)
+        mcpServers: mcpServers.map(toMcpServer),
+        ...systemPromptMeta(systemPrompt)
       })
     )
     return this.rememberState(acpSessionId, response ?? {})

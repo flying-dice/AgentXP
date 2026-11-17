@@ -16,6 +16,7 @@
  * Pure types and pure helpers only.
  */
 import type { Id, IsoDate } from './models'
+import type { FileFindQuery, FileFindResultDto, TextSearchQuery, TextSearchResultDto } from './search'
 
 /** `C:\Users\Agent\notes.md`. Always absolute, backslashes, upper-case drive letter, no trailing backslash except a drive root (`E:\`). */
 export type VPath = string
@@ -138,6 +139,10 @@ export function noDriveMessage(letter: DriveLetter, removedProject?: string): st
 
 export interface VfsApi {
   readDir(desktopId: Id, path: VPath): Promise<VfsEntryDto[]>
+  /** Find in files below `root` (the Code app's Search tab). */
+  searchText(desktopId: Id, root: VPath, query: TextSearchQuery): Promise<TextSearchResultDto>
+  /** Files and folders below `root` by name and/or contents (Explorer's Search Companion). */
+  find(desktopId: Id, root: VPath, query: FileFindQuery): Promise<FileFindResultDto>
   readFile(desktopId: Id, path: VPath): Promise<string>
   /** A user save (Notepad, WordPad): not recorded as an agent change. */
   writeFile(desktopId: Id, path: VPath, text: string): Promise<void>

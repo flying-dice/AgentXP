@@ -18,6 +18,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
 - 4 - Controls Reference
   - What the Agent Can Do
 - 5 - Common Tasks
+  - Find text in files
   - Save a file
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -26,7 +27,7 @@ This manual describes Code. Code shows the files of your projects, the changes o
 
 ## 1 - What It Is For
 
-Use Code to review what the agent changed. The agent edits the files. You read the files, look at each changed block (a hunk), and revert the blocks that you do not want. You cannot type in the editor.
+Use Code to review what the agent changed and to watch the agent work. The agent reads, searches, and edits the files in Code: the file that it reads opens with those lines marked, its searches show in the **Search** tab, and each edit shows as a change. You read the files, find text in them, look at each changed block (a hunk), and revert the blocks that you do not want. You cannot type in the editor.
 
 ## 2 - Open It
 
@@ -52,7 +53,14 @@ The pane is at the left. It has three tabs.
 
 - **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
-- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. The list has the columns **File**, **Status** (the whole word: Modified, Added, Deleted or Reverted), **Path** (the folder, shown in a wide pane; point to a row for the whole path) and **Lines**. A row marked "Reverted" shows "This change was undone" and a **Restore** button that puts the file back in one click; the pane then says "Restored" and the file name. If the file cannot be put back from here (for example, its folder is gone), the pane says why and the button reads **Open Recycle Bin...**. The list shows only changes that are not committed yet: when you commit a file in Git, its row leaves the list (in a folder without Git every change stays). When nothing is left, the list says "No uncommitted changes from this chat."; if Git shows changed files from before, the line above the list says how many and links to the Git tab. In a folder without Git it says "This folder is not tracked by Git, so there are no change marks."
+- **Search** – Finds text in the files of a project (find in files). Type the text and press Enter, or click **Search**. **Match case** finds only the same upper and lower case. **Regular expression** reads the text as a pattern. **Files to include** limits the search to some files, for example `*.ts, *.svelte`. **Look in** is the project or folder to search. The results show each file in bold with its number of matches, and below it each matching line with its line number and the match marked. Click a line: the file opens at that line, and the line is marked. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB. When the agent searches, its search shows here too, with the agent icon before the result line, and the Management pane opens if there is room.
+
+### The Logs and Others Pane
+
+The pane is at the bottom. It has two tabs.
+
+- **Changes** – Lists each change of the agent. The list is only as high as its rows, so the diff below it has the room. Click a row to see its diff. The list has the columns **File**, **Status** (the whole word: Modified, Added, Deleted or Reverted), **Path** (the folder, shown in a wide pane; point to a row for the whole path) and **Lines**. A row marked "Reverted" shows "This change was undone" and a **Restore** button that puts the file back in one click; the pane then says "Restored" and the file name. If the file cannot be put back from here (for example, its folder is gone), the pane says why and the button reads **Open Recycle Bin...**. The list shows only changes that are not committed yet: when you commit a file in Git, its row leaves the list (in a folder without Git every change stays). When nothing is left, the list says "No uncommitted changes from this chat."; if Git shows changed files from before, the line above the list says how many and links to the Git tab. In a folder without Git it says "This folder is not tracked by Git, so there are no change marks." A change also has **Revert** and **Open in editor**.
+- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Click a file to see its changes in the pane below the list. No window opens. Double-click the file, or select it and press Enter, to open it in Code Review. The status bar then says "Opening Review...". Point to a row to read which lines of the file changed, for example "redirect.ts: lines 1, 3 and 4 changed". If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
 
 ### The Editor
 
@@ -61,13 +69,6 @@ The editor shows one tab for each open file. A dot on a tab means that the file 
 ### The Change Peek
 
 The peek shows the old lines and the new lines of a block. **Revert hunk** writes the old lines back. **Close** closes the peek. Press Esc to close it too.
-
-### The Logs and Others Pane
-
-The pane is at the bottom. It has two tabs.
-
-- **Agent changes** – The same list as the chat, with **Revert** and **Open in editor**.
-- **Git** – Shows the branch and lists each changed file with its status and its lines (for example "+4 / -1"). Click a file to see its changes in the pane below the list. No window opens. Double-click the file, or select it and press Enter, to open it in Code Review. The status bar then says "Opening Review...". Point to a row to read which lines of the file changed, for example "redirect.ts: lines 1, 3 and 4 changed". If the folder is not tracked with Git, the tab explains Git and offers **Turn on Git here**. A question asks first, and **Cancel** is the default.
 
 ### Focus on the File
 
@@ -102,6 +103,7 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Show all panels | Opens all the panes. | `code-menu-show-all` |
 | New chat here (menu) | File menu: starts a chat in the selected project or folder of the tree, or in the project of the open file. | `code-menu-new-chat-here` |
 | Search menu | Opens the Search menu. | `menubar-search` |
+| Find in files... | Search menu: opens the **Search** tab with the cursor in the search box. Ctrl+F. | `code-menu-find-in-files` |
 | Next change | Goes to the next block. Alt+F5. | `menu-item-code-next-change` |
 | Previous change | Goes to the last block. Shift+Alt+F5. | `menu-item-code-prev-change` |
 | Tools menu | Opens the Tools menu. | `menubar-tools` |
@@ -182,6 +184,18 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Select lines hint | "Select some lines first." It shows while no line is selected, which is why Ask about selection is dimmed. | `code-status-select-hint` |
 | Line number | The number at the start of a line. Click it to select the line, or drag over several numbers to select those lines. | `code-line-number` |
 | Branch | Shows the git branch. | `code-git-branch` |
+| Search tab | The **Search** tab of the Management pane. | `code-mgmt-tab-search` |
+| Search pane | Find in files: the search box, the options, and the results. | `code-search` |
+| Find in files box | The text to find. Press Enter to search. | `code-search-query` |
+| Match case | Finds only the same upper and lower case. | `code-search-match-case` |
+| Regular expression | Reads the text as a regular expression. | `code-search-regex` |
+| Files to include | Searches only the files whose name matches, for example `*.ts, *.svelte`. Empty searches all files. | `code-search-include` |
+| Look in | The project or folder to search. You can type a folder, for example `E:\src`. | `code-search-look-in` |
+| Search | Runs the search. Dimmed while the box is empty. | `code-search-run` |
+| Search result line | How many matches in how many files, "No results.", or why the search failed. The agent icon shows when the agent ran the search. | `code-search-summary` |
+| Search results | The matching files and lines. | `code-search-results` |
+| Result file | A file with matches, its folder, and its number of matches. Click it to open the file at the first match. | `code-search-file` |
+| Result line | A matching line: its number and its text, with the match marked. Click it to open the file at that line. | `code-search-result` |
 
 ### Menu Bar and Context Menu
 
@@ -233,6 +247,7 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | Ctrl+O | Opens a file. | none |
+| Ctrl+F | Opens the **Search** tab (find in files). | none |
 | Alt+F5 | Goes to the next change. | none |
 | Shift+Alt+F5 | Goes to the last change. | none |
 | Ctrl+Shift+F | The same as F11. | none |
@@ -249,6 +264,22 @@ The agent uses the tools below when Code is open. The permission **Code** in **C
 | `code_open` | Opens a file in Code, optionally at a line. |
 | `code_reveal` | Scrolls to a range of lines and selects them, so that you see what the agent means. |
 | `code_show_diff` | Shows the change that the agent made to a file in the changes list. |
+
+The agent reads and searches files with the tools below when Code or Explorer is open. The permission **Read files** controls them. Code opens when it is closed, so that you see what the agent reads.
+
+| Tool | What it does |
+|---|---|
+| `code_read` | Reads a file, or some of its lines, with line numbers. Code opens the file and marks the lines that the agent read. |
+| `code_search` | Finds text in files (find in files), with the same options as the **Search** tab. The search and its results show in the **Search** tab. |
+
+The agent edits files with the tools below when Code or Notepad is open. The permission **Write files** controls them: set to Ask, each edit asks you first.
+
+| Tool | What it does |
+|---|---|
+| `code_edit` | Replaces some exact text in a file with new text. Code opens the file at the changed lines and selects the change in the **Changes** tab. |
+| `code_write` | Makes a new file, or writes all the text of a file again. Code opens the file and selects the change. |
+
+The agent is told to use these tools, and not its own built-in tools, so that its work shows on the desktop.
 
 ## 5 - Common Tasks
 
@@ -282,6 +313,17 @@ To see what changed in a file that Git lists, follow the steps below:
 2. Click the file. Its changes show in the pane below the list. Point to the row to see which lines changed.
 3. To review the file with comments, double-click it, or select it and press Enter. Code Review opens on that file.
 
+### Find text in files
+
+To find text in the files of a project, follow the steps below:
+
+1. Press Ctrl+F, or click **Search -> Find in files...**. The **Search** tab opens.
+2. Type the text. To search only some files, type their names in **Files to include**, for example `*.ts`.
+3. Press Enter. The results show below.
+4. Click a line of the results. The file opens at that line.
+
+To see what the agent searched for, open the **Search** tab. The search of the agent is there, with the agent icon.
+
 ### Save a file
 
 Code does not save files. You cannot type in the editor, and the agent writes the files. To change a file yourself, follow the steps below:
@@ -298,6 +340,8 @@ Code does not save files. You cannot type in the editor, and the agent writes th
 - **The file is in a narrow column.** Click **Focus on the file** in the toolbar, or press F11.
 - **Revert hunk is dimmed.** Move the caret to a changed block, or open its peek.
 - **I cannot type.** Code is read-only. Ask the agent to edit the file.
+- **The search finds nothing.** Check **Look in** and **Files to include**. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
+- **The search says "Too many folders to search".** Choose a smaller folder in **Look in**.
 
 ## 7 - Need Help?
 

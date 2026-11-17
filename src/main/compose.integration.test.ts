@@ -84,10 +84,15 @@ describe('app composition with the fake ACP agent', () => {
 
     const transcript = await app.api.sessions.transcript(session.id)
     expect(transcript.map((e) => e.kind)).toEqual(['message', 'message', 'tool_call'])
-    // The prompt carries the desktop state first (stored, but not shown as the user's text).
+    // The first prompt of a desktop chat carries the briefing (prefer the desktop's tools, the real shell), then the desktop
+    // state (both stored, but not shown as the user's text).
     expect(transcript[0]).toMatchObject({
       role: 'user',
-      blocks: [{ kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json' }, { kind: 'text', text: 'Write the output file' }]
+      blocks: [
+        { kind: 'resource', uri: 'agentxp://briefing', mimeType: 'text/markdown', text: expect.stringContaining('Prefer AgentXP tools') },
+        { kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json' },
+        { kind: 'text', text: 'Write the output file' }
+      ]
     })
     expect(transcript[1]).toMatchObject({ role: 'agent', blocks: [{ kind: 'text', text: 'Working on it' }] })
     expect(transcript[2]).toMatchObject({

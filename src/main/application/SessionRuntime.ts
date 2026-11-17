@@ -45,6 +45,8 @@ export interface RuntimeDeps {
   a2uiMcpConfig: A2uiMcpConfigFactory
   /** More MCP servers for a session next to the A2UI one: the ones the user installed (see `AgentCapabilities`). */
   extraMcpServers?: (sessionId: Id) => McpServerConfig[]
+  /** Appended to the agent's system prompt for a session (how to work on the desktop); null for none. */
+  systemPrompt?: (sessionId: Id) => string | null
   /** Gate for the client-side fs and terminal requests of a session. */
   toolGate(sessionId: Id): ToolGate
   /** Taps the protocol traffic of a session's agent connection (Event Viewer). */
@@ -141,11 +143,12 @@ export class SessionRuntime {
     defaultModeId: string | null
   ): Promise<LiveSession> {
     const mcpServers = [this.deps.a2uiMcpConfig(session.id), ...(this.deps.extraMcpServers?.(session.id) ?? [])]
+    const systemPrompt = this.deps.systemPrompt?.(session.id) ?? null
     try {
       if (session.acpSessionId && connection.canLoadSession) {
         const acpSessionId = session.acpSessionId
         sink.muted = true
-        const state = await connection.loadSession(acpSessionId, cwd, mcpServers).then(
+        const state = await connection.loadSession(acpSessionId, cwd, mcpServers, systemPrompt).then(
           (loaded) => loaded,
           () => null // the agent no longer has that session: start a fresh one below, and tell it the history
         ).finally(() => (sink.muted = false))
@@ -157,7 +160,7 @@ export class SessionRuntime {
       }
       // A chat that had an ACP session and cannot get it back talks to an agent that remembers nothing of it.
       if (session.acpSessionId) this.forgotten.add(session.id)
-      const opened = await connection.newSession(cwd, mcpServers)
+      const opened = await connection.newSession(cwd, mcpServers, systemPrompt)
       this.deps.sessions.setAcpSessionId(session.id, opened.acpSessionId)
       this.storeState(session.id, await this.applyDefaultMode(connection, opened, defaultModeId))
       return { connection, acpSessionId: opened.acpSessionId }

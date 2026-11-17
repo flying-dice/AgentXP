@@ -51,4 +51,43 @@ export class CodeWindow {
   get peek(): Locator {
     return this.frame.getByTestId('code-hunk-peek')
   }
+
+  // ---- Search tab (find in files) ---------------------------------------------------------------
+
+  get searchTab(): Locator {
+    return this.frame.getByTestId('code-mgmt-tab-search')
+  }
+
+  /** The Search pane; `data-searching` is "true" while a search runs. */
+  get search(): Locator {
+    return this.frame.getByTestId('code-search')
+  }
+
+  get searchQuery(): Locator {
+    return this.frame.getByTestId('code-search-query')
+  }
+
+  get searchInclude(): Locator {
+    return this.frame.getByTestId('code-search-include')
+  }
+
+  get searchSummary(): Locator {
+    return this.frame.getByTestId('code-search-summary')
+  }
+
+  /** Matching lines (`data-path`, `data-line`). */
+  get searchResults(): Locator {
+    return this.frame.getByTestId('code-search-result')
+  }
+
+  get searchFiles(): Locator {
+    return this.frame.getByTestId('code-search-file')
+  }
+
+  /** Types into the Search tab and presses Enter. */
+  async findInFiles(query: string): Promise<void> {
+    if ((await this.searchTab.getAttribute('aria-selected')) !== 'true') await this.searchTab.click()
+    await this.searchQuery.fill(query)
+    await this.searchQuery.press('Enter')
+  }
 }

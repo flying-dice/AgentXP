@@ -1,0 +1,46 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "search",
+  "description": "Find, read and edit files through the desktop apps (the project is E:\\ with src\\index.ts containing \"needle\"). A prompt with \"find files\" runs fs_find (Explorer's Search Companion shows it); \"search code\" runs code_search (the Code app's Search tab) and code_read; \"edit code\" runs code_edit and code_write (shown in Code).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "find-files",
+      "match": { "contains": "find files" },
+      "steps": [
+        { "type": "mcpCall", "server": "agentxp", "tool": "desktop_open_app", "arguments": { "app": "explorer" }, "saveAs": "opened" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "fs_find", "arguments": { "pattern": "*.ts", "containing": "needle", "path": "E:\\" }, "saveAs": "found", "label": "find files" },
+        { "type": "expect", "from": "found.isError", "equals": "false" },
+        { "type": "expect", "from": "found", "contains": "index.ts" },
+        { "type": "message", "text": "Found the files: {{found}}" }
+      ]
+    },
+    {
+      "id": "search-code",
+      "match": { "contains": "search code" },
+      "steps": [
+        { "type": "mcpCall", "server": "agentxp", "tool": "desktop_open_app", "arguments": { "app": "code" }, "saveAs": "opened" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_search", "arguments": { "query": "needle", "path": "E:\\" }, "saveAs": "matches", "label": "search code" },
+        { "type": "expect", "from": "matches.isError", "equals": "false" },
+        { "type": "expect", "from": "matches", "contains": "index.ts:2:" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_read", "arguments": { "path": "E:\\src\\index.ts", "startLine": 2, "endLine": 3 }, "saveAs": "read", "label": "read lines" },
+        { "type": "expect", "from": "read", "contains": "2\texport const needle" },
+        { "type": "message", "text": "Searched and read: {{read}}" }
+      ]
+    },
+    {
+      "id": "edit-code",
+      "match": { "contains": "edit code" },
+      "steps": [
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_edit", "arguments": { "path": "E:\\src\\index.ts", "oldText": "needle = 1", "newText": "needle = 2" }, "saveAs": "edited", "label": "edit file" },
+        { "type": "expect", "from": "edited.isError", "equals": "false" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_write", "arguments": { "path": "E:\\src\\fresh.ts", "text": "export const fresh = true\n" }, "saveAs": "written", "label": "write file" },
+        { "type": "expect", "from": "written", "contains": "Created" },
+        { "type": "message", "text": "Edited: {{edited}} {{written}}" }
+      ]
+    }
+  ]
+}

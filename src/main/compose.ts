@@ -37,6 +37,8 @@ import { AgentService } from './application/AgentService'
 import { NodeCommandLocator } from './infrastructure/process/NodeCommandLocator'
 import { ChangeReverter } from './application/ChangeReverter'
 import { FileChangeRecorder } from './application/FileChangeRecorder'
+import { FileSearch } from './application/vfs/FileSearch'
+import { desktopBriefing, desktopSystemPrompt } from './application/tools/catalog'
 import { FanOutEventPublisher } from './application/FanOutEventPublisher'
 import { FolderService } from './application/FolderService'
 import { PermissionBroker } from './application/PermissionBroker'
@@ -269,6 +271,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const folderService = new FolderService(repos.folders, new NodeFolderBrowser(), options.picker, publisher, fileSystem)
   const drives = new DriveService({ drives: repos.drives, folders: repos.folders, desktops: repos.desktops, pickFolder: () => folderService.pick() })
   const vfs = new VirtualFileSystem({ host: hostFiles, folders: repos.folders, drives, desktopsDir })
+  const fileSearch = new FileSearch(vfs)
   const gitCli = options.git ?? new ExecGitCli()
   const git = new GitService({
     vfs,
@@ -307,6 +310,15 @@ export function composeApp(options: ComposeOptions): AppServices {
   }
 
   const terminalRecorder = new TerminalRecorder(repos.terminals, publisher)
+  /** A chat on a desktop works with the desktop's apps: its agent is told how (system prompt and first-prompt briefing). */
+  const onDesktop = (sessionId: number): boolean => {
+    const desktopId = repos.sessions.get(sessionId)?.desktopId
+    return desktopId !== null && desktopId !== undefined
+  }
+  const joinBriefing = (...parts: (string | null)[]): string | null => {
+    const present = parts.filter((p): p is string => p !== null && p !== '')
+    return present.length > 0 ? present.join('\n\n') : null
+  }
   const runtime = new SessionRuntime({
     connector: options.connector ?? new AcpAgentConnector(),
     pool,
@@ -321,6 +333,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     problems,
     a2uiMcpConfig,
     extraMcpServers: (sessionId) => capabilities.mcpServers(sessionId),
+    systemPrompt: (sessionId) => (onDesktop(sessionId) ? desktopSystemPrompt(process.platform) : null),
     toolGate: (sessionId) => gateway.forSession(sessionId),
     protocolTap: (sessionId) => eventLog.acpTap(sessionId)
   })
@@ -341,7 +354,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     events: publisher,
     problems,
     desktopContext: { contextOfSession: (id) => desktops.contextOfSession(id) },
-    briefing: (sessionId) => capabilities.briefing(sessionId)
+    briefing: (sessionId) => joinBriefing(onDesktop(sessionId) ? desktopBriefing(process.platform) : null, capabilities.briefing(sessionId))
   })
   const rooms = new TeamRoomService({
     rooms: repos.rooms,
@@ -463,9 +476,16 @@ export function composeApp(options: ComposeOptions): AppServices {
     handlers: {
       ...createShellTools({ desktops, paths: toolPaths, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
       ...createChatTools({ desktops, sessions: repos.sessions, transcripts: repos.transcripts, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
-      ...createFsTools({ vfs, paths: toolPaths }),
+      ...createFsTools({ desktops, vfs, search: fileSearch, paths: toolPaths }),
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
-      ...createCodeTools({ desktops, changes: repos.changes, paths: toolPaths }),
+      ...createCodeTools({
+        desktops,
+        changes: repos.changes,
+        paths: toolPaths,
+        vfs,
+        search: fileSearch,
+        files: { write: (sessionId, path, text) => sessionFiles.writeVPath(sessionId, path, text) }
+      }),
       ...createTerminalTools({ desktops, runner: options.commandRunner ?? new ShellCommandRunner(), vfs, paths: toolPaths, terminals: terminalRecorder }),
       ...createBrowserTools({ desktops, driver: browsers, requests: appRequests }),
       ...createPaintTools({ desktops, requests: appRequests }),
@@ -524,6 +544,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     a2ui,
     desktops,
     vfs,
+    fileSearch,
     git,
     reviews,
     scheduler,

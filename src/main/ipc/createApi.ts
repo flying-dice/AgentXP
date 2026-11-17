@@ -5,6 +5,7 @@ import type { DirectoryBrowser, FilePicker, ScreenCapturer } from '../applicatio
 import type { AppRequestBroker } from '../application/desktop/AppRequestBroker'
 import type { ProtocolEventLog } from '../application/events/ProtocolEventLog'
 import type { VirtualFileSystem } from '../application/vfs/VirtualFileSystem'
+import type { FileSearch } from '../application/vfs/FileSearch'
 import type { GitService } from '../application/git/GitService'
 import type { ReviewService } from '../application/review/ReviewService'
 import type { DriveService } from '../application/vfs/DriveService'
@@ -41,6 +42,7 @@ export interface ApiServices {
   shell: ShellService
   desktops: DesktopService
   vfs: VirtualFileSystem
+  fileSearch: FileSearch
   git: GitService
   reviews: ReviewService
   scheduler: SchedulerService
@@ -122,6 +124,8 @@ export function createApi(s: ApiServices): InvokeApi {
     },
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),
+      searchText: (desktopId, root, query) => s.fileSearch.searchText(desktopId, root, query),
+      find: (desktopId, root, query) => s.fileSearch.find(desktopId, root, query),
       readFile: (desktopId, path) => s.vfs.readFile(desktopId, path),
       writeFile: async (desktopId, path, text) => {
         await s.vfs.writeFile(desktopId, path, text)

@@ -85,11 +85,32 @@ export interface Bounds {
   height: number
 }
 
+/** The Code app's Search tab: what is searched for, below which folder, and how. */
+export interface CodeSearchView {
+  query: string
+  root: VPath
+  regex: boolean
+  matchCase: boolean
+  /** Comma-separated file names or globs; '' searches every file. */
+  include: string
+  /** Who ran it: the user (Search button) or the agent (code_search). */
+  by?: 'user' | 'agent'
+}
+
+/** Explorer's Search Companion: part of the file name and/or a word or phrase in the file, looked for below `root`. */
+export interface ExplorerSearchView {
+  name: string
+  containing: string
+  root: VPath
+  /** Who ran it: the user (Search button) or the agent (fs_find). */
+  by?: 'user' | 'agent'
+}
+
 /** Per-app view state: what the window currently shows. Sent to the agent. */
 export type AppView =
   | { app: 'chat'; sessionId: Id; title: string }
-  /** `path` is a VPath; '' means "Computer" (the drives root, the initial view of a new Explorer). */
-  | { app: 'explorer'; path: VPath | ''; selected: VPath[] }
+  /** `path` is a VPath; '' means "Computer" (the drives root, the initial view of a new Explorer). `search`: the Search Companion is open. */
+  | { app: 'explorer'; path: VPath | ''; selected: VPath[]; search?: ExplorerSearchView | null }
   | { app: 'notepad'; path: VPath | null; dirty: boolean; caretLine: number }
   | {
       app: 'code'
@@ -98,6 +119,8 @@ export type AppView =
       visibleLines: [number, number] | null
       selection: { startLine: number; endLine: number } | null
       selectedChangeId: Id | null
+      /** The search the Search tab shows (the user's or the agent's code_search); absent or null: none yet. */
+      search?: CodeSearchView | null
     }
   | { app: 'terminal'; terminalId: string | null; cwd: VPath; runningCommand: string | null; lastLines: string[] }
   | { app: 'browser'; url: string; title: string; loading: boolean }
@@ -225,8 +248,8 @@ export interface SurfaceStateDto {
 
 export const TOOL_GROUPS = [
   'shell', // desktop_* and a2ui_* (always on)
-  'fs.read', // ACP fs/read_text_file, fs_list, fs_find
-  'fs.write', // ACP fs/write_text_file
+  'fs.read', // ACP fs/read_text_file, fs_list, fs_find, code_read, code_search
+  'fs.write', // ACP fs/write_text_file, code_edit, code_write
   'notepad', // notepad_open, notepad_read
   'code', // code_open, code_reveal, code_show_diff
   'terminal', // ACP terminal/*, terminal_run, terminal_read

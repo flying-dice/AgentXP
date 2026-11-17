@@ -32,6 +32,10 @@
   import { ViewSync } from '../viewSync'
   import { deriveAgentStatus, statusLabelFor } from './agentStatus'
   import AddressBar from './AddressBar.svelte'
+  import ExplorerSearchPane from './ExplorerSearchPane.svelte'
+  import { SEARCH_COLUMNS, defaultLookIn, explorerSearchKey, searchLookIn, searchRows, searchStatus } from './explorerSearch'
+  import type { ExplorerSearchView } from '@shared/desktop'
+  import type { FileFindResultDto } from '@shared/search'
   import ComputerView from './ComputerView.svelte'
   import { breadcrumbs, driveGroups, driveRoot, driveTitle, favourites, libraries, parseAddress, upPath } from './explorerModel'
 
@@ -59,9 +63,27 @@
 
   const sync = new ViewSync<{ path: string; selected: string[] }>((v) => JSON.stringify([v.path, v.selected]))
 
+  // The Search Companion: open or not, its criteria, the search on screen (also in the view, for the agent) and the results.
+  let searchOpen = $state(false)
+  let searchName = $state('')
+  let searchContaining = $state('')
+  let searchRoot = $state('')
+  let searchView = $state.raw<ExplorerSearchView | null>(null)
+  let searchResult = $state.raw<FileFindResultDto | null>(null)
+  let searching = $state(false)
+  let searchError = $state<string | null>(null)
+  let searchByAgent = $state(false)
+  let resultSelected = $state<string[]>([])
+  const searchSync = new ViewSync<ExplorerSearchView | null>(explorerSearchKey)
+
   function report(): void {
     const view = { path, selected: $state.snapshot(selected) }
-    if (sync.mark(view)) host.updateView(win.id, { app: 'explorer', ...view })
+    if (sync.mark(view)) host.updateView(win.id, { app: 'explorer', ...view, search: searchView })
+  }
+
+  /** Tells the view which search is on screen (null: none), so the agent sees what the user searched for. */
+  function reportSearch(): void {
+    if (searchSync.mark(searchView)) host.updateView(win.id, { app: 'explorer', path, selected: $state.snapshot(selected), search: searchView })
   }
 
   function reveal(target: VPath | ''): void {
@@ -96,6 +118,79 @@
       selected = [...view.selected]
     })
   })
+
+  /** Runs a search and lists what it finds: the user's (Search button, Enter) or the agent's (fs_find). */
+  let searchRun = 0
+  async function runSearch(next: ExplorerSearchView): Promise<void> {
+    const run = ++searchRun
+    searchOpen = true
+    searchName = next.name
+    searchContaining = next.containing
+    searchRoot = next.root
+    searchView = next
+    searchByAgent = next.by === 'agent'
+    resultSelected = []
+    searching = true
+    searchError = null
+    try {
+      const result = await host.api.vfs.find(desktopId, next.root, { name: next.name, containing: next.containing })
+      if (run === searchRun) searchResult = result
+    } catch (error) {
+      if (run !== searchRun) return
+      searchResult = null
+      searchError = errorText(error)
+    } finally {
+      if (run === searchRun) searching = false
+    }
+  }
+
+  function searchFromForm(): void {
+    const next: ExplorerSearchView = { name: searchName.trim(), containing: searchContaining.trim(), root: searchRoot || defaultLookIn(path, drives), by: 'user' }
+    if (next.name === '' && next.containing === '') return
+    void runSearch(next)
+    reportSearch()
+  }
+
+  /** Search (toolbar, View menu, F3): opens the Search Companion, looking in the folder shown. */
+  function openSearch(): void {
+    if (searchOpen) return
+    searchOpen = true
+    searchRoot = defaultLookIn(path, drives)
+  }
+
+  /** Back (or Search again): closes the Search Companion and its results; the folder list comes back. */
+  function closeSearch(): void {
+    searchRun++
+    searchOpen = false
+    searching = false
+    searchResult = null
+    searchError = null
+    searchView = null
+    reportSearch()
+  }
+
+  const toggleSearch = (): void => (searchOpen ? closeSearch() : openSearch())
+
+  // The agent searched (fs_find): the Search Companion opens with its criteria and lists the results.
+  $effect(() => {
+    const search = win.view.search ?? null
+    if (!searchSync.isExternal(search)) return
+    untrack(() => (search ? void runSearch(search) : searchOpen && closeSearch()))
+  })
+
+  const showingResults = $derived(searchOpen && (searchResult !== null || searching || searchError !== null))
+  const resultRows = $derived(searchResult ? searchRows(searchResult.entries) : [])
+  const resultEntry = (id: string): VfsEntryDto | undefined => searchResult?.entries.find((e) => e.path === id)
+
+  /** A result: a file opens in its app; a folder closes the search and opens in Explorer. */
+  function activateResult(row: ListRow): void {
+    const entry = resultEntry(row.id)
+    if (!entry) return
+    if (entry.kind === 'directory') {
+      closeSearch()
+      go(entry.path)
+    } else openEntry(entry)
+  }
 
   // The drive we are on was ejected: back to Computer.
   $effect(() => {
@@ -386,6 +481,7 @@
         items: [
           { id: 'up', testid: 'explorer-menu-up', label: '&Up one level', shortcut: 'Alt+Up', disabled: path === '', action: () => go(upPath(path)) },
           { id: 'refresh', testid: 'explorer-menu-refresh', label: '&Refresh', shortcut: 'F5', action: refresh },
+          { id: 'search', testid: 'explorer-menu-search', label: '&Search', icon: 'search', shortcut: 'F3', checked: searchOpen, action: toggleSearch },
           { separator: true },
           help.paneItem(win.id)
         ]
@@ -398,6 +494,9 @@
     if (event.key === 'F5') {
       event.preventDefault()
       refresh()
+    } else if (event.key === 'F3' || (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 'f')) {
+      event.preventDefault()
+      toggleSearch()
     } else if (event.altKey && event.key === 'ArrowUp' && path !== '') {
       event.preventDefault()
       go(upPath(path))
@@ -416,7 +515,7 @@
     report()
   }
 
-  const itemsText = $derived(path === '' ? projectCountText(drives.filter((d) => d.kind === 'removable').length) : `${entries.length} item${entries.length === 1 ? '' : 's'}`)
+  const itemsText = $derived(showingResults ? searchStatus(searchResult, searching, searchError) : path === '' ? projectCountText(drives.filter((d) => d.kind === 'removable').length) : `${entries.length} item${entries.length === 1 ? '' : 's'}`)
   const selectionText = $derived(
     selectedDrive
       ? `${driveTitle(selectedDrive)}  -  ${selectedDrive.kind === 'removable' ? 'USB drive' : 'Local Disk'}`
@@ -434,6 +533,7 @@
     <ToolStripButton data-testid="explorer-up" icon="chevron-up" title="Up one level" aria-label="Up" disabled={path === ''} onclick={() => go(upPath(path))} />
     <AddressBar {path} {drives} onnavigate={(p) => go(p)} onsubmit={(text) => void submitAddress(text)} />
     <ToolStripButton data-testid="explorer-refresh" icon="refresh" title="Refresh" aria-label="Refresh" onclick={refresh} />
+    <ToolStripButton data-testid="explorer-search" icon="search" text="Search" title="Search for files and folders (F3)" checked={searchOpen} onclick={toggleSearch} />
   </div>
   {#if path === ''}
     <div class="commands" role="toolbar" aria-label="Commands">
@@ -455,11 +555,41 @@
   <div class="split">
     <SplitContainer splitterDistance={190} panel1MinSize={110} panel2MinSize={200} fixedPanel="panel1">
       {#snippet panel1()}
-        <TreeView testid="explorer-nav" class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} oncontextmenu={navMenu} />
+        {#if searchOpen}
+          <ExplorerSearchPane
+            bind:name={searchName}
+            bind:containing={searchContaining}
+            bind:root={searchRoot}
+            lookIn={searchLookIn(path, drives)}
+            status={searchStatus(searchResult, searching, searchError)}
+            {searching}
+            byAgent={searchByAgent && searchResult !== null}
+            onsearch={searchFromForm}
+            onback={closeSearch}
+          />
+        {:else}
+          <TreeView testid="explorer-nav" class="folders" aria-label="Navigation pane" {nodes} selected={treeSelected} bind:expanded onselect={onTreeSelect} oncontextmenu={navMenu} />
+        {/if}
       {/snippet}
       {#snippet panel2()}
         <div class="list">
-          {#if path === ''}
+          {#if showingResults}
+            <ListView
+              testid="explorer-search-results"
+              rowTestid="explorer-search-result"
+              columns={SEARCH_COLUMNS}
+              rows={resultRows}
+              bind:selected={resultSelected}
+              multiSelect
+              aria-label="Search Results"
+              emptyText={searching ? 'Searching...' : (searchError ?? 'There are no results to display.')}
+              onactivate={activateResult}
+              oncontextmenu={(row, e) => {
+                const entry = resultEntry(row.id)
+                ctx.show(e, entry ? entryMenu(entry) : backgroundMenu())
+              }}
+            />
+          {:else if path === ''}
             <ComputerView {drives} selected={selected[0] ?? null} onselect={onSelectDrive} onactivate={(d) => go(driveRoot(d.letter))} oncontextmenu={driveMenu} removed={host.recentlyRemoved} {removedSelected} onselectremoved={onSelectRemoved} onplugagain={(id) => void plugInAgain(id)} onremovedcontextmenu={removedMenu} />
           {:else}
             <ListView testid="explorer-list" rowTestid="explorer-item" {columns} {rows} bind:selected multiSelect aria-label="Files" emptyText={loadError ?? 'This folder is empty.'} onselect={() => report()} onactivate={activate} oncontextmenu={folderMenu} />

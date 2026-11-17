@@ -19,6 +19,7 @@ import { createBrowserTools, formatRead, formatTabs, normalizeUrl } from './brow
 import { createCodeTools } from './codeTools'
 import { DesktopToolService } from './DesktopToolService'
 import { createFsTools, nameMatcher } from './fsTools'
+import { FileSearch } from '../vfs/FileSearch'
 import { createNotepadTools } from './notepadTools'
 import type { ActionResult, AppRequests, BrowserDriver, BrowserGuard, CommandRunner, PageContent, PageInfo } from './ports'
 import { createEventsTools } from './eventsTools'
@@ -229,9 +230,22 @@ beforeEach(async () => {
     handlers: {
       ...createShellTools({ desktops, paths, ask }),
       ...createChatTools({ desktops, sessions: f.repos.sessions, transcripts: f.repos.transcripts, ask }),
-      ...createFsTools({ vfs: f.vfs, paths }),
+      ...createFsTools({ desktops, vfs: f.vfs, search: new FileSearch(f.vfs), paths }),
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
-      ...createCodeTools({ desktops, changes: { list: () => changes }, paths }),
+      ...createCodeTools({
+        desktops,
+        changes: { list: () => changes },
+        paths,
+        vfs: f.vfs,
+        search: new FileSearch(f.vfs),
+        // Writes for real and records the change the way SessionFiles does, so code_edit / code_write can be read back.
+        files: {
+          write: async (id, path, text) => {
+            await f.vfs.writeFile(desktopId, path, text)
+            changes = [...changes.filter((c) => c.path !== path), { id: 30 + changes.length, sessionId: id, path, kind: 'modified', additions: 1, deletions: 1 } as FileChangeDto]
+          }
+        }
+      }),
       ...createTerminalTools({ desktops, runner, vfs: f.vfs, paths, terminals: { record: (id, a) => void recorded.push([id, a]) }, newTerminalId: () => `run-${++runCounter}` }),
       ...createBrowserTools({ desktops, driver, requests: browserRequests }),
       ...createPaintTools({ desktops, requests }),
@@ -272,7 +286,8 @@ describe('tool catalog', () => {
   it('groups the tools as documented', () => {
     const byGroup = (g: ToolGroup): string[] => specsForGroups([g]).map((s) => s.name)
     expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app', 'chats_list', 'chat_read', 'chat_open'])
-    expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find'])
+    expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find', 'code_read', 'code_search'])
+    expect(byGroup('fs.write')).toEqual(['code_edit', 'code_write'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
     expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
     expect(byGroup('terminal')).toEqual(['terminal_run', 'terminal_read'])
@@ -292,7 +307,6 @@ describe('tool catalog', () => {
       'browser_forward',
       'browser_reload'
     ])
-    expect(byGroup('fs.write')).toEqual([])
     expect(byGroup('paint')).toEqual(['paint_draw', 'paint_read', 'paint_clear', 'paint_resize'])
     expect(byGroup('wordpad')).toEqual(['wordpad_open', 'wordpad_read', 'wordpad_write'])
     expect(byGroup('notes')).toEqual(['notes_list', 'notes_add', 'notes_update', 'notes_remove'])
@@ -322,7 +336,7 @@ describe('tool catalog', () => {
     expect(byGroup('settings')).toHaveLength(18)
     expect(byGroup('taskmgr')).toEqual(['taskmgr_chats', 'taskmgr_processes', 'taskmgr_terminals', 'taskmgr_open_chat', 'taskmgr_end_task', 'taskmgr_end_process'])
     expect(byGroup('help')).toEqual(['help_search', 'help_read'])
-    expect(TOOL_SPECS).toHaveLength(126)
+    expect(TOOL_SPECS).toHaveLength(130)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -425,7 +439,22 @@ describe('fs tools', () => {
     expect(textOf(await run('fs_find', { pattern: '*.test.ts' }))).toBe('E:\\src\\app.test.ts')
     expect(textOf(await run('fs_find', { pattern: 'readme' }))).toBe('E:\\README.md')
     expect(textOf(await run('fs_find', { pattern: 'dep' }))).toBe('No matches.') // node_modules is not searched
-    expect(textOf(await run('fs_find', { pattern: 'app', limit: 1 }))).toBe('E:\\src\\app.test.ts')
+    expect(textOf(await run('fs_find', { pattern: 'app', limit: 1 }))).toBe('E:\\src\\app.test.ts\n(more not shown: raise limit or narrow the search)')
+  })
+
+  it('fs_find finds by a word in the file and shows the search in Explorer\'s Search Companion', async () => {
+    expect(textOf(await run('fs_find', { containing: 'TEXT OF' }))).toBe('E:\\notes.md\nE:\\other.txt\nE:\\README.md')
+    expect(textOf(await run('fs_find', { pattern: '*.md', containing: 'notes', path: 'E:\\' }))).toBe('E:\\notes.md')
+    const [explorer] = desktops.windowsOf(desktopId, 'explorer')
+    expect(explorer!.view).toMatchObject({ app: 'explorer', path: 'E:\\', selected: [], search: { name: '*.md', containing: 'notes', root: 'E:\\', by: 'agent' } })
+    expect(textOf(await run('fs_find', {}))).toMatch(/Give pattern/)
+  })
+
+  it('fs_find opens an Explorer for its results when only Code is open', async () => {
+    for (const w of desktops.windowsOf(desktopId, 'explorer')) desktops.closeWindow(w.id)
+    desktops.openWindow({ desktopId, app: 'code' })
+    await run('fs_find', { pattern: 'readme' })
+    expect(desktops.windowsOf(desktopId, 'explorer').map((w) => w.view)).toMatchObject([{ search: { name: 'readme', containing: '', root: 'E:\\' } }])
   })
 
   it('lists C: (seeded) and refuses paths outside the drives and missing folders', async () => {
@@ -501,6 +530,59 @@ describe('notepad and code tools', () => {
     expect(textOf(await run('code_show_diff', { path: 'src/app.ts' }))).toMatch(/\+3 -1/)
     expect(textOf(await run('code_show_diff', { path: 'e:\\SRC\\app.ts' }))).toMatch(/\+3 -1/)
     expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
+  })
+
+  it('code_read returns numbered lines and shows the file in Code, highlighting a range it read', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    await writeFile(join(f.projectDir, 'src/long.ts'), Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n') + '\n')
+    expect(textOf(await run('code_read', { path: 'src/long.ts' }))).toBe(`E:\\src\\long.ts, lines 1-10 of 10:\n${Array.from({ length: 10 }, (_, i) => `${i + 1}\tline ${i + 1}`).join('\n')}`)
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\long.ts', visibleLines: null, selection: null })
+    expect(textOf(await run('code_read', { path: 'src/long.ts', startLine: 3, endLine: 4 }))).toBe('E:\\src\\long.ts, lines 3-4 of 10:\n3\tline 3\n4\tline 4\n(6 more lines: read from startLine 5)')
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ visibleLines: [3, 4], selection: null })
+    expect(textOf(await run('code_read', { path: 'src/long.ts', startLine: 20 }))).toMatch(/has 10 lines/)
+    expect(textOf(await run('code_read', { path: 'missing.ts' }))).toMatch(/ENOENT|no such/i)
+  })
+
+  it('code_read is a fs.read tool: it works with only Explorer open and opens Code', async () => {
+    desktops.openWindow({ desktopId, app: 'explorer' })
+    expect((await run('code_read', { path: 'README.md' })).isError).toBeUndefined()
+    expect(desktops.windowsOf(desktopId, 'code')).toHaveLength(1)
+  })
+
+  it('code_search lists path:line:column matches and shows the search in the Search tab of Code', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    const text = textOf(await run('code_search', { query: 'TEXT OF', include: '*.md' }))
+    expect(text).toBe('2 results in 2 files (searched 3 files below E:\\; the Search tab of Code shows them).\nE:\\notes.md:1:1: text of notes.md\nE:\\README.md:1:1: text of README.md')
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ search: { query: 'TEXT OF', root: 'E:\\', regex: false, matchCase: false, include: '*.md', by: 'agent' } })
+    expect(textOf(await run('code_search', { query: 'nothing like this' }))).toMatch(/^No results\./)
+    expect(textOf(await run('code_search', { query: '(', regex: true }))).toMatch(/Not a valid regular expression/)
+  })
+
+  it('code_edit replaces exact text once, records the change and shows it in Code', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    await writeFile(join(f.projectDir, 'src/app.ts'), 'one\ntwo\nthree\ntwo\n')
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'missing', newText: 'x' }))).toMatch(/was not found/)
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'two', newText: 'x' }))).toMatch(/occurs 2 times/)
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'three', newText: 'THREE\nAND A HALF' }))).toBe('Edited E:\\src\\app.ts (lines 3-4); Code shows the change.')
+    expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\ntwo\nTHREE\nAND A HALF\ntwo\n')
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\app.ts', visibleLines: [3, 4], selectedChangeId: changes[0]!.id })
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'two', newText: '2', replaceAll: true }))).toMatch(/2 places/)
+    expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\n2\nTHREE\nAND A HALF\n2\n')
+  })
+
+  it('code_write creates or replaces a file and shows it in Code', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'a\nb\n' }))).toBe('Created E:\\src\\new.ts (2 lines); Code shows it.')
+    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'c' }))).toBe('Replaced E:\\src\\new.ts (1 lines); Code shows it.')
+    expect(await f.vfs.readFile(desktopId, 'E:\\src\\new.ts')).toBe('c')
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\new.ts', tabs: ['E:\\src\\new.ts'] })
+  })
+
+  it('code_edit and code_write follow the "Writing files" permission (fs.write)', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    desktops.setPolicy({ ...desktops.policy(), groups: { ...desktops.policy().groups, 'fs.write': 'deny' } })
+    expect((await run('code_write', { path: 'src/denied.ts', text: 'x' })).isError).toBe(true)
+    await expect(f.vfs.readFile(desktopId, 'E:\\src\\denied.ts')).rejects.toThrow()
   })
 })
 

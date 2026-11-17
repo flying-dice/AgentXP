@@ -118,6 +118,8 @@ export class FakeLiveConnection implements LiveAgentConnection {
   readonly calls: string[] = []
   readonly prompts: ContentBlockDto[][] = []
   mcpServers: McpServerConfig[] = []
+  /** What the last newSession / loadSession asked to append to the agent's system prompt. */
+  systemPrompt: string | null = null
   stopReason: StopReason = 'end_turn'
   promptError: Error | null = null
   onPrompt: () => Promise<void> = async () => {}
@@ -127,9 +129,10 @@ export class FakeLiveConnection implements LiveAgentConnection {
 
   constructor(private readonly nextAcpId: string) {}
 
-  async newSession(_cwd: string, mcpServers: McpServerConfig[]): Promise<OpenedAcpSession> {
+  async newSession(_cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<OpenedAcpSession> {
     this.calls.push('newSession')
     this.mcpServers = mcpServers
+    this.systemPrompt = systemPrompt ?? null
     return {
       acpSessionId: this.nextAcpId,
       modes: [
@@ -142,9 +145,10 @@ export class FakeLiveConnection implements LiveAgentConnection {
     }
   }
 
-  async loadSession(acpSessionId: string, _cwd: string, mcpServers: McpServerConfig[]): Promise<AcpSessionState> {
+  async loadSession(acpSessionId: string, _cwd: string, mcpServers: McpServerConfig[], systemPrompt?: string | null): Promise<AcpSessionState> {
     this.calls.push(`loadSession:${acpSessionId}`)
     this.mcpServers = mcpServers
+    this.systemPrompt = systemPrompt ?? null
     if (this.loadError) throw this.loadError
     return { modes: [], models: [], currentModeId: null, currentModelId: null }
   }

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { AgentSessionEvent } from '../../domain/agent/AgentSessionEvent'
 import type { PermissionDecision, PermissionPrompt } from '../../domain/agent/PermissionPrompter'
 import { ToolRefusedError, type GatedToolGroup, type ToolGate } from '../../domain/agent/ToolGate'
-import { AcpAgentConnection } from './AcpAgentConnection'
+import { AcpAgentConnection, systemPromptMeta } from './AcpAgentConnection'
 import { AgentProcess } from './AgentProcess'
 import { TerminalManager, type TerminalChange } from './TerminalManager'
 import { WorkspaceFileAccess } from './WorkspaceFileAccess'
@@ -211,5 +211,14 @@ describe('AgentProcess', () => {
     proc = new AgentProcess({ command: process.execPath, args: ['-e', 'setInterval(()=>{},1000)'] })
     await proc.dispose()
     expect(proc.running).toBe(false)
+  })
+})
+
+describe('systemPromptMeta', () => {
+  it('appends to the agent\'s system prompt (never replaces it) and sends nothing without a prompt', () => {
+    expect(systemPromptMeta('Use the desktop')).toEqual({ _meta: { systemPrompt: { append: 'Use the desktop' } } })
+    expect(systemPromptMeta(null)).toEqual({})
+    expect(systemPromptMeta('')).toEqual({})
+    expect(systemPromptMeta(undefined)).toEqual({})
   })
 })

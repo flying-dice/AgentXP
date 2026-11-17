@@ -20,6 +20,7 @@ import {
   type VfsEntryDto
 } from '@shared/vfs'
 import type { FolderDto } from '@shared/models'
+import { clipMatchLine, includeMatcher, lineMatcher, nameMatcher, type TextMatchDto } from '@shared/search'
 
 interface DirNode {
   kind: 'directory'
@@ -118,10 +119,57 @@ export function createFakeVfs(options: FakeVfsOptions): FakeVfs {
     return drive
   }
 
+  /** Every entry below `root`, breadth first (like FileSearch in main). */
+  const below = (root: VPath): VfsEntryDto[] => {
+    const start = walk(root)
+    if (start.kind === 'file') return [entryOf(root, start)]
+    const found: VfsEntryDto[] = []
+    const queue: [VPath, DirNode][] = [[root, start]]
+    while (queue.length > 0) {
+      const [path, node] = queue.shift()!
+      for (const [name, child] of node.children) {
+        const childPath = joinVPath(path, name)!
+        found.push(entryOf(childPath, child))
+        if (child.kind === 'directory') queue.push([childPath, child])
+      }
+    }
+    return found
+  }
+  const textAt = (path: VPath): string => {
+    const node = walk(path)
+    return node.kind === 'file' ? node.text : ''
+  }
+
   return {
     list: () => [...drives],
     mount,
     vfs: {
+      searchText: async (_desktop, root, query) => {
+        const match = lineMatcher(query)
+        const included = includeMatcher(query.include)
+        const limit = query.limit ?? 200
+        const matches: TextMatchDto[] = []
+        const files = below(root).filter((e) => e.kind === 'file' && included(e.name))
+        const matched = new Set<VPath>()
+        for (const file of files) {
+          for (const [i, line] of textAt(file.path).split('\n').entries()) {
+            const hit = match(line)
+            if (!hit) continue
+            if (matches.length >= limit) return { matches, filesSearched: files.length, filesMatched: matched.size, truncated: true }
+            matched.add(file.path)
+            const clipped = clipMatchLine(line, hit.start, hit.length)
+            matches.push({ path: file.path, line: i + 1, column: hit.start + 1, length: hit.length, text: clipped.text, textStart: clipped.start })
+          }
+        }
+        return { matches, filesSearched: files.length, filesMatched: matched.size, truncated: false }
+      },
+      find: async (_desktop, root, query) => {
+        const named = query.name?.trim() ? nameMatcher(query.name) : () => true
+        const words = query.containing?.trim() ? lineMatcher({ query: query.containing.trim() }) : null
+        const entries = below(root).filter((e) => named(e.name) && (!words || (e.kind === 'file' && textAt(e.path).split('\n').some((l) => words(l) !== null))))
+        const limit = query.limit ?? 100
+        return { entries: entries.slice(0, limit), truncated: entries.length > limit }
+      },
       readDir: async (_desktop, path) => {
         const node = walk(path)
         if (node.kind !== 'directory') throw new Error(`'${path}' is not a folder.`)

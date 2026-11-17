@@ -46,7 +46,8 @@ beforeEach(async () => {
     terminals: new TerminalRecorder(repos.terminals, publisher),
     broadcaster,
     toolGate: () => allowAllTools,
-    a2uiMcpConfig: (id) => ({ kind: 'stdio', name: 'a2ui', command: 'electron', args: ['a2ui-mcp.js'], env: { KEY: String(id) } })
+    a2uiMcpConfig: (id) => ({ kind: 'stdio', name: 'a2ui', command: 'electron', args: ['a2ui-mcp.js'], env: { KEY: String(id) } }),
+    systemPrompt: (id) => `desktop rules for ${id}`
   })
   serviceDeps = {
     sessions: repos.sessions,
@@ -212,6 +213,17 @@ describe('SessionService reconnect', () => {
     expect(connector.connections).toHaveLength(2)
     expect(connector.connections[1]!.calls).toEqual(['loadSession:acp-1', 'prompt'])
     expect(status(session.id)).toBe('idle')
+  })
+
+  it('appends the desktop rules to the agent\'s system prompt on a new session and on a loaded one', async () => {
+    connector.canLoadSession = true
+    const session = await service.create(f.desktop.id)
+    expect(connector.connections[0]!.systemPrompt).toBe(`desktop rules for ${session.id}`)
+    await pool.disposeAll()
+    service.recoverAfterRestart()
+    await service.prompt({ sessionId: session.id, text: 'again', attachments: [] })
+    expect(connector.connections[1]!.calls[0]).toBe('loadSession:acp-1')
+    expect(connector.connections[1]!.systemPrompt).toBe(`desktop rules for ${session.id}`)
   })
 
   it('starts a new ACP session silently when load is unsupported', async () => {
