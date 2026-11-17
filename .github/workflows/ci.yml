@@ -21,6 +21,7 @@ jobs:
       - run: node scripts/check-e2e-selectors.mjs
       # Every data-testid of the UI is in a manual.
       - run: npm run help:coverage
+      - run: npm run testids
       # Every app has UI, backend, agent API, e2e and docs, or a recorded reason (docs/APP_PILLARS.md).
       - run: npm run app:pillars
       - run: npx electron-vite build

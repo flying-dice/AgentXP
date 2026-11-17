@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     borderStyle?: 'None' | 'FixedSingle' | 'Fixed3D'
     autoScroll?: boolean
     class?: string
@@ -8,6 +10,7 @@
     children?: Snippet
   }
   let {
+    testid,
     borderStyle = 'None',
     autoScroll = false,
     class: className = '',
@@ -16,7 +19,7 @@
   }: Props = $props()
 </script>
 
-<div
+<div data-testid={testid}
   class="xp-panel {borderStyle} {className}"
   class:xp-scroll={autoScroll}
   class:clip={!autoScroll}

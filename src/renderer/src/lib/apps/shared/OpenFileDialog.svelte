@@ -78,7 +78,7 @@
 <Dialog testid="open-file-dialog" {title} iconName="open-folder" width="420px" contained {onclose}>
   <div class="open">
     <div class="where">
-      <ToolStripButton icon="chevron-up" title="Up one level" aria-label="Up" disabled={dir === ''} onclick={() => (dir = upPath(dir))} />
+      <ToolStripButton data-testid="open-file-up" icon="chevron-up" title="Up one level" aria-label="Up" disabled={dir === ''} onclick={() => (dir = upPath(dir))} />
       <span class="path">Look in: {dir === '' ? 'Computer' : dir}</span>
     </div>
     <div class="list">

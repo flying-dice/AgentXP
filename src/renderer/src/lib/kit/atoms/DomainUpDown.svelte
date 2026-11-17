@@ -2,6 +2,8 @@
   import SpinButtons from './SpinButtons.svelte'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     items: string[]
     value?: string
     /** Wrap around at the ends (Wrap). */
@@ -14,6 +16,7 @@
   }
 
   let {
+    testid,
     items,
     value = $bindable(''),
     wrap = false,
@@ -55,7 +58,7 @@
   }
 </script>
 
-<span class="xp-updown {className}" class:disabled {style}>
+<span data-testid={testid} class="xp-updown {className}" class:disabled {style}>
   <input
     type="text"
     role="spinbutton"

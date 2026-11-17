@@ -79,6 +79,7 @@
   {#if open}
     <MenuPopup
       bind:element={popup}
+      testid={testid ? `${testid}-menu` : undefined}
       {items}
       label={text ?? title}
       autofocus

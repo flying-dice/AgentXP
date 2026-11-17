@@ -55,7 +55,7 @@
       {#each surfaces as s (s.surfaceId)}
         {@const active = s.surfaceId === current.surfaceId}
         <div class="tab" class:active data-testid="chat-sidebar-tab" data-surface-id={s.surfaceId} data-selected={active}>
-          <button type="button" role="tab" aria-selected={active} class="label" title={tabLabels.get(s.surfaceId)?.tooltip} onclick={() => onselect?.(s.surfaceId)}>{tabLabels.get(s.surfaceId)?.label}</button>
+          <button data-testid="chat-sidebar-tab-label" type="button" role="tab" aria-selected={active} class="label" title={tabLabels.get(s.surfaceId)?.tooltip} onclick={() => onselect?.(s.surfaceId)}>{tabLabels.get(s.surfaceId)?.label}</button>
           <button type="button" class="x" data-testid="chat-sidebar-tab-close" aria-label="Close {surfaceDisplayTitle(s.messages)}" onclick={() => onclose?.(s)}>
             <Icon name="close" />
           </button>

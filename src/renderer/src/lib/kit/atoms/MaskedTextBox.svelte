@@ -4,6 +4,8 @@
   import { caretForRawCount, deleteRaw, formatMask, unmask } from './MaskedTextBox'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** Formatted text (literals included). */
     value?: string
     mask: string
@@ -16,6 +18,7 @@
   }
 
   let {
+    testid,
     value = $bindable(''),
     mask,
     promptChar = '_',
@@ -63,7 +66,7 @@
   }
 </script>
 
-<TextBox
+<TextBox data-testid={testid}
   bind:ref={input}
   value={text}
   class={className}

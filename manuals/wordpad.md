@@ -60,6 +60,14 @@ Each WordPad window has a chat pane at its right edge. The pane starts closed, a
 | B, I, H1 (Heading 1), H2 (Heading 2), List, 1. List, Code, Link | Add markdown marks in edit mode. | none |
 | Document | The formatted page. | `wordpad-reader` |
 | Document source | The text box of the source. | `wordpad-source` |
+| Bold | Makes the selected text bold. Ctrl+B. | `wordpad-format-bold` |
+| Italic | Makes the selected text italic. Ctrl+I. | `wordpad-format-italic` |
+| Heading 1 | Makes the line a heading. | `wordpad-format-h1` |
+| Heading 2 | Makes the line a subheading. | `wordpad-format-h2` |
+| Bulleted list | Makes the lines a bulleted list. | `wordpad-format-bullets` |
+| Numbered list | Makes the lines a numbered list. | `wordpad-format-numbers` |
+| Code | Makes the selected text code. | `wordpad-format-code` |
+| Link | Adds a link. | `wordpad-format-link` |
 
 ### Menu Bar and Context Menu
 

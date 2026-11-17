@@ -72,6 +72,14 @@ Each Snipping Tool window has a chat pane at its right edge. The pane starts clo
 | Status | What happened last, for example **Captured the whole desktop.** | `snipping-tool-status` |
 | Copy | Copies the snip. | none |
 | Delay | Selects the delay before the capture. | none |
+| Snip type | Opens the list of snip types. | `snipping-tool-type` |
+| Snip type: rectangular | Snips a rectangle you drag. | `snipping-tool-type-rect` |
+| Snip type: window | Snips one window. | `snipping-tool-type-window` |
+| Snip type: full screen | Snips the whole desktop. | `snipping-tool-type-full` |
+| Cancel | Stops the snip. | `snipping-tool-cancel` |
+| Options | Opens the options. | `snipping-tool-options` |
+| Copy | Copies the snip. | `snipping-tool-copy` |
+| Delay | Options dialog: the seconds to wait before the snip. | `snipping-tool-delay` |
 
 ### Menu Bar and Context Menu
 

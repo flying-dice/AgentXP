@@ -6,6 +6,8 @@
 
   type View = 'days' | 'months' | 'years'
   type Props = {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     value?: Date
     min?: Date
     max?: Date
@@ -17,6 +19,7 @@
     class?: string
   }
   let {
+    testid,
     value = $bindable(startOfDay(new Date())),
     min,
     max,
@@ -96,7 +99,7 @@
   }
 </script>
 
-<div class="xp-cal {className}" class:disabled>
+<div data-testid={testid} class="xp-cal {className}" class:disabled>
   <div class="head">
     <button type="button" class="nav" aria-label="Previous" {disabled} onclick={() => step(-1)}>
       <svg width="6" height="9"><path d="M6 0 0 4.5 6 9z" fill="currentColor" /></svg>

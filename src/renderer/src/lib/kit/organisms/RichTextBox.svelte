@@ -2,6 +2,8 @@
   import MarkdownView from './MarkdownView.svelte'
 
   interface Props {
+    /** `data-testid` of the control (agents and e2e specs find it by this id). */
+    testid?: string
     /** Markdown source (readOnly) or plain text (editable). */
     value?: string
     readOnly?: boolean
@@ -18,6 +20,7 @@
   }
 
   let {
+    testid,
     value = $bindable(''),
     readOnly = false,
     markdown = true,
@@ -51,7 +54,7 @@
   }
 </script>
 
-<div class="xp-richtextbox {className}" class:disabled style:height>
+<div data-testid={testid} class="xp-richtextbox {className}" class:disabled style:height>
   {#if showMarkdown}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div class="scroll xp-scroll" tabindex="0" role="region" aria-label={label}>

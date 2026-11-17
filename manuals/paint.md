@@ -68,6 +68,10 @@ Each Agent Paint window has a chat pane at its right edge. The pane starts close
 | Swatch | Sets the selected color slot to this color. | `paint-swatch` |
 | Canvas | The drawing area. | `paint-canvas` |
 | Agent is drawing | Shows that the agent draws. | `paint-agent-drawing` |
+| Text box | The text you type with the Text tool. | `paint-text-input` |
+| Canvas grip | Drag it to resize the picture. | `paint-canvas-grip` |
+| Color 1 | The colour of the left mouse button. Click to pick it in the palette. | `paint-color-1` |
+| Color 2 | The colour of the right mouse button. Click to pick it in the palette. | `paint-color-2` |
 
 ### Menu Bar and Context Menu
 

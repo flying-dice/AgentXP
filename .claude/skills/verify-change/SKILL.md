@@ -51,8 +51,10 @@ await setWindowSize(ctx.app, ctx.desktopPage, 900, 600) // the smallest window t
 
 Prefer turning this walk-through into a real spec with assertions (it keeps the check alive), as
 `e2e/popup-placement.e2e.ts` does. A throwaway spec is fine for a one-off look; delete it before committing.
-Locators are `getByTestId` only. If the element you need has no `data-testid`, add one in the component (and the
-manual's Controls Reference) instead of reaching for CSS selectors.
+Locators are `getByTestId` only. Every interactive element and every open menu has a stable `data-testid`
+(`npm run testids` enforces it), so you can find and measure anything you changed (`boundingBox()`, `getAttribute`).
+If one is missing, that is a bug: add the id in the component (and the manual's Controls Reference) instead of
+reaching for CSS selectors.
 
 ## 3. Cover the matrix
 
@@ -104,5 +106,5 @@ and why.
 ## 6. Then the usual gates
 
 Run the local checks (do not rely on GitHub Actions): `npm run typecheck`, `npm test`, `npm run help:coverage`,
-`npm run app:pillars`, `node scripts/check-e2e-selectors.mjs`, and the e2e specs that cover the change. Only merge
+`npm run app:pillars`, `npm run testids`, `node scripts/check-e2e-selectors.mjs`, and the e2e specs that cover the change. Only merge
 when these pass **and** the Manual verification section is filled.

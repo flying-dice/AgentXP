@@ -247,7 +247,7 @@
         <div class="page">
           {#if t.id === 'processes'}
             <div class="grid">
-              <DataGridView columns={procColumns} rows={procRows} readOnly rowHeaders={false} aria-label="Agent processes" onselect={(cell) => (current = cell)} />
+              <DataGridView testid="agent-manager-processes" columns={procColumns} rows={procRows} readOnly rowHeaders={false} aria-label="Agent processes" onselect={(cell) => (current = cell)} />
               {#if procRows.length === 0}<div class="empty">No agent is running. Start a chat to launch one.</div>{/if}
             </div>
             <div class="buttons">
@@ -266,7 +266,7 @@
             </div>
           {:else if t.id === 'terminals'}
             <div class="grid">
-              <ListView columns={terminalColumns} rows={termRows} aria-label="Terminals" emptyText="No chat has opened a terminal yet." />
+              <ListView testid="agent-manager-terminals" columns={terminalColumns} rows={termRows} aria-label="Terminals" emptyText="No chat has opened a terminal yet." />
             </div>
           {:else}
             <div class="perf xp-scroll" aria-label="Context use per chat">
