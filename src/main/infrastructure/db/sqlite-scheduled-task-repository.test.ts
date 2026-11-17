@@ -48,7 +48,7 @@ describe('bit sets', () => {
   })
 })
 
-describe('migration 013', () => {
+describe('migration 015', () => {
   it('lets the Task Scheduler have a window row', () => {
     const { db, desktop } = setup()
     const windows = new SqliteAppWindowRepository(db)
