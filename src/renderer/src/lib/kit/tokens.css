@@ -95,12 +95,12 @@
   --w7-caption-close-face: linear-gradient(#f0b3a8 0, #d9604f 48%, #c4301e 50%, #e0604a 100%);
   --w7-caption-close-hover-face: linear-gradient(#ffd0c4 0, #f58a74 48%, #e5381c 50%, #ff8a6a 100%);
   --w7-caption-close-active-face: linear-gradient(#b4574c 0, #9e2a1d 48%, #8a1608 50%, #a9392a 100%);
-  --w7-desktop-bg: radial-gradient(ellipse at 72% 22%, rgba(150, 215, 250, 0.9) 0, rgba(150, 215, 250, 0) 46%),
-    radial-gradient(ellipse at 15% 90%, rgba(8, 52, 120, 0.85) 0, rgba(8, 52, 120, 0) 55%),
-    linear-gradient(160deg, #134b8a 0, #2a86c8 55%, #7cc4ee 100%);
-  --w7-taskbar-face: linear-gradient(180deg, rgba(40, 70, 110, 0.45) 0, rgba(14, 30, 58, 0.62) 50%, rgba(6, 14, 30, 0.74) 100%);
+  --w7-desktop-bg: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%20900%22%20preserveAspectRatio%3D%22none%22%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M-50%20330%20C500%20140%20900%20-60%201200%20-80%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.85%22%20stroke-width%3D%225%22/%3E%3Cpath%20d%3D%22M-50%20420%20C450%20250%20850%2020%201150%20-60%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.45%22%20stroke-width%3D%222%22/%3E%3Cpath%20d%3D%22M420%20980%20C560%20650%20800%20300%201060%20-50%22%20stroke%3D%22%23c9f26b%22%20stroke-opacity%3D%22.9%22%20stroke-width%3D%229%22/%3E%3Cpath%20d%3D%22M400%20980%20C540%20650%20780%20300%201040%20-50%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.5%22%20stroke-width%3D%222%22/%3E%3Cpath%20d%3D%22M200%20980%20C400%20700%20700%20400%20900%20150%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.35%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat,
+    radial-gradient(ellipse at 70% 15%, rgba(190, 240, 255, 0.95) 0, rgba(190, 240, 255, 0) 55%),
+    linear-gradient(160deg, #1a8fd8 0, #35a9e8 50%, #8fd6f5 100%);
+  --w7-taskbar-face: linear-gradient(180deg, rgba(150, 205, 245, 0.34) 0, rgba(50, 120, 190, 0.46) 100%);
   --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.16));
-  --w7-glass-blur: blur(14px) saturate(1.8);
+  --w7-glass-blur: blur(12px) saturate(1.5) brightness(1.1);
   --w7-code-bg: #fff;
   --w7-code-gutter: #2b91af;
   --w7-code-gutter-bg: #fff;

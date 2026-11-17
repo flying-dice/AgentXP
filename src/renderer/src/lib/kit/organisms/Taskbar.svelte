@@ -136,15 +136,15 @@
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(105deg, transparent 0, rgba(255, 255, 255, 0.2) 18%, rgba(255, 255, 255, 0.04) 34%, transparent 35%, transparent 60%, rgba(255, 255, 255, 0.1) 78%, transparent 100%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.18) 100%),
+      linear-gradient(112deg, transparent 0, rgba(255, 255, 255, 0.22) 12%, transparent 30%, transparent 62%, rgba(255, 255, 255, 0.16) 80%, transparent 96%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.08) 55%, rgba(255, 255, 255, 0.02) 100%),
       var(--w7-taskbar-face);
     backdrop-filter: var(--w7-glass-blur);
-    border-top: 1px solid rgba(255, 255, 255, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-      0 -1px 0 rgba(0, 0, 0, 0.35);
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 0 0 1px rgba(30, 70, 120, 0.25),
+      0 -1px 0 rgba(20, 50, 90, 0.35);
     pointer-events: none;
   }
   .strip {
@@ -255,9 +255,8 @@
   }
   /* Glass button: a dark outer ring, a bright inner ring, a glossy upper half. */
   .task.running {
-    border-color: rgba(8, 18, 36, 0.7);
-    background:
-      linear-gradient(rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.14) 100%);
+    border-color: rgba(20, 50, 90, 0.55);
+    background: linear-gradient(rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0.18) 100%);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.4),
       inset 0 -6px 8px -4px rgba(var(--glow), 0.5);
@@ -265,7 +264,7 @@
   .task.running.active {
     background:
       radial-gradient(ellipse at var(--mx) 100%, rgba(var(--glow), 0.75), rgba(var(--glow), 0) 75%),
-      linear-gradient(rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0.24) 49%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.3) 100%);
+      linear-gradient(rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0.3) 100%);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.65),
       inset 0 -8px 10px -4px rgba(var(--glow), 0.8);
@@ -282,15 +281,15 @@
     }
     50% {
       background: var(--w7-taskbtn-face);
-      border-color: rgba(8, 18, 36, 0.7);
+      border-color: rgba(20, 50, 90, 0.55);
     }
   }
   /* Hover: a light follows the pointer, in the colour of the icon. */
   .task:hover {
-    border-color: rgba(8, 18, 36, 0.7);
+    border-color: rgba(20, 50, 90, 0.55);
     background:
       radial-gradient(ellipse 60% 90% at var(--mx) 100%, rgba(var(--glow), 0.85), rgba(var(--glow), 0) 100%),
-      linear-gradient(rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0.16) 100%);
+      linear-gradient(rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.16) 100%);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.55),
       0 0 6px rgba(var(--glow), 0.5);
