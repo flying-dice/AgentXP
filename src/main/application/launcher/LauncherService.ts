@@ -36,6 +36,8 @@ export interface LauncherDeps {
   notifier: ApprovalNotifier
   /** Drops the desktop's protocol events (Event Viewer log). */
   clearLog(desktopId: Id): void
+  /** Ends the runs of the desktop's scheduled tasks before the desktop and its tasks are deleted. */
+  forgetScheduledTasks?(desktopId: Id): void
   events: EventPublisher
 }
 
@@ -147,6 +149,7 @@ export class LauncherService {
   async remove(id: Id): Promise<void> {
     this.record(id)
     this.deps.host.close(id)
+    this.deps.forgetScheduledTasks?.(id)
     for (const session of this.deps.sessions.listByDesktop(id)) await this.deps.chats.remove(session.id)
     this.deps.desktopService.forget(id)
     this.startFailures.delete(id)

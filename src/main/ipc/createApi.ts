@@ -10,6 +10,7 @@ import type { ReviewService } from '../application/review/ReviewService'
 import type { DriveService } from '../application/vfs/DriveService'
 import type { LauncherService } from '../application/launcher/LauncherService'
 import type { RecycleService } from '../application/RecycleService'
+import type { SchedulerService } from '../application/scheduler/SchedulerService'
 import type { StickyNoteService } from '../application/desktop/StickyNoteService'
 import type { KanbanService } from '../application/kanban/KanbanService'
 import type { DesktopService } from '../application/desktop/DesktopService'
@@ -42,6 +43,7 @@ export interface ApiServices {
   vfs: VirtualFileSystem
   git: GitService
   reviews: ReviewService
+  scheduler: SchedulerService
   drives: DriveService
   launcher: LauncherService
   processes: ProcessService
@@ -141,6 +143,17 @@ export function createApi(s: ApiServices): InvokeApi {
       setState: async (commentId, state) => s.reviews.setState(commentId, state),
       remove: async (commentId) => s.reviews.remove(commentId),
       markSent: async (sessionId, ids) => s.reviews.markSent(sessionId, ids)
+    },
+    scheduler: {
+      list: async (desktopId) => s.scheduler.list(desktopId),
+      create: async (desktopId, input) => s.scheduler.create(desktopId, input),
+      update: async (id, input) => s.scheduler.update(id, input),
+      remove: async (id) => s.scheduler.remove(id),
+      setEnabled: async (id, enabled) => s.scheduler.setEnabled(id, enabled),
+      run: async (id) => s.scheduler.run(id),
+      end: async (id) => s.scheduler.end(id),
+      history: async (id) => s.scheduler.history(id),
+      clearHistory: async (id) => s.scheduler.clearHistory(id)
     },
     drives: {
       list: async (desktopId) => s.drives.list(desktopId),

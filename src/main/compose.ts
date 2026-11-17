@@ -9,6 +9,10 @@ import { AppRequestBroker } from './application/desktop/AppRequestBroker'
 import { StickyNoteService } from './application/desktop/StickyNoteService'
 import { ProtocolEventLog } from './application/events/ProtocolEventLog'
 import { RecycleService } from './application/RecycleService'
+import { AgentActionRunner } from './application/scheduler/AgentActionRunner'
+import { ProtocolSchedulerLog } from './application/scheduler/ProtocolSchedulerLog'
+import { SchedulerService } from './application/scheduler/SchedulerService'
+import { TaskEngine } from './application/scheduler/TaskEngine'
 import { DesktopService } from './application/desktop/DesktopService'
 import { createMemoryWindowHost, type DesktopWindowHost } from './application/desktop/ports'
 import { LauncherService, type ApprovalNotifier } from './application/launcher/LauncherService'
@@ -92,7 +96,9 @@ import { SqlitePermissionRepository } from './infrastructure/db/sqlite-permissio
 import { SqliteSessionRepository } from './infrastructure/db/sqlite-session-repository'
 import { SqliteRecycledChangeRepository } from './infrastructure/db/sqlite-recycled-change-repository'
 import { SqliteStickyNoteRepository } from './infrastructure/db/sqlite-sticky-note-repository'
+import { SqliteScheduledTaskRepository } from './infrastructure/db/sqlite-scheduled-task-repository'
 import { SqliteTaskRepository } from './infrastructure/db/sqlite-task-repository'
+import { SqliteTaskRunRepository } from './infrastructure/db/sqlite-task-run-repository'
 import { SqliteTerminalRepository } from './infrastructure/db/sqlite-terminal-repository'
 import { SqliteTranscriptRepository } from './infrastructure/db/sqlite-transcript-repository'
 import { FileThumbnailStore } from './infrastructure/fs/FileThumbnailStore'
@@ -177,6 +183,9 @@ export interface AppServices {
   a2ui: A2uiService
   /** Desktops, their windows and the tools that follow the apps. */
   desktops: DesktopService
+  /** The Task Scheduler: scheduled tasks that run agents (the engine starts with `start()`). */
+  scheduler: SchedulerService
+  taskEngine: TaskEngine
   /** The launcher: desktops as long-lived projects (connect, disconnect, create, delete). */
   launcher: LauncherService
   /** The drives (C: and USB projects) of every desktop and the virtual file system over them. */
@@ -224,7 +233,9 @@ export function composeApp(options: ComposeOptions): AppServices {
     mcpServers: new SqliteMcpServerRepository(db),
     profiles: new SqliteProfileRepository(db),
     teams: new SqliteTeamRepository(db),
-    rooms: new SqliteRoomRepository(db)
+    rooms: new SqliteRoomRepository(db),
+    scheduledTasks: new SqliteScheduledTaskRepository(db),
+    taskRuns: new SqliteTaskRunRepository(db)
   }
   const capabilities = new AgentCapabilities({
     skills: repos.skills,
@@ -357,6 +368,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     thumbnails,
     notifier: options.notifier ?? { approvalNeeded: () => {} },
     clearLog: (desktopId) => eventLog.clear(desktopId),
+    forgetScheduledTasks: (desktopId) => taskEngine.forgetDesktop(desktopId),
     events: publisher
   })
   drives.observe((desktopId) => {
@@ -366,6 +378,28 @@ export function composeApp(options: ComposeOptions): AppServices {
   broker.observe((change) => {
     if (change.kind === 'requested') launcher.onApprovalRequested(change.request.sessionId)
     else launcher.publishChanged()
+  })
+  // The Task Scheduler runs for every desktop, connected or not, while Agent7 runs.
+  const schedulerLog = new ProtocolSchedulerLog(eventLog)
+  const taskEngine = new TaskEngine({
+    tasks: repos.scheduledTasks,
+    runs: repos.taskRuns,
+    runner: new AgentActionRunner({ chats: sessions, sessions: repos.sessions, agents: repos.agents }),
+    world: {
+      isPaused: (desktopId) => repos.desktops.get(desktopId)?.paused ?? false,
+      agentBusy: (desktopId) => repos.sessions.list(desktopId).some((s) => s.status === 'working' || s.status === 'awaiting_permission')
+    },
+    log: schedulerLog
+  })
+  const scheduler = new SchedulerService({
+    tasks: repos.scheduledTasks,
+    runs: repos.taskRuns,
+    engine: taskEngine,
+    desktops: repos.desktops,
+    agents: repos.agents,
+    sessions: repos.sessions,
+    events: publisher,
+    log: schedulerLog
   })
   const gateway = new ToolGateway({ desktops, broker, events: eventBus })
   const reviews = new ReviewService({ reviews: repos.reviews, sessions: repos.sessions, vfs, cli: gitCli, events: publisher, states: desktops })
@@ -448,6 +482,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     vfs,
     git,
     reviews,
+    scheduler,
     drives,
     launcher,
     processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage()),
@@ -495,6 +530,8 @@ export function composeApp(options: ComposeOptions): AppServices {
     broker,
     a2ui,
     desktops,
+    scheduler,
+    taskEngine,
     launcher,
     drives,
     vfs,
@@ -509,8 +546,10 @@ export function composeApp(options: ComposeOptions): AppServices {
       await bridge.start()
       thumbnails.start()
       git.start()
+      taskEngine.start()
     },
     shutdown: async () => {
+      taskEngine.stop()
       thumbnails.stop()
       git.stop()
       agui.dispose()

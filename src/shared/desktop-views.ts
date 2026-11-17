@@ -28,7 +28,8 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   help: { x: 150, y: 70, width: 800, height: 560 },
   'code-review': { x: 50, y: 30, width: 1120, height: 650 },
   teams: { x: 190, y: 90, width: 820, height: 560 },
-  'team-chat': { x: 60, y: 50, width: 760, height: 580 }
+  'team-chat': { x: 60, y: 50, width: 760, height: 580 },
+  'task-scheduler': { x: 110, y: 70, width: 1000, height: 600 }
 }
 
 /** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
@@ -302,6 +303,8 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'teams', tab: 'teams', selectedId: null }
     case 'team-chat':
       return { app: 'team-chat', roomId: input.roomId ?? 0, title }
+    case 'task-scheduler':
+      return { app: 'task-scheduler', selectedTaskId: null, tab: 'general' }
     case 'code-review':
       return { app: 'code-review', root: input.path ?? AGENT_HOME, baseRef: input.baseRef ?? 'HEAD', selectedPath: input.selectedPath ?? null, sessionId: input.sessionId ?? 0 }
   }
