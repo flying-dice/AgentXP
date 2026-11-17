@@ -72,7 +72,8 @@ export class TaskSchedulerWindow {
   /** Picks an entry of a ComboBox (its test id and the value of the entry). */
   async choose(combo: string, value: string): Promise<void> {
     await this.id(combo).click()
-    await this.id(`${combo}-option-${value}`).click()
+    // The list opens in the popup layer (above every window), outside this window frame.
+    await this.frame.page().getByTestId(`${combo}-option-${value}`).click()
   }
 
   /** Brings a check box to a state (it toggles only when it differs). */

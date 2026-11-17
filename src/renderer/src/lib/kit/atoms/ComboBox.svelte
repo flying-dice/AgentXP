@@ -3,6 +3,7 @@
   import { clickOutside } from '../actions/clickOutside'
   import type { ComboItem } from './ComboBox'
   import { positionPopup, type PopupPosition } from '../actions/popup'
+  import { portal } from '../actions/portal'
 
   interface Props {
     items: ComboItem[]
@@ -215,6 +216,7 @@
   {#if open && position}
     <div
       bind:this={listEl}
+      use:portal
       id="{uid}-list"
       class="popup"
       role="listbox"

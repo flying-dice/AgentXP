@@ -157,6 +157,7 @@
     {#key openIndex}
       <MenuPopup
         bind:element={popup}
+        layer
         testid="menubar-{menuSlug(menus[openIndex].label)}-menu"
         items={menus[openIndex].items}
         label={menus[openIndex].label.replace('&', '')}

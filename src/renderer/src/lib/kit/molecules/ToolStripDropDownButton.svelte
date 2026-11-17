@@ -79,6 +79,7 @@
   {#if open}
     <MenuPopup
       bind:element={popup}
+      layer
       testid={testid ? `${testid}-menu` : undefined}
       {items}
       label={text ?? title}

@@ -61,6 +61,7 @@
   <div class="cms" use:clickOutside={{ handler: close }}>
     <MenuPopup
       bind:element
+      layer
       {testid}
       {items}
       {label}
