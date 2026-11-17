@@ -98,9 +98,9 @@
   --w7-desktop-bg: radial-gradient(ellipse at 72% 22%, rgba(150, 215, 250, 0.9) 0, rgba(150, 215, 250, 0) 46%),
     radial-gradient(ellipse at 15% 90%, rgba(8, 52, 120, 0.85) 0, rgba(8, 52, 120, 0) 55%),
     linear-gradient(160deg, #134b8a 0, #2a86c8 55%, #7cc4ee 100%);
-  --w7-taskbar-face: linear-gradient(180deg, rgba(120, 165, 215, 0.5) 0, rgba(40, 80, 135, 0.58) 45%, rgba(14, 38, 76, 0.7) 100%);
+  --w7-taskbar-face: linear-gradient(180deg, rgba(40, 70, 110, 0.45) 0, rgba(14, 30, 58, 0.62) 50%, rgba(6, 14, 30, 0.74) 100%);
   --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.16));
-  --w7-glass-blur: blur(10px) saturate(1.6);
+  --w7-glass-blur: blur(14px) saturate(1.8);
   --w7-code-bg: #fff;
   --w7-code-gutter: #2b91af;
   --w7-code-gutter-bg: #fff;

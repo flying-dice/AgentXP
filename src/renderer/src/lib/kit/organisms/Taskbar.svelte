@@ -78,6 +78,7 @@
         class="task"
         data-testid={item.testid}
         data-window-id={item.id}
+        data-accent={item.icon}
         class:pinned={item.pinned && !item.running}
         class:running={item.running}
         class:active={item.active}
@@ -86,6 +87,10 @@
         aria-label={item.title}
         aria-pressed={item.running ? !!item.active : undefined}
         title={item.title}
+        onpointermove={(e) => {
+          const r = e.currentTarget.getBoundingClientRect()
+          e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+        }}
         onclick={(e) => onitemclick?.(item, { keyboard: e.detail === 0 })}
         oncontextmenu={(e) => {
           e.preventDefault()
@@ -116,93 +121,154 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 8px 0 6px;
+    padding: 0 8px 0 4px;
     position: relative;
     isolation: isolate;
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     font: var(--w7-font);
     color: #000;
     user-select: none;
   }
-  /* A layer, not a backdrop-filter on the bar: that would make the bar the containing block of fixed popups (the USB menu). */
+  /* The Aero glass: a layer, not a backdrop-filter on the bar (that would make the bar the containing block of fixed popups, e.g. the USB menu).
+     Wallpaper blurs through a dark tint; the upper half is lighter than the lower one; a diagonal sheen crosses it; a bright hairline caps the top. */
   .w7-taskbar::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: var(--w7-taskbar-face);
+    background:
+      linear-gradient(105deg, transparent 0, rgba(255, 255, 255, 0.2) 18%, rgba(255, 255, 255, 0.04) 34%, transparent 35%, transparent 60%, rgba(255, 255, 255, 0.1) 78%, transparent 100%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.18) 100%),
+      var(--w7-taskbar-face);
     backdrop-filter: var(--w7-glass-blur);
+    border-top: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.22),
+      0 -1px 0 rgba(0, 0, 0, 0.35);
     pointer-events: none;
   }
   .strip {
+    align-self: stretch;
     flex: 1;
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
+  /* The Start orb: a glass sphere rising above the bar, with the Agent7 squares inside. */
   .orb {
     position: relative;
     flex: none;
-    width: 40px;
-    height: 40px;
-    margin: -3px 2px -3px 0;
+    width: 46px;
+    height: 46px;
+    align-self: flex-end;
+    margin: 0 4px 0 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid rgba(8, 24, 52, 0.9);
-    background: radial-gradient(circle at 50% 120%, rgba(120, 220, 255, 0.95) 0, rgba(40, 130, 220, 0.9) 35%, rgba(12, 52, 112, 0.95) 75%),
-      #0a2f66;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 -6px 10px rgba(100, 210, 255, 0.45), 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 0;
+    background:
+      radial-gradient(circle at 50% 108%, rgba(140, 240, 255, 0.95) 0, rgba(60, 170, 235, 0.75) 38%, rgba(20, 80, 160, 0) 68%),
+      radial-gradient(circle at 50% 30%, #3d86d1 0, #1b4f9a 55%, #0b2c63 100%);
+    box-shadow:
+      0 0 0 1px rgba(2, 10, 28, 0.95),
+      0 0 0 2px rgba(255, 255, 255, 0.28),
+      inset 0 0 0 1px rgba(190, 235, 255, 0.55),
+      inset 0 -7px 12px rgba(110, 225, 255, 0.5),
+      0 2px 7px rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: default;
+    transition: box-shadow 0.15s, filter 0.15s;
   }
+  .orb :global(svg) {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 1px 2px rgba(0, 20, 60, 0.7));
+  }
+  /* Upper glare. */
   .orb-gloss {
     position: absolute;
-    left: 5px;
-    right: 5px;
+    left: 6px;
+    right: 6px;
     top: 2px;
-    height: 17px;
-    border-radius: 50% 50% 46% 46%;
-    background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.08));
+    height: 19px;
+    border-radius: 50% 50% 55% 55% / 80% 80% 40% 40%;
+    background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.12));
+    pointer-events: none;
+  }
+  /* Lower rim light. */
+  .orb::after {
+    content: '';
+    position: absolute;
+    left: 11px;
+    right: 11px;
+    bottom: 2px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 100%, rgba(200, 250, 255, 0.85), rgba(200, 250, 255, 0) 70%);
     pointer-events: none;
   }
   .orb:hover,
   .orb.open {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 -6px 12px rgba(150, 235, 255, 0.85), 0 0 12px rgba(150, 220, 255, 0.95);
+    filter: brightness(1.12) saturate(1.15);
+    box-shadow:
+      0 0 0 1px rgba(2, 10, 28, 0.95),
+      0 0 0 2px rgba(255, 255, 255, 0.45),
+      inset 0 0 0 1px rgba(220, 245, 255, 0.8),
+      inset 0 -8px 14px rgba(150, 240, 255, 0.85),
+      0 0 14px 3px rgba(120, 210, 255, 0.85);
+  }
+  .orb.open {
+    filter: brightness(1.2) saturate(1.2);
   }
   .orb:active {
-    filter: brightness(0.9);
+    filter: brightness(0.88);
   }
   .task {
     position: relative;
     flex: none;
-    width: 50px;
+    width: 52px;
     height: 38px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-radius: 3px;
+    border-radius: 4px;
     border: 1px solid transparent;
     background: transparent;
     color: #000;
     font: inherit;
     cursor: default;
+    --glow: 120, 190, 255;
+    --mx: 50%;
   }
-  /* A running app gets the glass frame; the focused one is brighter. Pinned launchers have none until hovered. */
+  .task[data-accent='folder'] {
+    --glow: 255, 205, 90;
+  }
+  .task[data-accent='claude'] {
+    --glow: 255, 150, 90;
+  }
+  .task[data-accent='terminal'] {
+    --glow: 190, 200, 215;
+  }
+  /* Glass button: a dark outer ring, a bright inner ring, a glossy upper half. */
   .task.running {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: var(--w7-taskbtn-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(160, 215, 255, 0.55);
+    border-color: rgba(8, 18, 36, 0.7);
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.14) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+      inset 0 -6px 8px -4px rgba(var(--glow), 0.5);
   }
   .task.running.active {
-    border-color: rgba(255, 255, 255, 0.7);
-    background: linear-gradient(rgba(255, 255, 255, 0.6), rgba(210, 232, 252, 0.28) 50%, rgba(170, 210, 245, 0.3));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(190, 230, 255, 0.85);
+    background:
+      radial-gradient(ellipse at var(--mx) 100%, rgba(var(--glow), 0.75), rgba(var(--glow), 0) 75%),
+      linear-gradient(rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0.24) 49%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.3) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.65),
+      inset 0 -8px 10px -4px rgba(var(--glow), 0.8);
   }
   .task.flashing {
     animation: task-flash 1s steps(1, end) infinite;
@@ -210,22 +276,28 @@
   @keyframes task-flash {
     0%,
     100% {
-      background: linear-gradient(rgba(255, 214, 120, 0.95), rgba(255, 170, 40, 0.8) 55%, rgba(240, 140, 20, 0.75));
-      border-color: #fff3c4;
+      background: linear-gradient(rgba(255, 220, 140, 0.95), rgba(255, 170, 40, 0.8) 50%, rgba(240, 130, 10, 0.8));
+      border-color: #5a3200;
+      box-shadow: inset 0 0 0 1px rgba(255, 245, 200, 0.8);
     }
     50% {
       background: var(--w7-taskbtn-face);
-      border-color: rgba(255, 255, 255, 0.4);
+      border-color: rgba(8, 18, 36, 0.7);
     }
   }
+  /* Hover: a light follows the pointer, in the colour of the icon. */
   .task:hover {
-    border-color: rgba(255, 255, 255, 0.75);
-    background: radial-gradient(ellipse at 50% 100%, rgba(190, 235, 255, 0.8), rgba(255, 255, 255, 0.18) 70%),
-      linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.12));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 0 4px rgba(255, 255, 255, 0.3);
+    border-color: rgba(8, 18, 36, 0.7);
+    background:
+      radial-gradient(ellipse 60% 90% at var(--mx) 100%, rgba(var(--glow), 0.85), rgba(var(--glow), 0) 100%),
+      linear-gradient(rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.14) 49%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0.16) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+      0 0 6px rgba(var(--glow), 0.5);
   }
   .task:active {
-    background: linear-gradient(rgba(120, 160, 205, 0.6), rgba(150, 190, 235, 0.45));
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(var(--glow), 0.3));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.5);
   }
   /* A dotted ring in black on white, so it shows (3:1) on the light glass and on the dark one. */
   .orb:focus-visible,
