@@ -39,6 +39,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Agent Paint | `paint` | no | MCP `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` | file path, canvas size, tool, colour, dirty flag |
 | WordPad | `wordpad` | no | MCP `wordpad_open`, `wordpad_read` (incl. unsaved text), `wordpad_write` (recorded as an agent file change) | file path, read/edit mode, dirty flag, visible heading |
 | Sticky Notes | `sticky-notes` | yes | MCP `notes_list`, `notes_add` (`plan: true` for the chat's plan), `notes_update`, `notes_remove` | none (the notes themselves are in the desktop state) |
+| Kanban | `kanban` | yes | MCP `board_*` (`board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card`). The `board` tool group is **always on** (`ALWAYS_ON_TOOL_GROUPS`): agents work on boards without the window, gated by the Control Center policy only. | open board |
 | Event Viewer | `event-viewer` | yes | MCP `events_query` (chat, source, level, text; at most 200 compact lines) | chat filter, level filter, selected event |
 | Snipping Tool | `snipping-tool` | yes | MCP `screen_capture` (whole desktop or one window) | last snip id |
 | Recycle Bin | `recycle-bin` | yes | MCP `recycle_list`, `recycle_restore` | selected item |
@@ -330,6 +331,7 @@ Every app window has a collapsible chat pane at its right edge: short, local and
 | Event Viewer, Task Manager, Recycle Bin | `selectedRow` (and the filter, the tab or the item count) |
 | Paint | `canvas` (width, height), `tool`, `color` |
 | Sticky Notes | `note` (the selected note) or `notes` |
+| Kanban | `board` (the open board as text with ids) and `selectedCard` |
 | Help, Control Center, Snipping Tool | `topic`, `page`, `hasSnip` |
 
 **Compact UX.** The pane uses a dense composer and suggestion chips from `suggestionsFor(app, context)` ("Explain this", "Summarise this page", "What changed in this file?"). Before the first message the pane shows a composer without a session: `EmbeddedChat.onstart` creates the aside, then the message is sent to it.

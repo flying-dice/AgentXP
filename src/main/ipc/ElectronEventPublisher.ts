@@ -21,6 +21,8 @@ function desktopOf<K extends AppEventName>(event: K, payload: AppEvents[K]): Id 
       return (payload as AppEvents['desktop.appRequest']).desktopId
     case 'notes.changed':
       return (payload as AppEvents['notes.changed']).desktopId
+    case 'kanban.changed':
+      return (payload as AppEvents['kanban.changed']).desktopId
     case 'recycle.changed':
       return (payload as AppEvents['recycle.changed']).desktopId
     case 'git.changed':

@@ -102,6 +102,18 @@ const TITLES: Record<string, string> = {
   notes_add: 'Add a sticky note',
   notes_update: 'Change a sticky note',
   notes_remove: 'Remove a sticky note',
+  board_list: 'List the Kanban boards',
+  board_get: 'Read a Kanban board',
+  board_create: 'Create a Kanban board',
+  board_rename: 'Rename a Kanban board',
+  board_delete: 'Delete a Kanban board',
+  board_add_column: 'Add a Kanban column',
+  board_rename_column: 'Rename a Kanban column',
+  board_delete_column: 'Delete a Kanban column',
+  board_add_card: 'Add a Kanban card',
+  board_update_card: 'Change a Kanban card',
+  board_move_card: 'Move a Kanban card',
+  board_delete_card: 'Delete a Kanban card',
   a2ui_render: 'Show a form or a window',
   a2ui_delete_surface: 'Remove a form or a window'
 }

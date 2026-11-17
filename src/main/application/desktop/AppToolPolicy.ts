@@ -22,6 +22,7 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   events: 'Event Viewer tools',
   snip: 'Screen capture',
   recycle: 'Recycle Bin tools',
+  board: 'Kanban board tools',
   review: 'Code review tools'
 }
 

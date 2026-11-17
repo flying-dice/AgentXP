@@ -18,6 +18,7 @@ describe('permissionsTable', () => {
       'Events',
       'Screen capture',
       'Recycle Bin',
+      'Kanban boards',
       'Code review',
       'Agent may open apps'
     ])
@@ -52,7 +53,7 @@ describe('permissionsTable', () => {
     expect(groups.map((g) => g.title)).toEqual(['What the agent may do', 'Apps the agent may use'])
     expect(groups[0].rows.map((r) => r.key)).toEqual(['fs.read', 'fs.write', 'terminal'])
     expect(groups[1].rows.at(-1)?.key).toBe('openApps')
-    expect(groups.flatMap((g) => g.rows)).toHaveLength(14)
+    expect(groups.flatMap((g) => g.rows)).toHaveLength(15)
   })
 
   it('sets every permission at once without touching the original', () => {

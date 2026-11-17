@@ -11,7 +11,7 @@ export const iconNames = [
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
   'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agent7',
   'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
-  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library'
+  'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban'
 ] as const
 
 export type IconName = (typeof iconNames)[number]
@@ -284,6 +284,15 @@ const markup: Record<IconName, string> = {
     '<path d="M2 2.5h12v8.5l-3.5 3.5H2z" fill="url(#~y)" stroke="#a38a14" stroke-linejoin="round"/>' +
       '<path d="M10.5 14.5V11H14" fill="#e6c52c" stroke="#a38a14" stroke-linejoin="round"/>' +
       '<path d="M4 5.5h8M4 7.5h8M4 9.5h4" stroke="#b39a28"/>'
+  ),
+  kanban: defs(
+    vg('p', '#ffffff', '#dde6f1') + vg('c', '#fff9c8', '#f2d94a'),
+    '<rect x="1.5" y="1.5" width="13" height="13" fill="url(#~p)" stroke="#6b7886"/>' +
+      '<path d="M5.5 1.5v13M10.5 1.5v13" stroke="#9aa7b8"/>' +
+      '<rect x="2.5" y="3" width="2" height="3" fill="url(#~c)" stroke="#a38a14" stroke-width=".7"/>' +
+      '<rect x="2.5" y="7" width="2" height="2.5" fill="url(#~c)" stroke="#a38a14" stroke-width=".7"/>' +
+      '<rect x="6.5" y="3" width="3" height="3.5" fill="url(#~c)" stroke="#a38a14" stroke-width=".7"/>' +
+      '<rect x="11.5" y="3" width="2" height="2.5" fill="#bfe0a8" stroke="#4d8a2a" stroke-width=".7"/>'
   ),
   eventlog: defs(
     docDefs + rg('w', '#fff6c0', '#f0b81c'),

@@ -15,19 +15,19 @@ const policy = (patch: Partial<ToolPolicyDto['groups']> = {}): ToolPolicyDto => 
 
 describe('enabledToolGroups (open apps -> tool groups)', () => {
   it('always has the shell group', () => {
-    expect(enabledToolGroups([])).toEqual(['shell'])
+    expect(enabledToolGroups([])).toEqual(['shell', 'board'])
   })
 
   it('follows the apps that provide each group', () => {
-    expect(enabledToolGroups(['explorer'])).toEqual(['shell', 'fs.read'])
-    expect(enabledToolGroups(['notepad'])).toEqual(['shell', 'fs.write', 'notepad'])
-    expect(enabledToolGroups(['code'])).toEqual(['shell', 'fs.read', 'fs.write', 'code'])
-    expect(enabledToolGroups(['terminal', 'browser'])).toEqual(['shell', 'terminal', 'browser'])
-    expect(enabledToolGroups(['chat', 'control-centre', 'agent-manager'])).toEqual(['shell'])
-    expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes'])
-    expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events'])
-    expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle'])
-    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'review'])
+    expect(enabledToolGroups(['explorer'])).toEqual(['shell', 'fs.read', 'board'])
+    expect(enabledToolGroups(['notepad'])).toEqual(['shell', 'fs.write', 'notepad', 'board'])
+    expect(enabledToolGroups(['code'])).toEqual(['shell', 'fs.read', 'fs.write', 'code', 'board'])
+    expect(enabledToolGroups(['terminal', 'browser'])).toEqual(['shell', 'terminal', 'browser', 'board'])
+    expect(enabledToolGroups(['chat', 'control-centre', 'agent-manager'])).toEqual(['shell', 'board'])
+    expect(enabledToolGroups(['paint', 'sticky-notes'])).toEqual(['shell', 'paint', 'notes', 'board'])
+    expect(enabledToolGroups(['wordpad', 'event-viewer'])).toEqual(['shell', 'wordpad', 'events', 'board'])
+    expect(enabledToolGroups(['snipping-tool', 'recycle-bin'])).toEqual(['shell', 'snip', 'recycle', 'board'])
+    expect(enabledToolGroups(['code-review'])).toEqual(['shell', 'fs.read', 'board', 'review'])
   })
 
   it('ignores order and duplicates, and every group is reachable', () => {

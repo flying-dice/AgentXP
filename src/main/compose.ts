@@ -53,6 +53,9 @@ import { OsProcessUsage } from './infrastructure/process/osProcessUsage'
 import { createBrowserTools } from './application/tools/browserTools'
 import { createEventsTools } from './application/tools/eventsTools'
 import { createNotesTools } from './application/tools/notesTools'
+import { createBoardTools } from './application/tools/boardTools'
+import { KanbanService } from './application/kanban/KanbanService'
+import { SqliteKanbanRepository } from './infrastructure/db/sqlite-kanban-repository'
 import { createPaintTools } from './application/tools/paintTools'
 import { createRecycleTools } from './application/tools/recycleTools'
 import { createSnipTools } from './application/tools/snipTools'
@@ -195,6 +198,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     toolPolicies: new SqliteToolPolicyRepository(db),
     notes: new SqliteStickyNoteRepository(db),
     recycled: new SqliteRecycledChangeRepository(db),
+    kanban: new SqliteKanbanRepository(db),
     reviews: new SqliteReviewRepository(db)
   }
   const fileSystem = new NodeWorkspaceFileSystem()
@@ -336,6 +340,7 @@ export function composeApp(options: ComposeOptions): AppServices {
   const browsers = new ElectronBrowserDriver()
   const appRequests = new AppRequestBroker(publisher)
   const notes = new StickyNoteService({ notes: repos.notes, events: publisher, desktops })
+  const kanban = new KanbanService({ kanban: repos.kanban, events: publisher })
   const screen: ScreenCapturer = options.screen ?? {
     capture: () => Promise.reject(new Error('Screen capture is not available here.'))
   }
@@ -359,6 +364,7 @@ export function composeApp(options: ComposeOptions): AppServices {
         files: { write: (sessionId, path, text) => sessionFiles.writeVPath(sessionId, path, text) }
       }),
       ...createNotesTools({ notes }),
+      ...createBoardTools({ kanban }),
       ...createEventsTools({ log: eventLog }),
       ...createSnipTools({ desktops, screen }),
       ...createRecycleTools({ recycle }),
@@ -407,6 +413,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     nativePicker: options.nativePicker ?? false,
     appRequests,
     notes,
+    kanban,
     eventLog,
     recycle,
     screen,

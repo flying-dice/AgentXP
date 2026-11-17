@@ -36,6 +36,7 @@ const META: { key: PolicyKey; group: PermissionGroupId; label: string; descripti
   { key: 'events', group: 'apps', label: PERMISSION_NAMES['events'], description: 'Search the Event Viewer log of messages' },
   { key: 'snip', group: 'apps', label: PERMISSION_NAMES['snip'], description: 'Take screenshots of the desktop with the Snipping Tool' },
   { key: 'recycle', group: 'apps', label: PERMISSION_NAMES['recycle'], description: 'List and restore deleted items' },
+  { key: 'board', group: 'apps', label: PERMISSION_NAMES['board'], description: 'Read and write Kanban boards, even while the Kanban window is closed' },
   { key: 'review', group: 'apps', label: PERMISSION_NAMES['review'], description: 'Comment on changes and give a verdict in a Code Review window' },
   { key: 'openApps', group: 'apps', label: 'Agent may open apps', description: 'Let the agent open and close apps on this desktop' }
 ]

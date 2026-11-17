@@ -21,6 +21,7 @@ export const APP_KINDS = [
   'paint',
   'wordpad',
   'sticky-notes',
+  'kanban',
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
@@ -40,6 +41,7 @@ export const AGENT_OPENABLE_APPS = [
   'paint',
   'wordpad',
   'sticky-notes',
+  'kanban',
   'event-viewer',
   'snipping-tool',
   'recycle-bin'
@@ -52,6 +54,7 @@ export const SINGLETON_APPS: readonly AppKind[] = [
   'control-centre',
   'agent-manager',
   'sticky-notes',
+  'kanban',
   'event-viewer',
   'snipping-tool',
   'recycle-bin',
@@ -97,6 +100,8 @@ export type AppView =
   | { app: 'paint'; path: VPath | null; width: number; height: number; tool: PaintTool; color: string; dirty: boolean }
   | { app: 'wordpad'; path: VPath | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
   | { app: 'sticky-notes' }
+  /** `boardId`: the board shown (null: the first one, or none yet). */
+  | { app: 'kanban'; boardId: Id | null }
   | { app: 'event-viewer'; sessionId: Id | null; level: EventLevel | 'all'; selectedEventId: number | null }
   | { app: 'snipping-tool'; lastSnipId: string | null }
   | { app: 'recycle-bin'; selectedId: Id | null }
@@ -199,6 +204,7 @@ export const TOOL_GROUPS = [
   'events', // events_query
   'snip', // screen_capture
   'recycle', // recycle_list, recycle_restore
+  'board', // board_* (always on: a board is how the agents of a team track work, no window needed)
   'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
@@ -218,8 +224,12 @@ export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   events: ['event-viewer'],
   snip: ['snipping-tool'],
   recycle: ['recycle-bin'],
+  board: [],
   review: ['code-review']
 }
+
+/** Groups that are on whatever apps are open (`shell` has no gate; `board` is gated by the Control Center policy only). */
+export const ALWAYS_ON_TOOL_GROUPS: readonly ToolGroup[] = ['shell', 'board']
 
 /** The app suggested to the agent when a group is missing. */
 export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
@@ -235,6 +245,7 @@ export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
   events: 'event-viewer',
   snip: 'snipping-tool',
   recycle: 'recycle-bin',
+  board: 'kanban',
   review: 'code-review'
 }
 
@@ -250,6 +261,7 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
   paint: 'Agent Paint',
   wordpad: 'WordPad',
   'sticky-notes': 'Sticky Notes',
+  kanban: 'Kanban',
   'event-viewer': 'Event Viewer',
   'snipping-tool': 'Snipping Tool',
   'recycle-bin': 'Recycle Bin',
@@ -261,7 +273,7 @@ export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
 /** AppToolPolicy: the tool groups enabled by a set of open windows (minimised windows count as open). */
 export function enabledToolGroups(openApps: Iterable<AppKind>): ToolGroup[] {
   const open = new Set(openApps)
-  return TOOL_GROUPS.filter((g) => g === 'shell' || TOOL_GROUP_PROVIDERS[g].some((k) => open.has(k)))
+  return TOOL_GROUPS.filter((g) => ALWAYS_ON_TOOL_GROUPS.includes(g) || TOOL_GROUP_PROVIDERS[g].some((k) => open.has(k)))
 }
 
 /** The message an agent gets when it uses a tool whose app is closed. */
@@ -282,7 +294,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', review: 'allow' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', review: 'allow' },
   openApps: 'allow'
 }
 

@@ -207,7 +207,7 @@ Click the **Start** button, or press Ctrl+Esc, to open the Start menu.
 The Start menu has these parts:
 
 - **Programs** – Opens **New chat**, **Explorer**, **Code**, **Terminal**, and **Browser**.
-- **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Snipping Tool**, and **Sticky Notes**.
+- **Accessories** – Opens **Notepad**, **WordPad**, **Agent Paint**, **Snipping Tool**, **Sticky Notes**, and **Kanban**.
 - **System Tools** – Opens **Event Viewer**, **Task Manager**, and **Control Center**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
@@ -335,6 +335,7 @@ Each app gives the agent a group of tools. When you close the last window of an 
 | Agent Paint | Draw, read the picture, clear it, and resize it | `paint_draw`, `paint_read`, `paint_clear`, `paint_resize` |
 | WordPad | Open, read, and write documents | `wordpad_open`, `wordpad_read`, `wordpad_write` |
 | Sticky Notes | List, add, change, and remove notes, and keep a plan note | `notes_list`, `notes_add`, `notes_update`, `notes_remove` |
+| Kanban boards | List, read, create, and change boards, lists, and cards, and move cards. Always on: the Kanban window does not need to be open. | `board_list`, `board_get`, `board_create`, `board_rename`, `board_delete`, `board_add_column`, `board_rename_column`, `board_delete_column`, `board_add_card`, `board_update_card`, `board_move_card`, `board_delete_card` |
 | Event Viewer | Search the messages of the desktop | `events_query` |
 | Snipping Tool | Take a picture of the desktop or of one window | `screen_capture` |
 | Recycle Bin | List and restore reverted changes | `recycle_list`, `recycle_restore` |
@@ -460,6 +461,7 @@ The desktop has these apps:
 - **Browser** – Shows web pages. You and the agent can use it.
 - **Agent Paint** – Lets you draw. The agent can draw in it too.
 - **Sticky Notes** – Puts notes on the desktop. You and the agent can read them. A plan note shows the tasks of a chat.
+- **Kanban** – Shows boards of cards with a title, a description, and an assignee. Drag cards between lists. You and the agents can read and write the boards, so a team of agents can track its work on one board.
 - **Snipping Tool** – Takes a picture of an area of the desktop or of one window.
 - **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen.
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.

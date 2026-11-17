@@ -20,6 +20,9 @@ import { createNotepadTools } from './notepadTools'
 import type { ActionResult, AppRequests, BrowserDriver, BrowserGuard, CommandRunner, PageContent, PageInfo } from './ports'
 import { createEventsTools } from './eventsTools'
 import { createNotesTools } from './notesTools'
+import { createBoardTools } from './boardTools'
+import { KanbanService } from '../kanban/KanbanService'
+import { SqliteKanbanRepository } from '../../infrastructure/db/sqlite-kanban-repository'
 import { createPaintTools } from './paintTools'
 import { createRecycleTools } from './recycleTools'
 import { createReviewTools } from './reviewTools'
@@ -229,6 +232,7 @@ beforeEach(async () => {
         files: { write: async (sessionId, path, text) => void written.push({ sessionId, path, text }) }
       }),
       ...createNotesTools({ notes: noteService }),
+      ...createBoardTools({ kanban: new KanbanService({ kanban: new SqliteKanbanRepository(f.db), events: f.publisher }) }),
       ...createEventsTools({ log: eventLog }),
       ...createSnipTools({
         desktops,
@@ -276,14 +280,15 @@ describe('tool catalog', () => {
     expect(byGroup('events')).toEqual(['events_query'])
     expect(byGroup('snip')).toEqual(['screen_capture'])
     expect(byGroup('recycle')).toEqual(['recycle_list', 'recycle_restore'])
+    expect(byGroup('board')).toHaveLength(12)
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(48)
+    expect(TOOL_SPECS).toHaveLength(60)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'board'])
     desktops.openWindow({ desktopId, app: 'browser' })
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'browser'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'browser', 'board'])
     expect(tools.enabledGroups(999)).toEqual(['shell'])
   })
 })
@@ -815,6 +820,45 @@ describe('notes tools and desktop state', () => {
 
   it('rejects unknown colours', async () => {
     expect((await run('notes_add', { text: 'x', color: 'teal' })).isError).toBe(true)
+  })
+})
+
+describe('board tools', () => {
+  it('are on without any app open, for every chat of the desktop', () => {
+    expect(tools.enabledGroups(desktopId)).toContain('board')
+  })
+
+  it('create a board, add cards by column name, move them and show the board with ids', async () => {
+    expect(textOf(await run('board_list'))).toBe('No boards.')
+    expect((await run('board_get')).isError).toBe(true)
+    expect(textOf(await run('board_create', { name: 'Sprint' }))).toMatch(/Column \[\d+\] To do \(0\)\n.*Doing \(0\)\n.*Done \(0\)/)
+    await run('board_add_card', { column: 'to do', title: 'Write docs', description: 'the manual\nand help', assignee: 'Docs agent' })
+    await run('board_add_card', { column: 'To do', title: 'Ship it' })
+    const text = textOf(await run('board_get'))
+    expect(text).toMatch(/Card \[\d+\] Write docs \(assignee: Docs agent\)\n\s+the manual\n\s+and help/)
+    const id = Number(/Card \[(\d+)\] Ship it/.exec(text)![1])
+    expect(textOf(await run('board_move_card', { card: id, column: 'Done' }))).toMatch(/Done \(1\)\n\s+Card \[\d+\] Ship it/)
+    expect(textOf(await run('board_move_card', { card: id, column: 'To do', position: 0 }))).toMatch(/To do \(2\)\n\s+Card \[\d+\] Ship it/)
+    await run('board_update_card', { card: id, assignee: 'Dev agent', title: 'Ship v1' })
+    expect(textOf(await run('board_list'))).toMatch(/\[\d+\] Sprint: To do \(2\), Doing \(0\), Done \(0\)/)
+    expect(textOf(await run('board_get', { board: 'sprint' }))).toContain('Ship v1 (assignee: Dev agent)')
+    await run('board_update_card', { card: id, assignee: '' })
+    expect(textOf(await run('board_get'))).not.toContain('Dev agent')
+    expect(f.publisher.payloads('kanban.changed').length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('reports unknown columns and boards of other desktops as errors', async () => {
+    await run('board_create', { name: 'A', columns: ['One'] })
+    expect(textOf(await run('board_add_card', { column: 'Two', title: 'x' }))).toMatch(/no column "Two"\. Columns: One/)
+    expect((await run('board_add_card', { column: 9999, title: 'x' })).isError).toBe(true)
+    expect((await run('board_delete', { board: 'nope' })).isError).toBe(true)
+    expect(textOf(await run('board_delete', { board: 'A' }))).toMatch(/Deleted board/)
+    expect(textOf(await run('board_list'))).toBe('No boards.')
+  })
+
+  it('obeys the Control Center policy', async () => {
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, board: 'deny' } })
+    expect(textOf(await run('board_list'))).toMatch(/blocked/)
   })
 })
 

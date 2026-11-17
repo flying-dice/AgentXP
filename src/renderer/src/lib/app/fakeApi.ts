@@ -6,6 +6,7 @@ import { createFakeFs } from './fakeFs'
 import { createFakeVfs } from './fakeVfs'
 import { createFakeGit, sampleHead } from './fakeGit'
 import { createFakeExtras } from './fakeExtras'
+import { createFakeKanban } from './fakeKanban'
 import { createFakeReview } from './fakeReview'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
@@ -274,6 +275,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       }
     })),
     notes: extras.notes,
+    kanban: createFakeKanban(emit as unknown as Parameters<typeof createFakeKanban>[0]),
     events: extras.events,
     recycle: extras.recycle,
     snip: extras.snip,

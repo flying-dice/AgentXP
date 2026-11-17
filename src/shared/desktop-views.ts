@@ -20,6 +20,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
   paint: { x: 140, y: 70, width: 860, height: 640 },
   wordpad: { x: 170, y: 80, width: 700, height: 520 },
   'sticky-notes': { x: 600, y: 60, width: 360, height: 420 },
+  kanban: { x: 120, y: 50, width: 900, height: 520 },
   'event-viewer': { x: 130, y: 90, width: 980, height: 560 },
   'snipping-tool': { x: 300, y: 140, width: 420, height: 220 },
   'recycle-bin': { x: 240, y: 120, width: 680, height: 420 },
@@ -283,6 +284,8 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
       return { app: 'wordpad', path: input.path ?? null, mode: 'read', dirty: false, visibleHeading: null }
     case 'sticky-notes':
       return { app: 'sticky-notes' }
+    case 'kanban':
+      return { app: 'kanban', boardId: null }
     case 'event-viewer':
       return { app: 'event-viewer', sessionId: input.sessionId ?? null, level: 'all', selectedEventId: null }
     case 'snipping-tool':

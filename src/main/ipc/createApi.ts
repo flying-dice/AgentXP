@@ -11,6 +11,7 @@ import type { DriveService } from '../application/vfs/DriveService'
 import type { LauncherService } from '../application/launcher/LauncherService'
 import type { RecycleService } from '../application/RecycleService'
 import type { StickyNoteService } from '../application/desktop/StickyNoteService'
+import type { KanbanService } from '../application/kanban/KanbanService'
 import type { DesktopService } from '../application/desktop/DesktopService'
 import type { ProcessService } from '../application/ProcessService'
 import type { A2uiService } from '../application/A2uiService'
@@ -45,6 +46,7 @@ export interface ApiServices {
   nativePicker: boolean
   appRequests: AppRequestBroker
   notes: StickyNoteService
+  kanban: KanbanService
   eventLog: ProtocolEventLog
   recycle: RecycleService
   screen: ScreenCapturer
@@ -146,6 +148,20 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: (id) => s.launcher.remove(id),
       show: async () => s.launcher.show(),
       checkAgents: () => s.launcher.checkAgents()
+    },
+    kanban: {
+      list: async (desktopId) => s.kanban.list(desktopId),
+      createBoard: async (desktopId, name) => s.kanban.createBoard(desktopId, name),
+      renameBoard: async (id, name) => s.kanban.renameBoard(id, name),
+      deleteBoard: async (id) => s.kanban.deleteBoard(id),
+      addColumn: async (boardId, name) => s.kanban.addColumn(boardId, name),
+      renameColumn: async (id, name) => s.kanban.renameColumn(id, name),
+      moveColumn: async (id, index) => s.kanban.moveColumn(id, index),
+      deleteColumn: async (id) => s.kanban.deleteColumn(id),
+      addCard: async (columnId, card) => s.kanban.addCard(columnId, card),
+      updateCard: async (id, patch) => s.kanban.updateCard(id, patch),
+      moveCard: async (id, columnId, index) => s.kanban.moveCard(id, columnId, index),
+      deleteCard: async (id) => s.kanban.deleteCard(id)
     },
     notes: {
       list: async (desktopId) => s.notes.list(desktopId),
