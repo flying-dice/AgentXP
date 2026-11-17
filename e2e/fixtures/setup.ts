@@ -1,5 +1,5 @@
 /**
- * SETUP helpers. These are the ONLY place that talks to the backend through `window.agent7`
+ * SETUP helpers. These are the ONLY place that talks to the backend through `window.agentxp`
  * (inside `page.evaluate`): they prepare data the UI cannot create (a registered agent, a temp
  * workspace, a plugged-in drive). Specs and page objects verify behaviour through test ids only.
  */
@@ -34,7 +34,7 @@ export async function createWorkspace(files: Record<string, string> = { 'README.
 export async function registerFakeAgent(page: Page, name = 'Fake agent'): Promise<number> {
   return page.evaluate(
     async ({ name, script }) => {
-      const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+      const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
       const agent = await api.agents.create({ name, command: 'node', args: ['--experimental-strip-types', '--no-warnings', script], env: { FAKE_AGENT_UNIQUE_SESSIONS: '1' } })
       await api.agents.setDefault(agent.id)
       return agent.id
@@ -45,14 +45,14 @@ export async function registerFakeAgent(page: Page, name = 'Fake agent'): Promis
 
 /** Adds the workspace folder to the app (so it shows up in "New desktop"). Returns the folder id. */
 export async function addProject(page: Page, workspace: Workspace): Promise<number> {
-  return page.evaluate(async (path) => (await (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7.folders.add(path)).id, workspace.path)
+  return page.evaluate(async (path) => (await (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp.folders.add(path)).id, workspace.path)
 }
 
 /** Plugs the workspace into a RUNNING desktop as the next USB drive (what the Explorer's "Plug in a project" does). */
 export async function plugWorkspaceIn(desktopPage: Page, desktopId: number, workspace: Workspace): Promise<string> {
   return desktopPage.evaluate(
     async ({ desktopId, path }) => {
-      const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+      const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
       const folder = await api.folders.add(path)
       const drive = await api.drives.plugIn(desktopId, folder.id)
       if (!drive) throw new Error('the project was not plugged in')
@@ -65,7 +65,7 @@ export async function plugWorkspaceIn(desktopPage: Page, desktopId: number, work
 /** Lets the agent run shell commands without a prompt (the fake agent also runs a terminal command). */
 export async function allowTerminal(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
     const policy = await api.desktop.policy()
     await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, terminal: 'allow' } })
   })
@@ -74,7 +74,7 @@ export async function allowTerminal(page: Page): Promise<void> {
 /** Lets the agent write files without a prompt (a spec that only looks at the resulting changes). */
 export async function allowFileWrites(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
     const policy = await api.desktop.policy()
     await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, 'fs.write': 'allow' } })
   })
@@ -86,7 +86,7 @@ export const desktopIdOf = (page: Page): number => Number(new URL(page.url()).se
 /** Reads the id of a desktop by its title from the launcher (setup/read only). */
 export async function desktopIdByTitle(launcherPage: Page, title: string): Promise<number> {
   return launcherPage.evaluate(async (title) => {
-    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
     const found = (await api.launcher.list()).find((d) => d.title === title)
     if (!found) throw new Error(`no desktop titled ${title}`)
     return found.id
@@ -101,7 +101,7 @@ export async function registerAgent(
 ): Promise<number> {
   return page.evaluate(
     async ({ agent, makeDefault }) => {
-      const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+      const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
       const created = await api.agents.create(agent)
       if (makeDefault !== false) await api.agents.setDefault(created.id)
       return created.id
@@ -112,7 +112,7 @@ export async function registerAgent(
 
 /** The registered agents as `{ name, command, args, env }` (read only; shows the built-in "Scripted Agent"). */
 export async function listAgents(page: Page): Promise<{ name: string; command: string; args: string[]; env: Record<string, string>; isDefault: boolean }[]> {
-  return page.evaluate(async () => (await (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7.agents.list()))
+  return page.evaluate(async () => (await (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp.agents.list()))
 }
 
 /**
@@ -124,7 +124,7 @@ export async function listAgents(page: Page): Promise<{ name: string; command: s
 export async function readProtocolEvents(page: Page, query: { source?: ProtocolEventDto['source']; sessionId?: number | null }): Promise<ProtocolEventDto[]> {
   const desktopId = desktopIdOf(page)
   return page.evaluate(
-    async ({ desktopId, query }) => (await (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7.events.query({ desktopId, ...query, limit: 5000 })),
+    async ({ desktopId, query }) => (await (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp.events.query({ desktopId, ...query, limit: 5000 })),
     { desktopId, query }
   )
 }
@@ -132,7 +132,7 @@ export async function readProtocolEvents(page: Page, query: { source?: ProtocolE
 /** Makes the registered agent with this name the default (used for the built-in "Scripted Agent"). */
 export async function setDefaultAgentByName(page: Page, name: string): Promise<void> {
   await page.evaluate(async (name) => {
-    const api = (window as unknown as { agent7: import('../../src/shared/ipc').Agent7Api }).agent7
+    const api = (window as unknown as { agentxp: import('../../src/shared/ipc').AgentXPApi }).agentxp
     const found = (await api.agents.list()).find((a) => a.name === name)
     if (!found) throw new Error(`no agent named ${name}`)
     await api.agents.setDefault(found.id)

@@ -1,4 +1,4 @@
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { McpServerDto, ProfileDto, SkillDto, TeamDto } from '@shared/teams'
 
@@ -8,9 +8,9 @@ export class TeamsStore {
   servers = $state.raw<McpServerDto[]>([])
   profiles = $state.raw<ProfileDto[]>([])
   teams = $state.raw<TeamDto[]>([])
-  private readonly api: Pick<Agent7Api, 'skills' | 'mcp' | 'profiles' | 'teams'>
+  private readonly api: Pick<AgentXPApi, 'skills' | 'mcp' | 'profiles' | 'teams'>
 
-  constructor(api: Pick<Agent7Api, 'skills' | 'mcp' | 'profiles' | 'teams'>) {
+  constructor(api: Pick<AgentXPApi, 'skills' | 'mcp' | 'profiles' | 'teams'>) {
     this.api = api
   }
 

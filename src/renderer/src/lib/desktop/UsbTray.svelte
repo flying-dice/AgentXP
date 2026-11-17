@@ -37,7 +37,7 @@
   $effect(() => {
     if (!open || !element) return
     const r = element.getBoundingClientRect()
-    const barTop = element.closest('.w7-taskbar')?.getBoundingClientRect().top ?? r.top
+    const barTop = element.closest('.xp-taskbar')?.getBoundingClientRect().top ?? r.top
     x = r.left - 8
     // The popup sits on top of the taskbar: about 24 px per entry plus the popup frame.
     y = barTop - items.length * 24 - 12

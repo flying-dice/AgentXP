@@ -1,4 +1,4 @@
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { BrowseEntryDto, BrowseListingDto } from '@shared/models'
 
 /** A small disk for stories and unit tests: C: with a user folder holding a few projects. */
@@ -20,7 +20,7 @@ const TREE: Record<string, string[]> = {
 const join = (parent: string, name: string): string => (parent.endsWith('\\') ? `${parent}${name}` : `${parent}\\${name}`)
 
 /** The `fs` group of the fake backend; folders made with `makeFolder` stay for the session. */
-export function createFakeFs(): Agent7Api['fs'] {
+export function createFakeFs(): AgentXPApi['fs'] {
   const tree: Record<string, string[]> = Object.fromEntries(Object.entries(TREE).map(([k, v]) => [k, [...v]]))
   const entry = (path: string): BrowseEntryDto => ({ name: path.split('\\').pop() ?? path, path, hasChildren: (tree[path] ?? []).length > 0 })
   return {

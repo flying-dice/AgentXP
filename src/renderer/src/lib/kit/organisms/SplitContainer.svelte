@@ -66,7 +66,7 @@
   })
 </script>
 
-<div class="w7-split {orientation} {className}" bind:clientWidth={width} bind:clientHeight={height}>
+<div class="xp-split {orientation} {className}" bind:clientWidth={width} bind:clientHeight={height}>
   <div class="p1" style={orientation === 'vertical' ? `width:${splitterDistance}px` : `height:${splitterDistance}px`}>
     {@render panel1()}
   </div>
@@ -75,14 +75,14 @@
 </div>
 
 <style>
-  .w7-split {
+  .xp-split {
     display: flex;
     min-width: 0;
     min-height: 0;
     width: 100%;
     height: 100%;
   }
-  .w7-split.horizontal {
+  .xp-split.horizontal {
     flex-direction: column;
   }
   .p1 {

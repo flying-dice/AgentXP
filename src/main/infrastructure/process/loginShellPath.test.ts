@@ -3,11 +3,11 @@ import { inheritLoginShellPath, mergePaths, parseMarkedPath, readLoginShellPath 
 
 describe('parseMarkedPath', () => {
   it('reads the PATH between the markers and ignores profile noise', () => {
-    expect(parseMarkedPath('hello\n__AGENT7_PATH_START__/a:/b__AGENT7_PATH_END__\nbye')).toBe('/a:/b')
+    expect(parseMarkedPath('hello\n__AGENTXP_PATH_START__/a:/b__AGENTXP_PATH_END__\nbye')).toBe('/a:/b')
   })
   it('is null without markers or with an empty value', () => {
     expect(parseMarkedPath('nothing')).toBeNull()
-    expect(parseMarkedPath('__AGENT7_PATH_START____AGENT7_PATH_END__')).toBeNull()
+    expect(parseMarkedPath('__AGENTXP_PATH_START____AGENTXP_PATH_END__')).toBeNull()
   })
 })
 

@@ -16,9 +16,9 @@ describe('workingText', () => {
     expect(workingText([chat(1, { status: 'working', toolCalls: { a: call('Read a.ts'), b: call('Edit b.ts', 'in_progress') } })])).toBe('Edit b.ts')
   })
   it('words a running Browser step as a sentence, never as a tool id (UX-170)', () => {
-    const typing = { ...call('agent7.browser_type', 'in_progress'), rawInput: '{"ref":7,"text":"Standup"}' }
+    const typing = { ...call('agentxp.browser_type', 'in_progress'), rawInput: '{"ref":7,"text":"Standup"}' }
     expect(workingText([chat(1, { status: 'working', toolCalls: { a: typing } })])).toBe("Typing 'Standup'")
-    expect(workingText([chat(1, { status: 'working', toolCalls: { a: call('agent7.browser_read', 'in_progress') } })])).toBe('Reading the page')
+    expect(workingText([chat(1, { status: 'working', toolCalls: { a: call('agentxp.browser_read', 'in_progress') } })])).toBe('Reading the page')
   })
   it('falls back to the chat title, or the approval wait', () => {
     expect(workingText([chat(1, { status: 'working' })])).toBe('Chat 1')

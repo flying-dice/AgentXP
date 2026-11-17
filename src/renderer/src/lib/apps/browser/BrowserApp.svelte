@@ -443,7 +443,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .chrome {
     flex: none;
@@ -487,12 +487,12 @@
     gap: 4px;
     height: 24px;
     padding: 0 3px 0 5px;
-    background: var(--w7-window);
+    background: var(--xp-window);
     border: 1px solid #7c93b4;
     border-radius: 2px;
   }
   .address:focus-within {
-    border-color: #3399ff;
+    border-color: #316ac5;
   }
   .field {
     flex: 1;
@@ -515,8 +515,8 @@
     background: transparent;
   }
   .mini:hover {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
+    border-color: var(--xp-toolbar-hover-border);
+    background: var(--xp-toolbar-hover-face);
   }
   .tabrow {
     flex: none;
@@ -574,7 +574,7 @@
   }
   .tab.active {
     height: 25px;
-    background: var(--w7-window);
+    background: var(--xp-window);
     color: inherit;
     position: relative;
     z-index: 1;
@@ -628,8 +628,8 @@
     background: linear-gradient(#eef3fb, #d3dff0);
   }
   .newtab:hover {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
+    border-color: var(--xp-toolbar-hover-border);
+    background: var(--xp-toolbar-hover-face);
   }
   .page {
     position: relative;
@@ -637,7 +637,7 @@
     min-height: 0;
     min-width: 0;
     display: flex;
-    background: var(--w7-window);
+    background: var(--xp-window);
     border-top: 1px solid #8ea4c4;
   }
   .agentbar {

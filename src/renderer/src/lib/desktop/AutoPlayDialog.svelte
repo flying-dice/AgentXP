@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** The Win7 AutoPlay dialog for a USB drive that was just plugged in. */
+  /** The WinXP AutoPlay dialog for a USB drive that was just plugged in. */
   import type { DriveDto } from '@shared/vfs'
   import Icon from '../kit/atoms/Icon.svelte'
   import type { IconName } from '../kit/atoms/icons'
@@ -17,7 +17,7 @@
 
   const options: { id: AutoPlayChoice; icon: IconName; title: string }[] = [
     { id: 'open', icon: 'folder-open', title: 'Open folder to view files' },
-    { id: 'chat', icon: 'agent7', title: 'Start a chat on this drive' },
+    { id: 'chat', icon: 'agentxp', title: 'Start a chat on this drive' },
     { id: 'none', icon: 'close', title: 'Take no action' }
   ]
 </script>
@@ -45,7 +45,7 @@
 <style>
   .autoplay {
     padding: 14px 16px 16px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .drive {
     display: flex;
@@ -80,8 +80,8 @@
   }
   .option:hover,
   .option:focus-visible {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
     outline: 0;
   }
   .text {

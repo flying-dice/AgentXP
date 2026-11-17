@@ -8,7 +8,7 @@ export interface RadioGroupContext {
   register(value: string): () => void
 }
 
-const KEY = Symbol('w7-radio-group')
+const KEY = Symbol('xp-radio-group')
 
 export const provideRadioGroup = (ctx: RadioGroupContext): void => {
   setContext(KEY, ctx)

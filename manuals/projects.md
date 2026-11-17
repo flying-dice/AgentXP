@@ -38,9 +38,9 @@ To remove a project from the desktop, follow the steps below:
 
 A balloon with the title **Project removed** tells you that the project is no longer on the desktop and that your files are still in the folder. The folder is not deleted.
 
-Agent7 closes the windows that show files of the project. The chats of the project stay in the list, but their agents cannot read the files until you plug in the project again. The agent is told which project was removed and that you can plug it in again.
+AgentXP closes the windows that show files of the project. The chats of the project stay in the list, but their agents cannot read the files until you plug in the project again. The agent is told which project was removed and that you can plug it in again.
 
-To plug a removed project in again, open **Computer**, select it under **Recently removed**, and click **Plug in again**. You can also click the **Safely Remove Hardware** icon in the notification area and click **Plug in ... again**. Agent7 keeps the last five.
+To plug a removed project in again, open **Computer**, select it under **Recently removed**, and click **Plug in again**. You can also click the **Safely Remove Hardware** icon in the notification area and click **Plug in ... again**. AgentXP keeps the last five.
 
 ## 4 - Troubleshooting
 

@@ -14,7 +14,7 @@
     toolCall?: AguiToolCallState
     /** Test id prefix: `<prefix>-detail`, `<prefix>-detail-path`, `<prefix>-detail-summary`, `<prefix>-detail-more`. */
     testid: string
-    /** Show the setting that made Agent7 ask ("Run commands is set to Ask in Control Center.") on its own line under the command. */
+    /** Show the setting that made AgentXP ask ("Run commands is set to Ask in Control Center.") on its own line under the command. */
     note?: boolean
     /** The whole change is shown ("Show the whole change"); the box around it then takes more of the window. */
     expanded?: boolean
@@ -47,7 +47,7 @@
   const diff = $derived(toolCall?.contents.find((c) => c.kind === 'diff'))
   const summary = $derived(diff?.kind === 'diff' ? changeSummary(diff.oldText, diff.newText, { path: diff.path, error: diff.oldTextError }) : null)
   const argument = $derived(toolCall ? toolArgument(toolCall.kind, toolCall.rawInput, toolCall.locations, toolCall.title) : '')
-  /** Why Agent7 asks, apart from the command (it is never part of the command text). */
+  /** Why AgentXP asks, apart from the command (it is never part of the command text). */
   const setting = $derived(note ? gateReasonOf(toolCall?.rawInput) : null)
   const rows = $derived(summary?.rows ?? 0)
   const viewport = $derived(expanded ? wholeChangePx(rows) : diffViewportPx(rows))
@@ -115,7 +115,7 @@
     display: flex;
     flex-direction: column;
   }
-  .view :global(.w7-diffviewer) {
+  .view :global(.xp-diffviewer) {
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -131,12 +131,12 @@
     overflow-wrap: anywhere;
   }
   .summary {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .setting {
     margin-top: 3px;
     font-size: 11px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   /* The whole change in a box over the chat: the path on top, the diff at the full height of the box (UX-194). */
   .whole {
@@ -158,7 +158,7 @@
     display: flex;
     flex-direction: column;
   }
-  .whole-view :global(.w7-diffviewer) {
+  .whole-view :global(.xp-diffviewer) {
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -169,13 +169,13 @@
     border: 0;
     background: none;
     font: inherit;
-    color: var(--w7-link);
+    color: var(--xp-link);
     cursor: default;
   }
   .more:hover {
     text-decoration: underline;
   }
   .more:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
   }
 </style>

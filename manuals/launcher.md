@@ -1,6 +1,6 @@
 # Using Desktop Connection
 
-This manual describes the Agent7 Desktop Connection window. The window lists your desktops and lets you create, connect, rename, and delete them.
+This manual describes the AgentXP Desktop Connection window. The window lists your desktops and lets you create, connect, rename, and delete them.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ This manual describes the Agent7 Desktop Connection window. The window lists you
 
 ## 1 - What It Is For
 
-A desktop is a long-lived virtual computer for one or more projects. Desktop Connection is the first window that you see when you start Agent7. Use it to pick the desktop that you work on.
+A desktop is a long-lived virtual computer for one or more projects. Desktop Connection is the first window that you see when you start AgentXP. Use it to pick the desktop that you work on.
 
 Closing a desktop window only disconnects it. Its agents keep running. To end them, connect to the desktop and open **Task Manager** (**Start -> Task Manager**). On the **Chats** tab select a chat and click **End Task**. On the **Processes** tab select the agent program and click **End process**.
 
@@ -30,7 +30,7 @@ Closing a desktop window only disconnects it. Its agents keep running. To end th
 
 ## 2 - Open It
 
-The window opens when you start Agent7. To open it again from a desktop, click **Start -> Agent7 Desktops...** or click **Start -> Disconnect options -> Switch desktop...**.
+The window opens when you start AgentXP. To open it again from a desktop, click **Start -> AgentXP Desktops...** or click **Start -> Disconnect options -> Switch desktop...**.
 
 ## 3 - The Window
 
@@ -39,7 +39,7 @@ The window opens when you start Agent7. To open it again from a desktop, click *
 The list is in the middle of the window. Each row shows a picture of the desktop, its name, its state, its drives, and when you used it last.
 
 - **Name** – The name of the desktop. The word **Connected** appears next to the name while a window shows the desktop.
-- **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has a red error icon, red bold text, and a light red row, so that it differs from the amber row of a desktop that needs your approval, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. Agent7 looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
+- **State** – Working, Needs your approval, Idle, **Ready. Click Connect to open it.**, or **Agent problem:** followed by the cause. A desktop that needs your approval has a shield, bold text, and a light amber row. A desktop with an agent problem has a red error icon, red bold text, and a light red row, so that it differs from the amber row of a desktop that needs your approval, for example **Agent problem: The program 'x' was not found.** Point to the text to read where you change the agent: open the desktop, then **Control Center -> Agents**. AgentXP looks for the problem when the window opens, when you create, rename, or delete a desktop, when the window gets the focus, and every 30 seconds. **Ready. Click Connect to open it.** shows on a new desktop whose window did not open.
 
 Desktops that need you are at the top of the list: first the ones that wait for your approval, then the ones with an agent problem. The rest follow, the one you used last first. When the window opens, the first row is already selected, so one click on **Connect** opens the desktop that waits for you. If you have no desktop, the list explains what a desktop is and tells you to click **New...**.
 
@@ -61,7 +61,7 @@ Press F1 to read this manual.
 
 The dialog box has a name box, a list of projects, and an agent list.
 
-- **Desktop name** – The name of the new desktop. The line under the box says: Agent7 opens the new desktop when you click Create. The name must have 1 to 60 characters and must be new. Agent7 checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. The place for the message and the links is always reserved, so the buttons do not move when the message appears. **Create** stays dimmed until the name is good.
+- **Desktop name** – The name of the new desktop. The line under the box says: AgentXP opens the new desktop when you click Create. The name must have 1 to 60 characters and must be new. AgentXP checks the name while you type. If another desktop has the name, a red message says so, and a link such as **Use 'Fix login redirect (2)'** fills in a free name. The place for the message and the links is always reserved, so the buttons do not move when the message appears. **Create** stays dimmed until the name is good.
 - **Projects the agent can use (each project appears as a drive)** – A list of projects. Select the projects that the desktop gets. A long folder path is cut in the middle; point at it to read all of it.
 - **Browse...** – Opens the **Browse For Folder** dialog box and adds the folder that you select to the list.
 - **Agent** – The agent that the chats of the desktop start. The default agent is selected first.
@@ -72,19 +72,19 @@ The dialog box has one box for the new name. The same name rules apply, and the 
 
 ### The Browse For Folder Dialog Box
 
-The dialog box is part of Agent7. It is not a window of your computer. It says **Select a folder for the agent to work on.** (New desktop) or **Select the project folder to plug in to this desktop.** (Plug in a project).
+The dialog box is part of AgentXP. It is not a window of your computer. It says **Select a folder for the agent to work on.** (New desktop) or **Select the project folder to plug in to this desktop.** (Plug in a project).
 
-- The tree starts with **Projects you used before** (point at it to read "Folders that Agent7 opened before"), the projects of your desktops. It shows **Computer** (your drives, or `/`) and the shortcuts **Home**, **Documents**, and **Desktop**. The box opens on **Documents**, or on **Home** if there is no Documents folder. Folders only. Click the arrow, or press Enter or the Right arrow, to open a folder.
-- **Folder** shows the path of the selected folder. You can type or paste a path instead. You can also type only a name, for example `login-app`. Agent7 looks for it in your recent folders and near Documents and Home. A folder that has no subfolders shows **This folder has no subfolders.**
+- The tree starts with **Projects you used before** (point at it to read "Folders that AgentXP opened before"), the projects of your desktops. It shows **Computer** (your drives, or `/`) and the shortcuts **Home**, **Documents**, and **Desktop**. The box opens on **Documents**, or on **Home** if there is no Documents folder. Folders only. Click the arrow, or press Enter or the Right arrow, to open a folder.
+- **Folder** shows the path of the selected folder. You can type or paste a path instead. You can also type only a name, for example `login-app`. AgentXP looks for it in your recent folders and near Documents and Home. A folder that has no subfolders shows **This folder has no subfolders.**
 - **Make New Folder** creates a folder named **New Folder** inside the selected folder and selects it.
 - **OK** is dimmed until a folder is selected. **Cancel**, or Esc, closes the box. You can change the size of the box.
-- While the list loads, the box says **Opening the folder list...** and the pointer shows that Agent7 is busy.
+- While the list loads, the box says **Opening the folder list...** and the pointer shows that AgentXP is busy.
 
 ## 4 - Controls Reference
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Agent7 Desktop Connection | The window frame. | `launcher-window` |
+| AgentXP Desktop Connection | The window frame. | `launcher-window` |
 | Desktops | The list of desktops. | `launcher-list` |
 | Desktop row | One desktop. Double-click it to connect. | `launcher-desktop-row` |
 | Desktop name | Shows the name. | `launcher-desktop-name` |
@@ -100,7 +100,7 @@ The dialog box is part of Agent7. It is not a window of your computer. It says *
 | Connect | Opens the selected desktop. | `launcher-connect` |
 | New desktop | The New desktop dialog box. | `new-desktop-dialog` |
 | Desktop name (new) | Names the new desktop. | `new-desktop-name` |
-| Opens note | Says that Agent7 opens the new desktop when you click Create. | `new-desktop-opens-note` |
+| Opens note | Says that AgentXP opens the new desktop when you click Create. | `new-desktop-opens-note` |
 | Projects note | Says that you can add projects later. | `new-desktop-projects-note` |
 | Name error | Shows why the name is not valid, with an error icon. | `new-desktop-error` |
 | Use a free name | Fills in the suggested name (New desktop dialog box). | `new-desktop-use-suggestion` |

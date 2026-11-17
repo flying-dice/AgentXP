@@ -1,5 +1,5 @@
 /**
- * The Agent7 WinForms A2UI catalog (protocol v0.9).
+ * The AgentXP WinForms A2UI catalog (protocol v0.9).
  *
  * The component set lives in `winforms-catalog.json`, an official catalog document that web_core
  * loads with `Catalog.fromJson`. Its functions (formatString, required, regex, ...) are the basic

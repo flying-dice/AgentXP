@@ -1,10 +1,10 @@
-import type { Agent7Api, Agent7EventName } from './ipc'
+import type { AgentXPApi, AgentXPEventName } from './ipc'
 
 /**
  * The request/response part of the API handled generically (everything except the `on`
  * subscription and `agui`, whose streaming handlers need the sending window).
  */
-export type InvokeApi = Omit<Agent7Api, 'on' | 'agui' | 'window'>
+export type InvokeApi = Omit<AgentXPApi, 'on' | 'agui' | 'window'>
 
 /** AG-UI transport channels. */
 export const AGUI_CHANNELS = {
@@ -26,7 +26,7 @@ export const WINDOW_CHANNELS = {
   state: 'window.state'
 } as const
 
-/** Push events that reach the renderer (the type forces this list to match `Agent7Events`). */
+/** Push events that reach the renderer (the type forces this list to match `AgentXPEvents`). */
 const RENDERER_EVENTS = {
   'session.changed': true,
   'session.removed': true,
@@ -45,11 +45,11 @@ const RENDERER_EVENTS = {
   'room.changed': true,
   'room.removed': true,
   'scheduler.changed': true
-} as const satisfies Record<Agent7EventName, true>
+} as const satisfies Record<AgentXPEventName, true>
 
-export const isRendererEvent = (name: string): name is Agent7EventName => name in RENDERER_EVENTS
+export const isRendererEvent = (name: string): name is AgentXPEventName => name in RENDERER_EVENTS
 
-/** Every invoke method, as `true` flags. The type forces this list to match `Agent7Api` exactly. */
+/** Every invoke method, as `true` flags. The type forces this list to match `AgentXPApi` exactly. */
 const INVOKE_METHODS = {
   agents: { list: true, create: true, update: true, remove: true, setDefault: true, check: true },
   folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true, writeFile: true },
@@ -138,4 +138,4 @@ export const INVOKE_CHANNELS: readonly InvokeChannel[] = (Object.keys(INVOKE_MET
 export const readableIpcError = (message: string): string =>
   message.replace(/^Error invoking remote method '[^']*': (?:\w*Error: )?/, '')
 
-export type { Agent7EventName }
+export type { AgentXPEventName }

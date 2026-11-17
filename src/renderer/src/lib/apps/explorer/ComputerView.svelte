@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** The Win7 "Computer" folder: Hard Disk Drives and Devices with Removable Storage as tiles. */
+  /** The WinXP "Computer" folder: Hard Disk Drives and Devices with Removable Storage as tiles. */
   import type { Id } from '@shared/models'
   import type { DriveDto, VPath } from '@shared/vfs'
   import Icon from '../../kit/atoms/Icon.svelte'
@@ -115,8 +115,8 @@
     min-height: 0;
     overflow: auto;
     padding: 6px 8px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
     outline: 0;
   }
   .head {
@@ -152,18 +152,18 @@
     cursor: default;
   }
   .tile:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .tile.gone .info {
     opacity: 0.7;
   }
   .tile.selected {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .tile:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .info {
@@ -179,7 +179,7 @@
     white-space: nowrap;
   }
   .sub {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -200,6 +200,6 @@
   }
   .none {
     margin: 12px 4px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

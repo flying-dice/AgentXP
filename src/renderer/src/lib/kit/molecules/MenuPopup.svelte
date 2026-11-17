@@ -198,9 +198,9 @@
     min-width: 150px;
     width: max-content;
     padding: 2px;
-    background: var(--w7-menu-face);
-    border: 1px solid var(--w7-menu-border);
-    box-shadow: var(--w7-shadow-popup);
+    background: var(--xp-menu-face);
+    border: 1px solid var(--xp-menu-border);
+    box-shadow: var(--xp-shadow-popup);
     outline: none;
     cursor: default;
     z-index: 100;
@@ -217,7 +217,7 @@
   .slot {
     position: relative;
   }
-  /* The icon column divider of Win7 menus. */
+  /* The icon column divider of WinXP menus. */
   .menu::before {
     content: '';
     position: absolute;

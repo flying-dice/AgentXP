@@ -29,7 +29,7 @@ describe.skipIf(!existsSync(script))('built a2ui-mcp.js', () => {
         new StdioClientTransport({
           command: process.execPath,
           args: [script],
-          env: { ...(process.env as Record<string, string>), AGENT7_A2UI_SOCKET: bridge.socketPath, AGENT7_SESSION_KEY: 'k1' }
+          env: { ...(process.env as Record<string, string>), AGENTXP_A2UI_SOCKET: bridge.socketPath, AGENTXP_SESSION_KEY: 'k1' }
         })
       )
       await client.callTool({ name: 'a2ui_render', arguments: { messages: [{ deleteSurface: { surfaceId: 'x' } }] } })
@@ -58,14 +58,14 @@ describe.skipIf(!existsSync(script))('built a2ui-mcp.js', () => {
           args: [script],
           env: {
             ...(process.env as Record<string, string>),
-            AGENT7_A2UI_SOCKET: bridge.socketPath,
-            AGENT7_SESSION_KEY: '11',
-            AGENT7_DESKTOP_ID: '4'
+            AGENTXP_A2UI_SOCKET: bridge.socketPath,
+            AGENTXP_SESSION_KEY: '11',
+            AGENTXP_DESKTOP_ID: '4'
           }
         })
       )
       expect(client.getServerCapabilities()?.tools?.listChanged).toBe(true)
-      expect(client.getServerVersion()?.name).toBe('agent7')
+      expect(client.getServerVersion()?.name).toBe('agentxp')
       expect((await client.listTools()).tools.map((t) => t.name)).toContain('desktop_state')
       for (let i = 0; i < 300 && bridge.subscriberCount(4) === 0; i++) await new Promise((r) => setTimeout(r, 10))
       groups = ['shell', 'terminal']

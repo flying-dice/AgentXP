@@ -29,7 +29,7 @@ export interface PaneState {
 
 export const DEFAULT_PANE: PaneState = { collapsed: true, width: PANE_DEFAULT_WIDTH }
 
-export const paneKey = (desktopId: Id, windowId: Id): string => `agent7.chatpane.${desktopId}.${windowId}`
+export const paneKey = (desktopId: Id, windowId: Id): string => `agentxp.chatpane.${desktopId}.${windowId}`
 
 const clampWidth = (width: number): number => Math.min(PANE_MAX_WIDTH, Math.max(PANE_MIN_WIDTH, Math.round(width)))
 

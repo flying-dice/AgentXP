@@ -1,4 +1,4 @@
-// Facilitator context shared by presets and checks. It runs INSIDE the server process and uses window.agent7 for SETUP
+// Facilitator context shared by presets and checks. It runs INSIDE the server process and uses window.agentxp for SETUP
 // and for reading state only. None of this is ever exposed to a panelist.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -22,7 +22,7 @@ export async function launchApp({ userData, home }) {
     executablePath: packaged ?? require('electron'),
     args: [...(packaged ? [] : [join(repoRoot, 'out/main/index.js')]), '--no-sandbox'],
     cwd: repoRoot,
-    env: { ...process.env, AGENT7_USER_DATA: userData, ...(home ? { HOME: home, USERPROFILE: home } : {}) }
+    env: { ...process.env, AGENTXP_USER_DATA: userData, ...(home ? { HOME: home, USERPROFILE: home } : {}) }
   })
   app.context().setDefaultTimeout(20_000)
   return app
@@ -59,7 +59,7 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
     windows: () => app.windows().filter(isAppWindow),
     async launcher() {
       return ctx.waitFor(() => ctx.windows().find((w) => w.url().includes('launcher=1')), 'the launcher window').then(async (p) => {
-        await p.waitForFunction(() => Boolean(window.agent7))
+        await p.waitForFunction(() => Boolean(window.agentxp))
         return p
       })
     },
@@ -70,7 +70,7 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
     desktopWindow: (id) => ctx.windows().find((w) => w.url().includes(`desktop=${id}`)),
     async desktopPage(id) {
       const p = await ctx.waitFor(() => ctx.desktopWindow(id), `the window of desktop ${id}`)
-      await p.waitForFunction(() => Boolean(window.agent7))
+      await p.waitForFunction(() => Boolean(window.agentxp))
       return p
     },
 
@@ -97,38 +97,38 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
       return p.evaluate(fn, arg)
     },
     async addFolder(path) {
-      return ctx.eval((p) => window.agent7.folders.add(p).then((f) => f.id), path)
+      return ctx.eval((p) => window.agentxp.folders.add(p).then((f) => f.id), path)
     },
-    launcherList: () => ctx.eval(() => window.agent7.launcher.list()),
+    launcherList: () => ctx.eval(() => window.agentxp.launcher.list()),
     async desktopByTitle(title) {
       return (await ctx.launcherList()).find((d) => d.title === title)
     },
-    sessions: (desktopId) => ctx.eval((id) => window.agent7.sessions.list(id), desktopId),
-    transcript: (sessionId) => ctx.eval((id) => window.agent7.sessions.transcript(id), sessionId),
-    terminalsOf: (sessionId) => ctx.eval((id) => window.agent7.sessions.terminals(id), sessionId),
-    changes: (sessionId) => ctx.eval((id) => window.agent7.sessions.changes(id), sessionId),
-    drives: (desktopId) => ctx.eval((id) => window.agent7.drives.list(id), desktopId),
-    folders: () => ctx.eval(() => window.agent7.folders.list()),
-    recycled: (desktopId) => ctx.eval((id) => window.agent7.recycle.list(id), desktopId),
-    policy: () => ctx.eval(() => window.agent7.desktop.policy()),
-    agentsList: () => ctx.eval(() => window.agent7.agents.list()),
-    processes: () => ctx.eval(() => window.agent7.processes.list()),
+    sessions: (desktopId) => ctx.eval((id) => window.agentxp.sessions.list(id), desktopId),
+    transcript: (sessionId) => ctx.eval((id) => window.agentxp.sessions.transcript(id), sessionId),
+    terminalsOf: (sessionId) => ctx.eval((id) => window.agentxp.sessions.terminals(id), sessionId),
+    changes: (sessionId) => ctx.eval((id) => window.agentxp.sessions.changes(id), sessionId),
+    drives: (desktopId) => ctx.eval((id) => window.agentxp.drives.list(id), desktopId),
+    folders: () => ctx.eval(() => window.agentxp.folders.list()),
+    recycled: (desktopId) => ctx.eval((id) => window.agentxp.recycle.list(id), desktopId),
+    policy: () => ctx.eval(() => window.agentxp.desktop.policy()),
+    agentsList: () => ctx.eval(() => window.agentxp.agents.list()),
+    processes: () => ctx.eval(() => window.agentxp.processes.list()),
     /** Live state of a connected desktop (null when its window is closed). */
     async desktopState(id) {
       const p = ctx.desktopWindow(id)
-      return p ? p.evaluate(() => window.agent7.desktop.current()) : null
+      return p ? p.evaluate(() => window.agentxp.desktop.current()) : null
     },
     async setPolicy(groups = {}, openApps) {
       await ctx.eval(
         async ({ groups, openApps }) => {
-          const api = window.agent7
+          const api = window.agentxp
           const policy = await api.desktop.policy()
           await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, ...groups }, openApps: openApps ?? policy.openApps })
         },
         { groups, openApps }
       )
     },
-    protocol: (desktopId, query) => ctx.eval(({ desktopId, query }) => window.agent7.events.query({ desktopId, ...query, limit: 5000 }), { desktopId, query }),
+    protocol: (desktopId, query) => ctx.eval(({ desktopId, query }) => window.agentxp.events.query({ desktopId, ...query, limit: 5000 }), { desktopId, query }),
     /** Outcomes (`success`, `cancelled`, `interrupt`, `error`) of the finished runs of a chat, oldest first. */
     async runOutcomes(desktopId, sessionId) {
       const events = await ctx.protocol(desktopId, { source: 'ag-ui', sessionId })
@@ -152,12 +152,12 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
         name: name ?? `Scripted ${script}`,
         command: require('electron'),
         args: [join(repoRoot, 'out/main/scripted-agent.js'), '--script', used],
-        env: { ELECTRON_RUN_AS_NODE: '1', AGENT7_SCRIPT_CONTROL: socket }
+        env: { ELECTRON_RUN_AS_NODE: '1', AGENTXP_SCRIPT_CONTROL: socket }
       }
       const id = await ctx.eval(
         async ({ agent, makeDefault }) => {
-          const created = await window.agent7.agents.create(agent)
-          if (makeDefault) await window.agent7.agents.setDefault(created.id)
+          const created = await window.agentxp.agents.create(agent)
+          if (makeDefault) await window.agentxp.agents.setDefault(created.id)
           return created.id
         },
         { agent, makeDefault }
@@ -175,10 +175,10 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
     async createDesktop({ title, projects = [], connect = true, agentId }) {
       const folderIds = []
       for (const path of projects) folderIds.push(await ctx.addFolder(path))
-      const created = await ctx.eval(({ title, folderIds, agentId }) => window.agent7.launcher.create({ title, folderIds, agentId }), { title, folderIds, agentId })
+      const created = await ctx.eval(({ title, folderIds, agentId }) => window.agentxp.launcher.create({ title, folderIds, agentId }), { title, folderIds, agentId })
       let page = null
       if (connect) {
-        await ctx.eval((id) => window.agent7.launcher.connect(id), created.id)
+        await ctx.eval((id) => window.agentxp.launcher.connect(id), created.id)
         page = await ctx.desktopPage(created.id)
         await page.getByTestId('taskbar').waitFor()
       }
@@ -189,7 +189,7 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
       const page = await ctx.desktopPage(desktopId)
       const drives = await ctx.drives(desktopId)
       const where = cwd ?? (drives.find((d) => d.kind === 'removable') ? `${drives.find((d) => d.kind === 'removable').letter}:\\` : undefined)
-      const win = await page.evaluate(({ desktopId, agentId, where }) => window.agent7.desktop.newChat(desktopId, agentId, where), { desktopId, agentId, where })
+      const win = await page.evaluate(({ desktopId, agentId, where }) => window.agentxp.desktop.newChat(desktopId, agentId, where), { desktopId, agentId, where })
       return { sessionId: win.view.sessionId, windowId: win.id }
     },
     /** Types the prompt in the chat window of the session and presses Send (the same way a user does). */
@@ -232,13 +232,13 @@ export function makeContext({ app, userData, sessionDir, fixtures, state }) {
     async closeWindowsOf(desktopId, app) {
       const page = await ctx.desktopPage(desktopId)
       await page.evaluate(async ({ app }) => {
-        const state = await window.agent7.desktop.current()
-        for (const w of state.windows) if (w.app === app) await window.agent7.desktop.closeWindow(w.id)
+        const state = await window.agentxp.desktop.current()
+        for (const w of state.windows) if (w.app === app) await window.agentxp.desktop.closeWindow(w.id)
       }, { app })
     },
     async openApp(desktopId, app, extra = {}) {
       const page = await ctx.desktopPage(desktopId)
-      return page.evaluate((input) => window.agent7.desktop.openWindow(input), { desktopId, app, ...extra })
+      return page.evaluate((input) => window.agentxp.desktop.openWindow(input), { desktopId, app, ...extra })
     },
     async fileText(path) {
       try {

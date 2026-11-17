@@ -46,6 +46,6 @@
   }
   .missing {
     min-height: 1.2em;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

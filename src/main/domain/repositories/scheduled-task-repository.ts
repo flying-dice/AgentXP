@@ -8,7 +8,7 @@ export interface ScheduledTaskRecord extends ScheduledTaskInput {
   createdAt: IsoDate
   /**
    * The instant (ms since the epoch) up to which the scheduler has dealt with the task's due times. A due time after it is
-   * still to come, or was missed while Agent7 was closed. A new, edited or enabled task starts at "now".
+   * still to come, or was missed while AgentXP was closed. A new, edited or enabled task starts at "now".
    */
   handledUntil: number
 }

@@ -7,7 +7,7 @@ const KNOWN_DESCRIPTIONS: Record<string, string> = {
   plan: 'The agent plans and changes nothing.'
 }
 
-/** The description of a mode: the agent's own, else the one Agent7 knows by the mode's id or name. */
+/** The description of a mode: the agent's own, else the one AgentXP knows by the mode's id or name. */
 export function modeDescription(mode: Pick<SessionModeDto, 'id' | 'name' | 'description'>): string | null {
   return mode.description?.trim() || KNOWN_DESCRIPTIONS[mode.id.toLowerCase()] || KNOWN_DESCRIPTIONS[mode.name.toLowerCase()] || null
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "stepping",
-  "description": "Every step is manual and labelled: advance with the control socket (AGENT7_SCRIPT_CONTROL) or /next while idle.",
+  "description": "Every step is manual and labelled: advance with the control socket (AGENTXP_SCRIPT_CONTROL) or /next while idle.",
   "agent": { "name": "scripted-agent", "version": "1.0.0" },
   "defaults": { "stepMode": "manual" },
   "rules": [

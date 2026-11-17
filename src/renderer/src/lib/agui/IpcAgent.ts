@@ -15,7 +15,7 @@ export class IpcAgent extends AbstractAgent {
   private lastRunId = ''
 
   constructor(
-    private readonly api: AguiApi = window.agent7.agui,
+    private readonly api: AguiApi = window.agentxp.agui,
     config?: AgentConfig
   ) {
     super(config)

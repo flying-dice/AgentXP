@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "a2ui",
-  "description": "Draws a small WinForms form through the agent7 MCP tool a2ui_render and checks the tool accepted it. The prompt picks where it goes: 'window' (its own desktop window), 'sidebar' (beside the chat) or anything else (inline in the chat). A prompt containing 'update' changes the data model of the window surface and reports what the tool said (e.g. that the user closed it). The Send button's action comes back as a prompt and is answered by the first rule.",
+  "description": "Draws a small WinForms form through the agentxp MCP tool a2ui_render and checks the tool accepted it. The prompt picks where it goes: 'window' (its own desktop window), 'sidebar' (beside the chat) or anything else (inline in the chat). A prompt containing 'update' changes the data model of the window surface and reports what the tool said (e.g. that the user closed it). The Send button's action comes back as a prompt and is answered by the first rule.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -32,7 +32,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "saveAs": "render",
           "arguments": {
@@ -42,7 +42,7 @@
                 "version": "v0.9",
                 "createSurface": {
                   "surfaceId": "board",
-                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "catalogId": "https://agentxp.dev/a2ui/catalogs/winforms/v1",
                   "theme": {
                     "title": "Board",
                     "width": 520,
@@ -143,7 +143,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "saveAs": "render",
           "arguments": {
@@ -153,7 +153,7 @@
                 "version": "v0.9",
                 "createSurface": {
                   "surfaceId": "notes",
-                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "catalogId": "https://agentxp.dev/a2ui/catalogs/winforms/v1",
                   "theme": {
                     "title": "Notes"
                   }
@@ -248,7 +248,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "saveAs": "update",
           "arguments": {
@@ -282,7 +282,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "saveAs": "render",
           "arguments": {
@@ -291,7 +291,7 @@
                 "version": "v0.9",
                 "createSurface": {
                   "surfaceId": "contact",
-                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "catalogId": "https://agentxp.dev/a2ui/catalogs/winforms/v1",
                   "theme": {
                     "title": "Contact"
                   }

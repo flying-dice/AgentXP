@@ -37,7 +37,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-  class="w7-action-center"
+  class="xp-action-center"
   data-testid="action-center"
   role="dialog"
   tabindex="-1"
@@ -85,13 +85,13 @@
 </div>
 
 <style>
-  .w7-action-center {
+  .xp-action-center {
     box-sizing: border-box;
     width: 336px;
-    border: 1px solid var(--w7-popup-border);
+    border: 1px solid var(--xp-popup-border);
     background: #fff;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset, var(--w7-shadow-popup), 0 6px 20px rgba(0, 0, 0, 0.4);
-    font: var(--w7-font);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset, var(--xp-shadow-popup), 0 6px 20px rgba(0, 0, 0, 0.4);
+    font: var(--xp-font);
     color: #000;
   }
   .head {
@@ -145,7 +145,7 @@
     margin: 0;
   }
   .quiet {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .foot {
     padding: 8px 12px 10px;
@@ -160,7 +160,7 @@
     border: 0;
     background: none;
     font: inherit;
-    color: var(--w7-link);
+    color: var(--xp-link);
     cursor: default;
   }
   .link:hover {

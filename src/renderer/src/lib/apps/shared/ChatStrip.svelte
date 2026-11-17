@@ -40,7 +40,7 @@
     border: 0;
     border-left: 1px solid #9aa9bf;
     border-radius: 0;
-    color: var(--w7-text);
+    color: var(--xp-text);
     cursor: default;
   }
   .text {
@@ -53,10 +53,10 @@
     overflow-wrap: anywhere;
   }
   .tab:hover {
-    background: var(--w7-btn-hover-face);
+    background: var(--xp-btn-hover-face);
   }
   .tab:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .news {

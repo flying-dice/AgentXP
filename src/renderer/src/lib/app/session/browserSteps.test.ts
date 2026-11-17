@@ -7,8 +7,8 @@ const tool = (name: string, rawInput = '{}', id = name): WorkRow => ({ kind: 'to
 describe('browserToolName', () => {
   it('finds a Browser tool under the names an agent gives it', () => {
     expect(browserToolName('browser_click')).toBe('browser_click')
-    expect(browserToolName('agent7.browser_read')).toBe('browser_read')
-    expect(browserToolName('mcp__agent7__browser_navigate')).toBe('browser_navigate')
+    expect(browserToolName('agentxp.browser_read')).toBe('browser_read')
+    expect(browserToolName('mcp__agentxp__browser_navigate')).toBe('browser_navigate')
     expect(browserToolName('terminal_run')).toBeNull()
     expect(browserToolName('my_browser_thing')).toBeNull()
   })
@@ -35,7 +35,7 @@ describe('browserStep', () => {
     expect(browserStep('browser_click', '{"ref":12}', 'Clicked an item on the page [12]. Now at x.')).toBe('Clicked on the page')
     expect(browserStep('browser_click', '{"ref":12}', 'Clicked [12]. Now at x.')).toBe('Clicked on the page')
     expect(browserStep('browser_type', '{"ref":7}', null)).toBe('Typed on the page')
-    expect(browserStep('agent7.browser_press', '{"keys":"Enter"}')).toBe('Pressed Enter')
+    expect(browserStep('agentxp.browser_press', '{"keys":"Enter"}')).toBe('Pressed Enter')
   })
 })
 
@@ -67,14 +67,14 @@ describe('stepKinds', () => {
 
 describe('browserNow', () => {
   it('words a running step in the present tense, never with a tool id', () => {
-    expect(browserNow('agent7.browser_type', '{"ref":7,"text":"Standup"}')).toBe("Typing 'Standup'")
-    expect(browserNow('agent7.browser_type', '{"ref":7}')).toBe('Typing into a text box')
-    expect(browserNow('mcp__agent7__browser_read', '{}')).toBe('Reading the page')
-    expect(browserNow('agent7.browser_click', '{"ref":2}')).toBe('Clicking an item on the page')
-    expect(browserNow('agent7.browser_navigate', '{"url":"http://localhost:3000/chat"}')).toBe('Opening localhost:3000/chat')
+    expect(browserNow('agentxp.browser_type', '{"ref":7,"text":"Standup"}')).toBe("Typing 'Standup'")
+    expect(browserNow('agentxp.browser_type', '{"ref":7}')).toBe('Typing into a text box')
+    expect(browserNow('mcp__agentxp__browser_read', '{}')).toBe('Reading the page')
+    expect(browserNow('agentxp.browser_click', '{"ref":2}')).toBe('Clicking an item on the page')
+    expect(browserNow('agentxp.browser_navigate', '{"url":"http://localhost:3000/chat"}')).toBe('Opening localhost:3000/chat')
     expect(browserNow('fs.read_text_file', '{}')).toBeNull()
     for (const tool of ['navigate', 'read', 'find', 'screenshot', 'click', 'type', 'press', 'scroll', 'wait', 'select', 'tabs', 'back', 'forward', 'reload', 'other']) {
-      expect(browserNow(`agent7.browser_${tool}`, '{}')).not.toMatch(/browser_|agent7/)
+      expect(browserNow(`agentxp.browser_${tool}`, '{}')).not.toMatch(/browser_|agentxp/)
     }
   })
 })

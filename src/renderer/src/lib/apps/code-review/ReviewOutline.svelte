@@ -36,7 +36,7 @@
     <span class="st">Status</span><span class="file">File</span><span class="num">Added</span><span class="num">Removed</span><span class="cm">Comments</span>
   </div>
   {#if changes.length > 0}
-  <div class="list w7-scroll" role="listbox" aria-label="Changed files">
+  <div class="list xp-scroll" role="listbox" aria-label="Changed files">
     {#each changes as change (change.path)}
       {@const open = openComments.get(change.path) ?? 0}
       <div
@@ -72,8 +72,8 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
   .head,
   .item {
@@ -87,8 +87,8 @@
   .head {
     flex: none;
     background: linear-gradient(#fff, #e8eef6);
-    border-bottom: 1px solid var(--w7-panel-border);
-    color: var(--w7-text-muted);
+    border-bottom: 1px solid var(--xp-panel-border);
+    color: var(--xp-text-muted);
   }
   .list {
     flex: 1;
@@ -99,11 +99,11 @@
     cursor: default;
   }
   .item:hover {
-    background: var(--w7-hot-face);
+    background: var(--xp-hot-face);
   }
   .item.selected {
-    background: var(--w7-select-face, #dcebfc);
-    border-color: var(--w7-select-border, #7da2ce);
+    background: var(--xp-select-face, #d6dff7);
+    border-color: var(--xp-select-border, #316ac5);
   }
   .file {
     overflow: hidden;
@@ -138,12 +138,12 @@
   .totals {
     flex: none;
     padding: 2px 8px;
-    border-top: 1px solid var(--w7-panel-border);
+    border-top: 1px solid var(--xp-panel-border);
     background: linear-gradient(#fff, #e8eef6);
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .empty {
     padding: 12px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

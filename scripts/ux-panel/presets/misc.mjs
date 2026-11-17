@@ -17,7 +17,7 @@ export const presets = {
       const state = await ctx.desktopState(desktop.id)
       const surface = state.windows.find((w) => w.app === 'surface')
       if (!surface) throw new Error('no surface window to close')
-      await desktop.page.evaluate((id) => window.agent7.desktop.closeWindow(id), surface.id)
+      await desktop.page.evaluate((id) => window.agentxp.desktop.closeWindow(id), surface.id)
     }
     Object.assign(ctx.state, { sessionId: chat.sessionId, variant })
     ctx.saveState()

@@ -15,7 +15,7 @@
 {#snippet card(args: ComponentProps<typeof ToolCallCard>)}
   <div style="width:560px;padding:8px;background:#fff">
     <ToolCallCard {...args}>
-      <pre style="margin:0;padding:6px 8px;font:var(--w7-font-mono)">export async function handleSignIn(req, res) {'{'}
+      <pre style="margin:0;padding:6px 8px;font:var(--xp-font-mono)">export async function handleSignIn(req, res) {'{'}
   res.redirect('/home')
 {'}'}</pre>
     </ToolCallCard>

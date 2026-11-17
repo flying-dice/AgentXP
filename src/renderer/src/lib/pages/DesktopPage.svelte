@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte'
-  import type { Agent7Api } from '@shared/ipc'
+  import type { AgentXPApi } from '@shared/ipc'
   import type { AppKind } from '@shared/desktop'
   import type { IconName } from './../kit/atoms/icons'
   import ActionCenter from '../kit/organisms/ActionCenter.svelte'
@@ -19,7 +19,7 @@
   import { setDesktopContext } from '../desktop/context'
   import { DesktopController } from '../desktop/DesktopController.svelte'
   import DesktopSurface, { type DesktopIconDef } from '../desktop/DesktopSurface.svelte'
-  import Gadgets from '../desktop/Gadgets.svelte'
+  import InfoPanels from '../desktop/InfoPanels.svelte'
   import SnipOverlay from '../desktop/SnipOverlay.svelte'
   import StickyNotesLayer from '../desktop/StickyNotesLayer.svelte'
   import TopBar from '../desktop/TopBar.svelte'
@@ -40,13 +40,13 @@
   import { HOME_TOPIC } from '../apps/help/helpModel'
 
   interface Props {
-    /** The backend; defaults to `window.agent7`. */
-    api?: Agent7Api
+    /** The backend; defaults to `window.agentxp`. */
+    api?: AgentXPApi
     /** A prepared controller (stories); by default one is created for `api`. */
     controller?: DesktopController
   }
 
-  let { api = window.agent7, controller }: Props = $props()
+  let { api = window.agentxp, controller }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   const desktop = controller ?? new DesktopController(api)
@@ -66,7 +66,7 @@
     const stopRequests = startAppRequests(desktop.api)
     void desktop.api.window.getState().then((s) => (maximized = s.maximized)).catch(() => {})
     const stopWindow = desktop.api.window.onStateChanged((s) => (maximized = s.maximized))
-    orb = root?.querySelector<HTMLElement>('.w7-taskbar .orb') ?? null
+    orb = root?.querySelector<HTMLElement>('.xp-taskbar .orb') ?? null
     return () => {
       stopRequests()
       stopWindow()
@@ -117,7 +117,7 @@
     { id: 'recycle-bin', title: 'Recycle Bin' },
     { id: 'help', title: 'Help and Support' },
     { id: 'chat-on', title: 'New chat on a drive…' },
-    { id: 'desktops', title: 'Agent7 Desktops…' }
+    { id: 'desktops', title: 'AgentXP Desktops…' }
   ]
 
   function runApp(id: string): void {
@@ -241,17 +241,17 @@
     <DesktopSurface
       icons={desktopIcons}
       selected={desktop.selectedIcon}
-      gadgets={desktop.gadgetsVisible}
+      infopanels={desktop.infopanelsVisible}
       onselect={(id) => (desktop.selectedIcon = id)}
       onopen={openIcon}
       onnewchat={() => void desktop.newChatFlow()}
       onopencomputer={() => void desktop.openApp({ app: 'explorer', path: '' })}
-      ontogglegadgets={() => (desktop.gadgetsVisible = !desktop.gadgetsVisible)}
+      ontoggleinfopanels={() => (desktop.infopanelsVisible = !desktop.infopanelsVisible)}
       oncontrolcentre={() => void desktop.openApp({ app: 'control-centre' })}
       onbackground={() => desktop.closePopups()}
     />
-    {#if desktop.gadgetsVisible && !desktop.needsDesktop}
-      <Gadgets chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
+    {#if desktop.infopanelsVisible && !desktop.needsDesktop}
+      <InfoPanels chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />

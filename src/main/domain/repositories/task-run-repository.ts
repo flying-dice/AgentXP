@@ -30,6 +30,6 @@ export interface TaskRunRepository {
   clear(taskId: Id): void
   /** Deletes the oldest runs of the task beyond `keep`. */
   prune(taskId: Id, keep: number): void
-  /** Marks every run that is still `running` as failed with `message` (Agent7 closed while it ran). Returns how many. */
+  /** Marks every run that is still `running` as failed with `message` (AgentXP closed while it ran). Returns how many. */
   failUnfinished(endedAt: IsoDate, message: string): number
 }

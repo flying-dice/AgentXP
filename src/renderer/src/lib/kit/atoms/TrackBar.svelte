@@ -84,7 +84,7 @@
     run()
   }
 
-  /** Thumb outline; pointed side faces the ticks, like the Win7 control. */
+  /** Thumb outline; pointed side faces the ticks, like the WinXP control. */
   const shape = $derived.by(() => {
     const [w, h] = horizontal ? [11, 21] : [21, 11]
     const p = (x: number, y: number) => (horizontal ? `${x},${y}` : `${y},${x}`)
@@ -108,7 +108,7 @@
   aria-valuemax={max}
   aria-valuenow={value}
   aria-disabled={disabled}
-  class="w7-trackbar {orientation} {className}"
+  class="xp-trackbar {orientation} {className}"
   class:disabled
   class:dragging
   style={horizontal ? `width:${length}px` : `height:${length}px`}
@@ -143,7 +143,7 @@
 </div>
 
 <style>
-  .w7-trackbar {
+  .xp-trackbar {
     outline: none;
     position: relative;
     display: block;
@@ -151,10 +151,10 @@
     user-select: none;
     box-sizing: border-box;
   }
-  .w7-trackbar.horizontal {
+  .xp-trackbar.horizontal {
     height: 40px;
   }
-  .w7-trackbar.vertical {
+  .xp-trackbar.vertical {
     width: 40px;
   }
   .defs {
@@ -219,24 +219,24 @@
   }
   .thumb polygon {
     fill: var(--g);
-    stroke: #707070;
+    stroke: #003c74;
   }
-  .w7-trackbar:hover:not(.disabled) polygon {
+  .xp-trackbar:hover:not(.disabled) polygon {
     fill: var(--gh);
-    stroke: #3c7fb1;
+    stroke: #003c74;
   }
-  .w7-trackbar.dragging polygon {
+  .xp-trackbar.dragging polygon {
     fill: var(--gp);
     stroke: #2c628b;
   }
-  .w7-trackbar:focus-visible polygon {
-    stroke: #3399ff;
+  .xp-trackbar:focus-visible polygon {
+    stroke: #316ac5;
   }
-  .w7-trackbar.disabled {
+  .xp-trackbar.disabled {
     opacity: 0.6;
   }
-  .w7-trackbar.disabled polygon {
-    fill: #f4f4f4;
-    stroke: var(--w7-border-disabled);
+  .xp-trackbar.disabled polygon {
+    fill: #f4f2e8;
+    stroke: var(--xp-border-disabled);
   }
 </style>

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../agents/scripted-agent/script.schema.json",
   "name": "host-paths",
-  "description": "Reports tool calls with HOST paths (the chat's real working directory) like a real agent does: Agent7 shows them as virtual paths.",
+  "description": "Reports tool calls with HOST paths (the chat's real working directory) like a real agent does: AgentXP shows them as virtual paths.",
   "agent": { "name": "scripted-agent", "version": "1.0.0" },
   "rules": [
     {

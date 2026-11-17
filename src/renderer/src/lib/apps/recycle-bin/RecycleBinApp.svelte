@@ -176,7 +176,7 @@
         <div class="preview">
           {#if current}
             <div class="note">{restoreSummary(current)}</div>
-            <div class="diff w7-scroll">
+            <div class="diff xp-scroll">
               <DiffViewer oldText={current.restoredText ?? ''} newText={current.revertedText ?? ''} fileName={current.path} label="Restoring changes" />
             </div>
           {:else}
@@ -200,7 +200,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .body {
     flex: 1;
@@ -214,7 +214,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
@@ -223,14 +223,14 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .note {
     flex: none;
     padding: 4px 8px;
     background: #eef3fb;
-    border-bottom: 1px solid var(--w7-list-border);
+    border-bottom: 1px solid var(--xp-list-border);
     color: #1e3287;
   }
   .diff {
@@ -241,6 +241,6 @@
   .none {
     margin: 0;
     padding: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

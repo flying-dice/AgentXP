@@ -4,7 +4,7 @@
  * `desktop.appRequest` to the handler the target window registered and answers with
  * `desktop.respondAppRequest`.
  */
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { AppRequest, AppResponse } from '@shared/desktop'
 
@@ -34,7 +34,7 @@ export async function handleAppRequest(request: AppRequest): Promise<AppResponse
 }
 
 /** Subscribes to `desktop.appRequest` and answers every request. Returns the stop function. */
-export function startAppRequests(api: Pick<Agent7Api, 'on' | 'desktop'>): () => void {
+export function startAppRequests(api: Pick<AgentXPApi, 'on' | 'desktop'>): () => void {
   return api.on('desktop.appRequest', (request) => {
     void handleAppRequest(request).then((response) => api.desktop.respondAppRequest(response)).catch(() => {})
   })

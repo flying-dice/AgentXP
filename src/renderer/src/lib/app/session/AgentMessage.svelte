@@ -24,7 +24,7 @@
     gap: 5px;
     margin-bottom: 2px;
     font-weight: 700;
-    color: var(--w7-accent-claude);
+    color: var(--xp-accent-claude);
   }
   .body {
     font-size: 13px;

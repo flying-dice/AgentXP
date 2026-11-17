@@ -182,7 +182,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .row {
     flex: 1;
@@ -200,7 +200,7 @@
     width: 340px;
     min-height: 0;
     display: flex;
-    border-left: 1px solid var(--w7-group-border);
+    border-left: 1px solid var(--xp-group-border);
   }
   .members {
     flex: none;
@@ -208,8 +208,8 @@
     flex-wrap: wrap;
     gap: 4px 12px;
     padding: 6px 8px;
-    border-bottom: 1px solid var(--w7-group-border);
-    background: linear-gradient(#fdfeff, #e9f0fa);
+    border-bottom: 1px solid var(--xp-group-border);
+    background: linear-gradient(#fff, #e9f0fa);
   }
   .member {
     display: flex;
@@ -227,8 +227,8 @@
     cursor: default;
   }
   .chip:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .avatar {
     flex: none;
@@ -298,10 +298,10 @@
     gap: 6px;
     align-items: flex-end;
     padding: 6px 8px;
-    border-top: 1px solid var(--w7-group-border);
-    background: var(--w7-window);
+    border-top: 1px solid var(--xp-group-border);
+    background: var(--xp-window);
   }
-  .composer :global(.w7-textbox) {
+  .composer :global(.xp-textbox) {
     flex: 1;
     min-width: 0;
   }

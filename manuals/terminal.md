@@ -32,7 +32,7 @@ Click **Start -> Terminal**, or double-click **Terminal** on the desktop.
 
 ### The Header
 
-The header shows the name **Agent7 shell - cmd.exe**. If more than one terminal exists, the **Terminal** list appears at the right.
+The header shows the name **AgentXP shell - cmd.exe**. If more than one terminal exists, the **Terminal** list appears at the right.
 
 ### The Screen
 

@@ -73,15 +73,15 @@
     color: #333;
   }
   .command-link:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .command-link:active {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .command-link:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
 </style>

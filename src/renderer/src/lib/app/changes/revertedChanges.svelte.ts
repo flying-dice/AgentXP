@@ -1,4 +1,4 @@
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { RecycledChangeDto } from '@shared/desktop'
 import type { FileChangeDto, Id } from '@shared/models'
 import { revertedRows, type RevertedChange } from './changesLayout'
@@ -8,7 +8,7 @@ import { revertedRows, type RevertedChange } from './changesLayout'
  * changes. Call it while a component starts; the pane takes `list` as its `reverted` rows (UX-117).
  */
 export function useRevertedChanges(
-  api: Pick<Agent7Api, 'recycle' | 'on'>,
+  api: Pick<AgentXPApi, 'recycle' | 'on'>,
   desktopId: () => Id,
   sessionIds: () => readonly Id[],
   changes: () => readonly FileChangeDto[]

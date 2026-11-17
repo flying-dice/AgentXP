@@ -1,12 +1,12 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf'
-  import Gadgets from './Gadgets.svelte'
+  import InfoPanels from './InfoPanels.svelte'
 
   const now = new Date(2026, 10, 16, 3, 56)
 
   const { Story } = defineMeta({
-    title: 'Desktop/Gadgets',
-    component: Gadgets,
+    title: 'Desktop/InfoPanels',
+    component: InfoPanels,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
     args: {
       chatTitle: 'Fix login redirect bug',
@@ -25,16 +25,16 @@
 </script>
 
 <Story name="Default">
-  {#snippet template(args)}<div class="stage"><Gadgets {...args} /></div>{/snippet}
+  {#snippet template(args)}<div class="stage"><InfoPanels {...args} /></div>{/snippet}
 </Story>
 <Story name="NoChat" args={{ chatTitle: null, contextUsed: 0, contextSize: 0, feed: [] }}>
-  {#snippet template(args)}<div class="stage"><Gadgets {...args} /></div>{/snippet}
+  {#snippet template(args)}<div class="stage"><InfoPanels {...args} /></div>{/snippet}
 </Story>
 
 <style>
   .stage {
     position: relative;
     height: 100vh;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

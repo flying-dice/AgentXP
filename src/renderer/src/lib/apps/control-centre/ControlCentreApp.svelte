@@ -25,7 +25,7 @@
     { id: 'permissions', title: 'Permissions', heading: 'Permissions', icon: 'shield' },
     { id: 'skills', title: 'Skills and MCP', heading: 'Skills and MCP Servers', icon: 'library' },
     { id: 'appearance', title: 'Appearance', heading: 'Appearance and Personalization', icon: 'options' },
-    { id: 'about', title: 'About Agent7', heading: 'About Agent7', icon: 'info' }
+    { id: 'about', title: 'About AgentXP', heading: 'About AgentXP', icon: 'info' }
   ]
 
   // svelte-ignore state_referenced_locally
@@ -113,7 +113,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
+    background: var(--xp-window);
     container: cc / inline-size;
   }
   .row {
@@ -125,7 +125,7 @@
     flex: none;
     width: 176px;
     padding: 12px 8px;
-    background: linear-gradient(#fdfeff, #dfe9f7);
+    background: linear-gradient(#fff, #dfe9f7);
     border-right: 1px solid #b5c4dc;
   }
   .caption {
@@ -153,12 +153,12 @@
   }
   .task:hover {
     color: #0066cc;
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .task.on {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .content {
     flex: 1;

@@ -1,6 +1,6 @@
 /** One-time hints of the shell (a balloon the first time). The "already shown" flag lives in the browser's storage. */
 
-const ICON_HINT_KEY = 'agent7.hint.desktop-icons'
+const ICON_HINT_KEY = 'agentxp.hint.desktop-icons'
 
 export const ICON_HINT = { title: 'Welcome to your desktop', text: 'Double-click an icon to open it.' } as const
 
@@ -18,7 +18,7 @@ export function takeIconHint(storage: HintStorage | null): boolean {
   }
 }
 
-const PROJECT_HINT_KEY = 'agent7.hint.plug-in-project'
+const PROJECT_HINT_KEY = 'agentxp.hint.plug-in-project'
 
 /** The first-run balloon of a desktop without a project (UX-164): it names Computer, where Plug in a project is. */
 export const PROJECT_HINT = {

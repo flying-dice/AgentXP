@@ -19,8 +19,8 @@ export interface ToolGatewayDeps {
   now?: () => number
 }
 
-/** Prefix of the tool call ids of Agent7's own permission requests. */
-export const GATE_TOOL_CALL_PREFIX = 'agent7-gate:'
+/** Prefix of the tool call ids of AgentXP's own permission requests. */
+export const GATE_TOOL_CALL_PREFIX = 'agentxp-gate:'
 /** How long an approval the agent's own prompt obtained also covers the gated call that follows it. */
 const APPROVAL_TTL_MS = 60_000
 
@@ -60,7 +60,7 @@ export class ToolGateway {
     if (!(await this.ask(sessionId, request.title, access.reason))) throw new ToolRefusedError(`The user declined: ${request.title}.`)
   }
 
-  /** Puts an Agent7 permission request in front of the user; true when allowed. */
+  /** Puts an AgentXP permission request in front of the user; true when allowed. */
   async ask(sessionId: Id, title: string, reason: string): Promise<boolean> {
     const toolCallId = `${GATE_TOOL_CALL_PREFIX}${randomUUID()}`
     this.deps.events.publish(sessionId, {

@@ -32,13 +32,13 @@
   }
 </script>
 
-<span class="w7-datetimefield {className}" role="group" aria-label={label}>
+<span class="xp-datetimefield {className}" role="group" aria-label={label}>
   <DateTimePicker bind:value={date} format="Short" width={104} {disabled} label="{label}, date" testid={testid ? `${testid}-date` : undefined} onchange={update} />
   <TimeUpDown bind:value={minutes} {disabled} aria-label="{label}, time" testid={testid ? `${testid}-time` : undefined} onchange={update} />
 </span>
 
 <style>
-  .w7-datetimefield {
+  .xp-datetimefield {
     display: inline-flex;
     align-items: center;
     gap: 6px;

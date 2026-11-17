@@ -1,6 +1,6 @@
 <script lang="ts">
   /** A simple "Open" dialog over the desktop's drives (vfs.readDir), shown inside the app window. */
-  import type { Agent7Api } from '@shared/ipc'
+  import type { AgentXPApi } from '@shared/ipc'
   import type { Id } from '@shared/models'
   import type { VfsEntryDto, VPath } from '@shared/vfs'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
@@ -14,7 +14,7 @@
   import { errorText, listLocation } from './listing'
 
   interface Props {
-    api: Agent7Api
+    api: AgentXPApi
     desktopId: Id
     /** Directory shown first ('' is Computer, the list of drives). */
     startPath?: VPath | ''
@@ -113,7 +113,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }

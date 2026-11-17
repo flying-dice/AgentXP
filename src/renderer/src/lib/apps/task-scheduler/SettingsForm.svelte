@@ -18,7 +18,7 @@
 <div class="form" data-testid="{prefix}-settings">
   <p>Specify additional settings that affect the behavior of the task.</p>
   <CheckBox testid="{prefix}-set-on-demand" bind:checked={settings.allowOnDemand} label="Allow the task to be run on demand" />
-  <CheckBox testid="{prefix}-set-missed" bind:checked={settings.runMissed} label="Run the task as soon as possible after a scheduled start is missed (Agent7 was closed)" />
+  <CheckBox testid="{prefix}-set-missed" bind:checked={settings.runMissed} label="Run the task as soon as possible after a scheduled start is missed (AgentXP was closed)" />
   <div class="row">
     <CheckBox testid="{prefix}-set-restart" bind:checked={settings.restartOnFailure} label="If the task fails, restart every:" />
     <NumericUpDown testid="{prefix}-set-restart-interval" aria-label="Minutes between restarts" bind:value={settings.restartIntervalMinutes} min={1} max={1440} disabled={!settings.restartOnFailure} style="width:70px" />
@@ -59,6 +59,6 @@
     padding-left: 18px;
   }
   .off {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
 </style>

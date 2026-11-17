@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // WCAG 2.2 AA scan with axe-core (a devDependency) of the BUILT app: the launcher, the desktop with each app open and the
 // main dialogs. One app instance. Usage: xvfb-run -a node scripts/ux-panel/axe-scan.mjs [--out docs/ux/evidence/expert/axe.json]
-// Test tooling only (setup through window.agent7 like the panel presets).
+// Test tooling only (setup through window.agentxp like the panel presets).
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
@@ -77,7 +77,7 @@ for (const kind of KINDS) {
     await page.getByTestId(`window-${kind}`).waitFor()
     await sleep(900)
     await scan(page, `app: ${kind}`)
-    await page.evaluate((id) => window.agent7.desktop.closeWindow(id), win.id)
+    await page.evaluate((id) => window.agentxp.desktop.closeWindow(id), win.id)
     await sleep(200)
   })
 }
@@ -107,7 +107,7 @@ await safe('Notepad About dialog', async () => {
   await scan(page, 'Notepad About dialog')
   await page.keyboard.press('Escape')
   await sleep(200)
-  await page.evaluate((id) => window.agent7.desktop.closeWindow(id), win.id)
+  await page.evaluate((id) => window.agentxp.desktop.closeWindow(id), win.id)
 })
 await safe('Notepad context menu', async () => {
   const win = await ctx.openApp(desktop.id, 'notepad')
@@ -115,7 +115,7 @@ await safe('Notepad context menu', async () => {
   await sleep(300)
   await scan(page, 'Notepad context menu')
   await page.keyboard.press('Escape')
-  await page.evaluate((id) => window.agent7.desktop.closeWindow(id), win.id)
+  await page.evaluate((id) => window.agentxp.desktop.closeWindow(id), win.id)
 })
 await safe('Code with chat pane open', async () => {
   const win = await ctx.openApp(desktop.id, 'code', { path: 'E:\\src\\auth\\redirect.ts' })
@@ -123,10 +123,10 @@ await safe('Code with chat pane open', async () => {
   await page.getByTestId('window-code').getByTestId('chat-pane-toggle').click()
   await sleep(800)
   await scan(page, 'Code with chat pane open')
-  await page.evaluate((id) => window.agent7.desktop.closeWindow(id), win.id)
+  await page.evaluate((id) => window.agentxp.desktop.closeWindow(id), win.id)
 })
 await safe('Code Review (outline, comments)', async () => {
-  const win = await page.evaluate((id) => window.agent7.desktop.openReview(id, 'F:\\'), desktop.id)
+  const win = await page.evaluate((id) => window.agentxp.desktop.openReview(id, 'F:\\'), desktop.id)
   await page.getByTestId('code-review-app').waitFor()
   await sleep(2500)
   await scan(page, 'Code Review (outline)')

@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="resources/icon-256.png" alt="The Agent7 logo" width="96" height="96">
+  <img src="resources/icon-256.png" alt="The AgentXP logo" width="96" height="96">
 </p>
 
-# Introduction to Agent7
+# Introduction to AgentXP
 
-Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work on. You watch the agent open apps, read files, run commands, and change code. You decide what the agent can use.
+AgentXP is a program that gives coding agents a virtual Windows XP desktop to work on. You watch the agent open apps, read files, run commands, and change code. You decide what the agent can use.
 
 ## Table of Contents
 
-- 1 - About Agent7
-  - What Agent7 Does
+- 1 - About AgentXP
+  - What AgentXP Does
   - Words Used in This Guide
-- 2 - Installing Agent7
+- 2 - Installing AgentXP
 - 3 - The Desktop Connection Window
   - Creating a Desktop
   - Connecting and Disconnecting
@@ -22,7 +22,7 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
   - The Taskbar
   - The Start Menu
   - The Action Center
-  - The Gadgets
+  - The InfoPanels
 - 5 - Getting Started
   - Creating a Desktop for a Project
   - Plugging In a Project
@@ -34,7 +34,7 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
   - Pause and Take Control
 - 7 - Allowing or Denying an Action
   - Answering a Request
-  - Choosing When Agent7 Asks
+  - Choosing When AgentXP Asks
 - 8 - Drives and Files
   - The C: Drive
   - USB Drives
@@ -50,7 +50,7 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
 - 11 - Who Needs a Mouse?
 - 12 - For Developers
   - Commands
-  - How Agent7 Is Built
+  - How AgentXP Is Built
   - The Scripted Agent
   - Test Ids
   - Screenshots for This Guide
@@ -59,17 +59,17 @@ Agent7 is a program that gives coding agents a virtual Windows 7 desktop to work
 
 ---
 
-## 1 - About Agent7
+## 1 - About AgentXP
 
-This chapter tells you what Agent7 does and explains the words that this guide uses.
+This chapter tells you what AgentXP does and explains the words that this guide uses.
 
-### What Agent7 Does
+### What AgentXP Does
 
-Agent7 starts a coding agent as a separate program on your computer. The agent does not work in one window. It lives on a desktop, a small virtual Windows 7 computer, and works through apps that open as windows on that desktop.
+AgentXP starts a coding agent as a separate program on your computer. The agent does not work in one window. It lives on a desktop, a small virtual Windows XP computer, and works through apps that open as windows on that desktop.
 
 You see exactly what the agent can use, because the tools of the agent follow the apps that are open. If you close the Terminal app, the agent cannot run commands. If you open the Browser app, the agent can browse the web.
 
-Agent7 stores your desktops, chats, and changes on your computer. Nothing leaves your computer except the requests that the agent itself sends to its own service.
+AgentXP stores your desktops, chats, and changes on your computer. Nothing leaves your computer except the requests that the agent itself sends to its own service.
 
 ### Words Used in This Guide
 
@@ -80,36 +80,36 @@ Agent7 stores your desktops, chats, and changes on your computer. Nothing leaves
 - **Drive** – A place for files on a desktop. Each desktop has a C: drive and can have USB drives.
 - **USB drive** – A project folder that you plug in to a desktop. It gets the letter E: or a later letter.
 - **Tool** – An action that an agent can do, for example "run a command". An open app gives the agent its tools.
-- **ACP** – The Agent Client Protocol. Agent7 uses it to talk to agents.
+- **ACP** – The Agent Client Protocol. AgentXP uses it to talk to agents.
 
-## 2 - Installing Agent7
+## 2 - Installing AgentXP
 
-Agent7 runs on Windows, macOS, and Linux. Before you install it, make sure that your computer has these programs:
+AgentXP runs on Windows, macOS, and Linux. Before you install it, make sure that your computer has these programs:
 
 - **[Node.js](https://nodejs.org)** version 22 or later
 - **[Git](https://git-scm.com)**
-- An ACP agent. Agent7 adds Claude Code for you. Claude Code uses your Claude Code sign-in or the `ANTHROPIC_API_KEY` environment variable.
+- An ACP agent. AgentXP adds Claude Code for you. Claude Code uses your Claude Code sign-in or the `ANTHROPIC_API_KEY` environment variable.
 
-To install and start Agent7, follow the steps below:
+To install and start AgentXP, follow the steps below:
 
 1. Open a command prompt.
-2. Type the commands below to download Agent7 and install its parts:
+2. Type the commands below to download AgentXP and install its parts:
 
    ```bash
-   git clone https://github.com/flying-dice/AgentXP.git agent7
-   cd agent7
+   git clone https://github.com/flying-dice/AgentXP.git agentxp
+   cd agentxp
    npm install
    ```
 
-3. Type `npm run dev` and press Enter. The **Agent7 Desktop Connection** window appears.
+3. Type `npm run dev` and press Enter. The **AgentXP Desktop Connection** window appears.
 
 **Tip:** To make an installer for your computer, type `npm run dist`. The installer appears in the `dist` folder.
 
 ## 3 - The Desktop Connection Window
 
-The **Agent7 Desktop Connection** window opens when Agent7 starts. It lists your desktops and lets you create, connect, rename, and delete them.
+The **AgentXP Desktop Connection** window opens when AgentXP starts. It lists your desktops and lets you create, connect, rename, and delete them.
 
-![The Agent7 Desktop Connection window with three desktops and the desktop details open](docs/images/launcher.png)
+![The AgentXP Desktop Connection window with three desktops and the desktop details open](docs/images/launcher.png)
 
 The window has these parts:
 
@@ -143,9 +143,9 @@ To disconnect a desktop, follow the steps below:
 2. Click **Show Options**. The desktop details appear.
 3. Click **Disconnect**. The desktop window closes.
 
-You can also click the red **Close** button of the connection bar at the top of the desktop window, or click **Start -> Disconnect**. The result is the same. Closing a desktop window only disconnects the desktop. The agents, the chats, and the requests for permission keep running in Agent7.
+You can also click the red **Close** button of the connection bar at the top of the desktop window, or click **Start -> Disconnect**. The result is the same. Closing a desktop window only disconnects the desktop. The agents, the chats, and the requests for permission keep running in AgentXP.
 
-To come back, click **Connect** again. The apps, chats, and files are as you left them. To show this window again from a desktop, click **Start -> Agent7 Desktops...**.
+To come back, click **Connect** again. The apps, chats, and files are as you left them. To show this window again from a desktop, click **Start -> AgentXP Desktops...**.
 
 ### Renaming and Deleting a Desktop
 
@@ -157,17 +157,17 @@ To delete a desktop, follow the steps below:
 2. Click **Delete...**. A message box asks if you want to delete the desktop.
 3. Click **Yes**. The desktop leaves the list.
 
-**Caution:** Do not delete a desktop if you want to keep its chats. Agent7 removes the C: drive, the chats, the notes, and the logs of the desktop. Your project folders stay on your computer.
+**Caution:** Do not delete a desktop if you want to keep its chats. AgentXP removes the C: drive, the chats, the notes, and the logs of the desktop. Your project folders stay on your computer.
 
 ### Notifications
 
-If an agent asks for permission on a desktop that has no window, Agent7 shows a notification. The text is "Agent7: Fix login redirect needs your approval", where the name is the name of the desktop. Click the notification to connect the desktop. The row of the desktop in the list shows the state **Needs your approval**.
+If an agent asks for permission on a desktop that has no window, AgentXP shows a notification. The text is "AgentXP: Fix login redirect needs your approval", where the name is the name of the desktop. Click the notification to connect the desktop. The row of the desktop in the list shows the state **Needs your approval**.
 
 ## 4 - The Desktop
 
-The desktop window looks like Windows 7. It has a top bar for the agent, windows for the apps, a taskbar at the bottom, and gadgets on the right side.
+The desktop window looks like Windows XP. It has a top bar for the agent, windows for the apps, a taskbar at the bottom, and infopanels on the right side.
 
-![The Agent7 desktop with a chat, Explorer, Code, and Terminal open while the agent works](docs/images/desktop.png)
+![The AgentXP desktop with a chat, Explorer, Code, and Terminal open while the agent works](docs/images/desktop.png)
 
 The desktop has these parts:
 
@@ -175,7 +175,7 @@ The desktop has these parts:
 - **Desktop icons** – Open **Computer**, **Chats**, **Code**, **Terminal**, **Browser**, **Control Center**, and **Recycle Bin**. Double-click an icon.
 - **Windows** – Show the apps. You can move, resize, minimize, maximize, and close them. To maximize a window, drag its title bar to the top of the desktop.
 - **Sticky notes** – Stay on the desktop. The agent can read and write them while Sticky Notes is open.
-- **Gadgets** – Show the context meter, the clock, and the activity of the agent on the right side.
+- **InfoPanels** – Show the context meter, the clock, and the activity of the agent on the right side.
 - **Taskbar** – Shows the **Start** button, one button for each window, and the notification area.
 
 ### The Top Bar
@@ -212,9 +212,9 @@ The Start menu has these parts:
 - **System Tools** – Opens **Event Viewer**, **Task Manager**, **Task Scheduler**, and **Control Center**.
 - **Recent chats** – Opens a chat that you closed.
 - **Search apps and chats** – Finds an app or a chat by its name.
-- **Places** – Opens **Computer**, **Documents**, **Control Center**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **Agent7 Desktops...**.
+- **Places** – Opens **Computer**, **Documents**, **Control Center**, **Task Manager**, **Recycle Bin**, **New chat on a drive...**, and **AgentXP Desktops...**.
 - **Pause agent** – Pauses the agent. The button changes to **Resume agent**.
-- **Disconnect** – Closes the desktop window. The agents keep running. Click the arrow next to the button for **Disconnect**, **Switch desktop...**, and **Delete desktop...**. **Switch desktop...** shows the **Agent7 Desktop Connection** window. **Delete desktop...** asks you first.
+- **Disconnect** – Closes the desktop window. The agents keep running. Click the arrow next to the button for **Disconnect**, **Switch desktop...**, and **Delete desktop...**. **Switch desktop...** shows the **AgentXP Desktop Connection** window. **Delete desktop...** asks you first.
 
 ### The Action Center
 
@@ -222,17 +222,17 @@ Click the flag in the notification area to open the Action Center. It lists each
 
 ![The Action Center with one request to edit src/auth/redirect.ts](docs/images/action-center.png)
 
-Click **Review** next to a request to answer it. Chapter 7 explains how. The **Messages** list shows notes from Agent7, for example that a USB drive is safe to remove. Click **Open Control Center** to change the permissions.
+Click **Review** next to a request to answer it. Chapter 7 explains how. The **Messages** list shows notes from AgentXP, for example that a USB drive is safe to remove. Click **Open Control Center** to change the permissions.
 
-### The Gadgets
+### The InfoPanels
 
-The gadgets are on the right side of the desktop. They have these parts:
+The infopanels are on the right side of the desktop. They have these parts:
 
 - **Context meter** – Shows how much of its context the agent uses in the chat.
 - **Session clock** – Shows the time and how long the agent runs.
 - **Activity** – Lists the last actions of the agent and their state.
 
-To hide the gadgets, open **Control Center**, click **Appearance**, and clear **Show gadgets on the desktop**.
+To hide the infopanels, open **Control Center**, click **Appearance**, and clear **Show infopanels on the desktop**.
 
 ## 5 - Getting Started
 
@@ -240,13 +240,13 @@ This chapter takes you from a new installation to your first chat. You create a 
 
 ![The New desktop dialog box with the project claude-code-win selected](docs/images/new-desktop.png)
 
-**Note:** The screenshots in this guide show the Scripted Agent. This is a test agent that Agent7 contains. It gives the same answer each time. Your own agent gives other answers.
+**Note:** The screenshots in this guide show the Scripted Agent. This is a test agent that AgentXP contains. It gives the same answer each time. Your own agent gives other answers.
 
 ### Creating a Desktop for a Project
 
 To create a desktop, follow the steps below:
 
-1. In the **Agent7 Desktop Connection** window, click **New...**. The **New desktop** dialog box appears.
+1. In the **AgentXP Desktop Connection** window, click **New...**. The **New desktop** dialog box appears.
 2. Type a name, for example `Fix login redirect`.
 3. Click **Browse...**, select the folder of your project, and click **Select Folder**. The project appears in the list and is selected.
 4. Click **Create**. The desktop appears in the list.
@@ -283,7 +283,7 @@ The status bar of the Chat window shows the folder of the chat, for example `E:\
 
 To remove the messages from a Chat window, click **Chat -> Clear transcript...** and click **Yes**.
 
-**Tip:** The first start of Claude Code can take a minute. Agent7 downloads the agent with `npx` the first time.
+**Tip:** The first start of Claude Code can take a minute. AgentXP downloads the agent with `npx` the first time.
 
 ### Sending a Message
 
@@ -312,7 +312,7 @@ The **Changes** tab lists each file that the agent created, changed, or deleted 
 1. In the Chat window, click **Tasks and changes**, and then click the **Changes** tab.
 2. Select the file.
 3. Click **Revert**. A message box appears.
-4. Click **Yes**. Agent7 writes the original file back to the drive.
+4. Click **Yes**. AgentXP writes the original file back to the drive.
 
 The reverted change goes to the Recycle Bin. To get it back, open **Recycle Bin**, select the item, and click **Restore this item**.
 
@@ -344,28 +344,28 @@ Each app gives the agent a group of tools. When you close the last window of an 
 
 The Chat, Control Center, and Task Manager apps give the agent no tools. The agent always can see the desktop, list the drives, open, close, and focus apps, and draw windows in the chat. Chapter 10 explains these windows.
 
-To take a tool away from the agent, close its app. To give it a tool, open its app. If the agent calls a tool of a closed app, Agent7 refuses the call and tells the agent which app to open.
+To take a tool away from the agent, close its app. To give it a tool, open its app. If the agent calls a tool of a closed app, AgentXP refuses the call and tells the agent which app to open.
 
 The control **Agent may open apps** in the Control Center decides if the agent can open apps itself. Chapter 7 explains how to set it.
 
-**Note:** Agent7 controls the tools that the agent asks Agent7 to run. An agent can have its own built-in tools, and Agent7 cannot stop those. Claude Code uses Agent7 for files and commands when Agent7 offers them.
+**Note:** AgentXP controls the tools that the agent asks AgentXP to run. An agent can have its own built-in tools, and AgentXP cannot stop those. Claude Code uses AgentXP for files and commands when AgentXP offers them.
 
 ### Pause and Take Control
 
-To stop the agent at once, click **Pause** in the top bar. The agent stops its turn, and Agent7 refuses new tool calls. To let the agent continue, click **Resume**.
+To stop the agent at once, click **Pause** in the top bar. The agent stops its turn, and AgentXP refuses new tool calls. To let the agent continue, click **Resume**.
 
 To approve each action yourself, click **Take control** in the top bar. Each tool call then waits for your approval in the Action Center. To go back, click **Release**.
 
 ## 7 - Allowing or Denying an Action
 
-Some actions need your permission, for example a file edit or a command. When the agent asks, Agent7 dims the desktop and shows the **User Account Control** style dialog box.
+Some actions need your permission, for example a file edit or a command. When the agent asks, AgentXP dims the desktop and shows the **User Account Control** style dialog box.
 
 ![The permission dialog box for the edit of src/auth/redirect.ts with the difference open](docs/images/uac-dialog.png)
 
 The dialog box has these parts:
 
 - **Question** – Tells you what the agent wants to do, for example "Do you want to allow the agent to edit src/auth/redirect.ts?"
-- **Reason** – Tells you why Agent7 asks, for example "Writing files is set to Ask in Control Center."
+- **Reason** – Tells you why AgentXP asks, for example "Writing files is set to Ask in Control Center."
 - **Show details** – Shows the change or the command. Click **Hide details** to close it.
 - **Allow** and **Deny** – Answer the request. The agent supplies the names of these buttons.
 - **Not now** – Closes the dialog box. The request stays in the Action Center.
@@ -384,7 +384,7 @@ The Chat window also shows the request. You can answer in the Chat window instea
 
 **Tip:** Press Esc in the dialog box to close it without an answer.
 
-### Choosing When Agent7 Asks
+### Choosing When AgentXP Asks
 
 The Control Center sets what the agent can do without asking. To change it, follow the steps below:
 
@@ -399,7 +399,7 @@ The **Setting** column has three choices:
 
 - **Allow** – The agent does the action at once.
 - **Ask** – The agent waits until you answer a request in the Action Center.
-- **Deny** – Agent7 refuses the action.
+- **Deny** – AgentXP refuses the action.
 
 The page lists **Read files**, **Write files**, **Notepad**, **Code**, **Terminal**, **Browser**, **Paint**, **WordPad**, **Notes**, **Events**, **Screen capture**, **Recycle Bin**, and **Agent may open apps**. A new desktop asks before the agent writes files, runs commands, writes in WordPad, or restores an item from the Recycle Bin. It allows the rest.
 
@@ -421,11 +421,11 @@ The **Computer** window is the Explorer app. To open it, click **Start -> Comput
 
 The C: drive is the own disk of the desktop. It is private to the desktop. The home folder of the agent is `C:\Users\Agent`. It has the folders `Desktop`, `Documents`, and `Downloads`. The `Temp` folder is next to it.
 
-Agent7 stores the C: drive in its own data folder. It deletes the C: drive when you delete the desktop. You cannot remove the C: drive from the desktop.
+AgentXP stores the C: drive in its own data folder. It deletes the C: drive when you delete the desktop. You cannot remove the C: drive from the desktop.
 
 ### USB Drives
 
-A USB drive is a project folder that you plug in. It gets the first free letter from E: to Z:. If you plug in the same project again, it gets its letter again. Agent7 shows the drive with the name of the folder, for example `claude-code-win (E:)`.
+A USB drive is a project folder that you plug in. It gets the first free letter from E: to Z:. If you plug in the same project again, it gets its letter again. AgentXP shows the drive with the name of the folder, for example `claude-code-win (E:)`.
 
 A path on a USB drive looks like `E:\src\auth\redirect.ts`. The agent and the apps use these paths. The agent can read and change the real files in the folder.
 
@@ -468,7 +468,7 @@ The desktop has these apps:
 
 - **Snipping Tool** – Takes a picture of an area of the desktop or of one window.
 - **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen. Task Scheduler writes its own log there.
-- **Task Scheduler** – Asks an agent to do a job at a time that you choose: once, every day, every week, every month, or when Agent7 starts. Each task keeps a history of its runs. See `manuals/task-scheduler.md`.
+- **Task Scheduler** – Asks an agent to do a job at a time that you choose: once, every day, every week, every month, or when AgentXP starts. Each task keeps a history of its runs. See `manuals/task-scheduler.md`.
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
 - **Task Manager** – Lists the chats, the agent processes, the terminals, and the context use. **End process** stops an agent process.
 - **Control Center** – Sets the agents, the permissions, and the appearance of the desktop.
@@ -478,13 +478,13 @@ The desktop has these apps:
 
 Every app window has a chat pane at its right edge. Use it to ask a short question about what you look at, for example "Explain this". The pane starts closed, as a thin strip. To open it, click the strip, click **View -> Chat pane**, or press Ctrl+Shift+C.
 
-The agent sees the open file, the selection, or the page, depending on the app. It answers in a few sentences. The pane chat belongs to its window. When you close the window, Agent7 deletes the pane chat. Click **New conversation** to start again. The pane chat is not in your list of chats.
+The agent sees the open file, the selection, or the page, depending on the app. It answers in a few sentences. The pane chat belongs to its window. When you close the window, AgentXP deletes the pane chat. Click **New conversation** to start again. The pane chat is not in your list of chats.
 
 The right-click items **Explain this**, **Send selection to chat**, and **Ask chat...** use the chat pane of the window. **Open in Chat window** starts a full chat instead. Chat and Code Review have no chat pane. The manual **Using the Chat Pane** has the details.
 
 ### The Event Viewer
 
-The Event Viewer shows each message between Agent7 and the agent. Select a message to read its details. Use it to find out why the agent did something, or why Agent7 refused it.
+The Event Viewer shows each message between AgentXP and the agent. Select a message to read its details. Use it to find out why the agent did something, or why AgentXP refused it.
 
 ![The Event Viewer with the ACP, AG-UI, and MCP messages of a chat](docs/images/event-viewer.png)
 
@@ -492,13 +492,13 @@ The Event Viewer shows each message between Agent7 and the agent. Select a messa
 
 Task Scheduler runs an agent on a schedule. Open it from **Start -> System Tools -> Task Scheduler**, or double-click its icon on the desktop. To make a task, click **Create Basic Task** in the task pane. The wizard asks for a name, a trigger, a project, and a prompt. Use **Create Task** when you need more than one trigger, or the conditions and settings.
 
-A task runs only while Agent7 is open. When Agent7 was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
+A task runs only while AgentXP is open. When AgentXP was closed at the start time, the task runs at the next start if you select **Run task as soon as possible after a missed start**. Select a task, and then open its **History** tab to see each run and its result. The manual `manuals/task-scheduler.md` describes each control.
 
 ![The Task Scheduler window with four tasks and the History tab of the Morning review task](docs/images/task-scheduler-history.png)
 
 ### Adding an Agent
 
-Agent7 adds Claude Code and the Scripted Agent for you. You can add other agents that speak ACP. To add an agent, follow the steps below:
+AgentXP adds Claude Code and the Scripted Agent for you. You can add other agents that speak ACP. To add an agent, follow the steps below:
 
 1. Click **Start -> Control Center**. The **Control Center** window appears.
 2. Click **Agents**, and then click **Add...**. The **Add Agent** dialog box appears.
@@ -513,11 +513,11 @@ To use an agent for new desktops, select it and click **Set as Default**.
 
 ## 10 - Windows That the Agent Draws
 
-The agent can draw its own forms, for example a form, a table of test results, or a code review. Agent7 gives the agent Windows 7 controls for this. The agent uses A2UI, a format for user interfaces that agents send. The agent picks where each form appears: in the chat, in a side pane of the chat, or in its own window on the desktop.
+The agent can draw its own forms, for example a form, a table of test results, or a code review. AgentXP gives the agent Windows XP controls for this. The agent uses A2UI, a format for user interfaces that agents send. The agent picks where each form appears: in the chat, in a side pane of the chat, or in its own window on the desktop.
 
 ![A Chat window and a Deployment form that the agent drew in its own window](docs/images/a2ui-form.png)
 
-You use these forms like any other form. Select an item, type text, or click a button. When you click a button, Agent7 sends your answer to the chat that the form belongs to. The agent then continues its work. If the agent is still working on a turn, Agent7 ignores the click. Click the button again when the agent is done.
+You use these forms like any other form. Select an item, type text, or click a button. When you click a button, AgentXP sends your answer to the chat that the form belongs to. The agent then continues its work. If the agent is still working on a turn, AgentXP ignores the click. Click the button again when the agent is done.
 
 The agent can draw a form at any time. It does not need an open app for this.
 
@@ -545,15 +545,15 @@ To close and open a form, follow the steps below:
 2. Find the row of the form in the Chat window. The state is **Closed**.
 3. Click **Open**. The form appears again and shows the same data.
 
-**Note:** A closed form still exists. If the agent changes it, Agent7 keeps the change and does not open the form again. The agent learns that you closed it. If the agent draws a new form, a new window opens.
+**Note:** A closed form still exists. If the agent changes it, AgentXP keeps the change and does not open the form again. The agent learns that you closed it. If the agent draws a new form, a new window opens.
 
 **Tip:** Click **Move to** and select **Window** to turn a form from the chat into a window. Click **Move to** and select **Inline** to put it back.
 
-Agent7 saves your forms. After you restart Agent7 or connect to the desktop again, the windows are there, and the rows show the right state.
+AgentXP saves your forms. After you restart AgentXP or connect to the desktop again, the windows are there, and the rows show the right state.
 
 ## 11 - Who Needs a Mouse?
 
-You can do many tasks in Agent7 with the keyboard. The table below lists the shortcut keys that Agent7 has.
+You can do many tasks in AgentXP with the keyboard. The table below lists the shortcut keys that AgentXP has.
 
 | Press | To |
 |---|---|
@@ -575,25 +575,25 @@ You can do many tasks in Agent7 with the keyboard. The table below lists the sho
 
 The keys for Notepad, WordPad, and Agent Paint work when the window of that app has the focus.
 
-In the **Agent7 Desktop Connection** window, press the Up or Down arrow to select a desktop. Press Enter to connect it. Press F2 to rename it. Press Delete to delete it.
+In the **AgentXP Desktop Connection** window, press the Up or Down arrow to select a desktop. Press Enter to connect it. Press F2 to rename it. Press Delete to delete it.
 
 **Tip:** Press Alt and then the underlined letter of a menu to open that menu.
 
 ## 12 - For Developers
 
-This chapter is for people who change Agent7 itself. Agent7 uses Electron, Svelte 5, and SQLite. The user interface is a set of Windows 7 controls that Agent7 makes itself. Agent7 uses no other user interface library.
+This chapter is for people who change AgentXP itself. AgentXP uses Electron, Svelte 5, and SQLite. The user interface is a set of Windows XP controls that AgentXP makes itself. AgentXP uses no other user interface library.
 
 ### Commands
 
-The commands below run from the Agent7 folder:
+The commands below run from the AgentXP folder:
 
 | Command | Result |
 |---|---|
-| `npm run dev` | Starts Agent7 with live reload |
+| `npm run dev` | Starts AgentXP with live reload |
 | `npm run build` | Builds the program into the `out` folder |
 | `npm start` | Starts the built program |
 | `npm test` | Runs the unit tests |
-| `npm run test:e2e` | Builds Agent7 and runs the end-to-end tests with Playwright |
+| `npm run test:e2e` | Builds AgentXP and runs the end-to-end tests with Playwright |
 | `npm run typecheck` | Finds type errors |
 | `npm run storybook` | Opens the control kit in Storybook at port 6006 |
 | `npm run agent:scripted` | Runs the Scripted Agent from the terminal |
@@ -602,21 +602,21 @@ The commands below run from the Agent7 folder:
 
 To run one end-to-end test, type `npm run test:e2e -- e2e/chat.e2e.ts`. To skip the build, set `A7_E2E_SKIP_BUILD=1`.
 
-### How Agent7 Is Built
+### How AgentXP Is Built
 
-Agent7 has three parts that talk to each other:
+AgentXP has three parts that talk to each other:
 
 - **Main process** – Starts agents with ACP, stores data in SQLite, and serves the files and terminals of each agent. It owns the desktops, the drives, and the permissions.
 - **AG-UI stream** – Sends each turn to the window as AG-UI events over Electron IPC. AG-UI is a protocol for agent user interfaces.
-- **Window** – Shows the desktop with the Windows 7 controls, and draws A2UI forms (in the chat, in the side pane, or in a `surface` window) with the official A2UI engine. The agent chooses with the `target` argument of `a2ui_render`: `inline`, `sidebar`, or `window`.
+- **Window** – Shows the desktop with the Windows XP controls, and draws A2UI forms (in the chat, in the side pane, or in a `surface` window) with the official A2UI engine. The agent chooses with the `target` argument of `a2ui_render`: `inline`, `sidebar`, or `window`.
 
-The chat pane of an app window is a session with the role `aside`. The window owns it: Agent7 creates it with the first message and deletes it when the window closes. Chapter 9 describes it for users and `docs/DESKTOP_DESIGN.md` section 12 describes how it works.
+The chat pane of an app window is a session with the role `aside`. The window owns it: AgentXP creates it with the first message and deletes it when the window closes. Chapter 9 describes it for users and `docs/DESKTOP_DESIGN.md` section 12 describes how it works.
 
-The main process gives the agent an MCP server named `agent7`. The server lists only the tools of the open apps and tells the agent when the list changes. Agent7 serves the file and terminal requests of ACP in the same way. It allows only the paths on `C:` and on the USB drives.
+The main process gives the agent an MCP server named `agentxp`. The server lists only the tools of the open apps and tells the agent when the list changes. AgentXP serves the file and terminal requests of ACP in the same way. It allows only the paths on `C:` and on the USB drives.
 
 ### The Scripted Agent
 
-The Scripted Agent is a fake ACP agent for end-to-end tests. A JSON script says which prompt gives which messages, tool calls, and permission requests. Agent7 adds it to the list of agents at each start. You can step through a script with a control socket.
+The Scripted Agent is a fake ACP agent for end-to-end tests. A JSON script says which prompt gives which messages, tool calls, and permission requests. AgentXP adds it to the list of agents at each start. You can step through a script with a control socket.
 
 This script answers a prompt that contains "fix". It asks for permission and then writes a file:
 
@@ -663,11 +663,11 @@ Write a test id in lowercase with hyphens, as `<area>-<thing>[-<qualifier>]`. Th
 
 ### Screenshots for This Guide
 
-The screenshots in `docs/images` come from the real, built program. To take them again, type `npx electron-vite build` and then `npm run docs:screenshots`. The script `scripts/docs-screenshots.mjs` starts Agent7 with a private data folder. It runs the Scripted Agent with the script `scripts/docs-screenshots/chat.json` on a sample project named `claude-code-win`. On Linux without a display, it starts `xvfb-run` for you.
+The screenshots in `docs/images` come from the real, built program. To take them again, type `npx electron-vite build` and then `npm run docs:screenshots`. The script `scripts/docs-screenshots.mjs` starts AgentXP with a private data folder. It runs the Scripted Agent with the script `scripts/docs-screenshots/chat.json` on a sample project named `claude-code-win`. On Linux without a display, it starts `xvfb-run` for you.
 
 ### More to Read
 
-Read these documents before you change Agent7:
+Read these documents before you change AgentXP:
 
 - **[Architecture](docs/ARCHITECTURE.md)** – The layers and how a turn flows through them.
 - **[Desktop Design](docs/DESKTOP_DESIGN.md)** – The desktop, the apps, the tools, the drives, and the launcher.
@@ -679,9 +679,9 @@ Read these documents before you change Agent7:
 
 To open the Start menu and find an app, press Ctrl+Esc. To learn what the agent did, open the Event Viewer from **Start -> System Tools**.
 
-If Agent7 does not work as this guide says, open an issue at **[github.com/flying-dice/AgentXP/issues](https://github.com/flying-dice/AgentXP/issues)**. Tell us what you did, what you expected, and what happened.
+If AgentXP does not work as this guide says, open an issue at **[github.com/flying-dice/AgentXP/issues](https://github.com/flying-dice/AgentXP/issues)**. Tell us what you did, what you expected, and what happened.
 
-To learn more about the protocols that Agent7 uses, go to these sites:
+To learn more about the protocols that AgentXP uses, go to these sites:
 
 - **[agentclientprotocol.com](https://agentclientprotocol.com)** – The Agent Client Protocol.
 - **[docs.ag-ui.com](https://docs.ag-ui.com)** – The AG-UI protocol.

@@ -38,7 +38,7 @@
     align-items: stretch;
     height: 21px;
     border-bottom: 1px solid #ededed;
-    background: var(--w7-window);
+    background: var(--xp-window);
     cursor: default;
     outline: none;
   }
@@ -53,8 +53,8 @@
     text-overflow: ellipsis;
   }
   .selected .name {
-    background: var(--w7-list-select-face);
-    color: var(--w7-list-select-text);
+    background: var(--xp-list-select-face);
+    color: var(--xp-list-select-text);
   }
   .value {
     flex: 1;
@@ -69,6 +69,6 @@
     text-overflow: ellipsis;
   }
   .readonly {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
 </style>

@@ -263,8 +263,8 @@ describe('describing triggers', () => {
     expect(describeTrigger(weekly('2026-11-17T08:30', [1, 3, 5], 2))).toBe('At 8:30 AM on Monday, Wednesday and Friday, every 2 weeks')
     expect(describeTrigger(monthly('2026-11-17T08:30', [1, 15], [1, 7]))).toBe('At 8:30 AM on the 1st and 15th of January and July')
     expect(describeTrigger(monthly('2026-11-17T08:30', [2, 3, 11, 22], undefined, true))).toBe('At 8:30 AM on the 2nd, 3rd, 11th, 22nd and last day every month')
-    expect(describeTrigger({ kind: 'startup', enabled: true, delayMinutes: 0 })).toBe('At Agent7 startup')
-    expect(describeTrigger({ kind: 'startup', enabled: true, delayMinutes: 1 })).toBe('At Agent7 startup, after a delay of 1 minute')
+    expect(describeTrigger({ kind: 'startup', enabled: true, delayMinutes: 0 })).toBe('At AgentXP startup')
+    expect(describeTrigger({ kind: 'startup', enabled: true, delayMinutes: 1 })).toBe('At AgentXP startup, after a delay of 1 minute')
   })
 })
 

@@ -119,7 +119,7 @@
     padding: 1px 6px;
     background: #fff9c4;
     border: 1px solid #6b6b6b;
-    font: var(--w7-font);
+    font: var(--xp-font);
     pointer-events: none;
   }
   .hint {
@@ -131,7 +131,7 @@
     border: 1px solid #6b6b6b;
     background: #fffbd9;
     box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.35);
-    font: var(--w7-font);
+    font: var(--xp-font);
     pointer-events: none;
   }
 </style>

@@ -4,7 +4,7 @@
  * two-way flow (app reports, agent changes the view) can be played in Storybook.
  */
 import type { Message } from '@ag-ui/core'
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { AppKind, AskChatRequest, AppView, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab } from '@shared/desktop'
 import type { AguiSessionState } from '@shared/agui-state'
@@ -18,7 +18,7 @@ import { projectRootOf } from './explorer/explorerModel'
 import type { VPath } from '@shared/vfs'
 
 export class StoryHost implements DesktopHost {
-  readonly api: Agent7Api
+  readonly api: AgentXPApi
   /** The fake backend (for stories that push events). */
   readonly fake: FakeApi
   private current = $state.raw<DesktopState>(null as unknown as DesktopState)

@@ -22,13 +22,13 @@
 </Story>
 
 <Story name="Toolbar vertical">
-  <div style="display:flex;align-items:center;height:28px;padding:0 6px;background:var(--w7-toolbar-face)">
+  <div style="display:flex;align-items:center;height:28px;padding:0 6px;background:var(--xp-toolbar-face)">
     <span>New</span><Separator orientation="vertical" /><span>Open</span><Separator orientation="vertical" /><span>Save</span>
   </div>
 </Story>
 
 <Story name="Menu horizontal">
-  <div style="width:220px;padding:2px;background:var(--w7-menu-face);border:1px solid var(--w7-menu-border)">
+  <div style="width:220px;padding:2px;background:var(--xp-menu-face);border:1px solid var(--xp-menu-border)">
     <div style="padding:3px 28px">Cut</div>
     <Separator variant="menu" />
     <div style="padding:3px 28px">Paste</div>

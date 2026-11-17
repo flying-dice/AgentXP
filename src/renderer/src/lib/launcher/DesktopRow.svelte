@@ -67,8 +67,8 @@
     outline: 0;
   }
   .row:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .row.waiting {
     background: #fff4d6;
@@ -79,8 +79,8 @@
     border-color: #e8b4b4;
   }
   .row.selected {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .thumb {
     flex: none;
@@ -159,7 +159,7 @@
     font-weight: 700;
   }
   .meta {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

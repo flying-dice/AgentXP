@@ -14,12 +14,12 @@
 </script>
 
 <!-- The left pane of a Windows XP folder window: blue sections of links and details. -->
-<nav class="w7-taskpane {className}" aria-label={ariaLabel} data-testid={testid}>
+<nav class="xp-taskpane {className}" aria-label={ariaLabel} data-testid={testid}>
   {@render children?.()}
 </nav>
 
 <style>
-  .w7-taskpane {
+  .xp-taskpane {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -27,7 +27,7 @@
     height: 100%;
     padding: 10px 8px;
     overflow: auto;
-    font: var(--w7-font);
-    background: var(--w7-taskpane-face, linear-gradient(#7ba2e7, #6375d6));
+    font: var(--xp-font);
+    background: var(--xp-taskpane-face, linear-gradient(#7ba2e7, #6375d6));
   }
 </style>

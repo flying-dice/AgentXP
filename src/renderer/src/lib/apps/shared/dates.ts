@@ -1,4 +1,4 @@
-/** `11/16/2026 09:30:12` in local time, the way the Windows 7 logs show dates. */
+/** `11/16/2026 09:30:12` in local time, the way the Windows XP logs show dates. */
 export function formatDateTime(iso: string): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso

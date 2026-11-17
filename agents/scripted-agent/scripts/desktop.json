@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "desktop",
-  "description": "Desktop tools through the agent7 MCP server: a prompt containing \"closed\" is refused while the Terminal is closed; \"already open\" runs the command in an open Terminal; anything else opens the Terminal first, then runs a command.",
+  "description": "Desktop tools through the agentxp MCP server: a prompt containing \"closed\" is refused while the Terminal is closed; \"already open\" runs the command in an open Terminal; anything else opens the Terminal first, then runs a command.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -15,7 +15,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "terminal_run",
           "arguments": {
             "command": "echo nope"
@@ -46,7 +46,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "terminal_run",
           "arguments": {
             "command": "echo nope"
@@ -78,7 +78,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "desktop_open_app",
           "arguments": {
             "app": "terminal"
@@ -93,7 +93,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "terminal_run",
           "arguments": {
             "command": "echo hello from the scripted agent"

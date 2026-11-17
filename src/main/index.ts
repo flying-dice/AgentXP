@@ -20,13 +20,13 @@ import { ElectronThumbnailCapturer, handleThumbnailScheme, registerThumbnailSche
 if (app.isPackaged) inheritLoginShellPath()
 
 // Tests (and the smoke script) redirect all app data to a temp folder.
-const userDataOverride = process.env['AGENT7_USER_DATA']
+const userDataOverride = process.env['AGENTXP_USER_DATA']
 if (userDataOverride) app.setPath('userData', userDataOverride)
 
 // Thumbnails reach the launcher renderer over a custom protocol (registered before `ready`).
 registerThumbnailScheme()
 
-const databasePath = (): string => process.env['AGENT7_DB_PATH'] ?? join(app.getPath('userData'), 'agent7.sqlite')
+const databasePath = (): string => process.env['AGENTXP_DB_PATH'] ?? join(app.getPath('userData'), 'agentxp.sqlite')
 
 interface Running {
   windows: DesktopWindowManager
@@ -60,7 +60,7 @@ async function bootstrap(): Promise<Running> {
     notifier: new ElectronNotifier((desktopId) => services?.launcher.connect(desktopId)),
     screen: new ElectronScreenCapturer(windows),
     picker: new ElectronFolderPicker(),
-    nativePicker: process.env.AGENT7_NATIVE_PICKER === '1',
+    nativePicker: process.env.AGENTXP_NATIVE_PICKER === '1',
     filePicker: new ElectronFilePicker(),
     saver: new ElectronTextFileSaver(),
     opener: new ElectronPathOpener(),
@@ -109,16 +109,16 @@ let running: Running | null = null
 let shuttingDown = false
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.flyingdice.agent7')
+  electronApp.setAppUserModelId('com.flyingdice.agentxp')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
   running = await bootstrap()
-  // Starting Agent7 opens the launcher; desktops are connected from there.
+  // Starting AgentXP opens the launcher; desktops are connected from there.
   running.windows.showLauncher()
   app.on('activate', () => {
     if (running && !running.windows.hasWindows()) running.windows.showLauncher()
   })
 }).catch((error: unknown) => {
-  dialog.showErrorBox('Agent7 could not start', error instanceof Error ? error.message : String(error))
+  dialog.showErrorBox('AgentXP could not start', error instanceof Error ? error.message : String(error))
   app.exit(1)
 })
 

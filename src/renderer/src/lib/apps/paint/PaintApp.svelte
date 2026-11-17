@@ -375,7 +375,7 @@
     onkeydown(e)
   }} oncontextmenu={(e) => menuCtx.show(e, contextItems())}>
   <MenuStrip {menus} aria-label="Paint menu" />
-  <div class="ribbon">
+  <div class="toolbox">
     <section class="group" aria-label="Tools">
       <div class="body tools">
         {#each TOOLS as t (t.id)}
@@ -391,7 +391,6 @@
           </button>
         {/each}
       </div>
-      <div class="label">Tools</div>
     </section>
     <section class="group" aria-label="Shapes">
       <div class="body shapes">
@@ -405,7 +404,6 @@
           </button>
         {/each}
       </div>
-      <div class="label">Shapes</div>
     </section>
     <section class="group" aria-label="Size">
       <div class="body sizes">
@@ -415,30 +413,11 @@
           </button>
         {/each}
       </div>
-      <div class="label">Size</div>
-    </section>
-    <section class="group colors" aria-label="Colors">
-      <div class="body">
-        <div class="current">
-          <button type="button" class="cur" class:on={selecting === 1} aria-label="Color 1" aria-pressed={selecting === 1} onclick={() => (selecting = 1)}>
-            <i style:background={color1}></i><span>Color 1</span>
-          </button>
-          <button type="button" class="cur" class:on={selecting === 2} aria-label="Color 2" aria-pressed={selecting === 2} onclick={() => (selecting = 2)}>
-            <i style:background={color2}></i><span>Color 2</span>
-          </button>
-        </div>
-        <div class="palette" role="group" aria-label="Palette">
-          {#each PALETTE as c (c)}
-            <button type="button" class="sw" data-testid="paint-swatch" data-color={c} style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
-          {/each}
-        </div>
-      </div>
-      <div class="label">Colors</div>
     </section>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="workspace w7-scroll" role="region" tabindex="0" aria-label="Drawing area">
+  <div class="workspace xp-scroll" role="region" tabindex="0" aria-label="Drawing area">
     {#if agentDrawing}<div class="pill" data-testid="paint-agent-drawing" role="status">The agent is drawing…</div>{/if}
     <div class="sheet" style:width="{width}px" style:height="{height}px">
       <input
@@ -470,7 +449,7 @@
       {#if ghost}
         <div class="ghost" style:left="{ghost.x}px" style:top="{ghost.y}px" aria-hidden="true">
           <svg viewBox="0 0 16 16" width="22" height="22"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="#fff" stroke="#000" stroke-linejoin="round" /></svg>
-          <span>Agent7</span>
+          <span>AgentXP</span>
         </div>
       {/if}
       {#if textBox}
@@ -496,6 +475,24 @@
     </div>
   </div>
 
+    <div class="colorbar" role="group" aria-label="Colors">
+      <div class="body">
+        <div class="current">
+          <button type="button" class="cur" class:on={selecting === 1} aria-label="Color 1" aria-pressed={selecting === 1} onclick={() => (selecting = 1)}>
+            <i style:background={color1}></i><span>Color 1</span>
+          </button>
+          <button type="button" class="cur" class:on={selecting === 2} aria-label="Color 2" aria-pressed={selecting === 2} onclick={() => (selecting = 2)}>
+            <i style:background={color2}></i><span>Color 2</span>
+          </button>
+        </div>
+        <div class="palette" role="group" aria-label="Palette">
+          {#each PALETTE as c (c)}
+            <button type="button" class="sw" data-testid="paint-swatch" data-color={c} style:background={c} title={c} aria-label={c} onclick={(e) => pickColor(e, c)} oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation(), pickColor(new MouseEvent('click', { button: 2 }), c))}></button>
+          {/each}
+        </div>
+      </div>
+  </div>
+
   <StatusStrip sizeGrip={false}>
     <StatusStripLabel text={pointer ? `${pointer.x}, ${pointer.y}px` : ''} width={110} />
     <StatusStripLabel text="{resizing?.width ?? width} × {resizing?.height ?? height}px" borders={['left']} width={130} />
@@ -506,90 +503,100 @@
 </div>
 
 <style>
+  /* XP Paint: a toolbox on the left, the drawing area, a colour box at the bottom. */
   .paint {
     position: relative;
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background: #dbe6f4;
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    grid-template-rows: auto 1fr auto auto;
+    background: var(--xp-face);
     outline: 0;
   }
-  .ribbon {
-    flex: none;
+  .paint > :global(:first-child) {
+    grid-column: 1 / 3;
+  }
+  .toolbox {
+    grid-column: 1;
+    grid-row: 2;
     display: flex;
-    gap: 0;
-    height: 92px;
-    padding: 3px 4px 0;
-    border-top: 1px solid #a5b9d5;
-    border-bottom: 1px solid #8ea6c6;
-    background: linear-gradient(#fdfeff 0, #e8f0fa 46%, #dce7f5 50%, #e7eff9 100%);
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 4px;
+    background: var(--xp-face);
+  }
+  .workspace {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .colorbar {
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    background: var(--xp-face);
+    border-top: 1px solid #fff;
+  }
+  .paint > :global(.xp-statusstrip), .paint > :global([data-xp-statusstrip]) {
+    grid-column: 1 / 3;
   }
   .group {
     display: flex;
     flex-direction: column;
-    padding: 0 6px;
-    border-right: 1px solid #b9c9de;
   }
   .group .body {
-    flex: 1;
     display: flex;
-    align-items: center;
-    gap: 2px;
+    gap: 0;
   }
-  .label {
-    flex: none;
-    height: 16px;
-    color: #4a5f80;
-    text-align: center;
-  }
-  .tools {
-    display: grid !important;
-    grid-template-columns: repeat(3, 26px);
-    grid-auto-rows: 26px;
-    align-content: center;
-  }
+  .tools,
   .shapes {
     display: grid !important;
-    grid-template-columns: repeat(3, 26px);
-    align-content: center;
+    grid-template-columns: repeat(2, 24px);
+    grid-auto-rows: 24px;
+    justify-content: center;
+    padding: 2px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background: var(--xp-face);
   }
   .rb {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    background: transparent;
+    border: 1px solid;
+    border-color: #fff #808080 #808080 #fff;
+    border-radius: 0;
+    background: var(--xp-face);
     cursor: default;
   }
   .rb:hover {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
+    background: #f4f2e8;
   }
   .rb.on {
-    border-color: #8fa8cc;
-    background: linear-gradient(#cfdff5, #e3ecf9);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-color: #808080 #fff #fff #808080;
+    background: repeating-conic-gradient(#fff 0 25%, #ece9d8 0 50%) 0 0 / 2px 2px;
   }
-  /* Four 36 x 24 px buttons in two columns: every target is at least 24 px (UX-83). */
   .sizes {
     display: grid !important;
-    grid-template-columns: repeat(2, 36px);
-    align-content: center;
-    gap: 4px !important;
+    grid-template-columns: 1fr;
+    gap: 2px !important;
+    padding: 4px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background: #fff;
   }
   .size {
-    width: 36px;
-    height: 24px;
-    padding: 0 6px;
+    width: 100%;
+    height: 14px;
+    padding: 0 3px;
     display: flex;
     align-items: center;
     border: 1px solid transparent;
-    border-radius: 2px;
     background: transparent;
     cursor: default;
   }
@@ -597,82 +604,87 @@
     flex: 1;
     background: #000;
   }
-  .size:hover {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
-  }
   .size.on {
-    border-color: #8fa8cc;
-    background: linear-gradient(#cfdff5, #e3ecf9);
+    background: var(--xp-highlight);
+  }
+  .size.on span {
+    background: #fff;
   }
   .colors .body {
     gap: 10px;
   }
   .current {
-    display: flex;
-    gap: 4px;
+    position: relative;
+    width: 40px;
+    height: 36px;
+    flex: none;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    background: var(--xp-face);
   }
   .cur {
-    width: 52px;
-    height: 58px;
-    padding: 4px 2px 2px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    background: transparent;
-    font: inherit;
-    font-size: 11px;
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid;
+    border-color: #fff #808080 #808080 #fff;
+    background: var(--xp-face);
     cursor: default;
+    font-size: 0;
+  }
+  .cur:first-child {
+    left: 4px;
+    top: 4px;
+    z-index: 2;
+  }
+  .cur:last-child {
+    left: 14px;
+    top: 12px;
   }
   .cur i {
-    width: 30px;
-    height: 30px;
-    border: 1px solid #5d6c82;
-    box-shadow: inset 0 0 0 1px #fff;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #808080;
   }
-  .cur:hover {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
+  .cur span {
+    display: none;
   }
   .cur.on {
-    border-color: #8fa8cc;
-    background: linear-gradient(#cfdff5, #e3ecf9);
+    outline: 1px dotted #000;
+    outline-offset: 1px;
   }
   .palette {
     display: grid;
-    grid-template-columns: repeat(10, 24px);
-    grid-auto-rows: 24px;
-    gap: 2px;
+    grid-template-columns: repeat(10, 16px);
+    grid-auto-rows: 16px;
+    gap: 0;
   }
   .sw {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
     padding: 0;
-    border: 1px solid #6e7f99;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
     cursor: default;
   }
   .sw:hover {
-    outline: 2px solid #f0a43c;
-    outline-offset: -1px;
+    outline: 1px dotted #000;
+    outline-offset: -3px;
   }
   .workspace {
     position: relative;
-    flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 6px 6px 18px;
-    background: #aab8cc;
-    background-image: linear-gradient(#a3b2c8, #b4c1d4);
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.35);
+    padding: 4px 4px 18px;
+    background: #808080;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
   }
   .sheet {
     position: relative;
     flex: none;
-    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.45);
   }
   canvas {
     display: block;
@@ -742,6 +754,6 @@
     border: 1px dashed #3a4f6e;
     outline: 0;
     background: transparent;
-    font-family: 'Segoe UI', 'Noto Sans', sans-serif;
+    font-family: Tahoma, 'Noto Sans', sans-serif;
   }
 </style>

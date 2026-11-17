@@ -7,7 +7,7 @@ import { DesktopToolService } from '../../application/tools/DesktopToolService'
 import type { DesktopToolHost, ToolContext, ToolResult } from '../../application/tools/types'
 import { A2uiBridgeServer, defaultSocketPath } from './bridge-server'
 import { SocketBridgeClient } from './bridge-client'
-import { createAgent7McpServer } from './mcp-tools'
+import { createAgentXPMcpServer } from './mcp-tools'
 
 class FakeHost implements DesktopToolHost {
   groups: ToolGroup[] = ['shell']
@@ -26,14 +26,14 @@ class FakeHost implements DesktopToolHost {
 const sink = { apply: async () => ({ ok: true as const }) }
 const names = async (client: Client): Promise<string[]> => (await client.listTools()).tools.map((t) => t.name)
 
-describe('agent7 MCP server <-> bridge: desktop tools', () => {
+describe('agentxp MCP server <-> bridge: desktop tools', () => {
   let host: FakeHost
   let bridge: A2uiBridgeServer
   let client: Client
   let notified: number
 
   async function connect(desktopId: string): Promise<void> {
-    const server = createAgent7McpServer(new SocketBridgeClient(bridge.socketPath, '5', desktopId))
+    const server = createAgentXPMcpServer(new SocketBridgeClient(bridge.socketPath, '5', desktopId))
     const [a, b] = InMemoryTransport.createLinkedPair()
     client = new Client({ name: 't', version: '0' })
     client.setNotificationHandler(ToolListChangedNotificationSchema, () => void notified++)
@@ -60,7 +60,7 @@ describe('agent7 MCP server <-> bridge: desktop tools', () => {
   it('declares listChanged and lists the tools of the groups the bridge reports, on every tools/list', async () => {
     await connect('3')
     expect(client.getServerCapabilities()?.tools?.listChanged).toBe(true)
-    expect(client.getServerVersion()?.name).toBe('agent7')
+    expect(client.getServerVersion()?.name).toBe('agentxp')
     expect(await names(client)).toEqual(['a2ui_catalog', 'a2ui_render', 'a2ui_delete_surface', 'desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app'])
     host.groups = ['shell', 'terminal']
     expect(await names(client)).toContain('terminal_run')

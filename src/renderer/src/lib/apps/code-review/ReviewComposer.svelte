@@ -71,9 +71,9 @@
     flex-direction: column;
     gap: 4px;
     padding: 6px;
-    background: var(--w7-face);
-    border: 1px solid var(--w7-panel-border);
-    font: var(--w7-font);
+    background: var(--xp-face);
+    border: 1px solid var(--xp-panel-border);
+    font: var(--xp-font);
   }
   /* The box that has the keyboard shows it: a blue border around the whole box and a blue caret (UX-211). */
   .composer:focus-within {
@@ -89,8 +89,8 @@
     box-shadow: 0 0 0 1px #1c6ed6;
   }
   .where {
-    color: var(--w7-text-muted);
-    font-family: var(--w7-font-mono);
+    color: var(--xp-text-muted);
+    font-family: var(--xp-font-mono);
   }
   .row {
     display: flex;
@@ -101,6 +101,6 @@
     flex: 1;
   }
   .help {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

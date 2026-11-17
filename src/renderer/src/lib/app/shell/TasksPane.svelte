@@ -15,7 +15,7 @@
 
 <div class="tasks">
   <div class="caption">Plan for this request</div>
-  <div class="list w7-scroll" role="list" aria-label="Tasks">
+  <div class="list xp-scroll" role="list" aria-label="Tasks">
     {#each ordered as task (task.id)}
       <div class="item" role="listitem" data-testid="tasks-item" data-status={task.status} class:done={task.status === 'completed'} class:active={task.status === 'in_progress'}>
         <CheckBox checked={task.status === 'completed'} readonly>
@@ -48,8 +48,8 @@
     flex: 1;
     min-height: 0;
     padding: 2px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .item {
     display: flex;
@@ -59,14 +59,14 @@
   }
   .done .text {
     text-decoration: line-through;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .active .text {
     font-weight: 700;
   }
   .empty {
     padding: 6px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .summary {
     flex: none;

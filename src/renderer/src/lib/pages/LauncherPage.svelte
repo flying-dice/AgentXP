@@ -1,11 +1,11 @@
 <script lang="ts">
   /**
-   * The launcher window: "Agent7 Desktop Connection", styled after Windows 7's Remote Desktop
+   * The launcher window: "AgentXP Desktop Connection", styled after Windows XP's Remote Desktop
    * Connection. Lists the desktops (long-lived projects); Connect opens one in its own OS window,
    * and closing that window only disconnects.
    */
   import { onMount, untrack } from 'svelte'
-  import type { Agent7Api } from '@shared/ipc'
+  import type { AgentXPApi } from '@shared/ipc'
   import type { AgentDto, FolderDto } from '@shared/models'
   import type { DesktopSummaryDto, NewDesktopInput } from '@shared/vfs'
   import Button from '../kit/atoms/Button.svelte'
@@ -24,8 +24,8 @@
   import { accessKeyCommand, AGENT_CHECK_MS, connectLabel, connectTip, EMPTY_LAUNCHER_HELP, LAUNCHER_WINDOW_TITLE, DELETE_WARNING, drivesLine, initialSelection, lastUsedText, sortDesktops, stateLabel } from '../launcher/launcherModel'
 
   interface Props {
-    /** The backend; defaults to `window.agent7`. */
-    api?: Agent7Api
+    /** The backend; defaults to `window.agentxp`. */
+    api?: AgentXPApi
     /** Clock for "last used" (stories pass a fixed one). */
     now?: Date
     /** Open the "Show Options" details at start (stories). */
@@ -36,7 +36,7 @@
     selectedId?: number | null
   }
 
-  let { api = window.agent7, now, showOptions = false, dialog = null, selectedId = null }: Props = $props()
+  let { api = window.agentxp, now, showOptions = false, dialog = null, selectedId = null }: Props = $props()
 
   let desktops = $state.raw<DesktopSummaryDto[]>([])
   let loaded = $state(false)
@@ -111,7 +111,7 @@
   })
 
   async function fail(error: unknown): Promise<void> {
-    await showMessageBox({ text: errorText(error), caption: 'Agent7 Desktop Connection', buttons: 'OK', icon: 'error' })
+    await showMessageBox({ text: errorText(error), caption: 'AgentXP Desktop Connection', buttons: 'OK', icon: 'error' })
   }
 
   /** Opens the desktop's window; false when it failed (the user has been told). */
@@ -172,7 +172,7 @@
     if (!target) return
     const answer = await showMessageBox({
       text: `Delete the desktop '${target.title}'?\n\n${DELETE_WARNING}`,
-      caption: 'Agent7 Desktop Connection',
+      caption: 'AgentXP Desktop Connection',
       buttons: 'YesNo',
       icon: 'warning',
       defaultButton: 1
@@ -246,21 +246,21 @@
 {/snippet}
 
 <div class="page">
-  <Form testid="launcher-window" title="Agent7 Desktop Connection" iconName="agent7" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
+  <Form testid="launcher-window" title="AgentXP Desktop Connection" iconName="agentxp" dialog draggable width="100%" height="100%" onclose={() => void api.window.close()}>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div class="rdc" role="presentation" onkeydown={onKeydown}>
       <header class="banner">
         <span class="monitor" aria-hidden="true"><Icon name="computer" size={48} /></span>
         <span class="words">
-          <span class="small">Agent7</span>
+          <span class="small">AgentXP</span>
           <span class="big">Desktop<br />Connection</span>
         </span>
-        <span class="mark" aria-hidden="true"><Icon name="agent7" size={44} /></span>
+        <span class="mark" aria-hidden="true"><Icon name="agentxp" size={44} /></span>
       </header>
       <div class="body">
         <p class="lead">Closing a desktop window only disconnects it. Its agents keep running. To end them, use <button type="button" class="link" data-testid="launcher-task-manager-link" title="How to end the agents of a desktop" onclick={() => (helpOpen = true)}>Task Manager</button> on the desktop.</p>
         <!-- A listbox needs option children: with no desktops the list is plain. -->
-        <div class="list w7-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
+        <div class="list xp-scroll" role={sorted.length > 0 ? 'listbox' : undefined} data-testid="launcher-list" aria-label={sorted.length > 0 ? 'Desktops' : undefined} tabindex="0">
           {#each sorted as desktop (desktop.id)}
             <DesktopRow {desktop} {now} opening={opening.includes(desktop.id)} ready={ready.includes(desktop.id)} selected={desktop.id === selected} onselect={() => ((picked = true), (selected = desktop.id))} onactivate={() => void connect()} />
           {:else}
@@ -320,7 +320,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
     padding: 0;
     box-sizing: border-box;
   }
@@ -387,24 +387,24 @@
     cursor: pointer;
   }
   .link:hover {
-    color: #3399ff;
+    color: #316ac5;
   }
   .list {
     flex: 1;
     min-height: 90px;
     overflow: auto;
     padding: 2px;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
     outline: 0;
   }
   .list:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
   .empty {
     margin: 14px 10px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   :global(.details) {
     flex: none;
@@ -416,7 +416,7 @@
     margin: 0;
   }
   dt {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   dd {
     margin: 0;

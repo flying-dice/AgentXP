@@ -1,5 +1,5 @@
 /**
- * Win7-flavoured 16x16 icon set. Each entry is the inner SVG markup (viewBox 0 0 16 16).
+ * WinXP-flavoured 16x16 icon set. Each entry is the inner SVG markup (viewBox 0 0 16 16).
  * Gradient ids are namespaced per icon (`ix-<name>-…`) so identical markup can repeat on a page.
  */
 
@@ -9,7 +9,7 @@ export const iconNames = [
   'shield', 'terminal', 'search', 'edit', 'check', 'close', 'minimize', 'maximize', 'restore',
   'chevron-down', 'chevron-right', 'chevron-up', 'chevron-left', 'plus', 'minus', 'refresh',
   'attach', 'agent', 'claude', 'tasks', 'changes', 'properties', 'copy', 'cut', 'paste',
-  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agent7',
+  'delete', 'play', 'pause', 'globe', 'lock', 'user', 'help', 'agentxp',
   'paint', 'wordpad', 'sticky', 'eventlog', 'scissors', 'recycle', 'recycle-full', 'taskmgr',
   'computer', 'drive', 'usb', 'usb-safe', 'star', 'library', 'kanban', 'scheduler'
 ] as const
@@ -373,13 +373,9 @@ const markup: Record<IconName, string> = {
       '<circle cx="11.500" cy="11.500" r="4" fill="url(#~c)" stroke="#2c3e5c" stroke-width=".9"/>' +
       '<path d="M11.500 9.200v2.500l1.600 1" fill="none" stroke="#2c3e5c" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>'
   ),
-  agent7: defs(
-    vg('b', '#7cc3ff', '#3f9bf0', '#2f86e0') + vg('c', '#8fe9ff', '#3cc8ee', '#22b8e0') + vg('a', '#ffe08a', '#ffb84d', '#f6a93a'),
-    '<g transform="scale(.25)" stroke-width="3" stroke-linejoin="round">' +
-      '<rect x="4" y="4" width="26" height="26" rx="3" fill="url(#~b)" stroke="#124a8c"/>' +
-      '<rect x="34" y="4" width="26" height="26" rx="3" fill="url(#~c)" stroke="#0b6a8a"/>' +
-      '<rect x="34" y="34" width="26" height="26" rx="3" fill="url(#~a)" stroke="#9a5a06"/></g>' +
-      '<g fill="#fff" opacity=".4"><rect x="1.5" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="1.5" width="5.5" height="2.6" rx=".5"/><rect x="9" y="9" width="5.5" height="2.6" rx=".5"/></g>'
+  agentxp: defs(
+    '<linearGradient id="~b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fa8ff"/><stop offset=".5" stop-color="#2a63e4"/><stop offset="1" stop-color="#0f3fb8"/></linearGradient><linearGradient id="~g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity=".08"/></linearGradient><linearGradient id="~n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8bea6a"/><stop offset=".5" stop-color="#3fb83a"/><stop offset="1" stop-color="#2a9a2a"/></linearGradient>',
+    '<g transform="scale(.25)"><rect x="3" y="3" width="58" height="58" rx="14" fill="url(#~b)" stroke="#0a2f9c" stroke-width="2.500"/><rect x="5.500" y="5.500" width="53" height="53" rx="11.500" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.500"/><path d="M7 28C7 14 17 7 32 7s25 7 25 21C45 22 19 22 7 28z" fill="url(#~g)"/><path d="M17 24l15 11-15 11" fill="none" stroke="#0a2f9c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".45" transform="translate(1.500 2)"/><path d="M17 24l15 11-15 11" fill="none" stroke="#fff" stroke-width="6.500" stroke-linecap="round" stroke-linejoin="round"/><rect x="36" y="42" width="14" height="6" rx="2" fill="url(#~n)" stroke="#1d6f1d" stroke-width="1.200"/></g>'
   )
 }
 

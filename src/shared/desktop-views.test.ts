@@ -92,15 +92,15 @@ describe('numberDuplicateTitles', () => {
 
 describe('helpWindowTitle', () => {
   it('titles a help window after the app of its topic', () => {
-    expect(helpWindowTitle('notepad')).toBe('Agent7 Help and Support: Using Notepad')
-    expect(helpWindowTitle('agent-manager')).toBe('Agent7 Help and Support: Using Task Manager')
-    expect(helpWindowTitle('explorer')).toBe('Agent7 Help and Support: Using Explorer')
-    expect(helpWindowTitle('browser#troubleshooting')).toBe('Agent7 Help and Support: Using Browser')
-    expect(helpWindowTitle('nonsense#top')).toBe('Agent7 Help and Support')
+    expect(helpWindowTitle('notepad')).toBe('AgentXP Help and Support: Using Notepad')
+    expect(helpWindowTitle('agent-manager')).toBe('AgentXP Help and Support: Using Task Manager')
+    expect(helpWindowTitle('explorer')).toBe('AgentXP Help and Support: Using Explorer')
+    expect(helpWindowTitle('browser#troubleshooting')).toBe('AgentXP Help and Support: Using Browser')
+    expect(helpWindowTitle('nonsense#top')).toBe('AgentXP Help and Support')
   })
 
   it('keeps Help and Support for the home, desktop, launcher and Help topics', () => {
-    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('Agent7 Help and Support')
+    for (const topic of ['index', 'desktop', 'launcher', 'help', 'nonsense']) expect(helpWindowTitle(topic)).toBe('AgentXP Help and Support')
   })
 
   it('names the Chats window after its icon (UX-180)', () => {
@@ -111,7 +111,7 @@ describe('helpWindowTitle', () => {
 
   it('is what windowTitle gives a help view', () => {
     expect(windowTitle({ app: 'event-viewer', sessionId: null, level: 'all', selectedEventId: null })).toBe('Event Viewer') // the same words as the root of its tree
-    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('Agent7 Help and Support: Using Terminal')
+    expect(windowTitle({ app: 'help', topic: 'terminal' })).toBe('AgentXP Help and Support: Using Terminal')
   })
 })
 
@@ -287,7 +287,7 @@ describe('the icon column (UX-166)', () => {
 describe('Task Scheduler window', () => {
   it('is titled and sized like the other tools and keeps a minimum size', () => {
     expect(windowTitle({ app: 'task-scheduler', selectedTaskId: 3, tab: 'history' })).toBe('Task Scheduler')
-    expect(helpWindowTitle('task-scheduler')).toBe('Agent7 Help and Support: Using Task Scheduler')
+    expect(helpWindowTitle('task-scheduler')).toBe('AgentXP Help and Support: Using Task Scheduler')
     expect([DEFAULT_BOUNDS['task-scheduler'].width, DEFAULT_BOUNDS['task-scheduler'].height]).toEqual([1000, 600])
     expect(minWindowSize('task-scheduler')).toEqual({ width: 760, height: 520 })
   })

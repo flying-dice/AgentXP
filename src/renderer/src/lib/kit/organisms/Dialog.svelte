@@ -63,8 +63,8 @@
 </script>
 
 {#if open}
-  <!-- Win7 dialogs do not dim the owner; the transparent overlay only blocks interaction. -->
-  <div class="w7-dialog-overlay" class:contained>
+  <!-- WinXP dialogs do not dim the owner; the transparent overlay only blocks interaction. -->
+  <div class="xp-dialog-overlay" class:contained>
     <div class="holder" use:focusTrap role="presentation" onkeydown={onKeydown}>
       <Form
         {title}
@@ -81,7 +81,7 @@
         {closable}
         {onclose}
         {testid}
-        class="w7-dialog {className}"
+        class="xp-dialog {className}"
       >
         <div class="content" class:fill>{@render children?.()}</div>
         {#if buttons}<div class="bar">{@render buttons()}</div>{/if}
@@ -91,7 +91,7 @@
 {/if}
 
 <style>
-  .w7-dialog-overlay {
+  .xp-dialog-overlay {
     position: fixed;
     inset: 0;
     z-index: 1000;
@@ -100,7 +100,7 @@
     justify-content: center;
     background: transparent;
   }
-  .w7-dialog-overlay.contained {
+  .xp-dialog-overlay.contained {
     position: absolute;
   }
   .holder {
@@ -117,7 +117,7 @@
   .bar {
     flex: none;
     padding: 12px 12px 12px;
-    background: var(--w7-face);
+    background: var(--xp-face);
     border-top: 1px solid #dfdfdf;
   }
 </style>

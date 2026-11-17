@@ -23,14 +23,14 @@
     }
   })
 
-  const css = `.w7-btn {
+  const css = `.xp-btn {
   min-width: 75px;
   height: 23px;
   border: 1px solid #707070;
   border-radius: 3px;
   background: linear-gradient(#f2f2f2 0, #cfcfcf 100%);
 }
-.w7-btn:hover { border-color: #3c7fb1; }`
+.xp-btn:hover { border-color: #3c7fb1; }`
 
   const cs = `using System;
 
@@ -102,8 +102,8 @@ namespace Demo
       <CodeViewer {...args}>
         {#snippet peek(mark)}
           <div style="padding:4px 6px;font-weight:700">Modified line {mark.line}</div>
-          <div style="background:var(--w7-git-old-bg);padding:0 8px;font:var(--w7-font-mono)">- const target = returnUrl || '/'</div>
-          <div style="background:var(--w7-git-new-bg);padding:0 8px;font:var(--w7-font-mono)">+ const target = returnUrl ?? '/home'</div>
+          <div style="background:var(--xp-git-old-bg);padding:0 8px;font:var(--xp-font-mono)">- const target = returnUrl || '/'</div>
+          <div style="background:var(--xp-git-new-bg);padding:0 8px;font:var(--xp-font-mono)">+ const target = returnUrl ?? '/home'</div>
         {/snippet}
       </CodeViewer>
     </div>

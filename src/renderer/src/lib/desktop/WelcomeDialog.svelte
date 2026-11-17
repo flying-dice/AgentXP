@@ -10,16 +10,16 @@
   let { onopen }: Props = $props()
 </script>
 
-<Dialog testid="welcome-dialog" title="Welcome to Agent7" iconName="agent7" width="440px" closable={false} contained bodyColor="window">
+<Dialog testid="welcome-dialog" title="Welcome to AgentXP" iconName="agentxp" width="440px" closable={false} contained bodyColor="window">
   <div class="body">
-    <Icon name="agent7" size={48} />
+    <Icon name="agentxp" size={48} />
     <div>
       <h2>Open a desktop to get started</h2>
-      <p>A desktop is a small Windows 7 machine for one project. It has its own place for your files (C:), and your projects plug in as USB drives that you can safely remove. Pick or create one in Agent7 Desktops.</p>
+      <p>A desktop is a small Windows XP machine for one project. It has its own place for your files (C:), and your projects plug in as USB drives that you can safely remove. Pick or create one in AgentXP Desktops.</p>
     </div>
   </div>
   {#snippet buttons()}
-    <div class="buttons"><Button data-testid="welcome-open-launcher" isDefault data-autofocus onclick={() => onopen?.()}>Agent7 Desktops…</Button></div>
+    <div class="buttons"><Button data-testid="welcome-open-launcher" isDefault data-autofocus onclick={() => onopen?.()}>AgentXP Desktops…</Button></div>
   {/snippet}
 </Dialog>
 
@@ -28,7 +28,7 @@
     display: flex;
     gap: 14px;
     padding: 18px 18px 14px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   h2 {
     margin: 0 0 6px;

@@ -71,7 +71,7 @@ export interface RememberedLayout {
   restore: Panes | null
 }
 
-export const focusKey = (desktopId: Id, windowId: Id): string => `agent7.codepanes.${desktopId}.${windowId}`
+export const focusKey = (desktopId: Id, windowId: Id): string => `agentxp.codepanes.${desktopId}.${windowId}`
 
 const bool = (value: unknown, fallback: boolean): boolean => (typeof value === 'boolean' ? value : fallback)
 

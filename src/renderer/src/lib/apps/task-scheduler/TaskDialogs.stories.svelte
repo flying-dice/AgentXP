@@ -39,49 +39,49 @@
 </script>
 
 <Story name="CreateBasicTaskWizard" asChild>
-  <div style="position:relative;width:900px;height:640px;background:var(--w7-face);border:1px solid #999">
+  <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
     <BasicTaskWizard agents={sampleAgents} {drives} {sessions} onfinish={async () => null} oncancel={noop} />
   </div>
 </Story>
 
 <Story name="CreateTaskProperties" asChild>
-  <div style="position:relative;width:900px;height:640px;background:var(--w7-face);border:1px solid #999">
+  <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
     <TaskEditorDialog bind:draft={editor} bind:tab={editorTab} existing agents={sampleAgents} {drives} {sessions} problem="" onedittrigger={noop} oneditaction={noop} onresult={noop} />
   </div>
 </Story>
 
 <Story name="TriggersTab" asChild>
-  <div style="position:relative;width:900px;height:640px;background:var(--w7-face);border:1px solid #999">
+  <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
     <TaskEditorDialog bind:draft={editor} tab="triggers" existing agents={sampleAgents} {drives} {sessions} problem="" onedittrigger={noop} oneditaction={noop} onresult={noop} />
   </div>
 </Story>
 
 <Story name="NewTrigger" asChild>
-  <div style="position:relative;width:900px;height:640px;background:var(--w7-face);border:1px solid #999">
+  <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
     <TriggerDialog initial={null} onsave={noop} oncancel={noop} />
   </div>
 </Story>
 
 <Story name="NewAction" asChild>
-  <div style="position:relative;width:900px;height:640px;background:var(--w7-face);border:1px solid #999">
+  <div style="position:relative;width:900px;height:640px;background:var(--xp-face);border:1px solid #999">
     <ActionDialog initial={null} agents={sampleAgents} {drives} {sessions} onsave={noop} oncancel={noop} />
   </div>
 </Story>
 
 <Story name="MonthlyTriggerFields" asChild>
-  <div style="width:520px;padding:12px;background:var(--w7-face)"><TriggerFields bind:trigger prefix="story" advanced /></div>
+  <div style="width:520px;padding:12px;background:var(--xp-face)"><TriggerFields bind:trigger prefix="story" advanced /></div>
 </Story>
 
 <Story name="WeeklyTriggerFields" asChild>
-  <div style="width:520px;padding:12px;background:var(--w7-face)"><TriggerFields bind:trigger={weekly} prefix="story" /></div>
+  <div style="width:520px;padding:12px;background:var(--xp-face)"><TriggerFields bind:trigger={weekly} prefix="story" /></div>
 </Story>
 
 <Story name="ActionFields" asChild>
-  <div style="width:520px;padding:12px;background:var(--w7-face)"><ActionFields bind:action agents={sampleAgents} {drives} {sessions} prefix="story" /></div>
+  <div style="width:520px;padding:12px;background:var(--xp-face)"><ActionFields bind:action agents={sampleAgents} {drives} {sessions} prefix="story" /></div>
 </Story>
 
 <Story name="ConditionsAndSettings" asChild>
-  <div style="width:560px;display:flex;flex-direction:column;gap:8px;background:var(--w7-face)">
+  <div style="width:560px;display:flex;flex-direction:column;gap:8px;background:var(--xp-face)">
     <ConditionsForm bind:conditions prefix="story" />
     <SettingsForm bind:settings prefix="story" />
   </div>

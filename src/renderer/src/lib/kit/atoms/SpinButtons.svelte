@@ -16,7 +16,7 @@
     clearInterval(repeat)
   }
 
-  /** Fires once, then auto-repeats while the button is held (like the Win7 spinner). */
+  /** Fires once, then auto-repeats while the button is held (like the WinXP spinner). */
   function press(action: () => void): void {
     action()
     stop()
@@ -51,7 +51,7 @@
     align-items: center;
     justify-content: center;
     border: 1px solid #8e9097;
-    background: var(--w7-btn-face);
+    background: var(--xp-btn-face);
     color: #404040;
     cursor: default;
     outline: none;
@@ -64,16 +64,16 @@
     border-bottom-right-radius: 1px;
   }
   button:hover:not(:disabled) {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   button:active:not(:disabled) {
-    border-color: var(--w7-btn-active-border);
-    background: var(--w7-btn-active-face);
+    border-color: var(--xp-btn-active-border);
+    background: var(--xp-btn-active-face);
   }
   button:disabled {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
+    border-color: var(--xp-border-disabled);
+    background: #f4f2e8;
     color: #b0b0b0;
   }
 </style>

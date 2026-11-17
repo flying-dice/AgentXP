@@ -1,5 +1,5 @@
 /** In-memory skills, MCP servers, profiles, teams and rooms for Storybook (`createFakeApi`) and the renderer tests. */
-import type { Agent7Api, Agent7Events } from '@shared/ipc'
+import type { AgentXPApi, AgentXPEvents } from '@shared/ipc'
 import {
   colorOfName,
   mentionedMembers,
@@ -53,9 +53,9 @@ export const sampleTeams: TeamDto[] = [{ id: 1, name: 'Feature team', instructio
 const hasName = (list: readonly { id: number; name: string }[], name: string, except?: number): boolean => list.some((x) => x.id !== except && x.name.toLowerCase() === name.toLowerCase())
 
 export interface FakeTeams {
-  api: Pick<Agent7Api, 'skills' | 'mcp' | 'profiles' | 'teams' | 'rooms'>
+  api: Pick<AgentXPApi, 'skills' | 'mcp' | 'profiles' | 'teams' | 'rooms'>
   /** Wire the room events to the fake API's `on` (the room window listens to `room.changed`). */
-  onRoomEvents(emit: <K extends 'room.changed' | 'room.removed'>(event: K, payload: Agent7Events[K]) => void): void
+  onRoomEvents(emit: <K extends 'room.changed' | 'room.removed'>(event: K, payload: AgentXPEvents[K]) => void): void
 }
 
 export function createFakeTeams(): FakeTeams {

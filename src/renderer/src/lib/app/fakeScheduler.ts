@@ -65,7 +65,7 @@ export const sampleTaskInputs: ScheduledTaskInput[] = [
     actions: [agentAction('Run the dependency check and list the packages that are out of date.')],
     settings: { allowOnDemand: true, runMissed: true, stopIfRunsLonger: true, stopAfterMinutes: 30, restartOnFailure: true, restartIntervalMinutes: 10, restartAttempts: 2, ifRunning: 'queue' }
   }),
-  base('Start of day', 'Read the open tasks when Agent7 starts.', {
+  base('Start of day', 'Read the open tasks when AgentXP starts.', {
     triggers: [{ kind: 'startup', enabled: true, delayMinutes: 2 }],
     actions: [agentAction('List the open tasks of this project.')]
   }),

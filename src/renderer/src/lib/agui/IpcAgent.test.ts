@@ -9,7 +9,7 @@ import { surfacesOf } from './activities'
 
 type Script = (input: RunAgentInput) => BaseEvent[] | Promise<BaseEvent[]>
 
-/** A stand-in for window.agent7.agui: records calls and plays a script of events per run. */
+/** A stand-in for window.agentxp.agui: records calls and plays a script of events per run. */
 class FakeAguiApi implements AguiApi {
   readonly runs: RunAgentInput[] = []
   readonly aborts: [string, string][] = []
@@ -172,14 +172,14 @@ describe('IpcAgent', () => {
   })
 })
 
-describe('IpcAgent with the global window.agent7', () => {
+describe('IpcAgent with the global window.agentxp', () => {
   const holder = globalThis as unknown as { window?: unknown }
   afterEach(() => {
     delete holder.window
   })
 
-  it('defaults to window.agent7.agui', async () => {
-    holder.window = { agent7: { agui: api } }
+  it('defaults to window.agentxp.agui', async () => {
+    holder.window = { agentxp: { agui: api } }
     api.script = (input) => [started(input), finished(input)]
     await new IpcAgent(undefined, { threadId: '3' }).connectAgent()
     expect(api.runs[0]?.threadId).toBe('3')

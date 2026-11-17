@@ -149,7 +149,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
@@ -161,7 +161,7 @@
     align-items: flex-start;
     gap: 6px;
   }
-  .side :global(.w7-reason) {
+  .side :global(.xp-reason) {
     white-space: normal;
     min-height: 2.6em;
   }

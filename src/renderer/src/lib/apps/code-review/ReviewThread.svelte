@@ -75,7 +75,7 @@
     border: 1px solid #d9c98a;
     border-left: 4px solid #d9a400;
     border-radius: 3px;
-    font: var(--w7-font);
+    font: var(--xp-font);
     white-space: normal;
   }
   .thread[data-severity='blocker'] {
@@ -123,7 +123,7 @@
   }
   .range,
   .state {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .state {
@@ -141,7 +141,7 @@
     gap: 2px;
     padding: 2px 6px 4px;
   }
-  .actions :global(.w7-btn) {
+  .actions :global(.xp-btn) {
     min-width: 0;
     height: 20px;
     padding: 0 6px;

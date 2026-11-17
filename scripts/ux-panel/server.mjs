@@ -130,7 +130,7 @@ async function windowList() {
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i]
     const size = await p.evaluate(() => [innerWidth, innerHeight]).catch(() => [0, 0])
-    // H-43: every window title is "Agent7"; the kind (launcher or desktop) tells the windows apart.
+    // H-43: every window title is "AgentXP"; the kind (launcher or desktop) tells the windows apart.
     const kind = windowKind(p.url())
     rows.push(`${p === cur ? '*' : ' '} ${i}  [${kind}]  "${await p.title().catch(() => '')}"  ${size[0]}x${size[1]}${p === cur ? '  (current)' : ''}`)
   }
@@ -329,9 +329,9 @@ try {
     if (req.op === 'status') return { ok: true, state }
     if (req.op === 'check') return { ok: true, result: await runCheck(ctx, req.task ?? state.task, { answer: req.answer }) }
     if (req.op === 'eval') {
-      // Facilitator debugging only: evaluates an async function body in the launcher page with `api` = window.agent7.
+      // Facilitator debugging only: evaluates an async function body in the launcher page with `api` = window.agentxp.
       const page = await ctx.page()
-      return { ok: true, result: await page.evaluate(`(async (api) => { ${req.code} })(window.agent7)`) }
+      return { ok: true, result: await page.evaluate(`(async (api) => { ${req.code} })(window.agentxp)`) }
     }
     if (req.op === 'shutdown') {
       setTimeout(shutdown, 50)

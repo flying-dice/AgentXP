@@ -15,7 +15,7 @@
 </script>
 
 <div
-  class="w7-toolstrip {className}"
+  class="xp-toolstrip {className}"
   role="toolbar"
   aria-label={ariaLabel}
   use:rovingFocus={{ selector: 'button:not(:disabled)', loop: false }}
@@ -28,14 +28,14 @@
 </div>
 
 <style>
-  .w7-toolstrip {
+  .xp-toolstrip {
     flex: none;
     display: flex;
     align-items: center;
     gap: 1px;
     height: 34px;
     padding: 0 4px;
-    background: linear-gradient(#fafcfe, #dce6f4);
+    background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .spring {

@@ -49,7 +49,7 @@ export function moveBounds(start: Bounds, dx: number, dy: number, area: Size): B
   }
 }
 
-/** Dragging the title bar to the very top edge maximises (Aero Snap). */
+/** Dragging the title bar to the very top edge maximises (edge snap). */
 export const shouldSnapMaximize = (pointerY: number, areaTop = 0): boolean => pointerY <= areaTop + 2
 
 /** Pulls a window that sits (partly) outside the desktop back in, and enforces the minimum size. */

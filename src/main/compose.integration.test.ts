@@ -87,7 +87,7 @@ describe('app composition with the fake ACP agent', () => {
     // The prompt carries the desktop state first (stored, but not shown as the user's text).
     expect(transcript[0]).toMatchObject({
       role: 'user',
-      blocks: [{ kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json' }, { kind: 'text', text: 'Write the output file' }]
+      blocks: [{ kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json' }, { kind: 'text', text: 'Write the output file' }]
     })
     expect(transcript[1]).toMatchObject({ role: 'agent', blocks: [{ kind: 'text', text: 'Working on it' }] })
     expect(transcript[2]).toMatchObject({

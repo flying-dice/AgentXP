@@ -25,7 +25,7 @@ This manual describes the chat pane at the right edge of an app window. The pane
 
 Use the chat pane to ask a short question about what you look at, for example "Explain this". The pane is in every app window, so you do not leave the app. The agent knows the open file, the selection, or the page. It answers in a few sentences.
 
-The pane has no history. It belongs to its window. When you close the window, Agent7 deletes the pane chat. The pane chat is not in the list of your chats. For a long task, start a chat in the **[Chat](chat.md)** window.
+The pane has no history. It belongs to its window. When you close the window, AgentXP deletes the pane chat. The pane chat is not in the list of your chats. For a long task, start a chat in the **[Chat](chat.md)** window.
 
 The **[Chat](chat.md)** window and **[Code Review](code-review.md)** have no chat pane. Chat is the chat. Code Review has a reviewer panel of its own. Windows that the agent draws, see **[Agent Window](surface.md)**, have no chat pane.
 
@@ -38,7 +38,7 @@ Each new window starts with the pane closed. Use one of these ways.
 - Press Ctrl+Shift+C.
 - Right-click selected text and click **Explain this**.
 
-Agent7 remembers if the pane is open, and its width, for each window.
+AgentXP remembers if the pane is open, and its width, for each window.
 
 ## 3 - The Pane
 
@@ -60,7 +60,7 @@ Above the message box, the pane shows buttons with questions that fit the window
 
 ### The Transcript and the Composer
 
-These work like the ones in **[Chat](chat.md)**. Type a message and press Enter. Before the first message, the pane has no chat. Agent7 starts the chat when you send the first message.
+These work like the ones in **[Chat](chat.md)**. Type a message and press Enter. Before the first message, the pane has no chat. AgentXP starts the chat when you send the first message.
 
 ### What the Agent Sees
 
@@ -124,7 +124,7 @@ To start again, click **New conversation**.
 
 To make the pane wider, drag its left edge.
 
-To keep the answer, copy the text. Agent7 deletes the pane chat when you close the window.
+To keep the answer, copy the text. AgentXP deletes the pane chat when you close the window.
 
 ## 6 - Troubleshooting
 

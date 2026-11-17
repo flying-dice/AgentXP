@@ -51,7 +51,7 @@ export function segmentRange(text: string, segment: TimeSegment): [number, numbe
 }
 
 /**
- * One step of a segment, like the spinner of Windows 7: the hours cycle inside AM or PM (11 AM, 12 PM stay on their side), the
+ * One step of a segment, like the spinner of Windows XP: the hours cycle inside AM or PM (11 AM, 12 PM stay on their side), the
  * minutes cycle inside the hour, and the period moves the time by 12 hours.
  */
 export function stepTime(minutes: number, segment: TimeSegment, direction: 1 | -1, minuteStep = 1): number {

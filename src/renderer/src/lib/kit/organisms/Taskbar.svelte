@@ -66,11 +66,11 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="w7-taskbar {className}" data-testid="taskbar" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
+<div class="xp-taskbar {className}" data-testid="taskbar" role="toolbar" aria-label="Taskbar" tabindex="-1" onkeydown={onKeydown}>
   <div class="strip" bind:this={strip} data-region="taskbar">
     <button type="button" class="orb" data-testid="taskbar-start" class:open={startOpen} aria-label="Start" aria-haspopup="menu" aria-expanded={startOpen} onclick={() => onstart?.()}>
-      <span class="orb-gloss"></span>
-      <Icon name="agent7" size={22} />
+      <Icon name="agentxp" size={22} />
+      <span class="start-text">start</span>
     </button>
     {#each items as item (item.id)}
       <button
@@ -98,111 +98,115 @@
           onitemcontext?.(item, { x: r.left, y: r.top })
         }}
       >
-        {#if item.iconSnippet}{@render item.iconSnippet()}{:else if item.icon}<Icon name={item.icon} size={28} />{/if}
+        {#if item.iconSnippet}{@render item.iconSnippet()}{:else if item.icon}<Icon name={item.icon} size={16} />{/if}
+        {#if !(item.pinned && !item.running)}<span class="label">{item.title}</span>{/if}
       </button>
     {/each}
   </div>
   <div class="tray" data-testid="taskbar-tray" data-region="tray">
     {@render tray?.()}
-    <span class="clock" data-testid="taskbar-clock" role="timer" aria-label="{time} {date}">{time}<br />{date}</span>
+    <span class="clock" data-testid="taskbar-clock" role="timer" aria-label="{time} {date}">{time}</span>
   </div>
 </div>
 
 <style>
-  .w7-taskbar {
+  /* The XP taskbar: a Luna blue bar, a green Start button, wide task buttons with icon and title, a tray at the right. */
+  .xp-taskbar {
     flex: none;
-    height: 40px;
+    height: 30px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 8px 0 6px;
+    gap: 0;
+    padding: 0;
     position: relative;
-    isolation: isolate;
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    font: var(--w7-font);
-    color: #000;
+    background: var(--xp-taskbar-face);
+    font: var(--xp-font);
+    color: #fff;
     user-select: none;
-  }
-  /* A layer, not a backdrop-filter on the bar: that would make the bar the containing block of fixed popups (the USB menu). */
-  .w7-taskbar::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: var(--w7-taskbar-face);
-    backdrop-filter: var(--w7-glass-blur);
-    pointer-events: none;
   }
   .strip {
     flex: 1;
     min-width: 0;
+    height: 100%;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
+    padding-right: 6px;
   }
   .orb {
     position: relative;
     flex: none;
-    width: 40px;
-    height: 40px;
-    margin: -3px 2px -3px 0;
-    padding: 0;
-    border-radius: 50%;
-    border: 1px solid rgba(8, 24, 52, 0.9);
-    background: radial-gradient(circle at 50% 120%, rgba(120, 220, 255, 0.95) 0, rgba(40, 130, 220, 0.9) 35%, rgba(12, 52, 112, 0.95) 75%),
-      #0a2f66;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 -6px 10px rgba(100, 210, 255, 0.45), 0 0 6px rgba(0, 0, 0, 0.5);
+    width: 100px;
+    height: 100%;
+    margin: 0 8px 0 0;
+    padding: 0 14px 0 8px;
+    border: 0;
+    border-radius: 0 12px 12px 0;
+    background: var(--xp-start-green);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset -2px 0 3px rgba(0, 0, 0, 0.35), 2px 0 3px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 5px;
+    color: #fff;
     cursor: default;
   }
-  .orb-gloss {
-    position: absolute;
-    left: 5px;
-    right: 5px;
-    top: 2px;
-    height: 17px;
-    border-radius: 50% 50% 46% 46%;
-    background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.08));
-    pointer-events: none;
+  .start-text {
+    font: italic 900 20px/1 Tahoma, 'Trebuchet MS', 'Segoe UI', sans-serif;
+    letter-spacing: -0.5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
   }
-  .orb:hover,
-  .orb.open {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 -6px 12px rgba(150, 235, 255, 0.85), 0 0 12px rgba(150, 220, 255, 0.95);
+  .orb:hover {
+    background: var(--xp-start-green-hover);
   }
+  .orb.open,
   .orb:active {
-    filter: brightness(0.9);
+    background: linear-gradient(180deg, #2a7a2a 0, #2f8a2f 40%, #3c963c 100%);
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
   .task {
     position: relative;
-    flex: none;
-    width: 50px;
-    height: 38px;
+    flex: 0 1 160px;
+    width: 160px;
+    min-width: 36px;
+    height: 24px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-radius: 3px;
+    justify-content: flex-start;
+    gap: 5px;
+    padding: 0 8px;
+    border-radius: 2px;
     border: 1px solid transparent;
     background: transparent;
-    color: #000;
+    color: #fff;
     font: inherit;
     cursor: default;
+    overflow: hidden;
   }
-  /* A running app gets the glass frame; the focused one is brighter. Pinned launchers have none until hovered. */
+  .task .label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .task.pinned {
+    flex: none;
+    width: 26px;
+    padding: 0;
+    justify-content: center;
+  }
   .task.running {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: var(--w7-taskbtn-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(160, 215, 255, 0.55);
+    border-color: #1e3f9a;
+    background: var(--xp-taskbtn-face);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25);
   }
   .task.running.active {
-    border-color: rgba(255, 255, 255, 0.7);
-    background: linear-gradient(rgba(255, 255, 255, 0.6), rgba(210, 232, 252, 0.28) 50%, rgba(170, 210, 245, 0.3));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(190, 230, 255, 0.85);
+    background: linear-gradient(180deg, #1e52b7 0, #1a46a0 100%);
+    border-color: #0b2a78;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.45);
+    font-weight: bold;
   }
   .task.flashing {
     animation: task-flash 1s steps(1, end) infinite;
@@ -210,41 +214,39 @@
   @keyframes task-flash {
     0%,
     100% {
-      background: linear-gradient(rgba(255, 214, 120, 0.95), rgba(255, 170, 40, 0.8) 55%, rgba(240, 140, 20, 0.75));
-      border-color: #fff3c4;
+      background: linear-gradient(#f9b84a, #e08a1a);
+      border-color: #a35a00;
     }
     50% {
-      background: var(--w7-taskbtn-face);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: var(--xp-taskbtn-face);
+      border-color: #1e3f9a;
     }
   }
-  .task:hover {
-    border-color: rgba(255, 255, 255, 0.75);
-    background: radial-gradient(ellipse at 50% 100%, rgba(190, 235, 255, 0.8), rgba(255, 255, 255, 0.18) 70%),
-      linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.12));
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 0 4px rgba(255, 255, 255, 0.3);
+  .task:hover:not(.active) {
+    background: linear-gradient(180deg, #6ba0f6 0, #4a88ee 10%, #3a78e0 100%);
+    border-color: #1e3f9a;
   }
-  .task:active {
-    background: linear-gradient(rgba(120, 160, 205, 0.6), rgba(150, 190, 235, 0.45));
-  }
-  /* A dotted ring in black on white, so it shows (3:1) on the light glass and on the dark one. */
   .orb:focus-visible,
   .task:focus-visible {
-    outline: 2px dotted #000;
+    outline: 1px dotted #fff;
     outline-offset: -3px;
-    box-shadow: 0 0 0 1px #fff, inset 0 0 0 2px rgba(255, 255, 255, 0.9);
   }
   .tray {
     flex: none;
+    height: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    padding: 0 12px 0 14px;
+    border-left: 1px solid #0c3d99;
+    background: var(--xp-tray-face);
+    box-shadow: inset 1px 0 1px #3fb4f5;
   }
   .clock {
-    text-align: center;
+    text-align: right;
     color: #fff;
-    font-size: 12px;
-    line-height: 1.25;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
+    font-size: 11px;
+    line-height: 1.1;
+    white-space: nowrap;
   }
 </style>

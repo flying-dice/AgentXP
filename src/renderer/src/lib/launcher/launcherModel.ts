@@ -24,10 +24,10 @@ export const AGENT_CHECK_MS = 30_000
 export const EMPTY_LAUNCHER_HELP = 'What you can do: plug in a project folder, ask the agent to read or change it, and approve each change yourself.'
 
 /** Title of the launcher's operating system window (it is not the title of a desktop window). */
-export const LAUNCHER_WINDOW_TITLE = 'Agent7 Desktop Connection'
+export const LAUNCHER_WINDOW_TITLE = 'AgentXP Desktop Connection'
 
 /** Title of a desktop's operating system window: the desktop's own name. */
-export const desktopWindowTitle = (desktopTitle: string): string => `${desktopTitle.trim() || 'Desktop'} - Agent7`
+export const desktopWindowTitle = (desktopTitle: string): string => `${desktopTitle.trim() || 'Desktop'} - AgentXP`
 
 /** Tooltip of the error state: where to change the agent. */
 export const ERROR_HINT = 'Open the desktop, then Control Center > Agents, to change the command.'

@@ -1,8 +1,8 @@
 import { execFileSync } from 'node:child_process'
 import { delimiter } from 'node:path'
 
-const START = '__AGENT7_PATH_START__'
-const END = '__AGENT7_PATH_END__'
+const START = '__AGENTXP_PATH_START__'
+const END = '__AGENTXP_PATH_END__'
 
 /** The PATH printed between the markers (a shell profile may print other text before or after it). */
 export function parseMarkedPath(output: string): string | null {

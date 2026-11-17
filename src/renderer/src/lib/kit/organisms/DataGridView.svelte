@@ -192,7 +192,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 <div
   bind:this={root}
-  class="w7-grid w7-scroll {className}"
+  class="xp-grid xp-scroll {className}"
   data-testid={testid}
   role="grid"
   tabindex="0"
@@ -271,13 +271,13 @@
 </div>
 
 <style>
-  .w7-grid {
+  .xp-grid {
     position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
     background: #ababab;
-    border: 1px solid var(--w7-list-border);
+    border: 1px solid var(--xp-list-border);
     outline: none;
   }
   .inner {
@@ -292,7 +292,7 @@
     display: flex;
     height: 22px;
     border-bottom: 1px solid #a0a0a0;
-    background: linear-gradient(#fff, #f1f1f1 90%, #e6e6e6);
+    background: linear-gradient(#fff, #f1f1f1 90%, #ece9d8);
   }
   .head :global(.lvh) {
     height: 21px;
@@ -311,7 +311,7 @@
     display: flex;
     height: 22px;
     border-bottom: 1px solid #a0a0a0;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .rh {
     border-bottom: 0;
@@ -325,7 +325,7 @@
     align-items: center;
     padding: 0 3px;
     border-right: 1px solid #a0a0a0;
-    background: var(--w7-window);
+    background: var(--xp-window);
     overflow: hidden;
     position: relative;
   }
@@ -333,13 +333,13 @@
     justify-content: flex-end;
   }
   .cell.sel {
-    background: var(--w7-list-select-face);
-    color: var(--w7-list-select-text);
+    background: var(--xp-list-select-face);
+    color: var(--xp-list-select-text);
   }
   .cell.ro:not(.sel) {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
-  .cell :global(.w7-check) {
+  .cell :global(.xp-check) {
     margin: 0 auto;
   }
   .t {
@@ -352,18 +352,18 @@
     inset: 0;
     display: flex;
   }
-  .editor :global(.w7-textbox),
-  .editor :global(.w7-combo) {
+  .editor :global(.xp-textbox),
+  .editor :global(.xp-combo) {
     flex: 1;
     width: 100%;
     height: 100%;
     min-width: 0;
   }
-  .editor :global(.w7-textbox) {
+  .editor :global(.xp-textbox) {
     padding: 0 3px;
     border-width: 1px;
   }
-  .editor.invalid :global(.w7-textbox) {
+  .editor.invalid :global(.xp-textbox) {
     border-color: #d33;
     background: #fff4f4;
   }

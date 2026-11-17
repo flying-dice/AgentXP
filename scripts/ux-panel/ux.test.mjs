@@ -363,14 +363,14 @@ describe('H-22 near miss', () => {
 })
 
 // ---------------------------------------------------------------- round 2 harness fixes (H-23 .. H-46)
-const desktopResource = { kind: 'resource', uri: 'agent7://desktop/state', mimeType: 'application/json', text: '{"windows":[],"appContext":{"openFile":"E:\\\\index.ts","selection":"export const answer = 42"}}' }
+const desktopResource = { kind: 'resource', uri: 'agentxp://desktop/state', mimeType: 'application/json', text: '{"windows":[],"appContext":{"openFile":"E:\\\\index.ts","selection":"export const answer = 42"}}' }
 const userWithState = (text) => ({ kind: 'message', role: 'user', blocks: [desktopResource, { kind: 'text', text }] })
 
 describe('H-23 user text excludes the desktop-state resource', () => {
   it('userText keeps only text blocks; resourceText reads the resource', () => {
     const m = userWithState('hello')
     expect(userText(m)).toBe('hello')
-    expect(resourceText(m)).toContain('agent7://desktop/state')
+    expect(resourceText(m)).toContain('agentxp://desktop/state')
     expect(userText({ blocks: [{ text: 'old style' }] })).toBe('old style')
   })
   it('T21.1 passes for "hello" behind a resource block and an Allow answer', async () => {
@@ -471,7 +471,7 @@ describe('H-35 presets act through the UI', () => {
     const chat = source('presets/chat.mjs')
     expect(chat).toContain("getByTestId('usb-tray')")
     expect(chat).toContain('dialog-button-yes')
-    expect(chat).not.toContain('window.agent7.drives.eject')
+    expect(chat).not.toContain('window.agentxp.drives.eject')
     expect(chat).toContain("getByTestId('topbar-pause')")
     expect(chat).not.toContain('desktop.setPaused')
   })
@@ -1377,7 +1377,7 @@ describe('H-94 build id', () => {
     const root = mkdtempSync(join(tmpdir(), 'ux-h94-'))
     writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }))
     expect(readBuild({ repoRoot: root, env: { UX_BUILD_COMMIT: 'abcdef1234567' } })).toEqual({ packaged: false, version: '1.2.3', commit: 'abcdef1234567' })
-    const exe = join(root, 'Agent7.exe')
+    const exe = join(root, 'AgentXP.exe')
     writeFileSync(exe, '')
     expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'x' } }).packaged).toBe(true)
     expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: join(root, 'missing.exe'), UX_BUILD_COMMIT: 'x' } }).packaged).toBe(false)
@@ -1386,7 +1386,7 @@ describe('H-94 build id', () => {
     const root = mkdtempSync(join(tmpdir(), 'ux-h100-'))
     writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }))
     mkdirSync(join(root, 'app', 'resources'), { recursive: true })
-    const exe = join(root, 'app', 'Agent7.exe')
+    const exe = join(root, 'app', 'AgentXP.exe')
     writeFileSync(exe, '')
     expect(readBuild({ repoRoot: root, env: { UX_PACKAGED_EXE: exe, UX_BUILD_COMMIT: 'envcommit00' } }).commit).toBe('envcommit00')
     writeFileSync(join(root, 'app', 'resources', 'build-info.json'), JSON.stringify({ commit: '840aaf8687aa', version: '1.2.3' }))

@@ -61,7 +61,7 @@ export interface MonthlyTrigger extends TimedBase {
 export interface StartupTrigger {
   kind: 'startup'
   enabled: boolean
-  /** Minutes to wait after Agent7 started. */
+  /** Minutes to wait after AgentXP started. */
   delayMinutes: number
 }
 
@@ -77,7 +77,7 @@ export const TRIGGER_KIND_LABEL: Record<TriggerKind, string> = {
   daily: 'Daily',
   weekly: 'Weekly',
   monthly: 'Monthly',
-  startup: 'At Agent7 startup'
+  startup: 'At AgentXP startup'
 }
 
 // ---------------------------------------------------------------- zones
@@ -171,7 +171,7 @@ export function formatClock(hour: number, minute: number): string {
   return `${h}:${pad(minute)} ${hour < 12 ? 'AM' : 'PM'}`
 }
 
-/** `11/17/2026`, the way the Windows 7 lists show dates. */
+/** `11/17/2026`, the way the Windows XP lists show dates. */
 export const formatWallDate = (w: Wall): string => `${w.month}/${w.day}/${w.year}`
 
 // ---------------------------------------------------------------- calendar days
@@ -282,7 +282,7 @@ const everyOf = (n: number, unit: string): string => (n === 1 ? `every ${unit}` 
 
 /** The sentence of a trigger in the library list: `At 9:00 AM every day`, `At 8:30 AM every Monday and Friday`. */
 export function describeTrigger(trigger: TriggerDto): string {
-  if (trigger.kind === 'startup') return trigger.delayMinutes > 0 ? `At Agent7 startup, after a delay of ${trigger.delayMinutes} ${trigger.delayMinutes === 1 ? 'minute' : 'minutes'}` : 'At Agent7 startup'
+  if (trigger.kind === 'startup') return trigger.delayMinutes > 0 ? `At AgentXP startup, after a delay of ${trigger.delayMinutes} ${trigger.delayMinutes === 1 ? 'minute' : 'minutes'}` : 'At AgentXP startup'
   const start = parseLocal(trigger.startAt)
   if (!start) return TRIGGER_KIND_LABEL[trigger.kind]
   const time = formatClock(start.hour, start.minute)

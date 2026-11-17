@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { protocolEvents, see, startScriptedDesktop, type ScriptedDesktop } from './fixtures'
 
 /**
- * a2ui.json: the agent draws a WinForms surface with agent7.a2ui_render. Where it goes depends on the `target`:
+ * a2ui.json: the agent draws a WinForms surface with agentxp.a2ui_render. Where it goes depends on the `target`:
  * inline (in the transcript), sidebar (beside the chat) or window (its own desktop window). The button's action
  * comes back to the chat as a prompt in every case.
  */

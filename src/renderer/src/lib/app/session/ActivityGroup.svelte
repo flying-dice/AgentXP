@@ -36,7 +36,7 @@
 
 <style>
   .activity {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .detail {
     margin: 2px 0 0 14px;
@@ -55,17 +55,17 @@
     text-align: left;
   }
   .toggle:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .toggle:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .inside {
     margin: 4px 0 0 8px;
     padding-left: 8px;
-    border-left: 1px solid var(--w7-panel-border);
+    border-left: 1px solid var(--xp-panel-border);
     display: flex;
     flex-direction: column;
     gap: 6px;

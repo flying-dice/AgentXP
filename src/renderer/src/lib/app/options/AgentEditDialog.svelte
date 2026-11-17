@@ -101,7 +101,7 @@
     gap: 6px;
     align-items: center;
   }
-  .command :global(.w7-textbox) {
+  .command :global(.xp-textbox) {
     flex: 1;
     min-width: 0;
   }

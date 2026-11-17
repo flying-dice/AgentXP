@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createWorkspace, launchAgent7, readProtocolEvents, see, startConnectedDesktop, type ConnectedDesktop, type TaskSchedulerWindow, type Workspace } from './fixtures'
+import { createWorkspace, launchAgentXP, readProtocolEvents, see, startConnectedDesktop, type ConnectedDesktop, type TaskSchedulerWindow, type Workspace } from './fixtures'
 import { DesktopPage } from './fixtures/pages/DesktopPage'
 
 /** Task Scheduler: create tasks with the wizard and the full dialog, run and end one, the log in Event Viewer, and keeping tasks over a restart. */
@@ -227,9 +227,9 @@ describe('Task Scheduler', () => {
     await ctx.desktop.closeWindow('agent-manager')
   })
 
-  it('keeps the tasks when Agent7 restarts', async () => {
+  it('keeps the tasks when AgentXP restarts', async () => {
     await ctx.app.close()
-    const again = await launchAgent7({ userData })
+    const again = await launchAgentXP({ userData })
     try {
       const launcherPage = await again.launcherWindow()
       const { LauncherPage } = await import('./fixtures')

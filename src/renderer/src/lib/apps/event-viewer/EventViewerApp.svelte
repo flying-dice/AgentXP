@@ -135,13 +135,13 @@
     void visible.length
     if (!autoscroll) return
     void tick().then(() => {
-      const el = gridEl?.querySelector<HTMLElement>('.w7-listview')
+      const el = gridEl?.querySelector<HTMLElement>('.xp-listview')
       if (el) el.scrollTop = el.scrollHeight
     })
   })
 
   async function clearLog(): Promise<void> {
-    const answer = await showMessageBox({ text: 'Do you want to clear all the events in the Agent7 logs?', caption: 'Event Viewer', buttons: 'YesNo', icon: 'warning' })
+    const answer = await showMessageBox({ text: 'Do you want to clear all the events in the AgentXP logs?', caption: 'Event Viewer', buttons: 'YesNo', icon: 'warning' })
     if (answer !== 'yes') return
     await host.api.events.clear(desktopId)
     events = []
@@ -295,7 +295,7 @@
                     <TabControl {tabs} bind:selected={tab} aria-label="Event detail">
                       {#snippet panel(t)}
                         {#if t.id === 'general'}
-                          <div class="general w7-scroll">
+                          <div class="general xp-scroll">
                             {#if isNotable(current)}
                               <p class="summary" data-testid="event-viewer-what-happened">{whatHappened(current)}</p>
                               <p class="todo" data-testid="event-viewer-what-to-do"><strong>What to do:</strong> {whatToDo(current)}</p>
@@ -379,7 +379,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .body {
     flex: 1;
@@ -394,10 +394,12 @@
   .row {
     height: 100%;
     display: flex;
-    gap: 4px;
+    flex-direction: column;
+    gap: 0;
   }
   .main {
     flex: 1;
+    height: auto;
     min-width: 0;
     min-height: 0;
   }
@@ -414,19 +416,19 @@
     gap: 10px;
     height: 24px;
     padding: 0 6px;
-    background: linear-gradient(#fdfeff, #e3ecf8);
-    border: 1px solid var(--w7-list-border);
+    background: linear-gradient(#fff, #e3ecf8);
+    border: 1px solid var(--xp-list-border);
     border-bottom: 0;
   }
   .count {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .link {
     border: 0;
     padding: 0;
     background: none;
     font: inherit;
-    color: var(--w7-link, #0066cc);
+    color: var(--xp-link, #0066cc);
     text-decoration: underline;
     cursor: pointer;
   }
@@ -444,7 +446,7 @@
     flex-direction: column;
     overflow: hidden;
   }
-  .grid :global(.w7-listview) {
+  .grid :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
@@ -467,7 +469,7 @@
     min-height: 0;
     overflow: auto;
     padding: 6px 8px;
-    background: var(--w7-window);
+    background: var(--xp-window);
     height: 100%;
     box-sizing: border-box;
   }
@@ -485,14 +487,14 @@
     flex-direction: column;
     min-height: 0;
   }
-  .rawtab :global(.w7-codeviewer) {
+  .rawtab :global(.xp-codeviewer) {
     flex: 1;
     min-height: 0;
   }
   .raw {
     flex: none;
     padding: 4px 8px;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   dl {
     display: grid;
@@ -501,7 +503,7 @@
     margin: 0;
   }
   dt {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   dd {
     margin: 0;
@@ -510,44 +512,37 @@
   .none {
     margin: 0;
     padding: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
+  /* The XP Event Viewer (MMC 2.0) has no Actions pane: the actions are a toolbar above the list. */
   .actions {
+    order: -1;
     flex: none;
-    width: 150px;
-    height: 100%;
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--xp-toolbar-face);
+    border-bottom: 1px solid #aca899;
   }
-  .ahead {
-    padding: 3px 8px;
-    background: linear-gradient(#fdfeff, #dce6f4);
-    border-bottom: 1px solid var(--w7-list-border);
-    font-weight: 700;
-  }
+  .ahead,
   .asub {
-    padding: 4px 8px;
-    background: #e8eef7;
-    font-weight: 700;
-    color: #1e3287;
+    display: none;
   }
   .act {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 10px;
+    gap: 5px;
+    padding: 3px 8px;
     border: 1px solid transparent;
     background: transparent;
     font: inherit;
-    text-align: left;
     cursor: default;
   }
   .act:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: #316ac5;
+    background: #e8eefc;
   }
   .filter {
     display: flex;

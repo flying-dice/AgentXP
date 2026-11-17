@@ -103,7 +103,7 @@
   }
 </script>
 
-<div class="w7-codeviewer {className}" style:max-height={maxHeight}>
+<div class="xp-codeviewer {className}" style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <CheckBox label="Word wrap" bind:checked={wordWrap} />
@@ -112,7 +112,7 @@
   {/if}
   <div class="body">
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="scroll w7-scroll" bind:this={scroller} tabindex="0" role="region" aria-label={label}>
+  <div class="scroll xp-scroll" bind:this={scroller} tabindex="0" role="region" aria-label={label}>
     <div class="lines" class:wrap={wordWrap} style:--digits="{digits}ch">
       {#if peeked && peek && peekAfter === 0}
         <div class="peek" data-testid="code-hunk-peek" role="group" aria-label="Change">{@render peek(peeked)}</div>
@@ -173,14 +173,14 @@
 </div>
 
 <style>
-  .w7-codeviewer {
+  .xp-codeviewer {
     position: relative;
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    border: 1px solid var(--w7-list-border);
-    background: var(--w7-code-bg);
+    border: 1px solid var(--xp-list-border);
+    background: var(--xp-code-bg);
     color: #000;
   }
   .bar {
@@ -190,24 +190,24 @@
     justify-content: space-between;
     gap: 8px;
     padding: 4px 6px;
-    background: var(--w7-face);
-    border-bottom: 1px solid var(--w7-border-light);
+    background: var(--xp-face);
+    border-bottom: 1px solid var(--xp-border-light);
   }
   .scroll {
     flex: 1 1 0;
     min-height: 0;
     overflow: auto;
-    background: var(--w7-code-bg);
+    background: var(--xp-code-bg);
   }
   .scroll:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .lines {
     min-width: 100%;
     width: max-content;
     padding: 3px 0;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
     font-size: 12px;
   }
   .lines.wrap {
@@ -218,13 +218,13 @@
     min-height: 17px;
   }
   .row.hl {
-    background: var(--w7-code-highlight);
+    background: var(--xp-code-highlight);
   }
   .row.sel {
-    background: var(--w7-select-face, #dcebfc);
+    background: var(--xp-select-face, #d6dff7);
   }
   .row.sel .no {
-    background: var(--w7-select-face, #dcebfc);
+    background: var(--xp-select-face, #d6dff7);
   }
   .gutter {
     position: sticky;
@@ -232,7 +232,7 @@
     z-index: 1;
     flex: none;
     width: 8px;
-    background: var(--w7-code-gutter-bg);
+    background: var(--xp-code-gutter-bg);
   }
   .gutter .bar,
   .gutter .tri {
@@ -248,10 +248,10 @@
     width: 4px;
   }
   .bar.added {
-    background: var(--w7-git-gutter-added);
+    background: var(--xp-git-gutter-added);
   }
   .bar.modified {
-    background: var(--w7-git-gutter-modified);
+    background: var(--xp-git-gutter-modified);
   }
   .tri {
     left: 0;
@@ -259,7 +259,7 @@
     z-index: 2;
     width: 8px;
     height: 8px;
-    background: var(--w7-git-gutter-deleted);
+    background: var(--xp-git-gutter-deleted);
     clip-path: polygon(0 0, 100% 50%, 0 100%);
   }
   .tri.top {
@@ -277,13 +277,13 @@
     width: var(--digits);
     padding: 0 10px 0 8px;
     text-align: right;
-    color: var(--w7-code-gutter);
-    background: var(--w7-code-gutter-bg);
+    color: var(--xp-code-gutter);
+    background: var(--xp-code-gutter-bg);
     border-right: 1px solid #e0e0e0;
     user-select: none;
   }
   .row.hl .no {
-    background: var(--w7-code-highlight);
+    background: var(--xp-code-highlight);
   }
   .code {
     flex: 1;
@@ -303,8 +303,8 @@
     margin: 1px 0;
     border-top: 1px solid #8ea6c5;
     border-bottom: 1px solid #8ea6c5;
-    background: var(--w7-face);
-    font: var(--w7-font);
+    background: var(--xp-face);
+    font: var(--xp-font);
     white-space: normal;
   }
   .body {
@@ -316,7 +316,7 @@
     position: relative;
     flex: none;
     width: 10px;
-    background: linear-gradient(90deg, #f4f4f4, #eaeaea);
+    background: linear-gradient(90deg, #f4f2e8, #eaeaea);
     border-left: 1px solid #d4d4d4;
   }
   .tick {
@@ -329,13 +329,13 @@
     opacity: 0.9;
   }
   .tick.added {
-    background: var(--w7-git-gutter-added);
+    background: var(--xp-git-gutter-added);
   }
   .tick.modified {
-    background: var(--w7-git-gutter-modified);
+    background: var(--xp-git-gutter-modified);
   }
   .tick.deleted {
-    background: var(--w7-git-gutter-deleted);
+    background: var(--xp-git-gutter-deleted);
   }
   .wrap .code {
     white-space: pre-wrap;

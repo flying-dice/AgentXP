@@ -58,7 +58,7 @@ describe('chat turn with the fake agent', () => {
     // Two lines per request: what it wants to do, and which chat asked. The flag and the taskbar button say it waits.
     await see.text(ctx.desktopPage.getByTestId('action-center-approval-chat'), "In chat '")
     await see.attribute(ctx.desktop.actionCenterFlag, 'title', '1 request is waiting for you.')
-    // The taskbar buttons are icon-only (Aero): the caption is the tooltip.
+    // The taskbar buttons are icon-only (Luna): the caption is the tooltip.
     await see.attribute(ctx.desktop.taskbarItem('chat'), 'title', /^Waiting: /)
   })
 

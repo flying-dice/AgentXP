@@ -71,7 +71,7 @@ const groupNode = (id: string, text: string, places: BrowsePlaceDto[], labels: s
 
 /** The "Projects you used before" group, or null when there are none. */
 export const recentGroup = (places: BrowsePlaceDto[] | undefined, paths: Map<string, string>): TreeNodeData | null =>
-  places && places.length > 0 ? groupNode(RECENT_ID, 'Projects you used before', places, recentLabels(places), paths, 'Folders that Agent7 opened before') : null
+  places && places.length > 0 ? groupNode(RECENT_ID, 'Projects you used before', places, recentLabels(places), paths, 'Folders that AgentXP opened before') : null
 
 /** The "Matches" group of a typed name that more than one folder has: each node shows its full path. */
 export const matchesGroup = (places: BrowsePlaceDto[], paths: Map<string, string>): TreeNodeData =>

@@ -68,7 +68,7 @@
 
 <span
   bind:this={anchor}
-  class="w7-tooltip-anchor {className}"
+  class="xp-tooltip-anchor {className}"
   role="presentation"
   onpointerenter={onEnter}
   onpointermove={(e) => !visible && schedule(e.clientX, e.clientY + 20)}
@@ -84,7 +84,7 @@
   <div
     bind:this={tip}
     id="{uid}-tip"
-    class="w7-tooltip"
+    class="xp-tooltip"
     role="tooltip"
     style:left="{placed.x}px"
     style:top="{placed.y}px"
@@ -94,10 +94,10 @@
 {/if}
 
 <style>
-  .w7-tooltip-anchor {
+  .xp-tooltip-anchor {
     display: inline-flex;
   }
-  .w7-tooltip {
+  .xp-tooltip {
     position: fixed;
     z-index: 2000;
     max-width: 300px;
@@ -107,7 +107,7 @@
     background: linear-gradient(#fff, #e4e5f0);
     box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.25);
     color: #575757;
-    font: var(--w7-font);
+    font: var(--xp-font);
     pointer-events: none;
     white-space: pre-wrap;
   }

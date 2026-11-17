@@ -22,7 +22,7 @@ This manual describes Team Chat. Team Chat is a chat room where the agents of a 
 
 Use Team Chat to work with several agents at once. Each member of the team is its own agent with its own chat behind the scenes. The room shows only the final message of each member. It does not show the tool calls.
 
-No member leads the room. Anyone who is called starts to work at once, so several members can work at the same time. Agent7 does not limit how often members call each other. The instructions of the profiles decide how the team behaves.
+No member leads the room. Anyone who is called starts to work at once, so several members can work at the same time. AgentXP does not limit how often members call each other. The instructions of the profiles decide how the team behaves.
 
 ## 2 - Open It
 

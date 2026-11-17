@@ -81,7 +81,7 @@ describe('McpServerService', () => {
     const service = setup(tools)
     expect(() => service.add({ ...stdio, name: ' ' })).toThrow(/name/)
     expect(() => service.add({ ...stdio, name: 'bad name' })).toThrow(/letters/)
-    expect(() => service.add({ ...stdio, name: 'agent7' })).toThrow(/Agent7 itself/)
+    expect(() => service.add({ ...stdio, name: 'agentxp' })).toThrow(/AgentXP itself/)
     expect(() => service.add({ ...stdio, command: ' ' })).toThrow(/command/)
     expect(() => service.add({ ...stdio, transport: 'http', url: 'ftp://x' })).toThrow(/http/)
   })

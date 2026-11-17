@@ -44,10 +44,10 @@
     align-items: center;
     gap: 6px;
     padding: 4px 6px;
-    background: linear-gradient(#fafcfe, #e6edf7);
-    border: 1px solid var(--w7-panel-border);
-    font: var(--w7-font);
-    color: var(--w7-text);
+    background: linear-gradient(#fff, #e6edf7);
+    border: 1px solid var(--xp-panel-border);
+    font: var(--xp-font);
+    color: var(--xp-text);
   }
   .surface-row.inline {
     padding: 1px 2px;
@@ -72,16 +72,16 @@
     font-weight: 600;
   }
   .where {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .state {
     flex: none;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .surface-row {
     flex-wrap: wrap;
   }
-  .surface-row :global(.w7-btn) {
+  .surface-row :global(.xp-btn) {
     flex: none;
     min-width: 56px;
     padding: 0 10px;

@@ -29,7 +29,7 @@ export interface ChangeContext {
 /** The line of the permission box when the old text could not be read (it does not claim a whole-file replacement). */
 export function cannotReadText({ path, error }: ChangeContext = {}): string {
   const file = path ?? 'the file'
-  return error === 'in_use' ? `Agent7 cannot read ${file}: it is in use.` : `Agent7 cannot read ${file}, so it cannot show what changes.`
+  return error === 'in_use' ? `AgentXP cannot read ${file}: it is in use.` : `AgentXP cannot read ${file}, so it cannot show what changes.`
 }
 
 /** Counts the lines a write adds and removes against the file's current text (`null`: it could not be read). */

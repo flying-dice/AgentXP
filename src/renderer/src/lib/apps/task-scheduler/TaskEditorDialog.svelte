@@ -132,7 +132,7 @@
     gap: 6px;
     padding: 4px 2px 0;
   }
-  .editor :global(.w7-tabcontrol) {
+  .editor :global(.xp-tabcontrol) {
     height: 340px;
   }
   .page {
@@ -169,7 +169,7 @@
     display: flex;
     flex-direction: column;
   }
-  .grid :global(.w7-listview) {
+  .grid :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }

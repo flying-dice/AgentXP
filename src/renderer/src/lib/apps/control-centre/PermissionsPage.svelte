@@ -153,13 +153,13 @@
     padding: 0;
     border: 0;
     background: none;
-    color: var(--w7-link);
+    color: var(--xp-link);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
   }
   .more:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
   }
   .all {
     flex-wrap: wrap;
@@ -187,8 +187,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
   .rows {
     flex: 1;
@@ -211,13 +211,13 @@
     height: 24px;
     box-sizing: border-box;
     background: linear-gradient(#fff, #f1f4f9 50%, #e5eaf2 51%, #eef2f8);
-    border-bottom: 1px solid #d5dfe5;
+    border-bottom: 1px solid #d0d0bf;
     color: #4c607a;
   }
   .group {
     padding: 4px 8px 2px;
     color: #1e3287;
-    border-bottom: 1px solid #d5dfe5;
+    border-bottom: 1px solid #d0d0bf;
     background: #f6f9fd;
   }
   .row {
@@ -225,11 +225,11 @@
     row-gap: 1px;
     padding-top: 3px;
     padding-bottom: 4px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #ece9d8;
   }
   .row.selected {
-    background: var(--w7-select-face, #c4e5f6);
-    outline: 1px solid var(--w7-hot-border, #3399ff);
+    background: var(--xp-select-face, #c4e5f6);
+    outline: 1px solid var(--xp-hot-border, #316ac5);
     outline-offset: -1px;
   }
   .name {
@@ -244,7 +244,7 @@
     grid-area: what;
     min-width: 0;
     overflow-wrap: anywhere;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .mode {
     grid-area: mode;
@@ -271,7 +271,7 @@
     max-height: 32px;
     overflow: hidden;
     line-height: 16px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .note[data-kind='pending'] {
     color: #8a5a00;

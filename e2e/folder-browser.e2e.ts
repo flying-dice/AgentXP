@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Page } from 'playwright'
-import { createWorkspace, FolderBrowserDialog, launchAgent7, LauncherPage, registerFakeAgent, see, type Agent7Instance, type Workspace } from './fixtures'
+import { createWorkspace, FolderBrowserDialog, launchAgentXP, LauncherPage, registerFakeAgent, see, type AgentXPInstance, type Workspace } from './fixtures'
 
 /** UX-01: the in-app Browse For Folder dialog replaces the native folder dialog; no stub is needed. */
 describe('Browse For Folder dialog (New desktop > Browse...)', () => {
-  let app: Agent7Instance
+  let app: AgentXPInstance
   let page: Page
   let launcher: LauncherPage
   let browser: FolderBrowserDialog
@@ -12,7 +12,7 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
 
   beforeAll(async () => {
     workspace = await createWorkspace({ 'README.md': '# Hello\n', 'src/main.ts': 'export {}\n' })
-    app = await launchAgent7()
+    app = await launchAgentXP()
     page = await app.launcherWindow()
     launcher = new LauncherPage(page)
     browser = new FolderBrowserDialog(page)
@@ -104,7 +104,7 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
     await see.gone(browser.dialog)
   })
 
-  // UX-51: the dialog finds the folders Agent7 already knows, and accepts a bare folder name.
+  // UX-51: the dialog finds the folders AgentXP already knows, and accepts a bare folder name.
   it('lists "Projects you used before" first and open, with no folder selected', async () => {
     await openDialog()
     await see.visible(browser.group('Projects you used before'))

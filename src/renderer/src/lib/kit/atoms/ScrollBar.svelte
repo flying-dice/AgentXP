@@ -109,7 +109,7 @@
   aria-valuemax={top}
   aria-valuenow={value}
   aria-disabled={inactive}
-  class="w7-sb {orientation} {className}"
+  class="xp-sb {orientation} {className}"
   class:inactive
   style="{horizontal ? 'width' : 'height'}:{length}px"
   {onkeydown}
@@ -147,12 +147,12 @@
 </div>
 
 <style>
-  .w7-sb {
+  .xp-sb {
     display: flex;
     flex: none;
     box-sizing: border-box;
     outline: none;
-    background: #f0f0f0;
+    background: #ece9d8;
   }
   .vertical {
     width: 17px;
@@ -162,36 +162,36 @@
     height: 17px;
     flex-direction: row;
   }
-  .w7-sb:focus-visible .thumb {
-    border-color: #3399ff;
+  .xp-sb:focus-visible .thumb {
+    border-color: #316ac5;
   }
   .track {
     position: relative;
     flex: 1;
   }
   .vertical .track {
-    background: linear-gradient(90deg, #e6e6e6, #f3f3f3 40%, #f7f7f7);
+    background: linear-gradient(90deg, #ece9d8, #f3f3f3 40%, #f7f7f7);
     border-left: 1px solid #e2e2e2;
   }
   .horizontal .track {
-    background: linear-gradient(#e6e6e6, #f3f3f3 40%, #f7f7f7);
+    background: linear-gradient(#ece9d8, #f3f3f3 40%, #f7f7f7);
     border-top: 1px solid #e2e2e2;
   }
   .thumb {
     position: absolute;
     box-sizing: border-box;
-    border: 1px solid #979797;
+    border: 1px solid #aca899;
     border-radius: 2px;
   }
   .vertical .thumb {
     left: 0;
     right: 0;
-    background: linear-gradient(90deg, #f4f4f4, #dcdcdc 50%, #cfcfcf);
+    background: linear-gradient(90deg, #f4f2e8, #d6d0c5 50%, #d6d0c5);
   }
   .horizontal .thumb {
     top: 0;
     bottom: 0;
-    background: linear-gradient(#f4f4f4, #dcdcdc 50%, #cfcfcf);
+    background: linear-gradient(#f4f2e8, #d6d0c5 50%, #d6d0c5);
   }
   .thumb::after {
     /* grip */
@@ -214,7 +214,7 @@
   }
   .thumb:hover,
   .thumb.drag {
-    border-color: #3c7fb1;
+    border-color: #003c74;
   }
   .vertical .thumb:hover,
   .vertical .thumb.drag {
@@ -231,13 +231,13 @@
     padding: 0;
     border: 1px solid #b5b5b5;
     border-radius: 2px;
-    background-color: #e9e9e9;
+    background-color: #ece9d8;
     background-repeat: no-repeat;
     background-position: center;
   }
   .arrow:hover:not(:disabled) {
     background-color: #cdeafb;
-    border-color: #3c7fb1;
+    border-color: #003c74;
   }
   .arrow:active:not(:disabled) {
     background-color: #9fd0ee;

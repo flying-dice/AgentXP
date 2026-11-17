@@ -18,7 +18,7 @@ export class SdkMcpProber implements McpProber {
   constructor(private readonly timeoutMs = 20_000) {}
 
   async listTools(config: McpServerConfig): Promise<{ name: string; description: string }[]> {
-    const client = new Client({ name: 'agent7', version: '1.0.0' })
+    const client = new Client({ name: 'agentxp', version: '1.0.0' })
     const work = (async () => {
       await client.connect(transportFor(config))
       const tools: { name: string; description: string }[] = []

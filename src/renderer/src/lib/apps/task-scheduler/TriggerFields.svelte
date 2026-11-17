@@ -28,7 +28,7 @@
   {#if trigger.kind === 'startup'}
     <LabeledField label="Delay for:" for="{prefix}-delay" labelWidth={110}>
       <NumericUpDown testid="{prefix}-delay" aria-label="Delay in minutes" bind:value={trigger.delayMinutes} min={0} max={1440} style="width:70px" />
-      <span>minutes after Agent7 starts</span>
+      <span>minutes after AgentXP starts</span>
     </LabeledField>
   {:else}
     <LabeledField label="Start:" labelWidth={110}>
@@ -105,7 +105,7 @@
   }
   .hint {
     margin: 6px 0 0;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .advanced {
     display: flex;

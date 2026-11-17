@@ -99,7 +99,7 @@ If the agent cannot start, a red row in the chat says why and names the program.
 
 The row says what to do next. For a program that is not there: **Check the command in Agents, or choose another agent.** For a program that stops at once: **Check that it is installed, or choose another agent.** When you made another agent the default and it could not start either, the row says **The default agent is now** and the name, and **It could not start either.** - **Details...** – Shows more under the buttons. The first line is the same plain sentence as the row. For a program that did not start, a second line says **What to do: open Agents and choose another agent.** The technical text is below a line, under the words **Technical details**. Click **Hide details** to close it.
 
-While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat with your text** replaces **Restart and send again**, so that you do not send your message into the same failure again. The new chat opens with your text in its message box. Press Enter to send it. The old chat shows **Continued in a new chat.** in grey, with no red box, and its status bar says the same. After **Restart** or **Reconnect**, when your last request did not go through, the chat says **Agent7 restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. **Restart and send again** sends the request for you, and the chat says **Your request was sent again.** Your first message then says **Stopped** and the repeat says **Sent again**, so you see each try once. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
+While the agent restarts, the chat says **Restarting the agent...** with a progress bar, and then **The agent is running again.** If the agent fails a second time, the row adds the cause, for example **It stopped again: the program 'x' was not found.** The row then says **The details are in Event Viewer.**, with a link. The button **Start a new chat with your text** replaces **Restart and send again**, so that you do not send your message into the same failure again. The new chat opens with your text in its message box. Press Enter to send it. The old chat shows **Continued in a new chat.** in grey, with no red box, and its status bar says the same. After **Restart** or **Reconnect**, when your last request did not go through, the chat says **AgentXP restarted. Your last request was not sent again:** and shows your text. Click **Send it again** to send it. **Restart and send again** sends the request for you, and the chat says **Your request was sent again.** Your first message then says **Stopped** and the repeat says **Sent again**, so you see each try once. Press Ctrl+N or choose **File -> New chat** to start a new chat on the same folder at any time.
 
 ## 4 - Controls Reference
 
@@ -149,10 +149,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Newer messages | Shows above the message box when new text arrives while you read older text. Click it to go to the end. | `chat-new-messages` |
 | Card note | A line under a tool card, for example "Denied by you" or "The agent could not finish this step." | `tool-call-note` |
 | Show in Event Viewer (step) | A link under a failed step. It opens Event Viewer on the event of that step. | `tool-call-show-event` |
-| Restarted note | The line "Agent7 restarted. Your last request was not sent again:" with your text. It shows after **Restart** when your last request did not go through. | `chat-restarted-note` |
+| Restarted note | The line "AgentXP restarted. Your last request was not sent again:" with your text. It shows after **Restart** when your last request did not go through. | `chat-restarted-note` |
 | Restarted text | Your last request, on one line, in the restarted note. | `chat-restarted-text` |
 | Send it again | Sends your last request again, in one click. | `chat-restarted-resend` |
-| Sender | The name above a message: **You**, or **Agent7 (automatic)** for the message that Resume sends. | `chat-message-sender` |
+| Sender | The name above a message: **You**, or **AgentXP (automatic)** for the message that Resume sends. | `chat-message-sender` |
 | Earlier step | A divider above steps of an earlier request. | `tool-call-earlier` |
 | Paused banner | Shows when the desktop is paused. It says if Pause stopped a step of this chat. | `chat-paused-banner` |
 | Resumed note | Shows above the message that Resume sent: Resumed. Continuing where you stopped. | `chat-resume-note` |
@@ -213,7 +213,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Keys line | Tells which keys answer: Enter denies, A allows. | `permission-hint` |
 | Waiting count | Says **1 of 2 waiting** when more than one request waits on the desktop. | `permission-queue` |
 | Retry line | Says **Press Send to try again.** above the message box while the text of a message that did not go through is in the box. It goes away when a send works. When you send the same text again, the first copy is replaced, so the chat shows the message once. | `chat-retry-hint` |
-| Setting line | The setting that made Agent7 ask, under the command. | `permission-detail-setting` |
+| Setting line | The setting that made AgentXP ask, under the command. | `permission-detail-setting` |
 | Change preview | The lines that change, at least 9 rows. | `permission-detail-view` |
 | Show all lines | Shows every line of a long change, or the whole change in a small window. | `permission-detail-more` |
 | Don't ask again for this kind of action | Saves your answer. | `permission-remember` |

@@ -1,12 +1,12 @@
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { Id, SessionDto } from '@shared/models'
 
 /** All sessions, kept current by `session.changed` / `session.removed`. */
 export class SessionsStore {
   items = $state.raw<SessionDto[]>([])
-  private readonly api: Agent7Api['sessions']
+  private readonly api: AgentXPApi['sessions']
 
-  constructor(api: Agent7Api['sessions']) {
+  constructor(api: AgentXPApi['sessions']) {
     this.api = api
   }
 
@@ -32,7 +32,7 @@ export class SessionsStore {
   }
 
   /** Subscribes to changes; `onremoved` runs after a session disappeared. Returns the unsubscribe function. */
-  start(api: Agent7Api, onremoved?: (id: Id) => void): () => void {
+  start(api: AgentXPApi, onremoved?: (id: Id) => void): () => void {
     const offChanged = api.on('session.changed', (session) => this.upsert(session))
     const offRemoved = api.on('session.removed', ({ id }) => {
       this.drop(id)

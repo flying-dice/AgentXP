@@ -8,7 +8,7 @@
    */
   import { onMount, tick, untrack } from 'svelte'
   import { transcriptDetail } from '../../app/session/transcriptDetail.svelte'
-  import type { Agent7Events } from '@shared/ipc'
+  import type { AgentXPEvents } from '@shared/ipc'
   import type { SessionAgentStore } from '../../agui/SessionAgentStore.svelte'
   import type { SessionDto } from '@shared/models'
   import {
@@ -115,14 +115,14 @@
 
   function loadLayout(): ReviewLayout {
     try {
-      return window.localStorage.getItem('agent7.review.layout') === 'split' ? 'split' : 'unified'
+      return window.localStorage.getItem('agentxp.review.layout') === 'split' ? 'split' : 'unified'
     } catch {
       return 'unified'
     }
   }
   function saveLayout(value: ReviewLayout): void {
     try {
-      window.localStorage.setItem('agent7.review.layout', value)
+      window.localStorage.setItem('agentxp.review.layout', value)
     } catch {
       /* private window or blocked storage: the layout is only remembered for this window */
     }
@@ -245,12 +245,12 @@
   onMount(() => {
     void loadReview()
     let timer: ReturnType<typeof setTimeout> | undefined
-    const offGit = host.api.on('git.changed', (e: Agent7Events['git.changed']) => {
+    const offGit = host.api.on('git.changed', (e: AgentXPEvents['git.changed']) => {
       if (e.desktopId !== desktopId) return
       clearTimeout(timer)
       timer = setTimeout(() => void loadChanges(), 200)
     })
-    const offReview = host.api.on('review.changed', (e: Agent7Events['review.changed']) => {
+    const offReview = host.api.on('review.changed', (e: AgentXPEvents['review.changed']) => {
       if (e.sessionId === sessionId) void loadReview()
     })
     return () => {
@@ -587,7 +587,7 @@
           <span class="stat">Use Next file or F7 to go from file to file.</span>
         </div>
         <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-        <div class="all w7-scroll" bind:this={allScroller} role="region" tabindex="0" aria-label="All changes" data-testid="review-all">
+        <div class="all xp-scroll" bind:this={allScroller} role="region" tabindex="0" aria-label="All changes" data-testid="review-all">
           {#each changes as change (change.path)}
             {@const loaded = allFiles[change.path]}
             <section class="one" data-testid="review-all-file" data-path={change.path}>
@@ -692,7 +692,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .bar {
     flex: none;
@@ -702,7 +702,7 @@
     gap: 2px 4px;
     min-height: 30px;
     padding: 1px 6px;
-    background: linear-gradient(#fafcfe, #dce6f4);
+    background: linear-gradient(#fff, #d6dff7);
     border-bottom: 1px solid #aab7cb;
   }
   .spring {
@@ -715,14 +715,14 @@
     flex: none;
   }
   .hint {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     white-space: nowrap;
   }
   .link {
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--w7-link);
+    color: var(--xp-link);
     font: inherit;
     text-decoration: underline;
     cursor: default;
@@ -749,8 +749,8 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
   .one {
     margin-bottom: 8px;
@@ -759,9 +759,9 @@
     flex: none;
     display: block;
     padding: 4px 10px;
-    border-bottom: 1px solid var(--w7-panel-border);
+    border-bottom: 1px solid var(--xp-panel-border);
     background: #eef2f8;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
   .banner.approve {
     background: #e3f4dc;
@@ -773,7 +773,7 @@
     background: #fff6d6;
   }
   .banner.pending {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .banner.sent {
     background: #e6f0fb;
@@ -806,17 +806,17 @@
     gap: 8px;
     padding: 2px 8px;
     background: linear-gradient(#f9fbfd, #e4ecf6);
-    border: 1px solid var(--w7-panel-border);
+    border: 1px solid var(--xp-panel-border);
     border-bottom: 0;
   }
   .was,
   .stat {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .note {
     padding: 10px;
-    color: var(--w7-text-muted);
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    color: var(--xp-text-muted);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
 </style>

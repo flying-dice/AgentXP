@@ -328,7 +328,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .panel[style] {
     flex: none;
@@ -360,7 +360,7 @@
     white-space: nowrap;
   }
   .state {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 11px;
   }
   .reconnect {
@@ -369,13 +369,13 @@
     padding: 0 6px;
     border: 1px solid #9aa9bf;
     border-radius: 2px;
-    background: linear-gradient(#fdfeff, #e6eef8);
+    background: linear-gradient(#fff, #e6eef8);
     font: inherit;
     font-size: 11px;
   }
   .reconnect:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .collapse {
     flex: none;
@@ -390,8 +390,8 @@
     border-radius: 3px;
   }
   .collapse:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .sub {
     flex: none;
@@ -412,7 +412,7 @@
     text-decoration: underline;
   }
   .link:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: 1px;
   }
   .strip {
@@ -431,7 +431,7 @@
   }
   .resizer:hover,
   .resizer:focus-visible {
-    background: var(--w7-panel-border) content-box;
+    background: var(--xp-panel-border) content-box;
   }
   .start {
     flex: 1;
@@ -449,14 +449,14 @@
     padding: 1px 8px;
     border: 1px solid #9aa9bf;
     border-radius: 9px;
-    background: linear-gradient(#fdfeff, #e6eef8);
+    background: linear-gradient(#fff, #e6eef8);
     font: inherit;
     font-size: 11px;
     cursor: pointer;
   }
   .chip:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .chip.off,
   .chip.off:hover {
@@ -468,8 +468,8 @@
   .blank {
     flex: 1;
     padding: 8px;
-    color: var(--w7-text-muted);
-    background: var(--w7-window);
-    border: 1px solid var(--w7-panel-border);
+    color: var(--xp-text-muted);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-panel-border);
   }
 </style>

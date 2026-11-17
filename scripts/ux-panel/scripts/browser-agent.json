@@ -15,7 +15,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_navigate",
           "arguments": {
             "url": "{{match.1}}"
@@ -36,7 +36,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_tabs",
           "arguments": {
             "action": "new",
@@ -58,7 +58,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_tabs",
           "arguments": {
             "action": "list"
@@ -79,7 +79,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_tabs",
           "arguments": {
             "action": "switch",
@@ -101,7 +101,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_tabs",
           "arguments": {
             "action": "close",
@@ -141,7 +141,7 @@
       "steps": [
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_navigate",
           "arguments": {
             "url": "{{match.1}}"
@@ -162,7 +162,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "tree"
@@ -220,7 +220,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "text",
@@ -242,7 +242,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "role": "button",
@@ -270,7 +270,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_click",
           "arguments": {
             "ref": "{{random|number}}"
@@ -286,7 +286,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Welcome to random"
@@ -307,7 +307,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "text"
@@ -328,7 +328,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "role": "button",
@@ -356,7 +356,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_click",
           "arguments": {
             "ref": "{{general|number}}"
@@ -372,7 +372,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Message 200 from"
@@ -393,7 +393,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "role": "list",
@@ -421,7 +421,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "ref": "{{list|number}}",
@@ -443,7 +443,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Message 121 from",
@@ -465,7 +465,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_scroll",
           "arguments": {
             "ref": "{{list|number}}",
@@ -487,7 +487,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Standup notes",
@@ -510,7 +510,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "text": "Standup notes"
@@ -531,7 +531,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "role": "textbox",
@@ -559,7 +559,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_type",
           "arguments": {
             "ref": "{{composer|number}}",
@@ -581,7 +581,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_press",
           "arguments": {
             "keys": "Enter"
@@ -602,7 +602,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Hello from the agent"
@@ -623,7 +623,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_type",
           "arguments": {
             "ref": "{{composer|number}}",
@@ -646,7 +646,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "text": "Second message via submit"
@@ -667,7 +667,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "role": "searchbox",
@@ -695,7 +695,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_type",
           "arguments": {
             "ref": "{{search|number}}",
@@ -718,7 +718,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "1 results for \"Standup\""
@@ -739,7 +739,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_find",
           "arguments": {
             "text": "Add reaction"
@@ -766,7 +766,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_click",
           "arguments": {
             "ref": "{{react|number}}"
@@ -782,7 +782,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_wait",
           "arguments": {
             "text": "Reacted (1)"
@@ -819,7 +819,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "browser_read",
           "arguments": {
             "mode": "text"

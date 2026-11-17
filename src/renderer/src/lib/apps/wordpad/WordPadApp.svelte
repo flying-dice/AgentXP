@@ -322,7 +322,7 @@
   <div class="page">
     {#if mode === 'edit'}
       <textarea
-        class="source w7-scroll"
+        class="source xp-scroll"
         data-testid="wordpad-source"
         bind:this={area}
         bind:value={text}
@@ -333,7 +333,7 @@
         onclick={updateCaret}
       ></textarea>
     {:else}
-      <div class="reader w7-scroll" data-testid="wordpad-reader" bind:this={reader} tabindex="-1" onscroll={updateHeading} aria-label="Document">
+      <div class="reader xp-scroll" data-testid="wordpad-reader" bind:this={reader} tabindex="-1" onscroll={updateHeading} aria-label="Document">
         {#if text.trim() === ''}
           <p class="empty">{message || 'This document is empty. Choose Edit to start writing, or File > Open.'}</p>
         {:else}
@@ -374,7 +374,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
     outline: 0;
   }
   .sep {
@@ -422,6 +422,6 @@
     padding: 10px 18px;
   }
   .empty {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

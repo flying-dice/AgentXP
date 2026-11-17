@@ -4,7 +4,7 @@
  * its window and reports what it shows through `host.updateView`.
  */
 import type { Component } from 'svelte'
-import type { Agent7Api } from '@shared/ipc'
+import type { AgentXPApi } from '@shared/ipc'
 import type { Id } from '@shared/models'
 import type { DriveDto, DriveLetter, VPath } from '@shared/vfs'
 import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab, ViewOf } from '@shared/desktop'
@@ -15,7 +15,7 @@ import type { RemovedProject } from '../desktop/projectDrives'
 export interface DesktopHost {
   /** Reactive (a $state proxy): the live desktop. */
   readonly state: DesktopState
-  readonly api: Agent7Api
+  readonly api: AgentXPApi
   openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState>
   /** Opens the Event Viewer (one window per desktop), optionally on one chat and one event ("Show in Event Viewer"). */
   openEventViewer(scope?: { sessionId?: Id | null; selectedEventId?: number | null }): Promise<void>

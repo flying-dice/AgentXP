@@ -65,7 +65,7 @@ describe('the library list', () => {
   it('says Manual for a task without trigger and marks a trigger that is off', () => {
     expect(triggersSummary({ triggers: [] })).toBe('Manual. Use Run.')
     const off: TriggerDto = { kind: 'startup', enabled: false, delayMinutes: 0 }
-    expect(triggersSummary({ triggers: [off] })).toBe('At Agent7 startup (off)')
+    expect(triggersSummary({ triggers: [off] })).toBe('At AgentXP startup (off)')
     expect(triggersSummary({ triggers: [off, { kind: 'startup', enabled: true, delayMinutes: 3 }] })).toContain('; ')
   })
   it('shows Never for a task that did not run and names the queued instances', () => {

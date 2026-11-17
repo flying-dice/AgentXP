@@ -24,8 +24,8 @@
     max-width: 220px;
     height: 19px;
     padding: 0 2px 0 6px;
-    border: 1px solid var(--w7-select-border);
-    background: var(--w7-select-face);
+    border: 1px solid var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .name {
     overflow: hidden;
@@ -45,11 +45,11 @@
     color: #444;
   }
   .remove:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .remove:active {
-    border-color: var(--w7-btn-active-border);
-    background: var(--w7-btn-active-face);
+    border-color: var(--xp-btn-active-border);
+    background: var(--xp-btn-active-face);
   }
 </style>

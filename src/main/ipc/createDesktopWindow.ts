@@ -5,7 +5,7 @@ import type { Id } from '@shared/models'
 import { publishWindowState } from './registerWindowHandlers'
 
 /** Session partition of every Browser app `<webview>`: cookies and logins persist across restarts. */
-export const BROWSER_PARTITION = 'persist:agent7-browser'
+export const BROWSER_PARTITION = 'persist:agentxp-browser'
 
 const isWebAddress = (src: string | undefined): boolean => !src || src === 'about:blank' || /^https?:\/\//i.test(src)
 
@@ -30,7 +30,7 @@ function secureWebviews(window: BrowserWindow): void {
 
 /**
  * One desktop OS window; `loadDesktop` fills it. It keeps the native title bar (the OS draws the frame, so maximize and
- * full screen follow the OS rules without a gap); Agent7's own connection bar sits below it.
+ * full screen follow the OS rules without a gap); AgentXP's own connection bar sits below it.
  */
 export function createDesktopWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -39,7 +39,7 @@ export function createDesktopWindow(): BrowserWindow {
     minWidth: 900,
     minHeight: 600,
     show: false,
-    title: 'Agent7 Desktop', // the page sets the desktop's own name as soon as it loads (`desktopWindowTitle`)
+    title: 'AgentXP Desktop', // the page sets the desktop's own name as soon as it loads (`desktopWindowTitle`)
     frame: true,
     backgroundColor: '#1e5aa8',
     icon: join(__dirname, '../../resources/icon-256.png'),
@@ -74,7 +74,7 @@ export function createLauncherWindow(): BrowserWindow {
     maximizable: false,
     fullscreenable: false,
     show: false,
-    title: 'Agent7 Desktop Connection',
+    title: 'AgentXP Desktop Connection',
     frame: false,
     backgroundColor: '#1e5aa8',
     icon: join(__dirname, '../../resources/icon-256.png'),

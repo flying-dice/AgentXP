@@ -46,7 +46,7 @@
     if (event.button !== 0 || maximized) return
     const target = event.target as HTMLElement
     const edge = target.dataset.edge as ResizeEdge | undefined
-    const onTitle = !edge && !!target.closest('.w7-titlebar') && !target.closest('button')
+    const onTitle = !edge && !!target.closest('.xp-titlebar') && !target.closest('button')
     if (!edge && !onTitle) return
     gesture = { kind: edge ? 'resize' : 'move', ...(edge ? { edge } : {}), x: event.clientX, y: event.clientY, start: bounds, moved: false } as typeof gesture
     target.setPointerCapture(event.pointerId)
@@ -120,7 +120,7 @@
     </div>
   </Form>
   {#if w.openedBy === 'agent'}
-    <span class="badge" class:inactive={!focused} title="The agent opened this window"><Icon name="agent7" size={12} />opened by agent</span>
+    <span class="badge" class:inactive={!focused} title="The agent opened this window"><Icon name="agentxp" size={12} />opened by agent</span>
   {/if}
   {#if !maximized}
     {#each RESIZE_EDGES as edge (edge)}
@@ -159,7 +159,7 @@
   }
   @keyframes agent-glow {
     0% {
-      box-shadow: var(--w7-agent-glow);
+      box-shadow: var(--xp-agent-glow);
     }
     100% {
       box-shadow: 0 0 0 0 rgba(255, 190, 70, 0);
@@ -186,7 +186,7 @@
   .badge.inactive {
     opacity: 0.7;
   }
-  .appframe:has(:global(.w7-form.maximized)) .badge {
+  .appframe:has(:global(.xp-form.maximized)) .badge {
     right: 106px;
     top: 5px;
   }

@@ -162,8 +162,8 @@
     gap: 8px;
     padding: 12px 14px;
     overflow: auto;
-    background: var(--w7-face);
-    border-bottom: 1px solid var(--w7-group-border);
+    background: var(--xp-face);
+    border-bottom: 1px solid var(--xp-group-border);
   }
   .page :global(.top) {
     align-items: flex-start;
@@ -178,7 +178,7 @@
     margin: 0 0 8px;
   }
   dt {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   dd {
     margin: 0;
@@ -195,6 +195,6 @@
   }
   .stepno {
     flex: 1;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
 </style>

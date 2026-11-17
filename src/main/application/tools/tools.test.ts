@@ -614,7 +614,7 @@ describe('browser tools', () => {
     expect(params.detail).toBe('Waiting for the text "Reacted (1)" to show on the page.')
   })
 
-  it('stops an action when the user pauses Agent7 or takes control meanwhile', async () => {
+  it('stops an action when the user pauses AgentXP or takes control meanwhile', async () => {
     await run('browser_click', { ref: 1 })
     const guard = driver.guards[0]!
     expect(() => guard()).not.toThrow()

@@ -102,15 +102,15 @@
     position: relative;
     flex: none;
     height: 20px;
-    background: linear-gradient(#fff, #f1f1f1 90%, #e6e6e6);
-    color: var(--w7-text);
+    background: linear-gradient(#fff, #f1f1f1 90%, #ece9d8);
+    color: var(--xp-text);
     overflow: hidden;
   }
   .lvh.flex {
     flex: 1 1 0;
   }
   .lvh.divider {
-    border-right: 1px solid var(--w7-border-light);
+    border-right: 1px solid var(--xp-border-light);
   }
   .face {
     position: relative;
@@ -129,7 +129,7 @@
     outline: none;
   }
   .face:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
   .face.sortable:hover {

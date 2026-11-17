@@ -118,7 +118,7 @@
     min-height: 0;
     margin-top: 4px;
     border: 1px solid #1c3a64;
-    background: var(--w7-window);
+    background: var(--xp-window);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   }
   /* No scroll bar of its own: the preview inside is the only scroll area. */
@@ -145,7 +145,7 @@
   }
   .queue {
     margin-bottom: 2px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-size: 12px;
   }
   .question {
@@ -162,12 +162,12 @@
     gap: 4px 8px;
     padding: 4px 10px 6px;
     border-top: 1px solid #dfe6ee;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .hint {
     margin: 0;
     font-size: 12px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .remember {
     flex-basis: 100%;

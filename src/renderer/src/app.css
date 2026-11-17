@@ -14,9 +14,9 @@ body,
 }
 
 body {
-  font: var(--w7-font);
-  color: var(--w7-text);
-  background: var(--w7-face);
+  font: var(--xp-font);
+  color: var(--xp-text);
+  background: var(--xp-face);
   user-select: none;
   cursor: default;
 }

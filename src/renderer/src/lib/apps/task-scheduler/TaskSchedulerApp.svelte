@@ -375,7 +375,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .body {
     flex: 1;
@@ -406,13 +406,13 @@
     gap: 6px;
     height: 24px;
     padding: 0 6px;
-    background: var(--w7-face);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-face);
+    border: 1px solid var(--xp-list-border);
     border-bottom: 0;
   }
   .count {
     margin-left: 6px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .grid {
     flex: 1;
@@ -421,14 +421,14 @@
     flex-direction: column;
     overflow: hidden;
   }
-  .grid :global(.w7-listview) {
+  .grid :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
   .none {
     margin: 0;
     padding: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .details {
     display: flex;

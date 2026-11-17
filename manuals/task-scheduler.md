@@ -31,7 +31,7 @@ Use Task Scheduler to start work without you. A task has a name, one or more tri
 
 Task Scheduler works like the Scheduled Tasks folder of Windows XP, with more choices. A task can have conditions, for example "only if no chat is working". A task also keeps a history of its runs.
 
-Agent7 runs the tasks while it runs. The Task Scheduler window does not need to be open. If Agent7 is closed at the time that a task is due, the task does not start. Look at **Run missed tasks** in chapter 3 for the one exception.
+AgentXP runs the tasks while it runs. The Task Scheduler window does not need to be open. If AgentXP is closed at the time that a task is due, the task does not start. Look at **Run missed tasks** in chapter 3 for the one exception.
 
 **Note:** A task starts a new chat in the project, or sends the prompt to a chat that you choose. The chat has no window of its own. The agent can use the tools of the apps that are open on the desktop. If the agent asks for permission, the question waits in the Action Center until you answer.
 
@@ -45,7 +45,7 @@ Use one of the ways below to open Task Scheduler:
 
 ![The Task Scheduler icon on the desktop, between Control Center and Recycle Bin](../docs/images/task-scheduler-icon.png)
 
-Only one Task Scheduler window opens on a desktop. Each desktop has its own tasks. Agent7 keeps the tasks when you close the window and when you restart Agent7.
+Only one Task Scheduler window opens on a desktop. Each desktop has its own tasks. AgentXP keeps the tasks when you close the window and when you restart AgentXP.
 
 ## 3 - The Window
 
@@ -93,7 +93,7 @@ Click **Create Basic Task...** to open the wizard. The wizard asks one question 
 ![The first page of the Create Basic Task Wizard with a name and a description](../docs/images/task-scheduler-wizard.png)
 
 1. **Create a Basic Task** – Type a name and, if you want, a description.
-2. **Task Trigger** – Select when the task starts: **Daily**, **Weekly**, **Monthly**, **One time**, or **At Agent7 startup**.
+2. **Task Trigger** – Select when the task starts: **Daily**, **Weekly**, **Monthly**, **One time**, or **At AgentXP startup**.
 3. **Trigger Details** – Set the start and how often the task repeats. The fields depend on your choice in step 2.
 4. **Action** – Select the agent, the project, the chat, and type the prompt.
 5. **Summary** – Read the task. Click **Finish** to save it.
@@ -122,7 +122,7 @@ A task can have any number of triggers. A task without a trigger starts only whe
 - **Daily** – Starts at the time you set, every number of days that you choose. The first start is on the start day.
 - **Weekly** – Starts at the time you set, on the days of the week that you select, every number of weeks that you choose. A week starts on Sunday.
 - **Monthly** – Starts at the time you set, on the days of the months that you select. Select **Last** to start on the last day of each selected month.
-- **At Agent7 startup** – Starts after Agent7 started. Set a delay of 0 to 1440 minutes.
+- **At AgentXP startup** – Starts after AgentXP started. Set a delay of 0 to 1440 minutes.
 
 Each trigger that is not a startup trigger also has these fields:
 
@@ -160,27 +160,27 @@ A condition must hold when a trigger starts the task. If it does not hold, the r
 ### Settings
 
 - **Allow the task to be run on demand** – Makes **Run** work for this task.
-- **Run the task as soon as possible after a scheduled start is missed** – Applies when Agent7 was closed, or the computer was asleep, at the scheduled time. A start that is less than two minutes late counts as on time. Many missed starts make one run. If this box is off, the history shows **Missed**.
+- **Run the task as soon as possible after a scheduled start is missed** – Applies when AgentXP was closed, or the computer was asleep, at the scheduled time. A start that is less than two minutes late counts as on time. Many missed starts make one run. If this box is off, the history shows **Missed**.
 - **If the task fails, restart every** – Starts the task again after the number of minutes that you set. **at most** sets the number of restarts.
 - **Stop the task if it runs longer than** – Ends a run after the number of minutes that you set. The history shows **Stopped**.
 - **If the task is already running** – Select one rule: **Do not start a new instance**, **Queue a new instance**, or **Stop the existing instance**. At most 10 runs wait in the queue.
 
 ### History
 
-The **History** tab lists the runs of the selected task. Agent7 keeps the last 100 runs of each task.
+The **History** tab lists the runs of the selected task. AgentXP keeps the last 100 runs of each task.
 
 ![The History tab with two completed runs of the Morning review task](../docs/images/task-scheduler-history.png)
 
 - **Result** – **Running**, **Completed**, **Failed**, **Stopped**, **Not started**, or **Missed**.
 - **Start** and **End** – The times of the run.
-- **Started by** – **Schedule**, **Agent7 startup**, **Run command**, **Missed schedule**, or **Restart after failure**. A restart shows the number of the attempt.
+- **Started by** – **Schedule**, **AgentXP startup**, **Run command**, **Missed schedule**, or **Restart after failure**. A restart shows the number of the attempt.
 - **Message** – One sentence that says what happened.
 
 Select a run and click **Open chat** to open the chat that the run used. Click **Clear history** to delete the runs of the task.
 
 ### The Event Viewer Log
 
-Task Scheduler writes each start, end, failure, and change of a task to the **Task Scheduler** log in **[Event Viewer](event-viewer.md)**. A failure is an error in the log. The error goes away from the Activity gadget when a later run of the same task completes.
+Task Scheduler writes each start, end, failure, and change of a task to the **Task Scheduler** log in **[Event Viewer](event-viewer.md)**. A failure is an error in the log. The error goes away from the Activity taskpane when a later run of the same task completes.
 
 ## 4 - Controls Reference
 
@@ -265,7 +265,7 @@ Task Scheduler writes each start, end, failure, and change of a task to the **Ta
 | Wizard trigger fields | The fields of the trigger. | `basic-wizard-trigger-fields` |
 | Wizard start | The start date and time. | `basic-wizard-trigger-start-date`, `basic-wizard-trigger-start-date-open`, `basic-wizard-trigger-start-time` |
 | Wizard recur | The number of days or weeks between starts. | `basic-wizard-trigger-every` |
-| Wizard delay | The delay after the start of Agent7. | `basic-wizard-trigger-delay` |
+| Wizard delay | The delay after the start of AgentXP. | `basic-wizard-trigger-delay` |
 | Wizard weekdays | One box for each day, Sunday is 0. | `basic-wizard-trigger-dow-0`, `basic-wizard-trigger-dow-1`, `basic-wizard-trigger-dow-2`, `basic-wizard-trigger-dow-3`, `basic-wizard-trigger-dow-4`, `basic-wizard-trigger-dow-5`, `basic-wizard-trigger-dow-6` |
 | Wizard months | One box for each month, January is 1. | `basic-wizard-trigger-month-1` to `basic-wizard-trigger-month-12` |
 | Wizard days | One box for each day of the month. | `basic-wizard-trigger-day-1` to `basic-wizard-trigger-day-31` |
@@ -322,7 +322,7 @@ Task Scheduler writes each start, end, failure, and change of a task to the **Ta
 | Trigger fields | The fields of the trigger. | `trigger-dialog-fields` |
 | Trigger start | The start date and time. | `trigger-dialog-start-date`, `trigger-dialog-start-date-open`, `trigger-dialog-start-time` |
 | Trigger recur | The number of days or weeks between starts. | `trigger-dialog-every` |
-| Trigger delay | The delay after the start of Agent7. | `trigger-dialog-delay` |
+| Trigger delay | The delay after the start of AgentXP. | `trigger-dialog-delay` |
 | Trigger weekdays | One box for each day, Sunday is 0. | `trigger-dialog-dow-0`, `trigger-dialog-dow-1`, `trigger-dialog-dow-2`, `trigger-dialog-dow-3`, `trigger-dialog-dow-4`, `trigger-dialog-dow-5`, `trigger-dialog-dow-6` |
 | Trigger months | One box for each month, January is 1. | `trigger-dialog-month-1` to `trigger-dialog-month-12` |
 | Trigger days | One box for each day of the month. | `trigger-dialog-day-1` to `trigger-dialog-day-31` |
@@ -384,13 +384,13 @@ To see why a task failed, follow the steps below:
 
 ### Delete a Task
 
-To delete a task, select it, click **Delete**, and click **Yes**. Agent7 deletes the history of the task. The chats that the task started stay in the chat list.
+To delete a task, select it, click **Delete**, and click **Yes**. AgentXP deletes the history of the task. The chats that the task started stay in the chat list.
 
 ## 6 - Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| The task did not start at its time. | Make sure that the task is **Enabled** and that Agent7 was open. Read the **History** tab. A row **Missed** means that Agent7 was closed. A row **Not started** names the condition that did not hold. |
+| The task did not start at its time. | Make sure that the task is **Enabled** and that AgentXP was open. Read the **History** tab. A row **Missed** means that AgentXP was closed. A row **Not started** names the condition that did not hold. |
 | The history says "Not started" and names the paused desktop. | Click **Resume agents and continue** on the top bar, or clear the condition **Start the task only if the desktop is not paused**. |
 | The task shows **Running** for a long time. | The agent waits for an answer. Open the Action Center and answer the question. Click **End** to stop the task. |
 | **Run** is gray. | The task is disabled, or **Allow the task to be run on demand** is off in the properties. |
@@ -405,7 +405,7 @@ To delete a task, select it, click **Delete**, and click **Yes**. Agent7 deletes
 
 - It does not run an action that is not **Run an agent**. It does not start programs or send mail.
 - It does not repeat a task inside a day, for example every hour. Use a daily trigger for each time of the day.
-- It does not start Agent7. A task starts only while Agent7 runs.
+- It does not start AgentXP. A task starts only while AgentXP runs.
 - It does not run one prompt with several agents. Make one task for each agent.
 - It does not open a window for the chat of a run. Click **Open chat** in the **History** tab.
 
@@ -417,6 +417,6 @@ If this manual does not answer your question, read the next topic that fits:
 - **[Event Viewer](event-viewer.md)** – The Task Scheduler log.
 - **[Task Manager](agent-manager.md)** – The chats that tasks start.
 - **[Control Center](control-centre.md)** – Agents and permissions.
-- **[Keyboard](keyboard.md)** – The keys of Agent7.
+- **[Keyboard](keyboard.md)** – The keys of AgentXP.
 
 To open this manual from the window, press F1.

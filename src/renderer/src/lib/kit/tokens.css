@@ -1,138 +1,156 @@
 /*
- * Windows 7 (Aero Basic / WinForms) design tokens, taken from docs/design.
+ * Windows XP (Luna / WinForms) design tokens, taken from docs/design.
  * Kit components read these variables; never hard-code colours in components
  * when a token exists.
  */
 :root {
-  --w7-font: 12px/1.35 'Segoe UI', 'Noto Sans', Tahoma, sans-serif;
-  --w7-font-mono: 12px/17px Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+  --xp-font: 12px/1.35 Tahoma, 'Segoe UI', 'Noto Sans', sans-serif;
+  --xp-font-mono: 11px/15px 'Lucida Console', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
 
-  --w7-text: #000;
-  --w7-text-disabled: #6d6d6d;
-  --w7-text-muted: #555;
-  --w7-face: #f0f0f0;
-  --w7-window: #fff;
-  --w7-desktop: #1e5aa8;
+  --xp-text: #000;
+  --xp-text-disabled: #78756a;
+  --xp-text-muted: #5a5a5a;
+  --xp-face: #ece9d8;
+  --xp-window: #fff;
+  --xp-desktop: #3a6ea5;
 
-  --w7-border: #707070;
-  --w7-border-light: #d5d5d5;
-  --w7-border-disabled: #adb2b5;
-  --w7-input-border: #abadb3;
-  --w7-input-border-top: #8e9097;
-  --w7-group-border: #d5dfe5;
-  --w7-panel-border: #898c95;
+  --xp-border: #003c74;
+  --xp-border-light: #fff;
+  --xp-border-disabled: #c9c7ba;
+  --xp-input-border: #7f9db9;
+  --xp-input-border-top: #7f9db9;
+  --xp-group-border: #d0d0bf;
+  --xp-panel-border: #7f9db9;
 
-  --w7-btn-face: linear-gradient(#f2f2f2 0, #ebebeb 49%, #ddd 50%, #cfcfcf 100%);
-  --w7-btn-hover-border: #3c7fb1;
-  --w7-btn-hover-face: linear-gradient(#eaf6fd 0, #d9f0fc 49%, #bee6fd 50%, #a7d9f5 100%);
-  --w7-btn-active-border: #2c628b;
-  --w7-btn-active-face: linear-gradient(#e5f4fc 0, #c4e5f6 49%, #98d1ef 50%, #68b3db 100%);
-  --w7-btn-default-border: #3399ff;
+  --xp-btn-face: linear-gradient(180deg, #fff 0, #f4f3ee 8%, #ece9d8 60%, #d6d0c5 100%);
+  --xp-btn-hover-border: #003c74;
+  --xp-btn-hover-face: linear-gradient(180deg, #fff 0, #f4f3ee 8%, #ece9d8 60%, #d6d0c5 100%);
+  --xp-btn-active-border: #003c74;
+  --xp-btn-active-face: linear-gradient(180deg, #cdcac3 0, #ddd9cd 12%, #e3e0d0 100%);
+  --xp-btn-default-border: #003c74;
 
-  --w7-hot-border: #b8d6fb;
-  --w7-hot-face: linear-gradient(#fafbfd, #ebf3fd);
-  --w7-select-border: #7da2ce;
-  --w7-select-face: linear-gradient(#dcebfc, #c1dbfc);
-  --w7-select-inactive-face: linear-gradient(#f8f8f8, #e5e5e5);
+  --xp-hot-border: #ffc73c;
+  --xp-hot-face: #fff4d3;
+  --xp-select-border: #316ac5;
+  --xp-select-face: #316ac5;
+  --xp-select-inactive-face: #d4d0c8;
 
-  --w7-toolbar-hover-border: #98b8e0;
-  --w7-toolbar-hover-face: linear-gradient(#fbfcfe, #e3ecf8 49%, #d3e1f4 50%, #e0ebf9);
-  --w7-toolbar-face: linear-gradient(#fdfeff, #e8eff8 50%, #dce6f4 51%, #e6eef9);
+  --xp-toolbar-hover-border: #003c74;
+  --xp-toolbar-hover-face: linear-gradient(#fff, #ece9d8);
+  --xp-toolbar-face: linear-gradient(180deg, #f6f4ec 0, #ece9d8 40%, #e0dcc8 100%);
 
-  --w7-menu-face: #f7f7f7;
-  --w7-menu-border: #979797;
-  --w7-menu-hot-border: #a8d8eb;
-  --w7-menu-hot-face: linear-gradient(#f4fafe, #d6ebf9);
-  --w7-menubar-hot-border: #a8c4e6;
-  --w7-menubar-hot-face: linear-gradient(#f6faff, #dbe9f9);
+  --xp-menu-face: #fff;
+  --xp-menu-border: #aca899;
+  --xp-menu-hot-border: #316ac5;
+  --xp-menu-hot-face: #316ac5;
+  --xp-menubar-hot-border: #316ac5;
+  --xp-menubar-hot-face: #316ac5;
 
-  --w7-tab-accent: #f0a43c;
-  --w7-progress-fill: linear-gradient(#bff2b4 0, #4fd34e 45%, #1fa71f 50%, #5de35c 100%);
+  --xp-tab-accent: #ffc73c;
+  --xp-progress-fill: repeating-linear-gradient(90deg, #37c037 0, #37c037 7px, transparent 7px, transparent 9px);
 
-  --w7-focus-outline: 1px dotted #000;
-  --w7-shadow-popup: 3px 3px 4px rgba(0, 0, 0, 0.3);
+  --xp-focus-outline: 1px dotted #000;
+  --xp-shadow-popup: 2px 2px 3px rgba(0, 0, 0, 0.35);
 
-  --w7-diff-hunk-bg: #eef3fb;
-  --w7-diff-hunk-fg: #1c3d6e;
-  --w7-diff-del-bg: #ffe3e3;
-  --w7-diff-del-fg: #7a0000;
-  --w7-diff-add-bg: #e1f7e1;
-  --w7-diff-add-fg: #0b4d0b;
-  --w7-console-bg: #0c0c0c;
-  --w7-console-fg: #cccccc;
+  --xp-diff-hunk-bg: #eef3fb;
+  --xp-diff-hunk-fg: #1c3d6e;
+  --xp-diff-del-bg: #ffe3e3;
+  --xp-diff-del-fg: #7a0000;
+  --xp-diff-add-bg: #e1f7e1;
+  --xp-diff-add-fg: #0b4d0b;
+  --xp-console-bg: #0c0c0c;
+  --xp-console-fg: #cccccc;
 
-  --w7-accent-claude: #b0502f;
-  --w7-link: #0066cc;
+  --xp-accent-claude: #b0502f;
+  --xp-link: #0000ee;
 }
 
 /* Added by atoms batch 2: lists, progress, sliders, calendar */
 :root {
-  --w7-list-border: #828790;
-  --w7-list-select-face: linear-gradient(#3399ff, #3399ff);
-  --w7-list-select-text: #fff;
-  --w7-progress-fill-paused: linear-gradient(#fff3b0 0, #f2d94a 45%, #dcb800 50%, #f5e36a 100%);
-  --w7-progress-fill-error: linear-gradient(#ffb8b0 0, #f0605a 45%, #d01818 50%, #f27a74 100%);
-  --w7-progress-track: #e6e6e6;
-  --w7-progress-border: #bcbcbc;
-  --w7-calendar-today: #3d82d4;
-  --w7-calendar-header: linear-gradient(#fdfdfe, #e4ecf7);
-  --w7-etched-dark: #b5c2d6;
+  --xp-list-border: #7f9db9;
+  --xp-list-select-face: #316ac5;
+  --xp-list-select-text: #fff;
+  --xp-progress-fill-paused: repeating-linear-gradient(90deg, #e6c534 0, #e6c534 7px, transparent 7px, transparent 9px);
+  --xp-progress-fill-error: repeating-linear-gradient(90deg, #d8322a 0, #d8322a 7px, transparent 7px, transparent 9px);
+  --xp-progress-track: #fff;
+  --xp-progress-border: #686868;
+  --xp-calendar-today: #316ac5;
+  --xp-calendar-header: linear-gradient(#f6f4ec, #d6d0c5);
+  --xp-etched-dark: #aca899;
 }
 
-/* Added by organisms batch: Aero Basic window frame, caption buttons, taskbar, code viewer */
+/* Added by organisms batch: Luna window frame, caption buttons, taskbar, code viewer */
 :root {
-  --w7-frame-border: rgba(20, 36, 60, 0.85);
-  --w7-frame-active: linear-gradient(180deg, rgba(196, 220, 248, 0.72) 0, rgba(160, 196, 238, 0.68) 34px, rgba(172, 204, 242, 0.7) 100%);
-  --w7-frame-inactive: linear-gradient(180deg, #eef1f5 0, #e1e6ed 34px, #e4e8ee 100%);
-  --w7-frame-inactive-border: #7c8794;
-  --w7-frame-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 10px 36px rgba(0, 0, 0, 0.55);
-  --w7-frame-shadow-inactive: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 0, 0, 0.35);
-  --w7-client-border: #5d6c82;
-  --w7-title-glow: 0 0 9px #fff, 0 0 5px #fff, 0 0 2px #fff;
-  --w7-caption-border: #3a4f6e;
-  --w7-caption-face: linear-gradient(#e6eef9 0, #c3d4ea 48%, #a9c0de 50%, #c3d6ee 100%);
-  --w7-caption-hover-face: linear-gradient(#f4fbff 0, #cfeafc 48%, #8fd0f5 50%, #bfe6fb 100%);
-  --w7-caption-close-face: linear-gradient(#f0b3a8 0, #d9604f 48%, #c4301e 50%, #e0604a 100%);
-  --w7-caption-close-hover-face: linear-gradient(#ffd0c4 0, #f58a74 48%, #e5381c 50%, #ff8a6a 100%);
-  --w7-caption-close-active-face: linear-gradient(#b4574c 0, #9e2a1d 48%, #8a1608 50%, #a9392a 100%);
-  --w7-desktop-bg: radial-gradient(ellipse at 72% 22%, rgba(150, 215, 250, 0.9) 0, rgba(150, 215, 250, 0) 46%),
-    radial-gradient(ellipse at 15% 90%, rgba(8, 52, 120, 0.85) 0, rgba(8, 52, 120, 0) 55%),
-    linear-gradient(160deg, #134b8a 0, #2a86c8 55%, #7cc4ee 100%);
-  --w7-taskbar-face: linear-gradient(180deg, rgba(120, 165, 215, 0.5) 0, rgba(40, 80, 135, 0.58) 45%, rgba(14, 38, 76, 0.7) 100%);
-  --w7-taskbtn-face: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.16));
-  --w7-glass-blur: blur(10px) saturate(1.6);
-  --w7-code-bg: #fff;
-  --w7-code-gutter: #2b91af;
-  --w7-code-gutter-bg: #fff;
-  --w7-code-highlight: #fff6c0;
-  --w7-statusbar-face: linear-gradient(#f5f7fa, #dbe4f1);
-  --w7-menubar-face: linear-gradient(#fbfcfe, #dfe8f4);
+  --xp-frame-border: #0831d9;
+  --xp-frame-active: linear-gradient(180deg, #0997ff 0, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+  --xp-frame-inactive: linear-gradient(180deg, #7697e7 0, #7e9ee3 8%, #7a96df 40%, #86a2e8 88%, #7a96df 100%);
+  --xp-frame-inactive-border: #6582d4;
+  --xp-frame-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), 2px 2px 8px rgba(0, 0, 0, 0.45);
+  --xp-frame-shadow-inactive: 2px 2px 6px rgba(0, 0, 0, 0.3);
+  --xp-client-border: #0831d9;
+  --xp-title-glow: 1px 1px 0 #0f1089;
+  --xp-caption-border: #fff;
+  --xp-caption-face: radial-gradient(circle at 30% 25%, #6c9cf6 0, #2a63e4 55%, #1a47c3 100%);
+  --xp-caption-hover-face: radial-gradient(circle at 30% 25%, #9cc0ff 0, #4a85ee 55%, #2a63e4 100%);
+  --xp-caption-close-face: radial-gradient(circle at 30% 25%, #e8957a 0, #d4492a 55%, #b8300f 100%);
+  --xp-caption-close-hover-face: radial-gradient(circle at 30% 25%, #f8b8a2 0, #e5603d 55%, #c8421f 100%);
+  --xp-caption-close-active-face: radial-gradient(circle at 30% 25%, #b8573f 0, #a2331a 55%, #8a2208 100%);
+  --xp-desktop-bg: radial-gradient(ellipse 120% 55% at 30% 112%, #5a9a2a 0, #3f8a1c 45%, rgba(63,138,28,0) 46%), radial-gradient(ellipse 100% 40% at 85% 118%, #4f9226 0, #357a14 50%, rgba(53,122,20,0) 51%), linear-gradient(180deg, #2f6fd6 0, #5f9be8 45%, #a9d0f5 78%, #cfe5fa 100%);
+  --xp-taskbar-face: linear-gradient(180deg, #3168d5 0, #4993e6 8%, #3168d5 18%, #2763d6 90%, #1941a5 96%, #1941a5 100%);
+  --xp-taskbtn-face: linear-gradient(180deg, #5b92f0 0, #3c79e6 10%, #3168d5 90%, #2a5ac0 100%);
+  --xp-glass-blur: none;
+  --xp-code-bg: #fff;
+  --xp-code-gutter: #2b6cb0;
+  --xp-code-gutter-bg: #fff;
+  --xp-code-highlight: #fff6c0;
+  --xp-statusbar-face: #ece9d8;
+  --xp-menubar-face: #ece9d8;
 }
 
-/* Added by the desktop shell: glass gadgets, start menu, action center, UAC */
+/* Added by the desktop shell: infopanels, start menu, action center, UAC */
 :root {
-  --w7-gadget-face: linear-gradient(rgba(34, 66, 112, 0.82), rgba(10, 26, 58, 0.88));
-  --w7-gadget-border: rgba(190, 215, 245, 0.55);
-  --w7-gadget-text: #eef5ff;
-  --w7-gadget-muted: #b4c8e4;
-  --w7-glass-face: linear-gradient(rgba(90, 140, 200, 0.62), rgba(30, 70, 125, 0.68));
-  --w7-glass-border: rgba(10, 24, 48, 0.85);
-  --w7-start-hover: linear-gradient(rgba(255, 255, 255, 0.7), rgba(210, 232, 252, 0.55));
-  --w7-popup-border: #6f7f96;
-  --w7-uac-band: linear-gradient(#3b88d8, #1f5cab);
-  --w7-uac-band-warn: linear-gradient(#f6c94a, #d79a12);
-  --w7-agent-glow: 0 0 0 2px rgba(255, 196, 80, 0.9), 0 0 22px 4px rgba(255, 190, 70, 0.75);
+  --xp-infopanel-face: #d6dff7;
+  --xp-infopanel-border: #fff;
+  --xp-infopanel-text: #000;
+  --xp-infopanel-muted: #3b4d78;
+  --xp-glass-face: linear-gradient(90deg, #3a73d8 0, #2a5ac0 100%);
+  --xp-glass-border: #0831d9;
+  --xp-start-hover: #316ac5;
+  --xp-popup-border: #aca899;
+  --xp-uac-band: linear-gradient(#3a73d8, #1941a5);
+  --xp-uac-band-warn: linear-gradient(#f6c94a, #d79a12);
+  --xp-agent-glow: 0 0 0 2px #ffc73c, 0 0 8px 2px rgba(255, 199, 60, 0.8);
 }
 
 /* Version control (Code app git status): file tree letters, gutter marks, overview ruler. */
 :root {
-  --w7-git-modified: #1f5fb4;
-  --w7-git-added: #237a23;
-  --w7-git-deleted: #c0302a;
-  --w7-git-renamed: #7a4bb0;
-  --w7-git-gutter-added: #4caf50;
-  --w7-git-gutter-modified: #3b82d6;
-  --w7-git-gutter-deleted: #d9382e;
-  --w7-git-old-bg: #ffe3e0;
-  --w7-git-new-bg: #e4f6df;
+  --xp-git-modified: #1f5fb4;
+  --xp-git-added: #237a23;
+  --xp-git-deleted: #c0302a;
+  --xp-git-renamed: #7a4bb0;
+  --xp-git-gutter-added: #4caf50;
+  --xp-git-gutter-modified: #3b82d6;
+  --xp-git-gutter-deleted: #d9382e;
+  --xp-git-old-bg: #ffe3e0;
+  --xp-git-new-bg: #e4f6df;
+}
+
+/* Luna-only tokens: Start button, Start menu panels, group boxes, tabs, window metrics. */
+:root {
+  --xp-luna-blue: #0054e3;
+  --xp-luna-blue-dark: #0831d9;
+  --xp-start-green: linear-gradient(180deg, #5bbf5b 0, #3c963c 12%, #2f8a2f 55%, #3c963c 100%);
+  --xp-start-green-hover: linear-gradient(180deg, #7ad37a 0, #4cab4c 12%, #3d9c3d 55%, #4cab4c 100%);
+  --xp-start-header: linear-gradient(180deg, #2a5ac0 0, #1f4fb5 40%, #1941a5 100%);
+  --xp-start-right: #d3e5fa;
+  --xp-start-footer: linear-gradient(180deg, #2a5ac0 0, #1941a5 100%);
+  --xp-start-divider: #c5d3ee;
+  --xp-highlight: #316ac5;
+  --xp-highlight-text: #fff;
+  --xp-group-title: #0046d5;
+  --xp-tab-face: linear-gradient(#fff 0, #fcfcfe 90%, #ecebe5 100%);
+  --xp-tab-border: #919b9c;
+  --xp-frame-width: 4px;
+  --xp-title-height: 30px;
+  --xp-tray-face: linear-gradient(180deg, #0c59b9 0, #139ee9 8%, #18b5f2 50%, #139ee9 90%, #1042af 100%);
 }

@@ -59,7 +59,7 @@
 
   onMount(() => void guard(() => store.load()))
 
-  /** Install...: the Browse For Folder dialog, then the skill is copied into Agent7. */
+  /** Install...: the Browse For Folder dialog, then the skill is copied into AgentXP. */
   async function install(): Promise<void> {
     const path = await showFolderBrowser({ purpose: 'skill', source: host.api.fs })
     if (!path) return
@@ -177,7 +177,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }

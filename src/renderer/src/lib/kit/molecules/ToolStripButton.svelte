@@ -68,7 +68,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    color: var(--w7-text);
+    color: var(--xp-text);
     cursor: default;
     white-space: nowrap;
     outline: none;
@@ -76,8 +76,8 @@
   .tb:hover:not(:disabled),
   .tb.checked:not(:disabled),
   .tb.expanded {
-    border-color: var(--w7-toolbar-hover-border);
-    background: var(--w7-toolbar-hover-face);
+    border-color: var(--xp-toolbar-hover-border);
+    background: var(--xp-toolbar-hover-face);
   }
   .tb.checked:not(:disabled):not(:hover),
   .tb.expanded {
@@ -89,13 +89,13 @@
     background: linear-gradient(#d4e2f4, #c1d5ee);
   }
   .tb:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
   .tb:disabled {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
-  .tb:disabled :global(.w7-icon),
+  .tb:disabled :global(.xp-icon),
   .tb:disabled .glyph {
     opacity: 0.45;
   }

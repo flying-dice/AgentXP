@@ -38,7 +38,7 @@
   }
 </script>
 
-<label class="w7-check {className}" class:disabled class:readonly>
+<label class="xp-check {className}" class:disabled class:readonly>
   <button
     type="button"
     class="box"
@@ -65,16 +65,16 @@
 </label>
 
 <style>
-  .w7-check {
+  .xp-check {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     min-height: 17px;
-    color: var(--w7-text);
+    color: var(--xp-text);
     cursor: default;
   }
-  .w7-check.disabled {
-    color: var(--w7-text-disabled);
+  .xp-check.disabled {
+    color: var(--xp-text-disabled);
   }
   .text {
     padding: 0 1px;
@@ -90,28 +90,28 @@
     justify-content: center;
     border: 1px solid #8e8f8f;
     border-radius: 2px;
-    background: linear-gradient(135deg, #dcdcdc 0%, #f4f4f4 45%, #fff 100%);
+    background: linear-gradient(135deg, #d6d0c5 0%, #f4f2e8 45%, #fff 100%);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     outline: none;
   }
-  .w7-check:hover:not(.disabled):not(.readonly) .box {
-    border-color: var(--w7-btn-hover-border);
+  .xp-check:hover:not(.disabled):not(.readonly) .box {
+    border-color: var(--xp-btn-hover-border);
     background: linear-gradient(135deg, #c4e5f6 0%, #e4f4fc 50%, #fff 100%);
   }
-  .w7-check:active:not(.disabled):not(.readonly) .box {
-    border-color: var(--w7-btn-active-border);
+  .xp-check:active:not(.disabled):not(.readonly) .box {
+    border-color: var(--xp-btn-active-border);
     background: linear-gradient(135deg, #8cc8e8 0%, #c4e5f6 100%);
   }
-  .w7-check.disabled .box {
+  .xp-check.disabled .box {
     border-color: #bcbcbc;
-    background: #f4f4f4;
+    background: #f4f2e8;
     box-shadow: none;
   }
-  .w7-check.disabled svg {
+  .xp-check.disabled svg {
     opacity: 0.4;
   }
-  .w7-check:has(.box:focus-visible) .text {
-    outline: var(--w7-focus-outline);
+  .xp-check:has(.box:focus-visible) .text {
+    outline: var(--xp-focus-outline);
   }
   .mixed {
     width: 7px;

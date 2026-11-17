@@ -22,10 +22,10 @@ const ratio = (a: string, b: string): number => {
 
 /** UX-48: text colours that sit on white must reach 4.5:1 (WCAG 1.4.3). */
 describe('token contrast', () => {
-  it.each(['w7-text', 'w7-text-muted', 'w7-accent-claude', 'w7-git-added', 'w7-git-modified', 'w7-git-deleted', 'w7-git-renamed', 'w7-link'])('%s on white is at least 4.5:1', (name) => {
+  it.each(['xp-text', 'xp-text-muted', 'xp-accent-claude', 'xp-git-added', 'xp-git-modified', 'xp-git-deleted', 'xp-git-renamed', 'xp-link'])('%s on white is at least 4.5:1', (name) => {
     expect(ratio(token(name), '#ffffff')).toBeGreaterThanOrEqual(4.5)
   })
   it('disabled text keeps 3:1 on the window face', () => {
-    expect(ratio(token('w7-text-disabled'), token('w7-face'))).toBeGreaterThanOrEqual(3)
+    expect(ratio(token('xp-text-disabled'), token('xp-face'))).toBeGreaterThanOrEqual(3)
   })
 })

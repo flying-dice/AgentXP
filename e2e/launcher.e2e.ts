@@ -1,16 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Page } from 'playwright'
-import { addProject, createWorkspace, desktopIdByTitle, launchAgent7, LauncherPage, registerFakeAgent, see, type Agent7Instance, type Workspace } from './fixtures'
+import { addProject, createWorkspace, desktopIdByTitle, launchAgentXP, LauncherPage, registerFakeAgent, see, type AgentXPInstance, type Workspace } from './fixtures'
 
 describe('launcher', () => {
-  let app: Agent7Instance
+  let app: AgentXPInstance
   let page: Page
   let launcher: LauncherPage
   let workspace: Workspace
 
   beforeAll(async () => {
     workspace = await createWorkspace()
-    app = await launchAgent7()
+    app = await launchAgentXP()
     page = await app.launcherWindow()
     launcher = new LauncherPage(page)
     await registerFakeAgent(page)
@@ -29,7 +29,7 @@ describe('launcher', () => {
 
   it('the New dialog says that Create opens the desktop', async () => {
     await page.getByTestId('launcher-new').click()
-    await see.text(page.getByTestId('new-desktop-opens-note'), 'Agent7 opens the new desktop when you click Create.')
+    await see.text(page.getByTestId('new-desktop-opens-note'), 'AgentXP opens the new desktop when you click Create.')
     await see.text(page.getByTestId('new-desktop-projects-note'), 'You can add projects later.')
     await page.getByTestId('dialog-button-cancel').click()
   })

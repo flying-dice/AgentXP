@@ -19,7 +19,7 @@ export interface TaskEngineDeps {
 
 /** The longest sleep of the timer: it wakes up this often to look at the clock again (sleep and wake, a changed clock). */
 export const MAX_TICK_MS = 60_000
-/** A due time that is older than this when the scheduler sees it counts as missed (Agent7 was closed or the computer slept). */
+/** A due time that is older than this when the scheduler sees it counts as missed (AgentXP was closed or the computer slept). */
 export const MISSED_GRACE_MS = 2 * 60_000
 /** Instances that wait for the running one, per task ("Queue a new instance"). */
 export const MAX_QUEUED = 10
@@ -56,7 +56,7 @@ interface Outcome {
 const START_TEXT: Record<TaskRunStart, string> = {
   manual: 'run by the user',
   schedule: 'by its schedule',
-  startup: 'at Agent7 startup',
+  startup: 'at AgentXP startup',
   retry: 'a restart after a failure',
   missed: 'a missed run'
 }
@@ -104,14 +104,14 @@ export class TaskEngine {
   // ---- life cycle --------------------------------------------------------------------------------
 
   /**
-   * Agent7 started: runs that a previous Agent7 left open are failed, tasks with a start-up trigger start (after their
-   * delay), due times that passed while Agent7 was closed are missed, and the timer starts.
+   * AgentXP started: runs that a previous AgentXP left open are failed, tasks with a start-up trigger start (after their
+   * delay), due times that passed while AgentXP was closed are missed, and the timer starts.
    */
   start(): void {
     if (this.started) return
     this.started = true
     const now = this.clock.now()
-    this.deps.runs.failUnfinished(new Date(now).toISOString(), 'Agent7 closed while the task was running.')
+    this.deps.runs.failUnfinished(new Date(now).toISOString(), 'AgentXP closed while the task was running.')
     for (const task of this.deps.tasks.listAll()) {
       if (!task.enabled) continue
       const startup = this.startupDelay(task)
@@ -121,7 +121,7 @@ export class TaskEngine {
     this.arm()
   }
 
-  /** Agent7 closes: timers stop and the runs that go on are written as failed. */
+  /** AgentXP closes: timers stop and the runs that go on are written as failed. */
   stop(): void {
     this.started = false
     this.clearTimer()
@@ -132,7 +132,7 @@ export class TaskEngine {
     for (const [taskId, active] of this.active) {
       this.timers.clear(active.stopTimer)
       active.controller.abort()
-      this.deps.runs.finish(active.run.id, { endedAt, result: 'failed', message: 'Agent7 closed while the task was running.', sessionId: null })
+      this.deps.runs.finish(active.run.id, { endedAt, result: 'failed', message: 'AgentXP closed while the task was running.', sessionId: null })
       this.active.delete(taskId)
     }
     this.waiting.clear()
@@ -224,7 +224,7 @@ export class TaskEngine {
     const fresh = this.deps.tasks.get(task.id) ?? task
     if (now - due <= MISSED_GRACE_MS) return void this.fire(fresh, 'schedule')
     if (fresh.settings.runMissed && !covered) return void this.fire(fresh, 'missed')
-    this.record(fresh, 'missed', 'missed', 'Agent7 was not running at the scheduled time, so the task did not start.')
+    this.record(fresh, 'missed', 'missed', 'AgentXP was not running at the scheduled time, so the task did not start.')
   }
 
   /** Sleeps until the earliest due time, at most `MAX_TICK_MS`. */
@@ -358,9 +358,9 @@ export class TaskEngine {
   private stoppedMessage(task: ScheduledTaskRecord, active: ActiveRun, fallback: string): string {
     switch (active.reason) {
       case 'timeout':
-        return `The task ran longer than ${task.settings.stopAfterMinutes} ${task.settings.stopAfterMinutes === 1 ? 'minute' : 'minutes'} and Agent7 stopped it.`
+        return `The task ran longer than ${task.settings.stopAfterMinutes} ${task.settings.stopAfterMinutes === 1 ? 'minute' : 'minutes'} and AgentXP stopped it.`
       case 'replaced':
-        return 'Agent7 stopped the task to start a new instance.'
+        return 'AgentXP stopped the task to start a new instance.'
       case 'ended':
         return 'The task was ended by the user.'
       default:

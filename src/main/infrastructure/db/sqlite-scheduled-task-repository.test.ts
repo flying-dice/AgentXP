@@ -199,13 +199,13 @@ describe('SqliteTaskRunRepository', () => {
     expect(runs.list(task.id)).toEqual([])
   })
 
-  it('fails the runs that Agent7 left running', () => {
+  it('fails the runs that AgentXP left running', () => {
     const { tasks, runs, desktop } = setup()
     const task = tasks.create(desktop.id, input(), 0)
     const open = runs.start({ taskId: task.id, startedAt: '2026-11-17T09:00:00.000Z', startedBy: 'schedule', attempt: 1 })
     const done = runs.start({ taskId: task.id, startedAt: '2026-11-17T08:00:00.000Z', startedBy: 'schedule', attempt: 1, finished: { endedAt: '2026-11-17T08:01:00.000Z', result: 'success', message: '' } })
-    expect(runs.failUnfinished('2026-11-18T00:00:00.000Z', 'Agent7 closed.')).toBe(1)
-    expect(runs.list(task.id).find((r) => r.id === open.id)).toMatchObject({ result: 'failed', message: 'Agent7 closed.', endedAt: '2026-11-18T00:00:00.000Z' })
+    expect(runs.failUnfinished('2026-11-18T00:00:00.000Z', 'AgentXP closed.')).toBe(1)
+    expect(runs.list(task.id).find((r) => r.id === open.id)).toMatchObject({ result: 'failed', message: 'AgentXP closed.', endedAt: '2026-11-18T00:00:00.000Z' })
     expect(runs.list(task.id).find((r) => r.id === done.id)?.result).toBe('success')
   })
 })

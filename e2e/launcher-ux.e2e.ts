@@ -1,14 +1,14 @@
 import { afterAll, beforeAll, describe, it } from 'vitest'
 import type { Page } from 'playwright'
-import { launchAgent7, registerFakeAgent, see, type Agent7Instance } from './fixtures'
+import { launchAgentXP, registerFakeAgent, see, type AgentXPInstance } from './fixtures'
 
 /** UX-04 to UX-07: help key, access keys and the live name check in the launcher. */
 describe('launcher keyboard and name check', () => {
-  let app: Agent7Instance
+  let app: AgentXPInstance
   let page: Page
 
   beforeAll(async () => {
-    app = await launchAgent7()
+    app = await launchAgentXP()
     page = await app.launcherWindow()
     await registerFakeAgent(page)
   })

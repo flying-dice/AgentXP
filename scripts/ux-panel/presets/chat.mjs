@@ -101,7 +101,7 @@ export const presets = {
     const changes = await ctx.changes(ctx.state.sessionId)
     const redirect = changes.find((c) => c.path.endsWith('redirect.ts'))
     ctx.state.redirectAgentText = redirect.currentText
-    await ctx.eval((id) => window.agent7.sessions.revertChange(id), redirect.id)
+    await ctx.eval((id) => window.agentxp.sessions.revertChange(id), redirect.id)
     await ctx.waitFor(async () => (await ctx.recycled(ctx.state.desktopId)).length === 1, 'one recycled change')
     // H-34: the revert happened after the windows opened, so the open Changes list is stale ("Changes (2)"). Reload the
     // desktop window and check that the list shows the revert (note revertShownInList in state.json).
@@ -132,9 +132,9 @@ export const presets = {
     const retryScript = resolveScript('crash-recovered')
     await ctx.eval(
       async ({ id, retryScript }) => {
-        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const row = (await window.agentxp.agents.list()).find((a) => a.id === id)
         const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? retryScript : a))
-        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+        await window.agentxp.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
       },
       { id: agent.id, retryScript }
     )
@@ -150,9 +150,9 @@ export const presets = {
     if (options.twice && ctx.state.firstCrashOffersRestartSend) {
       // Second failure: point the agent at the crashing script again, press Restart and send again, kill the new process.
       await ctx.eval(async ({ id, script }) => {
-        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const row = (await window.agentxp.agents.list()).find((a) => a.id === id)
         const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? script : a))
-        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+        await window.agentxp.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
       }, { id: agent.id, script: resolveScript('crash-recovery') })
       await page.getByTestId('chat-error-restart-send').click()
       const second = await ctx.waitFor(async () => (await ctx.processes()).find((p) => p.pid && p.pid !== proc.pid), 'the restarted agent process')
@@ -163,9 +163,9 @@ export const presets = {
     if (options.twice) {
       // The retry of the second-failure task must finish too (the agent points at crash-recovered again).
       await ctx.eval(async ({ id, script }) => {
-        const row = (await window.agent7.agents.list()).find((a) => a.id === id)
+        const row = (await window.agentxp.agents.list()).find((a) => a.id === id)
         const args = row.args.map((a, i) => (row.args[i - 1] === '--script' ? script : a))
-        await window.agent7.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
+        await window.agentxp.agents.update(id, { name: row.name, command: row.command, args, env: row.env })
       }, { id: agent.id, script: retryScript })
       ctx.state.secondFailure = /stopped again/i.test(await errorText())
       ctx.state.secondFailureOffersNewChat = await page.getByTestId('chat-error-new-chat').isVisible().catch(() => false)
@@ -191,7 +191,7 @@ export const presets = {
     const { desktop } = await projectDesktop(ctx, { script: 'fix-redirect' })
     const chat = await chatWithPendingRequest(ctx, desktop.id, PROMPT_FIX)
     await ctx.dismissDialogs(desktop.id)
-    await ctx.eval((id) => window.agent7.launcher.disconnect(id), desktop.id)
+    await ctx.eval((id) => window.agentxp.launcher.disconnect(id), desktop.id)
     await ctx.waitFor(async () => !(await ctx.desktopState(desktop.id)), 'the desktop window closed')
     ctx.state.sessionId = chat.sessionId
     ctx.saveState()

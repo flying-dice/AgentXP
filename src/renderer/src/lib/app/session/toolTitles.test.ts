@@ -40,12 +40,12 @@ describe('plainToolTitle', () => {
     expect(plainToolTitle('fs.read_text_file')).toBe('Read a file')
     expect(plainToolTitle('fs.write_text_file')).toBe('Change a file')
     expect(plainToolTitle('terminal')).toBe('Run a command')
-    expect(plainToolTitle('agent7.browser_read')).toBe('Read the page')
-    expect(plainToolTitle('agent7.review_add_comment')).toBe('Add a review comment')
+    expect(plainToolTitle('agentxp.browser_read')).toBe('Read the page')
+    expect(plainToolTitle('agentxp.review_add_comment')).toBe('Add a review comment')
   })
 
   it('finds the tool behind a server prefix', () => {
-    expect(plainToolTitle('mcp__agent7__browser_click')).toBe('Click on the page')
+    expect(plainToolTitle('mcp__agentxp__browser_click')).toBe('Click on the page')
     expect(plainToolTitle('other.browser_back')).toBe('Go back one page')
   })
 
@@ -58,7 +58,7 @@ describe('plainToolTitle', () => {
 
 describe('liveToolTitle', () => {
   it('gives a sentence for a running Browser step and the plain title for other tools', () => {
-    expect(liveToolTitle('agent7.browser_type', '{"text":"hi"}')).toBe("Typing 'hi'")
+    expect(liveToolTitle('agentxp.browser_type', '{"text":"hi"}')).toBe("Typing 'hi'")
     expect(liveToolTitle('terminal_run')).toBe('Run a command')
     expect(liveToolTitle('mystery')).toBeNull()
   })

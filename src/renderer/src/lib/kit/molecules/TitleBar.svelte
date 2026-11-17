@@ -47,7 +47,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="w7-titlebar {className}" class:inactive={!active} class:drag={draggable} ondblclick={toggle}>
+<div class="xp-titlebar {className}" class:inactive={!active} class:drag={draggable} ondblclick={toggle}>
   <span class="app-icon">
     {#if icon}{@render icon()}{:else if iconName}<Icon name={iconName} />{/if}
   </span>
@@ -66,15 +66,15 @@
 </div>
 
 <style>
-  .w7-titlebar {
+  .xp-titlebar {
     flex: none;
-    height: 30px;
+    height: var(--xp-title-height);
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding-left: 2px;
-    font: var(--w7-font);
-    color: #000;
+    gap: 4px;
+    padding: 0 0 0 3px;
+    font: bold 13px/1 Tahoma, 'Segoe UI', 'Noto Sans', sans-serif;
+    color: #fff;
     overflow: hidden;
   }
   .drag {
@@ -90,10 +90,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow: var(--w7-title-glow);
+    text-shadow: var(--xp-title-glow);
+  }
+  .inactive {
+    color: #d8e4f8;
   }
   .inactive .text {
-    color: #4d5560;
-    text-shadow: 0 0 6px #fff, 0 0 3px #fff;
+    text-shadow: none;
   }
 </style>

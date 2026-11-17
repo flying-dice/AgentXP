@@ -2,14 +2,14 @@ import { buildResumeArray, randomUUID, type AgentSubscriber } from '@ag-ui/clien
 import type { Context, ContentPart, Interrupt, Message, UserMessage } from '@ag-ui/core'
 import type { A2uiClientEvent } from '@shared/a2ui'
 import { emptyAguiState, type AguiSessionState } from '@shared/agui-state'
-import type { Agent7Api, AguiApi } from '@shared/ipc'
+import type { AgentXPApi, AguiApi } from '@shared/ipc'
 import { surfacesOf, type SurfaceActivity } from './activities'
 import { decisionText, isAllow, permissionMetadata, requestLabel } from '../app/session/permissionOptions'
 import { pathToFileUrl } from './fileUrl'
 import { IpcAgent } from './IpcAgent'
 
 /** The calls of the sessions API the store makes besides AG-UI (taking back a failed send, restarting the agent). */
-export type SessionsRetryApi = Pick<Agent7Api['sessions'], 'retry' | 'restartAgent'>
+export type SessionsRetryApi = Pick<AgentXPApi['sessions'], 'retry' | 'restartAgent'>
 
 /** A send that did not go through: kept so the message can be sent again (and the composer gets its draft back). */
 export interface FailedSend {
@@ -87,8 +87,8 @@ export class SessionAgentStore {
 
   constructor(
     sessionId: number,
-    api: AguiApi = window.agent7.agui,
-    private readonly sessionsApi: () => SessionsRetryApi = () => window.agent7.sessions
+    api: AguiApi = window.agentxp.agui,
+    private readonly sessionsApi: () => SessionsRetryApi = () => window.agentxp.sessions
   ) {
     this.sessionId = sessionId
     this.agent = new IpcAgent(api, { threadId: String(sessionId) })

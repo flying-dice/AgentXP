@@ -113,9 +113,9 @@ describe('launcherModel', () => {
 
 describe('window titles and launcher text', () => {
   it('names the operating system windows apart', () => {
-    expect(LAUNCHER_WINDOW_TITLE).toBe('Agent7 Desktop Connection')
-    expect(desktopWindowTitle('Fix login redirect')).toBe('Fix login redirect - Agent7')
-    expect(desktopWindowTitle('  ')).toBe('Desktop - Agent7')
+    expect(LAUNCHER_WINDOW_TITLE).toBe('AgentXP Desktop Connection')
+    expect(desktopWindowTitle('Fix login redirect')).toBe('Fix login redirect - AgentXP')
+    expect(desktopWindowTitle('  ')).toBe('Desktop - AgentXP')
   })
 
   it('says what the user can do from the empty launcher', () => {

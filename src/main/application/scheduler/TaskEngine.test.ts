@@ -90,7 +90,7 @@ describe('missed due times', () => {
   const downtime = (settings: Partial<typeof DEFAULT_SETTINGS>, triggers = [{ kind: 'daily', enabled: true, startAt: '2026-11-17T09:00', expiresAt: null, everyDays: 1 } as const]) => {
     const s = setupScheduler('2026-11-17T08:00')
     const task = s.addTask({ settings: { ...DEFAULT_SETTINGS, ...settings }, triggers: [...triggers] })
-    // Agent7 is closed from 08:00 until 11:30.
+    // AgentXP is closed from 08:00 until 11:30.
     s.time.advanceTo(at('2026-11-17T11:30'))
     return { s, task }
   }
@@ -132,17 +132,17 @@ describe('missed due times', () => {
     expect(s.runner.calls).toHaveLength(1)
   })
 
-  it('fails the runs that a closed Agent7 left open', () => {
+  it('fails the runs that a closed AgentXP left open', () => {
     const s = setupScheduler()
     const task = s.addTask({})
     s.runs.start({ taskId: task.id, startedAt: new Date(at('2026-11-17T07:00')).toISOString(), startedBy: 'schedule', attempt: 1 })
     s.engine.start()
-    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'failed', message: 'Agent7 closed while the task was running.' })
+    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'failed', message: 'AgentXP closed while the task was running.' })
   })
 })
 
 describe('start-up triggers', () => {
-  it('starts the task after its delay when Agent7 starts', () => {
+  it('starts the task after its delay when AgentXP starts', () => {
     const s = setupScheduler()
     const task = s.addTask({ triggers: [{ kind: 'startup', enabled: true, delayMinutes: 2 }] })
     s.engine.start()
@@ -162,7 +162,7 @@ describe('start-up triggers', () => {
     expect(s.runner.calls).toHaveLength(0)
   })
 
-  it('starts only at Agent7 startup, not each time the task is saved', () => {
+  it('starts only at AgentXP startup, not each time the task is saved', () => {
     const s = setupScheduler()
     s.engine.start()
     s.addTask({ triggers: [{ kind: 'startup', enabled: true, delayMinutes: 0 }] })
@@ -324,7 +324,7 @@ describe('a task that is already running', () => {
     await settle()
     expect(s.runner.calls).toHaveLength(2)
     const runs = s.runs.list(task.id)
-    expect(runs[1]).toMatchObject({ result: 'stopped', message: 'Agent7 stopped the task to start a new instance.' })
+    expect(runs[1]).toMatchObject({ result: 'stopped', message: 'AgentXP stopped the task to start a new instance.' })
     expect(runs[0].result).toBe('running')
   })
 
@@ -351,7 +351,7 @@ describe('stop if the task runs longer', () => {
     s.time.advance(MINUTE)
     expect(s.runner.last.input.signal.aborted).toBe(true)
     await settle()
-    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'stopped', message: 'The task ran longer than 30 minutes and Agent7 stopped it.' })
+    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'stopped', message: 'The task ran longer than 30 minutes and AgentXP stopped it.' })
   })
 
   it('has no limit when the setting is off, and cancels its timer when the run ends early', async () => {
@@ -443,13 +443,13 @@ describe('restart on failure', () => {
 })
 
 describe('shutdown and removal', () => {
-  it('writes the runs that go on as failed when Agent7 closes, and stops the timers', async () => {
+  it('writes the runs that go on as failed when AgentXP closes, and stops the timers', async () => {
     const s = setupScheduler()
     const task = s.addTask({ triggers: [s.daily()] })
     s.engine.start()
     s.engine.run(task.id)
     s.engine.stop()
-    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'failed', message: 'Agent7 closed while the task was running.' })
+    expect(s.runs.list(task.id)[0]).toMatchObject({ result: 'failed', message: 'AgentXP closed while the task was running.' })
     expect(s.time.pending).toBe(0)
     s.runner.last.finish('success')
     await settle()

@@ -42,7 +42,7 @@
     margin: 0;
     max-height: 60px;
     overflow: auto;
-    font: var(--w7-font-mono);
-    color: var(--w7-text-muted);
+    font: var(--xp-font-mono);
+    color: var(--xp-text-muted);
   }
 </style>

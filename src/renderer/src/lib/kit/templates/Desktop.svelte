@@ -19,7 +19,7 @@
   let { taskbarItems = [], clock, showTaskbar = true, startOpen = false, onstart, onitemclick, onitemcontext, children, tray, class: className = '' }: Props = $props()
 </script>
 
-<div class="w7-desktop {className}">
+<div class="xp-desktop {className}">
   <div class="area">{@render children?.()}</div>
   {#if showTaskbar}
     <Taskbar items={taskbarItems} {clock} {tray} {startOpen} {onstart} {onitemclick} {onitemcontext} />
@@ -27,7 +27,7 @@
 </div>
 
 <style>
-  .w7-desktop {
+  .xp-desktop {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -35,9 +35,9 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    font: var(--w7-font);
-    color: var(--w7-text);
-    background: var(--w7-desktop-bg);
+    font: var(--xp-font);
+    color: var(--xp-text);
+    background: var(--xp-desktop-bg);
   }
   .area {
     position: relative;

@@ -319,9 +319,9 @@ export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
 // ---------------------------------------------------------------- AG-UI
 
 /** `RunAgentInput.context[].description` of the desktop context entry. */
-export const DESKTOP_CONTEXT_DESCRIPTION = 'agent7.desktop'
+export const DESKTOP_CONTEXT_DESCRIPTION = 'agentxp.desktop'
 /** URI of the ACP resource block that carries the desktop state into a prompt. */
-export const DESKTOP_RESOURCE_URI = 'agent7://desktop/state'
+export const DESKTOP_RESOURCE_URI = 'agentxp://desktop/state'
 
 // ---------------------------------------------------------------- IPC
 

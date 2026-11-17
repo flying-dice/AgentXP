@@ -56,7 +56,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
     padding-top: 60px;
   }
   .hint {

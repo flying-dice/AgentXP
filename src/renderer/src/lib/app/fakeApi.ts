@@ -1,4 +1,4 @@
-/** An in-memory `Agent7Api` for Storybook: the "Fix login redirect bug" session of the design. */
+/** An in-memory `AgentXPApi` for Storybook: the "Fix login redirect bug" session of the design. */
 import { EventType, type BaseEvent, type Message, type RunAgentInput } from '@ag-ui/core'
 import { createFakeDesktop } from './fakeDesktop'
 import { createFakeLauncher, sampleDesktops } from './fakeLauncher'
@@ -11,7 +11,7 @@ import { createFakeReview } from './fakeReview'
 import { createFakeTeams } from './fakeTeams'
 import { createFakeScheduler } from './fakeScheduler'
 import type { AguiSessionState } from '@shared/agui-state'
-import type { Agent7Api, Agent7Events } from '@shared/ipc'
+import type { AgentXPApi, AgentXPEvents } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
 import type { DesktopSummaryDto, DriveDto, VPath } from '@shared/vfs'
 import { AGENT_HOME, parseVPath } from '@shared/vfs'
@@ -129,7 +129,7 @@ export const sampleState = (): AguiSessionState => {
 const noop = (): void => {}
 
 /** Fake AG-UI transport: every run (connect included) answers with the sample transcript and `stateOf()` (default: the sample state). */
-export function fakeAgui(stateOf: () => AguiSessionState = sampleState, messagesOf: () => Message[] = () => completedTurn().messages): Agent7Api['agui'] {
+export function fakeAgui(stateOf: () => AguiSessionState = sampleState, messagesOf: () => Message[] = () => completedTurn().messages): AgentXPApi['agui'] {
   const listeners = new Map<string, (event: BaseEvent) => void>()
   return {
     run: async (input: RunAgentInput) => {
@@ -152,7 +152,7 @@ export function fakeAgui(stateOf: () => AguiSessionState = sampleState, messages
 }
 
 /** Builds the fake backend; `agents` starts with the sample agents, `folders` and `sessions` can start empty. */
-export type FakeApi = Agent7Api & {
+export type FakeApi = AgentXPApi & {
   pushEvent: ReturnType<typeof createFakeExtras>['pushEvent']
   /** The current drives (C: and the plugged-in USB drives). */
   driveList(): DriveDto[]
@@ -164,8 +164,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
   let agents = [...sampleAgents]
   let folders = options.empty ? [] : [...sampleFolders]
   let sessions = options.empty ? [] : [...sampleSessions]
-  const listeners: { [K in keyof Agent7Events]?: ((payload: Agent7Events[K]) => void)[] } = {}
-  const emit = <K extends keyof Agent7Events>(event: K, payload: Agent7Events[K]): void => (listeners[event] ?? []).forEach((l) => l(payload))
+  const listeners: { [K in keyof AgentXPEvents]?: ((payload: AgentXPEvents[K]) => void)[] } = {}
+  const emit = <K extends keyof AgentXPEvents>(event: K, payload: AgentXPEvents[K]): void => (listeners[event] ?? []).forEach((l) => l(payload))
   let nextId = 100
   const extras = createFakeExtras(emit as unknown as Parameters<typeof createFakeExtras>[0])
   const teams = createFakeTeams()
@@ -193,7 +193,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
   /** The path of a folder-relative `FileNodeDto` listing, now served by the VFS: the drive a folder is plugged in as. */
   const driveRoot = (folderId: number): VPath => `${fakeVfs.list().find((d) => d.folderId === folderId)?.letter ?? 'E'}:\\`
 
-  const api: Agent7Api = {
+  const api: AgentXPApi = {
     agents: {
       list: async () => agents,
       create: async (input) => {

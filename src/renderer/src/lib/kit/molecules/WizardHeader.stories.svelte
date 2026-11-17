@@ -16,7 +16,7 @@
 </script>
 
 {#snippet framed(args: { title: string; description?: string; icon?: (typeof iconNames)[number] })}
-  <div style="width:520px;border:1px solid var(--w7-group-border)"><WizardHeader {...args} /></div>
+  <div style="width:520px;border:1px solid var(--xp-group-border)"><WizardHeader {...args} /></div>
 {/snippet}
 
 <Story name="Default">

@@ -72,7 +72,7 @@
   aria-valuemin={value === undefined ? undefined : Math.round(min)}
   aria-valuemax={value === undefined ? undefined : Math.round(Math.max(max ?? value, value))}
   aria-disabled={disabled}
-  class="w7-splitter {orientation} {className}"
+  class="xp-splitter {orientation} {className}"
   class:dragging
   onpointerdown={down}
   onpointermove={move}
@@ -86,17 +86,17 @@
    * The bar is drawn 4 px wide (`::before`), but the element is 24 px across (WCAG 2.5.8) and reaches over the edges of
    * the panes beside it through a negative margin.
    */
-  .w7-splitter {
+  .xp-splitter {
     flex: none;
     position: relative;
     z-index: 1;
     background: transparent;
     touch-action: none;
   }
-  .w7-splitter::before {
+  .xp-splitter::before {
     content: '';
     position: absolute;
-    background: var(--w7-face);
+    background: var(--xp-face);
   }
   .vertical {
     width: 24px;
@@ -120,18 +120,18 @@
     top: 10px;
     height: 4px;
   }
-  .w7-splitter:hover::before,
+  .xp-splitter:hover::before,
   .dragging::before {
     background: #bcc7d8;
   }
-  .w7-splitter:focus-visible {
+  .xp-splitter:focus-visible {
     outline: none;
   }
-  .w7-splitter:focus-visible::before {
-    outline: var(--w7-focus-outline);
+  .xp-splitter:focus-visible::before {
+    outline: var(--xp-focus-outline);
     outline-offset: 0;
   }
-  .w7-splitter[aria-disabled='true'] {
+  .xp-splitter[aria-disabled='true'] {
     cursor: default;
     pointer-events: none;
   }

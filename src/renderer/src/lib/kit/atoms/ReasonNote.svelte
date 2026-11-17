@@ -8,13 +8,13 @@
   let { reason = null, testid }: Props = $props()
 </script>
 
-<span class="w7-reason" role="status" data-testid={testid} data-on={reason ? 'true' : 'false'}>{reason ?? ''}</span>
+<span class="xp-reason" role="status" data-testid={testid} data-on={reason ? 'true' : 'false'}>{reason ?? ''}</span>
 
 <style>
-  .w7-reason {
+  .xp-reason {
     display: block;
     min-height: 1.3em;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

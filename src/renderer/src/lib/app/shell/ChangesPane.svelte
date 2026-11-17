@@ -273,7 +273,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
   .split.beside {
     min-height: 130px;
   }
-  .split :global(.w7-split) {
+  .split :global(.xp-split) {
     height: auto;
     flex: 1;
   }
@@ -283,7 +283,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
@@ -321,17 +321,17 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .reverted,
   .reverted .name {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-weight: normal;
   }
   .note,
   .reason {
     flex: none;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   /* One line: the words give way (ellipsis), the link stays. */
   .note.line {
@@ -353,7 +353,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--w7-link);
+    color: var(--xp-link);
     font: inherit;
     text-decoration: underline;
     cursor: default;
@@ -365,22 +365,22 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: var(--w7-window);
-    border: 1px solid var(--w7-list-border);
+    background: var(--xp-window);
+    border: 1px solid var(--xp-list-border);
   }
-  .diff :global(.w7-diffviewer) {
+  .diff :global(.xp-diffviewer) {
     flex: 1;
   }
   .hint {
     padding: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .hint.undone {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
   .bottom {
     flex: none;
@@ -394,7 +394,7 @@ import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .buttons {
     flex: none;

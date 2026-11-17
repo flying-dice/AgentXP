@@ -15,7 +15,7 @@
   let { title, description = '', icon, class: className = '', testid }: Props = $props()
 </script>
 
-<header class="w7-wizard-header {className}" data-testid={testid}>
+<header class="xp-wizard-header {className}" data-testid={testid}>
   <div class="text">
     <h2>{title}</h2>
     {#if description}<p>{description}</p>{/if}
@@ -24,15 +24,15 @@
 </header>
 
 <style>
-  .w7-wizard-header {
+  .xp-wizard-header {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
     background: #fff;
-    border-bottom: 1px solid var(--w7-group-border);
+    border-bottom: 1px solid var(--xp-group-border);
     box-shadow: 0 1px 0 #fff;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
   .text {
     flex: 1;
@@ -43,10 +43,10 @@
     font: inherit;
     font-size: 12px;
     font-weight: 700;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
   p {
     margin: 2px 0 0 14px;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
 </style>

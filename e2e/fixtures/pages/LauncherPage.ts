@@ -1,6 +1,6 @@
 import type { Locator, Page } from 'playwright'
 
-/** The launcher window ("Agent7 Desktop Connection"). Locators are test ids only. */
+/** The launcher window ("AgentXP Desktop Connection"). Locators are test ids only. */
 export class LauncherPage {
   readonly window: Locator
   readonly rows: Locator

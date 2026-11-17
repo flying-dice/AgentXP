@@ -239,7 +239,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .body {
     flex: 1;
@@ -263,7 +263,7 @@
     display: flex;
     flex-direction: column;
   }
-  .list :global(.w7-listview) {
+  .list :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }
@@ -275,11 +275,11 @@
     align-items: flex-start;
     gap: 6px;
   }
-  .side :global(.w7-reason) {
+  .side :global(.xp-reason) {
     white-space: normal;
     min-height: 2.6em;
   }
-  .body :global(.w7-tabcontrol) {
+  .body :global(.xp-tabcontrol) {
     flex: 1;
     min-height: 0;
   }

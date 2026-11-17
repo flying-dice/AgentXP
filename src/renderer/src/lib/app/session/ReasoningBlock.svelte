@@ -23,7 +23,7 @@
 
 <style>
   .reasoning {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
     font-style: italic;
   }
   .toggle {
@@ -37,11 +37,11 @@
     color: inherit;
   }
   .toggle:hover {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .toggle:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .text {

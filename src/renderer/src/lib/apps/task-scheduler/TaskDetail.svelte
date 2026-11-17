@@ -39,7 +39,7 @@
   <TabControl {tabs} selected={tab} onchange={(id) => (tab = id as SchedulerTab)} aria-label="Task details">
     {#snippet panel(t)}
       {#if t.id === 'general'}
-        <dl class="general w7-scroll" data-testid="task-scheduler-general">
+        <dl class="general xp-scroll" data-testid="task-scheduler-general">
           <dt>Name:</dt>
           <dd data-testid="task-scheduler-general-name">{task.name}</dd>
           <dt>Description:</dt>
@@ -56,11 +56,11 @@
       {:else if t.id === 'actions'}
         <ListView testid="task-scheduler-actions" columns={actionColumns} rows={task.actions.map((a, i) => actionRow(a, i, ctx))} aria-label="Actions" emptyText="No actions." />
       {:else if t.id === 'conditions'}
-        <ul class="lines w7-scroll" data-testid="task-scheduler-conditions">
+        <ul class="lines xp-scroll" data-testid="task-scheduler-conditions">
           {#each conditions as line (line)}<li>{line}</li>{:else}<li>{NO_CONDITIONS}</li>{/each}
         </ul>
       {:else if t.id === 'settings'}
-        <dl class="general w7-scroll" data-testid="task-scheduler-settings">
+        <dl class="general xp-scroll" data-testid="task-scheduler-settings">
           {#each settingLines(task.settings) as [k, v] (k)}
             <dt>{k}:</dt>
             <dd class="wrap">{v}</dd>
@@ -101,7 +101,7 @@
     box-sizing: border-box;
   }
   dt {
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   dd {
     margin: 0;
@@ -129,7 +129,7 @@
     display: flex;
     flex-direction: column;
   }
-  .grid :global(.w7-listview) {
+  .grid :global(.xp-listview) {
     flex: 1;
     min-height: 0;
   }

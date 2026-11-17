@@ -173,27 +173,27 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--w7-text);
+    color: var(--xp-text);
     white-space: nowrap;
     cursor: default;
   }
   .tlabel:hover:not(.disabled) {
-    border-color: var(--w7-hot-border);
-    background: var(--w7-hot-face);
+    border-color: var(--xp-hot-border);
+    background: var(--xp-hot-face);
   }
   .tlabel.selected {
-    border-color: var(--w7-select-border);
-    background: var(--w7-select-face);
+    border-color: var(--xp-select-border);
+    background: var(--xp-select-face);
   }
   .tlabel.focused {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -3px;
   }
   .tlabel.bold {
     font-weight: 700;
   }
   .tlabel.disabled {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
   .badge {
     margin-left: 4px;
@@ -214,12 +214,12 @@
     flex: none;
     opacity: 0.85;
   }
-  /* Version control tones: TortoiseGit-in-Win7 palette. */
-  .tlabel.modified { color: var(--w7-git-modified); }
-  .tlabel.added { color: var(--w7-git-added); }
-  .tlabel.deleted { color: var(--w7-git-deleted); }
-  .tlabel.renamed { color: var(--w7-git-renamed); }
-  .tlabel.untracked { color: var(--w7-git-added); }
-  .tlabel.conflict { color: var(--w7-git-deleted); }
+  /* Version control tones: TortoiseGit-in-WinXP palette. */
+  .tlabel.modified { color: var(--xp-git-modified); }
+  .tlabel.added { color: var(--xp-git-added); }
+  .tlabel.deleted { color: var(--xp-git-deleted); }
+  .tlabel.renamed { color: var(--xp-git-renamed); }
+  .tlabel.untracked { color: var(--xp-git-added); }
+  .tlabel.conflict { color: var(--xp-git-deleted); }
   .tlabel.modified .badge, .tlabel.added .badge, .tlabel.deleted .badge, .tlabel.renamed .badge, .tlabel.untracked .badge, .tlabel.conflict .badge { color: inherit; }
 </style>

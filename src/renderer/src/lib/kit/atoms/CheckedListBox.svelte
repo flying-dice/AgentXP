@@ -74,15 +74,15 @@
     box-sizing: border-box;
     border: 1px solid #8e8f8f;
     border-radius: 2px;
-    background: linear-gradient(135deg, #dcdcdc, #fff 60%);
+    background: linear-gradient(135deg, #d6d0c5, #fff 60%);
   }
   .box:hover:not(.off) {
-    border-color: #3c7fb1;
+    border-color: #003c74;
     background: linear-gradient(135deg, #d9f0fc, #fff 60%);
   }
   .box.off {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
+    border-color: var(--xp-border-disabled);
+    background: #f4f2e8;
   }
   .box.on::after {
     content: '';

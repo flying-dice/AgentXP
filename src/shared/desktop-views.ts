@@ -76,7 +76,7 @@ export function cascadedBounds(app: AppKind, openCount: number, size?: { width: 
 
 /**
  * The desktop area new windows are placed in. Main does not know the real viewport; this is the
- * default Agent7 window (1280x800) minus the top bar and the taskbar.
+ * default AgentXP window (1280x800) minus the top bar and the taskbar.
  */
 export const DESKTOP_AREA = { width: 1280, height: 730 } as const
 
@@ -311,9 +311,9 @@ export function initialView(input: Pick<OpenWindowInput, 'app' | 'path' | 'url' 
 }
 
 /** The program name of every Help window (UX-44): the same whatever topic it shows. */
-export const HELP_PROGRAM_NAME = 'Agent7 Help and Support'
+export const HELP_PROGRAM_NAME = 'AgentXP Help and Support'
 
-/** "Agent7 Help and Support: Using Notepad" for the topic of an app, "Agent7 Help and Support" for the home, desktop, launcher and Help topics. */
+/** "AgentXP Help and Support: Using Notepad" for the topic of an app, "AgentXP Help and Support" for the home, desktop, launcher and Help topics. */
 export function helpWindowTitle(topic: string): string {
   const base = topic.split('#')[0] // "browser#troubleshooting": the title comes from the topic
   const kind = (APP_KINDS as readonly string[]).includes(base) ? (base as AppKind) : null

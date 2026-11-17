@@ -4,7 +4,7 @@
  * The approval dialogs and the Action Center show these instead, so no tool name or JSON reaches the person.
  *
  * Plain titles for the agent's tools. An agent names its tools like a program does (`fs.read_text_file`,
- * `agent7.browser_read`); the person sees what the tool does ("Read a file", "Read the page"). Unknown names have no
+ * `agentxp.browser_read`); the person sees what the tool does ("Read a file", "Read the page"). Unknown names have no
  * plain title: callers keep what the agent said.
  */
 import type { ToolKind } from '@shared/models'
@@ -73,7 +73,7 @@ const TITLES: Record<string, string> = {
   'fs.read_text_file': 'Read a file',
   'fs.write_text_file': 'Change a file',
   terminal: 'Run a command',
-  // Agent7 desktop tools: the part after `agent7.`
+  // AgentXP desktop tools: the part after `agentxp.`
   browser_navigate: 'Open a web page',
   browser_read: 'Read the page',
   browser_find: 'Find something on the page',
@@ -118,7 +118,7 @@ const TITLES: Record<string, string> = {
   a2ui_delete_surface: 'Remove a form or a window'
 }
 
-/** The tool part of a name: `agent7.browser_read` and `mcp__agent7__browser_read` both give `browser_read`. */
+/** The tool part of a name: `agentxp.browser_read` and `mcp__agentxp__browser_read` both give `browser_read`. */
 const toolPart = (name: string): string => name.replace(/^mcp__.*?__/, '').replace(/^[a-z0-9_-]+\./i, '')
 
 /** The plain title of a tool by the name the agent gave it, or null when there is none. */
@@ -132,6 +132,6 @@ export const toolTitleOr = (name: string): string => plainToolTitle(name) ?? nam
 
 /**
  * The title of a step that is running, for the status text and the chat row: the present-tense sentence of a Browser step
- * ("Typing 'Standup'"), else the plain title, else null. A tool id such as `agent7.browser_type` is never the answer (UX-170).
+ * ("Typing 'Standup'"), else the plain title, else null. A tool id such as `agentxp.browser_type` is never the answer (UX-170).
  */
 export const liveToolTitle = (name: string, rawInput: string | null = null): string | null => browserNow(name, rawInput) ?? plainToolTitle(name)

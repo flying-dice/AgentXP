@@ -25,6 +25,6 @@
     display: grid;
     gap: 6px;
     align-items: center;
-    font: var(--w7-font);
+    font: var(--xp-font);
   }
 </style>

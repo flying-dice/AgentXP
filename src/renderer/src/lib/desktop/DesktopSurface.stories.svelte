@@ -17,8 +17,8 @@
     title: 'Desktop/DesktopSurface',
     component: DesktopSurface,
     parameters: { layout: 'fullscreen', backgrounds: { disable: true } },
-    args: { icons: [...icons], selected: null, gadgets: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopencomputer: fn(), ontogglegadgets: fn(), oncontrolcentre: fn(), onbackground: fn() },
-    argTypes: { selected: { control: 'text' }, gadgets: { control: 'boolean' } }
+    args: { icons: [...icons], selected: null, infopanels: true, onselect: fn(), onopen: fn(), onnewchat: fn(), onopencomputer: fn(), ontoggleinfopanels: fn(), oncontrolcentre: fn(), onbackground: fn() },
+    argTypes: { selected: { control: 'text' }, infopanels: { control: 'boolean' } }
   })
 </script>
 
@@ -33,6 +33,6 @@
   .stage {
     position: relative;
     height: 100vh;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

@@ -47,7 +47,7 @@
     flex-direction: column;
     width: 250px;
     height: 320px;
-    border: 1px solid var(--w7-panel-border);
-    background: var(--w7-window);
+    border: 1px solid var(--xp-panel-border);
+    background: var(--xp-window);
   }
 </style>

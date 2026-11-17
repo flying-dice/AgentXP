@@ -25,7 +25,7 @@
     agent: AgentDto | null
     /** The file open in the editor, offered by "Include open file". */
     openFilePath?: string | null
-    /** Overrides for the IPC calls (stories, tests); default to `window.agent7`. */
+    /** Overrides for the IPC calls (stories, tests); default to `window.agentxp`. */
     setMode?: (sessionId: number, modeId: string) => Promise<void>
     pickFiles?: () => Promise<string[]>
     /** Not used any more: the permission box is a part of the chat layout, never an overlay (UX-138). Kept so hosts need no change. */
@@ -69,8 +69,8 @@
     folderText,
     agent,
     openFilePath = null,
-    setMode = (id, modeId) => window.agent7.sessions.setMode(id, modeId),
-    pickFiles = () => window.agent7.dialogs.pickFiles(),
+    setMode = (id, modeId) => window.agentxp.sessions.setMode(id, modeId),
+    pickFiles = () => window.agentxp.dialogs.pickFiles(),
     surfaceControls,
     compact = false,
     suggestions = [],
@@ -331,7 +331,7 @@
     padding: 1px 8px;
     border: 1px solid #9aa9bf;
     border-radius: 9px;
-    background: linear-gradient(#fdfeff, #e6eef8);
+    background: linear-gradient(#fff, #e6eef8);
     font: inherit;
     font-size: 11px;
     cursor: pointer;
@@ -341,7 +341,7 @@
     margin-top: 4px;
     padding: 3px 8px;
     border: 1px solid #b9c7da;
-    background: #f4f7fb;
+    background: #f4f2e8;
     color: #1d3a63;
   }
   .continued {
@@ -361,8 +361,8 @@
     color: #4a3b00;
   }
   .chip:hover {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .chip.off,
   .chip.off:hover {

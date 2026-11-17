@@ -13,7 +13,7 @@ export interface ToolGateRequest {
   askUser?: boolean
 }
 
-/** The call is not allowed: its app is closed, the policy denies it, Agent7 is paused or the user said no. */
+/** The call is not allowed: its app is closed, the policy denies it, AgentXP is paused or the user said no. */
 export class ToolRefusedError extends Error {
   constructor(message: string) {
     super(message)

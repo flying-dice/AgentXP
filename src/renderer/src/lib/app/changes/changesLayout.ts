@@ -45,7 +45,7 @@ export const DIFF_MIN_WIDTH = 180
 /** The list beside the diff opens this wide: File, Status and Lines whole, without a sideways scroll (UX-207). */
 export const BESIDE_LIST_WIDTH = 300
 
-const keyOf = (layoutKey: string): string => `agent7.changes.list.v2.${layoutKey}`
+const keyOf = (layoutKey: string): string => `agentxp.changes.list.v2.${layoutKey}`
 
 /** The list size (height, or width when the diff is beside it) the user chose for this window, or null. Reads never throw. */
 export function readListSize(store: Pick<Storage, 'getItem'> | null, layoutKey: string): number | null {

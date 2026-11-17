@@ -15,7 +15,7 @@ describe('DriveService', () => {
   })
 
   it('plugs projects in as E:, F:, ... and returns the same drive for the same project', () => {
-    const second = f.repos.folders.add(tempDir('agent7-second-'), 'second')
+    const second = f.repos.folders.add(tempDir('agentxp-second-'), 'second')
     expect(f.drives.plugInFolder(id, f.folder.id)).toMatchObject({ letter: 'E', label: 'project', folderId: f.folder.id })
     expect(f.drives.plugInFolder(id, second.id)).toMatchObject({ letter: 'F' })
     expect(f.drives.plugInFolder(id, f.folder.id).letter).toBe('E')
@@ -23,7 +23,7 @@ describe('DriveService', () => {
   })
 
   it('reuses a freed letter after eject', () => {
-    const second = f.repos.folders.add(tempDir('agent7-second-'), 'second')
+    const second = f.repos.folders.add(tempDir('agentxp-second-'), 'second')
     f.drives.plugInFolder(id, f.folder.id)
     f.drives.eject(id, 'E')
     expect(f.drives.plugInFolder(id, second.id).letter).toBe('E')
@@ -53,7 +53,7 @@ describe('DriveService', () => {
 
 describe('DriveService: recently removed projects', () => {
   it('records every ejected project, newest first, and keeps five', () => {
-    const folders = Array.from({ length: 6 }, (_, n) => f.repos.folders.add(tempDir('agent7-removed-'), `p${n}`))
+    const folders = Array.from({ length: 6 }, (_, n) => f.repos.folders.add(tempDir('agentxp-removed-'), `p${n}`))
     for (const folder of folders) {
       const drive = f.drives.plugInFolder(id, folder.id)
       f.drives.eject(id, drive.letter)

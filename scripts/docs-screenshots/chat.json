@@ -55,7 +55,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "arguments": {
             "target": "sidebar",
@@ -64,7 +64,7 @@
                 "version": "v0.9",
                 "createSurface": {
                   "surfaceId": "checklist",
-                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "catalogId": "https://agentxp.dev/a2ui/catalogs/winforms/v1",
                   "theme": {
                     "title": "Release checklist"
                   }
@@ -151,7 +151,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "a2ui_render",
           "arguments": {
             "target": "window",
@@ -160,7 +160,7 @@
                 "version": "v0.9",
                 "createSurface": {
                   "surfaceId": "deploy",
-                  "catalogId": "https://agent7.dev/a2ui/catalogs/winforms/v1",
+                  "catalogId": "https://agentxp.dev/a2ui/catalogs/winforms/v1",
                   "theme": {
                     "title": "Deployment"
                   }
@@ -323,7 +323,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "paint_resize",
           "arguments": {
             "width": 700,
@@ -334,7 +334,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "paint_draw",
           "arguments": {
             "ops": [
@@ -510,7 +510,7 @@
                 "type": "text",
                 "x": 150,
                 "y": 432,
-                "text": "Hello from Agent7",
+                "text": "Hello from AgentXP",
                 "font": "bold 34px sans-serif",
                 "color": "#1e3287"
               }
@@ -636,7 +636,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "desktop_open_app",
           "arguments": {
             "app": "sticky-notes"
@@ -646,7 +646,7 @@
         },
         {
           "type": "mcpCall",
-          "server": "agent7",
+          "server": "agentxp",
           "tool": "notes_add",
           "arguments": {
             "plan": true,

@@ -52,18 +52,18 @@
     padding: 6px 8px;
     max-height: 260px;
     overflow: auto;
-    background: var(--w7-window);
+    background: var(--xp-window);
     color: #222;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     user-select: text;
   }
   .exit {
     padding: 2px 8px;
-    background: var(--w7-console-bg);
+    background: var(--xp-console-bg);
     color: #f0605a;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
   }
   .parts :global(.piece) {
     border-left: 0;

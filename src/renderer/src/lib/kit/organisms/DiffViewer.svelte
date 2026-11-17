@@ -48,7 +48,7 @@
   const title = (file: DiffFile): string => file.newPath ?? file.oldPath ?? ''
 </script>
 
-<div class="w7-diffviewer {className}" class:wrap style:max-height={maxHeight}>
+<div class="xp-diffviewer {className}" class:wrap style:max-height={maxHeight}>
   {#if toolbar}
     <div class="bar">
       <span class="summary">
@@ -63,7 +63,7 @@
     </div>
   {/if}
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="scroll w7-scroll" tabindex="0" role="region" aria-label={label}>
+  <div class="scroll xp-scroll" tabindex="0" role="region" aria-label={label}>
     {#if empty}
       <div class="none">No differences.</div>
     {/if}
@@ -103,14 +103,14 @@
 </div>
 
 <style>
-  .w7-diffviewer {
+  .xp-diffviewer {
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    border: 1px solid var(--w7-list-border);
-    background: var(--w7-window);
-    color: var(--w7-text);
+    border: 1px solid var(--xp-list-border);
+    background: var(--xp-window);
+    color: var(--xp-text);
   }
   .bar {
     flex: none;
@@ -119,8 +119,8 @@
     justify-content: space-between;
     gap: 8px;
     padding: 4px 6px;
-    background: var(--w7-face);
-    border-bottom: 1px solid var(--w7-border-light);
+    background: var(--xp-face);
+    border-bottom: 1px solid var(--xp-border-light);
   }
   .summary {
     display: inline-flex;
@@ -144,7 +144,7 @@
     display: inline-flex;
     gap: 4px;
   }
-  .toggle :global(.w7-btn) {
+  .toggle :global(.xp-btn) {
     min-width: 0;
     height: 21px;
   }
@@ -152,26 +152,26 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    background: var(--w7-window);
+    background: var(--xp-window);
   }
   .scroll:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
     outline-offset: -2px;
   }
   .none {
     padding: 8px;
-    color: var(--w7-text-muted);
+    color: var(--xp-text-muted);
   }
   .filehead {
     padding: 2px 8px;
-    background: var(--w7-face);
-    border-bottom: 1px solid var(--w7-border-light);
+    background: var(--xp-face);
+    border-bottom: 1px solid var(--xp-border-light);
     font-weight: 600;
   }
 
   .grid {
     display: grid;
-    font: var(--w7-font-mono);
+    font: var(--xp-font-mono);
     font-size: 12px;
     user-select: text;
   }
@@ -196,8 +196,8 @@
   }
   .hh {
     grid-column: 1 / -1;
-    background: var(--w7-diff-hunk-bg);
-    color: var(--w7-diff-hunk-fg);
+    background: var(--xp-diff-hunk-bg);
+    color: var(--xp-diff-hunk-fg);
   }
   .no {
     min-width: 36px;
@@ -220,7 +220,7 @@
     width: 100%;
   }
   .split .no + .tx {
-    border-right: 1px solid var(--w7-border-light);
+    border-right: 1px solid var(--xp-border-light);
   }
   .row.context > span,
   .tx.context {
@@ -229,14 +229,14 @@
   .row.del > span,
   .tx.del,
   .no.del {
-    background: var(--w7-diff-del-bg);
-    color: var(--w7-diff-del-fg);
+    background: var(--xp-diff-del-bg);
+    color: var(--xp-diff-del-fg);
   }
   .row.add > span,
   .tx.add,
   .no.add {
-    background: var(--w7-diff-add-bg);
-    color: var(--w7-diff-add-fg);
+    background: var(--xp-diff-add-bg);
+    color: var(--xp-diff-add-fg);
   }
   .row.del > .no,
   .row.add > .no,
@@ -245,6 +245,6 @@
     color: #7a7a7a;
   }
   .blank {
-    background: #f4f4f4;
+    background: #f4f2e8;
   }
 </style>

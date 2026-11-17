@@ -1,7 +1,7 @@
 /**
  * Task Scheduler: the contract shared by main and renderer. A scheduled task belongs to a desktop. It has triggers (when),
  * actions (what: send a prompt to an agent), conditions and settings, and it keeps a history of its runs.
- * The scheduler in main runs the tasks while Agent7 runs, whether or not the window of the desktop is open.
+ * The scheduler in main runs the tasks while AgentXP runs, whether or not the window of the desktop is open.
  * See docs/DESKTOP_DESIGN.md, section 13.
  *
  * Pure types, constants and pure functions only.
@@ -46,7 +46,7 @@ export interface TaskConditionsDto {
 export interface TaskSettingsDto {
   /** The task can be started with Run. */
   allowOnDemand: boolean
-  /** Run the task as soon as possible after a scheduled start was missed (Agent7 was closed). */
+  /** Run the task as soon as possible after a scheduled start was missed (AgentXP was closed). */
   runMissed: boolean
   stopIfRunsLonger: boolean
   stopAfterMinutes: number
@@ -84,7 +84,7 @@ export type TaskStatus = 'ready' | 'running' | 'disabled'
 
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { ready: 'Ready', running: 'Running', disabled: 'Disabled' }
 
-/** How a run ended. `running` while it goes on. `skipped`: not started (a condition did not hold or an instance ran). `missed`: Agent7 was closed at the scheduled time. */
+/** How a run ended. `running` while it goes on. `skipped`: not started (a condition did not hold or an instance ran). `missed`: AgentXP was closed at the scheduled time. */
 export type TaskRunResult = 'running' | 'success' | 'failed' | 'stopped' | 'skipped' | 'missed'
 
 export const TASK_RESULT_LABEL: Record<TaskRunResult, string> = {
@@ -101,7 +101,7 @@ export type TaskRunStart = 'schedule' | 'startup' | 'manual' | 'missed' | 'retry
 
 export const TASK_START_LABEL: Record<TaskRunStart, string> = {
   schedule: 'Schedule',
-  startup: 'Agent7 startup',
+  startup: 'AgentXP startup',
   manual: 'Run command',
   missed: 'Missed schedule',
   retry: 'Restart after failure'

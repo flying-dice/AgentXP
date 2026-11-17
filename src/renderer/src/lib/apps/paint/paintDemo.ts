@@ -8,5 +8,5 @@ export const houseScene: { type: string; [k: string]: unknown }[] = [
   { type: 'rect', x: 310, y: 330, w: 60, h: 110, color: '#4a2a12', fill: '#8a5a2b', width: 3 },
   { type: 'rect', x: 230, y: 285, w: 55, h: 50, color: '#27456b', fill: '#9fd3ff', width: 3 },
   { type: 'rect', x: 395, y: 285, w: 55, h: 50, color: '#27456b', fill: '#9fd3ff', width: 3 },
-  { type: 'text', x: 250, y: 470, text: 'Hello from Agent7', font: '36px sans-serif', color: '#1e3287' }
+  { type: 'text', x: 250, y: 470, text: 'Hello from AgentXP', font: '36px sans-serif', color: '#1e3287' }
 ]

@@ -1,7 +1,7 @@
 import { localStore } from '../../desktop/chatPane'
 
 /** localStorage key of the preference; "all" shows every thinking and tool group opened, anything else folds them. */
-export const TRANSCRIPT_DETAIL_KEY = 'agent7.transcript.detail'
+export const TRANSCRIPT_DETAIL_KEY = 'agentxp.transcript.detail'
 
 /**
  * Whether the transcripts of this window open their folded "Thinking" groups at once ("Show thinking and tool details",

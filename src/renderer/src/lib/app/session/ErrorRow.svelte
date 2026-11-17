@@ -53,7 +53,7 @@
   }
   .error-row.notice {
     border-color: #b9c7da;
-    background: #f4f7fb;
+    background: #f4f2e8;
     color: #1d3a63;
   }
   .main {
@@ -88,13 +88,13 @@
     padding: 0;
     border: 0;
     background: none;
-    color: var(--w7-link);
+    color: var(--xp-link);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
   }
   .link:focus-visible {
-    outline: var(--w7-focus-outline);
+    outline: var(--xp-focus-outline);
   }
   .actions {
     display: flex;
@@ -102,7 +102,7 @@
     gap: 6px;
     margin: 6px 0 2px;
   }
-  .actions :global(.w7-btn) {
+  .actions :global(.xp-btn) {
     min-width: 0;
     padding: 0 10px;
   }

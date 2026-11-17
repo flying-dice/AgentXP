@@ -84,7 +84,7 @@ describe('rules and fallback', () => {
 
   it('exposes regex captures and the desktop resource to templates', async () => {
     const h = await start(script({ rules: [{ id: 'r', match: { regex: 'open (?<app>\\w+)' }, steps: [{ type: 'message', text: '{{match.app}}|{{desktop}}|{{sessionId}}' }] }] }))
-    await h.prompt('open notepad', [{ type: 'resource', resource: { uri: 'agent7://desktop/state', text: '{"windows":[]}' } }])
+    await h.prompt('open notepad', [{ type: 'resource', resource: { uri: 'agentxp://desktop/state', text: '{"windows":[]}' } }])
     expect(h.trace()).toEqual([`message:notepad|{"windows":[]}|${h.sessionId}`])
   })
 

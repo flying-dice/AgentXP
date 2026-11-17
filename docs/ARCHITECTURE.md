@@ -1,8 +1,8 @@
-# Agent7 architecture
+# AgentXP architecture
 
-Agent7 is an Electron desktop harness for coding agents that speak the
+AgentXP is an Electron desktop harness for coding agents that speak the
 [Agent Client Protocol](https://agentclientprotocol.com) (ACP). It looks and
-behaves like a Windows 7 WinForms application (see `docs/design/`).
+behaves like a Windows XP WinForms application (see `docs/design/`).
 
 ## Layers (clean architecture)
 
@@ -10,7 +10,7 @@ behaves like a Windows 7 WinForms application (see `docs/design/`).
 src/
   shared/          Pure TypeScript contracts and pure logic used by main and renderer.
                    No Node, no Electron, no DOM.
-                   models.ts (DTOs), ipc.ts + ipc-channels.ts (Agent7Api, push events),
+                   models.ts (DTOs), ipc.ts + ipc-channels.ts (AgentXPApi, push events),
                    agui-state.ts (the AG-UI shared state), a2ui.ts + a2ui/ (A2UI catalog,
                    validation and message processor built on @a2ui/web_core), diff.ts (line diff,
                    line-change counting, unified diff parsing).
@@ -26,27 +26,27 @@ src/
                    client-side handlers (fs, terminals, permissions), session update mapping.
       a2ui/        Stdio MCP server (@modelcontextprotocol/sdk) handed to agents + bridge into the app.
       fs/          Host file access (`NodeHostFiles`), sandboxed per drive root; thumbnail store.
-    ipc/           ipcMain handlers that adapt Agent7Api calls to application services, the AG-UI
+    ipc/           ipcMain handlers that adapt AgentXPApi calls to application services, the AG-UI
                    stream transport (streamAguiRun), window caption handlers, Electron dialogs and
                    the event publisher that pushes the renderer-facing events to windows.
     compose.ts     Composition root: builds the services from ports and adapters.
     index.ts       Electron entry: frameless BrowserWindow, opens the database, wires IPC.
-  preload/         contextBridge implementation of Agent7Api.
+  preload/         contextBridge implementation of AgentXPApi.
   renderer/src/
     App.svelte     Mounts the main window page and the message box host.
-    lib/kit/       WinForms UI kit (Windows 7 look), pure Svelte, atomic design:
+    lib/kit/       WinForms UI kit (Windows XP look), pure Svelte, atomic design:
       atoms/       One standard WinForms control per component (Button, TextBox, ...).
       molecules/   Small compositions of atoms (LabeledField, TitleBar, MenuItem, ...).
       organisms/   Large controls (MenuStrip, TreeView, DataGridView, CodeViewer, Taskbar, ...).
       templates/   Window layouts (Desktop, MainWindowTemplate).
       actions/     Shared behaviour (click-outside, popup positioning, roving focus, focus trap).
-      tokens.css   Win7 design tokens (`--w7-*`). Components use these variables.
+      tokens.css   WinXP design tokens (`--xp-*`). Components use these variables.
       The kit knows nothing about the app. Atoms import no molecules or organisms; molecules
       import no organisms.
-    lib/app/       Agent7-specific components and logic built from the kit: shell (trees, panes,
+    lib/app/       AgentXP-specific components and logic built from the kit: shell (trees, panes,
                    dialogs), session (transcript, composer, tool calls, permissions), options,
                    changes, files, menus, shortcuts and AppController (UI orchestration).
-    lib/stores/    Svelte 5 rune stores over `window.agent7` (one store per concern).
+    lib/stores/    Svelte 5 rune stores over `window.agentxp` (one store per concern).
     lib/agui/      AG-UI client: IpcAgent (AbstractAgent over IPC) and SessionAgentStore.
     lib/a2ui/      A2UI surface renderer: SurfaceController drives @a2ui/web_core's processor and
                    the registry maps catalog components to Svelte components (a2ui/components).
@@ -56,13 +56,13 @@ src/
 Dependency rule: arrows point inwards. `domain` imports nothing from other layers;
 `application` imports `domain` and `shared`; `infrastructure` implements domain and application
 ports; `ipc`, `compose.ts` and `index.ts` wire it all. The renderer talks to main only via
-`window.agent7` (typed by `src/shared/ipc.ts`) and never imports main code. The kit never
+`window.agentxp` (typed by `src/shared/ipc.ts`) and never imports main code. The kit never
 imports `lib/app`, stores or pages.
 
 ## Principles
 
 - SRP: one reason to change per module. Small files, small functions.
-- DRY: shared shapes live in `src/shared`; Win7 visuals live in `tokens.css`
+- DRY: shared shapes live in `src/shared`; WinXP visuals live in `tokens.css`
   and kit atoms, never duplicated in pages.
 - KISS: official SDKs for protocols (@agentclientprotocol/sdk, @ag-ui/core + @ag-ui/client, @a2ui/web_core,
   @modelcontextprotocol/sdk) instead of hand-rolled protocol code; no UI libraries, no frameworks beyond what is listed in package.json. No global singletons
@@ -114,7 +114,7 @@ cancels the session's turn. One thread per session (`threadId` = session id).
   `resume` entry continues it.
 - Transcript, tasks, changes, terminals and surfaces are not pushed as separate events: services
   publish them internally (`InternalEvents` in `application/ports.ts`), the coordinator consumes them.
-  The only events sent straight to the renderer are the `Agent7Events` (session list, folders, status bar).
+  The only events sent straight to the renderer are the `AgentXPEvents` (session list, folders, status bar).
 
 ## A2UI
 
@@ -143,13 +143,13 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
   `<userData>/desktops/<id>/C`; E: to Z: are plugged-in `folders`), `SessionFiles` gates the ACP file/terminal requests the same way,
   and `HostFiles` (`NodeHostFiles`, sandbox guard, symlink-safe) is the only code that touches the disk. `LauncherService`
   (application/launcher) lists/creates/connects/disconnects/renames/removes desktops; `ThumbnailService` keeps a PNG per desktop
-  (served as `agent7-thumb://`). Disconnecting only closes the OS window.
+  (served as `agentxp-thumb://`). Disconnecting only closes the OS window.
 - **Windows.** One `BrowserWindow` per connected desktop plus the launcher window (`?launcher=1`) (`ipc/DesktopWindowManager`, URL `?desktop=<id>`, `webviewTag` on). The
   manager is the `DesktopWindowHost` port: `open` focuses or creates a window, reusing the blank first-run window. Closing an
   OS window only disconnects (`is_open = 0`, not when the app quits); nothing running stops. `desktop.current` and `desktop.attachBrowser` need the calling window
   and are registered per sender (`ipc/registerDesktopHandlers`); every other call goes through `createApi`.
 - **Tools follow apps.** `application/tools/catalog.ts` lists the MCP tools (name, group, zod schema); the MCP child
-  (`agent7`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
+  (`agentxp`, `infrastructure/a2ui/mcp-tools.ts`, built as `out/main/a2ui-mcp.js`) asks the bridge for the enabled groups on
   every `tools/list`, forwards other calls to the app and sends `notifications/tools/list_changed` when the bridge pushes
   `toolsChanged` (the child holds a subscription socket per desktop). Handlers are one module per group
   (`shellTools`, `fsTools`, `notepadTools`, `codeTools`, `terminalTools`, `browserTools`, `paintTools`, `wordpadTools`,
@@ -158,12 +158,12 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
 - **Gate.** `AppToolPolicy.evaluateToolAccess` (pure) decides: paused, app closed, policy deny, then ask (policy ask or
   "take control"). `ToolGateway` applies it to both channels: MCP tools (closed app = MCP error result with
   `closedAppMessage`) and the ACP client methods (`AcpAgentConnection` calls the `ToolGate` port for `fs/*` and `terminal/*`
-  and answers refusals with a JSON-RPC error). "Ask" shows an Agent7 permission request through `PermissionBroker`; an allow
+  and answers refusals with a JSON-RPC error). "Ask" shows an AgentXP permission request through `PermissionBroker`; an allow
   the agent's own prompt just obtained covers the next gated call of that session (60 s, once), so users are not asked twice.
-- **Prompt context.** The AG-UI client sends the desktop as `RunAgentInput.context` (`agent7.desktop`);
+- **Prompt context.** The AG-UI client sends the desktop as `RunAgentInput.context` (`agentxp.desktop`);
   `SessionService.promptTurn` puts it (or, if absent, the current state) before the user's text as an ACP `resource` block
-  (`agent7://desktop/state`). The block is stored but left out of the AG-UI messages and the Markdown export.
-- **Browser.** The Browser app renders a `<webview partition="persist:agent7-browser">` and reports its
+  (`agentxp://desktop/state`). The block is stored but left out of the AG-UI messages and the Markdown export.
+- **Browser.** The Browser app renders a `<webview partition="persist:agentxp-browser">` and reports its
   `getWebContentsId()` with `desktop.attachBrowser(windowId, id)`; main checks the guest belongs to the caller and hands it to
   `ElectronBrowserDriver` (Chrome DevTools Protocol: accessibility-tree read with stable refs, trusted click/type/keys/wheel, tabs through app requests; pure helpers `ax.ts`, `keys.ts`, `refs.ts`, `paging.ts`).
 - **App requests.** Some tools need what only the renderer has (the Paint canvas, WordPad's unsaved text). `AppRequestBroker`
@@ -202,7 +202,7 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
 ## Window
 
 Desktop windows keep the native title bar (`frame: true`), so maximize and full screen follow the OS rules; the launcher is frameless (`frame: false`). Inside the page the kit's `TitleBar` and `CaptionButtons` draw the
-Windows 7 caption; `ipc/registerWindowHandlers.ts` implements minimise, maximise and close and
+Windows XP caption; `ipc/registerWindowHandlers.ts` implements minimise, maximise and close and
 publishes the window state. Storybook renders the same components against `lib/app/fakeApi.ts`.
 
 

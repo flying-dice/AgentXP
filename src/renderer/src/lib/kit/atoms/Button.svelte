@@ -26,7 +26,7 @@
 </script>
 
 <button
-  class="w7-btn {variant} {className}"
+  class="xp-btn {variant} {className}"
   class:def={isDefault}
   {type}
   {disabled}
@@ -37,15 +37,16 @@
 </button>
 
 <style>
-  .w7-btn {
+  /* XP push button: 3 px rounded, dark blue border, cream gradient, orange hover ring, blue default ring. */
+  .xp-btn {
     min-width: 75px;
     height: 23px;
     padding: 0 10px;
-    border: 1px solid var(--w7-border);
+    border: 1px solid var(--xp-border);
     border-radius: 3px;
-    background: var(--w7-btn-face);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
-    color: var(--w7-text);
+    background: var(--xp-btn-face);
+    box-shadow: none;
+    color: var(--xp-text);
     font: inherit;
     cursor: default;
     display: inline-flex;
@@ -54,58 +55,56 @@
     gap: 5px;
     white-space: nowrap;
   }
-  .w7-btn:hover:not(:disabled) {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+  .xp-btn:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 2px #fcd78c, inset 0 -2px 0 2px #e68b2c;
+    box-shadow: inset 0 0 0 1px #fff0cf, inset 0 0 0 2px #f8b330, inset 0 -2px 0 2px #e68b2c;
   }
-  .w7-btn:active:not(:disabled) {
-    border-color: var(--w7-btn-active-border);
-    background: var(--w7-btn-active-face);
+  .xp-btn:active:not(:disabled) {
+    box-shadow: none;
+    background: var(--xp-btn-active-face);
   }
-  .w7-btn.def {
-    border-color: var(--w7-btn-default-border);
-    box-shadow:
-      inset 0 0 0 1px #bfe3ff,
-      0 0 3px rgba(51, 153, 255, 0.7);
+  .xp-btn.def {
+    box-shadow: inset 0 0 0 1px #cfe0fb, inset 0 0 0 2px #98b8ef, inset -1px -1px 0 2px #6d93e0;
   }
-  .w7-btn.def:hover:not(:disabled) {
-    border-color: var(--w7-btn-hover-border);
+  .xp-btn.def:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 1px #fff0cf, inset 0 0 0 2px #f8b330, inset 0 -2px 0 2px #e68b2c;
   }
-  .w7-btn:focus-visible {
-    outline: var(--w7-focus-outline);
+  .xp-btn:focus-visible {
+    outline: var(--xp-focus-outline);
     outline-offset: -4px;
   }
-  .w7-btn:disabled {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
+  .xp-btn:disabled {
+    border-color: #c9c7ba;
+    background: #f4f2e8;
     box-shadow: none;
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
-  .w7-btn:disabled :global(.w7-icon) {
+  .xp-btn:disabled :global(.xp-icon) {
     opacity: 0.45;
   }
 
   /* FlatStyle.Flat */
-  .w7-btn.flat {
+  .xp-btn.flat {
     border-radius: 0;
-    border-color: var(--w7-border);
-    background: var(--w7-face);
+    border-color: var(--xp-border);
+    background: var(--xp-face);
     box-shadow: none;
   }
-  .w7-btn.flat:hover:not(:disabled) {
-    border-color: var(--w7-border);
-    background: #e5e5e5;
+  .xp-btn.flat:hover:not(:disabled) {
+    border-color: var(--xp-border);
+    background: #f4f2e8;
+    box-shadow: none;
   }
-  .w7-btn.flat:active:not(:disabled) {
-    border-color: var(--w7-border);
-    background: #cdcdcd;
+  .xp-btn.flat:active:not(:disabled) {
+    border-color: var(--xp-border);
+    background: #d6d0c5;
   }
-  .w7-btn.flat.def {
+  .xp-btn.flat.def {
     border-color: #000;
     box-shadow: inset 0 0 0 1px #000;
   }
-  .w7-btn.flat:disabled {
-    background: var(--w7-face);
-    border-color: var(--w7-border-disabled);
+  .xp-btn.flat:disabled {
+    background: var(--xp-face);
+    border-color: var(--xp-border-disabled);
   }
 </style>

@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { launchAgent7, listAgents, see, setDefaultAgentByName, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
+import { launchAgentXP, listAgents, see, setDefaultAgentByName, startConnectedDesktop, type ConnectedDesktop } from './fixtures'
 
 /** The "Scripted Agent" that ships with the app: seeded once, runs the bundled script `demo` from the built app. */
 describe('built-in Scripted Agent', () => {
@@ -36,7 +36,7 @@ describe('built-in Scripted Agent', () => {
 
   it('is not added twice when the app restarts on the same data', async () => {
     await ctx.app.close()
-    const again = await launchAgent7({ userData })
+    const again = await launchAgentXP({ userData })
     try {
       const page = await again.launcherWindow()
       expect((await listAgents(page)).filter((a) => a.name === 'Scripted Agent')).toHaveLength(1)

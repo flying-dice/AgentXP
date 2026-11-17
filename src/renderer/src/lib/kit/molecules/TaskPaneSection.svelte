@@ -16,7 +16,7 @@
   const uid = $props.id()
 </script>
 
-<section class="w7-tasksection {className}" data-testid={testid} data-collapsed={collapsed}>
+<section class="xp-tasksection {className}" data-testid={testid} data-collapsed={collapsed}>
   <h3>
     <span class="title">{title}</span>
     {#if collapsible}
@@ -34,10 +34,10 @@
 </section>
 
 <style>
-  .w7-tasksection {
+  .xp-tasksection {
     border-radius: 6px 6px 0 0;
     overflow: hidden;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
   h3 {
     display: flex;
@@ -47,8 +47,8 @@
     padding: 3px 4px 3px 10px;
     font: inherit;
     font-weight: 700;
-    color: var(--w7-taskpane-title, #215dc6);
-    background: var(--w7-taskpane-head, linear-gradient(to right, #fff, #c6d3f7));
+    color: var(--xp-taskpane-title, #215dc6);
+    background: var(--xp-taskpane-head, linear-gradient(to right, #fff, #c6d3f7));
   }
   .title {
     flex: 1;
@@ -74,7 +74,7 @@
     flex-direction: column;
     gap: 3px;
     padding: 8px 10px;
-    background: var(--w7-taskpane-body, #d6dff7);
+    background: var(--xp-taskpane-body, #d6dff7);
     border: 1px solid #fff;
     border-top: 0;
   }

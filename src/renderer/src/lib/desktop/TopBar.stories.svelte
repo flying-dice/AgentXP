@@ -54,6 +54,6 @@
   .stage {
     position: relative;
     height: 120px;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

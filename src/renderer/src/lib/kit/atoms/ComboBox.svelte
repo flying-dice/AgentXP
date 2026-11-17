@@ -165,7 +165,7 @@
 <div
   bind:this={root}
   data-testid={testid}
-  class="w7-combo {className}"
+  class="xp-combo {className}"
   class:open
   class:disabled
   class:editable
@@ -247,13 +247,13 @@
 </div>
 
 <style>
-  .w7-combo {
+  .xp-combo {
     position: relative;
     display: inline-flex;
     align-items: stretch;
     height: 21px;
     width: 160px;
-    color: var(--w7-text);
+    color: var(--xp-text);
   }
   .field {
     flex: 1;
@@ -269,7 +269,7 @@
   .face {
     border: 1px solid #7a7a7a;
     border-radius: 2px;
-    background: linear-gradient(#fff, #ececec 49%, #dcdcdc 50%, #cfcfcf);
+    background: linear-gradient(#fff, #ececec 49%, #d6d0c5 50%, #d6d0c5);
     padding: 0 0 0 3px;
   }
   .face .label {
@@ -291,23 +291,23 @@
   }
   .face:hover,
   .open .face {
-    border-color: var(--w7-btn-hover-border);
-    background: var(--w7-btn-hover-face);
+    border-color: var(--xp-btn-hover-border);
+    background: var(--xp-btn-hover-face);
   }
   .open .face {
-    border-color: var(--w7-btn-active-border);
-    background: var(--w7-btn-active-face);
+    border-color: var(--xp-btn-active-border);
+    background: var(--xp-btn-active-face);
   }
-  .w7-combo:not(.open) .face:focus-visible .label {
-    background: #3399ff;
+  .xp-combo:not(.open) .face:focus-visible .label {
+    background: #316ac5;
     color: #fff;
   }
 
   /* DropDown: textbox + arrow button */
   .editable {
-    border: 1px solid var(--w7-input-border);
-    border-top-color: var(--w7-input-border-top);
-    background: var(--w7-window);
+    border: 1px solid var(--xp-input-border);
+    border-top-color: var(--xp-input-border-top);
+    background: var(--xp-window);
   }
   .editable:hover:not(.disabled) {
     border-color: #3d7bad;
@@ -332,20 +332,20 @@
     justify-content: center;
     border: 0;
     border-left: 1px solid #8e9097;
-    background: linear-gradient(#fff, #ececec 49%, #dcdcdc 50%, #cfcfcf);
+    background: linear-gradient(#fff, #ececec 49%, #d6d0c5 50%, #d6d0c5);
     color: #404040;
     cursor: default;
   }
   .editable button.arrow:hover:not(:disabled),
   .editable.open button.arrow {
-    background: var(--w7-btn-hover-face);
+    background: var(--xp-btn-hover-face);
   }
 
   .disabled .face,
   .disabled.editable {
-    border-color: var(--w7-border-disabled);
-    background: #f4f4f4;
-    color: var(--w7-text-disabled);
+    border-color: var(--xp-border-disabled);
+    background: #f4f2e8;
+    color: var(--xp-text-disabled);
   }
   .disabled .arrow {
     color: #b0b0b0;
@@ -358,7 +358,7 @@
     padding: 0;
     background: #fff;
     border: 1px solid #646464;
-    box-shadow: var(--w7-shadow-popup);
+    box-shadow: var(--xp-shadow-popup);
   }
   .option {
     height: 17px;
@@ -368,14 +368,14 @@
     cursor: default;
   }
   .option.hot {
-    background: #3399ff;
+    background: #316ac5;
     color: #fff;
   }
   .option.off {
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
   .option.off.hot {
     background: transparent;
-    color: var(--w7-text-disabled);
+    color: var(--xp-text-disabled);
   }
 </style>

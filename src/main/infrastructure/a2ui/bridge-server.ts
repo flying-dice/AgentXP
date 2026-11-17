@@ -13,7 +13,7 @@ import { ENV_DESKTOP_ID, ENV_SESSION_KEY, ENV_SOCKET, MCP_SERVER_NAME, type Brid
 
 /** Per-app IPC endpoint: unix socket under tmpdir, named pipe on Windows. */
 export function defaultSocketPath(pid: number = process.pid, platform: NodeJS.Platform = process.platform): string {
-  return platform === 'win32' ? `\\\\.\\pipe\\agent7-a2ui-${pid}` : join(tmpdir(), `agent7-a2ui-${pid}.sock`)
+  return platform === 'win32' ? `\\\\.\\pipe\\agentxp-a2ui-${pid}` : join(tmpdir(), `agentxp-a2ui-${pid}.sock`)
 }
 
 const parseJson = (line: string): unknown => {

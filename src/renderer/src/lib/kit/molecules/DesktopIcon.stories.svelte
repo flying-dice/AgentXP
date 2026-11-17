@@ -25,6 +25,6 @@
 <style>
   .stage {
     padding: 30px 60px;
-    background: var(--w7-desktop-bg);
+    background: var(--xp-desktop-bg);
   }
 </style>

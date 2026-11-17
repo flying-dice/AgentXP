@@ -53,7 +53,7 @@ export function chatReviewChecks({ review, entries, desktop, chatWindowId }) {
   ]
 }
 
-const reviewState = (ctx) => ctx.eval((id) => window.agent7.review.state(id), ctx.state.reviewSessionId)
+const reviewState = (ctx) => ctx.eval((id) => window.agentxp.review.state(id), ctx.state.reviewSessionId)
 const desktopPage = (ctx) => ctx.desktopPage(ctx.state.desktopId)
 
 async function reviewOpen(ctx) {

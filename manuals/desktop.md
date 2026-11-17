@@ -26,7 +26,7 @@ This manual describes the parts of the desktop that do not belong to one app: th
 
 ## 1 - What It Is For
 
-The desktop is the shell of Agent7. It looks like Windows 7. It holds the apps of one desktop, shows what the agent can use, and asks you before the agent does a risky action.
+The desktop is the shell of AgentXP. It looks like Windows XP. It holds the apps of one desktop, shows what the agent can use, and asks you before the agent does a risky action.
 
 Use the desktop to open apps, to switch between windows, to pause the agent, and to answer permission requests.
 
@@ -36,7 +36,7 @@ Use the desktop to open apps, to switch between windows, to pause the agent, and
 
 You open a desktop from the **[Desktop Connection](launcher.md)** window. A desktop that you just created opens at once. To open another one, select it and click **Connect**. A new window opens and shows the desktop.
 
-If you have no desktop yet, the **Welcome to Agent7** dialog box appears. Click **Agent7 Desktops...** to open the **Desktop Connection** window.
+If you have no desktop yet, the **Welcome to AgentXP** dialog box appears. Click **AgentXP Desktops...** to open the **Desktop Connection** window.
 
 ## 3 - The Window
 
@@ -48,8 +48,8 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 
 - **Pin** – Keeps the bar open. If you unpin it, the bar folds away until the pointer is over it.
 - **Desktop name** – Shows the name of the desktop and the state of the agent.
-- **Minimize, Maximize** – Change the size of the Agent7 window on your computer.
-- **Disconnect** – Closes the Agent7 window. The agents keep running.
+- **Minimize, Maximize** – Change the size of the AgentXP window on your computer.
+- **Disconnect** – Closes the AgentXP window. The agents keep running.
 
 ### The Top Bar
 
@@ -62,9 +62,9 @@ The top bar is below the connection bar. It shows what the agent does now and wh
 
 ### The Desktop Icons
 
-The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, Task Scheduler, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens **Chats - Task Manager**, with the first chat selected, where a double-click on a chat opens its window. The pointer shows that Agent7 is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
+The icons are at the left side of the desktop area: Computer, Chats, Code, Terminal, Browser, Control Center, Task Scheduler, and Recycle Bin. Click an icon to select it. Double-click it, or press Enter, to open its app. Point to an icon to read what it opens, for example **Chats: see your chats and open one**. With no chat yet, Chats starts one; with chats, it opens **Chats - Task Manager**, with the first chat selected, where a double-click on a chat opens its window. The pointer shows that AgentXP is busy and the taskbar shows a button at once while the app opens. If the app cannot open, a message tells you why. The first time that you see a desktop, a balloon says **Double-click an icon to open it.** Use the arrow keys to move between icons. A dotted frame shows the icon that has the keyboard focus.
 
-Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **Gadgets**, and **Control Center**.
+Right-click the bare desktop to see the menu of the desktop. The menu has **New chat**, **Open Computer**, **InfoPanels**, and **Control Center**.
 
 ### The Windows
 
@@ -90,7 +90,7 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **System Tools** – A folder (under All Programs) with Task Manager, Control Center, and Task Scheduler. Event Viewer is in the left column of the Start menu.
 - **Recent chats** – Lists your latest chats.
 - **Search programs and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
-- **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and Agent7 Desktops.
+- **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and AgentXP Desktops.
 - **Pause all agents or Resume agents** – Stops every agent or lets them work again.
 - **Disconnect** – Closes the window. Its arrow opens **Disconnect**, **Switch desktop...**, and **Delete desktop...**.
 
@@ -109,11 +109,11 @@ Click the flag to open the Action Center. Point at the flag to see how many requ
 
 ### Permission Prompts
 
-Agent7 asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
+AgentXP asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. A request appears in the Action Center. When you click **Review**, the permission dialog box dims the desktop.
 
 - The title asks in plain words if the agent can do the action, for example **Allow the agent to change src/auth/redirect.ts?**
-- The line **Reason:** tells why Agent7 asks, for example that Running commands is set to Ask.
-- The box shows the command, or the change to the file: the full path, how many lines are added and removed, and the lines. Long lines wrap. **Show all lines** shows a long change in full. If Agent7 cannot read the file, the box says that the change replaces the whole file.
+- The line **Reason:** tells why AgentXP asks, for example that Running commands is set to Ask.
+- The box shows the command, or the change to the file: the full path, how many lines are added and removed, and the lines. Long lines wrap. **Show all lines** shows a long change in full. If AgentXP cannot read the file, the box says that the change replaces the whole file.
 - The choices answer the request. Each has a second line that tells what happens. The focus starts on the refusal.
 
 Press Esc or click **Not now** to close the dialog box without an answer. The request stays in the Action Center.
@@ -136,9 +136,9 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Connection bar | Holds the title and the buttons of the connection. | `connbar` |
 | Pin | Keeps the bar open or lets it fold away. | `connbar-pin` |
 | Desktop name | Shows the name of the desktop. | `connbar-title` |
-| Minimize | Minimizes the Agent7 window. | `connbar-minimize` |
-| Maximize, Restore Down | Changes the size of the Agent7 window. | `connbar-maximize` |
-| Disconnect | Closes the Agent7 window. The agents keep running. | `connbar-close` |
+| Minimize | Minimizes the AgentXP window. | `connbar-minimize` |
+| Maximize, Restore Down | Changes the size of the AgentXP window. | `connbar-maximize` |
+| Disconnect | Closes the AgentXP window. The agents keep running. | `connbar-close` |
 | Top bar | Holds the state and the tools of the agent. | `topbar` |
 | State dot | Shows Idle, Working, or Paused. | `topbar-dot` |
 | Status | Shows the text of the state. | `topbar-status` |
@@ -162,7 +162,7 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 | Maximize | Makes the window fill the desktop. | `window-maximize` |
 | Close | Closes the window. | `window-close` |
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
-| Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-gadgets`, `menu-item-desktop-control-centre` |
+| Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |
 
 ### Taskbar
 
@@ -235,8 +235,8 @@ A Chat window shows a second kind of permission dialog box, with the same choice
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Welcome to Agent7 | Appears when you have no desktop. | `welcome-dialog` |
-| Agent7 Desktops... | Opens the Desktop Connection window. | `welcome-open-launcher` |
+| Welcome to AgentXP | Appears when you have no desktop. | `welcome-dialog` |
+| AgentXP Desktops... | Opens the Desktop Connection window. | `welcome-open-launcher` |
 | AutoPlay | Appears when you plug in a project. | `autoplay-dialog` |
 | Open folder to view files | Opens the drive in Explorer. | `autoplay-open-folder` |
 | Start a chat on this drive | Starts a chat on the drive. | `autoplay-start-chat` |
