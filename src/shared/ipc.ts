@@ -196,6 +196,11 @@ export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents,
   'status.message': { text: string }
   /** The transcript was cleared: the chat's AG-UI store reloads (empty messages and state). */
   'transcript.cleared': { sessionId: Id }
+  /** Settings outside a desktop changed (an agent tool did it): open Control Center and Teams windows reload that area. */
+  'config.changed': { area: ConfigArea }
 }
+
+/** The settings areas that `config.changed` names. */
+export type ConfigArea = 'agents' | 'skills' | 'mcp' | 'profiles' | 'teams'
 
 export type AgentXPEventName = keyof AgentXPEvents

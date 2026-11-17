@@ -63,6 +63,15 @@ import { SqliteKanbanRepository } from './infrastructure/db/sqlite-kanban-reposi
 import { createPaintTools } from './application/tools/paintTools'
 import { createDiagramTools } from './application/tools/diagramTools'
 import { createRecycleTools } from './application/tools/recycleTools'
+import { createSchedulerTools } from './application/tools/schedulerTools'
+import { createTeamsTools } from './application/tools/teamsTools'
+import { createRoomTools } from './application/tools/roomTools'
+import { createSettingsTools } from './application/tools/settingsTools'
+import { createTaskmgrTools } from './application/tools/taskmgrTools'
+import { createHelpTools } from './application/tools/helpTools'
+import { HelpService } from './application/HelpService'
+import { bundledManuals } from './infrastructure/help/bundledManuals'
+import type { ConfigArea } from '@shared/ipc'
 import { createSnipTools } from './application/tools/snipTools'
 import { createWordpadTools } from './application/tools/wordpadTools'
 import { createCodeTools } from './application/tools/codeTools'
@@ -168,6 +177,8 @@ export interface ComposeOptions {
   skillStore?: SkillStore
   /** Connects to MCP servers for "Test"; defaults to the official MCP client. */
   mcpProber?: McpProber
+  /** The manuals the help_* tools serve (file name -> Markdown); default: the bundled manuals/ folder. */
+  manuals?: Record<string, string>
   /** How the proxy that hides switched-off MCP tools is launched; without it a server is handed over whole (tests). */
   mcpProxy?: McpProxyLaunch
   /** Poll interval of `git.changed` while a Code window is open (ms); default 5000, 0 disables. */
@@ -430,6 +441,22 @@ export function composeApp(options: ComposeOptions): AppServices {
     capture: () => Promise.reject(new Error('Screen capture is not available here.'))
   }
   const recycle = new RecycleService(repos.recycled, repos.sessions, vfs, hostFiles, changeRecorder, publisher)
+  const queries = new SessionQueryService(
+    repos.sessions,
+    repos.transcripts,
+    repos.tasks,
+    repos.changes,
+    repos.terminals,
+    repos.surfaces,
+    desktops
+  )
+  const agentService = new AgentService(repos.agents, new NodeCommandLocator())
+  const processes = new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage())
+  const skills = new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agentxp-skills-')))
+  const mcp = new McpServerService(repos.mcpServers, options.mcpProber ?? new SdkMcpProber())
+  const teamService = new TeamService(repos.profiles, repos.teams)
+  const help = new HelpService(options.manuals ?? bundledManuals)
+  const configChanged = (area: ConfigArea): void => publisher.publish('config.changed', { area })
   const desktopTools = new DesktopToolService({
     states: desktops,
     gate: gateway,
@@ -461,7 +488,18 @@ export function composeApp(options: ComposeOptions): AppServices {
       ...createEventsTools({ log: eventLog }),
       ...createSnipTools({ desktops, screen }),
       ...createRecycleTools({ recycle }),
-      ...createReviewTools({ reviews })
+      ...createReviewTools({ reviews }),
+      ...createSchedulerTools({ scheduler, agents: agentService, paths: toolPaths }),
+      ...createTeamsTools({ teams: teamService, agents: agentService, skills, mcp, kanban, changed: configChanged }),
+      ...createRoomTools({ rooms, teams: teamService, paths: toolPaths, chatTitle: (id) => repos.sessions.get(id)?.title || `Chat ${id}` }),
+      ...createSettingsTools({ policy: desktops, agents: agentService, skills, mcp, paths: toolPaths, vfs, changed: configChanged }),
+      ...createTaskmgrTools({
+        sessions: { list: (id) => queries.list(id), terminalsOf: (id) => queries.terminalsOf(id), cancel: (id) => sessions.cancel(id) },
+        processes,
+        agents: agentService,
+        desktops: { state: (id) => desktops.state(id), openChat: (desktopId, sessionId) => void desktops.openWindow({ desktopId, app: 'chat', sessionId }, 'agent') }
+      }),
+      ...createHelpTools({ help })
     },
     log: {
       called: (context, tool, args) => eventLog.recordToolCall(context, tool, args),
@@ -473,19 +511,10 @@ export function composeApp(options: ComposeOptions): AppServices {
     finished: (sessionId, tool, result) => eventLog.recordToolResult({ sessionId }, tool, result, false)
   })
 
-  const queries = new SessionQueryService(
-    repos.sessions,
-    repos.transcripts,
-    repos.tasks,
-    repos.changes,
-    repos.terminals,
-    repos.surfaces,
-    desktops
-  )
   const agui = new AguiRunCoordinator({ queries, sessions, a2ui, broker, events: eventBus, appEvents: publisher })
 
   const api = createApi({
-    agents: new AgentService(repos.agents, new NodeCommandLocator()),
+    agents: agentService,
     folders: folderService,
     sessions,
     queries,
@@ -500,7 +529,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     scheduler,
     drives,
     launcher,
-    processes: new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage()),
+    processes,
     shell: new ShellService(options.opener),
     files: options.filePicker ?? { pickFiles: async () => [] },
     directories: options.directories ?? new NodeDirectoryBrowser({ recent: () => folderService.list().map((f) => f.path) }),
@@ -511,9 +540,9 @@ export function composeApp(options: ComposeOptions): AppServices {
     eventLog,
     recycle,
     screen,
-    skills: new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agentxp-skills-'))),
-    mcp: new McpServerService(repos.mcpServers, options.mcpProber ?? new SdkMcpProber()),
-    teamService: new TeamService(repos.profiles, repos.teams),
+    skills,
+    mcp,
+    teamService,
     rooms,
     appVersion: options.appVersion ?? '0.0.0'
   })

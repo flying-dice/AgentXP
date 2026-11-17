@@ -24,7 +24,13 @@ const GROUP_LABELS: Record<GatedToolGroup, string> = {
   recycle: 'Recycle Bin tools',
   board: 'Kanban board tools',
   diagrams: 'Agent Diagrams tools',
-  review: 'Code review tools'
+  review: 'Code review tools',
+  scheduler: 'Task Scheduler tools',
+  teams: 'Teams tools',
+  rooms: 'Team chat tools',
+  settings: 'Control Center tools',
+  taskmgr: 'Task Manager tools',
+  help: 'Help tools'
 }
 
 export const groupLabel = (group: GatedToolGroup): string => GROUP_LABELS[group]

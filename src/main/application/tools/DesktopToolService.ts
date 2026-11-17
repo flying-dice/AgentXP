@@ -73,7 +73,12 @@ export class DesktopToolService implements DesktopToolHost {
       if (tool !== 'desktop_state' && this.deps.states.state(context.desktopId).paused) throw new ToolRefusedError(PAUSED_MESSAGE)
       return
     }
-    await this.deps.gate.authorize(context.sessionId, { group: group as GatedToolGroup, title: summarise(tool, args) })
+    const access = (TOOL_DEFS[tool] as { access?: 'read' | 'confirm' }).access
+    await this.deps.gate.authorize(context.sessionId, {
+      group: group as GatedToolGroup,
+      title: summarise(tool, args),
+      ...(access === 'read' ? { askUser: false } : access === 'confirm' ? { force: true } : {})
+    })
   }
 }
 

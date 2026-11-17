@@ -239,7 +239,13 @@ export const TOOL_GROUPS = [
   'recycle', // recycle_list, recycle_restore
   'board', // board_* (always on: a board is how the agents of a team track work, no window needed)
   'diagrams', // diagram_* (the open Agent Diagrams window)
-  'review' // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
+  'review', // review_list_changes, review_read_diff, review_add_comment, review_submit (the review session of a Code Review window and the chats of its desktop; review_open opens the window)
+  'scheduler', // scheduler_* (always on: the Task Scheduler of the desktop)
+  'teams', // profile_*, team_* (always on: the profiles and teams of the Teams app)
+  'rooms', // room_* (always on: the team chat rooms of the desktop)
+  'settings', // settings_*, agent_*, skill_*, mcp_* (always on: Control Center; every change asks the user)
+  'taskmgr', // taskmgr_* (always on: the chats, agent programs and terminals that Task Manager shows)
+  'help' // help_search, help_read (always on: the manuals of Help and Support)
 ] as const
 export type ToolGroup = (typeof TOOL_GROUPS)[number]
 
@@ -260,11 +266,17 @@ export const TOOL_GROUP_PROVIDERS: Record<ToolGroup, readonly AppKind[]> = {
   recycle: ['recycle-bin'],
   board: [],
   diagrams: ['diagrams'],
-  review: ['code-review']
+  review: ['code-review'],
+  scheduler: [],
+  teams: [],
+  rooms: [],
+  settings: [],
+  taskmgr: [],
+  help: []
 }
 
 /** Groups that are on whatever apps are open (`shell` has no gate; `board` is gated by the Control Center policy only). */
-export const ALWAYS_ON_TOOL_GROUPS: readonly ToolGroup[] = ['shell', 'board']
+export const ALWAYS_ON_TOOL_GROUPS: readonly ToolGroup[] = ['shell', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help']
 
 /** The app suggested to the agent when a group is missing. */
 export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
@@ -282,7 +294,13 @@ export const TOOL_GROUP_APP: Record<Exclude<ToolGroup, 'shell'>, AppKind> = {
   recycle: 'recycle-bin',
   board: 'kanban',
   diagrams: 'diagrams',
-  review: 'code-review'
+  review: 'code-review',
+  scheduler: 'task-scheduler',
+  teams: 'teams',
+  rooms: 'team-chat',
+  settings: 'control-centre',
+  taskmgr: 'agent-manager',
+  help: 'help'
 }
 
 export const APP_DISPLAY_NAMES: Record<AppKind, string> = {
@@ -334,7 +352,7 @@ export interface ToolPolicyDto {
 }
 
 export const DEFAULT_TOOL_POLICY: ToolPolicyDto = {
-  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', diagrams: 'allow', review: 'allow' },
+  groups: { 'fs.read': 'allow', 'fs.write': 'ask', notepad: 'allow', code: 'allow', terminal: 'ask', browser: 'allow', paint: 'allow', wordpad: 'ask', notes: 'allow', events: 'allow', snip: 'allow', recycle: 'ask', board: 'allow', diagrams: 'allow', review: 'allow', scheduler: 'ask', teams: 'ask', rooms: 'ask', settings: 'allow', taskmgr: 'allow', help: 'allow' },
   openApps: 'allow'
 }
 

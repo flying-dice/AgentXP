@@ -58,8 +58,8 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | code | Yes | Yes | Yes | Yes | Yes |
 | terminal | Yes | Yes | Yes | Yes | Yes |
 | browser | Yes | Yes | Yes | Yes | Yes |
-| control-centre | Yes | Yes | **Gap** | Yes | Yes |
-| agent-manager | Yes | Yes | **Gap** | Yes | Yes |
+| control-centre | Yes | Yes | Yes | Yes | Yes |
+| agent-manager | Yes | Yes | Yes | Yes | Yes |
 | paint | Yes | Yes | Yes | **Gap** | Yes |
 | wordpad | Yes | Yes | Yes | **Gap** | Yes |
 | sticky-notes | Yes | Yes | Yes | **Gap** | Yes |
@@ -69,29 +69,22 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | snipping-tool | Yes | Yes | Yes | **Gap** | Yes |
 | recycle-bin | Yes | Yes | Yes | Yes | Yes |
 | surface | Yes | Yes | Yes | Yes | Yes |
-| help | Yes | **Gap** | **Gap** | Yes | Yes |
+| help | Yes | Yes | Yes | Yes | Yes |
 | code-review | Yes | Yes | Yes | Yes | Yes |
-| teams | Yes | Yes | **Gap** | **Gap** | Yes |
-| team-chat | Yes | Yes | **Gap** | **Gap** | Yes |
-| task-scheduler | Yes | Yes | **Gap** | Yes | Yes |
+| teams | Yes | Yes | Yes | **Gap** | Yes |
+| team-chat | Yes | Yes | Yes | **Gap** | Yes |
+| task-scheduler | Yes | Yes | Yes | Yes | Yes |
 
-14 open gap(s).
+7 open gap(s).
 
 - **chat, Agent API** (not needed): The chat is the agent's own conversation. The agent acts through it, not on it.
-- **control-centre, Agent API** (gap): The agent cannot read or change permissions, agents or appearance.
-- **agent-manager, Agent API** (gap): The agent cannot list chats, agent processes or context use.
 - **paint, E2E** (gap): Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.
 - **wordpad, E2E** (gap): Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.
 - **sticky-notes, E2E** (gap): Only the open/close smoke test.
 - **kanban, E2E** (gap): No spec at all.
 - **snipping-tool, E2E** (gap): Only the open/close smoke test.
-- **help, Backend** (gap): The manuals are bundled into the renderer only. Main cannot search or serve them.
-- **help, Agent API** (gap): The agent cannot search or read the manuals.
-- **teams, Agent API** (gap): The agent cannot list or change profiles, teams, skills or MCP servers.
 - **teams, E2E** (gap): No spec at all.
-- **team-chat, Agent API** (gap): An agent outside a room cannot list rooms, read them or post to them.
 - **team-chat, E2E** (gap): No spec at all.
-- **task-scheduler, Agent API** (gap): The agent cannot list, create, run or change scheduled tasks.
 <!-- app-pillars:end -->
 
 ## 5 - Need Help?

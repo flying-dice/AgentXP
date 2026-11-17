@@ -90,7 +90,13 @@
     const off = host.api.on('room.changed', () => void loadRooms())
     const gone = host.api.on('room.removed', () => void loadRooms())
     const boardsOff = host.api.on('kanban.changed', () => void loadBoards())
+    // An agent changed profiles, teams, skills or servers (profile_*, team_*, skill_*, mcp_*): show it.
+    const configOff = host.api.on('config.changed', (e) => {
+      if (e.area === 'agents') void host.api.agents.list().then((list) => (agents = list))
+      else void guard(() => store.load())
+    })
     return () => {
+      configOff()
       off()
       boardsOff()
       gone()

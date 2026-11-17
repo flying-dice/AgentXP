@@ -11,6 +11,8 @@ export interface ToolGateRequest {
   title: string
   /** False for follow-up calls (terminal output, release...) that must not prompt again. Default true. */
   askUser?: boolean
+  /** Ask the user even when the policy says Allow, and do not count an approval the agent's own prompt obtained. For changes to AgentXP itself (permissions, agents, MCP servers, ending an agent program). */
+  force?: boolean
 }
 
 /** The call is not allowed: its app is closed, the policy denies it, AgentXP is paused or the user said no. */

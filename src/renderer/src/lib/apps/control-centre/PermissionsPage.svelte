@@ -58,6 +58,13 @@
       saved = p
       draft = p
     })
+    // An agent changed a permission (settings_set_permission, after the user allowed it): show it unless the user has unsaved edits.
+    return host.api.on('desktop.changed', (state) => {
+      if (state.policy && !dirty && !policiesEqual(saved ?? state.policy, state.policy)) {
+        saved = state.policy
+        draft = state.policy
+      }
+    })
   })
   onDestroy(() => {
     if (statusTimer) clearTimeout(statusTimer)

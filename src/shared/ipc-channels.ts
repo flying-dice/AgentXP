@@ -44,7 +44,8 @@ const RENDERER_EVENTS = {
   'review.changed': true,
   'room.changed': true,
   'room.removed': true,
-  'scheduler.changed': true
+  'scheduler.changed': true,
+  'config.changed': true
 } as const satisfies Record<AgentXPEventName, true>
 
 export const isRendererEvent = (name: string): name is AgentXPEventName => name in RENDERER_EVENTS

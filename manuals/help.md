@@ -13,6 +13,7 @@ This manual describes Help and Support. Help and Support shows the manuals of Ag
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -106,6 +107,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help 
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens the manual of the focused window, at the row of the focused control when the manual lists it, else at the top. With no window focused, it opens **Using the Desktop**. | none |
+
+### What the Agent Can Do
+
+The agent can read the manuals at any time. The permission **Help** in **Control Center** controls the tools below. When you ask the agent how AgentXP works, it can look up the answer here.
+
+| Tool | What it does |
+|---|---|
+| `help_search` | Searches the manuals and gives the best sections. |
+| `help_read` | Reads one manual or one section of it. |
 
 ## 5 - Common Tasks
 

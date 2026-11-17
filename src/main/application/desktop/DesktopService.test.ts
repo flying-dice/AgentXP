@@ -1,3 +1,5 @@
+/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
+const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, type DesktopState } from '@shared/desktop'
 import type { SessionDto, SessionRole } from '@shared/models'
@@ -89,11 +91,11 @@ describe('DesktopService: windows and state', () => {
     const state = service.state(desktopId)
     expect(state.windows.map((w) => w.id)).toEqual([terminal.id, browser.id])
     expect(state.focusedWindowId).toBe(browser.id)
-    expect(state.tools).toEqual(['shell', 'terminal', 'browser', 'board'])
+    expect(state.tools).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
     expect(state.drives.map((d) => `${d.letter}:${d.kind}`)).toEqual(['C:system', 'E:removable'])
     expect(state.home).toBe('C:\\Users\\Agent')
     expect(browser).toMatchObject({ openedBy: 'agent', view: { app: 'browser', url: 'https://example.com/' } })
-    expect(changes().at(-1)?.tools).toEqual(['shell', 'terminal', 'browser', 'board'])
+    expect(changes().at(-1)?.tools).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
   })
 
   it('enforces singleton apps: opening Code twice focuses the window and shows the new file', () => {
@@ -119,15 +121,15 @@ describe('DesktopService: windows and state', () => {
     const terminal = service.openWindow({ desktopId, app: 'terminal' })
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
     service.closeWindow(notepad.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: terminal.id, tools: ['shell', 'terminal', 'board'] })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: terminal.id, tools: ['shell', 'terminal', 'board', ...ADMIN_GROUPS] })
     service.closeWindow(terminal.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: ['shell', 'board'] })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: ['shell', 'board', ...ADMIN_GROUPS] })
   })
 
   it('minimised windows keep their tools; focusing restores them', () => {
     const terminal = service.openWindow({ desktopId, app: 'terminal' })
     service.setWindowState(terminal.id, 'minimized')
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: ['shell', 'terminal', 'board'] })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: ['shell', 'terminal', 'board', ...ADMIN_GROUPS] })
     service.focusWindow(terminal.id)
     expect(service.state(desktopId)).toMatchObject({ focusedWindowId: terminal.id, windows: [{ windowState: 'normal' }] })
   })
@@ -350,7 +352,7 @@ describe('DesktopService: control flags and policy', () => {
   it('builds the prompt context from the chat desktop', async () => {
     const chat = await service.newChat(desktopId)
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
-    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: ['shell', 'board'] })
+    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: ['shell', 'board', ...ADMIN_GROUPS] })
     expect(service.contextOfSession(f.sessionId)).toBeNull() // the fixture chat has no desktop
   })
 

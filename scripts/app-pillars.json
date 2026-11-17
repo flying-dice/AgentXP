@@ -96,16 +96,20 @@
       "ui": "src/renderer/src/lib/apps/control-centre/ControlCentreApp.svelte",
       "backend": [
         "src/main/application/desktop/DesktopService.ts",
-        "src/main/application/AgentService.ts"
+        "src/main/application/AgentService.ts",
+        "src/main/application/teams/SkillService.ts",
+        "src/main/application/teams/McpServerService.ts"
       ],
-      "tools": [],
+      "tools": [
+        "settings_*",
+        "agent_*",
+        "skill_*",
+        "mcp_*"
+      ],
       "e2e": [
         "e2e/control-centre.e2e.ts"
       ],
-      "manual": "manuals/control-centre.md",
-      "gaps": {
-        "agentApi": "The agent cannot read or change permissions, agents or appearance."
-      }
+      "manual": "manuals/control-centre.md"
     },
     "agent-manager": {
       "area": "agent-manager",
@@ -114,14 +118,13 @@
         "src/main/application/SessionQueryService.ts",
         "src/main/application/ProcessService.ts"
       ],
-      "tools": [],
+      "tools": [
+        "taskmgr_*"
+      ],
       "e2e": [
         "e2e/chat-restart.e2e.ts"
       ],
-      "manual": "manuals/agent-manager.md",
-      "gaps": {
-        "agentApi": "The agent cannot list chats, agent processes or context use."
-      }
+      "manual": "manuals/agent-manager.md"
     },
     "paint": {
       "area": "paint",
@@ -244,16 +247,17 @@
     "help": {
       "area": "help",
       "ui": "src/renderer/src/lib/apps/help/HelpApp.svelte",
-      "backend": [],
-      "tools": [],
+      "backend": [
+        "src/main/application/HelpService.ts",
+        "src/main/infrastructure/help/bundledManuals.ts"
+      ],
+      "tools": [
+        "help_*"
+      ],
       "e2e": [
         "e2e/help.e2e.ts"
       ],
-      "manual": "manuals/help.md",
-      "gaps": {
-        "backend": "The manuals are bundled into the renderer only. Main cannot search or serve them.",
-        "agentApi": "The agent cannot search or read the manuals."
-      }
+      "manual": "manuals/help.md"
     },
     "code-review": {
       "area": "review",
@@ -277,11 +281,13 @@
         "src/main/application/teams/SkillService.ts",
         "src/main/application/teams/McpServerService.ts"
       ],
-      "tools": [],
+      "tools": [
+        "profile_*",
+        "team_*"
+      ],
       "e2e": [],
       "manual": "manuals/teams.md",
       "gaps": {
-        "agentApi": "The agent cannot list or change profiles, teams, skills or MCP servers.",
         "e2e": "No spec at all."
       }
     },
@@ -291,11 +297,12 @@
       "backend": [
         "src/main/application/teams/TeamRoomService.ts"
       ],
-      "tools": [],
+      "tools": [
+        "room_*"
+      ],
       "e2e": [],
       "manual": "manuals/team-chat.md",
       "gaps": {
-        "agentApi": "An agent outside a room cannot list rooms, read them or post to them.",
         "e2e": "No spec at all."
       }
     },
@@ -305,14 +312,13 @@
       "backend": [
         "src/main/application/scheduler/SchedulerService.ts"
       ],
-      "tools": [],
+      "tools": [
+        "scheduler_*"
+      ],
       "e2e": [
         "e2e/task-scheduler.e2e.ts"
       ],
-      "manual": "manuals/task-scheduler.md",
-      "gaps": {
-        "agentApi": "The agent cannot list, create, run or change scheduled tasks."
-      }
+      "manual": "manuals/task-scheduler.md"
     },
     "surface": {
       "area": "a2ui",
