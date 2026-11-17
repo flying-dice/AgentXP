@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "search",
-  "description": "Find, read and edit files through the desktop apps (the project is E:\\ with src\\index.ts containing \"needle\"). A prompt with \"find files\" runs fs_find (Explorer's Search Companion shows it); \"search code\" runs code_search (the Code app's Search tab) and code_read; \"edit code\" runs code_edit and code_write (shown in Code).",
+  "description": "Find, read and edit files through the desktop apps (the project is E:\\ with src\\index.ts containing \"needle\"). A prompt with \"find files\" runs fs_find (Explorer's Search Companion shows it); \"search code\" runs code_search (the Code app's Search tab) and code_read; \"edit code\" runs code_edit and code_write (shown in Code); \"edit legacy\" tries code_edit on E:\\docs\\legacy.txt, a Windows-1252 file, and reports the refusal.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -40,6 +40,16 @@
         { "type": "mcpCall", "server": "agentxp", "tool": "code_write", "arguments": { "path": "E:\\src\\fresh.ts", "text": "export const fresh = true\n" }, "saveAs": "written", "label": "write file" },
         { "type": "expect", "from": "written", "contains": "Created" },
         { "type": "message", "text": "Edited: {{edited}} {{written}}" }
+      ]
+    },
+    {
+      "id": "edit-legacy",
+      "match": { "contains": "edit legacy" },
+      "steps": [
+        { "type": "mcpCall", "server": "agentxp", "tool": "code_edit", "arguments": { "path": "E:\\docs\\legacy.txt", "oldText": "one", "newText": "two" }, "saveAs": "edited", "label": "edit a Windows-1252 file" },
+        { "type": "expect", "from": "edited.isError", "equals": "true" },
+        { "type": "expect", "from": "edited", "contains": "not UTF-8" },
+        { "type": "message", "text": "Refused: {{edited}}" }
       ]
     }
   ]
