@@ -59,6 +59,7 @@
   <div class="cms" use:clickOutside={{ handler: close }}>
     <MenuPopup
       bind:element
+      layer
       {items}
       {label}
       autofocus

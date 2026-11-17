@@ -79,6 +79,7 @@
   {#if open}
     <MenuPopup
       bind:element={popup}
+      layer
       {items}
       label={text ?? title}
       autofocus

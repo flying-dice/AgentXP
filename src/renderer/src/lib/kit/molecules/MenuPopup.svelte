@@ -4,6 +4,7 @@
   import MenuPopup from './MenuPopup.svelte'
   import { isSelectable, mnemonicKey, type MenuItemDef } from './MenuItem'
   import { nudgeUp, placeBeside } from '../actions/popup'
+  import { portal } from '../actions/portal'
 
   interface Props {
     items: MenuItemDef[]
@@ -32,6 +33,8 @@
     maxHeight?: number
     /** Fixed placement beside this item rect (a submenu of a scrolling menu). */
     anchor?: DOMRect
+    /** Draw in the popup layer above every window and bar (a top-level menu bar, drop-down or context menu). */
+    layer?: boolean
   }
 
   let {
@@ -48,7 +51,8 @@
     onnavigate,
     element = $bindable(null),
     maxHeight,
-    anchor
+    anchor,
+    layer = false
   }: Props = $props()
 
   const uid = $props.id()
@@ -191,6 +195,7 @@
 
 <div
   bind:this={element}
+  use:portal={layer}
   class="menu {className}"
   class:flipped
   class:submenu

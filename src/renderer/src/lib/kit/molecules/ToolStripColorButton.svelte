@@ -6,6 +6,7 @@
   import type { Snippet } from 'svelte'
   import { clickOutside } from '../actions/clickOutside'
   import { keepPlaced, placePopup } from '../actions/popup'
+  import { portal } from '../actions/portal'
   import { tooltip } from '../actions/tooltip'
   import ColorPalette from '../atoms/ColorPalette.svelte'
 
@@ -83,7 +84,7 @@
   </button>
   {#if open}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="popup" bind:this={popup} style:left="{pos.left}px" style:top="{pos.top}px" onkeydown={(e) => e.key === 'Escape' && ((open = false), arrow?.focus())}>
+    <div class="popup" bind:this={popup} use:portal style:left="{pos.left}px" style:top="{pos.top}px" onkeydown={(e) => e.key === 'Escape' && ((open = false), arrow?.focus())}>
       <ColorPalette {value} {allowNone} {noneLabel} {recent} label={title} testid={testid ? `${testid}-palette` : 'color-palette'} onpick={pick} />
     </div>
   {/if}

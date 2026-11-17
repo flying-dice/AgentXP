@@ -152,6 +152,7 @@
     {#key openIndex}
       <MenuPopup
         bind:element={popup}
+        layer
         items={menus[openIndex].items}
         label={menus[openIndex].label.replace('&', '')}
         showMnemonics={keyboardMode}

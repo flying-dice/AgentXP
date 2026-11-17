@@ -56,6 +56,23 @@ describe('popup placement', () => {
     await ctx.desktopPage.keyboard.press('Escape')
   })
 
+  it('a menu that opens under the expanded top bar is drawn over it and takes clicks (menus sit above every window and bar)', async () => {
+    const win = ctx.desktop.window('kanban')
+    const help = win.getByTestId('menubar-help')
+    await help.click()
+    const first = ctx.desktopPage.getByTestId('kanban-menu-help')
+    await see.visible(first)
+    // The Help menu of a maximized window opens where the top bar hangs down; a click must reach the item, not the bar.
+    const bar = await box(ctx.desktop.topBar)
+    const item = await box(first)
+    expect(item.y).toBeLessThan(bar.y + bar.height)
+    expect(item.x + item.width).toBeGreaterThan(bar.x)
+    await shot('menu-over-top-bar')
+    await first.click()
+    await see.visible(ctx.desktop.window('help'))
+    await ctx.desktop.closeWindow('help')
+  })
+
   it('the combo box list and the column menu open below their controls', async () => {
     const win = ctx.desktop.window('kanban')
     await win.getByTestId('kanban-new-board').click()
@@ -65,7 +82,7 @@ describe('popup placement', () => {
 
     const picker = win.getByTestId('kanban-board-picker')
     await picker.click()
-    const option = win.getByTestId('kanban-board-picker-option-1')
+    const option = ctx.desktopPage.getByTestId('kanban-board-picker-option-1') // lists open in the popup layer, outside the window
     await see.visible(option)
     await expectBelow(option, picker)
     await shot('combo')
