@@ -28,6 +28,6 @@
     padding: 10px 8px;
     overflow: auto;
     font: var(--xp-font);
-    background: var(--xp-taskpane-face, linear-gradient(#7ba2e7, #6375d6));
+    background: var(--xp-taskpane-face);
   }
 </style>
