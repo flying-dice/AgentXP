@@ -30,10 +30,7 @@
         "e2e/explorer-usb.e2e.ts",
         "e2e/fixtures/pages/ExplorerWindow.ts"
       ],
-      "manual": "manuals/explorer.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/explorer.md"
     },
     "notepad": {
       "area": "notepad",
@@ -48,10 +45,7 @@
       "e2e": [
         "e2e/apps.e2e.ts"
       ],
-      "manual": "manuals/notepad.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/notepad.md"
     },
     "code": {
       "area": "code",
@@ -66,10 +60,7 @@
       "e2e": [
         "e2e/code-git.e2e.ts"
       ],
-      "manual": "manuals/code.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/code.md"
     },
     "terminal": {
       "area": "terminal",
@@ -84,10 +75,7 @@
         "e2e/scripted-desktop-tools.e2e.ts",
         "e2e/fixtures/pages/TerminalWindow.ts"
       ],
-      "manual": "manuals/terminal.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/terminal.md"
     },
     "browser": {
       "area": "browser",
@@ -147,8 +135,7 @@
       "e2e": [],
       "manual": "manuals/paint.md",
       "gaps": {
-        "e2e": "Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.",
-        "docs": "The manual does not list the agent tools of the app."
+        "e2e": "Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls."
       }
     },
     "wordpad": {
@@ -164,8 +151,7 @@
       "e2e": [],
       "manual": "manuals/wordpad.md",
       "gaps": {
-        "e2e": "Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.",
-        "docs": "The manual does not list the agent tools of the app."
+        "e2e": "Only the open/close smoke test and Ctrl+O. No spec edits or saves a document."
       }
     },
     "sticky-notes": {
@@ -180,8 +166,7 @@
       "e2e": [],
       "manual": "manuals/sticky-notes.md",
       "gaps": {
-        "e2e": "Only the open/close smoke test.",
-        "docs": "The manual does not list the agent tools of the app."
+        "e2e": "Only the open/close smoke test."
       }
     },
     "kanban": {
@@ -197,7 +182,6 @@
       "manual": "manuals/kanban.md",
       "gaps": {
         "e2e": "No spec at all.",
-        "docs": "The manual does not list the agent tools of the app.",
         "agentApi": "board_rename, board_add_column, board_rename_column, board_delete_column and board_delete_card have no unit test."
       }
     },
@@ -227,10 +211,7 @@
       "e2e": [
         "e2e/chat-problems.e2e.ts"
       ],
-      "manual": "manuals/event-viewer.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/event-viewer.md"
     },
     "snipping-tool": {
       "area": "snipping-tool",
@@ -244,8 +225,7 @@
       "e2e": [],
       "manual": "manuals/snipping-tool.md",
       "gaps": {
-        "e2e": "Only the open/close smoke test.",
-        "docs": "The manual does not list the agent tools of the app."
+        "e2e": "Only the open/close smoke test."
       }
     },
     "recycle-bin": {
@@ -260,10 +240,7 @@
       "e2e": [
         "e2e/changes-pane.e2e.ts"
       ],
-      "manual": "manuals/recycle-bin.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/recycle-bin.md"
     },
     "help": {
       "area": "help",
@@ -291,10 +268,7 @@
       "e2e": [
         "e2e/code-review.e2e.ts"
       ],
-      "manual": "manuals/code-review.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/code-review.md"
     },
     "teams": {
       "area": "teams",
@@ -354,10 +328,7 @@
         "e2e/scripted-a2ui.e2e.ts",
         "e2e/fixtures/pages/ChatWindow.ts"
       ],
-      "manual": "manuals/surface.md",
-      "gaps": {
-        "docs": "The manual does not list the agent tools of the app."
-      }
+      "manual": "manuals/surface.md"
     }
   }
 }

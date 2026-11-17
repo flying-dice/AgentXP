@@ -13,6 +13,7 @@ This manual describes Agent Paint. Agent Paint is a small drawing app. You can d
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -101,6 +102,17 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Enter | Puts the typed text on the canvas. | none |
 | Esc | Drops the typed text. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Agent Paint is open. The permission **Agent Paint** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `paint_draw` | Draws lines, rectangles, ellipses, paths, fills, and text on the canvas. |
+| `paint_read` | Reads the canvas as a picture. |
+| `paint_clear` | Clears the canvas to white or to a colour. |
+| `paint_resize` | Changes the size of the canvas. The picture stays at the top-left. |
 
 ## 5 - Common Tasks
 

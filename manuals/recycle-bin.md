@@ -13,6 +13,7 @@ This manual describes Recycle Bin. Recycle Bin keeps the changes that you revert
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -89,6 +90,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when Recycle Bin is open. The permission **Recycle Bin** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `recycle_list` | Lists the changes that you reverted. |
+| `recycle_restore` | Restores a reverted change. AgentXP records it as a new change. |
 
 ## 5 - Common Tasks
 

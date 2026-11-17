@@ -15,6 +15,7 @@ This manual describes Event Viewer. Event Viewer lists the messages between Agen
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -126,6 +127,14 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 |---|---|---|
 | Enter (in Find) | Finds the next event. | `event-viewer-find-text` |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tool below when Event Viewer is open. The permission **Events** in **Control Center** controls it.
+
+| Tool | What it does |
+|---|---|
+| `events_query` | Searches the events of the desktop and returns one line for each event. |
 
 ## 5 - Common Tasks
 

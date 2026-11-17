@@ -53,54 +53,41 @@ Use `exempt` only when a pillar can never apply. For example, the Chat app has n
 | App | UI | Backend | Agent API | E2E | Docs |
 |---|---|---|---|---|---|
 | chat | Yes | Yes | n/a | Yes | Yes |
-| explorer | Yes | Yes | Yes | Yes | **Gap** |
-| notepad | Yes | Yes | Yes | Yes | **Gap** |
-| code | Yes | Yes | Yes | Yes | **Gap** |
-| terminal | Yes | Yes | Yes | Yes | **Gap** |
+| explorer | Yes | Yes | Yes | Yes | Yes |
+| notepad | Yes | Yes | Yes | Yes | Yes |
+| code | Yes | Yes | Yes | Yes | Yes |
+| terminal | Yes | Yes | Yes | Yes | Yes |
 | browser | Yes | Yes | Yes | Yes | Yes |
 | control-centre | Yes | Yes | **Gap** | Yes | Yes |
 | agent-manager | Yes | Yes | **Gap** | Yes | Yes |
-| paint | Yes | Yes | Yes | **Gap** | **Gap** |
-| wordpad | Yes | Yes | Yes | **Gap** | **Gap** |
-| sticky-notes | Yes | Yes | Yes | **Gap** | **Gap** |
-| kanban | Yes | Yes | **Gap** | **Gap** | **Gap** |
+| paint | Yes | Yes | Yes | **Gap** | Yes |
+| wordpad | Yes | Yes | Yes | **Gap** | Yes |
+| sticky-notes | Yes | Yes | Yes | **Gap** | Yes |
+| kanban | Yes | Yes | **Gap** | **Gap** | Yes |
 | diagrams | Yes | Yes | Yes | Yes | Yes |
-| event-viewer | Yes | Yes | Yes | Yes | **Gap** |
-| snipping-tool | Yes | Yes | Yes | **Gap** | **Gap** |
-| recycle-bin | Yes | Yes | Yes | Yes | **Gap** |
-| surface | Yes | Yes | Yes | Yes | **Gap** |
+| event-viewer | Yes | Yes | Yes | Yes | Yes |
+| snipping-tool | Yes | Yes | Yes | **Gap** | Yes |
+| recycle-bin | Yes | Yes | Yes | Yes | Yes |
+| surface | Yes | Yes | Yes | Yes | Yes |
 | help | Yes | **Gap** | **Gap** | Yes | Yes |
-| code-review | Yes | Yes | Yes | Yes | **Gap** |
+| code-review | Yes | Yes | Yes | Yes | Yes |
 | teams | Yes | Yes | **Gap** | **Gap** | Yes |
 | team-chat | Yes | Yes | **Gap** | **Gap** | Yes |
 | task-scheduler | Yes | Yes | **Gap** | Yes | Yes |
 
-28 open gap(s).
+15 open gap(s).
 
 - **chat, Agent API** (not needed): The chat is the agent's own conversation. The agent acts through it, not on it.
-- **explorer, Docs** (gap): The manual does not list the agent tools of the app.
-- **notepad, Docs** (gap): The manual does not list the agent tools of the app.
-- **code, Docs** (gap): The manual does not list the agent tools of the app.
-- **terminal, Docs** (gap): The manual does not list the agent tools of the app.
 - **control-centre, Agent API** (gap): The agent cannot read or change permissions, agents or appearance.
 - **agent-manager, Agent API** (gap): The agent cannot list chats, agent processes or context use.
 - **paint, E2E** (gap): Only the Ctrl+N check in apps.e2e.ts. No spec draws, saves or follows the agent's paint_* calls.
-- **paint, Docs** (gap): The manual does not list the agent tools of the app.
 - **wordpad, E2E** (gap): Only the open/close smoke test and Ctrl+O. No spec edits or saves a document.
-- **wordpad, Docs** (gap): The manual does not list the agent tools of the app.
 - **sticky-notes, E2E** (gap): Only the open/close smoke test.
-- **sticky-notes, Docs** (gap): The manual does not list the agent tools of the app.
 - **kanban, Agent API** (gap): board_rename, board_add_column, board_rename_column, board_delete_column and board_delete_card have no unit test.
 - **kanban, E2E** (gap): No spec at all.
-- **kanban, Docs** (gap): The manual does not list the agent tools of the app.
-- **event-viewer, Docs** (gap): The manual does not list the agent tools of the app.
 - **snipping-tool, E2E** (gap): Only the open/close smoke test.
-- **snipping-tool, Docs** (gap): The manual does not list the agent tools of the app.
-- **recycle-bin, Docs** (gap): The manual does not list the agent tools of the app.
-- **surface, Docs** (gap): The manual does not list the agent tools of the app.
 - **help, Backend** (gap): The manuals are bundled into the renderer only. Main cannot search or serve them.
 - **help, Agent API** (gap): The agent cannot search or read the manuals.
-- **code-review, Docs** (gap): The manual does not list the agent tools of the app.
 - **teams, Agent API** (gap): The agent cannot list or change profiles, teams, skills or MCP servers.
 - **teams, E2E** (gap): No spec at all.
 - **team-chat, Agent API** (gap): An agent outside a room cannot list rooms, read them or post to them.

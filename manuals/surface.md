@@ -8,6 +8,7 @@ This manual describes an agent window. An agent window shows a form that the age
 - 2 - Open It
 - 3 - The Window
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -52,6 +53,16 @@ If you delete the form, the window says that the surface was deleted.
 | Name | What it does | data-testid |
 |---|---|---|
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent draws Agent windows with the tools below. They are always available.
+
+| Tool | What it does |
+|---|---|
+| `a2ui_catalog` | Describes the controls that the agent can put in a window. |
+| `a2ui_render` | Draws or updates a window, a sidebar, or a form in the chat. |
+| `a2ui_delete_surface` | Removes a window, a sidebar, or a form. A window closes. |
 
 ## 5 - Common Tasks
 

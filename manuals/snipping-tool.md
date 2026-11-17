@@ -13,6 +13,7 @@ This manual describes Snipping Tool. Snipping Tool captures a part of the screen
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -101,6 +102,14 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 |---|---|---|
 | Esc | Cancels the selection. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tool below when Snipping Tool is open. The permission **Screen capture** in **Control Center** controls it.
+
+| Tool | What it does |
+|---|---|
+| `screen_capture` | Takes a picture of the whole desktop or of one window. |
 
 ## 5 - Common Tasks
 

@@ -13,6 +13,7 @@ This manual describes WordPad. WordPad reads and writes markdown documents.
   - The Status Bar
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -103,6 +104,16 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Ctrl+B | Makes the selection bold in edit mode. | none |
 | Ctrl+I | Makes the selection italic in edit mode. | none |
 | F1 | Opens this manual. | none |
+
+### What the Agent Can Do
+
+The agent uses the tools below when WordPad is open. The permission **WordPad** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `wordpad_open` | Shows a markdown file in a WordPad window. |
+| `wordpad_read` | Reads the text that WordPad shows, also changes that you did not save. |
+| `wordpad_write` | Writes a markdown file and shows it in WordPad. The change appears in the Changes list. |
 
 ## 5 - Common Tasks
 

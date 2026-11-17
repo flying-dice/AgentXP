@@ -13,6 +13,7 @@ This manual describes Kanban. Kanban shows boards of cards that track work. You 
   - Drag and Drop
   - The Chat Pane
 - 4 - Controls Reference
+  - What the Agent Can Do
 - 5 - Common Tasks
 - 6 - Troubleshooting
 - 7 - Need Help?
@@ -139,6 +140,25 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 | Delete | Deletes the selected card. | none |
 | Arrow keys | Select the card above, below, or in the next list. | none |
 | Alt+Arrow keys | Move the selected card. | none |
+
+### What the Agent Can Do
+
+The agent can use the tools below at any time. The Kanban window does not need to be open. The permission **Kanban boards** in **Control Center** controls them.
+
+| Tool | What it does |
+|---|---|
+| `board_list` | Lists the boards, with their lists and the number of cards. |
+| `board_get` | Shows one board with every card. |
+| `board_create` | Creates a board with the lists To do, Doing, and Done. |
+| `board_rename` | Renames a board. |
+| `board_delete` | Deletes a board with its lists and cards. |
+| `board_add_column` | Adds a list at the right end of a board. |
+| `board_rename_column` | Renames a list. |
+| `board_delete_column` | Deletes a list with its cards. |
+| `board_add_card` | Adds a card at the bottom of a list. |
+| `board_update_card` | Changes the title, the description, or the assignee of a card. |
+| `board_move_card` | Moves a card to a list, optionally to a position. |
+| `board_delete_card` | Deletes a card. |
 
 ## 5 - Common Tasks
 
