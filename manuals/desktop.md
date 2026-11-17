@@ -88,7 +88,7 @@ Click the Start button, or press Ctrl+Esc. The Start menu has these parts:
 - **All Programs** – Shows or hides the folders. Pause for a search and the matching folders open by themselves.
 - **Accessories** – A folder (under All Programs) with Notepad, WordPad, Agent Paint, Snipping Tool, and Sticky Notes.
 - **System Tools** – A folder (under All Programs) with Task Manager, Control Center, and Task Scheduler. Event Viewer is in the left column of the Start menu.
-- **Recent chats** – Lists your latest chats.
+- **Recent chats** – Lists your latest chats, also the chats whose window you closed. Click one to open it again with its history.
 - **Search programs and chats** – Filters the lists while you type. The box is empty every time that you open the menu.
 - **Places** – Lists Computer, Eject a project..., Documents, Control Center, Task Manager, Recycle Bin, Help and Support, New chat on a drive, and AgentXP Desktops.
 - **Pause all agents or Resume agents** – Stops every agent or lets them work again.

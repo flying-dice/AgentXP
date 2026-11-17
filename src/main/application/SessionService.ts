@@ -2,7 +2,7 @@ import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { PromptInput } from '@shared/ipc'
 import { AGENT_HOME, normaliseVPath, vpathName, type VPath } from '@shared/vfs'
-import type { ContentBlockDto, Id, SessionDto, SessionRole } from '@shared/models'
+import type { ContentBlockDto, Id, SessionDto, SessionRole, TranscriptEntryDto } from '@shared/models'
 import type { A2uiSurfaceRepository } from '../domain/repositories/a2ui-surface-repository'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
 import type { PermissionRepository } from '../domain/repositories/permission-repository'
@@ -11,6 +11,7 @@ import type { TranscriptRepository } from '../domain/repositories/transcript-rep
 import type { AgentConnectionPool } from './AgentConnectionPool'
 import { desktopBlock } from './desktop/desktopBlock'
 import { briefingBlock } from './teams/briefing'
+import { historyBlock } from './historyBlock'
 import { isConnectionLoss, stoppedUnexpectedly } from './agentProblems'
 import { AppError, required } from './errors'
 import type { EventPublisher, StopReason } from './ports'
@@ -124,6 +125,21 @@ export class SessionService {
     this.deps.events.publish('session.removed', { id })
   }
 
+  /**
+   * Keeps a chat pane conversation when its window closes (or "New conversation" / "Open as a chat window" ends it in the
+   * pane): a pane chat with at least one message of the user becomes a `chat`, listed under Recent chats and opened in
+   * a Chat window like any other. False when there is nothing to keep (the caller removes the session).
+   */
+  keepAsChat(id: Id): boolean {
+    const session = this.deps.sessions.get(id)
+    if (!session) return false
+    if (session.role === 'chat') return true
+    if (session.role !== 'aside' || !this.hasUserMessage(id)) return false
+    this.deps.sessions.setRole(id, 'chat')
+    this.deps.broadcaster.refresh(id)
+    return true
+  }
+
   /** Persists the user's message, then runs the turn until the agent stops. */
   async prompt(input: PromptInput): Promise<void> {
     await this.promptTurn(input)
@@ -137,18 +153,19 @@ export class SessionService {
     // Main is the truth about the desktop: what the client sent is used, otherwise the current state.
     const desktop = input.desktopContext ?? this.deps.desktopContext?.contextOfSession(session.id) ?? null
     // The first prompt of a chat also carries its briefing (instructions, skills); the agent keeps it in its own memory.
-    const briefing = this.deps.transcripts.list(session.id).some((e) => e.kind === 'message' && e.role === 'user') ? null : (this.deps.briefing?.(session.id) ?? null)
+    const earlier = this.deps.transcripts.list(session.id)
+    const briefing = earlier.some((e) => e.kind === 'message' && e.role === 'user') ? null : (this.deps.briefing?.(session.id) ?? null)
     const blocks = [...(briefing ? [briefingBlock(briefing)] : []), ...(desktop ? [desktopBlock(desktop)] : []), ...userBlocks]
     const entry = this.deps.transcripts.appendMessage(session.id, 'user', blocks)
     this.deps.events.publish('transcript.upserted', { sessionId: session.id, entry })
     this.autoTitle(session, input.text)
-    return this.runTurn(session.id, blocks)
+    return this.runTurn(session.id, blocks, earlier)
   }
 
   /** Runs a turn for an input the user did not type (e.g. an A2UI action); nothing is added to the transcript. */
   async sendHidden(sessionId: Id, text: string): Promise<void> {
     this.requireSession(sessionId)
-    await this.runTurn(sessionId, [{ kind: 'text', text }])
+    await this.runTurn(sessionId, [{ kind: 'text', text }], this.deps.transcripts.list(sessionId))
   }
 
   /**
@@ -213,6 +230,10 @@ export class SessionService {
     }
   }
 
+  private hasUserMessage(id: Id): boolean {
+    return this.deps.transcripts.list(id).some((e) => e.kind === 'message' && e.role === 'user')
+  }
+
   private requireSession(id: Id): SessionDto {
     return required(this.deps.sessions.get(id), 'Session')
   }
@@ -223,12 +244,19 @@ export class SessionService {
     this.deps.sessions.rename(session.id, title)
   }
 
-  private async runTurn(sessionId: Id, blocks: ContentBlockDto[]): Promise<StopReason> {
+  /**
+   * Sends one turn. `earlier` is the transcript before this turn: a reopened chat whose agent could not load its old ACP
+   * session talks to an agent that remembers nothing, so the first turn after that also carries the conversation so far
+   * (not stored: the transcript already has it). An agent that loaded its session keeps its own memory and gets none.
+   */
+  private async runTurn(sessionId: Id, blocks: ContentBlockDto[], earlier: readonly TranscriptEntryDto[]): Promise<StopReason> {
     const { runtime, broadcaster, sessions } = this.deps
     try {
       const live = await runtime.ensureConnected(sessionId)
+      const session = sessions.get(sessionId)
+      const recap = runtime.takeForgotten(sessionId) && session ? historyBlock(session, earlier) : null
       broadcaster.setStatus(sessionId, 'working')
-      const stopReason = await live.connection.prompt(live.acpSessionId, blocks)
+      const stopReason = await live.connection.prompt(live.acpSessionId, recap ? [recap, ...blocks] : blocks)
       sessions.touch(sessionId)
       // The agent answered without a failure: the next failure is the first again.
       this.deps.problems?.recovered(sessionId)

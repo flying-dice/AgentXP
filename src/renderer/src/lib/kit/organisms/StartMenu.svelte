@@ -258,8 +258,8 @@
     position: relative;
     box-sizing: border-box;
     width: 380px;
-    height: 520px;
-    /* Never taller than the space it is given (the desktop above the taskbar): the columns scroll instead. */
+    /* Tall enough for the programs and at least five recent chats; never taller than the space it is given (the desktop above the taskbar). */
+    height: 640px;
     max-height: 100%;
     min-height: 0;
     flex: 0 1 auto;
@@ -320,8 +320,8 @@
   }
   /*
    * The left column never overflows: when the menu is short (a small window, or All Programs and its
-   * folders open), the lists shrink and scroll. The folder list gives way first, then recent chats,
-   * then the pinned programs; the search box and hint always stay visible.
+   * folders open), the lists shrink and scroll. The folder list gives way first, then the pinned programs; recent chats keep
+   * room for two entries (a closed chat must stay reachable from here); the search box and hint always stay visible.
    */
   .programs {
     flex: 0 1 auto;
@@ -431,8 +431,9 @@
     transform: rotate(90deg);
   }
   .recent {
-    flex: 1 50 auto;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: 44px;
+    max-height: 200px;
     overflow-y: auto;
   }
   .none {

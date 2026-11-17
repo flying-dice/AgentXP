@@ -54,6 +54,18 @@ describe('SqliteSessionRepository', () => {
     expect(repo.get(f.sessionId)!.currentModeId).toBeNull()
   })
 
+  it('changes the role of a session (a kept pane chat becomes a chat) and keeps its transcript', () => {
+    const f = createFixture()
+    const repo = new SqliteSessionRepository(f.db)
+    const transcripts = new SqliteTranscriptRepository(f.db)
+    const pane = repo.create({ agentId: f.agentId, title: 'Pane', role: 'aside' })
+    transcripts.appendMessage(pane.id, 'user', [{ kind: 'text', text: 'hi' }])
+    repo.setRole(pane.id, 'chat')
+    expect(repo.get(pane.id)?.role).toBe('chat')
+    expect(transcripts.list(pane.id)).toHaveLength(1)
+    expect(() => repo.setRole(pane.id, 'bogus' as never)).toThrow()
+  })
+
   it('rejects invalid status through the CHECK constraint', () => {
     const f = createFixture()
     expect(() => f.db.prepare("UPDATE sessions SET status = 'bogus'").run()).toThrow(/CHECK/)

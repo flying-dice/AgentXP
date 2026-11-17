@@ -24,7 +24,19 @@ class FakeChats implements ChatLifecycle {
     this.removed.push(id)
     this.f.repos.sessions.remove(id)
   }
+  /** Like `SessionService.keepAsChat`: an aside with a message of the user becomes a chat. */
+  keepAsChat(id: number): boolean {
+    const session = this.f.repos.sessions.get(id)
+    if (!session) return false
+    if (session.role === 'chat') return true
+    if (session.role !== 'aside' || !this.f.repos.transcripts.list(id).some((e) => e.kind === 'message' && e.role === 'user')) return false
+    this.f.repos.sessions.setRole(id, 'chat')
+    return true
+  }
 }
+
+/** The user writes in a pane chat (what makes it worth keeping). */
+const say = (id: number, text = 'hello'): void => void f.repos.transcripts.appendMessage(id, 'user', [{ kind: 'text', text }])
 
 let f: Awaited<ReturnType<typeof createVfsFixture>>
 let chats: FakeChats
@@ -400,7 +412,41 @@ describe('DesktopService: the chat pane (aside sessions)', () => {
     await expect(service.openAside(desktopId + 99, notepad.id)).rejects.toThrow()
   })
 
-  it('closing the window deletes its aside session', async () => {
+  it('closing the window keeps a pane chat the user wrote in as a chat', async () => {
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
+    const id = await service.openAside(desktopId, notepad.id)
+    say(id)
+    service.closeWindow(notepad.id)
+    expect(chats.removed).not.toContain(id)
+    expect(f.repos.sessions.get(id)).toMatchObject({ role: 'chat' })
+  })
+
+  it('New conversation keeps the conversation as a chat and blanks the pane', async () => {
+    const browser = service.openWindow({ desktopId, app: 'browser', url: 'https://example.com/' })
+    const first = await service.openAside(desktopId, browser.id)
+    say(first)
+    await service.closeAside(browser.id)
+    expect(f.repos.sessions.get(first)).toMatchObject({ role: 'chat' })
+    expect(asideOf(browser.id)).toBeUndefined()
+    const second = await service.openAside(desktopId, browser.id)
+    expect(second).not.toBe(first)
+  })
+
+  it('Open as a chat window moves the pane conversation to a Chat window', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
+    expect(service.openAsideAsChat(code.id)).toBeNull() // nothing in the pane yet
+    const id = await service.openAside(desktopId, code.id)
+    expect(service.openAsideAsChat(code.id)).toBeNull() // no message yet: nothing to keep
+    say(id)
+    const chat = service.openAsideAsChat(code.id)
+    expect(chat?.view).toMatchObject({ app: 'chat', sessionId: id })
+    expect(f.repos.sessions.get(id)).toMatchObject({ role: 'chat' })
+    expect(asideOf(code.id)).toBeUndefined()
+    service.closeWindow(code.id)
+    expect(f.repos.sessions.get(id)).not.toBeNull()
+  })
+
+  it('closing the window deletes an aside session with no message', async () => {
     const terminal = service.openWindow({ desktopId, app: 'terminal' })
     const id = await service.openAside(desktopId, terminal.id)
     service.closeWindow(terminal.id)

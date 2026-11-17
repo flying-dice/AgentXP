@@ -3,7 +3,7 @@ import { createWorkspace, see, startScriptedDesktop, type ScriptedDesktop, type 
 
 const INDEX = ['export const answer = 42', 'export const question = "what is it?"', 'export function life(): number {', '  return answer', '}', ''].join('\n')
 
-/** aside.json: the chat pane inside app windows is a short-lived session owned by its window. */
+/** aside.json: the chat pane inside app windows; a conversation in it is kept as a chat when it ends in the pane. */
 describe('Chat pane in app windows', () => {
   let ctx: ScriptedDesktop
   let workspace: Workspace
@@ -51,7 +51,7 @@ describe('Chat pane in app windows', () => {
     expect(await aside.sessionId()).toBeGreaterThan(0)
   })
 
-  it('the aside is not a chat: no Start menu recent entry, but Task Manager lists the running session', async () => {
+  it('the aside is not a chat while its window has it: no Start menu recent entry, but Task Manager lists the running session', async () => {
     await ctx.desktop.openStart()
     await see.count(ctx.desktopPage.getByTestId('start-menu-recent'), 0)
     await ctx.desktopPage.getByTestId('taskbar-start').click()
@@ -60,27 +60,99 @@ describe('Chat pane in app windows', () => {
     await see.eventually(async () => expect(await taskRows()).toBe(1))
   })
 
-  it('New conversation deletes the session and blanks the pane; the next message starts a fresh one', async () => {
+  /** The chats under Start > Recent chats (the menu is closed again afterwards). */
+  async function recentChats(): Promise<string[]> {
+    await ctx.desktop.openStart()
+    const titles = await ctx.desktopPage.getByTestId('start-menu-recent').allInnerTexts()
+    await ctx.desktopPage.getByTestId('taskbar-start').click()
+    await see.gone(ctx.desktopPage.getByTestId('start-menu'))
+    return titles.map((t) => t.trim())
+  }
+
+  it('New conversation keeps the conversation under Recent chats and blanks the pane; the next message starts a fresh one', async () => {
     await raise('code')
     const aside = ctx.desktop.aside('code')
-    expect(await aside.sessionId()).toBeGreaterThan(0)
+    const first = await aside.sessionId()
+    expect(first).toBeGreaterThan(0)
     await aside.newConversation.click()
     await see.visible(aside.blank)
-    await see.eventually(async () => expect(await taskRows()).toBe(0))
+    await see.eventually(async () => expect(await recentChats()).toEqual(['explain this']))
     await raise('code')
     await see.count(aside.userMessages, 0)
     await aside.send('explain this')
     await see.text(aside.agentMessages.last(), 'Short answer')
-    await see.count(aside.userMessages, 1) // the old transcript is gone with its session
-    expect(await aside.sessionId()).toBeGreaterThan(0)
-    await see.eventually(async () => expect(await taskRows()).toBe(1))
+    await see.count(aside.userMessages, 1) // a fresh conversation: the old one lives on as a chat
+    const second = await aside.sessionId()
+    expect(second).toBeGreaterThan(0)
+    expect(second).not.toBe(first)
   })
 
-  it('closing the Code window deletes its aside session', async () => {
+  it('closing the Code window keeps its pane conversation; Start > Recent chats opens it with its transcript', async () => {
     await raise('code')
+    const second = await ctx.desktop.aside('code').sessionId()
     await ctx.desktop.closeWindow('code')
     await see.count(ctx.desktop.windows('code'), 0)
-    await see.eventually(async () => expect(await taskRows()).toBe(0))
+    await see.eventually(async () => expect(await recentChats()).toHaveLength(2))
+    await ctx.desktop.openStart()
+    const latest = ctx.desktopPage.getByTestId('start-menu-recent').first() // latest activity first: the conversation just kept
+    await see.attribute(latest, 'data-session-id', String(second))
+    await latest.click()
+    const chat = ctx.desktop.window('chat')
+    await see.visible(chat)
+    await see.attribute(chat.getByTestId('embedded-chat'), 'data-session-id', String(second))
+    await see.text(chat.getByTestId('chat-message-user').last(), 'explain this')
+    await see.text(chat.getByTestId('chat-message-agent').last(), 'Short answer')
+  })
+
+  it('File > Open Recent in the Chat window lists the other chat and opens it', async () => {
+    const chat = ctx.desktop.window('chat')
+    await chat.getByTestId('menubar-file').click()
+    await ctx.desktopPage.getByTestId('chat-menu-recent').hover()
+    const items = ctx.desktopPage.getByTestId('chat-menu-recent-item')
+    await see.count(items, 1)
+    await see.text(items.first(), 'explain this')
+    await see.visible(ctx.desktopPage.getByTestId('chat-menu-recent-all'))
+    await items.first().click()
+    await see.count(ctx.desktop.windows('chat'), 2)
+    await see.text(ctx.desktop.window('chat', 1).getByTestId('chat-message-user').last(), 'explain this')
+    await ctx.desktop.closeWindow('chat')
+    await ctx.desktop.closeWindow('chat')
+    await see.count(ctx.desktop.windows('chat'), 0)
+  })
+
+  it('Open as a chat window moves the pane conversation to a Chat window', async () => {
+    await ctx.desktop.openApp('code')
+    const aside = ctx.desktop.aside('code')
+    await ctx.desktop.code().openFile('index.ts')
+    await aside.edgeToggle.click()
+    await see.visible(aside.panel)
+    await aside.send('explain this')
+    await see.text(aside.agentMessages.last(), 'Short answer')
+    const id = await aside.sessionId()
+    await aside.panel.getByTestId('embedded-chat-open-window').click()
+    const chat = ctx.desktop.window('chat')
+    await see.attribute(chat.getByTestId('embedded-chat'), 'data-session-id', String(id))
+    await see.text(chat.getByTestId('chat-message-user').last(), 'explain this')
+    await see.visible(aside.blank) // the pane starts again, empty
+    await ctx.desktop.closeWindow('chat')
+    await see.count(ctx.desktop.windows('chat'), 0)
+    await ctx.desktop.closeWindow('code')
+    await see.count(ctx.desktop.windows('code'), 0)
+  })
+
+  it('the agent lists the chats and reopens a closed one with chats_list, chat_read and chat_open', async () => {
+    const chat = await ctx.desktop.openApp('chat')
+    const window = ctx.desktop.chat()
+    await see.visible(window.composer)
+    await window.send('list my chats')
+    await see.text(window.agentMessage('Your chats'), '"explain this"')
+    await see.text(window.agentMessage('Your chats'), '(closed)')
+    await window.send('reopen the first chat')
+    await see.text(window.agentMessage('Reopened'), 'with its history')
+    await see.text(window.agentMessage('Reopened'), 'Short answer') // chat_read returned the transcript of chat 1
+    await see.count(ctx.desktop.windows('chat'), 2)
+    await see.visible(chat)
+    while ((await ctx.desktop.windows('chat').count()) > 0) await ctx.desktop.closeWindow('chat')
   })
 
   it('Browser: the pane exists, opens from View > Chat pane and offers the page chips', async () => {

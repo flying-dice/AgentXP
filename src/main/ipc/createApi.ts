@@ -112,6 +112,7 @@ export function createApi(s: ApiServices): InvokeApi {
       openReview: (desktopId, root, baseRef, agentId, selectedPath) => s.desktops.openReview(desktopId, root, baseRef, agentId, selectedPath),
       openAside: (desktopId, windowId, agentId) => s.desktops.openAside(desktopId, windowId, agentId),
       closeAside: (windowId) => s.desktops.closeAside(windowId),
+      openAsideAsChat: async (windowId) => s.desktops.openAsideAsChat(windowId),
       policy: async () => s.desktops.policy(),
       setPolicy: async (policy) => s.desktops.setPolicy(policy),
       attachBrowser: perWindow('desktop.attachBrowser'),

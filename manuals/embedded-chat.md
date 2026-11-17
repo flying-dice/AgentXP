@@ -25,7 +25,7 @@ This manual describes the chat pane at the right edge of an app window. The pane
 
 Use the chat pane to ask a short question about what you look at, for example "Explain this". The pane is in every app window, so you do not leave the app. The agent knows the open file, the selection, or the page. It answers in a few sentences.
 
-The pane has no history. It belongs to its window. When you close the window, AgentXP deletes the pane chat. The pane chat is not in the list of your chats. For a long task, start a chat in the **[Chat](chat.md)** window.
+The pane belongs to its window. When you close the window, AgentXP keeps the conversation as a chat, if you wrote a message in it. Open it again from **Start -> Recent chats**. It then opens in a **[Chat](chat.md)** window. A pane with no message is not kept.
 
 The **[Chat](chat.md)** window and **[Code Review](code-review.md)** have no chat pane. Chat is the chat. Code Review has a reviewer panel of its own. Windows that the agent draws, see **[Agent Window](surface.md)**, have no chat pane.
 
@@ -48,11 +48,11 @@ When the pane is closed, a strip shows at the right edge of the window. It is 44
 
 ### The Title Bar
 
-The title bar shows **Chat about** and the folder where the pane works, for example **Chat about login-app (E:)**, and the state of the agent. Under it, the link **Open as a chat window** starts a chat in its own window on the same folder. The arrow button closes the pane to the thin strip. The **New conversation** button deletes the chat and shows an empty pane. The button shows after the first message.
+The title bar shows **Chat about** and the folder where the pane works, for example **Chat about login-app (E:)**, and the state of the agent. Under it, the link **Open as a chat window** moves the conversation to a Chat window of its own, and the pane becomes empty. Before the first message, the link starts a new chat in its own window on the same folder. The arrow button closes the pane to the thin strip. The **New conversation** button shows an empty pane. The conversation that was in the pane is kept under **Start -> Recent chats**. The button shows after the first message.
 
 ### The Empty Pane
 
-Before the first message, the pane says: **Ask about what you are looking at. This is a quick pane: it ends when you close the window. For a chat that you can come back to, use Start > New chat.** The chat pane is not a Chat window. To keep a conversation, start a chat from **Start -> New chat**, or click **Open as a chat window**.
+Before the first message, the pane says: **Ask about what you are looking at. When you close the window, the conversation is kept: open it again from Start > Recent chats.**
 
 ### The Suggestions
 
@@ -101,12 +101,12 @@ The context menus of the apps have a group of chat items.
 | Panel | The root of the panel. The attributes `data-role` (`aside` for the chat pane), `data-session-id`, and `data-collapsed` describe it. | `embedded-chat` |
 | Chat pane | The holder of the pane in an app window. | `chat-pane` |
 | Edge toggle | The tab at the right edge, with a chat icon and the word Chat. It pulses when the chat has news. Click it to open the pane. | `chat-pane-toggle` |
-| Open as a chat window | The link under the title bar. It starts a chat in its own window on the same folder. | `embedded-chat-open-window` |
+| Open as a chat window | The link under the title bar. It moves the conversation to a Chat window of its own. Before the first message, it starts a chat in its own window on the same folder. | `embedded-chat-open-window` |
 | Open or close | Hides the pane. In Code Review it shows or hides the panel. | `embedded-chat-toggle` |
 | Title | The name of the chat. | `embedded-chat-title` |
 | Status | The state of the agent: Ready, Connecting..., Connected, Working..., Disconnected. | `embedded-chat-status` |
 | Reconnect | Starts the agent again after a failure. | `embedded-chat-reconnect` |
-| New conversation | Deletes the chat and shows an empty pane. | `embedded-chat-new` |
+| New conversation | Shows an empty pane. The conversation is kept under **Start -> Recent chats**. | `embedded-chat-new` |
 | Suggestions | The row of suggestion buttons. | `embedded-chat-suggestions` |
 | Suggestion | One suggestion button. The attribute `data-suggestion` names it. | `embedded-chat-suggestion` |
 | Edge | Drag it to change the width. | `embedded-chat-resizer` |
@@ -120,11 +120,13 @@ To ask about a file, open the file, press Ctrl+Shift+C, and click **Explain this
 
 To ask about some lines, select the lines, press Ctrl+Shift+C, and type your question.
 
-To start again, click **New conversation**.
+To start again, click **New conversation**. The old conversation stays under **Start -> Recent chats**.
+
+To continue a pane conversation in a bigger window, click **Open as a chat window**.
 
 To make the pane wider, drag its left edge.
 
-To keep the answer, copy the text. AgentXP deletes the pane chat when you close the window.
+To find a pane conversation after you closed its window, click **Start** and click it under **Recent chats**.
 
 ## 6 - Troubleshooting
 

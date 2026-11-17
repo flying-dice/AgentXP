@@ -32,6 +32,7 @@ import { createWordpadTools } from './wordpadTools'
 import { ProtocolEventLog } from '../events/ProtocolEventLog'
 import { StickyNoteService } from '../desktop/StickyNoteService'
 import { createShellTools } from './shellTools'
+import { createChatTools } from './chatTools'
 import { createTerminalTools } from './terminalTools'
 import { ToolPaths } from './ToolPaths'
 import type { TerminalActivity } from '../ports'
@@ -149,7 +150,8 @@ beforeEach(async () => {
     notes: new SqliteStickyNoteRepository(f.db),
     surfaces: f.repos.surfaces,
     chats: {
-      create: async (desktop, agentId, cwd) => f.repos.sessions.create({ agentId: agentId ?? f.agentId, desktopId: desktop, cwd, title: 'chat' }),
+      keepAsChat: () => false,
+      create: async (desktop, agentId, cwd, role) => f.repos.sessions.create({ agentId: agentId ?? f.agentId, desktopId: desktop, cwd, title: 'chat', role }),
       cancel: async () => {},
       remove: async () => {}
     },
@@ -219,6 +221,7 @@ beforeEach(async () => {
     gate: gateway,
     handlers: {
       ...createShellTools({ desktops, paths, ask }),
+      ...createChatTools({ desktops, sessions: f.repos.sessions, transcripts: f.repos.transcripts, ask }),
       ...createFsTools({ vfs: f.vfs, paths }),
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
       ...createCodeTools({ desktops, changes: { list: () => changes }, paths }),
@@ -260,7 +263,7 @@ beforeEach(async () => {
 describe('tool catalog', () => {
   it('groups the tools as documented', () => {
     const byGroup = (g: ToolGroup): string[] => specsForGroups([g]).map((s) => s.name)
-    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app'])
+    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app', 'chats_list', 'chat_read', 'chat_open'])
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
     expect(byGroup('code')).toEqual(['code_open', 'code_reveal', 'code_show_diff'])
@@ -305,7 +308,7 @@ describe('tool catalog', () => {
       'diagram_open'
     ])
     expect(byGroup('review')).toEqual(['review_list_changes', 'review_read_diff', 'review_add_comment', 'review_submit'])
-    expect(TOOL_SPECS).toHaveLength(73)
+    expect(TOOL_SPECS).toHaveLength(76)
   })
 
   it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
@@ -977,5 +980,51 @@ describe('recycle tools', () => {
     expect(restored).toEqual([4])
     expect(textOf(await run('recycle_restore', { id: 5 }))).toMatch(/does not exist/)
     expect(restored).toEqual([4])
+  })
+})
+
+describe('chat tools', () => {
+  /** A closed chat with a short conversation, as the user left it. */
+  const closedChat = (title: string): number => {
+    const chat = f.repos.sessions.create({ agentId: f.agentId, desktopId, cwd: 'E:\\', title })
+    f.repos.transcripts.appendMessage(chat.id, 'user', [{ kind: 'text', text: `question about ${title}` }])
+    f.repos.transcripts.appendMessage(chat.id, 'agent', [{ kind: 'text', text: `answer about ${title}` }])
+    return chat.id
+  }
+
+  it('lists the chats of the desktop, open and closed, and filters by title', async () => {
+    const old = closedChat('Fix the login form')
+    const listed = textOf(await run('chats_list'))
+    expect(listed).toMatch(new RegExp(`^${old}  "Fix the login form"  .*\\(closed\\)$`, 'm'))
+    expect(listed).toMatch(new RegExp(`^${sessionId}  .*\\(open in a window, this chat\\)$`, 'm'))
+    expect(textOf(await run('chats_list', { query: 'LOGIN' })).split('\n')).toHaveLength(1)
+    expect(textOf(await run('chats_list', { query: 'nothing' }))).toMatch(/No chat title contains/)
+    expect(textOf(await run('chats_list', { limit: 1 }))).toMatch(/and 1 older chats/)
+  })
+
+  it('reads the transcript of a closed chat', async () => {
+    const id = closedChat('Plan the release')
+    const text = textOf(await run('chat_read', { chat: id }))
+    expect(text).toContain('# Plan the release')
+    expect(text).toContain('question about Plan the release')
+    expect(text).toContain('answer about Plan the release')
+    expect(textOf(await run('chat_read', { chat: id, maxChars: 500 }))).not.toMatch(/left out/)
+    expect((await run('chat_read', { chat: 99_999 })).isError).toBe(true)
+  })
+
+  it('opens a closed chat again in a Chat window, following the open-apps policy', async () => {
+    const id = closedChat('Write the docs')
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
+    expect((await run('chat_open', { chat: id })).isError).toBe(true)
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'allow' })
+    expect(textOf(await run('chat_open', { chat: id }))).toMatch(/Opened chat \d+ \("Write the docs"\) in Chat window \d+/)
+    expect(desktops.windowsOf(desktopId, 'chat').map((w) => (w.view.app === 'chat' ? w.view.sessionId : 0))).toContain(id)
+  })
+
+  it('does not reach a pane chat that is still in its window', async () => {
+    const notepad = desktops.openWindow({ desktopId, app: 'notepad' })
+    const aside = await desktops.openAside(desktopId, notepad.id)
+    expect(textOf(await run('chats_list'))).not.toMatch(new RegExp(`^${aside}  `, 'm'))
+    expect((await run('chat_open', { chat: aside })).isError).toBe(true)
   })
 })

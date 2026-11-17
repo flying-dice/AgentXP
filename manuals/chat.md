@@ -33,13 +33,29 @@ Use Chat to tell the agent what to do and to read what the agent does. The trans
 - Click **Start -> New chat**. If you have a project folder (plugged in), a dialog box asks where the agent works.
 - Double-click **Chats** on the desktop. The latest chat opens.
 - Click a chat under **Recent chats** in the Start menu.
+- In a Chat window, click **File -> Open Recent** and click a chat.
 - Click **Start a chat on this drive** in the AutoPlay dialog box.
 
 ## 3 - The Window
 
 ### The Menu Bar
 
-The menu bar is at the top of the window. It has the menus **Chat** and **Help**.
+The menu bar is at the top of the window. It has the menus **File**, **Edit**, **Tools**, **View**, and **Help**.
+
+### Close a Chat and Open It Again
+
+When you close a Chat window, AgentXP keeps the chat. The transcript, the changes, and the plan stay. If the agent works, it continues.
+
+To open a chat again, use one of these ways:
+
+- Click **Start**, and click the chat under **Recent chats**.
+- In a Chat window, click **File -> Open Recent**. The list shows up to nine chats, the latest first. Press the number of a chat to open it. Click **All chats...** to see every chat of the desktop in Task Manager.
+
+The chat opens with all its messages. The note **Reopened** tells you that your earlier messages are kept.
+
+If the agent can load its earlier session, it remembers the chat. If the agent cannot load it, for example after AgentXP restarted, AgentXP starts a new session and sends the conversation so far with your next message. The agent then continues from there.
+
+> **Note:** A conversation in the chat pane of an app window is kept too, after you wrote a message in it. See **[Chat pane](embedded-chat.md)**.
 
 ### The Model Bar
 
@@ -108,6 +124,10 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Chat window | The root of the window. | `chat-app` |
 | File menu | Opens the File menu. | `menubar-file` |
 | New chat (menu) | Starts a new chat on the folder of this chat. Ctrl+N. | `chat-menu-new` |
+| Open Recent (menu) | File menu: lists up to nine other chats of the desktop, the latest first. Click a chat to open it again with its history. | `chat-menu-recent` |
+| Recent chat | One chat in **Open Recent**. Its number is the access key. | `chat-menu-recent-item` |
+| No other chats | Shows in **Open Recent** when the desktop has no other chat. | `chat-menu-recent-none` |
+| All chats... | Last item of **Open Recent**: opens Task Manager on the Chats tab. | `chat-menu-recent-all` |
 | Clear transcript... | Removes the messages from the window after a question. | `chat-menu-clear` |
 | Review changes (menu) | Opens the Code Review box for the project of the chat. | `chat-menu-review` |
 | Open in Code (menu) | Opens the Code app on the project of the chat. | `chat-menu-code` |

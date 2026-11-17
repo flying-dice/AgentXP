@@ -91,6 +91,7 @@ const INVOKE_METHODS = {
     openReview: true,
     openAside: true,
     closeAside: true,
+    openAsideAsChat: true,
     policy: true,
     setPolicy: true,
     attachBrowser: true,

@@ -2,8 +2,9 @@
   /**
    * The chat pane of an app window: the same collapsible right aside in every app (manuals/embedded-chat.md), hosted by the
    * window frame so no app wires it. It starts collapsed as a slim toggle on the frame edge; View > Chat pane and
-   * Ctrl+Shift+C open it. The session is the window's `aside` session: created on the first message, deleted by "New
-   * conversation" and when the window closes. The app only registers its context (`host.setContext`). The collapsed strip is a
+   * Ctrl+Shift+C open it. The session is the window's `aside` session: created on the first message. "New conversation", "Open
+   * as a chat window" and closing the window end it in the pane: once the user wrote in it, it is kept as a chat (Start >
+   * Recent chats), else deleted. The app only registers its context (`host.setContext`). The collapsed strip is a
    * tab with the word Chat that pulses while the chat has news; an app in Focus mode hides it (UX-153).
    */
   import { untrack } from 'svelte'
@@ -67,6 +68,12 @@
     return id
   }
 
+  /** The conversation moves to a Chat window of its own (or a new chat starts there when the pane has none). */
+  async function openAsWindow(): Promise<void> {
+    if (sessionId > 0) local = 0
+    await desktop.openAsideAsChat(w.id, cwd)
+  }
+
   async function startOver(): Promise<void> {
     local = 0
     await desktop.closeAside(w.id)
@@ -85,7 +92,7 @@
       {sessionId}
       role="aside"
       title={w.view.app === 'browser' ? 'Chat about this page' : heading}
-      onopenwindow={() => void desktop.startChat(cwd)}
+      onopenwindow={openAsWindow}
       collapsible
       resizable
       compact

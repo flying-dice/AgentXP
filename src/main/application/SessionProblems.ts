@@ -5,6 +5,7 @@ import type {
   SessionModeDto,
   SessionModelDto,
   SessionProblemDto,
+  SessionRole,
   SessionStatus
 } from '@shared/models'
 import type { NewSession, SessionRepository } from '../domain/repositories/session-repository'
@@ -96,6 +97,9 @@ export class ProblemAwareSessions implements SessionRepository {
   }
   rename(id: Id, title: string): void {
     this.inner.rename(id, title)
+  }
+  setRole(id: Id, role: SessionRole): void {
+    this.inner.setRole(id, role)
   }
   setStatus(id: Id, status: SessionStatus): void {
     this.inner.setStatus(id, status)
