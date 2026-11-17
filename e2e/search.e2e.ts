@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { allowFileWrites, createWorkspace, protocolEvents, see, setWindowSize, shot, startScriptedDesktop, type ScriptedDesktop, type Workspace } from './fixtures'
@@ -188,6 +188,16 @@ describe('search in Code and Explorer', () => {
     await see.visible(code.changes.filter({ hasText: 'index.ts' }))
     await see.visible(code.changes.filter({ hasText: 'fresh.ts' }))
     await shot(ctx.desktopPage, 'search-09-agent-edits')
+  })
+
+  it('the agent cannot damage a file that is not UTF-8: code_edit refuses it and the bytes stay', async () => {
+    const latin1 = Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x0a, 0x6f, 0x6e, 0x65, 0x0a]) // "café\none\n" in Windows-1252
+    await writeFile(join(workspace.path, 'docs/legacy.txt'), latin1)
+    const chat = ctx.desktop.chat()
+    await sendToChat('edit legacy please')
+    await see.text(chat.agentMessage('Refused'), 'not UTF-8 text')
+    expect(Buffer.compare(await readFile(join(workspace.path, 'docs/legacy.txt')), latin1)).toBe(0)
+    await shot(ctx.desktopPage, 'search-12-agent-edit-refused')
   })
 
   it('both search panes fit a maximized window and a small one', async () => {
