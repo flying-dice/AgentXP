@@ -64,3 +64,16 @@ export function nudgeUp(rect: Pick<DOMRect, 'top' | 'bottom'>, viewportHeight = 
   if (overflow <= 0) return 0
   return -Math.min(overflow, Math.max(0, rect.top))
 }
+
+/**
+ * Where a cascading menu (a submenu, the Start menu's All Programs) goes: to the right of its anchor item with
+ * its top level with the item, flipping to the left when it would run past the right edge, and sliding up
+ * so it ends above the bottom of the work area. A menu taller than the work area starts at the top (it scrolls).
+ */
+export function placeBeside(anchor: DOMRect, size: PopupSize, viewport: Viewport = workArea()): { left: number; top: number } {
+  let left = anchor.right - 3
+  if (left + size.width > viewport.width && anchor.left - size.width + 3 >= 0) left = anchor.left - size.width + 3
+  left = Math.max(0, Math.min(left, viewport.width - size.width))
+  const top = Math.max(0, Math.min(anchor.top - 3, viewport.height - size.height))
+  return { left, top }
+}

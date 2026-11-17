@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nudgeUp, placePopup, positionPopup } from './popup'
+import { nudgeUp, placeBeside, placePopup, positionPopup } from './popup'
 
 const rect = (left: number, top: number, width: number, height: number): DOMRect =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect
@@ -41,5 +41,23 @@ describe('nudgeUp', () => {
 describe('positionPopup', () => {
   it('flips a combo box list above when cramped below', () => {
     expect(positionPopup(rect(0, 700, 100, 20), 200, 800).top).toBe(501)
+  })
+})
+
+describe('placeBeside', () => {
+  it('opens to the right of the item, level with it', () => {
+    expect(placeBeside(rect(100, 100, 200, 24), { width: 180, height: 100 }, viewport)).toEqual({ left: 297, top: 97 })
+  })
+
+  it('slides up to end above the bottom of the work area (All Programs near the taskbar)', () => {
+    expect(placeBeside(rect(0, 700, 190, 24), { width: 180, height: 300 }, viewport)).toEqual({ left: 187, top: 500 })
+  })
+
+  it('starts at the top when taller than the work area (it scrolls)', () => {
+    expect(placeBeside(rect(0, 700, 190, 24), { width: 180, height: 1200 }, viewport).top).toBe(0)
+  })
+
+  it('flips to the left at the right edge', () => {
+    expect(placeBeside(rect(800, 100, 150, 24), { width: 200, height: 100 }, viewport).left).toBe(603)
   })
 })
