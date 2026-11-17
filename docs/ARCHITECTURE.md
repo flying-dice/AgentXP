@@ -194,3 +194,8 @@ Design: `docs/DESKTOP_DESIGN.md`. Contract: `src/shared/desktop.ts` (types, tool
 Desktop windows keep the native title bar (`frame: true`), so maximize and full screen follow the OS rules; the launcher is frameless (`frame: false`). Inside the page the kit's `TitleBar` and `CaptionButtons` draw the
 Windows 7 caption; `ipc/registerWindowHandlers.ts` implements minimise, maximise and close and
 publishes the window state. Storybook renders the same components against `lib/app/fakeApi.ts`.
+
+
+## Teams, skills and MCP
+
+See [TEAMS.md](TEAMS.md): `application/teams` (skills, MCP servers, profiles, teams, room service), `infrastructure/mcp` (SDK prober and filtering proxy), migration 014.

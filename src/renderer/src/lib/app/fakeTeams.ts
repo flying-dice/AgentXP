@@ -63,8 +63,19 @@ export function createFakeTeams(): FakeTeams {
   let servers = sampleMcpServers.map((s) => ({ ...s, tools: s.tools.map((t) => ({ ...t })) }))
   let profiles = sampleProfiles.map((p) => ({ ...p }))
   let teams = sampleTeams.map((t) => ({ ...t }))
-  let rooms: RoomDto[] = []
-  const messages = new Map<number, RoomMessageDto[]>()
+  // One sample room (id 1) so the Team Chat story and the Chat rooms tab have something to show.
+  let rooms: RoomDto[] = [{ id: 1, desktopId: 1, teamId: 1, title: 'Feature team', cwd: 'E:\\src', createdAt: '2025-01-01T09:00:00.000Z' }]
+  const at = (m: number): string => `2025-01-01T09:0${m}:00.000Z`
+  const messages = new Map<number, RoomMessageDto[]>([
+    [
+      1,
+      [
+        { id: 1, roomId: 1, profileId: null, author: 'You', text: '@Planner split the login redirect fix into steps, then @Coder starts.', createdAt: at(0) },
+        { id: 2, roomId: 1, profileId: 1, author: 'Planner', text: 'Two steps: 1) keep the return URL when the session expires, 2) test the redirect. @Coder please take step 1.', createdAt: at(1) },
+        { id: 3, roomId: 1, profileId: 2, author: 'Coder', text: 'Step 1 is done in src/auth/redirect.ts. @Reviewer please check it.', createdAt: at(3) }
+      ]
+    ]
+  ])
   const busy = new Map<string, boolean>()
   let nextId = 100
   let emit: Parameters<FakeTeams['onRoomEvents']>[0] = () => {}

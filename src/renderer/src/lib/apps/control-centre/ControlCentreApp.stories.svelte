@@ -23,3 +23,7 @@
 <Story name="About" asChild>
   <AppStory app="control-centre" width={700} height={340} view={{ app: 'control-centre', page: 'about' }} />
 </Story>
+
+<Story name="Skills and MCP" asChild>
+  <AppStory app="control-centre" width={760} height={600} view={{ app: 'control-centre', page: 'skills' }} />
+</Story>
