@@ -24,6 +24,7 @@
   import { useAppContext } from '../shared/appContext.svelte'
   import { ContextMenu } from '../shared/ContextMenu.svelte'
   import ProfileDialog from './ProfileDialog.svelte'
+  import type { BoardDto } from '@shared/kanban'
   import TeamDialog from './TeamDialog.svelte'
   import { formFromProfile, formFromTeam, profileRows, roomRows, teamRows } from './teamForms'
 
@@ -75,18 +76,23 @@
     }
   }
 
+  let boards = $state<BoardDto[]>([])
+  const loadBoards = async (): Promise<void> => void (boards = await host.api.kanban.list(host.state.desktopId).catch(() => []))
   const loadRooms = async (): Promise<void> => void (rooms = await host.api.rooms.list(host.state.desktopId))
 
   onMount(() => {
     void guard(async () => {
       await store.load()
       await loadRooms()
+      await loadBoards()
       agents = await host.api.agents.list()
     })
     const off = host.api.on('room.changed', () => void loadRooms())
     const gone = host.api.on('room.removed', () => void loadRooms())
+    const boardsOff = host.api.on('kanban.changed', () => void loadBoards())
     return () => {
       off()
+      boardsOff()
       gone()
     }
   })
@@ -218,7 +224,7 @@
   <AppAbout {help} />
   {#if editingTeam}
     {@const target = store.teams.find((t) => t.id === editingTeam?.id)}
-    <TeamDialog title={target ? 'Edit Team' : 'New Team'} initial={target ? formFromTeam(target) : undefined} profiles={store.profiles} skills={store.skills} contained onsubmit={(input) => void saveTeam(input)} onclose={() => (editingTeam = null)} />
+    <TeamDialog title={target ? 'Edit Team' : 'New Team'} initial={target ? formFromTeam(target) : undefined} profiles={store.profiles} skills={store.skills} {boards} contained onsubmit={(input) => void saveTeam(input)} onclose={() => (editingTeam = null)} />
   {/if}
   {#if editingProfile}
     {@const target = store.profiles.find((p) => p.id === editingProfile?.id)}

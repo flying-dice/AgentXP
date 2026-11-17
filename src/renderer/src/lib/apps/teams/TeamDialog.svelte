@@ -1,8 +1,10 @@
 <script lang="ts">
   /** Add or edit a team: its members, the instructions and skills every member gets, and the board it works from. */
+  import type { BoardDto } from '@shared/kanban'
   import type { ProfileDto, SkillDto, TeamInput } from '@shared/teams'
-  import CheckedListBox from '../../kit/atoms/CheckedListBox.svelte'
+  import ComboBox from '../../kit/atoms/ComboBox.svelte'
   import TextBox from '../../kit/atoms/TextBox.svelte'
+  import CheckedListBox from '../../kit/atoms/CheckedListBox.svelte'
   import DialogButtons from '../../kit/molecules/DialogButtons.svelte'
   import type { DialogResult } from '../../kit/molecules/DialogButtons'
   import LabeledField from '../../kit/molecules/LabeledField.svelte'
@@ -14,18 +16,21 @@
     initial?: TeamFormValues
     profiles: readonly ProfileDto[]
     skills: readonly SkillDto[]
+    /** The Kanban boards of the desktop the team can work from. */
+    boards?: readonly BoardDto[]
     onsubmit?: (input: TeamInput) => void
     onclose?: () => void
     contained?: boolean
   }
 
-  let { title = 'New Team', initial = emptyTeamForm(), profiles, skills, onsubmit, onclose, contained = false }: Props = $props()
+  let { title = 'New Team', initial = emptyTeamForm(), profiles, skills, boards = [], onsubmit, onclose, contained = false }: Props = $props()
 
   // svelte-ignore state_referenced_locally
   let form = $state<TeamFormValues>({ ...initial, memberIds: [...initial.memberIds], skillIds: [...initial.skillIds] })
   let touched = $state(false)
   const problem = $derived(validateTeamForm(form))
   const memberItems = $derived(profiles.map((p) => ({ value: p.id, label: p.name })))
+  const boardItems = $derived([{ value: '', label: '(none)' }, ...boards.map((b) => ({ value: String(b.id), label: b.name }))])
   const skillItems = $derived(skills.map((s) => ({ value: s.id, label: s.name, title: s.description })))
 
   function result(r: DialogResult): void {
@@ -53,8 +58,8 @@
     <LabeledField label="Skills:" labelWidth={90}>
       <CheckedListBox testid="team-dialog-skills" items={skillItems} bind:checked={form.skillIds} width="100%" height={70} label="Skills every member gets" />
     </LabeledField>
-    <LabeledField label="Board:" for="team-board" labelWidth={90}>
-      <TextBox id="team-board" data-testid="team-dialog-board" bind:value={form.boardRef} placeholder="Optional. The work board the team uses." />
+    <LabeledField label="Board:" labelWidth={90}>
+      <ComboBox testid="team-dialog-board" items={boardItems} bind:value={form.boardRef} aria-label="Kanban board of the team" />
     </LabeledField>
     <div class="problem" role="alert" data-testid="team-dialog-problem">{touched && problem ? problem : ''}</div>
   </div>

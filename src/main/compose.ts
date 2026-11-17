@@ -233,6 +233,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     teams: repos.teams,
     rooms: repos.rooms,
     sessions: repos.sessions,
+    boards: repos.kanban,
     proxy: options.mcpProxy
   })
   const fileSystem = new NodeWorkspaceFileSystem()

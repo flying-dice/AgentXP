@@ -97,7 +97,7 @@ export interface TeamDto {
   skillIds: Id[]
   /** Members in the order of the team; the first one answers a message without an @mention. */
   memberIds: Id[]
-  /** Hook for a work board (Kanban) the team uses; an opaque reference, null when none. */
+  /** The Kanban board the team works from: its board id as text (`BoardDto.id`), null when none. */
   boardRef: string | null
 }
 
