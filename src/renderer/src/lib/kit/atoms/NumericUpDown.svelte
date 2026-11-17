@@ -11,6 +11,8 @@
     readonly?: boolean
     class?: string
     style?: string
+    /** `data-testid` of the text field. */
+    testid?: string
     onchange?: (value: number) => void
     'aria-label'?: string
   }
@@ -25,6 +27,7 @@
     readonly = false,
     class: className = '',
     style,
+    testid,
     onchange,
     'aria-label': ariaLabel
   }: Props = $props()
@@ -80,6 +83,7 @@
     aria-valuenow={value}
     aria-valuemin={min}
     aria-valuemax={max}
+    data-testid={testid}
     {disabled}
     {readonly}
     value={text}
