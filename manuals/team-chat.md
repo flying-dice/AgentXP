@@ -40,7 +40,9 @@ The bar at the top lists the members. Each member shows a colored letter, its na
 - **waiting for approval** – The member asked for permission. The permission box opens over the desktop, for example **Allow Tester to run a command?** with **Requested by Tester in the room Development Team**. Click **Allow** or **Deny**. If you click **Not now**, the request stays in the Action Center and in the link on the top bar.
 - **stopped with an error** – The last message of the member failed.
 
-If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Session** to show the chat of that member in the pane at the right. The pane shows what the member does while it works: its messages and each step, as it happens.
+While the member works, its row also says its step in plain words, for example **reading auth.ts** or **running npm test**. If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Session** to show the chat of that member in the pane at the right. The pane shows what the member does while it works: its messages and each step, as it happens.
+
+Click **Follow** to watch the member work. Code and the Terminal come to the front at each step of the member, and the agent cursor of the member, in the color of the member, moves there. The button then reads **Following**. Click it again, or click **Stop following** on the top bar, to stop. The follow also stops when the turn of the member ends, unless **Keep following** on the top bar is selected. See **[Using the Desktop](desktop.md)**.
 
 ### The Messages
 
@@ -69,6 +71,8 @@ The pane at the right shows the full chat of one member, with its tool calls. Yo
 | Member | One member. The attribute `data-activity` says what it does. | `team-chat-member` |
 | Member name | Adds a mention of the member to your message. | `team-chat-member-call` |
 | Member activity | Says what the member does now. | `team-chat-member-activity` |
+| Member step | The step of the member in plain words while it works, for example **reading auth.ts**. | `team-chat-member-step` |
+| Follow | Follows the member: its steps appear in Code and the Terminal, with its agent cursor. It reads **Following** while you follow it; click it again to stop. The member row then has `data-following`. | `team-chat-member-follow` |
 | Stop | Stops the member and drops the messages that wait. | `team-chat-member-stop` |
 | Session | Shows or hides the chat of the member. | `team-chat-member-session` |
 | Messages | The list of messages. | `team-chat-messages` |

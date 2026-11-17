@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "review",
-  "description": "A code reviewer for the Code Review app. The review prompt (\"code review of the changes\") makes it leave two inline comments with review_add_comment on notes.txt (line 1 and line 4, the fixture of e2e/code-review.e2e.ts) and finish with review_submit (request_changes). The prompt a chat gets from \"Send to chat\" (\"fix the following code review comments\") is answered by the first rule, so the same script serves the reviewer and the chat that fixes.",
+  "description": "A code reviewer for the Code Review app. The review prompt (\"code review of the changes\") makes it leave two inline comments with review_add_comment on notes.txt (line 1 and line 4, the fixture of e2e/code-review.e2e.ts) and finish with review_submit (request_changes). The prompt a chat gets from \"Send to chat\" (\"fix the following code review comments\") is answered by the first rule, so the same script serves the reviewer and the chat that fixes. \"show me your comment\" (typed in the review's chat) adds a comment on notes.txt line 2 and shows it (show with a review-comment target).",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -17,6 +17,50 @@
         {
           "type": "message",
           "text": "Fixing the review comments now."
+        }
+      ]
+    },
+    {
+      "id": "show-comment",
+      "match": {
+        "contains": "show me your comment",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "saveAs": "added",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 2,
+            "severity": "nit",
+            "body": "Line two could say what it is for."
+          }
+        },
+        {
+          "type": "extract",
+          "from": "added",
+          "regex": "Comment (\\d+) added",
+          "saveAs": "commentId"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "show",
+          "saveAs": "shown",
+          "arguments": {
+            "target": {
+              "kind": "review-comment",
+              "id": "{{commentId|number}}"
+            },
+            "note": "This is the comment I mean"
+          }
+        },
+        {
+          "type": "message",
+          "text": "{{shown}}"
         }
       ]
     },

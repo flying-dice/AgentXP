@@ -4,9 +4,9 @@
  * click from the row. Pure: derived from the AG-UI tool call (its kind, locations, contents and raw input, and the
  * `code_*`, `terminal_run` and `browser_*` tool names of the agentxp MCP server).
  */
-import type { ToolCallContentDto, ToolCallLocationDto, ToolKind } from '@shared/models'
-import { joinVPath, normaliseVPath, type VPath } from '@shared/vfs'
-import { parseShowTarget, showLabelOf, showOutcomeOf, showRowTitle, showTargetLabel, type ShowTarget } from '@shared/show'
+import type { ToolCallContentDto, ToolCallLocationDto, ToolKind } from './models'
+import { joinVPath, normaliseVPath, type VPath } from './vfs'
+import { parseShowTarget, showLabelOf, showOutcomeOf, showRowTitle, showTargetLabel, type ShowTarget } from './show'
 
 export type ToolShowTarget =
   /** Code at a file, with the lines to highlight when they are known. */

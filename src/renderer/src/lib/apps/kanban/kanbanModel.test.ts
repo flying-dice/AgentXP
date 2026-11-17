@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assigneeItems, assigneesOf, cardCount, descriptionPreview, dropIndex, initials, isNoop, targetIndex } from './kanbanModel'
+import { assigneeItems, assigneesOf, cardCount, descriptionPreview, dropIndex, inView, initials, isNoop, revealDelta, targetIndex } from './kanbanModel'
 
 describe('drop positions', () => {
   it('counts the cards whose centre is above the pointer', () => {
@@ -44,5 +44,18 @@ describe('assignees', () => {
     expect(assigneeItems([{ name: 'Claude' }, { name: 'Zed' }], ['Zed']).map((i) => i.value)).toEqual(['Me', 'Claude', 'Zed'])
     expect(cardCount(board)).toBe(2)
     expect(cardCount(null)).toBe(0)
+  })
+})
+
+describe('a card out of view (a show or a flash)', () => {
+  const area = { left: 0, top: 0, right: 400, bottom: 300 }
+  it('is in view only when the whole card is inside the area', () => {
+    expect(inView({ left: 10, top: 10, right: 100, bottom: 50 }, area)).toBe(true)
+    expect(inView({ left: 380, top: 10, right: 470, bottom: 50 }, area)).toBe(false)
+  })
+  it('scrolls the least distance to bring it in, nothing when it is in', () => {
+    expect(revealDelta({ left: 10, top: 10, right: 100, bottom: 50 }, area)).toEqual({ x: 0, y: 0 })
+    expect(revealDelta({ left: 500, top: 10, right: 600, bottom: 50 }, area)).toEqual({ x: 200, y: 0 })
+    expect(revealDelta({ left: -120, top: 320, right: -20, bottom: 360 }, area)).toEqual({ x: -120, y: 60 })
   })
 })

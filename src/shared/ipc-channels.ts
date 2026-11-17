@@ -36,6 +36,7 @@ const RENDERER_EVENTS = {
   'desktop.showEnded': true,
   'desktop.showQueue': true,
   'desktop.agentCursor': true,
+  'desktop.followEnded': true,
   'transcript.cleared': true,
   'desktop.changed': true,
   'desktop.appRequest': true,
@@ -106,7 +107,9 @@ const INVOKE_METHODS = {
     notePaneFocus: true,
     dismissShow: true,
     acceptShow: true,
-    showAgain: true
+    showAgain: true,
+    follow: true,
+    setKeepFollowing: true
   },
   vfs: { readDir: true, searchText: true, find: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },

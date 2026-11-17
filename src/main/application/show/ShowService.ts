@@ -24,6 +24,8 @@ export interface ShowServiceDeps {
     land(context: ShowContext, checked: CheckedTarget, focus: boolean): Promise<ShowSpot>
   }
   events: EventPublisher
+  /** The chat the operator follows on a desktop (Follow): its Browser actions get the cursor like the foreground chat's. */
+  followed?: (desktopId: Id) => Id | null
   /** Waits (the Browser click waits for the cursor's glide); tests pass an instant one. */
   sleep?: (ms: number) => Promise<void>
   now?: () => Date
@@ -130,7 +132,7 @@ export class ShowService {
 
   /**
    * The Browser is about to click, type or select: the agent cursor glides to the element's box first, then the action
-   * happens. Only when the Browser window is on screen and the session is the foreground chat (Follow joins in PR 4).
+   * happens. Only when the Browser window is on screen and the session is the foreground chat or the followed one.
    * Resolves true when the cursor was sent (after the glide).
    */
   async pointAt(context: ShowContext, windowId: Id, box: PageBoxDto): Promise<boolean> {
@@ -138,10 +140,15 @@ export class ShowService {
     const state = this.deps.desktops.state(desktopId)
     const window = state.windows.find((w) => w.id === windowId)
     if (state.paused || !window || window.windowState === 'minimized') return false
-    if (this.deps.desktops.foregroundSessionId(desktopId) !== sessionId) return false
+    if (this.deps.desktops.foregroundSessionId(desktopId) !== sessionId && this.deps.followed?.(desktopId) !== sessionId) return false
     this.deps.events.publish('desktop.agentCursor', { desktopId, sessionId, identity: this.deps.identity(sessionId), spot: { kind: 'page-box', windowId, box } })
     await this.sleep(BROWSER_POINT_WAIT_MS)
     return true
+  }
+
+  /** True while a show is on screen on the desktop (its note callout is up): Follow does not move the view under it. */
+  onScreen(desktopId: Id): boolean {
+    return this.active.has(desktopId)
   }
 
   /** How many things wait for the operator on a desktop: queued shows and unanswered requests. */

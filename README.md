@@ -361,7 +361,8 @@ The agent works out of your sight. When it reads, searches, changes a file, or r
 
 - **Chat** – Shows each step as a row. A row has a link to where you can see the step: **Show in Code**, **Show diff**, **Show in Terminal**, or **Show in Browser**.
 - **Activity** – Lists the latest steps in the infopanel at the right. Click a line to go to the same place, or to the chat that did the step.
-- **Top bar** – Shows **Working:** and the current step. Click the text to go to the chat that does the work.
+- **Top bar** – Shows **Working:** and the current step. Click the text to go to the chat that does the work. While two or more chats work, it reads, for example, **3 agents working**. Click it to see each agent with its color, its name, and its step, with **Open chat** and **Follow**.
+- **Team Chat** – Each member row says the step of the member in plain words, for example **reading auth.ts**.
 
 A window that already shows the file or the command updates in place. If Code shows the file that the agent changes, Code reloads it and marks the changed lines. An open Terminal shows each command of the agent as it runs.
 
@@ -370,6 +371,12 @@ A window that already shows the file or the command updates in place. If Code sh
 An agent can point you at one thing on purpose, with the `show` tool. It always gives a reason. If you work in the chat of that agent, the window comes to the front at the exact spot, for example the lines in Code. The agent cursor, an arrow with the name of the agent, moves there, and a note tells why. Your keyboard stays in the chat. Click **OK** to close the note, or **Reply** to answer in the chat.
 
 Only the chat that you work in can move your view. Any other chat, a team member, or a scheduled task asks first: a balloon **Show request** appears with **Show** and **Not now**, and the Action Center keeps it. AgentXP shows one thing at a time. Any click or key closes the note. **Pause all agents** hides the agent cursors and removes the shows that wait.
+
+### Following an Agent
+
+To watch one agent while it works, follow it: click **View -> Follow this chat** in its Chat window, **Follow** on its row in a Team Chat room, or **Follow** in the list of the agents that work on the top bar. While you follow it, Code comes to the front at the lines that it reads or changes, the Terminal shows its commands, and its agent cursor moves with each step. There is no note, and the keyboard stays where you are. While you type, the steps wait.
+
+The top bar then reads **Following** and the name of the agent. Click **Stop following** to stop. The follow also stops when you pause the agents, when the chat closes, or at the end of the turn. To follow the next turns too, select **Keep following** on the top bar.
 
 ### Windows That the Agent Opens
 

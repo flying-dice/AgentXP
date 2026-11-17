@@ -42,6 +42,8 @@ Use Chat to tell the agent what to do and to read what the agent does. The trans
 
 The menu bar is at the top of the window. It has the menus **File**, **Edit**, **Tools**, **View**, and **Help**.
 
+Click **View -> Follow this chat** to watch the agent work. Code comes to the front at the lines that the agent reads or changes, the Terminal shows its commands, and the agent cursor moves with each step. The keyboard focus stays where you are. A check mark shows that you follow the chat. Click the item again, or **Stop following** on the top bar, to stop. The follow also stops at the end of the turn, unless **Keep following** on the top bar is selected. See **[Using the Desktop](desktop.md)**.
+
 ### Close a Chat and Open It Again
 
 When you close a Chat window, AgentXP keeps the chat. The transcript, the changes, and the plan stay. If the agent works, it continues.
@@ -147,6 +149,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Event Viewer (menu) | Opens Event Viewer on the events of this chat. | `chat-menu-event-viewer` |
 | Show thinking and tool details (menu) | Opens every Thinking line at once, in all chats and Code Review windows. Off by default. | `chat-menu-details` |
 | Changes (menu) | View menu: shows or hides the Changes pane. | `chat-menu-panel` |
+| Follow this chat | View menu: follows this chat (Code, the Terminal and the agent cursor go with its steps) or stops the follow. It has a check mark while you follow the chat. | `chat-menu-follow` |
 | Close | Closes the window. The agent keeps working. (Tooltip: "Close this window. The agent keeps working.") | `chat-menu-close` |
 | Help menu | Opens the Help menu. | `menubar-help` |
 | View Help | Opens the Chat Help window. F1. | `chat-menu-help` |

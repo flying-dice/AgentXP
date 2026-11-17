@@ -1,6 +1,6 @@
 # AgentXP Desktop Design
 
-Status: accepted, being built. **Replaced in part:** "tools follow apps" (section 1, section 3 "How gating works") is retired by `docs/AGENT_PRESENCE.md` (Work, Show, Output). PR 1 of that plan has landed: every tool group is enabled and gated by policy only, except the output apps whose tools need their window (Browser, Agent Paint, Agent Diagrams, Code Review); Work tools open nothing; every agent open goes through `DesktopService.openOutputWindow`. Where this note says otherwise, `AGENT_PRESENCE.md` wins. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
+Status: accepted. **Replaced in part:** "tools follow apps" (section 1, section 3 "How gating works") is fully replaced by `docs/AGENT_PRESENCE.md` (Work, Show, Output, Follow); every PR of that plan has landed. Every tool group is enabled and gated by policy only, except the output apps whose tools need their window (Browser, Agent Paint, Agent Diagrams, Code Review); Work tools open nothing; every agent open goes through `DesktopService.openOutputWindow`; the agent moves the operator's view only through `show` (foreground chat) and Follow (opted in by the operator). Where this note says otherwise, `AGENT_PRESENCE.md` wins. Reference mockup: `docs/design/desktop/Desktop.dc.html` (serve the folder and open it) and `docs/design/desktop/desktop.png`.
 
 ## 1. Idea
 

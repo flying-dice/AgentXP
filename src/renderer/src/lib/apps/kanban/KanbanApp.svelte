@@ -21,9 +21,10 @@
   import KanbanCard from './KanbanCard.svelte'
   import NameDialog from './NameDialog.svelte'
   import { submission, type DialogInput, type KanbanDialog } from './dialogSubmit'
-  import { assigneeItems, assigneesOf, cardCount, columnDropIndex, dropIndex, isNoop, targetIndex } from './kanbanModel'
+  import { assigneeItems, assigneesOf, cardCount, columnDropIndex, dropIndex, inView, isNoop, revealDelta, targetIndex } from './kanbanModel'
+  import { tick } from 'svelte'
 
-  let { window: win, host }: AppProps<'kanban'> = $props()
+  let { window: win, host, focused }: AppProps<'kanban'> = $props()
 
   let boards = $state.raw<BoardDto[]>([])
   let agents = $state.raw<AgentDto[]>([])
@@ -62,9 +63,13 @@
     void load()
     const off = host.api.on('kanban.changed', (e) => {
       if (e.desktopId !== desktopId) return
-      void load()
+      const loading = load()
       // An agent added, moved or changed cards: they flash briefly where they are (output, live; no focus change).
-      if (e.by != null && e.cards?.length) flashCards(e.cards.filter((c) => c.kind !== 'deleted').map((c) => c.cardId))
+      if (e.by != null && e.cards?.length) {
+        const ids = e.cards.filter((c) => c.kind !== 'deleted').map((c) => c.cardId)
+        flashCards(ids)
+        void loading.then(() => tick()).then(() => offerHidden(ids))
+      }
     })
     return () => {
       off()
@@ -83,6 +88,42 @@
     flashTimer = setTimeout(() => (flashing = new Set()), FLASH_MS)
   }
 
+  let canvas: HTMLDivElement | undefined = $state()
+  /** A changed card the operator cannot see while they work in the board: the cue offers to bring it into view. */
+  let hiddenChange = $state<number | null>(null)
+
+  const cardEl = (id: number): HTMLElement | null => canvas?.querySelector<HTMLElement>(`[data-testid="kanban-card"][data-card-id="${id}"]`) ?? null
+  const boxOf = (el: Element) => el.getBoundingClientRect()
+
+  /** Scrolls the card's list, then the board, the least distance so the whole card is in view. */
+  function reveal(id: number): void {
+    const card = cardEl(id)
+    if (!card || !canvas) return
+    for (const area of [card.closest<HTMLElement>('[data-cards]'), canvas]) {
+      if (!area) continue
+      const delta = revealDelta(boxOf(card), boxOf(area))
+      area.scrollLeft += delta.x
+      area.scrollTop += delta.y
+    }
+  }
+
+  const hidden = (id: number): boolean => {
+    const card = cardEl(id)
+    const list = card?.closest('[data-cards]')
+    return !!card && !!canvas && !(inView(boxOf(card), boxOf(canvas)) && (!list || inView(boxOf(card), boxOf(list))))
+  }
+
+  /**
+   * An agent changed cards that are out of view. While the operator works in the board (the window has the focus) the
+   * board does not scroll under them: a cue offers to show the card. Otherwise the board scrolls to it.
+   */
+  function offerHidden(ids: readonly number[]): void {
+    const first = ids.find(hidden)
+    if (first === undefined) return
+    if (focused) hiddenChange = first
+    else reveal(first)
+  }
+
   // A notice's Open board asks for a card (`view.selectedCardId`): it is selected once the board has it.
   let shownCard: number | null = null
   $effect(() => {
@@ -94,6 +135,8 @@
     if (shownCard === wanted || !allCards.some((c) => c.id === wanted)) return
     shownCard = wanted
     selectedCard = wanted
+    // A show of the card: it scrolls into view, so the agent cursor and the note land on it.
+    void tick().then(() => reveal(wanted))
   })
   $effect(() => {
     let stale = false
@@ -359,7 +402,14 @@
   {#if error}<p class="error" role="alert" data-testid="kanban-error">{error}</p>{/if}
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="canvas xp-scroll" data-testid="kanban-board" ondragover={overCanvas} ondrop={dropOnCanvas}>
+  {#if hiddenChange !== null}
+    <div class="cue" role="status" data-testid="kanban-flash-cue">
+      An agent changed a card that is out of view.
+      <button type="button" class="cue-link" data-testid="kanban-flash-cue-show" onclick={() => { const id = hiddenChange; hiddenChange = null; if (id !== null) { reveal(id); flashCards([id]) } }}>Show it</button>
+      <button type="button" class="cue-link" data-testid="kanban-flash-cue-close" aria-label="Close" title="Close" onclick={() => (hiddenChange = null)}>Close</button>
+    </div>
+  {/if}
+  <div class="canvas xp-scroll" bind:this={canvas} data-testid="kanban-board" ondragover={overCanvas} ondrop={dropOnCanvas}>
     {#if board}
       {#each board.columns as col, ci (col.id)}
         {#if over?.kind === 'column' && over.index === ci}<div class="col-gap" data-testid="kanban-drop-column"></div>{/if}
@@ -528,6 +578,29 @@
   .more:hover {
     border-color: var(--xp-btn-hover-border);
     background: var(--xp-btn-hover-face);
+  }
+  /* The XP information bar: a pale yellow strip under the toolbar. */
+  .cue {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 8px 4px;
+    padding: 3px 8px;
+    border: 1px solid #c9b05a;
+    background: #ffffe1;
+    color: #000;
+  }
+  .cue-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--xp-taskpane-link);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .cue-link:focus-visible {
+    outline: var(--xp-focus-outline);
   }
   .cards {
     flex: 0 1 auto;

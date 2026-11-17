@@ -118,7 +118,8 @@ export function createCodeTools({ desktops, paths, vfs, search, files }: CodeToo
         const after = replaceAll ? before.split(oldText).join(newText) : before.slice(0, at) + newText + before.slice(at + oldText.length)
         await files.write(sessionId, file, after)
         const startLine = lineAt(after, at)
-        const endLine = startLine + Math.max(0, newText.split('\n').length - 1)
+        // A trailing line break ends the last line; it does not start another one.
+        const endLine = startLine + Math.max(0, newText.replace(/\r?\n$/, '').split('\n').length - 1)
         highlightIfShowing(desktops, desktopId, file, [startLine, endLine])
         const where = replaceAll && count > 1 ? `${count} places` : `line${endLine > startLine ? `s ${startLine}-${endLine}` : ` ${startLine}`}`
         return textResult(`Edited ${file} (${where}).`)

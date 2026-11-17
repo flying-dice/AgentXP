@@ -51,9 +51,9 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J31 | Get help from inside an app (Help menu and F1) | P4 |
 | J32 | An agent shows you something | P1, P4 |
 | J33 | Hear about what the agents made | P2, P3 |
-| J34 | Follow an agent as it works [planned] | P3, P1 |
+| J34 | Follow an agent as it works | P3, P1 |
 
-J10 and J32 to J34 come from `docs/AGENT_PRESENCE.md` (Work, Show, Output). J10 replaces "Tools follow apps"; until PR 1 of that plan merges, the built app still behaves as the old J10 described (see git history).
+J10 and J32 to J34 come from `docs/AGENT_PRESENCE.md` (Work, Show, Output). J10 replaces "Tools follow apps"; every PR of that plan has landed.
 
 ---
 
@@ -983,7 +983,7 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
 - **E2E coverage.** `e2e/notices.e2e.ts`: a background chat finishes (one summary balloon, kept in the Action Center), review comments in a Code Review window behind (balloon, **Open review** lands on the comment), the window focused (the threads flash, no balloon), a card moved with Kanban open (the card flashes, no balloon), the foreground chat (no balloon), two notices queue. Not yet: a two-member team run (step 1 with a room), balloons below a UAC popup.
 - **Docs and panel.** `manuals/desktop.md` (balloons, Action Center, notices), `manuals/code-review.md`, `manuals/kanban.md`. Panel tasks: T33.1, T33.2 in `tasks.md` (still **[planned]**: no preset and checker yet).
 
-## J34 - Follow an agent as it works [planned]
+## J34 - Follow an agent as it works
 
 `docs/AGENT_PRESENCE.md`, section 7.
 
@@ -1008,5 +1008,5 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - Another agent calls `show` while following: it becomes a request balloon.
   - Reduced motion: the cursor jumps.
 - **Success measure.** P3 turns Follow on and off without Help; P1 describes the order of Builder's steps after watching one turn.
-- **E2E coverage.** Planned: `e2e/follow.e2e.ts`.
+- **E2E coverage.** `e2e/follow.e2e.ts` (View > Follow this chat, reads and edits in Code with the cursor, the run in the Terminal, typing in Notepad pauses it, Stop following, Keep following and the end of the turn, Pause, the top-bar agents popup with two working chats, a team member's step text and Follow). The "Follow ends with a short notice" is one line on the top bar (`topbar-follow-ended`), not a balloon.
 - **Docs and panel.** `manuals/team-chat.md`, `manuals/chat.md`, `manuals/desktop.md`. Panel tasks: T34.1 in `tasks.md`.

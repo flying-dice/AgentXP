@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createWorkspace, see, startScriptedDesktop, type ScriptedDesktop, type Workspace } from './fixtures'
+import { createWorkspace, see, shot, startScriptedDesktop, type ScriptedDesktop, type Workspace } from './fixtures'
 
 const git = (cwd: string, ...args: string[]): void => {
   execFileSync('git', ['-c', 'user.name=E2E', '-c', 'user.email=e2e@example.com', '-c', 'commit.gpgsign=false', ...args], { cwd, stdio: 'ignore' })
@@ -175,5 +175,25 @@ describe('Code Review', () => {
     await see.text(review.frame.getByTestId('review-send-comments'), 'Comments sent')
     // The list names each level in words beside its colour.
     await see.text(review.frame.getByTestId('review-comment-level').first(), /^(Blocker|Major|Minor|Nit)$/)
+  })
+
+  it("the reviewer's show of a comment lands on that comment: cursor and note beside it", async () => {
+    const review = ctx.desktop.codeReview()
+    await ctx.desktop.taskbarItem('code-review').click()
+    const composer = review.frame.getByTestId('chat-composer-input')
+    await composer.fill('show me your comment')
+    await composer.press('Enter')
+    const callout = ctx.desktopPage.getByTestId('show-callout')
+    await see.visible(callout)
+    await see.text(callout.getByTestId('show-callout-label'), 'the comment on notes.txt:2')
+    await see.text(callout.getByTestId('show-callout-note'), 'This is the comment I mean')
+    await see.visible(ctx.desktopPage.getByTestId('agent-cursor'))
+    const thread = review.threads.filter({ hasText: 'Line two could say' })
+    await see.visible(thread)
+    const [threadBox, calloutBox] = await Promise.all([thread.boundingBox(), callout.boundingBox()])
+    expect(Math.abs(calloutBox!.y - threadBox!.y)).toBeLessThan(200)
+    await shot(ctx.desktopPage, 'show-11-review-comment')
+    await ctx.desktopPage.getByTestId('show-callout-ok').click()
+    await see.gone(callout)
   })
 })

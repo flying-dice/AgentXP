@@ -83,6 +83,7 @@ import { createCodeTools } from './application/tools/codeTools'
 import { createShowTools } from './application/tools/showTools'
 import { ShowService } from './application/show/ShowService'
 import { ShowTargets } from './application/show/ShowTargets'
+import { FollowService } from './application/show/FollowService'
 import { DesktopToolService } from './application/tools/DesktopToolService'
 import { createFsTools } from './application/tools/fsTools'
 import { createNotepadTools } from './application/tools/notepadTools'
@@ -486,23 +487,46 @@ export function composeApp(options: ComposeOptions): AppServices {
   const notes = new StickyNoteService({ notes: repos.notes, events: publisher, desktops })
   const kanban = new KanbanService({ kanban: repos.kanban, events: publisher })
   // Show (docs/AGENT_PRESENCE.md, section 5): the agent points the operator at one thing; only the foreground chat moves the view.
+  const showTargets = new ShowTargets({
+    desktops,
+    paths: toolPaths,
+    files: { stat: (desktopId, path) => vfs.stat(desktopId, path) },
+    changes: repos.changes,
+    comments: repos.reviews,
+    boards: kanban,
+    requests: appRequests,
+    browser: browsers
+  })
   const shows = new ShowService({
     desktops,
     identity: identityOf,
     ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason),
-    targets: new ShowTargets({
-      desktops,
-      paths: toolPaths,
-      files: { stat: (desktopId, path) => vfs.stat(desktopId, path) },
-      changes: repos.changes,
-      comments: repos.reviews,
-      boards: kanban,
-      requests: appRequests,
-      browser: browsers
-    }),
-    events: publisher
+    targets: showTargets,
+    events: publisher,
+    followed: (desktopId) => follows.followed(desktopId)
   })
   publisher.subscribe((message) => shows.onEvent(message))
+  // Follow (docs/AGENT_PRESENCE.md, section 7): the operator watches one chat's work live, projected as quiet shows.
+  const follows = new FollowService({
+    desktops,
+    sessions: repos.sessions,
+    roomOf: (sessionId) => rooms.memberOfSession(sessionId)?.roomId ?? null,
+    identity: identityOf,
+    targets: showTargets,
+    shows,
+    events: publisher
+  })
+  publisher.subscribe((message) => follows.onEvent(message))
+  sessions.observeTurns({ started: () => {}, ended: (id) => follows.turnEnded(id) })
+  desktops.attachPresence({
+    following: (desktopId) => follows.state(desktopId),
+    // The agents a desktop shows: its windows' chats, the busy chats and every team room member (one identity each).
+    identities: (desktopId, sessionIds) => {
+      const ids = new Set<number>(sessionIds)
+      for (const room of repos.rooms.list(desktopId)) for (const m of repos.rooms.members(room.id)) if (m.sessionId !== null) ids.add(m.sessionId)
+      return Object.fromEntries([...ids].map((id) => [String(id), identityOf(id)]))
+    }
+  })
   const screen: ScreenCapturer = options.screen ?? {
     capture: () => Promise.reject(new Error('Screen capture is not available here.'))
   }
@@ -622,6 +646,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     teamService,
     rooms,
     shows,
+    follows,
     appVersion: options.appVersion ?? '0.0.0'
   })
 

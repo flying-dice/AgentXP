@@ -9,7 +9,7 @@ import type { Id } from '@shared/models'
 import type { DriveDto, DriveLetter, VPath } from '@shared/vfs'
 import type { AppKind, AppView, AskChatRequest, AppWindowState, DesktopState, OpenWindowInput, TaskManagerTab, ViewOf } from '@shared/desktop'
 import type { IconName } from '$lib/kit/atoms/icons'
-import type { ToolShowTarget } from '../app/session/toolShowTarget'
+import type { ToolShowTarget } from '@shared/toolShowTarget'
 import type { RemovedProject } from '../desktop/projectDrives'
 
 /** What the shell gives every app. Implemented by lib/desktop/DesktopController. */
@@ -29,6 +29,10 @@ export interface DesktopHost {
   openTaskManager(tab?: TaskManagerTab, chatId?: Id): Promise<void>
   /** What a working chat is doing now (the title of its running tool), or null. */
   chatProgress(sessionId: Id): string | null
+  /** The step a chat is on in plain words ("reading auth.ts", "running npm test"), or null when it runs no tool now. */
+  agentStep(sessionId: Id): string | null
+  /** **Follow** a chat: its work is projected live (`docs/AGENT_PRESENCE.md`, section 7); `null`: **Stop following**. */
+  follow(sessionId: Id | null): Promise<void>
   /** The root to review or work on for a path: its plugged-in project drive, else the first project drive, else home. */
   projectRootOf(path?: string | null): VPath
   /** Opens the "Code Review" dialog, which asks what to review (project and ref); `path` preselects its project drive. */

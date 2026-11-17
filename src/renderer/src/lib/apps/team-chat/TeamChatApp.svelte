@@ -127,16 +127,21 @@
       <div class="members" data-testid="team-chat-members" role="list" aria-label="Members">
         {#each room?.members ?? [] as m (m.profileId)}
           {@const label = activityLabel(m.activity, m.queued)}
-          <div class="member" role="listitem" data-testid="team-chat-member" data-activity={m.activity} data-member={m.name}>
+          {@const step = m.sessionId !== null && m.activity === 'thinking' ? host.agentStep(m.sessionId) : null}
+          {@const followed = m.sessionId !== null && host.state.following?.sessionId === m.sessionId}
+          <div class="member" role="listitem" data-testid="team-chat-member" data-activity={m.activity} data-member={m.name} data-session-id={m.sessionId ?? undefined} data-following={followed ? 'true' : undefined}>
             <button class="chip" title="Call {m.name}" data-testid="team-chat-member-call" onclick={() => mention(m.name)}>
               <span class="avatar" style:background={m.color} aria-hidden="true">{initialOf(m.name)}</span>
               <span class="name">{m.name}</span>
             </button>
             <span class="activity" class:busy={m.activity !== 'idle'} data-testid="team-chat-member-activity">{label ?? ''}</span>
+            {#if step}<span class="step" data-testid="team-chat-member-step" title="{m.name} is {step}">{step}</span>{/if}
             {#if m.activity === 'thinking' || m.activity === 'starting' || m.activity === 'waiting' || m.queued > 0}
               <Button data-testid="team-chat-member-stop" onclick={() => void host.api.rooms.stop(roomId, m.profileId)}>Stop</Button>
             {/if}
             {#if m.sessionId !== null}
+              {@const sessionId = m.sessionId}
+              <Button data-testid="team-chat-member-follow" aria-pressed={followed} title={followed ? `Stop following ${m.name}.` : `Watch ${m.name} work: Code and the Terminal follow its steps and its cursor shows where it is.`} onclick={() => void host.follow(followed ? null : sessionId)}>{followed ? 'Following' : 'Follow'}</Button>
               <Button data-testid="team-chat-member-session" aria-pressed={openMemberId === m.profileId} onclick={() => openSession(openMemberId === m.profileId ? null : m.profileId)}>Session</Button>
             {/if}
           </div>
@@ -248,6 +253,13 @@
     font-style: italic;
   }
   .activity.busy {
+    color: #1e3287;
+  }
+  .step {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: #1e3287;
   }
   .messages {

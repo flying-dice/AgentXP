@@ -1,0 +1,182 @@
+{
+  "$schema": "../script.schema.json",
+  "name": "follow-steps",
+  "description": "Follow for e2e/follow.e2e.ts (the project at E:\\ has auth.ts with 12 lines). \"follow steps\" works in steps that each wait for next: code_read of auth.ts lines 3-5, code_edit of line 8, terminal_run of an echo, code_read of lines 10-11, then a message. \"member steps\" (a team room member) has a read of auth.ts running for 5 s (an ACP read with a location), then a code_read of lines 6-7, waits 3 s and answers (a member runs in its own agent program, so it does not use the control socket). \"keep busy\" has a read running for 8 s before it answers (a second chat may run in another agent program) (two chats working for the top-bar agents popup). Anything else answers at once.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "steps",
+      "match": {
+        "contains": "follow steps",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Working through auth.ts.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "step": "manual",
+          "label": "read",
+          "arguments": {
+            "path": "E:\\auth.ts",
+            "startLine": 3,
+            "endLine": 5
+          },
+          "saveAs": "read"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_edit",
+          "step": "manual",
+          "label": "edit",
+          "arguments": {
+            "path": "E:\\auth.ts",
+            "oldText": "// line 8\n",
+            "newText": "// line 8 (checked)\n"
+          },
+          "saveAs": "edited"
+        },
+        {
+          "type": "expect",
+          "from": "edited",
+          "contains": "line 8"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "terminal_run",
+          "step": "manual",
+          "label": "run",
+          "arguments": {
+            "command": "echo followed"
+          },
+          "saveAs": "ran"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "step": "manual",
+          "label": "read again",
+          "arguments": {
+            "path": "E:\\auth.ts",
+            "startLine": 10,
+            "endLine": 11
+          },
+          "saveAs": "again"
+        },
+        {
+          "type": "message",
+          "step": "manual",
+          "label": "done",
+          "text": "Done with auth.ts."
+        }
+      ]
+    },
+    {
+      "id": "member",
+      "match": {
+        "contains": "member steps",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "toolCall",
+          "id": "member-read",
+          "title": "Read auth.ts",
+          "kind": "read",
+          "status": "in_progress",
+          "locations": [
+            {
+              "path": "E:\\auth.ts",
+              "line": 2
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "ms": 5000
+        },
+        {
+          "type": "toolCallUpdate",
+          "id": "member-read",
+          "status": "completed"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "E:\\auth.ts",
+            "startLine": 6,
+            "endLine": 7
+          },
+          "saveAs": "read"
+        },
+        {
+          "type": "wait",
+          "ms": 3000
+        },
+        {
+          "type": "message",
+          "text": "I read auth.ts."
+        }
+      ]
+    },
+    {
+      "id": "busy",
+      "match": {
+        "contains": "keep busy",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "toolCall",
+          "id": "busy-read",
+          "title": "Read auth.ts",
+          "kind": "read",
+          "status": "in_progress",
+          "locations": [
+            {
+              "path": "E:\\auth.ts",
+              "line": 1
+            }
+          ]
+        },
+        {
+          "type": "wait",
+          "ms": 8000
+        },
+        {
+          "type": "toolCallUpdate",
+          "id": "busy-read",
+          "status": "completed"
+        },
+        {
+          "type": "message",
+          "text": "Still here."
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Nothing to do."
+        }
+      ]
+    }
+  ]
+}

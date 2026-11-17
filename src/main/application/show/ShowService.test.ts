@@ -220,4 +220,16 @@ describe('ShowService: the Browser cursor', () => {
     expect(await service.pointAt(ctx(), 7, box)).toBe(false)
     expect(events.payloads('desktop.agentCursor')).toEqual([])
   })
+
+  it('also for the chat the operator follows (Follow), even in the background', async () => {
+    const following = new ShowService({ ...(service as unknown as { deps: ConstructorParameters<typeof ShowService>[0] }).deps, followed: () => BACK })
+    expect(await following.pointAt(ctx(BACK), 7, box)).toBe(true)
+    expect(events.payloads('desktop.agentCursor')).toHaveLength(1)
+  })
+
+  it('onScreen tells Follow that a note is up', async () => {
+    expect(service.onScreen(DESKTOP)).toBe(false)
+    await service.show(ctx(), file('E:\\auth.ts', [1, 2]), 'why')
+    expect(service.onScreen(DESKTOP)).toBe(true)
+  })
 })
