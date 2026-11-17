@@ -62,6 +62,9 @@ export function createRoomTools({ rooms, teams, paths, chatTitle }: RoomToolsDep
     room_post: ({ room, text }, { desktopId, sessionId }) =>
       attempt(async () => {
         const found = find(desktopId, room)
+        // A member posting into its own room would post as an outsider under its name and call itself again.
+        const self = rooms.state(found.id).members.find((m) => m.sessionId === sessionId)
+        if (self) throw new AppError(`You are ${self.name}, a member of [${found.id}] ${found.title}: your final answer is posted there for you. Do not call room_post; reply with your answer.`)
         await rooms.say(found.id, text, chatTitle(sessionId))
         return textResult(`Posted in [${found.id}] ${found.title}. Call room_read to see the answers.`)
       }),

@@ -55,7 +55,17 @@ beforeEach(() => {
   script = async () => 'end_turn'
   coordinator = new AguiRunCoordinator({
     queries: new SessionQueryService(f.repos.sessions, f.repos.transcripts, f.repos.tasks, f.repos.changes, f.repos.terminals, f.repos.surfaces),
-    sessions: { promptTurn: (input) => script(input), cancel: async (id) => (cancelled.push(id), onCancel()) },
+    // Like SessionService: the session is idle again when its turn has ended.
+    sessions: {
+      promptTurn: async (input) => {
+        try {
+          return await script(input)
+        } finally {
+          broadcaster.setStatus(input.sessionId, 'idle')
+        }
+      },
+      cancel: async (id) => (cancelled.push(id), onCancel())
+    },
     a2ui: { dispatch: async (event) => (dispatched.push(event), dispatchScript(event)) },
     broker,
     events: bus,
@@ -370,7 +380,7 @@ describe('AguiRunCoordinator: permission interrupts', () => {
     expect(agent.pendingInterrupts).toEqual([])
     const state = agent.state as AguiSessionState
     expect(state.toolCalls['t1']?.status).toBe('completed')
-    expect(state.session.status).toBe('working')
+    expect(state.session.status).toBe('idle') // the turn has ended (the session service sets idle)
     expect(agent.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'tool', 'assistant'])
     expect(agent.messages[1]).toMatchObject({ content: 'About to write', toolCalls: [{ id: 't1', function: { name: 'Write file', arguments: '{"path":"a.txt"}' } }] })
   })
@@ -455,6 +465,53 @@ describe('AguiRunCoordinator: connect', () => {
     expect(ofType(events, EventType.TEXT_MESSAGE_CONTENT)[0]?.delta).toBe('late text')
     expect(ofType(events, EventType.RUN_FINISHED)[0]?.outcome).toEqual({ type: 'success' })
     await running // the replaced run just ended without a terminal event
+  })
+
+  it('follows a turn that main runs on its own (a team room member, a scheduled task) until the session is idle again', async () => {
+    broadcaster.setStatus(f.sessionId, 'working')
+    const follower = collect(coordinator.run(input()))
+    await new Promise((r) => setTimeout(r, 0))
+    emit(chunk('working in the background'))
+    broadcaster.setStatus(f.sessionId, 'idle')
+    const events = await follower
+    await expectValidStream(events)
+    expect(ofType(events, EventType.TEXT_MESSAGE_CONTENT)[0]?.delta).toBe('working in the background')
+    expect(ofType(events, EventType.RUN_FINISHED)[0]?.outcome).toEqual({ type: 'success' })
+  })
+
+  it('reports the permission request of a background turn: open before the connect, or opened while it follows', async () => {
+    broadcaster.setStatus(f.sessionId, 'working')
+    void askPermission()
+    await new Promise((r) => setTimeout(r, 0))
+    const before = await collect(coordinator.run(input()))
+    expect(ofType(before, EventType.RUN_FINISHED)[0]?.outcome).toMatchObject({ type: 'interrupt', interrupts: [{ toolCallId: 't1' }] })
+
+    broker.respond(broker.pendingRequests(f.sessionId)[0]!.id, 'allow')
+    broadcaster.setStatus(f.sessionId, 'working')
+    const following = collect(coordinator.run(input()))
+    await new Promise((r) => setTimeout(r, 0))
+    void askPermission()
+    const events = await following
+    expect(ofType(events, EventType.RUN_FINISHED)[0]?.outcome).toMatchObject({ type: 'interrupt' })
+  })
+
+  it('a reconnect that carries the transcript (its last message is a user message main prompted) is not a new prompt', async () => {
+    let prompts = 0
+    script = async () => (prompts++, 'end_turn')
+    f.repos.transcripts.appendMessage(f.sessionId, 'user', [{ kind: 'text', text: 'New in the room: you were called.' }])
+    const first = await collect(coordinator.run(input()))
+    const messages = ofType(first, EventType.MESSAGES_SNAPSHOT)[0]!.messages
+    expect(messages.at(-1)?.role).toBe('user')
+    const again = await collect(coordinator.run(input({ messages })))
+    expect(types(again)).not.toContain(EventType.RUN_ERROR)
+    expect(ofType(again, EventType.RUN_FINISHED)[0]?.outcome).toEqual({ type: 'success' })
+    expect(prompts).toBe(0)
+  })
+
+  it('a prompt while a background turn runs is refused (the agent is busy), not started beside it', async () => {
+    broadcaster.setStatus(f.sessionId, 'working')
+    const events = await collect(coordinator.run(input({ messages: [user('hello?')] })))
+    expect(ofType(events, EventType.RUN_ERROR)[0]?.message).toMatch(/still working/)
   })
 })
 

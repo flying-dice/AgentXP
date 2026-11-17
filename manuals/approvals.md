@@ -39,11 +39,15 @@ A chip that asks reads **Ask first**, for example **Run commands: Ask first**. W
 
 To answer a request, follow the steps below:
 
-1. Click the status in the top bar, for example **Fix login redirect is waiting: run a command**. The chat that waits comes to the front. With more than one request, the link opens the oldest first, and the box says **1 of 2 waiting**. You can also click the flag in the notification area, and then **Review** next to the request.
-2. Read the box above the message box. It shows the file or the command. If the text is long, scroll inside the box. **Allow** and **Deny** always stay in the window. When a change has more rows than the box shows, and the window has room, the link **Show the whole change** makes the change bigger and the chat above it smaller. The link then reads **Show fewer lines**. In a window with no room to grow, the link does not show.
-3. Click **Allow** to let the agent go on, or click **Deny** to stop the action. You can also press A to allow. The Left and Right arrow keys move between the two choices.
+A request opens the permission dialog box over the whole desktop, whichever window, chat, or team room asked. The desktop behind it is dimmed. See **[Desktop](desktop.md)** for the parts of the box.
 
-The focus starts on **Deny**, because Deny is the safe answer. Enter denies. The line **Enter denies. Press A to allow.** shows beside the two choices. When AgentXP asks because of a setting, for example **Run commands is set to Ask in Control Center.**, the box shows this on its own line under the command. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
+1. Read the title, for example **Allow the agent to change src/auth/redirect.ts?** The line under it names the chat that asked, or the member and the room, for example **Requested by Tester in the room Development Team**. The line **Reason:** tells why AgentXP asks, for example **Run commands is set to Ask in Control Center.**
+2. Read the command or the change to the file. A long change scrolls inside the box. Click **Show all lines** to see a long change in full.
+3. Click **Allow** to let the agent go on, or click **Deny** to stop the action. You can also press A to allow. The Left and Right arrow keys move between the choices. Hold Alt to see the access keys: Alt+A allows, Alt+D denies.
+
+The box opens by itself, also while you type in another window. For a moment after it appears it takes no answer, so a key that you typed for that window does not answer it. The focus starts on **Deny**, because Deny is the safe answer. Enter denies. The line **Enter denies. Press A to allow.** shows under the choices. When more than one request waits, the box says, for example, **1 of 2 waiting**, and the oldest request comes first. After you answer, the chat shows a line, for example **You allowed: Change NOTE.md.**
+
+To answer later, press Esc or click **Not now**. The request stays in the Action Center. To open the box again, click the status in the top bar, for example **Fix login redirect is waiting: run a command**, or click the flag in the notification area and then **Review** next to the request.
 
 If you click **Deny**, the agent tells you that it could not do the action. The request leaves the Action Center.
 
@@ -51,20 +55,17 @@ If you click **Deny**, the agent tells you that it could not do the action. The 
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Keys line | Tells which keys answer the request in the permission dialog box of the Action Center: Enter denies, A allows. | `uac-hint` |
-| Keys line (chat) | The same line in the permission box of a chat. | `permission-hint` |
-| Waiting count | The line **1 of 2 waiting** in the box, when more than one request waits. | `permission-queue` |
-| Waiting count (Action Center) | The same line in the permission dialog box of the Action Center. | `uac-queue` |
-| Setting line | The setting that made AgentXP ask, for example **Run commands is set to Ask in Control Center.** It shows under the command, never inside it. | `permission-detail-setting` |
-| Change preview | The lines that change in the permission box of a chat. It shows at least 9 rows and up to 14, then it scrolls. When more rows follow, the last row is cut in half, so you see that there is more. It is the only part of the box that scrolls. The chat above the box keeps one row at least. | `permission-detail-view` |
-| Show all lines | Shows every line of a long change. When the chat window is too small for 9 rows it reads **Show the whole change**. After the click it reads **Show fewer lines**. It does not show when a click could not show more rows. | `permission-detail-more` |
+| Keys line | Tells which keys answer the request in the permission dialog box: Enter denies, A allows. | `uac-hint` |
+| Waiting count | The line **1 of 2 waiting** in the permission dialog box, when more than one request waits. | `uac-queue` |
+| Reason line | The setting that made AgentXP ask, after **Reason:**, for example **Run commands is set to Ask in Control Center.** | `uac-reason` |
+| Show all lines | Shows every line of a long change. After the click it reads **Show fewer lines**. | `uac-detail-more` |
 | Check box label | The label of the check box in the top bar: **Ask before every action (this session only)**. | `topbar-ask-slot` |
 | Not saved line | The line in the top bar while you are in control: **To keep a tool on Ask, change it in Control Center.** The status above it says **This is not saved.** | `topbar-control-note` |
 | Not saved link (top bar) | The words **Control Center** in that line. It opens the Permissions page. | `topbar-control-note-link` |
 | Not saved line (Activity) | The same sentence in the Activity list, under **You are in control... This is not saved.** | `infopanel-activity-not-saved` |
 | Not saved link (Activity) | The words **Control Center** in that sentence. It opens the Permissions page. | `infopanel-activity-open-permissions` |
 | Chip help line | Shows the help text of a tool chip while the chip has the keyboard focus. | `topbar-chip-tip` |
-| Change preview (Action Center) | The same preview in the permission dialog box of the Action Center. | `uac-detail-view` |
+| Change preview | The lines that change, in the permission dialog box. It scrolls when the change is long. | `uac-detail-view` |
 | Answer note | The line in the chat that tells what you answered. | `chat-permission-result` |
 
 ## 5 - Troubleshooting

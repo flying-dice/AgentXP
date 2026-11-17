@@ -221,7 +221,7 @@ To remove a project from the desktop, select it in **Computer** and click **Ejec
 - **Eject (remove from this desktop) is dimmed.** Select a project. **Your files (C:)** cannot be ejected.
 - **A folder looks empty.** The window shows **This folder is empty**. Click **Refresh** to read it again.
 - **The search finds nothing.** Check **Look in**. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
-- **The search says "Too many folders to search".** Choose a smaller folder in **Look in**.
+- **The search stops with "more not shown".** The search looks in 2000 folders at most, or it found more results than it shows. Choose a smaller folder in **Look in**, or type more of the text.
 
 ## 7 - Need Help?
 

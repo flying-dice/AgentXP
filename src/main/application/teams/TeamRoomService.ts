@@ -135,9 +135,9 @@ export class TeamRoomService {
   /** A member's final message goes into the room; the members it @mentions start at once. */
   private answer(room: RoomDto, member: ProfileDto, text: string, callOthers = true): void {
     if (!this.deps.rooms.get(room.id)) return
-    const posted = this.post(room, member.id, member.name, text)
-    // What the member wrote itself needs no telling: it has seen it.
-    this.deps.rooms.setMemberSeen(room.id, member.id, posted.id)
+    // The member's own messages never count as unseen (unseenFor), so nothing is marked seen here: a message that came in while
+    // the member worked is newer than what its turn read, and its queued call must still answer it.
+    this.post(room, member.id, member.name, text)
     if (!callOthers) return
     const team = this.deps.teams.get(room.teamId)
     if (!team) return
@@ -170,7 +170,7 @@ export class TeamRoomService {
 
   private promptFor(room: RoomDto, unseen: RoomMessageDto[]): string {
     const lines = unseen.map((m) => `${m.author}: ${m.text}`)
-    return `New in the room "${room.title}":\n\n${lines.join('\n\n')}\n\nYou were called. Answer in the room.`
+    return `New in the room "${room.title}":\n\n${lines.join('\n\n')}\n\nYou were called. Reply with your answer: your reply is posted in the room for you (do not call room_post for this room).`
   }
 
   private defaultMember(roomId: Id, members: ProfileDto[]): ProfileDto[] {

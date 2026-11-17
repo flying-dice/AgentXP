@@ -130,6 +130,8 @@ export interface PermissionInterruptMetadata {
   title: string
   toolKind: ToolKind | null
   options: PermissionOptionDto[]
+  /** The Control Center permission of an AgentXP tool (`terminal` for terminal_run), when the request is about one. */
+  group?: string | null
 }
 
 export const emptyAguiState = (): AguiSessionState => ({

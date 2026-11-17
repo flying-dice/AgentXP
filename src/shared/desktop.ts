@@ -95,6 +95,10 @@ export interface CodeSearchView {
   include: string
   /** Who ran it: the user (Search button) or the agent (code_search). */
   by?: 'user' | 'agent'
+  /** Most results to show (the agent's `limit`); the default when absent. */
+  limit?: number
+  /** When the agent ran it (ms): the same search run again is a new view, so the tab searches again. */
+  ranAt?: number
 }
 
 /** Explorer's Search Companion: part of the file name and/or a word or phrase in the file, looked for below `root`. */

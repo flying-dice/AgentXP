@@ -6,6 +6,13 @@ import {
 } from '@shared/agui-state'
 import type { PermissionRequestDto } from '@shared/models'
 import { AppError } from '../errors'
+import { TOOL_DEFS, isToolName } from '../tools/catalog'
+
+/** The permission group of the AgentXP tool a request title names (`terminal_run {...}`, `mcp__agentxp__code_edit`), or null. */
+export function toolGroupOfTitle(title: string): string | null {
+  const name = (title.trim().split(/[\s({]/)[0] ?? '').replace(/^mcp__agentxp__/, '')
+  return isToolName(name) ? TOOL_DEFS[name].group : null
+}
 
 /** The AG-UI interrupt for an open permission request (the interrupt id is the request id). */
 export function permissionInterrupt(request: PermissionRequestDto, toolCall: AguiToolCallState | undefined): Interrupt {
@@ -14,7 +21,8 @@ export function permissionInterrupt(request: PermissionRequestDto, toolCall: Agu
     requestId: request.id,
     title,
     toolKind: toolCall?.kind ?? null,
-    options: request.options
+    options: request.options,
+    group: toolGroupOfTitle(title)
   }
   return {
     id: String(request.id),

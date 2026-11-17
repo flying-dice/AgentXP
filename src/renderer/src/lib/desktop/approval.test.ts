@@ -30,6 +30,13 @@ describe('approvals', () => {
     expect(approvalOrigin('Fix the login redirect bug and add a test', '2026-11-16T10:42:00')).toBe("In chat 'Fix the login redirect bug a...' (started 10:42)")
     expect(approvalOrigin('hello')).toBe("In chat 'hello'")
     expect(approvalOrigin('hello', 'nope')).toBe("In chat 'hello'")
+    expect(approvalOrigin('Tester', '2026-11-16T10:42:00', 'Development Team')).toBe("Tester in the room 'Development Team'")
+  })
+  it('names the member who asks in a team chat room', () => {
+    const member = approvalFromInterrupt(4, permissionInterrupt('t', 'terminal_run {"command":"npm test"}', 'other'), null, 'Development Team')!
+    expect(member.room).toBe('Development Team')
+    expect(approvalQuestion({ ...member, chatTitle: 'Tester' })).toBe('Allow Tester to run a command?')
+    expect(approvalFromInterrupt(4, permissionInterrupt('t', 'Run x', 'execute'), null)?.room).toBeNull()
   })
   it('says what each choice does', () => {
     expect(optionDescription('allow_once')).toMatch(/goes ahead/)
@@ -50,6 +57,11 @@ describe('approvals', () => {
     expect(approvalReason('edit', null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason(null, null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason('edit', DEFAULT_TOOL_POLICY, true)).toMatch(/Ask before every action/)
+  })
+  it('names the setting of an AgentXP tool that has no tool kind (terminal_run from MCP)', () => {
+    expect(approvalReason(null, DEFAULT_TOOL_POLICY, false, 'terminal')).toBe('Run commands is set to Ask in Control Center.')
+    expect(approvalReason('other', DEFAULT_TOOL_POLICY, false, 'fs.write')).toBe('Write files is set to Ask in Control Center.')
+    expect(approvalReason(null, DEFAULT_TOOL_POLICY, false, 'nonsense')).toBe('The agent asked for your permission.')
   })
 })
 

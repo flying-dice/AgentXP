@@ -188,6 +188,9 @@ export class AguiRunCoordinator implements AguiRunner {
     thread.resyncState(transcript)
     const surfaces = new Map(queries.surfacesOf(thread.sessionId).map((s) => [s.surfaceId, s]))
     const { messages, placedSurfaces } = new TranscriptMessageBuilder(thread.model.current(), surfaces).build(transcript)
+    // What the transcript holds was already prompted (also by main, for a team room or a scheduled task): when the client
+    // connects again with these messages, the last user message must not count as a new prompt.
+    for (const message of messages) if (message.role === 'user') thread.handledMessageIds.add(message.id)
     thread.push({ type: EventType.MESSAGES_SNAPSHOT, messages })
     thread.pushStateSnapshot()
     for (const surface of surfaces.values()) {

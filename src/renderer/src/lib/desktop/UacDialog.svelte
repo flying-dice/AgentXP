@@ -5,7 +5,7 @@
   import ApprovalDetail from '../app/session/ApprovalDetail.svelte'
   import { AltHeld, moveBetweenAnswers } from '../app/session/answerKeys.svelte'
   import CommandLink from '../app/session/CommandLink.svelte'
-  import { KEY_HINT, accessKeyIndex, decisionForKey } from '../app/session/permissionOptions'
+  import { ANSWER_ARM_MS, KEY_HINT, accessKeyIndex, decisionForKey } from '../app/session/permissionOptions'
   import { approvalQuestion, optionDescription, type PendingApproval } from './approval'
 
   interface Props {
@@ -28,6 +28,13 @@
   const ordered = $derived([...allow, ...deny])
   const alt = new AltHeld()
 
+  /** False for ANSWER_ARM_MS after the dialog appears: answers by key or click are ignored until then. */
+  let armed = $state(false)
+  $effect(() => {
+    const timer = setTimeout(() => (armed = true), ANSWER_ARM_MS)
+    return () => clearTimeout(timer)
+  })
+
   /** Alt+A takes the first Allow answer, Alt+D the first refusal; Left and Right move between the answers. */
   function onkeydown(event: KeyboardEvent): void {
     alt.keydown(event)
@@ -37,6 +44,12 @@
       return
     }
     const decision = decisionForKey(event)
+    if (decision && !armed) {
+      // A key typed for another window just before the dialog appeared: swallow it, answer nothing.
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     const option = decision === 'allow' ? allow[0] : decision === 'deny' ? deny[0] : undefined
     if (option) {
       event.preventDefault()
@@ -50,6 +63,7 @@
   <div
     class="uac"
     data-testid="uac-dialog"
+    data-armed={armed ? 'true' : 'false'}
     role="alertdialog"
     aria-modal="true"
     aria-labelledby="uac-q"
@@ -66,12 +80,14 @@
       <h2 id="uac-q" data-testid="uac-question">{approvalQuestion(approval)}</h2>
     </div>
     <div class="body">
-      <div class="from" data-testid="uac-from">Requested by the agent in <em>{approval.chatTitle}</em></div>
+      <div class="from" data-testid="uac-from">
+        {#if approval.room}Requested by {approval.chatTitle} in the room <em>{approval.room}</em>{:else}Requested by the agent in <em>{approval.chatTitle}</em>{/if}
+      </div>
       <div class="reason" data-testid="uac-reason">Reason: {reason}</div>
       {#if queueText}<div class="queue" data-testid="uac-queue">{queueText}</div>{/if}
       <ApprovalDetail toolCall={approval.toolCall} testid="uac" note={false} />
     </div>
-    <div class="links" data-answers role="group" aria-label="Your answer">
+    <div class="links" data-answers role="group" aria-label="Your answer" aria-disabled={armed ? undefined : 'true'}>
       {#each ordered as option (option.optionId)}
         {@const decision = option.kind.startsWith('allow') ? 'allow' : 'deny'}
         {@const first = option === allow[0] || option === deny[0]}
@@ -84,14 +100,16 @@
           showKey={alt.held}
           description={optionDescription(option.kind)}
           autofocus={option === deny[0]}
-          onclick={() => onanswer?.(option.optionId)}
+          onclick={() => {
+            if (armed) onanswer?.(option.optionId)
+          }}
         />
       {/each}
       {#if ordered.length > 0}<p class="hint" data-testid="uac-hint">{KEY_HINT}</p>{/if}
     </div>
     <div class="bar">
       {#if ordered.length === 0}
-        <Button data-testid="uac-cancel-action" data-autofocus onclick={() => onanswer?.(null)}>Cancel the action</Button>
+        <Button data-testid="uac-cancel-action" data-autofocus aria-disabled={armed ? undefined : 'true'} onclick={() => armed && onanswer?.(null)}>Cancel the action</Button>
       {/if}
       <Button data-testid="uac-not-now" onclick={() => onclose?.()}>Not now</Button>
     </div>

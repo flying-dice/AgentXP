@@ -15,7 +15,7 @@ export interface CodeToolsDeps {
   desktops: DesktopOps
   changes: { list(sessionId: Id): FileChangeDto[] }
   paths: ToolPaths
-  vfs: Pick<VirtualFileSystem, 'readFile'>
+  vfs: Pick<VirtualFileSystem, 'readFile' | 'readBytes'>
   search: Pick<FileSearch, 'searchText'>
   files: AgentFileWriter
 }
@@ -27,6 +27,14 @@ const VIEW_CONTEXT_LINES = 5
 const VIEW_HEIGHT = 30
 /** Lines code_read returns at most in one call. */
 export const MAX_READ_LINES = 2000
+/** Characters of one line that code_read returns (a minified bundle is one huge line). */
+export const MAX_READ_LINE_CHARS = 2000
+/** Characters one code_read returns at most; past it the result says where to read on. */
+export const MAX_READ_CHARS = 100_000
+
+/** Cuts a line to MAX_READ_LINE_CHARS and says how much was left out. */
+const clipLine = (line: string): string =>
+  line.length <= MAX_READ_LINE_CHARS ? line : `${line.slice(0, MAX_READ_LINE_CHARS)} [... ${line.length - MAX_READ_LINE_CHARS} more characters]`
 
 /** The singleton Code window (opened by the agent when needed) and its view. */
 function codeWindow(desktops: DesktopOps, desktopId: Id, file?: VPath): { id: Id; view: CodeView } {
@@ -69,6 +77,20 @@ const lineAt = (text: string, offset: number): number => text.slice(0, offset).s
 export function createCodeTools({ desktops, changes, paths, vfs, search, files }: CodeToolsDeps): ToolHandlers<CodeTool> {
   const changeOf = (sessionId: Id, file: VPath): FileChangeDto | undefined => changes.list(sessionId).find((c) => c.path.toLowerCase() === file.toLowerCase())
 
+  /**
+   * The text of a file that code_edit may change. A binary file or one that is not UTF-8 (Windows-1252, UTF-16) is refused:
+   * reading it as UTF-8 would turn every other non-ASCII byte into U+FFFD on save, and Revert could not bring them back.
+   */
+  const editableText = async (desktopId: Id, file: VPath): Promise<string> => {
+    const bytes = await vfs.readBytes(desktopId, file)
+    if (bytes.subarray(0, 8000).includes(0)) throw new AppError(`${file} is a binary file, not text; code_edit cannot change it.`)
+    try {
+      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
+    } catch {
+      throw new AppError(`${file} is not UTF-8 text (it may be Windows-1252 or UTF-16). code_edit would damage its other characters, so it was not changed.`)
+    }
+  }
+
   return {
     code_open: ({ path, line }, context) =>
       attempt(() => {
@@ -105,20 +127,29 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
         if (lines.length > 1 && lines.at(-1) === '') lines.pop()
         const first = startLine ?? 1
         if (first > lines.length) throw new AppError(`${file} has ${lines.length} lines; startLine ${first} is past the end.`)
-        const last = Math.min(endLine ?? lines.length, lines.length, first + MAX_READ_LINES - 1)
+        let last = Math.min(endLine ?? lines.length, lines.length, first + MAX_READ_LINES - 1)
         if (last < first) throw new AppError('endLine is before startLine.')
+        // Stop before the result gets too big for the agent to take in (long lines count as their clipped length).
+        let size = 0
+        for (let n = first; n <= last; n++) {
+          size += Math.min(lines[n - 1]!.length, MAX_READ_LINE_CHARS) + 8
+          if (size > MAX_READ_CHARS && n > first) {
+            last = n - 1
+            break
+          }
+        }
         const ranged = startLine !== undefined || endLine !== undefined
         // A whole file opens at the top; a range is scrolled to and highlighted.
         showFile(desktops, context.desktopId, file, { visibleLines: ranged ? [first, last] : null })
         const more = last < lines.length ? `\n(${lines.length - last} more lines: read from startLine ${last + 1})` : ''
-        return textResult(`${file}, lines ${first}-${last} of ${lines.length}:\n${numbered(lines.slice(first - 1, last), first)}${more}`)
+        return textResult(`${file}, lines ${first}-${last} of ${lines.length}:\n${numbered(lines.slice(first - 1, last).map(clipLine), first)}${more}`)
       }),
 
     code_search: ({ query, path, regex, matchCase, include, limit }, context) =>
       attempt(async () => {
         const root = paths.resolve(context, path)
         const result = await search.searchText(context.desktopId, root, { query, regex, matchCase, include, limit })
-        const view: CodeSearchView = { query, root, regex: regex ?? false, matchCase: matchCase ?? false, include: include ?? '', by: 'agent' }
+        const view: CodeSearchView = { query, root, regex: regex ?? false, matchCase: matchCase ?? false, include: include ?? '', by: 'agent', ...(limit !== undefined ? { limit } : {}), ranAt: Date.now() }
         const { id, view: current } = codeWindow(desktops, context.desktopId)
         desktops.updateView(id, { ...current, search: view })
         const lines = result.matches.map((m) => `${m.path}:${m.line}:${m.column}: ${m.text}`)
@@ -129,7 +160,12 @@ export function createCodeTools({ desktops, changes, paths, vfs, search, files }
       attempt(async () => {
         const { desktopId, sessionId } = context
         const file = paths.resolve(context, path)
-        const before = await vfs.readFile(desktopId, file)
+        const before = await editableText(desktopId, file)
+        // code_read shows lines without their \r: in a file with Windows line endings, the agent's text gets them back.
+        if (before.includes('\r\n') && !oldText.includes('\r')) {
+          oldText = oldText.replace(/\n/g, '\r\n')
+          newText = newText.replace(/\r?\n/g, '\r\n')
+        }
         const count = occurrences(before, oldText)
         if (count === 0) throw new AppError(`oldText was not found in ${file}. Read the file (code_read) and copy the text exactly, spaces and line breaks too.`)
         if (count > 1 && !replaceAll) throw new AppError(`oldText occurs ${count} times in ${file}. Add more of the surrounding text so it is unique, or set replaceAll.`)

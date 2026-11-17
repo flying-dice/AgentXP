@@ -82,7 +82,7 @@ attributes of a located element (`getAttribute('data-status')`); that is not sel
 `launcher-connect`, `taskbar-start`, `start-menu-item-notepad`, `window-explorer`, `window-close`,
 `topbar-pause`, `topbar-tool-chip-terminal` (dots become dashes: `topbar-tool-chip-fs-read`),
 `action-center-flag`, `uac-allow`, `chat-composer-input`, `chat-send`, `chat-transcript`,
-`chat-message-agent`, `tool-call-card`, `permission-option-<optionId>`, `explorer-item`,
+`chat-message-agent`, `tool-call-card`, `uac-option-<optionId>`, `explorer-item`,
 `explorer-drive-e`, `code-tab`, `code-editor`, `terminal-output`, `paint-canvas`, `notes-sticky`,
 `chat-surface-row` (`data-surface-id`, `data-state` open|closed, `data-target` inline|sidebar|window; with `chat-surface-title`, `chat-surface-state`, `chat-surface-open`, `chat-surface-close`, `chat-surface-delete`, `chat-surface-move` and `chat-surface-move-inline|sidebar|window`), `chat-sidebar`, `chat-sidebar-tab` (+ `chat-sidebar-tab-close`, `chat-sidebar-resizer`), `window-surface` with `surface-app`, `event-viewer-row`, `usb-tray`, `usb-eject-e`, `autoplay-open-folder`.
 
@@ -90,7 +90,7 @@ attributes of a located element (`getAttribute('data-status')`); that is not sel
 `window-chat` for two chats) and tests pick one with `.filter({ hasText })`, `.filter({ has })` or `.nth()`.
 Where the thing is a small closed set the id is unique instead: drives (`explorer-drive-e`,
 `usb-eject-e`), start menu items (`start-menu-item-<appKind>`), window frames (`window-<appKind>`), tool
-chips, permission options (`permission-option-<optionId>`). Rows additionally carry `data-*` attributes
+chips, permission options (`uac-option-<optionId>`). Rows additionally carry `data-*` attributes
 for disambiguation by humans and for assertions (`data-window-id`, `data-session-id`, `data-path`,
 `data-row-id`, `data-source`, `data-name`, `data-status`); tests never select by them.
 
@@ -117,6 +117,9 @@ for disambiguation by humans and for assertions (`data-window-id`, `data-session
   (`scripts/check-help-coverage.mjs`) fails when a static id of `src/renderer/src/lib/{apps,desktop,launcher,pages}`
   is in no manual. A template id is written with its static prefix and `*` (`chat-message-*`). Kit internals
   that need no manual go on the ignore list of the script, with a reason.
+  It also fails the other way round: when a control is deleted, its row must go too. An id in a Controls reference
+  table that no renderer source can produce any more fails the check (ids built in ways it cannot read go on its
+  `DYNAMIC_DOC_IDS` list, with a reason).
 
 **Statuses.** `tool-call-card` carries `data-status` = `running` | `waiting` | `done` | `failed` | `cancelled` | `denied`
 (`toolStatus.ts`); `topbar` carries `data-state` = `idle` | `working` | `paused`; window frames carry

@@ -170,7 +170,7 @@
     if (popup && !desktop.policy && !desktop.state.policy) void desktop.loadPolicy()
   })
   const centreApprovals = $derived(
-    approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt) }))
+    approvals.map((a) => ({ key: a.key, title: approvalLabel(a), detail: approvalOrigin(a.chatTitle, desktop.sessions.byId(a.sessionId)?.createdAt, a.room) }))
   )
   const messages = $derived(desktop.centreMessages)
   const policy = $derived(desktop.state.policy ?? desktop.policy)
@@ -343,7 +343,7 @@
       {#key popup.key}
         <UacDialog
           approval={popup}
-          reason={approvalReason(popup.toolKind, policy, desktop.state.userInControl)}
+          reason={approvalReason(popup.toolKind, policy, desktop.state.userInControl, popup.group)}
           queueText={approvals.length > 1 ? `1 of ${approvals.length} waiting` : null}
           onanswer={(optionId) => void desktop.answerReview(optionId)}
           onclose={() => desktop.closePopup()}

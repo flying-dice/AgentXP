@@ -164,7 +164,9 @@ export const ADMIN_TOOL_DEFS = {
   room_delete: { group: 'rooms', description: 'Delete a team chat room and the chats of its members.', input: z.object({ room: ref('Room') }) },
   room_post: {
     group: 'rooms',
-    description: 'Post a message in a team chat room. @mention a member to call it; without a mention the member who spoke last answers.',
+    description:
+      'Post a message in a team chat room. @mention a member to call it; without a mention the member who spoke last answers. ' +
+      'A member of the room never calls this for its own room: its final answer is posted there for it.',
     input: z.object({ room: ref('Room'), text: z.string().min(1).max(20_000) })
   },
   room_stop: {

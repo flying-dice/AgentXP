@@ -13,7 +13,11 @@ describe('toolTitles', () => {
     expect(toolPredicate({ title: 'Run npm test', toolKind: 'execute' })).toBe('run a command')
     expect(toolPredicate({ title: 'browser_navigate {"url":"https://x.test"}', toolKind: 'fetch' })).toBe('read the page')
     expect(toolPredicate({ title: 'read_file {"path":"a"}', toolKind: 'read' })).toBe('read a file')
-    expect(toolPredicate({ title: 'desktop_open_app', toolKind: 'other' })).toBe('do something')
+    // A desktop tool's name gives its plain title (still no tool name); an unknown one stays generic.
+    expect(toolPredicate({ title: 'desktop_open_app', toolKind: 'other' })).toBe('open an app')
+    expect(toolPredicate({ title: 'terminal_run {"command":"echo hi"}', toolKind: 'other' })).toBe('run a command')
+    expect(toolPredicate({ title: 'mcp__agentxp__code_edit', toolKind: null })).toBe('change a file')
+    expect(toolPredicate({ title: 'mystery_tool {"x":1}', toolKind: 'other' })).toBe('do something')
   })
 
   it('uses the agent\'s own words when no file is named', () => {
@@ -61,5 +65,11 @@ describe('liveToolTitle', () => {
     expect(liveToolTitle('agentxp.browser_type', '{"text":"hi"}')).toBe("Typing 'hi'")
     expect(liveToolTitle('terminal_run')).toBe('Run a command')
     expect(liveToolTitle('mystery')).toBeNull()
+  })
+
+  it('finds the plain title of a tool named with its input, but not of a sentence', () => {
+    expect(plainToolTitle('terminal_run {"command":"echo hi"}')).toBe('Run a command')
+    expect(plainToolTitle('mcp__agentxp__fs_find {"pattern":"*.ts"}')).toBe('Find files')
+    expect(plainToolTitle('terminal output is long')).toBeNull()
   })
 })

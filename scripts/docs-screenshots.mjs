@@ -216,26 +216,19 @@ async function main() {
 
     // Action Center and the UAC dialog
     console.log('uac')
-    // The agent asks after the search step (about 9 s). Open the Action Center until it lists the request.
-    const flag = page.getByTestId('action-center-flag')
-    await flag.waitFor()
-    for (let i = 0; ; i++) {
-      if (i > 120) throw new Error('no permission request reached the Action Center')
-      await flag.click()
-      await pause(400)
-      if ((await page.getByTestId('action-center-approval').count()) > 0) break
-      await flag.click()
-      await pause(500)
-    }
-    await page.getByTestId('action-center').waitFor()
+    // The agent asks after the search step (about 9 s): the permission dialog box pops up over the desktop by itself.
+    await page.getByTestId('uac-dialog').waitFor({ timeout: 60_000 })
+    await page.locator('[data-testid="uac-dialog"][data-armed="true"]').waitFor()
+    await pause(300)
+    await pageShot('uac-dialog', page)
+    // Not now puts it off: the request waits in the Action Center, whose Review brings the box back.
+    await page.getByTestId('uac-not-now').click()
+    await page.getByTestId('uac-dialog').waitFor({ state: 'hidden' })
+    await page.getByTestId('action-center-flag').click()
+    await page.getByTestId('action-center-approval').first().waitFor()
     await pause(300)
     await shot('action-center', page.getByTestId('action-center'), { margin: 60 })
     await page.getByTestId('action-center-review').first().click()
-    await page.getByTestId('uac-dialog').waitFor()
-    // Older builds fold the details behind a button; the dialog now shows them.
-    if ((await page.getByTestId('uac-details').count()) > 0) await page.getByTestId('uac-details').click()
-    await pause(700)
-    await pageShot('uac-dialog', page)
     await page.getByTestId('uac-allow').click()
     await chat.getByTestId('chat-transcript').and(page.locator('[data-running="false"]')).waitFor({ timeout: 60_000 })
     await pause(600)
@@ -252,12 +245,12 @@ async function main() {
       const last = s.windows.filter((w) => w.app === 'chat').at(-1)
       await window.agentxp.sessions.rename(last.view.sessionId, 'Deploy the fix')
     })
-    await place('chat', { x: 20, y: 70, width: 520, height: 600 }, 1)
+    await place('chat', { x: 20, y: 84, width: 520, height: 600 }, 1)
     await say(chat2, 'Show me a form for the deployment')
     const surfaceWindow = page.getByTestId('window-surface')
     await surfaceWindow.getByTestId('a2ui-surface').waitFor({ timeout: 60_000 })
     await chat2.getByTestId('chat-surface-row').waitFor()
-    await place('surface', { x: 560, y: 70, width: 480, height: 420 })
+    await place('surface', { x: 560, y: 84, width: 480, height: 420 })
     await pause(1200)
     // The form in its own window next to the chat, with the chat row (Open / Close / Delete) visible.
     const chatBox = await chat2.boundingBox()
@@ -277,7 +270,7 @@ async function main() {
 
     // ---- the same chat with a sidebar: the chat's extended surface ---------------------------------------------------
     console.log('a2ui sidebar')
-    await place('chat', { x: 20, y: 70, width: 860, height: 600 }, 1)
+    await place('chat', { x: 20, y: 84, width: 860, height: 600 }, 1)
     await say(chat2, 'Add the release checklist')
     await chat2.getByTestId('chat-sidebar').getByTestId('a2ui-surface').waitFor({ timeout: 60_000 })
     await chat2.getByTestId('chat-transcript').and(page.locator('[data-running="false"]')).waitFor({ timeout: 60_000 })
@@ -288,12 +281,12 @@ async function main() {
       const last = s.windows.filter((w) => w.app === 'chat').at(-1)
       await window.agentxp.a2ui.setSidebarHidden(last.view.sessionId, 'checklist', true)
     })
-    await place('chat', { x: 300, y: 70, width: 520, height: 600 }, 1)
+    await place('chat', { x: 300, y: 84, width: 520, height: 600 }, 1)
 
     // ---- Agent Paint --------------------------------------------------------------------------------------------------
     console.log('paint')
     await open('paint')
-    await place('paint', { x: 120, y: 50, width: 790, height: 690 })
+    await place('paint', { x: 120, y: 80, width: 790, height: 660 })
     await say(chat2, 'Draw a picture of a little house')
     await page.getByTestId('window-paint').getByTestId('paint-canvas').waitFor()
     await pause(1500)
@@ -323,7 +316,7 @@ async function main() {
     await page.getByTestId('start-menu-place-control-centre').click()
     const cc = page.getByTestId('window-control-centre')
     await cc.waitFor()
-    await place('control-centre', { x: 180, y: 60, width: 760, height: 690 })
+    await place('control-centre', { x: 180, y: 90, width: 760, height: 660 })
     await cc.getByTestId('control-centre-page-permissions').click()
     await pause(900)
     await shot('control-centre-permissions', cc)
@@ -368,6 +361,12 @@ async function main() {
     const page2 = await desktopWindow(desktopId)
     await page2.getByTestId('taskbar').waitFor()
     await pause(1200)
+    // The first chat asks again (it changes src/auth/login.ts): its request pops up over this desktop. Allow it first.
+    for (let i = 0; i < 20 && (await page2.getByTestId('uac-dialog').count()) > 0; i++) {
+      await page2.locator('[data-testid="uac-dialog"][data-armed="true"]').waitFor()
+      await page2.getByTestId('uac-allow').click()
+      await pause(800)
+    }
     await page2.getByTestId('taskbar-start').click()
     await page2.getByTestId('start-menu').waitFor()
     await pause(500)
@@ -521,7 +520,8 @@ async function main() {
     const triggerDialog = page2.getByTestId('trigger-dialog')
     await triggerDialog.waitFor()
     await triggerDialog.getByTestId('trigger-dialog-kind').click()
-    await triggerDialog.getByTestId('trigger-dialog-kind-option-weekly').click()
+    // The list opens in the popup layer above every window (#38), not inside the dialog.
+    await page2.getByTestId('trigger-dialog-kind-option-weekly').click()
     for (let d = 0; d < 7; d++) {
       const box = triggerDialog.getByTestId(`trigger-dialog-dow-${d}`)
       if ((await box.getAttribute('aria-checked')) !== String(d === 1 || d === 5)) await box.click()

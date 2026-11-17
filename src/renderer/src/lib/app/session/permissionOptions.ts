@@ -63,6 +63,13 @@ export const asPredicate = (title: string): string => {
 /** The access keys of the two answers (Alt+A, Alt+D); the dialogs underline them while Alt is held. A alone allows too. */
 export const ACCESS_KEYS: Record<PermissionDecision, string> = { allow: 'a', deny: 'd' }
 
+/**
+ * How long the permission dialog ignores answers after it appears. It opens by itself over whatever the user is doing, so
+ * a key meant for another window (an "a" typed in Notepad, Enter in a chat) or a click aimed at the request it replaced
+ * must not answer it.
+ */
+export const ANSWER_ARM_MS = 700
+
 /** The line under the answers of both permission dialogs. */
 export const KEY_HINT = 'Enter denies. Press A to allow.'
 

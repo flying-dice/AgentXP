@@ -1,6 +1,6 @@
 import { EventType, type BaseEvent, type RunAgentInput } from '@ag-ui/core'
 import type { AguiApi } from '@shared/ipc'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SessionAgentStore } from './SessionAgentStore.svelte'
 
 class FakeAguiApi implements AguiApi {
@@ -45,6 +45,25 @@ const interruptOutcome = (id: string): object => ({
 })
 
 describe('SessionAgentStore', () => {
+  it('follows a turn that main started while its run was ending, and only when the session still works', async () => {
+    let busy = true
+    api.script = (input) => {
+      // The next turn begins in main while this run streams its end (a room member's queued message).
+      if (api.runs.length === 1) store.followAfterRun(() => busy)
+      return bookends(input)
+    }
+    await store.connect()
+    await vi.waitFor(() => expect(api.runs).toHaveLength(2))
+    expect(store.running).toBe(false)
+
+    // A turn that simply ended is not loaded again.
+    busy = false
+    api.runs.length = 0
+    await store.connect()
+    await new Promise((r) => setTimeout(r, 120))
+    expect(api.runs).toHaveLength(1)
+  })
+
   it('connect mirrors the snapshots into reactive state and surfaces A2UI activities', async () => {
     api.script = (input) =>
       bookends(

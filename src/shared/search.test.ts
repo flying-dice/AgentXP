@@ -16,6 +16,18 @@ describe('nameMatcher and includeMatcher', () => {
     expect(includeMatcher('')('anything')).toBe(true)
     expect(includeMatcher(' , ')('anything')).toBe(true)
   })
+
+  it('takes **, ?, {a,b} and paths below the folder searched, with either slash', () => {
+    expect(nameMatcher('**/*.ts')('a.ts', 'a.ts')).toBe(true)
+    expect(nameMatcher('**/*.ts')('a.ts', 'src\\deep\\a.ts')).toBe(true)
+    expect(nameMatcher('src/*.ts')('a.ts', 'src\\a.ts')).toBe(true)
+    expect(nameMatcher('src/*.ts')('a.ts', 'src\\deep\\a.ts')).toBe(false)
+    expect(nameMatcher('src\\**\\*.ts')('a.ts', 'src/deep/a.ts')).toBe(true)
+    expect(nameMatcher('test?.js')('test1.js')).toBe(true)
+    expect(nameMatcher('test?.js')('test10.js')).toBe(false)
+    const either = includeMatcher('*.{ts,tsx}, *.md')
+    expect(['a.ts', 'b.tsx', 'c.md', 'd.js'].map((n) => either(n))).toEqual([true, true, true, false])
+  })
 })
 
 describe('lineMatcher', () => {
@@ -23,11 +35,13 @@ describe('lineMatcher', () => {
     expect(lineMatcher({ query: 'foo' })('a FOO b')).toEqual({ start: 2, length: 3 })
     expect(lineMatcher({ query: 'foo', matchCase: true })('a FOO b')).toBeNull()
     expect(lineMatcher({ query: 'a.b' })('axb')).toBeNull() // plain text: the dot is a dot
+    expect(lineMatcher({ query: 'x' })('İİ x')).toEqual({ start: 3, length: 1 }) // lower-casing İ would shift the column
   })
 
   it('finds a regular expression and reports the first match', () => {
     expect(lineMatcher({ query: 'b+', regex: true })('abbbc bb')).toEqual({ start: 1, length: 3 })
     expect(lineMatcher({ query: 'x*', regex: true })('abc')).toBeNull() // empty matches do not count
+    expect(lineMatcher({ query: 'a*', regex: true })('baaa')).toEqual({ start: 1, length: 3 }) // an empty first match is not the end
   })
 
   it('refuses an empty query and a broken regular expression', () => {

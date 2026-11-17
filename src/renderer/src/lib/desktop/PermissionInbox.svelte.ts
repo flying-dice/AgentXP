@@ -15,18 +15,21 @@ export type InboxStore = Pick<SessionStoreLike, 'state' | 'pendingInterrupt' | '
 export class PermissionInbox {
   private entries = $state.raw<ReadonlyMap<Id, InboxStore>>(new Map())
   private readonly create: (sessionId: Id) => InboxStore
+  /** The team chat room a session is a member of (its title), or null: names the room in the approvals. */
+  private readonly roomOf: (sessionId: Id) => string | null
 
   /** Pending approvals across the desktop's chats, newest chat first. */
   readonly pending = $derived<PendingApproval[]>(
     [...this.entries]
       .reverse()
-      .map(([sessionId, store]) => approvalFromInterrupt(sessionId, store.pendingInterrupt, store.state))
+      .map(([sessionId, store]) => approvalFromInterrupt(sessionId, store.pendingInterrupt, store.state, this.roomOf(sessionId)))
       .filter((a): a is PendingApproval => a !== null)
   )
 
   /** `create` returns the (already connecting) store of a chat; the desktop passes the host's shared store cache. */
-  constructor(create: (sessionId: Id) => InboxStore) {
+  constructor(create: (sessionId: Id) => InboxStore, roomOf: (sessionId: Id) => string | null = () => null) {
     this.create = create
+    this.roomOf = roomOf
   }
 
   /** Ids of the chats the inbox knows. */

@@ -53,7 +53,10 @@ export function toolPredicate({ title, toolKind, path }: ToolTitleInput): string
       return 'switch to another mode'
     default: {
       const text = title.trim()
-      return !text || looksLikeToolName(text) ? 'do something' : lowerFirst(text)
+      if (text && !looksLikeToolName(text)) return lowerFirst(text)
+      // A tool name with its input (`terminal_run {"command": ...}`, `mcp__agentxp__code_edit`): its plain title when known.
+      const plain = plainToolTitle(text)
+      return plain ? lowerFirst(plain) : 'do something'
     }
   }
 }
@@ -93,6 +96,40 @@ const TITLES: Record<string, string> = {
   review_read_diff: 'Read a change',
   review_submit: 'Finish the review',
   terminal_run: 'Run a command',
+  terminal_read: 'Read the terminal',
+  fs_list: 'List a folder',
+  fs_find: 'Find files',
+  code_read: 'Read a file',
+  code_search: 'Search the files',
+  code_edit: 'Change a file',
+  code_write: 'Write a file',
+  code_open: 'Show a file in Code',
+  code_reveal: 'Point at lines in Code',
+  code_show_diff: 'Show a change in Code',
+  notepad_open: 'Open a file in Notepad',
+  notepad_read: 'Read a file in Notepad',
+  wordpad_open: 'Open a document in WordPad',
+  wordpad_read: 'Read a document in WordPad',
+  wordpad_write: 'Write a document in WordPad',
+  paint_draw: 'Draw in Paint',
+  paint_read: 'Look at the picture in Paint',
+  paint_clear: 'Clear the picture in Paint',
+  paint_resize: 'Resize the picture in Paint',
+  desktop_open_app: 'Open an app',
+  desktop_close_app: 'Close an app',
+  desktop_focus_app: 'Bring an app to the front',
+  review_open: 'Open Code Review',
+  chats_list: 'List the chats',
+  chat_read: 'Read a chat',
+  chat_open: 'Open a chat',
+  drives_list: 'List the drives',
+  room_list: 'List the team chat rooms',
+  room_read: 'Read a team chat room',
+  room_create: 'Start a team chat room',
+  room_rename: 'Rename a team chat room',
+  room_delete: 'Delete a team chat room',
+  room_post: 'Post in a team chat room',
+  room_stop: 'Stop a member of a team chat room',
   desktop_state: 'Look at the desktop',
   screen_capture: 'Take a picture of the screen',
   events_query: 'Read the event log',
@@ -124,7 +161,10 @@ const toolPart = (name: string): string => name.replace(/^mcp__.*?__/, '').repla
 /** The plain title of a tool by the name the agent gave it, or null when there is none. */
 export function plainToolTitle(name: string): string | null {
   const trimmed = name.trim()
-  return TITLES[trimmed] ?? TITLES[toolPart(trimmed)] ?? null
+  // `terminal_run {"command": ...}`: the tool's name before its input (only a tool-like name, not a sentence's first word).
+  const head = trimmed.split(/\s/)[0] ?? ''
+  const headTitle = /[_.]/.test(head) ? (TITLES[head] ?? TITLES[toolPart(head)]) : undefined
+  return TITLES[trimmed] ?? TITLES[toolPart(trimmed)] ?? headTitle ?? null
 }
 
 /** The title to show for a tool: the plain one, else what the agent said. */
