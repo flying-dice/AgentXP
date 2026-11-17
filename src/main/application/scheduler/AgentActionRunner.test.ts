@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { AgentDto, Id, SessionDto } from '@shared/models'
 import { newAgentAction, type AgentActionDto } from '@shared/scheduler'
 import type { McpServerDto, ProfileDto, SkillDto, TeamDto } from '@shared/teams'
@@ -24,7 +24,7 @@ interface Registry {
   teams?: TeamDto[]
 }
 
-function setup(options: { reason?: StopReason | Error; hold?: boolean; sessions?: SessionDto[]; registry?: Registry; models?: { id: string; name: string }[] } = {}) {
+function setup(options: { ignoreCancels?: number; reason?: StopReason | Error; hold?: boolean; sessions?: SessionDto[]; registry?: Registry; models?: { id: string; name: string }[] } = {}) {
   const calls: string[] = []
   const scopes: [number, SessionScope][] = []
   let chatRow: SessionDto | null = null
@@ -49,7 +49,8 @@ function setup(options: { reason?: StopReason | Error; hold?: boolean; sessions?
     },
     cancel: async (id) => {
       calls.push(`cancel ${id}`)
-      release('cancelled')
+      // A cancel that comes too early does nothing: the turn is not far enough along.
+      if (calls.filter((c) => c.startsWith('cancel')).length > (options.ignoreCancels ?? 0)) release('cancelled')
     }
   }
   const known = options.sessions ?? [session(7)]
@@ -136,6 +137,21 @@ describe('AgentActionRunner', () => {
     t.controller.abort()
     expect(await done).toMatchObject({ result: 'stopped', sessionId: 42 })
     expect(t.calls).toContain('cancel 42')
+  })
+
+  it('asks again to cancel while the turn goes on, so that End is not lost when it comes too early', async () => {
+    vi.useFakeTimers()
+    try {
+      const t = setup({ hold: true, ignoreCancels: 1 })
+      const done = t.runner.run(t.input(action()))
+      await vi.advanceTimersByTimeAsync(0)
+      t.controller.abort()
+      await vi.advanceTimersByTimeAsync(1200)
+      expect(await done).toMatchObject({ result: 'stopped', sessionId: 42 })
+      expect(t.calls.filter((c) => c === 'cancel 42').length).toBeGreaterThanOrEqual(2)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('does nothing when it is aborted before it starts', async () => {

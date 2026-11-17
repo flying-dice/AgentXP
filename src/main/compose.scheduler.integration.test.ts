@@ -118,6 +118,7 @@ describe('Task Scheduler with the fake ACP agent', () => {
 
     await app.api.scheduler.run(task.id)
     const running = await waitFor(async () => (await app.api.scheduler.history(task.id)).find((r) => r.sessionId !== null), 'the chat of the run')
+    await waitFor(async () => (await app.api.sessions.transcript(running.sessionId!)).find((e) => e.kind === 'tool_call' && e.permission?.outcome === 'pending'), 'the permission request')
     const scope = db.prepare('SELECT instructions FROM session_scopes WHERE session_id = ?').get(running.sessionId!)
     expect(scope).toEqual({ instructions: '' })
     expect(db.prepare('SELECT skill_id FROM session_scope_skills WHERE session_id = ?').all(running.sessionId!)).toEqual([{ skill_id: skill.id }])

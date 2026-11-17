@@ -65,7 +65,7 @@ export const LIBRARY_COLUMNS: ListColumn[] = [
   { key: 'triggers', header: 'Triggers', minWidth: 150 },
   { key: 'next', header: 'Next Run Time', width: 128 },
   { key: 'last', header: 'Last Run Time', width: 128 },
-  { key: 'result', header: 'Last Run Result', minWidth: 100 }
+  { key: 'result', header: 'Last Run Result', width: 108 }
 ]
 
 export const HISTORY_COLUMNS: ListColumn[] = [

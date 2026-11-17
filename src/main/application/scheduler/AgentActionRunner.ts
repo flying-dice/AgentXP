@@ -27,6 +27,9 @@ export interface AgentActionRunnerDeps {
   scopes: Pick<SessionScopeRepository, 'set'>
 }
 
+/** How often a cancel is repeated while a stopped run waits for its turn to end. */
+const CANCEL_RETRY_MS = 500
+
 const pad = (n: number): string => String(n).padStart(2, '0')
 
 /** `Nightly review - 11/17 09:00`: the title of a chat that a scheduled task starts, so the chat list shows where it came from. */
@@ -60,7 +63,13 @@ export class AgentActionRunner implements ActionRunner {
       if (typeof session === 'string') return failed(session)
       sessionId = session.id
       input.onSession(session.id)
-      const cancel = (): void => void this.deps.chats.cancel(session.id).catch(() => {})
+      // End can arrive before the turn is far enough along to be cancelled: ask again until the turn ends.
+      let again: ReturnType<typeof setInterval> | null = null
+      const ask = (): void => void this.deps.chats.cancel(session.id).catch(() => {})
+      const cancel = (): void => {
+        ask()
+        again ??= setInterval(ask, CANCEL_RETRY_MS)
+      }
       if (signal.aborted) return stopped(sessionId)
       signal.addEventListener('abort', cancel, { once: true })
       try {
@@ -69,6 +78,7 @@ export class AgentActionRunner implements ActionRunner {
         return reason === 'end_turn' ? { result: 'success', message: 'The agent finished its turn.', sessionId } : failed(STOP_TEXT[reason], sessionId)
       } finally {
         signal.removeEventListener('abort', cancel)
+        if (again) clearInterval(again)
       }
     } catch (error) {
       return signal.aborted ? stopped(sessionId) : failed(messageOf(error), sessionId)

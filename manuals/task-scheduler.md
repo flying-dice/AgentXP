@@ -159,6 +159,8 @@ Select how the chat of a run gets its skills and tools:
 - **Use a team** – The agent runs as the first member of the team that you select. It gets the skills and the MCP servers of that member, the skills of the team, and the instructions of both. The other members do not take part.
 - **Choose skills and tools** – The agent gets only the skills and the MCP servers that you check. Under the lists, **Tools of the chosen servers** shows the tools that the last test of each server found. Clear a tool to hide it from the agent. If you did not test a server yet, the agent gets all of its tools. Test the server in Control Center to see its tools.
 
+![The Edit Action dialog box with Choose skills and tools selected, the skill pdf, the server GitHub, and two of its three tools checked](../docs/images/task-scheduler-action-tools.png)
+
 AgentXP keeps the choice with the action. The **Actions** tab, the **Actions** tab of the dialog box, and the last page of the wizard show it in the column **Skills and tools**.
 
 A choice applies to a new chat only. A chat that exists keeps the skills and the tools that it has. If you select **Send the prompt to this chat**, the choice is not available.
