@@ -32,9 +32,13 @@ export const DESKTOP_INSTRUCTIONS =
   'In a chat pane (an aside: the small chat inside an app window, whose prompts carry `appContext` in the desktop state: windowId, app, the open file, the selection, the page) ' +
   'keep your answers short and local to that app context, a few sentences or a short list: "explain this" means the selection or the open file in appContext. ' +
   'Do not start side projects there; act only when asked, and pass `window` = appContext.windowId to tools that take a window (the browser_* tools drive that Browser window). ' +
+  'Work tracking: the board_* tools (always available, the Kanban window need not be open) read and write the desktop\'s Kanban boards. Teams share a board: ' +
+  'look at it (board_get) before you start, take or create a card for your work (assignee = your own name), move it to "Doing" when you start and to "Done" when you finish, and keep descriptions short. ' +
   'Using web apps (chat, mail, docs) in the Browser: the user signs in themselves in the Browser window and the session persists; you never type passwords or secrets. ' +
   'Loop: browser_read (tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. browser_read pages through the whole document (follow nextOffset), ' +
   'refs reset when the page navigates, and long lists load more when you browser_scroll, then read again.'
+
+const BOARD_REF = z.union([z.number().int(), z.string()]).describe('Board id, or its name')
 
 const STICKY_COLOR = z.enum(['yellow', 'blue', 'green', 'pink', 'purple', 'white'])
 
@@ -308,6 +312,77 @@ export const TOOL_DEFS = {
     group: 'notes',
     description: 'Remove a sticky note.',
     input: z.object({ id: z.number().int() })
+  },
+  board_list: {
+    group: 'board',
+    description:
+      'List the Kanban boards of this desktop (id, name, columns with card counts). Boards are how agents and people track work: a team shares one board, cards have a title, a description and an assignee.',
+    input: z.object({})
+  },
+  board_get: {
+    group: 'board',
+    description: 'Show one board: its columns and every card with ids, title, assignee and description. Default: the only board, when there is just one.',
+    input: z.object({ board: BOARD_REF.optional() })
+  },
+  board_create: {
+    group: 'board',
+    description: 'Create a board. It gets the columns "To do", "Doing" and "Done" unless you pass `columns`.',
+    input: z.object({ name: z.string().min(1), columns: z.array(z.string().min(1)).optional() })
+  },
+  board_rename: {
+    group: 'board',
+    description: 'Rename a board.',
+    input: z.object({ board: BOARD_REF, name: z.string().min(1) })
+  },
+  board_delete: {
+    group: 'board',
+    description: 'Delete a board with all its columns and cards.',
+    input: z.object({ board: BOARD_REF })
+  },
+  board_add_column: {
+    group: 'board',
+    description: 'Add a column (list) at the right end of a board.',
+    input: z.object({ board: BOARD_REF, name: z.string().min(1) })
+  },
+  board_rename_column: {
+    group: 'board',
+    description: 'Rename a column.',
+    input: z.object({ column: z.number().int().describe('Column id from board_get'), name: z.string().min(1) })
+  },
+  board_delete_column: {
+    group: 'board',
+    description: 'Delete a column with its cards.',
+    input: z.object({ column: z.number().int().describe('Column id from board_get') })
+  },
+  board_add_card: {
+    group: 'board',
+    description: 'Add a card at the bottom of a column. Assign it to a person or an agent profile by name.',
+    input: z.object({
+      column: z.union([z.number().int(), z.string()]).describe('Column id, or its name (then pass `board` too unless there is a single board)'),
+      board: BOARD_REF.optional(),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      assignee: z.string().optional()
+    })
+  },
+  board_update_card: {
+    group: 'board',
+    description: 'Change a card\'s title, description or assignee. An empty assignee clears it.',
+    input: z.object({ card: z.number().int().describe('Card id from board_get'), title: z.string().min(1).optional(), description: z.string().optional(), assignee: z.string().optional() })
+  },
+  board_move_card: {
+    group: 'board',
+    description: 'Move a card to a column of its board (for example to "Doing" or "Done"), optionally to a position (0 is the top). Default: the bottom.',
+    input: z.object({
+      card: z.number().int().describe('Card id from board_get'),
+      column: z.union([z.number().int(), z.string()]).describe('Column id, or its name on the card\'s board'),
+      position: z.number().int().min(0).optional()
+    })
+  },
+  board_delete_card: {
+    group: 'board',
+    description: 'Delete a card.',
+    input: z.object({ card: z.number().int().describe('Card id from board_get') })
   },
   events_query: {
     group: 'events',

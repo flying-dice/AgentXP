@@ -71,7 +71,7 @@ Other agents can have other modes. You can type the id of a mode in the box. If 
 The page has two blocks. Each row has a list with the choices **Allow**, **Ask**, and **Deny**.
 
 - **What the agent may do** – Read files, Write files, and Run commands. Point at **Run commands** to see "Run commands (Terminal)".
-- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Events, Screen capture, Recycle Bin, Code review, and Agent may open apps.
+- **Apps the agent may use** – Code, Notepad, Browser, Agent Paint, WordPad, Notes, Kanban boards, Events, Screen capture, Recycle Bin, Code review, and Agent may open apps.
 
 Each row has two lines. The first line shows the name and the setting. The second line tells what the row covers. The table has no sideways scroll, so you can read every line at the default size of the window.
 

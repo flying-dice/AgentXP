@@ -69,6 +69,7 @@ This chapter lists the manual of each app. The Start menu lists the same apps.
 - **[Browser](browser.md)** – Browse the web together with the agent.
 - **[Agent Paint](paint.md)** – Draw, and watch the agent draw.
 - **[Sticky Notes](sticky-notes.md)** – Notes on the desktop, shared with the agent.
+- **[Kanban](kanban.md)** – Boards of cards that track work, shared with the agents.
 - **[Snipping Tool](snipping-tool.md)** – Capture part of the screen.
 
 ### System

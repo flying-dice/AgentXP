@@ -100,7 +100,7 @@
     items: kinds.map((k) => ({ id: k, title: appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
   })
   const groups: StartGroup[] = [
-    groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes']),
+    groupOf('accessories', 'Accessories', ['notepad', 'wordpad', 'paint', 'snipping-tool', 'sticky-notes', 'kanban']),
     groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre'])
   ]
   const programs = $derived<StartItem[]>(

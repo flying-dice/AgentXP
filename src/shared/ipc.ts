@@ -22,6 +22,7 @@ import type { AgentProcessDto, DesktopApi, DesktopEvents, DesktopExtrasApi } fro
 import type { DrivesApi, LauncherApi, LauncherEvents, VPath, VfsApi } from './vfs'
 import type { GitApi, GitEvents } from './git'
 import type { ReviewApi, ReviewEvents } from './review'
+import type { KanbanApi, KanbanEvents } from './kanban'
 
 export interface PromptInput {
   sessionId: Id
@@ -156,6 +157,7 @@ export interface Agent7Api {
   drives: DrivesApi
   launcher: LauncherApi
   notes: DesktopExtrasApi['notes']
+  kanban: KanbanApi
   events: DesktopExtrasApi['events']
   recycle: DesktopExtrasApi['recycle']
   snip: DesktopExtrasApi['snip']
@@ -179,7 +181,7 @@ export interface Agent7Api {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents {
+export interface Agent7Events extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

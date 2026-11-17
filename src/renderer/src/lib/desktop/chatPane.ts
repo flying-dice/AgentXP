@@ -144,6 +144,8 @@ export function suggestionsFor(app: AppKind, context: Record<string, unknown> | 
       return [chip('describe', 'Describe the canvas'), chip('draw', 'Draw something simple')]
     case 'sticky-notes':
       return [chip('summarise', 'Summarise my notes')]
+    case 'kanban':
+      return [chip('summarise', 'Summarise this board'), chip('next', 'What should be done next?')]
     case 'help':
       return [chip('explain', 'Explain this topic')]
     default:
