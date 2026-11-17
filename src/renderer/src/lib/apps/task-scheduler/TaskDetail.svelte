@@ -23,12 +23,12 @@
   const tabs = SCHEDULER_TABS.map((t) => ({ ...t, testid: `task-scheduler-tab-${t.id}` }))
   const triggerColumns: ListColumn[] = [
     { key: 'kind', header: 'Trigger', width: 110 },
-    { key: 'details', header: 'Details', width: 360, minWidth: 160 },
+    { key: 'details', header: 'Details', minWidth: 160 },
     { key: 'status', header: 'Status', width: 70 }
   ]
   const actionColumns: ListColumn[] = [
     { key: 'action', header: 'Action', width: 100 },
-    { key: 'details', header: 'Details', width: 460, minWidth: 200 }
+    { key: 'details', header: 'Details', minWidth: 200 }
   ]
   let runSelected = $state<string[]>([])
   const chat = $derived(runs.find((r) => String(r.id) === runSelected[0])?.sessionId ?? null)

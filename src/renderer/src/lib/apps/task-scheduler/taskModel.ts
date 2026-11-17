@@ -48,13 +48,17 @@ export const SCHEDULER_TABS: { id: SchedulerTab; title: string }[] = [
   { id: 'history', title: 'History' }
 ]
 
+/**
+ * The columns fit the list at the default window width: Triggers and Last Run Result take what is left (flexible columns), the
+ * others have a fixed width. The list scrolls sideways only when the window is narrower than the sum of the narrowest widths.
+ */
 export const LIBRARY_COLUMNS: ListColumn[] = [
-  { key: 'name', header: 'Name', width: 170 },
-  { key: 'status', header: 'Status', width: 70 },
-  { key: 'triggers', header: 'Triggers', width: 220 },
-  { key: 'next', header: 'Next Run Time', width: 130 },
-  { key: 'last', header: 'Last Run Time', width: 130 },
-  { key: 'result', header: 'Last Run Result', width: 150, minWidth: 110 }
+  { key: 'name', header: 'Name', width: 150 },
+  { key: 'status', header: 'Status', width: 64 },
+  { key: 'triggers', header: 'Triggers', minWidth: 150 },
+  { key: 'next', header: 'Next Run Time', width: 128 },
+  { key: 'last', header: 'Last Run Time', width: 128 },
+  { key: 'result', header: 'Last Run Result', minWidth: 100 }
 ]
 
 export const HISTORY_COLUMNS: ListColumn[] = [
@@ -62,7 +66,7 @@ export const HISTORY_COLUMNS: ListColumn[] = [
   { key: 'start', header: 'Start', width: 130 },
   { key: 'end', header: 'End', width: 130 },
   { key: 'by', header: 'Started by', width: 120 },
-  { key: 'message', header: 'Message', width: 300, minWidth: 160 }
+  { key: 'message', header: 'Message', minWidth: 200 }
 ]
 
 // ---------------------------------------------------------------- the library

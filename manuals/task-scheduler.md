@@ -104,7 +104,7 @@ If a step has a problem, a red line at the bottom says what to do. The wizard do
 
 Click **Create Task...** to make a task with all options. Click **Properties...** to change a task. Both open the same dialog box. It has five tabs.
 
-![The Create Task dialog with the Triggers tab open and no triggers](../docs/images/task-scheduler-create-task.png)
+![The Create Task dialog with the Triggers tab open and one weekly trigger](../docs/images/task-scheduler-create-task.png)
 
 - **General** – The name, the description, and **Enabled**. A task that is not enabled does not start by itself.
 - **Triggers** – The list of triggers. Click **New...**, **Edit...**, or **Delete**.

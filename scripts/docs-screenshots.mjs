@@ -489,6 +489,18 @@ async function main() {
     await editor.waitFor()
     await editor.getByTestId('task-editor-name').fill('Weekly summary')
     await editor.getByTestId('task-editor-tab-triggers').click()
+    // A weekly trigger on Monday and Friday, so that the list shows one.
+    await editor.getByTestId('task-editor-trigger-new').click()
+    const triggerDialog = page2.getByTestId('trigger-dialog')
+    await triggerDialog.waitFor()
+    await triggerDialog.getByTestId('trigger-dialog-kind').click()
+    await triggerDialog.getByTestId('trigger-dialog-kind-option-weekly').click()
+    for (let d = 0; d < 7; d++) {
+      const box = triggerDialog.getByTestId(`trigger-dialog-dow-${d}`)
+      if ((await box.getAttribute('aria-checked')) !== String(d === 1 || d === 5)) await box.click()
+    }
+    await triggerDialog.getByTestId('dialog-button-ok').click()
+    await triggerDialog.waitFor({ state: 'detached' })
     await pause(500)
     await shot('task-scheduler-create-task', editor, { margin: 40 })
     await editor.getByTestId('dialog-button-cancel').click()

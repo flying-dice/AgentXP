@@ -46,12 +46,12 @@
   const ctx = $derived<ActionContext>({ agents, drives, sessions })
   const triggerColumns: ListColumn[] = [
     { key: 'kind', header: 'Trigger', width: 110 },
-    { key: 'details', header: 'Details', width: 260, minWidth: 160 },
+    { key: 'details', header: 'Details', minWidth: 160 },
     { key: 'status', header: 'Status', width: 70 }
   ]
   const actionColumns: ListColumn[] = [
     { key: 'action', header: 'Action', width: 100 },
-    { key: 'details', header: 'Details', width: 340, minWidth: 200 }
+    { key: 'details', header: 'Details', minWidth: 200 }
   ]
   let triggerSelected = $state<string[]>([])
   let actionSelected = $state<string[]>([])
@@ -90,7 +90,7 @@
             <div class="listpage">
               <p>When you create a task, you can specify the conditions that will trigger the task. Without a trigger, the task runs only when you use Run.</p>
               <div class="grid">
-                <ListView testid="task-editor-triggers" columns={triggerColumns} rows={draft.triggers.map(triggerRow)} bind:selected={triggerSelected} aria-label="Triggers" emptyText="No triggers. The task runs only on demand." onactivate={(row) => onedittrigger(Number(row.id))} />
+                <ListView testid="task-editor-triggers" columns={triggerColumns} rows={draft.triggers.map(triggerRow)} bind:selected={triggerSelected} aria-label="Triggers" emptyText="No triggers yet. Click New… to choose when the task starts. Without a trigger, the task runs only when you use Run." onactivate={(row) => onedittrigger(Number(row.id))} />
               </div>
               <div class="buttons">
                 <Button data-testid="task-editor-trigger-new" onclick={() => onedittrigger(null)}>New…</Button>
