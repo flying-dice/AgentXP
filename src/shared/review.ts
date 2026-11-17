@@ -121,7 +121,14 @@ export interface ReviewApi {
 
 export interface ReviewEvents {
   /** Comments or the verdict of a review changed (the agent called a `review_*` tool, or the user edited). */
-  'review.changed': { desktopId: Id; sessionId: Id }
+  'review.changed': {
+    desktopId: Id
+    sessionId: Id
+    /** Comments added or changed by this change (the window flashes them); absent when unknown. */
+    commentIds?: Id[]
+    /** The session whose agent made the change (a review_* tool call); absent or null for the user's own edits. */
+    by?: Id | null
+  }
 }
 
 // ---------------------------------------------------------------- pure helpers

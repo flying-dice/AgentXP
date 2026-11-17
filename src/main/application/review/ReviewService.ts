@@ -131,7 +131,8 @@ export class ReviewService {
     return { comments: this.deps.reviews.listComments(sessionId), summary: this.deps.reviews.getSummary(sessionId) }
   }
 
-  addComment(sessionId: Id, input: NewReviewComment, author: 'agent' | 'user'): ReviewCommentDto {
+  /** `by`: the session whose agent adds it (a `review_add_comment` call); notices and change cues name it. */
+  addComment(sessionId: Id, input: NewReviewComment, author: 'agent' | 'user', by: Id | null = null): ReviewCommentDto {
     this.requireReviewSession(sessionId)
     const body = input.body.trim()
     if (!body) throw new AppError('A comment needs text.')
@@ -151,14 +152,14 @@ export class ReviewService {
       author,
       parentId: parent ? (parent.parentId ?? parent.id) : null
     })
-    this.changed(sessionId)
+    this.changed(sessionId, [comment.id], author === 'agent' ? by ?? sessionId : null)
     return comment
   }
 
   setState(commentId: Id, state: ReviewCommentState): void {
     const comment = required(this.deps.reviews.getComment(commentId), 'Comment')
     this.deps.reviews.setState(commentId, state)
-    this.changed(comment.sessionId)
+    this.changed(comment.sessionId, [commentId])
   }
 
   remove(commentId: Id): void {
@@ -219,9 +220,11 @@ export class ReviewService {
     if (session.role !== 'review') throw new AppError('That session is not a review.')
   }
 
-  private changed(sessionId: Id): void {
+  /** Publishes `review.changed`; `commentIds` are the comments the window flashes, `by` the agent's session (null: the user). */
+  private changed(sessionId: Id, commentIds?: Id[], by: Id | null = null): void {
     const desktopId = this.deps.sessions.get(sessionId)?.desktopId
-    if (desktopId != null) this.deps.events.publish('review.changed', { desktopId, sessionId })
+    if (desktopId == null) return
+    this.deps.events.publish('review.changed', { desktopId, sessionId, ...(commentIds ? { commentIds } : {}), ...(by !== null ? { by } : {}) })
   }
 
   // ---- git ---------------------------------------------------------------------------------------

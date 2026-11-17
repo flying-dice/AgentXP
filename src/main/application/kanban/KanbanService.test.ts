@@ -31,7 +31,7 @@ describe('KanbanService', () => {
     expect(custom.columns.map((c) => c.name)).toEqual(['Open', 'Closed'])
     expect(service.list(desktopId).map((b) => b.name)).toEqual(['Sprint', 'Bugs'])
     expect(service.list(otherDesktopId)).toEqual([])
-    expect(publisher.payloads('kanban.changed')).toEqual([{ desktopId }, { desktopId }])
+    expect(publisher.payloads('kanban.changed').map((e) => e.desktopId)).toEqual([desktopId, desktopId])
   })
 
   it('adds cards with a title, a description and an assignee, in order', () => {
@@ -101,6 +101,23 @@ describe('KanbanService', () => {
     expect(() => service.find(otherDesktopId, board.id)).toThrow(/does not exist/)
     expect(service.desktopOfCard(card.id)).toBe(desktopId)
     expect(service.desktopOfColumn(board.columns[1]!.id)).toBe(desktopId)
+  })
+
+  it('names the changed cards and the agent session in kanban.changed (the window flashes them, a notice names them)', () => {
+    const board = service.createBoard(desktopId, 'Sprint')
+    const [todo, , done] = board.columns.map((c) => c.id)
+    const card = service.addCard(todo!, { title: 'Login bug' }, 42).columns[0]!.cards[0]!
+    service.moveCard(card.id, done!, undefined, 42)
+    service.updateCard(card.id, { title: 'Login bug fixed' })
+    service.deleteCard(card.id, 42)
+    const events = publisher.payloads('kanban.changed').slice(1)
+    expect(events).toEqual([
+      { desktopId, boardId: board.id, cards: [{ cardId: card.id, title: 'Login bug', kind: 'added', column: 'To do' }], by: 42 },
+      { desktopId, boardId: board.id, cards: [{ cardId: card.id, title: 'Login bug', kind: 'moved', column: 'Done' }], by: 42 },
+      // The user's own edit: no session.
+      { desktopId, boardId: board.id, cards: [{ cardId: card.id, title: 'Login bug fixed', kind: 'updated', column: 'Done' }] },
+      { desktopId, boardId: board.id, cards: [{ cardId: card.id, title: 'Login bug fixed', kind: 'deleted' }], by: 42 }
+    ])
   })
 
   it('goes away with its desktop', () => {

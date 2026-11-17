@@ -34,6 +34,15 @@ export interface BoardDto {
 export const DEFAULT_COLUMNS = ['To do', 'Doing', 'Done'] as const
 export const MAX_KANBAN_TEXT = 20_000
 
+/** One card an agent or the user changed: the Kanban window flashes it, a notice names it. */
+export interface CardChange {
+  cardId: Id
+  title: string
+  kind: 'added' | 'moved' | 'updated' | 'deleted'
+  /** The column it is in after the change (for moved and added). */
+  column?: string
+}
+
 export interface CardInput {
   title: string
   description?: string
@@ -60,7 +69,15 @@ export interface KanbanApi {
 
 export interface KanbanEvents {
   /** The boards of a desktop changed (anyone, user or agent); the window loads them again. */
-  'kanban.changed': { desktopId: Id }
+  'kanban.changed': {
+    desktopId: Id
+    /** The board that changed; absent for a deleted board. */
+    boardId?: Id
+    /** What happened to which cards (the window flashes them); absent for changes that touch no card. */
+    cards?: CardChange[]
+    /** The session whose agent made the change (a board_* tool call); absent or null for the user's own edits. */
+    by?: Id | null
+  }
 }
 
 /** `ids` with `id` moved to `index` (clamped; default the end). Pure. */

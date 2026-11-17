@@ -162,7 +162,9 @@ describe('review tools', () => {
     expect(res.isError).toBeFalsy()
     expect(textOf(res)).toContain('src/a.ts:2 [blocker]')
     expect(reviewRepo.listComments(reviewId)).toMatchObject([{ path: 'src/a.ts', lineStart: 2, side: 'new', severity: 'blocker', author: 'agent', state: 'open', body: 'Do not shout' }])
-    expect(f.publisher.payloads('review.changed')).toContainEqual({ desktopId, sessionId: reviewId })
+    const comment = reviewRepo.listComments(reviewId)[0]!
+    // The window flashes the new comment; the reviewer's session made it (notices name it).
+    expect(f.publisher.payloads('review.changed')).toContainEqual({ desktopId, sessionId: reviewId, commentIds: [comment.id], by: reviewId })
     const list = textOf(await call('review_list_changes'))
     expect(list).toContain('1 open comment')
   })
@@ -215,7 +217,8 @@ describe('session scoping', () => {
     expect(added.isError).toBeFalsy()
     expect(reviewRepo.listComments(reviewId)).toMatchObject([{ path: 'src/a.ts', lineStart: 2, author: 'agent', body: 'Shouting' }])
     expect(reviewRepo.listComments(chatId)).toEqual([])
-    expect(f.publisher.payloads('review.changed')).toContainEqual({ desktopId, sessionId: reviewId })
+    // The comment is the window's, the change is the chat's: `by` names the chat that called the tool.
+    expect(f.publisher.payloads('review.changed')).toContainEqual(expect.objectContaining({ desktopId, sessionId: reviewId, by: chatId }))
   })
 
   it('submitting from a chat stores the verdict on the window and hands the verdict and the comments back to that chat', async () => {

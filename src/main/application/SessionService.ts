@@ -51,6 +51,15 @@ export function titleFromPrompt(text: string): string {
   return line.length <= TITLE_MAX_LENGTH ? line : `${line.slice(0, TITLE_MAX_LENGTH - 1).trimEnd()}…`
 }
 
+/** How a turn ended: the agent's stop reason, or the error that ended it. */
+export type TurnOutcome = { stopReason: StopReason; error?: undefined } | { stopReason?: undefined; error: string }
+
+/** Hears every turn of every chat start and end (the notices of turns nobody watched, `NoticeService`). */
+export interface TurnObserver {
+  started(sessionId: Id): void
+  ended(sessionId: Id, outcome: TurnOutcome): void
+}
+
 /** A prompt, plus the desktop state the AG-UI client sent with it (`RunAgentInput.context`). */
 export interface PromptTurnInput extends PromptInput {
   desktopContext?: string | null
@@ -68,7 +77,25 @@ const toBlocks = ({ text, attachments }: PromptInput): ContentBlockDto[] => [
 
 /** Session lifecycle and conversation turns. */
 export class SessionService {
+  private readonly turnObservers = new Set<TurnObserver>()
+
   constructor(private readonly deps: SessionServiceDeps) {}
+
+  /** Adds a listener for the start and end of every turn; returns the function that removes it. */
+  observeTurns(observer: TurnObserver): () => void {
+    this.turnObservers.add(observer)
+    return () => this.turnObservers.delete(observer)
+  }
+
+  private tellTurn(notify: (observer: TurnObserver) => void): void {
+    for (const observer of [...this.turnObservers]) {
+      try {
+        notify(observer)
+      } catch (error) {
+        console.error('Turn observer failed', error)
+      }
+    }
+  }
 
   /**
    * Starts a chat on a desktop. `cwd` (a VPath on C: or a plugged-in drive) defaults to `AGENT_HOME`. `role` is
@@ -251,20 +278,25 @@ export class SessionService {
    */
   private async runTurn(sessionId: Id, blocks: ContentBlockDto[], earlier: readonly TranscriptEntryDto[]): Promise<StopReason> {
     const { runtime, broadcaster, sessions } = this.deps
+    let started = false
     try {
       const live = await runtime.ensureConnected(sessionId)
       const session = sessions.get(sessionId)
       const recap = runtime.takeForgotten(sessionId) && session ? historyBlock(session, earlier) : null
       broadcaster.setStatus(sessionId, 'working')
+      started = true
+      this.tellTurn((o) => o.started(sessionId))
       const stopReason = await live.connection.prompt(live.acpSessionId, recap ? [recap, ...blocks] : blocks)
       sessions.touch(sessionId)
       // The agent answered without a failure: the next failure is the first again.
       this.deps.problems?.recovered(sessionId)
       broadcaster.setStatus(sessionId, 'idle')
+      this.tellTurn((o) => o.ended(sessionId, { stopReason }))
       return stopReason
     } catch (error) {
       if (isConnectionLoss(error)) this.deps.problems?.set(sessionId, stoppedUnexpectedly(error))
       broadcaster.setStatus(sessionId, 'error')
+      if (started) this.tellTurn((o) => o.ended(sessionId, { error: error instanceof Error ? error.message : String(error) }))
       throw error
     }
   }

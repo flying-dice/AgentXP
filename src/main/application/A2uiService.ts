@@ -17,8 +17,12 @@ export interface HiddenPrompter {
 
 /** The desktop windows of surfaces (satisfied by `DesktopService`). */
 export interface SurfaceWindows {
-  /** Opens or focuses the window of a surface; false when the chat has no desktop. */
-  open(sessionId: Id, surfaceId: string, by: 'user' | 'agent', size?: { width?: number; height?: number }): boolean
+  /**
+   * Opens or focuses the window of a surface; false when the chat has no desktop. The agent's open may first ask the
+   * user ("Agent may open apps" set to Ask): it then returns a promise that rejects when the open is refused. It throws
+   * when the policy refuses it outright (Never).
+   */
+  open(sessionId: Id, surfaceId: string, by: 'user' | 'agent', size?: { width?: number; height?: number }): boolean | Promise<unknown>
   /** Closes the window of a surface; the surface stays. */
   close(sessionId: Id, surfaceId: string): void
   isOpen(sessionId: Id, surfaceId: string): boolean
@@ -130,7 +134,7 @@ export class A2uiService implements A2uiMessageSink {
     const target = input.target !== 'inline' && this.windows && this.hasDesktop(sessionId) ? input.target : 'inline'
     const surface = this.surfaces.create(sessionId, { ...input, target })
     this.publishTranscriptEntry(sessionId, input.surfaceId)
-    if (!existed && surface.target === 'window') this.windows?.open(sessionId, input.surfaceId, 'agent', size)
+    if (!existed && surface.target === 'window') this.openForAgent(sessionId, input.surfaceId, size)
     this.events.publish('surface.changed', surface)
     this.windows?.refresh(sessionId) // the window title follows the surface title
     this.note(surface, notes, !existed)
@@ -144,6 +148,32 @@ export class A2uiService implements A2uiMessageSink {
     return []
   }
 
+  /** Surface windows the agent asked for that wait for the user's answer, and the ones refused (with why), by `session/surface`. */
+  private readonly asking = new Set<string>()
+  private readonly refused = new Map<string, string>()
+
+  /** The agent's own surface window: opened behind the user's window when "Agent may open apps" allows it. */
+  private openForAgent(sessionId: Id, surfaceId: string, size: { width?: number; height?: number }): void {
+    const key = `${sessionId}/${surfaceId}`
+    const reason = (error: unknown): string => (error instanceof Error ? error.message : String(error))
+    this.refused.delete(key)
+    try {
+      const opened = this.windows?.open(sessionId, surfaceId, 'agent', size)
+      if (opened instanceof Promise) {
+        this.asking.add(key)
+        opened.then(
+          () => this.asking.delete(key),
+          (error: unknown) => {
+            this.asking.delete(key)
+            this.refused.set(key, reason(error))
+          }
+        )
+      }
+    } catch (error) {
+      this.refused.set(key, reason(error))
+    }
+  }
+
   /** Tells the agent where the surface is (and that the user closed it, which the agent must not undo). */
   private note(surface: A2uiSurfaceDto, notes: Set<string>, created: boolean): void {
     const title = surface.title ?? SURFACE_FALLBACK_TITLE
@@ -151,6 +181,10 @@ export class A2uiService implements A2uiMessageSink {
     if (surface.target === 'window') {
       if (this.windows?.isOpen(sessionId, surfaceId)) {
         if (created) notes.add(`Shown in its own window "${surfaceWindowTitle(title)}" (surface "${surfaceId}"). The user can close and reopen it.`)
+      } else if (this.refused.has(`${sessionId}/${surfaceId}`)) {
+        notes.add(`Surface "${surfaceId}": its window was not opened. ${this.refused.get(`${sessionId}/${surfaceId}`)} The surface is kept and updates in the background; the user can open it from the chat. Do not render it again.`)
+      } else if (this.asking.has(`${sessionId}/${surfaceId}`)) {
+        notes.add(`Surface "${surfaceId}": its window opens when the user allows it ("Agent may open apps" is set to Ask). Do not render it again.`)
       } else notes.add(`Surface "${surfaceId}": The user closed this window; it updates in the background.`)
     } else if (surface.target === 'sidebar') {
       if (surface.hidden) notes.add(`Surface "${surfaceId}": The user closed this sidebar tab; it updates in the background.`)

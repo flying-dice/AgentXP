@@ -78,25 +78,25 @@ export function createBoardTools({ kanban }: BoardToolsDeps): ToolHandlers<Names
         return shown(kanban.deleteColumn(column))
       }),
 
-    board_add_card: ({ column, board, title, description, assignee }, { desktopId }) =>
-      attempt(() => shown(kanban.addCard(columnOf(desktopId, column, board), { title, description, assignee }))),
+    board_add_card: ({ column, board, title, description, assignee }, { desktopId, sessionId }) =>
+      attempt(() => shown(kanban.addCard(columnOf(desktopId, column, board), { title, description, assignee }, sessionId))),
 
-    board_update_card: ({ card, title, description, assignee }, { desktopId }) =>
+    board_update_card: ({ card, title, description, assignee }, { desktopId, sessionId }) =>
       attempt(() => {
         mine(desktopId, kanban.desktopOfCard(card))
-        return shown(kanban.updateCard(card, { title, description, assignee }))
+        return shown(kanban.updateCard(card, { title, description, assignee }, sessionId))
       }),
 
-    board_move_card: ({ card, column, position }, { desktopId }) =>
+    board_move_card: ({ card, column, position }, { desktopId, sessionId }) =>
       attempt(() => {
         mine(desktopId, kanban.desktopOfCard(card))
-        return shown(kanban.moveCard(card, columnOf(desktopId, column, kanban.boardOfCard(card)), position))
+        return shown(kanban.moveCard(card, columnOf(desktopId, column, kanban.boardOfCard(card)), position, sessionId))
       }),
 
-    board_delete_card: ({ card }, { desktopId }) =>
+    board_delete_card: ({ card }, { desktopId, sessionId }) =>
       attempt(() => {
         mine(desktopId, kanban.desktopOfCard(card))
-        return shown(kanban.deleteCard(card))
+        return shown(kanban.deleteCard(card, sessionId))
       })
   }
 }

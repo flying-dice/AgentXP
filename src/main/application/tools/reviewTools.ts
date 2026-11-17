@@ -69,7 +69,7 @@ export function createReviewTools({ reviews }: ReviewToolsDeps): ToolHandlers<'r
         const total = splitLines(side === 'old' ? file.oldText : file.newText).length
         const last = Math.max(line, endLine ?? line)
         if (!file.binary && last > total) throw new AppError(`${path} has only ${total} ${side === 'old' ? 'old' : 'new'} lines; line ${last} does not exist. Use the line numbers of review_read_diff.`)
-        const comment = reviews.addComment(reviewSessionId, { path, lineStart: line, lineEnd: endLine, side, severity, body, parentId: replyTo ?? null }, 'agent')
+        const comment = reviews.addComment(reviewSessionId, { path, lineStart: line, lineEnd: endLine, side, severity, body, parentId: replyTo ?? null }, 'agent', sessionId)
         return textResult(`Comment ${comment.id} added at ${commentLocation(comment)} [${comment.severity}].`)
       }),
 

@@ -60,6 +60,9 @@ export interface DesktopServiceDeps {
 /** Asks the user in the chat whether its agent may go on ("Agent may open apps" set to Ask); true when allowed. */
 export type OpenApproval = (sessionId: Id, title: string, reason: string) => Promise<boolean>
 
+/** Why an agent's open is refused with "Agent may open apps" set to Never. */
+export const OPEN_APPS_BLOCKED = 'Opening apps is blocked by the permission policy in Control Center.'
+
 /** A window the agent opens does not take the focus from a window the user typed in during this long. */
 export const TYPING_GRACE_MS = 2000
 
@@ -89,6 +92,8 @@ export class DesktopService implements DesktopStates {
   /** When the user last typed or clicked in a window, per desktop. */
   private readonly userActiveAt = new Map<Id, number>()
   private readonly asideStarts = new Map<Id, Promise<Id>>()
+  /** The window whose chat pane the operator last focused or typed in, per desktop (`notePaneFocus`). */
+  private readonly paneFocus = new Map<Id, Id>()
   /** Asks the user when "Agent may open apps" is set to Ask (the tool gateway, attached after construction). */
   private openApproval: OpenApproval | null = null
 
@@ -115,6 +120,30 @@ export class DesktopService implements DesktopStates {
     this.userActiveAt.set(desktopId, (this.deps.now ?? Date.now)())
   }
 
+  /**
+   * The operator focused or typed in the chat pane of a window (`active`), or hid the pane (`!active`). While that window
+   * has the focus, its pane's chat is the foreground chat (`foregroundSessionId`).
+   */
+  notePaneFocus(windowId: Id, active: boolean): void {
+    const record = this.windowRecord(windowId)
+    if (active) this.paneFocus.set(record.desktopId, windowId)
+    else if (this.paneFocus.get(record.desktopId) === windowId) this.paneFocus.delete(record.desktopId)
+  }
+
+  /**
+   * The foreground chat of a desktop (`docs/AGENT_PRESENCE.md`, rule 1): the session of the focused window. A Chat window
+   * is its chat, a Code Review window its review session, and an app window whose chat pane the operator last focused or
+   * typed in (`notePaneFocus`) is that pane's chat. Null when the focused window shows no chat (or nothing is focused).
+   */
+  foregroundSessionId(desktopId: Id): Id | null {
+    if (!this.deps.desktops.get(desktopId)) return null
+    const focused = this.focusedRecord(desktopId)
+    if (!focused) return null
+    if (focused.app === 'chat' || focused.app === 'code-review') return focused.sessionId
+    if (focused.asideSessionId !== null && this.paneFocus.get(desktopId) === focused.id) return focused.asideSessionId
+    return null
+  }
+
   private userIsTyping(desktopId: Id): boolean {
     const at = this.userActiveAt.get(desktopId)
     return at !== undefined && (this.deps.now ?? Date.now)() - at < TYPING_GRACE_MS
@@ -124,6 +153,7 @@ export class DesktopService implements DesktopStates {
   forget(id: Id): void {
     for (const window of this.deps.windows.list(id)) this.views.delete(window.id)
     this.focus.delete(id)
+    this.paneFocus.delete(id)
     this.userActiveAt.delete(id)
     this.attention.delete(id)
     this.lastPublished.delete(id)
@@ -204,7 +234,7 @@ export class DesktopService implements DesktopStates {
   async assertMayOpen(sessionId: Id, app: AppKind): Promise<void> {
     const decision = this.policy().openApps
     const what = app === 'chat' ? 'a chat window' : `the ${APP_DISPLAY_NAMES[app]} app`
-    if (decision === 'deny') throw new AppError('Opening apps is blocked by the permission policy in Control Center.')
+    if (decision === 'deny') throw new AppError(OPEN_APPS_BLOCKED)
     if (decision === 'allow') return
     const allowed = this.openApproval ? await this.openApproval(sessionId, `Open ${what}`, 'Agent may open apps is set to Ask in Control Center') : false
     if (!allowed) throw new AppError(`The user declined to open ${what}.`)
@@ -283,6 +313,7 @@ export class DesktopService implements DesktopStates {
     this.views.delete(windowId)
     this.attention.get(record.desktopId)?.delete(windowId)
     if (this.focus.get(record.desktopId) === windowId) this.focus.delete(record.desktopId)
+    if (this.paneFocus.get(record.desktopId) === windowId) this.paneFocus.delete(record.desktopId)
     this.emit(record.desktopId)
     if (record.sessionId !== null) this.removeOwnedSession(record.sessionId)
     if (record.asideSessionId !== null) this.removeOwnedSession(record.asideSessionId)

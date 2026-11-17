@@ -1,4 +1,4 @@
-import { DEFAULT_COLUMNS, MAX_KANBAN_TEXT, reorder, type BoardDto, type CardInput, type CardPatch } from '@shared/kanban'
+import { DEFAULT_COLUMNS, MAX_KANBAN_TEXT, reorder, type BoardDto, type CardChange, type CardInput, type CardPatch } from '@shared/kanban'
 import type { Id } from '@shared/models'
 import type { KanbanRepository } from '../../domain/repositories/kanban-repository'
 import { AppError, required } from '../errors'
@@ -23,7 +23,11 @@ const text = (value: string, what: string): string => {
 
 const assignee = (value: string | null | undefined): string | null | undefined => (typeof value === 'string' ? value.trim() || null : value)
 
-/** Boards, columns and cards of a desktop. Every change publishes `kanban.changed`; each call answers with the changed board. */
+/**
+ * Boards, columns and cards of a desktop. Every change publishes `kanban.changed`; each call answers with the changed board.
+ * The card calls take `by`, the session whose agent makes the change (a `board_*` tool call): the event names the cards
+ * and the session, so the window flashes the cards and a notice can say who changed them.
+ */
 export class KanbanService {
   constructor(private readonly deps: KanbanServiceDeps) {}
 
@@ -103,27 +107,28 @@ export class KanbanService {
     return this.done(boardId)
   }
 
-  addCard(columnId: Id, card: CardInput): BoardDto {
+  addCard(columnId: Id, card: CardInput, by: Id | null = null): BoardDto {
     const boardId = required(this.deps.kanban.boardOfColumn(columnId), 'Column')
-    this.deps.kanban.createCard(columnId, {
-      title: name(card.title, 'A card'),
+    const title = name(card.title, 'A card')
+    const cardId = this.deps.kanban.createCard(columnId, {
+      title,
       description: text(card.description ?? '', 'description'),
       assignee: assignee(card.assignee) ?? null
     })
-    return this.done(boardId)
+    return this.done(boardId, [{ cardId, title, kind: 'added', column: this.columnName(boardId, columnId) }], by)
   }
 
-  updateCard(id: Id, patch: CardPatch): BoardDto {
+  updateCard(id: Id, patch: CardPatch, by: Id | null = null): BoardDto {
     const boardId = required(this.deps.kanban.boardOfCard(id), 'Card')
     this.deps.kanban.updateCard(id, {
       title: patch.title === undefined ? undefined : name(patch.title, 'A card'),
       description: patch.description === undefined ? undefined : text(patch.description, 'description'),
       assignee: assignee(patch.assignee)
     })
-    return this.done(boardId)
+    return this.done(boardId, [this.cardChange(boardId, id, 'updated')], by)
   }
 
-  moveCard(id: Id, columnId: Id, index?: number): BoardDto {
+  moveCard(id: Id, columnId: Id, index?: number, by: Id | null = null): BoardDto {
     const boardId = required(this.deps.kanban.boardOfCard(id), 'Card')
     const target = this.board(boardId).columns.find((c) => c.id === columnId)
     if (!target) throw new AppError('A card moves between the columns of its own board')
@@ -131,18 +136,32 @@ export class KanbanService {
     if (source.id !== columnId) this.deps.kanban.orderCards(source.id, source.cards.filter((k) => k.id !== id).map((k) => k.id))
     const ids = target.cards.map((k) => k.id)
     this.deps.kanban.orderCards(columnId, reorder(ids, id, index))
-    return this.done(boardId)
+    return this.done(boardId, [this.cardChange(boardId, id, 'moved')], by)
   }
 
-  deleteCard(id: Id): BoardDto {
+  deleteCard(id: Id, by: Id | null = null): BoardDto {
     const boardId = required(this.deps.kanban.boardOfCard(id), 'Card')
+    const gone = this.cardChange(boardId, id, 'deleted')
     this.deps.kanban.deleteCard(id)
-    return this.done(boardId)
+    return this.done(boardId, [{ cardId: gone.cardId, title: gone.title, kind: 'deleted' }], by)
   }
 
-  private done(boardId: Id): BoardDto {
+  private columnName(boardId: Id, columnId: Id): string | undefined {
+    return this.board(boardId).columns.find((c) => c.id === columnId)?.name
+  }
+
+  /** The card as it is now: its title and the column it is in. */
+  private cardChange(boardId: Id, cardId: Id, kind: CardChange['kind']): CardChange {
+    for (const column of this.board(boardId).columns) {
+      const card = column.cards.find((k) => k.id === cardId)
+      if (card) return { cardId, title: card.title, kind, column: column.name }
+    }
+    return { cardId, title: '', kind }
+  }
+
+  private done(boardId: Id, cards?: CardChange[], by: Id | null = null): BoardDto {
     const board = this.board(boardId)
-    this.deps.events.publish('kanban.changed', { desktopId: board.desktopId })
+    this.deps.events.publish('kanban.changed', { desktopId: board.desktopId, boardId, ...(cards ? { cards } : {}), ...(by !== null ? { by } : {}) })
     return board
   }
 }
