@@ -33,8 +33,6 @@ Click **Start -> Accessories -> Kanban**. Only one window exists on a desktop. E
 
 ## 3 - The Window
 
-![The Kanban window with three lists of cards](../docs/images/kanban-board.png)
-
 ### The Toolbar
 
 The toolbar has **New board**, **New list**, and **New card**.
@@ -52,8 +50,6 @@ The board shows its lists from left to right. Each list has a title bar with the
 ### Cards
 
 A card shows its title, the first line of its description, and its assignee. Double-click a card, or press F2, to change its title, description, and assignee. Type any name in **Assignee**, or select one from the list. The list has **Me** and the agents of this project.
-
-![The Card properties dialog](../docs/images/kanban-card.png)
 
 Right-click a card to edit it, move it to another list, assign it, or delete it.
 

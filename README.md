@@ -462,6 +462,9 @@ The desktop has these apps:
 - **Agent Paint** – Lets you draw. The agent can draw in it too.
 - **Sticky Notes** – Puts notes on the desktop. You and the agent can read them. A plan note shows the tasks of a chat.
 - **Kanban** – Shows boards of cards with a title, a description, and an assignee. Drag cards between lists. You and the agents can read and write the boards, so a team of agents can track its work on one board.
+
+  ![The Kanban window with three lists of cards](docs/images/kanban-board.png)
+
 - **Snipping Tool** – Takes a picture of an area of the desktop or of one window.
 - **Event Viewer** – Lists the ACP, AG-UI, and MCP messages of the desktop as they happen.
 - **Recycle Bin** – Keeps the changes that you reverted, so that you can restore them.
