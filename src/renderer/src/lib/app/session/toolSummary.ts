@@ -68,7 +68,11 @@ export function toolArgument(
   locations: readonly ToolCallLocationDto[],
   title: string
 ): string {
-  const input = parseInput(rawInput)
+  const raw = parseInput(rawInput)
+  // A tool call titled with its name and input (`terminal_run {"command":"npm test"}`, an MCP tool): when the raw input
+  // does not say (none, or only AgentXP's gate note), read the input from the title, so the approval shows "npm test".
+  const titled = /^[\w.-]+\s+(\{[\s\S]*\})\s*$/.exec(title.trim())?.[1]
+  const input: Input = titled ? { ...parseInput(titled), ...raw } : raw
   switch (kind) {
     case 'execute':
       return firstText(input, ['command', 'cmd']) ?? stripTicks(title)

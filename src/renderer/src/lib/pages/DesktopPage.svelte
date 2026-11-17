@@ -343,7 +343,7 @@
       {#key popup.key}
         <UacDialog
           approval={popup}
-          reason={approvalReason(popup.toolKind, policy, desktop.state.userInControl)}
+          reason={approvalReason(popup.toolKind, policy, desktop.state.userInControl, popup.group)}
           queueText={approvals.length > 1 ? `1 of ${approvals.length} waiting` : null}
           onanswer={(optionId) => void desktop.answerReview(optionId)}
           onclose={() => desktop.closePopup()}

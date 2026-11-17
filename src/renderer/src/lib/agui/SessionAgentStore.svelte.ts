@@ -45,6 +45,9 @@ function userContent(text: string, attachments: string[]): string | ContentPart[
  * cleared), `store.send(...)` for prompts, `store.resolveInterrupt(optionId | null)` to answer a
  * permission request, `store.sendA2uiAction(event)` for clicks on surfaces, `store.cancel()` to stop.
  */
+/** How long after a run ends the store checks whether the session already works on a next turn. */
+export const FOLLOW_CHECK_MS = 50
+
 export class SessionAgentStore {
   readonly sessionId: number
   /** All messages of the thread (user, assistant incl. tool calls, tool, reasoning and activity messages). */
@@ -346,5 +349,32 @@ export class SessionAgentStore {
     this.running = false
     this.interrupts = [...this.agent.pendingInterrupts]
     this.answers = {}
+    const stillBusy = this.followNext
+    this.followNext = null
+    // A turn that main started while this run was ending (a room member's next message): follow it now. Checked a moment
+    // later, so the session's own status has caught up and a turn that simply ended is not loaded again.
+    if (stillBusy && this.interrupts.length === 0) setTimeout(() => void (stillBusy() && !this.running && this.interrupts.length === 0 && this.follow()), FOLLOW_CHECK_MS)
+  }
+
+  /** Set by followAfterRun: asks whether the session still works once this store's run has ended. */
+  private followNext: (() => boolean) | null = null
+
+  /**
+   * A turn started in main (a team room member, a scheduled task) while this store still streams the end of the previous
+   * one: once that run ends, connect again if `stillBusy()` says the session still works, so the new turn shows live.
+   */
+  followAfterRun(stillBusy: () => boolean): void {
+    if (this.running) this.followNext = stillBusy
+  }
+
+  /** Follows a running turn without clearing what the chat shows about the last one (its error, its failed send). */
+  private async follow(): Promise<void> {
+    try {
+      await this.agent.connectAgent()
+    } catch {
+      // Nothing streams: the next session change connects again.
+    }
+    this.running = false
+    this.interrupts = [...this.agent.pendingInterrupts]
   }
 }

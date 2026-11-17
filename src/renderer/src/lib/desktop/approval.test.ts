@@ -58,6 +58,11 @@ describe('approvals', () => {
     expect(approvalReason(null, null, false)).toBe('The agent asked for your permission.')
     expect(approvalReason('edit', DEFAULT_TOOL_POLICY, true)).toMatch(/Ask before every action/)
   })
+  it('names the setting of an AgentXP tool that has no tool kind (terminal_run from MCP)', () => {
+    expect(approvalReason(null, DEFAULT_TOOL_POLICY, false, 'terminal')).toBe('Run commands is set to Ask in Control Center.')
+    expect(approvalReason('other', DEFAULT_TOOL_POLICY, false, 'fs.write')).toBe('Write files is set to Ask in Control Center.')
+    expect(approvalReason(null, DEFAULT_TOOL_POLICY, false, 'nonsense')).toBe('The agent asked for your permission.')
+  })
 })
 
 describe('the queue of waiting requests (UX-138)', () => {

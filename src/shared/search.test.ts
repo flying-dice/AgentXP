@@ -35,6 +35,7 @@ describe('lineMatcher', () => {
     expect(lineMatcher({ query: 'foo' })('a FOO b')).toEqual({ start: 2, length: 3 })
     expect(lineMatcher({ query: 'foo', matchCase: true })('a FOO b')).toBeNull()
     expect(lineMatcher({ query: 'a.b' })('axb')).toBeNull() // plain text: the dot is a dot
+    expect(lineMatcher({ query: 'x' })('İİ x')).toEqual({ start: 3, length: 1 }) // lower-casing İ would shift the column
   })
 
   it('finds a regular expression and reports the first match', () => {

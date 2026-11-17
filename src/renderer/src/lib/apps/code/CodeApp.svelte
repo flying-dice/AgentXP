@@ -336,7 +336,7 @@
     searching = true
     searchError = null
     try {
-      const result = await host.api.vfs.searchText(desktopId, next.root, { query: next.query, regex: next.regex, matchCase: next.matchCase, include: next.include })
+      const result = await host.api.vfs.searchText(desktopId, next.root, { query: next.query, regex: next.regex, matchCase: next.matchCase, include: next.include, limit: next.limit })
       if (run === searchRun) searchResult = result
     } catch (error) {
       if (run !== searchRun) return

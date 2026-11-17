@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createVfsFixture } from '../test-helpers'
 import { FileSearch, MAX_SEARCHED_DIRECTORIES, MAX_SEARCHED_FILE_BYTES } from './FileSearch'
+import { GuardedRegex } from './guardedRegex'
 
 let f: Awaited<ReturnType<typeof createVfsFixture>>
 let search: FileSearch
@@ -99,5 +100,13 @@ describe('FileSearch.find', () => {
   it('stops at the limit and needs a name or a word', async () => {
     expect(await search.find(desktopId, 'E:\\', { name: '*', limit: 1 })).toMatchObject({ truncated: true })
     await expect(search.find(desktopId, 'E:\\', { name: ' ', containing: '' })).rejects.toThrow(/file name, a word or phrase/)
+  })
+})
+
+describe('FileSearch: a regular expression that runs too long', () => {
+  it('stops with a message instead of freezing AgentXP', async () => {
+    await writeFile(join(f.projectDir, 'slow.txt'), `${'a'.repeat(40)}b\n`)
+    const quick = new FileSearch(f.vfs, new GuardedRegex(100))
+    await expect(quick.searchText(desktopId, 'E:\\slow.txt', { query: '(a+)+$', regex: true })).rejects.toThrow(/takes too long on E:\\slow\.txt/)
   })
 })

@@ -1,6 +1,6 @@
 /** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
 const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_TOOL_POLICY, closedAppMessage, type ToolGroup } from '@shared/desktop'
@@ -16,7 +16,7 @@ import { createVfsFixture } from '../test-helpers'
 import { TOOL_SPECS, specsForGroups, type ToolHandlers } from './catalog'
 import { ADMIN_TOOL_DEFS } from './adminCatalog'
 import { createBrowserTools, formatRead, formatTabs, normalizeUrl } from './browserTools'
-import { createCodeTools } from './codeTools'
+import { MAX_READ_CHARS, MAX_READ_LINE_CHARS, createCodeTools } from './codeTools'
 import { DesktopToolService } from './DesktopToolService'
 import { createFsTools, nameMatcher } from './fsTools'
 import { FileSearch } from '../vfs/FileSearch'
@@ -575,6 +575,26 @@ describe('notepad and code tools', () => {
     await writeFile(join(f.projectDir, 'src/win.ts'), 'one\r\ntwo\r\nthree\r\n')
     expect(textOf(await run('code_edit', { path: 'src/win.ts', oldText: 'one\ntwo', newText: 'ONE\nTWO\nTWO AND A HALF' }))).toBe('Edited E:\\src\\win.ts (lines 1-3); Code shows the change.')
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\win.ts')).toBe('ONE\r\nTWO\r\nTWO AND A HALF\r\nthree\r\n')
+  })
+
+  it('code_edit refuses binary files and files that are not UTF-8, and leaves them as they were', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    const latin1 = Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x0a, 0x6f, 0x6e, 0x65, 0x0a]) // "café\none\n" in Windows-1252
+    await writeFile(join(f.projectDir, 'src/latin1.txt'), latin1)
+    expect(textOf(await run('code_edit', { path: 'src/latin1.txt', oldText: 'one', newText: 'two' }))).toMatch(/not UTF-8 text/)
+    expect(Buffer.compare(await readFile(join(f.projectDir, 'src/latin1.txt')), latin1)).toBe(0)
+    await writeFile(join(f.projectDir, 'src/blob.bin'), Buffer.from([0x6f, 0x6e, 0x65, 0x00, 0x01]))
+    expect(textOf(await run('code_edit', { path: 'src/blob.bin', oldText: 'one', newText: 'two' }))).toMatch(/binary file/)
+  })
+
+  it('code_read cuts very long lines and stops before the result gets too big', async () => {
+    desktops.openWindow({ desktopId, app: 'code' })
+    await writeFile(join(f.projectDir, 'src/min.js'), `${'x'.repeat(MAX_READ_LINE_CHARS + 500)}\n`)
+    expect(textOf(await run('code_read', { path: 'src/min.js' }))).toContain('[... 500 more characters]')
+    await writeFile(join(f.projectDir, 'src/wide.js'), Array.from({ length: 200 }, () => 'y'.repeat(MAX_READ_LINE_CHARS)).join('\n'))
+    const text = textOf(await run('code_read', { path: 'src/wide.js' }))
+    expect(text.length).toBeLessThan(MAX_READ_CHARS + 1000)
+    expect(text).toMatch(/more lines: read from startLine \d+/)
   })
 
   it('code_write creates or replaces a file and shows it in Code', async () => {

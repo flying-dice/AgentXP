@@ -19,6 +19,14 @@ describe('toolLabel', () => {
 })
 
 describe('toolArgument', () => {
+  it('reads the input from a title like `terminal_run {...}` when the call has no raw input', () => {
+    expect(toolArgument(undefined, null, [], 'terminal_run {"command":"echo hello"}')).toBe('echo hello')
+    expect(toolArgument('execute', null, [], 'mcp__agentxp__terminal_run {"command":"npm test"}')).toBe('npm test')
+    expect(toolArgument(undefined, null, [], 'Some plain title')).toBe('Some plain title')
+    // The raw input holds only AgentXP's gate note: the command still comes from the title.
+    expect(toolArgument(undefined, '{"agentxpGate":"Run commands is set to Ask"}', [], 'terminal_run {"command":"ls"}')).toBe('ls')
+  })
+
   it('uses the path of read/edit', () => {
     expect(toolArgument('read', '{"file_path":"src/a.ts"}', [], 't')).toBe('src/a.ts')
     expect(toolArgument('edit', null, [{ path: 'src/b.ts', line: 12 }], 't')).toBe('src/b.ts:12')

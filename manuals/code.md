@@ -269,14 +269,14 @@ The agent reads and searches files with the tools below when Code or Explorer is
 
 | Tool | What it does |
 |---|---|
-| `code_read` | Reads a file, or some of its lines, with line numbers. Code opens the file. When the agent reads some of the lines, Code scrolls to them and marks them. |
+| `code_read` | Reads a file, or some of its lines, with line numbers. Code opens the file. When the agent reads some of the lines, Code scrolls to them and marks them. A very long line is cut at 2000 characters, and a big file is read in parts. |
 | `code_search` | Finds text in files (find in files), with the same options as the **Search** tab. The search and its results show in the **Search** tab. |
 
 The agent edits files with the tools below when Code or Notepad is open. The permission **Write files** controls them: set to Ask, each edit asks you first.
 
 | Tool | What it does |
 |---|---|
-| `code_edit` | Replaces some exact text in a file with new text. Code opens the file at the changed lines and selects the change in the **Changes** tab. |
+| `code_edit` | Replaces some exact text in a file with new text. Code opens the file at the changed lines and selects the change in the **Changes** tab. It keeps Windows line endings. It does not change a binary file or a file that is not UTF-8 text, because that would damage its other characters. |
 | `code_write` | Makes a new file, or writes all the text of a file again. Code opens the file and selects the change. |
 
 The agent is told to use these tools, and not its own built-in tools, so that its work shows on the desktop.
@@ -341,6 +341,7 @@ Code does not save files. You cannot type in the editor, and the agent writes th
 - **Revert hunk is dimmed.** Move the caret to a changed block, or open its peek.
 - **I cannot type.** Code is read-only. Ask the agent to edit the file.
 - **The search finds nothing.** Check **Look in** and **Files to include**. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
+- **The search says that the regular expression takes too long.** The pattern repeats inside a repeat, for example `(a+)+`, and would run for minutes. Make it simpler.
 - **The search stops with "more not shown".** The search looks in 2000 folders at most, or it found more results than it shows. Choose a smaller folder in **Look in**, or type more of the text.
 
 ## 7 - Need Help?

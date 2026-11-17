@@ -160,10 +160,19 @@ export function lineMatcher(query: Pick<TextSearchQuery, 'query' | 'regex' | 'ma
       return null
     }
   }
-  const needle = query.matchCase ? query.query : query.query.toLowerCase()
+  if (query.matchCase) {
+    const needle = query.query
+    return (line) => {
+      const start = line.indexOf(needle)
+      return start < 0 ? null : { start, length: needle.length }
+    }
+  }
+  // A literal with the `i` flag, not toLowerCase(): lowering can change a line's length ("İ"), which put the column and
+  // the highlight off for the rest of the line. An escaped literal cannot backtrack.
+  const literal = new RegExp(query.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
   return (line) => {
-    const start = (query.matchCase ? line : line.toLowerCase()).indexOf(needle)
-    return start < 0 ? null : { start, length: needle.length }
+    const m = literal.exec(line)
+    return m ? { start: m.index, length: m[0].length } : null
   }
 }
 

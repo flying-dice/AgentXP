@@ -19,6 +19,8 @@ export interface PendingApproval {
   toolKind: ToolKind | null
   options: PermissionOptionDto[]
   toolCall?: AguiToolCallState
+  /** The Control Center permission of the AgentXP tool asked about (from main), when known. */
+  group?: string | null
 }
 
 /** Builds the pending approval of an interrupt, or null when it is not a tool permission request. */
@@ -35,6 +37,7 @@ export function approvalFromInterrupt(sessionId: number, interrupt: Interrupt | 
     title: meta.title,
     toolKind: meta.toolKind,
     options: meta.options,
+    group: meta.group ?? null,
     toolCall: interrupt.toolCallId ? state?.toolCalls[interrupt.toolCallId] : undefined
   }
 }
@@ -94,9 +97,11 @@ const KIND_GROUP: Partial<Record<ToolKind, Exclude<ToolGroup, 'shell'>>> = {
 export const approvalGroup = (kind: ToolKind | null): Exclude<ToolGroup, 'shell'> | null => (kind ? (KIND_GROUP[kind] ?? null) : null)
 
 /** The reason line of the UAC dialog (shown after "Reason:"): the policy that caused the question when it is known. */
-export function approvalReason(kind: ToolKind | null, policy: ToolPolicyDto | null, userInControl: boolean): string {
+export function approvalReason(kind: ToolKind | null, policy: ToolPolicyDto | null, userInControl: boolean, toolGroup: string | null = null): string {
   if (userInControl) return 'Ask before every action is on, so every action needs your approval.'
-  const group = approvalGroup(kind)
+  // An AgentXP tool (terminal_run) names its own permission; an agent's built-in tool is known by its kind.
+  const named = toolGroup && toolGroup in PERMISSION_NAMES ? (toolGroup as Exclude<ToolGroup, 'shell'>) : null
+  const group = named ?? approvalGroup(kind)
   const decision: PolicyDecision | undefined = group && policy ? policy.groups[group] : undefined
   if (group && decision === 'ask') return `${PERMISSION_NAMES[group]} is set to Ask in Control Center.`
   return 'The agent asked for your permission.'

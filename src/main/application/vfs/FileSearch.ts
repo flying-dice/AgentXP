@@ -18,6 +18,7 @@ import {
 } from '@shared/search'
 import type { VfsEntryDto, VPath } from '@shared/vfs'
 import { AppError } from '../errors'
+import { GuardedRegex, RegexTimeoutError } from './guardedRegex'
 import type { VirtualFileSystem } from './VirtualFileSystem'
 
 /** Folders one search opens at most; past it the search stops and returns what it found, marked as more not shown. */
@@ -35,7 +36,10 @@ const looksBinary = (text: string): boolean => text.slice(0, 8000).includes('\u0
  * Explorer's Search Companion, over IPC) and the agent (code_search, fs_find). .git and node_modules are skipped.
  */
 export class FileSearch {
-  constructor(private readonly vfs: Pick<VirtualFileSystem, 'readDir' | 'readFile' | 'stat'>) {}
+  constructor(
+    private readonly vfs: Pick<VirtualFileSystem, 'readDir' | 'readFile' | 'stat'>,
+    private readonly regex: GuardedRegex = new GuardedRegex()
+  ) {}
 
   async searchText(desktopId: Id, root: VPath, query: TextSearchQuery): Promise<TextSearchResultDto> {
     const match = this.matcher(query)
@@ -52,14 +56,13 @@ export class FileSearch {
       filesSearched++
       let found = false
       const lines = text.split(/\r?\n/)
-      for (let i = 0; i < lines.length; i++) {
-        const hit = match(lines[i]!)
-        if (!hit) continue
+      for (const hit of this.hits(file.path, lines, text, query, match)) {
         if (matches.length >= limit) return { matches, filesSearched, filesMatched, truncated: true }
         if (!found) filesMatched++
         found = true
-        const clipped = clipMatchLine(lines[i]!, hit.start, hit.length)
-        matches.push({ path: file.path, line: i + 1, column: hit.start + 1, length: hit.length, text: clipped.text, textStart: clipped.start })
+        const line = lines[hit.line]!
+        const clipped = clipMatchLine(line, hit.start, hit.length)
+        matches.push({ path: file.path, line: hit.line + 1, column: hit.start + 1, length: hit.length, text: clipped.text, textStart: clipped.start })
       }
     }
     return { matches, filesSearched, filesMatched, truncated: walk.capped }
@@ -86,6 +89,27 @@ export class FileSearch {
       entries.push(entry)
     }
     return { entries, truncated: walk.capped }
+  }
+
+  /**
+   * The matching lines of one file. A regular expression runs under a time limit (GuardedRegex), so a pattern that
+   * backtracks for ever stops the search with a message instead of freezing AgentXP; plain text cannot backtrack.
+   */
+  private hits(path: VPath, lines: string[], text: string, query: TextSearchQuery, match: ReturnType<typeof lineMatcher>): { line: number; start: number; length: number }[] {
+    if (query.regex) {
+      try {
+        return this.regex.scan(query.query, query.matchCase ? '' : 'i', text)
+      } catch (error) {
+        if (error instanceof RegexTimeoutError) throw new AppError(`The regular expression takes too long on ${path}. Make it simpler (avoid nested repeats such as (a+)+).`)
+        throw error
+      }
+    }
+    const hits: { line: number; start: number; length: number }[] = []
+    for (let i = 0; i < lines.length; i++) {
+      const hit = match(lines[i]!)
+      if (hit) hits.push({ line: i, ...hit })
+    }
+    return hits
   }
 
   private matcher(query: TextSearchQuery): ReturnType<typeof lineMatcher> {

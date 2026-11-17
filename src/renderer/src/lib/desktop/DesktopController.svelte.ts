@@ -396,10 +396,12 @@ export class DesktopController implements DesktopHost {
         continue
       }
       const known = this.inbox.has(s.id)
-      const store = this.inbox.storeFor(s.id) as Partial<Pick<SessionAgentStore, 'running' | 'pendingInterrupt' | 'connect'>>
+      const store = this.inbox.storeFor(s.id) as Partial<Pick<SessionAgentStore, 'running' | 'pendingInterrupt' | 'connect' | 'followAfterRun'>>
       // A turn the store did not start (a team room member, a scheduled task) is not streamed to it: a store that was idle when
       // that turn began connects again, so it follows the turn live and shows its permission requests. A new store just connected.
       if (known && s.status !== 'connecting' && store.running === false && !store.pendingInterrupt) void store.connect?.()
+      // Still streaming the end of the previous turn (the next one began within microseconds): follow it once that run ends.
+      else if (known && s.status === 'working' && store.running === true) store.followAfterRun?.(() => isBusy(this.allSessions.find((x) => x.id === s.id)?.status ?? null))
     }
   }
 
