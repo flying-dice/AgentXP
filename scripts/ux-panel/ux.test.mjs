@@ -168,10 +168,10 @@ describe('H-03 T10.1 routes', () => {
     const ctx = fakeCtx({ desktop: { windows: [win('terminal')], tools: ['terminal'] }, policy: { groups: { terminal: 'allow' } } })
     expect((await run('T10.1', ctx)).status).toBe('FAIL')
   })
-  it('tasks.md has budget 8 / 10, T10.2 Min 0, T22.1 Min 2, T06.1 Min 1', () => {
+  it('tasks.md has T10.1 budget 6 / 8, T10.2 Min 4, T22.1 Min 2, T06.1 Min 1 (J10 rewritten by docs/AGENT_PRESENCE.md)', () => {
     const t = loadTasks()
-    expect(t['T10.1']).toMatchObject({ min: 1, budgetExpert: 8, budgetNovice: 10 })
-    expect(t['T10.2'].min).toBe(0)
+    expect(t['T10.1']).toMatchObject({ min: 2, budgetExpert: 6, budgetNovice: 8 })
+    expect(t['T10.2'].min).toBe(4)
     expect(t['T22.1'].min).toBe(2)
     expect(t['T06.1'].min).toBe(1)
   })
