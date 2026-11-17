@@ -9,6 +9,7 @@ import { createFakeExtras } from './fakeExtras'
 import { createFakeKanban } from './fakeKanban'
 import { createFakeReview } from './fakeReview'
 import { createFakeTeams } from './fakeTeams'
+import { createFakeScheduler } from './fakeScheduler'
 import type { AguiSessionState } from '@shared/agui-state'
 import type { Agent7Api, Agent7Events } from '@shared/ipc'
 import type { AgentDto, FileChangeDto, FileNodeDto, FolderDto, SessionDto, TaskDto } from '@shared/models'
@@ -232,6 +233,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     },
     vfs: fakeVfs.vfs,
     git: createFakeGit({ vfs: fakeVfs.vfs, head: cleanHead(), changed: (root) => emit('git.changed', { desktopId: 1, root }) }),
+    scheduler: createFakeScheduler({ emit: emit as never, seed: !options.empty }),
     review: createFakeReview({ vfs: fakeVfs.vfs, head: sampleHead(), emit: emit as never }),
     drives: fakeVfs.drives,
     launcher,

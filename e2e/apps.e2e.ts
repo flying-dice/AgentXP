@@ -24,7 +24,8 @@ describe('apps open from the Start menu', () => {
     ['sticky-notes', 'sticky-notes-app'],
     ['event-viewer', 'event-viewer-app'],
     ['agent-manager', 'agent-manager-app'],
-    ['control-centre', 'control-centre-app']
+    ['control-centre', 'control-centre-app'],
+    ['task-scheduler', 'task-scheduler-app']
   ]
   for (const [app, root] of apps) {
     it(`${app}: opens, shows ${root}, closes`, async () => {

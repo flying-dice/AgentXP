@@ -138,6 +138,8 @@ export function suggestionsFor(app: AppKind, context: Record<string, unknown> | 
       return has(c['selectedRow']) ? [explainChip(app, windowId, c, 'Explain this event')] : [chip('errors', 'Any errors in these events?')]
     case 'agent-manager':
       return [chip('context', 'Which chat uses the most context?')]
+    case 'task-scheduler':
+      return [chip('schedule', 'Help me set up a task'), chip('failed', 'Why did my last task fail?')]
     case 'recycle-bin':
       return [chip('reverted', 'What did I revert?')]
     case 'paint':

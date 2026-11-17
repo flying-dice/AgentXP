@@ -283,3 +283,15 @@ describe('the icon column (UX-166)', () => {
     }
   })
 })
+
+describe('Task Scheduler window', () => {
+  it('is titled and sized like the other tools and keeps a minimum size', () => {
+    expect(windowTitle({ app: 'task-scheduler', selectedTaskId: 3, tab: 'history' })).toBe('Task Scheduler')
+    expect(helpWindowTitle('task-scheduler')).toBe('Agent7 Help and Support: Using Task Scheduler')
+    expect([DEFAULT_BOUNDS['task-scheduler'].width, DEFAULT_BOUNDS['task-scheduler'].height]).toEqual([1000, 600])
+    expect(minWindowSize('task-scheduler')).toEqual({ width: 760, height: 520 })
+  })
+  it('opens in the library with the General tab and no task selected', () => {
+    expect(viewPath({ app: 'task-scheduler', selectedTaskId: null, tab: 'general' })).toBeNull()
+  })
+})

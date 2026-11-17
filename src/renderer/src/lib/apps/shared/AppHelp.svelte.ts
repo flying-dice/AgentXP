@@ -26,6 +26,7 @@ export const ABOUT: Record<AppKind, { icon: IconName; description: string }> = {
   kanban: { icon: 'kanban', description: 'Boards of cards to track work, shared with the agents.' },
   'event-viewer': { icon: 'eventlog', description: 'What the agent and the desktop send each other, as it happens.' },
   'snipping-tool': { icon: 'scissors', description: 'Capture part of the screen.' },
+  'task-scheduler': { icon: 'scheduler', description: 'Run an agent at a time you choose, once or again and again.' },
   'recycle-bin': { icon: 'recycle', description: 'Changes you reverted, ready to restore.' },
   help: { icon: 'help', description: 'Manuals for every app and window.' },
   'code-review': { icon: 'changes', description: 'Review changes with an agent and send its comments to a chat.' },

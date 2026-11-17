@@ -21,6 +21,7 @@ export type AppId =
   | 'event-viewer'
   | 'agent-manager'
   | 'control-centre'
+  | 'task-scheduler'
   | 'recycle-bin'
   | 'surface'
   | 'help'
@@ -33,7 +34,8 @@ const START_GROUP: Partial<Record<AppId, string>> = {
   'snipping-tool': 'accessories',
   'sticky-notes': 'accessories',
   'agent-manager': 'system-tools',
-  'control-centre': 'system-tools'
+  'control-centre': 'system-tools',
+  'task-scheduler': 'system-tools'
 }
 
 /** A desktop window: taskbar, Start menu, top bar, tray and the app windows. Test ids only. */
@@ -189,7 +191,7 @@ export class DesktopPage {
     return this.page.getByTestId('balloon-text')
   }
 
-  /** Desktop icon (`computer`, `chats`, `code`, `terminal`, `browser`, `control-centre`, `recycle`). */
+  /** Desktop icon (`computer`, `chats`, `code`, `terminal`, `browser`, `control-centre`, `task-scheduler`, `recycle`). */
   icon(id: string): Locator {
     return this.page.getByTestId(`desktop-icon-${id}`)
   }

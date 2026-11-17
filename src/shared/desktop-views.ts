@@ -33,7 +33,7 @@ export const DEFAULT_BOUNDS: Record<AppKind, Bounds> = {
 }
 
 /** Smallest size of a window: 480 x 320, Control Center 640 x 420. */
-export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 } }
+export const MIN_WINDOW_SIZES: Partial<Record<AppKind, { width: number; height: number }>> = { 'control-centre': { width: 640, height: 420 }, 'task-scheduler': { width: 760, height: 520 } }
 export const DEFAULT_MIN_WINDOW_SIZE = { width: 480, height: 320 } as const
 export const minWindowSize = (app: AppKind): { width: number; height: number } => MIN_WINDOW_SIZES[app] ?? DEFAULT_MIN_WINDOW_SIZE
 
