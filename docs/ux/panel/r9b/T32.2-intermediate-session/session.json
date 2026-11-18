@@ -1,0 +1,27 @@
+{
+  "task": "T32.2",
+  "level": "intermediate",
+  "socket": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/ux.sock",
+  "admin": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/admin.sock",
+  "pid": 89604,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "tmp": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ",
+  "userData": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/user-data",
+  "testPageUrl": "http://127.0.0.1:63446/",
+  "home": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/home",
+  "fixtures": {
+    "loginApp": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/home/Documents/login-app",
+    "docsSite": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/home/Documents/docs-site",
+    "plain": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "show-request",
+  "note": "the reviewer asked to show you a comment (balloon with Show and Not now); Code has the focus",
+  "context": {
+    "previousTasks": []
+  }
+}

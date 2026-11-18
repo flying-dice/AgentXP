@@ -11,6 +11,11 @@ describe('stepWords: the step in plain words', () => {
     expect(stepWords(mcp('code_write', { path: 'notes.md' }))).toBe('writing notes.md')
   })
 
+  it('names the file and line of a review comment (panel r9)', () => {
+    expect(stepWords(mcp('review_add_comment', { path: 'notes.txt', line: 4, body: 'x' }))).toBe('commenting on notes.txt:4')
+    expect(stepWords(mcp('review_read_diff', { path: 'notes.txt' }))).toBe('reviewing notes.txt')
+  })
+
   it('names the command of a run and the query of a search, cut when long', () => {
     expect(stepWords(mcp('terminal_run', { command: 'npm test' }))).toBe('running npm test')
     expect(stepWords(mcp('code_search', { query: 'token' }))).toBe('searching for "token"')

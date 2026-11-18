@@ -1,0 +1,21 @@
+{
+  "task": "T33.2",
+  "level": "intermediate",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-0l15qq",
+  "testPagePort": 63444,
+  "testPageUrl": "http://127.0.0.1:63444/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:57:45.420Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-0l15qq/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "notepadWindowId": 3,
+  "diagramsWindowId": 1,
+  "preset": "diagram-behind",
+  "note": "Notepad has the focus; the assistant draws in Agent Diagrams behind it in about 15 seconds"
+}

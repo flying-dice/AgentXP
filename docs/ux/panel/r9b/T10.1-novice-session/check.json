@@ -1,0 +1,39 @@
+{
+  "task": "T10.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Changes list of the chat shows the change of redirect.ts; answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 8,
+  "answer": "login.ts and redirect.ts; redirect.ts returns next only if it starts with a slash, else /home",
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:57:06.491Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:57:06.491Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Changes list of the chat shows the change of redirect.ts; answer ok",
+      "steps": 4,
+      "answer": "login.ts and redirect.ts; redirect.ts returns next only if it starts with a slash, else /home",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

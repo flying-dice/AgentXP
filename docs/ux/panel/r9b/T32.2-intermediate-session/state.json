@@ -1,0 +1,36 @@
+{
+  "task": "T32.2",
+  "level": "intermediate",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ",
+  "testPagePort": 63446,
+  "testPageUrl": "http://127.0.0.1:63446/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:57:46.502Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Review notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-5cHsbZ/home/Documents/review-notes"
+  ],
+  "reviewSessionId": 1,
+  "reviewWindowId": 2,
+  "codeWindowId": 1,
+  "commentId": 1,
+  "codeViewAtStart": {
+    "app": "code",
+    "tabs": [
+      "E:\\notes.txt"
+    ],
+    "activePath": "E:\\notes.txt",
+    "visibleLines": [
+      1,
+      6
+    ],
+    "selectedChangeId": null,
+    "selection": null,
+    "search": null
+  },
+  "preset": "show-request",
+  "note": "the reviewer asked to show you a comment (balloon with Show and Not now); Code has the focus"
+}

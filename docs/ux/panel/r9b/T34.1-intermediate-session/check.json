@@ -1,0 +1,41 @@
+{
+  "task": "T34.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "stepsToPass": 2,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the recorder has 7 reading(s); Follow was turned on for Builder; Code landed on a step of Builder while it was followed; Follow was turned off afterwards; it was turned off while Builder still worked (not by the end of the turn)",
+  "notes": [
+    "readings: 7"
+  ],
+  "steps": 2,
+  "budget": 6,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:58:52.275Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:58:52.275Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the recorder has 7 reading(s); Follow was turned on for Builder; Code landed on a step of Builder while it was followed; Follow was turned off afterwards; it was turned off while Builder still worked (not by the end of the turn)",
+      "steps": 2,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 2
+    }
+  ]
+}

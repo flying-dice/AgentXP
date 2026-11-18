@@ -1,0 +1,27 @@
+{
+  "task": "T10.2",
+  "level": "intermediate",
+  "socket": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/ux.sock",
+  "admin": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/admin.sock",
+  "pid": 82001,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "tmp": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6",
+  "userData": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/user-data",
+  "testPageUrl": "http://127.0.0.1:62408/",
+  "home": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/home",
+  "fixtures": {
+    "loginApp": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/home/Documents/login-app",
+    "docsSite": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/home/Documents/docs-site",
+    "plain": "/Users/jonathanturnock/.ux-panel/a7ux-J3m4W6/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "project-desktop",
+  "note": "desktop 1",
+  "context": {
+    "previousTasks": []
+  }
+}

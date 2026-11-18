@@ -117,7 +117,7 @@ export function stepLabel(call: AguiToolCallState): string {
 }
 
 /** Step words that name no file, command or query: the tool title says as much, so the feed keeps it. */
-const GENERIC_STEPS = new Set(['reading a file', 'editing a file', 'writing a file', 'deleting a file', 'moving a file', 'running a command', 'searching the files', 'finding files', 'listing a folder', 'reading a web page'])
+const GENERIC_STEPS = new Set(['reading a file', 'editing a file', 'writing a file', 'deleting a file', 'moving a file', 'running a command', 'searching the files', 'finding files', 'listing a folder', 'reading a web page', 'commenting on a change', 'reviewing a change'])
 
 /** The text of a feed line: the step in plain words, with the repeat count. */
 export function feedLabel(item: FeedItem): string {

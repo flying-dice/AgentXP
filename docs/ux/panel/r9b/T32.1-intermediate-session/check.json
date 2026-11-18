@@ -1,0 +1,39 @@
+{
+  "task": "T32.1",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the chat has 1 new message(s) from the panelist; the reply agrees or quotes the note (\"> afterLogin ignores the address in ?next= and always returns /home: this is why\")",
+  "notes": [],
+  "steps": 3,
+  "budget": 6,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:58:42.031Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:58:42.031Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the chat has 1 new message(s) from the panelist; the reply agrees or quotes the note (\"> afterLogin ignores the address in ?next= and always returns /home: this is why\")",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

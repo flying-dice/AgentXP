@@ -37,9 +37,12 @@ export function judgeMissedOutput({ desktop, reviewWindowId, firstCommentId, com
   const review = desktop?.windows?.find((w) => w.id === reviewWindowId)
   const ids = commentIds?.length ? commentIds : firstCommentId != null ? [firstCommentId] : []
   const selected = review?.view?.selectedCommentId ?? null
+  const onComment = selected != null && ids.includes(selected)
+  // Panel r9b (T33.1 novice): bringing the review window to the front shows both comments inline; that opens them too.
+  const inFront = Boolean(review) && desktop?.focusedWindowId === review.id
   return [
     [Boolean(review), 'the Code Review window is open'],
-    [selected != null && ids.includes(selected), `Code Review is on a new comment (selected ${selected ?? 'none'}; new ${ids.join(', ') || 'none'})`]
+    [onComment || inFront, `the comments are open: Code Review is on a new comment or in front (selected ${selected ?? 'none'}; new ${ids.join(', ') || 'none'}; focused ${desktop?.focusedWindowId ?? 'none'})`]
   ]
 }
 

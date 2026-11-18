@@ -69,6 +69,12 @@ export function stepWords(call: StepInput): string | null {
       return str(input['command']) ? `running ${clip(String(input['command']))}` : 'running a command'
     case 'show':
       return 'showing you something'
+    case 'review_add_comment': {
+      const line = typeof input['line'] === 'number' ? `:${input['line']}` : ''
+      return file ? `commenting on ${file}${line}` : 'commenting on a change'
+    }
+    case 'review_read_diff':
+      return file ? `reviewing ${file}` : 'reviewing a change'
     default:
       break
   }

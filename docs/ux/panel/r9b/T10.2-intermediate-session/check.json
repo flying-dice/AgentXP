@@ -1,0 +1,39 @@
+{
+  "task": "T10.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "stepsToPass": 4,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Terminal permission is Deny; answer ok",
+  "notes": [],
+  "steps": 4,
+  "budget": 12,
+  "answer": "The top bar of the Fix login redirect window now reads Run commands: Deny, and Control Center Permissions shows Run commands set to Deny: never runs",
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:57:09.820Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:57:09.820Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Terminal permission is Deny; answer ok",
+      "steps": 4,
+      "answer": "The top bar of the Fix login redirect window now reads Run commands: Deny, and Control Center Permissions shows Run commands set to Deny: never runs",
+      "noAnswer": false,
+      "stepsToPass": 4
+    }
+  ]
+}

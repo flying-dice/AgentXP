@@ -487,7 +487,7 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 **T33.1 - What happened while I was busy?**
 - Scenario: "Two assistants worked while you were in a meeting. Find out what each one did, and open the review comments one of them left."
 - Start state: preset `missed-output`. The project `review-notes`. While Notepad had the focus, the chat "Builder" (script `two-agent-output`) wrote CHANGELOG.md and ran a command (a turn summary: "Builder finished: changed 1 file, ...", **Review changes**), and "Reviewer" left 2 comments on notes.txt in Code Review ("New review comments", **Open review**). The balloons were closed; the Action Center keeps both.
-- Success check: the Code Review window is open on one of the new comments (the focus may move on afterwards; panel r9), and the answer says what each assistant did.
+- Success check: the comments are open: the Code Review window is in front (its comments show inline) or is on one of the new comments (the focus may move on afterwards; panel r9 and r9b), and the answer says what each assistant did.
 - Answer: what each assistant did (Builder changed a file and ran the tests; Reviewer left comments).
 - Min 2 (tray flag, **Open review**). Budget 6 / 8.
 
