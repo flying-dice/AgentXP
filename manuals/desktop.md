@@ -58,7 +58,7 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
-- **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the agent works, the status is a link, for example **Working: Read a file**. Click it to go to the chat that does the work. While two or more chats work, the status reads, for example, **3 agents working**. Click it to open the list of the agents that work (see **Follow an Agent**). While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
+- **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the agent works, the status is a link, for example **Working: Read a file**. Click it to go to the chat that does the work. Click **Follow** next to it to follow that agent. While two or more chats work, the status reads, for example, **3 agents working**. Click it to open the list of the agents that work (see **Follow an Agent**). While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
 - **Agent can use** – Always has the chips **Read files**, **Write files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, for example **Run commands: Ask first**. The chips show the permissions of Control Center. No app has to be open for a tool. A chip that says **Ask first** also says **Asks you first.** in its tooltip. While **Ask before every action** is on, a chip that is not on Ask in Control Center reads **Ask first (now)**. Point to a chip to read what it means. A chip appears for each other tool that is set to **Deny**. Each chip is a button with a border. Click it to open the Permissions page of Control Center.
 - **Pause all agents or Resume agents and continue** – Its tooltip reads **Pause every agent on this desktop**. Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents and continue**. Then each chat that was stopped gets the message **Please continue where you stopped.** and carries on. The Action Center has a line for each chat that was stopped.
 - **Following** – A line under the bar while you follow an agent, for example **Following Builder**, with the color square of the agent, the button **Stop following**, and the check box **Keep following**. After a follow ends by itself, the line says why for a few seconds, for example **Stopped following Builder: the turn ended.**
@@ -157,9 +157,10 @@ You can watch one agent while it works. This is Follow. While you follow an agen
 
 To follow an agent, do one of these steps:
 
-a. In its Chat window, click **View -> Follow this chat**.
-b. In a Team Chat room, click **Follow** on the row of the member.
-c. While two or more agents work, click **3 agents working** (the number changes) on the top bar, then click **Follow** on the row of the agent.
+a. While one agent works, click **Follow** next to **Working:** on the top bar.
+b. In its Chat window, click **View -> Follow this chat**.
+c. In a Team Chat room, click **Follow** on the row of the member.
+d. While two or more agents work, click **3 agents working** (the number changes) on the top bar, then click **Follow** on the row of the agent.
 
 The list of the agents that work has one row for each agent: the color square and the name of the agent, the chat, and the step in plain words, for example **reading auth.ts**. Click **Open chat** to go to the chat of that agent. Press Esc or click outside the list to close it.
 
@@ -205,6 +206,7 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
 | Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask first**. Its tooltip starts with **Open Control Center to change this.** A click opens Control Center at Permissions with the row of that tool selected. | `topbar-tool-chip-*` |
 | Working link | The status while the agent works, for example **Working: Read a file**. Click it to go to the chat that does the work. | `topbar-working-link` |
+| Follow (top bar) | Shows while one agent works and you do not follow it yet. Click it to follow that agent: Code and the Terminal come to the front at its steps, with its agent cursor. With two or more agents working, use **Follow** in the agents popup. | `topbar-follow` |
 | Agents working | The status while two or more chats work, for example **3 agents working**. Click it to open the list of the agents that work. | `topbar-agents-link` |
 | Agents list | The list of the agents that work, under the top bar. | `topbar-agents-menu` |
 | Agent row | One agent in the list. `data-session-id` is its chat and `data-agent` is its name. | `topbar-agents-row` |
@@ -239,7 +241,7 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
 | Activity list | The infopanel that says what the agent does now, the last problem, and what finished. The Event Viewer button and the right-click item open the Event Viewer. | `infopanel-activity`, `infopanel-activity-control`, `infopanel-activity-not-saved`, `infopanel-activity-problem`, `infopanel-activity-working`, `infopanel-activity-last`, `infopanel-activity-open-event-viewer`, `infopanel-activity-open-permissions`, `infopanel-activity-menu-event-viewer` |
 | Activity agent | The color square and the name of the agent at the start of an activity line. | `infopanel-activity-agent` |
-| Activity line | One step of the agent in the Activity list. It starts with the color square and the name of the agent. Click it to see the step: **Show in Code**, **Show in Terminal**, or **Show in Browser**. A step with no place to show opens the chat that did it. The tooltip ends with what a click does. | `infopanel-activity-item` |
+| Activity line | One step of the agent in the Activity list, in plain words with its file or command, for example **Reading auth.ts**. It starts with the color square and the name of the agent. Click it to see the step: **Show in Code**, **Show in Terminal**, or **Show in Browser**. A step with no place to show opens the chat that did it. The tooltip ends with what a click does. | `infopanel-activity-item` |
 | Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |
 
 ### Taskbar

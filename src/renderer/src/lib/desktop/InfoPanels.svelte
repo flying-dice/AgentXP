@@ -4,11 +4,10 @@
   import InfoPanel from '../kit/molecules/InfoPanel.svelte'
   import ToolStatusIcon from '../app/session/ToolStatusIcon.svelte'
   import { toolStatusView } from '../app/session/toolStatus'
-  import { toolTitleOr } from '../app/session/toolTitles'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
   import type { AgentIdentity } from '@shared/identity'
-  import { NOT_SAVED_NOTE, WAITING_FOR_YOU, feedAction, feedText, type FeedItem } from './activity'
+  import { NOT_SAVED_NOTE, WAITING_FOR_YOU, feedAction, feedLabel, type FeedItem } from './activity'
   import { lastFinished, lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
   import type { ProtocolEventDto } from '@shared/desktop'
   import type { AgentXPApi } from '@shared/ipc'
@@ -111,7 +110,7 @@
       {#if workingLine}<li class="working" data-testid="infopanel-activity-working"><span class="t" title={workingLine}>{workingLine}</span></li>{/if}
       {#each feed as item (item.key)}
         {@const who = identityOf?.(item.sessionId) ?? null}
-        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} />{#if onshowfeeditem}<button type="button" class="t item" data-testid="infopanel-activity-item" data-action={feedAction(item)} data-session-id={item.sessionId} data-agent={who?.name} title="{who ? `${who.name}, ` : ''}{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}. Click: {feedAction(item)}." onclick={() => onshowfeeditem?.(item)}>{@render agent(who)}{feedText(toolTitleOr(item.title), item.count)}</button>{:else}<span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{@render agent(who)}{feedText(toolTitleOr(item.title), item.count)}</span>{/if}</li>
+        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} />{#if onshowfeeditem}<button type="button" class="t item" data-testid="infopanel-activity-item" data-action={feedAction(item)} data-session-id={item.sessionId} data-agent={who?.name} title="{who ? `${who.name}, ` : ''}{item.chatTitle}: {feedLabel(item)}. Click: {feedAction(item)}." onclick={() => onshowfeeditem?.(item)}>{@render agent(who)}{feedLabel(item)}</button>{:else}<span class="t" title="{item.chatTitle}: {feedLabel(item)}">{@render agent(who)}{feedLabel(item)}</span>{/if}</li>
       {:else}
         {#if !problem && !working}<li class="muted" data-testid="infopanel-activity-last">{finished ?? 'Nothing has happened yet.'}</li>{/if}
       {/each}

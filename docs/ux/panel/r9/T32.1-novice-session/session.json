@@ -1,0 +1,27 @@
+{
+  "task": "T32.1",
+  "level": "novice",
+  "socket": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/ux.sock",
+  "admin": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/admin.sock",
+  "pid": 26627,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "tmp": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf",
+  "userData": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/user-data",
+  "testPageUrl": "http://127.0.0.1:59032/",
+  "home": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/home",
+  "fixtures": {
+    "loginApp": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/home/Documents/login-app",
+    "docsSite": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/home/Documents/docs-site",
+    "plain": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "show-foreground",
+  "note": "the chat shows you redirect.ts lines 2-4 with a note",
+  "context": {
+    "previousTasks": []
+  }
+}

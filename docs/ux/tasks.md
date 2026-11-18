@@ -137,7 +137,7 @@ Needs PR 1 of `docs/AGENT_PRESENCE.md` (headless Work). The old T10.1 and T10.2 
 **T10.1 - What did it just do?**
 - Scenario: "The assistant just finished a job. Without asking it, tell me which files it changed, and show me what it changed in the redirect file."
 - Start state: preset `changes-to-review` (scripted agent `two-edits` changed `src/auth/login.ts` and `src/auth/redirect.ts`); no Code, Explorer or Terminal window open, because agent work opens nothing.
-- Success check: a Code window shows `src/auth/redirect.ts`; the panelist names both files (answer check).
+- Success check: a Code window shows `src/auth/redirect.ts`, or the Changes list of the chat shows its change (panel r9: the novice used Changes); the panelist names both files (answer check).
 - Answer: the files the assistant changed (login.ts and redirect.ts), and Code shows the change in redirect.ts.
 - Min 2 (open the chat from the top bar or the activity feed, **Show diff** on the redirect row). Budget 6 / 8.
 
@@ -487,7 +487,7 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 **T33.1 - What happened while I was busy?**
 - Scenario: "Two assistants worked while you were in a meeting. Find out what each one did, and open the review comments one of them left."
 - Start state: preset `missed-output`. The project `review-notes`. While Notepad had the focus, the chat "Builder" (script `two-agent-output`) wrote CHANGELOG.md and ran a command (a turn summary: "Builder finished: changed 1 file, ...", **Review changes**), and "Reviewer" left 2 comments on notes.txt in Code Review ("New review comments", **Open review**). The balloons were closed; the Action Center keeps both.
-- Success check: the Code Review window has the focus on the first new comment, and the answer says what each assistant did.
+- Success check: the Code Review window is open on one of the new comments (the focus may move on afterwards; panel r9), and the answer says what each assistant did.
 - Answer: what each assistant did (Builder changed a file and ran the tests; Reviewer left comments).
 - Min 2 (tray flag, **Open review**). Budget 6 / 8.
 

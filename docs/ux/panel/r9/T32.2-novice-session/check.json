@@ -1,0 +1,39 @@
+{
+  "task": "T32.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "stepsToPass": 1,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the reviewer's show became a request (the view did not move before the panelist acted); the Code Review window is open; the Code Review window has the focus (focused 2); Code Review is on the comment 1 (selected 1)",
+  "notes": [],
+  "steps": 1,
+  "budget": 4,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:45:37.521Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:45:37.521Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the reviewer's show became a request (the view did not move before the panelist acted); the Code Review window is open; the Code Review window has the focus (focused 2); Code Review is on the comment 1 (selected 1)",
+      "steps": 1,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 1
+    }
+  ]
+}

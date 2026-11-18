@@ -1,0 +1,39 @@
+{
+  "task": "T10.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "Code does not show redirect.ts (active: no Code window)",
+  "notes": [],
+  "steps": 3,
+  "budget": 8,
+  "answer": "It changed login.ts and redirect.ts. In redirect.ts, afterLogin now reads the next address from ?next= and returns it only when it starts with a slash, else /home.",
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:45:48.862Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:45:48.862Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "Code does not show redirect.ts (active: no Code window)",
+      "steps": 3,
+      "answer": "It changed login.ts and redirect.ts. In redirect.ts, afterLogin now reads the next address from ?next= and returns it only when it starts with a slash, else /home.",
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}
