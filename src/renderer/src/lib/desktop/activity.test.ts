@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
 import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
-import { workingAgents, CONTROL_IDLE_NOTE, CONTROL_NOTE, NOT_SAVED_TEXT, barStatus, controlNote, TAKE_OVER_TIP, chipAriaLabel, controlText, feedAction, feedTarget, feedText, recentToolCalls, toolChips, waitingText, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import { workingAgents, CONTROL_IDLE_NOTE, CONTROL_NOTE, NOT_SAVED_TEXT, barStatus, controlNote, TAKE_OVER_TIP, chipAriaLabel, controlText, feedAction, feedTarget, feedText, recentToolCalls, feedLabel, toolChips, waitingText, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -117,6 +117,18 @@ describe('recentToolCalls', () => {
     expect(feed.map((f) => [f.title, f.count])).toEqual([['Read the page', 1], ['Clicked', 1], ['Read the page', 3]])
     expect(feedText('Read the page', 24)).toBe('Read the page (24 times)')
     expect(feedText('Clicked', 1)).toBe('Clicked')
+  })
+})
+
+describe('feedLabel', () => {
+  const at = (path: string, title = 'Read a file') => ({ ...call(title), locations: [{ path, line: null }] })
+  it('says the step in plain words with its file, and keeps the tool title when it names nothing', () => {
+    const feed = recentToolCalls([chat(1, { toolCalls: { a: at('E:/src/auth.ts'), b: at('E:/src/login.ts'), c: call('Read the page') } })])
+    expect(feed.map(feedLabel)).toEqual(['Read the page', 'Reading login.ts', 'Reading auth.ts'])
+  })
+  it('counts repeats of the same step on the same file only', () => {
+    const feed = recentToolCalls([chat(1, { toolCalls: { a: at('E:/a.ts'), b: at('E:/a.ts'), c: at('E:/b.ts') } })])
+    expect(feed.map(feedLabel)).toEqual(['Reading b.ts', 'Reading a.ts (2 times)'])
   })
 })
 

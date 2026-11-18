@@ -1,0 +1,23 @@
+{
+  "task": "T33.1",
+  "level": "novice",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-GC7lWf",
+  "testPagePort": 59021,
+  "testPageUrl": "http://127.0.0.1:59021/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:44:35.822Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Review notes",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-GC7lWf/home/Documents/review-notes"
+  ],
+  "sessionId": 1,
+  "reviewSessionId": 2,
+  "reviewWindowId": 2,
+  "notepadWindowId": 3,
+  "firstCommentId": 1,
+  "preset": "missed-output",
+  "note": "Builder and Reviewer finished while Notepad had the focus; their balloons are closed (the Action Center keeps them)"
+}

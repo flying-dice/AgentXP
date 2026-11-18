@@ -82,6 +82,10 @@
     <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
       {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else if mode === 'working' && several}<button type="button" class="link" data-testid="topbar-agents-link" aria-haspopup="dialog" aria-expanded={agentsOpen} title="See what each agent is doing. Open its chat or follow it." bind:this={agentsLink} onclick={() => (agentsOpen = !agentsOpen)}>{status}</button>{:else if mode === 'working' && onopenworking}<button type="button" class="link" data-testid="topbar-working-link" title="Go to the chat that is doing this. Its steps show what it read, changed and ran." onclick={() => onopenworking?.()}>{status}</button>{:else}{status}{/if}
     </span>
+    {#if mode === 'working' && agents.length === 1 && !following && onfollow}
+      {@const only = agents[0]}
+      <button type="button" class="link follow" data-testid="topbar-follow" data-session-id={only.sessionId} title="Watch {only.identity.name} work: Code and the Terminal follow its steps and its cursor shows where it is." onclick={() => onfollow?.(only.sessionId)}>Follow</button>
+    {/if}
     {#if userInControl && !paused}
       <button type="button" class="give-back" data-testid="topbar-give-back" title={RESUME_CONTROL_TIP} onclick={() => ontakecontrol?.()}>{RESUME_CONTROL_BUTTON}</button>
     {/if}
@@ -260,6 +264,10 @@
     border: 1px solid #d9b44a;
     background: #fff4cf;
     color: #5f4300;
+  }
+  .follow {
+    margin-left: 8px;
+    flex: none;
   }
   .link {
     padding: 0;

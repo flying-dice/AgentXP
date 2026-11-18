@@ -1,0 +1,21 @@
+{
+  "task": "T10.1",
+  "level": "intermediate",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-RIngDn",
+  "testPagePort": 62409,
+  "testPageUrl": "http://127.0.0.1:62409/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:56:04.291Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-RIngDn/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 2,
+  "changeCount": 2,
+  "preset": "changes-to-review",
+  "note": null
+}

@@ -114,6 +114,15 @@ describe('Follow', () => {
     await see.gone(following())
     // The operator ended it: no "Stopped following" line.
     await see.count(page().getByTestId('topbar-follow-ended'), 0)
+    // Panel r9 (T34.1 novice): with one agent working, Follow sits on the top bar next to Working.
+    await see.visible(page().getByTestId('topbar-follow'))
+    await shot('17-topbar-follow-link')
+    await page().getByTestId('topbar-follow').click()
+    await see.text(following(), /Following Builder/)
+    await see.count(page().getByTestId('topbar-follow'), 0)
+    await shot('18-topbar-follow-on')
+    await page().getByTestId('topbar-stop-following').click()
+    await see.gone(following())
     await control.next()
     await idle()
   })

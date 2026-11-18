@@ -160,9 +160,14 @@ describe('H-03 T10.1 and T10.2 (J10 agents work quietly)', () => {
     const ctx = fakeCtx({ desktop: { windows: [win('code', { activePath: 'W:/src/auth/redirect.ts' })], tools: [] } })
     expect((await run('T10.1', ctx, 'It changed login.ts and redirect.ts')).status).toBe('PASS')
   })
-  it('T10.1 fails without a Code window on redirect.ts', async () => {
+  it('T10.1 fails without a Code window on redirect.ts and without its change in the Changes list', async () => {
     const ctx = fakeCtx({ desktop: { windows: [], tools: [] } })
     expect((await run('T10.1', ctx, 'login.ts and redirect.ts')).status).toBe('FAIL')
+  })
+  it('T10.1 passes when the chat Changes list shows the change of redirect.ts (panel r9)', async () => {
+    const page = { getByTestId: () => ({ allInnerTexts: async () => ["return next && next.startsWith('/') ? next : '/home'"] }) }
+    const ctx = fakeCtx({ desktop: { windows: [], tools: [] }, page })
+    expect((await run('T10.1', ctx, 'It changed login.ts and redirect.ts')).status).toBe('PASS')
   })
   it('T10.2 passes on Deny and fails otherwise', async () => {
     expect((await run('T10.2', fakeCtx({ desktop: { windows: [], tools: [] }, policy: { groups: { terminal: 'deny' } } }), 'I set it to deny in Control Center')).status).toBe('PASS')

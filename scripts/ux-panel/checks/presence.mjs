@@ -28,12 +28,21 @@ export function judgeShowRequest({ desktop, reviewWindowId, commentId, requested
   ]
 }
 
-/** T33.1: Code Review is focused on the first new comment. */
-export function judgeMissedOutput({ desktop, reviewWindowId, firstCommentId }) {
+/**
+ * T33.1: the review comments are open: the Code Review window is open on one of the new comments. Panel r9 (T33.1
+ * novice): opening the comments does not need the focus to stay there, and any new comment counts (the panelist
+ * picked the Blocker from the list, then went back to the Builder chat to check its answer).
+ */
+export function judgeMissedOutput({ desktop, reviewWindowId, firstCommentId, commentIds }) {
   const review = desktop?.windows?.find((w) => w.id === reviewWindowId)
+  const ids = commentIds?.length ? commentIds : firstCommentId != null ? [firstCommentId] : []
+  const selected = review?.view?.selectedCommentId ?? null
+  const onComment = selected != null && ids.includes(selected)
+  // Panel r9b (T33.1 novice): bringing the review window to the front shows both comments inline; that opens them too.
+  const inFront = Boolean(review) && desktop?.focusedWindowId === review.id
   return [
-    [Boolean(review) && desktop.focusedWindowId === review.id, `the Code Review window has the focus (focused ${desktop?.focusedWindowId ?? 'none'})`],
-    [firstCommentId != null && review?.view?.selectedCommentId === firstCommentId, `Code Review is on the first new comment ${firstCommentId} (selected ${review?.view?.selectedCommentId ?? 'none'})`]
+    [Boolean(review), 'the Code Review window is open'],
+    [onComment || inFront, `the comments are open: Code Review is on a new comment or in front (selected ${selected ?? 'none'}; new ${ids.join(', ') || 'none'}; focused ${desktop?.focusedWindowId ?? 'none'})`]
   ]
 }
 
@@ -81,7 +90,7 @@ export const checks = {
   },
 
   async 'T33.1'(ctx, { answer }) {
-    const state = all(judgeMissedOutput({ desktop: await desktopOf(ctx), reviewWindowId: ctx.state.reviewWindowId, firstCommentId: ctx.state.firstCommentId }))
+    const state = all(judgeMissedOutput({ desktop: await desktopOf(ctx), reviewWindowId: ctx.state.reviewWindowId, firstCommentId: ctx.state.firstCommentId, commentIds: ctx.state.commentIds }))
     return withAnswer(state, answer, {
       keywords: [['changed', 'added', 'wrote', 'edited', 'changelog', 'file'], ['comment', 'review', 'remark']],
       expect: 'Builder changed a file (CHANGELOG.md) and ran the tests; Reviewer left 2 comments on notes.txt'

@@ -59,7 +59,7 @@ export function agentxpToolName(title: string): string | null {
   const head = title.trim().split(/\s/)[0] ?? ''
   const name = head.replace(/^mcp__.*?__/, '').replace(/^[a-z0-9_-]+\./i, '')
   if (name === 'show' && head !== 'show') return name // `agentxp.show`, `mcp__agentxp__show` (a bare "show" may be another server's)
-  return /^(code|terminal|browser|fs|notepad|wordpad)_[a-z_]+$/.test(name) ? name : null
+  return /^(code|terminal|browser|fs|notepad|wordpad|review)_[a-z_]+$/.test(name) ? name : null
 }
 
 const text = (value: unknown): string | null => (typeof value === 'string' && value.trim() !== '' ? value : null)

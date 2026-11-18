@@ -126,7 +126,7 @@ export const presets = {
     await closeBalloons(ctx, desktop.page)
     const comments = (await desktop.page.evaluate((id) => window.agentxp.review.state(id), reviewSessionId)).comments
     const firstCommentId = Math.min(...comments.map((c) => c.id))
-    Object.assign(ctx.state, { sessionId: chat.sessionId, reviewSessionId, reviewWindowId: review.id, notepadWindowId: notepad.id, firstCommentId })
+    Object.assign(ctx.state, { sessionId: chat.sessionId, reviewSessionId, reviewWindowId: review.id, notepadWindowId: notepad.id, firstCommentId, commentIds: comments.map((c) => c.id) })
     ctx.saveState()
     return 'Builder and Reviewer finished while Notepad had the focus; their balloons are closed (the Action Center keeps them)'
   },

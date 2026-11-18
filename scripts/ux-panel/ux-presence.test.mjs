@@ -82,6 +82,15 @@ describe('T33.1 What happened while I was busy?', () => {
     const notOpened = { focusedWindowId: 2, windows: [win(2, 'notepad'), win(7, 'code-review', { selectedCommentId: null })] }
     expect((await run('T33.1', fakeCtx({ state, desktop: notOpened }), 'Builder changed a file, Reviewer left comments')).status).toBe('FAIL')
   })
+  it('accepts any new comment, or the review window in front with its comments shown (panel r9, r9b)', async () => {
+    const later = { focusedWindowId: 3, windows: [win(3, 'chat'), win(7, 'code-review', { selectedCommentId: 5 })] }
+    const both = { ...state, commentIds: [4, 5] }
+    expect((await run('T33.1', fakeCtx({ state: both, desktop: later }), 'Builder changed a file and ran the tests, Reviewer left two comments')).status).toBe('PASS')
+    const front = { focusedWindowId: 7, windows: [win(7, 'code-review', { selectedCommentId: null })] }
+    expect((await run('T33.1', fakeCtx({ state: both, desktop: front }), 'Builder changed a file and ran the tests, Reviewer left two comments')).status).toBe('PASS')
+    const behind = { focusedWindowId: 3, windows: [win(3, 'chat'), win(7, 'code-review', { selectedCommentId: 1 })] }
+    expect((await run('T33.1', fakeCtx({ state: both, desktop: behind }), 'Builder changed a file, Reviewer left comments')).status).toBe('FAIL')
+  })
 })
 
 describe('T33.2 Do not disturb me', () => {

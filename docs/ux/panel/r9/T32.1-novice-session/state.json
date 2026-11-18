@@ -1,0 +1,21 @@
+{
+  "task": "T32.1",
+  "level": "novice",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf",
+  "testPagePort": 59032,
+  "testPageUrl": "http://127.0.0.1:59032/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:44:39.077Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-32IdDf/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "prompt": "Where is the login redirect checked?",
+  "preset": "show-foreground",
+  "note": "the chat shows you redirect.ts lines 2-4 with a note"
+}

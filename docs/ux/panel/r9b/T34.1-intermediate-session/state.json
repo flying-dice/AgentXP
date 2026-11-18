@@ -1,0 +1,20 @@
+{
+  "task": "T34.1",
+  "level": "intermediate",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-EpYa1h",
+  "testPagePort": 63453,
+  "testPageUrl": "http://127.0.0.1:63453/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:57:48.019Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-EpYa1h/home/Documents/login-app"
+  ],
+  "sessionId": 1,
+  "chatWindowId": 1,
+  "preset": "builder-working",
+  "note": "Builder is working in its chat (about three minutes of reading); Code is closed"
+}

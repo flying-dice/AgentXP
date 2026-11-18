@@ -1,0 +1,41 @@
+{
+  "task": "T33.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Notepad has the typed note (\"Call the team about the login fix\"); the assistant drew in Agent Diagrams (2 of 2 steps done); the Diagrams window has the focus at the end (focused 1)",
+  "notes": [
+    "keys lost while typing are not measured: compare the typed note with the panelist record"
+  ],
+  "steps": 3,
+  "budget": 12,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:45:48.260Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:45:48.260Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Notepad has the typed note (\"Call the team about the login fix\"); the assistant drew in Agent Diagrams (2 of 2 steps done); the Diagrams window has the focus at the end (focused 1)",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

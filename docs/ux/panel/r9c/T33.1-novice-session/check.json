@@ -1,0 +1,39 @@
+{
+  "task": "T33.1",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "FAIL",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "f2be8055df6260c593108d04b8993e6230e94b32"
+  },
+  "stepsToPass": null,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "FAIL",
+  "reason": "not met: the comments are open: Code Review is on a new comment or in front (selected none; new 1, 2; focused 1)",
+  "notes": [],
+  "steps": 2,
+  "budget": 8,
+  "answer": "Builder added CHANGELOG.md and ran the tests; Reviewer left two comments on notes.txt",
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T13:01:24.726Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T13:01:24.726Z",
+      "status": "FAIL",
+      "checkerStatus": "FAIL",
+      "reason": "not met: the comments are open: Code Review is on a new comment or in front (selected none; new 1, 2; focused 1)",
+      "steps": 2,
+      "answer": "Builder added CHANGELOG.md and ran the tests; Reviewer left two comments on notes.txt",
+      "noAnswer": false,
+      "stepsToPass": null
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "task": "T34.1",
+  "level": "novice",
+  "socket": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/ux.sock",
+  "admin": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/admin.sock",
+  "pid": 26565,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "tmp": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg",
+  "userData": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/user-data",
+  "testPageUrl": "http://127.0.0.1:59028/",
+  "home": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/home",
+  "fixtures": {
+    "loginApp": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/home/Documents/login-app",
+    "docsSite": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/home/Documents/docs-site",
+    "plain": "/Users/jonathanturnock/.ux-panel/a7ux-VOyZcg/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "builder-working",
+  "note": "Builder is working in its chat (about three minutes of reading); Code is closed",
+  "context": {
+    "previousTasks": []
+  }
+}

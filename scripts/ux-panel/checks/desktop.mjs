@@ -10,6 +10,9 @@ export const PAGE_HEADING = 'Example Domain'
 /** H-62: T19.2 keywords by cause (the start state is the blocked port 9), plus the older connection words. */
 export const BLOCKED_PORT_WORDS = ['port', 'blocked', 'address', 'refused', 'not load', 'could not connect', "couldn't connect", "can't connect", 'cannot connect', 'not connect', 'unreachable', 'no network', 'no internet']
 
+/** A line of the change that `two-edits` makes in redirect.ts (preset `changes-to-review`). */
+export const REDIRECT_CHANGE = /startsWith\('\/'\)|searchParams\.get\('next'\)/
+
 export const checks = {
   // J10 rewritten by docs/AGENT_PRESENCE.md: agents work quietly; the operator finds the work from the chat or the activity feed.
   async 'T10.1'(ctx, { answer }) {
@@ -17,7 +20,15 @@ export const checks = {
     if (!state) return fail('the desktop window is closed')
     const code = windowsOf(state, 'code')[0]
     const active = code?.view?.activePath ?? ''
-    const stateResult = /redirect\.ts$/.test(active) ? pass('Code shows redirect.ts (Show in Code or Show diff from the chat or the activity feed)') : fail(`Code does not show redirect.ts (active: ${active || 'no Code window'})`)
+    // Panel r9 (T10.1 novice): the chat's own Changes list shows the change too; its diff of redirect.ts counts.
+    const page = await ctx.desktopPage(ctx.state.desktopId)
+    const diffs = page ? await page.getByTestId('changes-diff').allInnerTexts().catch(() => []) : []
+    const inChanges = diffs.some((t) => REDIRECT_CHANGE.test(t))
+    const stateResult = /redirect\.ts$/.test(active)
+      ? pass('Code shows redirect.ts (Show in Code or Show diff from the chat or the activity feed)')
+      : inChanges
+        ? pass('the Changes list of the chat shows the change of redirect.ts')
+        : fail(`neither Code nor the Changes list shows redirect.ts (Code active: ${active || 'no Code window'})`)
     return withAnswer(stateResult, answer, {
       keywords: [['login'], ['redirect']],
       expect: 'the panelist names login.ts and redirect.ts as the changed files'

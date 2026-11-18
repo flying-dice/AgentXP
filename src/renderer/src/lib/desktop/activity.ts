@@ -1,8 +1,8 @@
 /** Pure summaries of what the agent is doing, from the chats of a desktop. */
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
-import { liveToolTitle } from '../app/session/toolTitles'
-import { currentStep } from '../app/session/stepWords'
+import { liveToolTitle, toolTitleOr } from '../app/session/toolTitles'
+import { currentStep, stepWords } from '../app/session/stepWords'
 import type { AgentIdentity } from '@shared/identity'
 import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from '@shared/toolShowTarget'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
@@ -110,6 +110,20 @@ export const feedAction = (item: FeedItem): string => {
 export const feedText = (title: string, count: number): string => (count > 1 ? `${title} (${count} times)` : title)
 
 /** The last `limit` lines of what the agent did across chats; the most recently updated chat first, latest call first, equal calls in a row as one line. */
+/** The step in plain words with its file or command ("Reading auth.ts"), else the tool title ("Read a file"). */
+export function stepLabel(call: AguiToolCallState): string {
+  const words = stepWords(call)
+  return words && !GENERIC_STEPS.has(words) ? words.charAt(0).toUpperCase() + words.slice(1) : toolTitleOr(call.title)
+}
+
+/** Step words that name no file, command or query: the tool title says as much, so the feed keeps it. */
+const GENERIC_STEPS = new Set(['reading a file', 'editing a file', 'writing a file', 'deleting a file', 'moving a file', 'running a command', 'searching the files', 'finding files', 'listing a folder', 'reading a web page', 'commenting on a change', 'reviewing a change'])
+
+/** The text of a feed line: the step in plain words, with the repeat count. */
+export function feedLabel(item: FeedItem): string {
+  return feedText(stepLabel(item.call), item.count)
+}
+
 export function recentToolCalls(chats: readonly ChatActivityInput[], limit = 8): FeedItem[] {
   const ordered = [...chats].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
   const items: FeedItem[] = []
@@ -117,7 +131,7 @@ export function recentToolCalls(chats: readonly ChatActivityInput[], limit = 8):
     const entries = Object.entries(chat.toolCalls)
     for (let i = entries.length - 1; i >= 0; i--) {
       const last = items[items.length - 1]
-      if (last && last.chatTitle === chat.title && last.title === entries[i][1].title) last.count++
+      if (last && last.chatTitle === chat.title && stepLabel(last.call) === stepLabel(entries[i][1])) last.count++
       else items.push({ key: `${chat.sessionId}:${entries[i][0]}`, sessionId: chat.sessionId, toolCallId: entries[i][0], call: entries[i][1], cwd: chat.cwd ?? null, chatTitle: chat.title, title: entries[i][1].title, status: entries[i][1].status, count: 1 })
     }
   }

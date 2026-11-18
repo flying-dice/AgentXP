@@ -1,0 +1,41 @@
+{
+  "task": "T33.2",
+  "level": "intermediate",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 7,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "80815a0385ee35e82f2e45363839766ffcea4a64"
+  },
+  "stepsToPass": 3,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "Notepad has the typed note (\"Buy milk and call Sam\"); the assistant drew in Agent Diagrams (2 of 2 steps done); the Diagrams window has the focus at the end (focused 1)",
+  "notes": [
+    "keys lost while typing are not measured: compare the typed note with the panelist record"
+  ],
+  "steps": 3,
+  "budget": 9,
+  "answer": null,
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:58:34.242Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:58:34.242Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "Notepad has the typed note (\"Buy milk and call Sam\"); the assistant drew in Agent Diagrams (2 of 2 steps done); the Diagrams window has the focus at the end (focused 1)",
+      "steps": 3,
+      "answer": null,
+      "noAnswer": false,
+      "stepsToPass": 3
+    }
+  ]
+}

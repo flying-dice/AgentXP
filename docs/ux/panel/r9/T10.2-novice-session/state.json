@@ -1,0 +1,18 @@
+{
+  "task": "T10.2",
+  "level": "novice",
+  "sockDir": "/Users/jonathanturnock/.ux-panel/a7ux-5nN1ch",
+  "testPagePort": 59029,
+  "testPageUrl": "http://127.0.0.1:59029/",
+  "noMouse": false,
+  "startedAt": "2026-11-18T12:44:35.824Z",
+  "options": {},
+  "desktopId": 1,
+  "desktopTitle": "Fix login redirect",
+  "agentId": 3,
+  "projectPaths": [
+    "/Users/jonathanturnock/.ux-panel/a7ux-5nN1ch/home/Documents/login-app"
+  ],
+  "preset": "project-desktop",
+  "note": "desktop 1"
+}

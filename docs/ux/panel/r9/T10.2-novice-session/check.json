@@ -1,0 +1,39 @@
+{
+  "task": "T10.2",
+  "level": "novice",
+  "context": {
+    "previousTasks": []
+  },
+  "status": "PASS",
+  "nearMiss": false,
+  "weak": false,
+  "seq": 6,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "143e80488898a47d44d4f11de6a83293ee369b2d"
+  },
+  "stepsToPass": 5,
+  "rerun": null,
+  "finishedByFacilitator": false,
+  "checkerStatus": "PASS",
+  "reason": "the Terminal permission is Deny; answer ok",
+  "notes": [],
+  "steps": 5,
+  "budget": 16,
+  "answer": "Run commands is set to Deny in Control Center, and the top bar reads Run commands: Deny",
+  "noAnswer": false,
+  "checkedAt": "2026-11-18T12:45:57.220Z",
+  "runs": [
+    {
+      "checkedAt": "2026-11-18T12:45:57.220Z",
+      "status": "PASS",
+      "checkerStatus": "PASS",
+      "reason": "the Terminal permission is Deny; answer ok",
+      "steps": 5,
+      "answer": "Run commands is set to Deny in Control Center, and the top bar reads Run commands: Deny",
+      "noAnswer": false,
+      "stepsToPass": 5
+    }
+  ]
+}
