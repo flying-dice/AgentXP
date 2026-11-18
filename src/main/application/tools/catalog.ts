@@ -32,7 +32,7 @@ export const WORK_QUIETLY_INSTRUCTIONS =
   'Agent Diagrams, WordPad, Code Review and windows you draw with a2ui_render. Open an app only to put your output in it or when the user asks, ' +
   'never just so the user can watch you work. To point the user at something, call show: one target (lines of a file, a change, a review comment, ' +
   'a card, a diagram shape, a page element or a window) and always a short note saying why. Use it sparingly, only when you want the user to look now; ' +
-  'if the user is in another chat it becomes a request they can accept later. code_open, code_reveal and code_show_diff are deprecated names of show. '
+  'if the user is in another chat it becomes a request they can accept later. '
 
 /** The shell terminal_run uses on this host, so the agent writes commands it understands. */
 export function hostShellInstructions(platform: string): string {
@@ -302,21 +302,6 @@ export const TOOL_DEFS = {
         .describe('The one thing to show'),
       note: z.string().trim().min(1).max(SHOW_NOTE_MAX).describe('Why the user should look, in one short sentence')
     })
-  },
-  code_open: {
-    group: 'show',
-    description: 'Deprecated: use show with target {kind: "file"}. Shows the user a file in Code, optionally at a line, like show (the same rules: only when you want the user to look; a request when the user is in another chat).',
-    input: z.object({ path: path('File'), line: z.number().int().min(1).optional(), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
-  },
-  code_reveal: {
-    group: 'show',
-    description: 'Deprecated: use show with target {kind: "file", lines: [start, end]}. Shows the user a line range of a file in Code, like show.',
-    input: z.object({ path: path('File'), startLine: z.number().int().min(1), endLine: z.number().int().min(1).optional(), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
-  },
-  code_show_diff: {
-    group: 'show',
-    description: 'Deprecated: use show with target {kind: "change", path}. Shows the user the recorded change of a file you edited, like show.',
-    input: z.object({ path: path('File'), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
   },
   code_read: {
     group: 'fs.read',

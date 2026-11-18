@@ -333,7 +333,7 @@ Each tool belongs to a group, for example **Read files** or **Run commands**. Th
 |---|---|---|
 | Read files | Read and list files, find files by name or by a word, and search inside files | `fs_list`, `fs_find`, `code_read`, `code_search`, `fs/read_text_file` |
 | Write files | Change and write files. Each change goes to the Changes pane. | `code_edit`, `code_write`, `fs/write_text_file` |
-| Agent may show you things | Show you one thing with a note that tells why: lines of a file, a change, a review comment, a card, a diagram shape, a page element, or a window. The control has the choices Always, Ask, and Never. | `show` (and its old names `code_open`, `code_reveal`, `code_show_diff`) |
+| Agent may show you things | Show you one thing with a note that tells why: lines of a file, a change, a review comment, a card, a diagram shape, a page element, or a window. The control has the choices Always, Ask, and Never. | `show` |
 | Notepad | Open a file in Notepad for you, and read it | `notepad_open`, `notepad_read` |
 | Run commands | Run commands and read their output | `terminal_run`, `terminal_read`, `terminal/*` |
 | Browser | Open web pages, read the whole page, find items, click, type (also in chat boxes), press keys, scroll, wait, use tabs, go back, and take a picture. The agent can use web apps such as a team chat after you sign in. Needs an open Browser window. | `browser_navigate`, `browser_read`, `browser_find`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload`, `browser_screenshot` |

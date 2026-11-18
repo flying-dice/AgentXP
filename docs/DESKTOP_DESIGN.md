@@ -31,7 +31,7 @@ User text says "chat" (README style guide updated: chat = one conversation in a 
 | Chat | `chat` | no (one per chat) | *(prompt channel, always)* | session id, title, status |
 | Explorer | `explorer` | no | ACP `fs/read_text_file`; MCP `fs_list`, `fs_find` | current path, selected entries |
 | Notepad | `notepad` | no | ACP `fs/write_text_file`; MCP `notepad_open`, `notepad_read` | file path, dirty flag, caret line |
-| Code | `code` | yes | ACP `fs/read_text_file`, `fs/write_text_file`; MCP `show` with a file or change target (`code_open`, `code_reveal` and `code_show_diff` are its deprecated aliases; see `docs/AGENT_PRESENCE.md`) | open tabs, active file, visible line range, selection, changes list selection |
+| Code | `code` | yes | ACP `fs/read_text_file`, `fs/write_text_file`; MCP `show` with a file or change target (see `docs/AGENT_PRESENCE.md`) | open tabs, active file, visible line range, selection, changes list selection |
 | Terminal | `terminal` | no | ACP `terminal/*`; MCP `terminal_run`, `terminal_read` | cwd, running command, last 20 lines |
 | Browser | `browser` | no | MCP `browser_navigate`, `browser_read`, `browser_find`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_press`, `browser_scroll`, `browser_wait`, `browser_select`, `browser_tabs`, `browser_back`, `browser_forward`, `browser_reload` | url, page title, loading |
 | Control Center | `control-centre` | yes | none (system UI) | open page |
