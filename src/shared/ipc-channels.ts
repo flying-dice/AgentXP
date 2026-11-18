@@ -57,7 +57,7 @@ export const isRendererEvent = (name: string): name is AgentXPEventName => name 
 
 /** Every invoke method, as `true` flags. The type forces this list to match `AgentXPApi` exactly. */
 const INVOKE_METHODS = {
-  agents: { list: true, create: true, update: true, remove: true, setDefault: true, check: true },
+  agents: { list: true, create: true, update: true, remove: true, setDefault: true, check: true, discover: true },
   folders: { list: true, pick: true, add: true, remove: true, readDir: true, readFile: true, gitBranch: true, writeFile: true },
   sessions: {
     list: true,

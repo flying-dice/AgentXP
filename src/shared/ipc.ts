@@ -13,6 +13,8 @@ import type {
   FolderDto,
   Id,
   SessionDto,
+  SessionModeDto,
+  SessionModelDto,
   TaskDto,
   TerminalDto,
   TranscriptEntryDto
@@ -43,6 +45,11 @@ export interface AgentInput {
   env: Record<string, string>
   defaultModeId?: string | null
   defaultModelId?: string | null
+}
+
+export interface AgentChoicesDto {
+  modes: SessionModeDto[]
+  models: SessionModelDto[]
 }
 
 /** What main sends on the `agui.event` channel: one AG-UI event of one run. */
@@ -85,9 +92,11 @@ export interface AgentXPApi {
     create(input: AgentInput): Promise<AgentDto>
     update(id: Id, input: AgentInput): Promise<AgentDto>
     remove(id: Id): Promise<void>
-    setDefault(id: Id): Promise<void>
+    setDefault(id: Id, desktopId?: Id): Promise<void>
     /** True when `command` is a program that can be started (the Add Agent dialog's Test button). */
     check(command: string): Promise<boolean>
+    /** Starts a temporary ACP session to discover this command's available choices. */
+    discover(input: AgentInput): Promise<AgentChoicesDto>
   }
   folders: {
     list(): Promise<FolderDto[]>

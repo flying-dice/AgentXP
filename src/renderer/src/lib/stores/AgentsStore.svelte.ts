@@ -39,8 +39,8 @@ export class AgentsStore {
     await this.load()
   }
 
-  async setDefault(id: Id): Promise<void> {
-    await this.api.setDefault(id)
+  async setDefault(id: Id, desktopId?: Id): Promise<void> {
+    await this.api.setDefault(id, desktopId)
     await this.load()
   }
 }

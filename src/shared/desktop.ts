@@ -214,6 +214,8 @@ export interface DesktopDto {
 /** The whole live desktop: AG-UI `state.desktop` and the agent's `desktop_state`. */
 export interface DesktopState {
   desktopId: Id
+  /** Agent used for new conversations on this desktop; absent in older fixtures. */
+  agentId?: Id | null
   title: string
   /** The drives of the desktop: C: first, then the plugged-in USB drives (projects). */
   drives: DriveDto[]

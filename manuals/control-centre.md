@@ -47,7 +47,7 @@ The page lists the agents. The columns are **Name**, **About** (one plain senten
 - **Add...** – Opens the **Add Agent** dialog box.
 - **Edit...** – Opens the **Edit Agent** dialog box for the selected agent.
 - **Remove** – Removes the selected agent after a question.
-- **Set as Default** – Makes the selected agent the default.
+- **Set as Default** – Makes the selected agent the default for new desktops and for new Chat and sidebar conversations on this desktop. Existing conversations keep their agent and model. In a sidebar, choose **New conversation** to use the new default; its earlier messages are kept under Recent chats.
 
 The agent dialog box has these parts:
 
@@ -57,6 +57,7 @@ The agent dialog box has these parts:
 - **Environment** – KEY=VALUE, one per line.
 - **Start mode** – The mode that every new chat of the agent starts in. See below.
 - **Start model** – The model that every new chat of the agent starts on. See below.
+- **Load choices** – Starts a temporary ACP session using the command, arguments and environment above, and reads the models and modes that the agent advertises. It sends no chat prompt. The agent must be installed and signed in. If loading fails or the agent advertises no choices, you can keep **Agent default** or type an ACP id. Changing the command, arguments or environment clears the loaded choices; load them again for the new command.
 - **Make this the default agent for new desktops and chats** – A check box. It is on when you add an agent.
 
 **Start mode** is the mode that every new chat of the agent starts in. This is how you reduce the permission prompts. Choose **Agent default** to keep the mode that the agent chooses itself. For Claude Code the modes are:
@@ -69,7 +70,7 @@ The agent dialog box has these parts:
 
 Other agents can have other modes. You can type the id of a mode in the box. If the agent does not offer the mode, the chat starts in the mode of the agent. The setting does not change chats that already exist. In a chat you can still change the mode at any time.
 
-**Start model** is the model that every new chat of the agent starts on. Claude Code is set to **Sonnet**. Choose **Agent default** to keep the model that the agent chooses itself; for Claude Code that is the model in your own Claude settings. For Claude Code the choices are **Sonnet**, **Opus**, **Fable**, and **Haiku**. Every model the agent offers is also in the **Model** list of each chat, so you can switch to Opus there at any time. You can type the id of a model in the box. If the agent does not offer the model, the chat starts on the model of the agent. The setting does not change chats that already exist, and a chat keeps its model when it is opened again.
+**Start model** is the model that every new chat of the agent starts on. Claude Code is initially set to **Sonnet**. Choose **Agent default** to keep the model that the agent chooses itself. **Load choices** fills the list with names and ids from this agent's ACP session, including model config options. You can also type a model id. A saved id stays visible even when it is not advertised. If the agent does not offer the model, the chat starts on the model of the agent. The setting does not change chats that already exist, and a chat keeps its model when it is opened again.
 
 ### The Permissions Page
 
@@ -156,6 +157,8 @@ Each Control Center window has a chat pane at its right edge. The pane starts cl
 | Agent command | The program to run. | `agents-dialog-command` |
 | Test | Checks that the program can be found. | `agents-dialog-test` |
 | Test result | Says if the program was found. | `agents-dialog-test-result` |
+| Load choices | Reads modes and models from a temporary ACP session. | `agents-dialog-load-choices` |
+| Choices status | Shows loading, the number of advertised choices, or the reason loading failed. | `agents-dialog-choices-status` |
 | Agent arguments | One argument per line. | `agents-dialog-args` |
 | Agent environment | KEY=VALUE per line. | `agents-dialog-env` |
 | Make default | Makes the agent the default for new desktops and chats. | `agents-dialog-default` |

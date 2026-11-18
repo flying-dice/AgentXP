@@ -52,6 +52,7 @@ export function extractSessionState(response: SessionStateSource): SessionState 
   const modes = fromModeState(response.modes)
   const legacy = fromLegacyModels(response)
   const config = fromConfigOptions(response.configOptions)
-  const models = legacy ?? config
+  // Config options are the current protocol. An empty legacy list must not hide its advertised choices.
+  const models = config.modelConfigId ? config : legacy ?? config
   return { ...modes, models: models.models, currentModelId: models.currentModelId, modelConfigId: config.modelConfigId }
 }

@@ -159,6 +159,13 @@
     if (open) hide()
     else void show()
   }
+
+  // Handle keys at the control before a dialog's native Enter/Escape listener runs.
+  // Svelte delegates onkeydown to the root, which would let the dialog close first.
+  function handleKeys(node: HTMLElement): { destroy(): void } {
+    node.addEventListener('keydown', onKeydown)
+    return { destroy: () => node.removeEventListener('keydown', onKeydown) }
+  }
 </script>
 
 <svelte:window onresize={hide} />
@@ -175,6 +182,7 @@
 >
   {#if editable}
     <input
+      data-testid={testid ? `${testid}-input` : undefined}
       class="field"
       type="text"
       role="combobox"
@@ -187,9 +195,9 @@
       {disabled}
       value={text}
       oninput={onInput}
-      onkeydown={onKeydown}
+      use:handleKeys
     />
-    <button type="button" class="arrow" tabindex="-1" aria-label="Show list" {disabled} onclick={toggle}>
+    <button data-testid={testid ? `${testid}-button` : undefined} type="button" class="arrow" tabindex="-1" aria-label="Show list" {disabled} onclick={toggle}>
       <svg width="7" height="4" viewBox="0 0 7 4" aria-hidden="true"><path d="M0 0h7L3.5 4z" fill="currentColor" /></svg>
     </button>
   {:else}
@@ -204,7 +212,7 @@
       aria-disabled={disabled || undefined}
       aria-activedescendant={open && highlighted >= 0 ? `${uid}-opt-${highlighted}` : undefined}
       onclick={toggle}
-      onkeydown={onKeydown}
+      use:handleKeys
     >
       <span class="label">{text || placeholder}</span>
       <span class="arrow" aria-hidden="true">
@@ -216,6 +224,7 @@
   {#if open && position}
     <div
       bind:this={listEl}
+      data-testid={testid ? `${testid}-menu` : undefined}
       use:portal
       id="{uid}-list"
       class="popup"

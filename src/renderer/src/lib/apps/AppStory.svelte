@@ -68,10 +68,10 @@
     <div class="agent">
       <b>Agent:</b>
       {#each agent as a (a.label)}
-        <Button onclick={() => host.agentSetsView(opened.id, a.view)}>{a.label}</Button>
+        <Button data-testid="app-story-agent-view" onclick={() => host.agentSetsView(opened.id, a.view)}>{a.label}</Button>
       {/each}
       {#each requests as r (r.label)}
-        <Button onclick={() => void send(r)}>{r.label}</Button>
+        <Button data-testid="app-story-agent-request" onclick={() => void send(r)}>{r.label}</Button>
       {/each}
       {@render extra?.(host)}
     </div>

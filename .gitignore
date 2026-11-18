@@ -10,3 +10,4 @@ storybook-static
 .scratch/
 .claude/worktrees/
 resources/build-info.json
+.idea/

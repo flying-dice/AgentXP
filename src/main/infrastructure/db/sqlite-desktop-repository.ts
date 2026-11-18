@@ -34,6 +34,7 @@ export class SqliteDesktopRepository implements DesktopRepository {
   private readonly closeAll_: Statement<[]>
   private readonly touch_: Statement<[Id]>
   private readonly updateTitle: Statement<[string, Id]>
+  private readonly updateAgent: Statement<[Id, Id]>
   private readonly updateFlag: Record<'is_open' | 'paused' | 'user_in_control', Statement<[number, Id]>>
   private readonly remove_: Statement<[Id]>
   private readonly selectStopped: Statement<[Id], { session_id: number }>
@@ -48,6 +49,7 @@ export class SqliteDesktopRepository implements DesktopRepository {
     this.closeAll_ = prepare(db, 'UPDATE desktops SET is_open = 0 WHERE is_open = 1')
     this.touch_ = prepare(db, `UPDATE desktops SET last_used_at = ${NOW_SQL} WHERE id = ?`)
     this.updateTitle = prepare(db, 'UPDATE desktops SET title = ? WHERE id = ?')
+    this.updateAgent = prepare(db, 'UPDATE desktops SET agent_id = ? WHERE id = ?')
     const flag = (column: string): Statement<[number, Id]> => prepare(db, `UPDATE desktops SET ${column} = ? WHERE id = ?`)
     this.updateFlag = { is_open: flag('is_open'), paused: flag('paused'), user_in_control: flag('user_in_control') }
     this.remove_ = prepare(db, 'DELETE FROM desktops WHERE id = ?')
@@ -94,6 +96,10 @@ export class SqliteDesktopRepository implements DesktopRepository {
 
   setPaused(id: Id, paused: boolean): void {
     this.updateFlag.paused.run(paused ? 1 : 0, id)
+  }
+
+  setAgent(id: Id, agentId: Id): void {
+    this.updateAgent.run(agentId, id)
   }
 
   setUserInControl(id: Id, on: boolean): void {

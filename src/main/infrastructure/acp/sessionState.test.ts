@@ -40,4 +40,13 @@ describe('extractSessionState', () => {
     expect(state.currentModelId).toBe('x')
     expect(state.modelConfigId).toBeNull()
   })
+
+  it('prefers model config choices when an adapter also includes legacy models', () => {
+    const state = extractSessionState({
+      models: { currentModelId: 'old', availableModels: [] },
+      configOptions: [{ type: 'select', id: 'model', name: 'Model', category: 'model', currentValue: 'new', options: [{ value: 'new', name: 'New model' }] }]
+    } as never)
+    expect(state.models).toEqual([{ id: 'new', name: 'New model', description: null }])
+    expect(state.currentModelId).toBe('new')
+  })
 })

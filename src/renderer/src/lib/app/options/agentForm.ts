@@ -49,24 +49,12 @@ export interface AgentFormValues {
   defaultModelId: string
 }
 
-/** The session modes Claude Code offers; other agents may name their own (the field is editable). */
-export const COMMON_MODES: { value: string; label: string }[] = [
-  { value: '', label: 'Agent default' },
-  { value: 'default', label: 'Default (asks before risky actions)' },
-  { value: 'acceptEdits', label: 'Accept Edits (no prompts for file edits)' },
-  { value: 'plan', label: 'Plan (no tool execution)' },
-  { value: 'dontAsk', label: "Don't Ask (deny what is not pre-approved)" },
-  { value: 'bypassPermissions', label: 'Bypass Permissions (no prompts at all)' }
-]
-
-/** The models Claude Code offers by alias; other agents may name their own (the field is editable). */
-export const COMMON_MODELS: { value: string; label: string }[] = [
-  { value: '', label: 'Agent default' },
-  { value: 'sonnet', label: 'Sonnet' },
-  { value: 'opus', label: 'Opus' },
-  { value: 'fable', label: 'Fable' },
-  { value: 'haiku', label: 'Haiku' }
-]
+/** ACP ids are persisted; display names are only labels. Keep an unadvertised saved id editable. */
+export function choiceItems(choices: readonly { id: string; name: string }[], saved: string): { value: string; label: string }[] {
+  const items = [{ value: '', label: 'Agent default' }, ...choices.map((c) => ({ value: c.id, label: c.name }))]
+  if (saved && !choices.some((c) => c.id === saved)) items.push({ value: saved, label: saved })
+  return items
+}
 
 /** A new agent is the default unless the person unticks the box. */
 export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '', makeDefault: true, defaultModeId: '', defaultModelId: '' })

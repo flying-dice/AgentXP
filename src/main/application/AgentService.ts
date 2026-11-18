@@ -1,11 +1,15 @@
 import type { AgentDto, Id } from '@shared/models'
-import type { AgentInput } from '@shared/ipc'
+import type { AgentChoicesDto, AgentInput } from '@shared/ipc'
 import type { AgentRepository } from '../domain/repositories/agent-repository'
 import { AppError, required } from './errors'
 
 /** Finds out whether a program can be started (looked up like the shell does). */
 export interface CommandLocator {
   exists(command: string): Promise<boolean>
+}
+
+export interface AgentChoiceDiscovery {
+  discover(input: AgentInput): Promise<AgentChoicesDto>
 }
 
 const clean = (input: AgentInput): AgentInput => {
@@ -21,12 +25,19 @@ const clean = (input: AgentInput): AgentInput => {
 export class AgentService {
   constructor(
     private readonly agents: AgentRepository,
-    private readonly locator: CommandLocator = { exists: async () => false }
+    private readonly locator: CommandLocator = { exists: async () => false },
+    private readonly discovery?: AgentChoiceDiscovery,
+    private readonly useOnDesktop?: (desktopId: Id, agentId: Id) => void
   ) {}
 
   /** True when `command` is a program that can be started ("Test" in the Add Agent dialog). */
   check(command: string): Promise<boolean> {
     return this.locator.exists(command)
+  }
+
+  discover(input: AgentInput): ReturnType<AgentChoiceDiscovery['discover']> {
+    if (!this.discovery) throw new AppError('Agent choice discovery is unavailable')
+    return this.discovery.discover(clean(input))
   }
 
   list(): AgentDto[] {
@@ -45,7 +56,9 @@ export class AgentService {
     required(this.agents.remove(id) || null, 'Agent')
   }
 
-  setDefault(id: Id): void {
+  setDefault(id: Id, desktopId?: Id): void {
+    required(this.agents.get(id), 'Agent')
+    if (desktopId !== undefined) this.useOnDesktop?.(desktopId, id)
     required(this.agents.setDefault(id) || null, 'Agent')
   }
 }

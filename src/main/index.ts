@@ -66,9 +66,20 @@ async function bootstrap(): Promise<Running> {
     opener: new ElectronPathOpener(),
     appVersion: __APP_VERSION__,
     a2uiMcp: { electronPath: process.execPath, scriptPath: join(__dirname, 'a2ui-mcp.js') },
-    // The scripted ACP agent (agents/scripted-agent) runs on the app's own Electron in node mode; its sample scripts are
-    // copied next to it (out/main/scripts), so `--script demo` resolves in dev, built and packaged runs alike.
+    // Core providers that are not seeded by a migration ship as built-in agents: the initial DB migration only reaches
+    // fresh installs, so missing presets are added on every start (existing configurations are kept).
+    // Each is an ACP server; the underlying CLI and its own sign-in are the user's (see the "Agent does not start" help).
+    //   Codex    -> npx -y @agentclientprotocol/codex-acp     (same ACP org the renamed Claude adapter lives in)
+    //   OpenCode -> npx -y opencode-ai acp                    (opencode's built-in ACP server)
+    //   pi       -> npx -y pi-acp                             (ACP adapter for the pi coding agent)
+    // Claude Code ships via the initial DB migration + the ACP-package rename in 018 (and starts on Sonnet there), so it
+    // is not listed here.
     builtinAgents: [
+      { name: 'Codex', command: 'npx', args: ['-y', '@agentclientprotocol/codex-acp'], env: {}, seedOnly: true },
+      { name: 'OpenCode', command: 'npx', args: ['-y', 'opencode-ai', 'acp'], env: {}, seedOnly: true },
+      { name: 'pi', command: 'npx', args: ['-y', 'pi-acp'], env: {}, seedOnly: true },
+      // The scripted ACP agent (agents/scripted-agent) runs on the app's own Electron in node mode; its sample scripts
+      // are copied next to it (out/main/scripts), so `--script demo` resolves in dev, built and packaged runs alike.
       {
         name: 'Scripted Agent',
         command: process.execPath,

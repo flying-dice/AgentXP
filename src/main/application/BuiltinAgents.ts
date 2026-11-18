@@ -4,6 +4,8 @@ import type { AgentRepository, NewAgent } from '../domain/repositories/agent-rep
 export interface BuiltinAgent extends NewAgent {
   /** Identifies the row: the agent is found by name. */
   readonly name: string
+  /** External presets only fill a missing row; a matching user configuration stays untouched. */
+  readonly seedOnly?: boolean
 }
 
 /**
@@ -18,9 +20,13 @@ export function ensureBuiltinAgents(agents: AgentRepository, builtins: readonly 
       agents.create({ name: builtin.name, command: builtin.command, args: [...builtin.args], env: { ...builtin.env } })
       continue
     }
+    if (builtin.seedOnly) continue
     const args = [...existing.args]
     if (builtin.args.length > 0) args[0] = builtin.args[0]
-    const next: NewAgent = { name: existing.name, command: builtin.command, args, env: { ...builtin.env, ...existing.env } }
+    const next: NewAgent = {
+      name: existing.name, command: builtin.command, args, env: { ...builtin.env, ...existing.env },
+      defaultModeId: existing.defaultModeId, defaultModelId: existing.defaultModelId
+    }
     const same =
       existing.command === next.command &&
       JSON.stringify(existing.args) === JSON.stringify(next.args) &&

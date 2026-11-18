@@ -436,6 +436,22 @@ describe('DesktopService: control flags and policy', () => {
     expect(cwdOf(project)).toBe('E:\\')
   })
 
+  it('uses a changed desktop agent for new chats and sidebars while keeping existing chats', async () => {
+    const old = await service.newChat(desktopId)
+    const oldId = old.view.app === 'chat' ? old.view.sessionId : 0
+    const originalAgent = f.repos.sessions.get(oldId)!.agentId
+    const other = f.repos.agents.create({ name: 'Other ACP agent', command: 'other', args: [], env: {} })
+    service.setAgent(desktopId, other.id)
+    const fresh = await service.newChat(desktopId)
+    const freshId = fresh.view.app === 'chat' ? fresh.view.sessionId : 0
+    const app = service.openWindow({ desktopId, app: 'control-centre' })
+    const aside = await service.openAside(desktopId, app.id)
+    expect(service.state(desktopId).agentId).toBe(other.id)
+    expect(f.repos.sessions.get(freshId)!.agentId).toBe(other.id)
+    expect(f.repos.sessions.get(aside)!.agentId).toBe(other.id)
+    expect(f.repos.sessions.get(oldId)!.agentId).toBe(originalAgent)
+  })
+
   it('shows plugging in and ejecting a drive in the desktop state at once', () => {
     const other = f.repos.folders.add(f.desktopsDir, 'other')
     const published = changes().length

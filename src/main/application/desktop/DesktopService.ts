@@ -191,6 +191,7 @@ export class DesktopService implements DesktopStates {
     const windows = numberDuplicateTitles(records.map((r) => this.toWindowState(r)))
     return {
       desktopId,
+      agentId: desktop.agentId,
       title: desktop.title,
       drives: this.deps.drives.list(desktopId),
       removedProjects: this.deps.drives.removed(desktopId),
@@ -539,6 +540,14 @@ export class DesktopService implements DesktopStates {
     // The window always opens: an agent that cannot start is reported in it, not by a missing window.
     const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, cwd, 'chat', { background: true })
     return this.openWindow({ desktopId, app: 'chat', sessionId: session.id })
+  }
+
+  /** New conversations use the selected agent; existing conversations keep their history and agent. */
+  setAgent(desktopId: Id, agentId: Id): void {
+    this.record(desktopId)
+    required(this.deps.agents.get(agentId), 'Agent')
+    this.deps.desktops.setAgent(desktopId, agentId)
+    this.emit(desktopId)
   }
 
   /**

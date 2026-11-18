@@ -76,7 +76,7 @@
       const id = target ? target.id : (await agents.create(input)).id
       if (target) await agents.update(id, input)
       else selected = [String(id)]
-      if (makeDefault && !target?.isDefault) await agents.setDefault(id)
+      if (makeDefault) await agents.setDefault(id, host.state.desktopId)
     })
     await probe()
   }
@@ -89,7 +89,7 @@
       const answer = await showMessageBox({ text: MISSING_DEFAULT_QUESTION, caption: 'Control Center', buttons: 'YesNo', icon: 'warning', defaultButton: 1 })
       if (answer !== 'yes') return
     }
-    await guard(() => agents.setDefault(agent.id))
+    await guard(() => agents.setDefault(agent.id, host.state.desktopId))
   }
 
   async function remove(): Promise<void> {
@@ -101,10 +101,10 @@
 
   /** Why Edit and Remove are off, and why Set as Default is (one note under the buttons). */
   const noAgent = $derived(selectedAgent ? null : 'Select an agent first')
-  const defaultReason = $derived(firstReason([!selectedAgent && 'Select an agent first', selectedAgent?.isDefault && 'This is already the default']))
+  const defaultReason = $derived(firstReason([!selectedAgent && 'Select an agent first', selectedAgent?.isDefault && host.state.agentId === selectedAgent.id && 'This is already the default']))
 </script>
 
-<p class="lead">Agents are the programs behind your chats. New desktops use the default agent. A chat uses the agent of the desktop it is on.</p>
+<p class="lead">Agents are the programs behind your chats. Set as Default chooses the agent for new desktops and new conversations on this desktop. Existing chats keep their agent; choose New conversation in an app's chat pane to use the new default.</p>
 <div class="agents">
   <div class="list">
     <ListView
@@ -133,6 +133,7 @@
     initial={editing.agent ? formFromAgent(editing.agent) : undefined}
     contained
     oncheck={(command) => host.api.agents.check(command)}
+    ondiscover={(input) => host.api.agents.discover(input)}
     onsubmit={submit}
     onclose={() => (editing = null)}
   />

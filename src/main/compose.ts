@@ -1,4 +1,5 @@
 import { ensureBuiltinAgents, type BuiltinAgent } from './application/BuiltinAgents'
+import { AcpAgentChoiceDiscovery } from './infrastructure/acp/AgentChoiceDiscovery'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -540,7 +541,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     repos.surfaces,
     desktops
   )
-  const agentService = new AgentService(repos.agents, new NodeCommandLocator())
+  const agentService = new AgentService(repos.agents, new NodeCommandLocator(), new AcpAgentChoiceDiscovery(), (desktopId, agentId) => desktops.setAgent(desktopId, agentId))
   const processes = new ProcessService(pool, repos.sessions, repos.agents, broadcaster, problems, new OsProcessUsage())
   const skills = new SkillService(repos.skills, options.skillStore ?? new NodeSkillStore(), options.skillsDir ?? mkdtempSync(join(tmpdir(), 'agentxp-skills-')))
   const mcp = new McpServerService(repos.mcpServers, options.mcpProber ?? new SdkMcpProber())

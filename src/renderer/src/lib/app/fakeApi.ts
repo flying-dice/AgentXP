@@ -20,7 +20,10 @@ import { completedTurn, modes } from './session/session.fixtures'
 
 export const sampleAgents: AgentDto[] = [
   { id: 1, name: 'Claude Code', command: 'npx', args: ['-y', '@agentclientprotocol/claude-agent-acp'], env: {}, isDefault: true, defaultModeId: null, defaultModelId: null },
-  { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false, defaultModeId: null, defaultModelId: null }
+  { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false, defaultModeId: null, defaultModelId: null },
+  { id: 3, name: 'Codex', command: 'npx', args: ['-y', '@agentclientprotocol/codex-acp'], env: {}, isDefault: false, defaultModeId: null, defaultModelId: null },
+  { id: 4, name: 'OpenCode', command: 'npx', args: ['-y', 'opencode-ai', 'acp'], env: {}, isDefault: false, defaultModeId: null, defaultModelId: null },
+  { id: 5, name: 'pi', command: 'npx', args: ['-y', 'pi-acp'], env: {}, isDefault: false, defaultModeId: null, defaultModelId: null }
 ]
 
 export const sampleMarkdown = `# claude-code-win
@@ -209,7 +212,8 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
       },
       remove: async (id) => void (agents = agents.filter((a) => a.id !== id)),
       setDefault: async (id) => void (agents = agents.map((a) => ({ ...a, isDefault: a.id === id }))),
-      check: async (command) => ['node', 'npx', 'python', 'claude'].includes(command.trim())
+      check: async (command) => ['node', 'npx', 'python', 'claude'].includes(command.trim()),
+      discover: async () => ({ modes: [], models: [] })
     },
     folders: {
       list: async () => folders,

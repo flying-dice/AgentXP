@@ -21,6 +21,7 @@ export interface DesktopRepository {
   get(id: Id): DesktopRecord | null
   create(input: NewDesktop): DesktopRecord
   rename(id: Id, title: string): void
+  setAgent(id: Id, agentId: Id): void
   setOpen(id: Id, isOpen: boolean): void
   /** Marks every desktop disconnected (app start: no window shows any). */
   closeAll(): void

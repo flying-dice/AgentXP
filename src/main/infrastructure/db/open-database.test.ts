@@ -44,6 +44,24 @@ describe('openDatabase', () => {
 
 const LATEST = MIGRATIONS[MIGRATIONS.length - 1].version
 
+describe('migration 019: Codex ACP package', () => {
+  it('renames only the deprecated package and preserves user settings', () => {
+    const db = openRaw(':memory:')
+    migrate(db, MIGRATIONS.filter((m) => m.version < 19))
+    db.exec(`
+      INSERT INTO agents (id, name, command, default_model_id) VALUES (2, 'My Codex', 'bunx', 'custom-model');
+      INSERT INTO agent_args (agent_id, position, value) VALUES (2, 0, '@zed-industries/codex-acp'), (2, 1, '--custom');
+      INSERT INTO agents (id, name, command) VALUES (3, 'Pinned Codex', 'npx');
+      INSERT INTO agent_args (agent_id, position, value) VALUES (3, 0, '@zed-industries/codex-acp@1.0.0');
+    `)
+    migrate(db)
+    expect(db.prepare('SELECT command, default_model_id FROM agents WHERE id = 2').get()).toEqual({ command: 'bunx', default_model_id: 'custom-model' })
+    expect(db.prepare('SELECT value FROM agent_args WHERE agent_id = 2 ORDER BY position').all()).toEqual([{ value: '@agentclientprotocol/codex-acp' }, { value: '--custom' }])
+    expect(db.prepare('SELECT value FROM agent_args WHERE agent_id = 3').get()).toEqual({ value: '@zed-industries/codex-acp@1.0.0' })
+    db.close()
+  })
+})
+
 describe('migrate', () => {
   const m = (version: number, sql: string): Migration => ({ version, name: `m${version}`, sql })
 
