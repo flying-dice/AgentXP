@@ -110,9 +110,7 @@ export function toolShowTargets(call: ToolShowInput): ToolShowTarget[] {
       const target = parseShowTarget(input['target'])
       return target ? [{ kind: 'again', target, note: text(input['note']) ?? '' }] : []
     }
-    case 'code_read':
-    case 'code_reveal':
-    case 'code_open': {
+    case 'code_read': {
       if (!path) return []
       const start = int(input['startLine']) ?? int(input['line'])
       const end = int(input['endLine']) ?? start
@@ -120,7 +118,6 @@ export function toolShowTargets(call: ToolShowInput): ToolShowTarget[] {
     }
     case 'code_edit':
     case 'code_write':
-    case 'code_show_diff':
       return path ? [{ kind: 'code', path, lines: null }, { kind: 'diff', path }] : []
     case 'code_search': {
       const match = firstMatch(call.result)

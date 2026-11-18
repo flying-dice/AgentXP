@@ -953,7 +953,7 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - A stale target (file deleted, comment removed): the agent gets an error; nothing opens.
 - **Success measure.** P4 states why the agent showed the lines, and replies to it, in under 20 seconds, on the first try.
 - **E2E coverage.** `e2e/show.e2e.ts` (foreground show at the exact lines with cursor and note, Reply, OK, Show again, typing during a show, background request with Show and Not now and the Action Center count, Pause, reduced motion, Never). Ask and the queue are unit tests (`ShowService.test.ts`). `e2e/browser-agent.e2e.ts` checks the cursor before Browser clicks.
-- **Docs and panel.** `manuals/desktop.md` (the agent cursor, the note callout, show requests), `manuals/chat.md`, `manuals/control-centre.md`, and the "What the Agent Can Do" of Code, Code Review, Kanban, Agent Diagrams and Browser. Panel tasks: T32.1, T32.2 in `tasks.md`.
+- **Docs and panel.** `manuals/desktop.md` (the agent cursor, the note callout, show requests), `manuals/chat.md`, `manuals/control-centre.md`, and the "What the Agent Can Do" of Code, Code Review, Kanban, Agent Diagrams and Browser. Panel tasks: T32.1, T32.2 in `tasks.md` (presets `show-foreground` and `show-request`).
 
 ## J33 - Hear about what the agents made
 
@@ -981,7 +981,7 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - Two desktops: notices go only to their own desktop.
 - **Success measure.** P2 names every result of a two-agent run from the Action Center alone; P3 reaches each result in one click; the user was never pulled out of their own window.
 - **E2E coverage.** `e2e/notices.e2e.ts`: a background chat finishes (one summary balloon, kept in the Action Center), review comments in a Code Review window behind (balloon, **Open review** lands on the comment), the window focused (the threads flash, no balloon), a card moved with Kanban open (the card flashes, no balloon), the foreground chat (no balloon), two notices queue. Not yet: a two-member team run (step 1 with a room), balloons below a UAC popup.
-- **Docs and panel.** `manuals/desktop.md` (balloons, Action Center, notices), `manuals/code-review.md`, `manuals/kanban.md`. Panel tasks: T33.1, T33.2 in `tasks.md` (still **[planned]**: no preset and checker yet).
+- **Docs and panel.** `manuals/desktop.md` (balloons, Action Center, notices), `manuals/code-review.md`, `manuals/kanban.md`. Panel tasks: T33.1, T33.2 in `tasks.md` (presets `missed-output` and `diagram-behind`).
 
 ## J34 - Follow an agent as it works
 
@@ -1009,4 +1009,4 @@ Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work 
   - Reduced motion: the cursor jumps.
 - **Success measure.** P3 turns Follow on and off without Help; P1 describes the order of Builder's steps after watching one turn.
 - **E2E coverage.** `e2e/follow.e2e.ts` (View > Follow this chat, reads and edits in Code with the cursor, the run in the Terminal, typing in Notepad pauses it, Stop following, Keep following and the end of the turn, Pause, the top-bar agents popup with two working chats, a team member's step text and Follow). The "Follow ends with a short notice" is one line on the top bar (`topbar-follow-ended`), not a balloon.
-- **Docs and panel.** `manuals/team-chat.md`, `manuals/chat.md`, `manuals/desktop.md`. Panel tasks: T34.1 in `tasks.md`.
+- **Docs and panel.** `manuals/team-chat.md`, `manuals/chat.md`, `manuals/desktop.md`. Panel tasks: T34.1 in `tasks.md` (preset `builder-working`).

@@ -12,7 +12,7 @@
   import AgentCursor, { type AgentCursorState } from '../kit/organisms/AgentCursor.svelte'
   import ShowCallout from './ShowCallout.svelte'
   import type { DesktopController } from './DesktopController.svelte'
-  import { chatRect, cursorPoint, glideStart, placeCallout, resolveSpot, type Rect } from './showResolvers'
+  import { chatRect, cursorFollowsWindow, cursorPoint, glideStart, placeCallout, resolveSpot, type CursorAnchor, type Rect } from './showResolvers'
 
   let { desktop }: { desktop: DesktopController } = $props()
 
@@ -22,6 +22,8 @@
     x: number
     y: number
     state: AgentCursorState
+    /** The window the cursor stands on: when it is closed, minimized or resized the cursor goes, when moved it follows. */
+    anchor?: CursorAnchor | null
   }
 
   /** How long a spot may take to appear on screen (a window opening, a file loading) before the cursor gives up. */
@@ -94,12 +96,13 @@
     const rect = await settledRect(spot, alive)
     if (!rect || !alive()) return
     const tip = cursorPoint(rect)
+    const anchor = anchorOf(spot.windowId)
     const before = cursors[sessionId]
     const from = glideStart(before && before.state !== 'hidden' ? { x: before.x, y: before.y } : null, chatRect(document, sessionId, desktop.state.windows), tip)
     if (reduced) {
-      setCursor(sessionId, { sessionId, identity, x: tip.x, y: tip.y, state: 'arrived' })
+      setCursor(sessionId, { sessionId, identity, x: tip.x, y: tip.y, state: 'arrived', anchor })
     } else {
-      setCursor(sessionId, { sessionId, identity, x: from.x, y: from.y, state: 'ready' })
+      setCursor(sessionId, { sessionId, identity, x: from.x, y: from.y, state: 'ready', anchor })
       await frame()
       await frame()
       if (!alive()) return
@@ -113,6 +116,38 @@
       if (runs.get(sessionId) === token) setCursor(sessionId, { state: 'idle' })
     })
   }
+
+  function anchorOf(windowId: number): CursorAnchor | null {
+    const win = desktop.state.windows.find((w) => w.id === windowId)
+    return win ? { windowId, bounds: { ...desktop.boundsOf(win) }, windowState: win.windowState } : null
+  }
+
+  // The window under a cursor changed: closed, minimized or resized, the cursor goes at once (it must not point at a
+  // place that is not there); moved, it goes along with the window.
+  $effect(() => {
+    const windows = desktop.state.windows
+    // A window being dragged moves through its live bounds first: the cursor goes along while it moves.
+    void desktop.liveBounds
+    untrack(() => {
+      let next: Record<number, CursorView> | null = null
+      for (const c of Object.values(cursors)) {
+        if (!c.anchor || c.state === 'hidden') continue
+        const win = windows.find((w) => w.id === c.anchor!.windowId)
+        const now = win ? { bounds: desktop.boundsOf(win), windowState: win.windowState } : undefined
+        const follow = cursorFollowsWindow(c.anchor, now)
+        if (follow.kind === 'stay') continue
+        next ??= { ...cursors }
+        if (follow.kind === 'hide') {
+          runs.delete(c.sessionId)
+          clearTimers(c.sessionId)
+          next[c.sessionId] = { ...c, state: 'hidden', anchor: null }
+        } else {
+          next[c.sessionId] = { ...c, x: c.x + follow.dx, y: c.y + follow.dy, anchor: { ...c.anchor, bounds: { ...now!.bounds } } }
+        }
+      }
+      if (next) cursors = next
+    })
+  })
 
   // A show: the cursor first (unless the operator asked: Show again), then the note beside the spot.
   let shownId: string | null = null

@@ -92,9 +92,6 @@ export const GLIDE_MS = 300
 /** How long the agent cursor stays after it arrived and nothing more happens; then it fades. */
 export const CURSOR_IDLE_MS = 1500
 
-/** The note of a deprecated alias (`code_open`, `code_reveal`, `code_show_diff`) that gave no reason. */
-export const ALIAS_NOTE = 'The agent pointed you here without saying why.'
-
 /** "auth.ts:40-62", "auth.ts:12", "auth.ts". */
 export function showFileLabel(path: string, lines?: readonly [number, number] | null): string {
   const name = baseName(path)

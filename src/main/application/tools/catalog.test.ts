@@ -65,10 +65,9 @@ describe('tool descriptions', () => {
     expect(show.input.safeParse({ target: { kind: 'file', path: 'a.ts' }, note: '  ' }).success).toBe(false)
     expect(show.input.safeParse({ target: { kind: 'file', path: 'a.ts' } }).success).toBe(false)
     expect(show.input.safeParse({ target: { kind: 'card', boardId: 'Sprint', cardId: 3 }, note: 'x' }).success).toBe(true)
-    for (const alias of ['code_open', 'code_reveal', 'code_show_diff'] as const) {
-      expect(TOOL_DEFS[alias].group).toBe('show')
-      expect(TOOL_DEFS[alias].description).toMatch(/^Deprecated: use show/)
-    }
+    // The deprecated aliases are gone: show is the one tool of its group.
+    for (const alias of ['code_open', 'code_reveal', 'code_show_diff']) expect(alias in TOOL_DEFS).toBe(false)
+    expect(WORK_QUIETLY_INSTRUCTIONS).not.toContain('code_open')
     expect(WORK_QUIETLY_INSTRUCTIONS).toContain('call show: one target')
     expect(WORK_QUIETLY_INSTRUCTIONS).toContain('always a short note saying why')
   })

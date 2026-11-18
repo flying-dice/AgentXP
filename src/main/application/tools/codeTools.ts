@@ -50,7 +50,7 @@ const lineAt = (text: string, offset: number): number => text.slice(0, offset).s
 
 /**
  * code_read, code_search, code_edit, code_write: Work, headless (no window opens or moves). Showing the operator a file,
- * lines or a change is `show` (`showTools.ts`; code_open, code_reveal and code_show_diff are its aliases).
+ * lines or a change is `show` (`showTools.ts`).
  */
 export function createCodeTools({ desktops, paths, vfs, search, files }: CodeToolsDeps): ToolHandlers<CodeTool> {
 

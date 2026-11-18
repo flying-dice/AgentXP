@@ -17,6 +17,30 @@ export interface Point {
   y: number
 }
 
+/** The window an agent cursor stands on, as it was when the cursor arrived. */
+export interface CursorAnchor {
+  windowId: number
+  bounds: { x: number; y: number; width: number; height: number }
+  windowState: string
+}
+
+/** What an agent cursor does when its window changes: nothing, go with the window, or go away. */
+export type CursorFollow = { kind: 'stay' } | { kind: 'move'; dx: number; dy: number } | { kind: 'hide' }
+
+/**
+ * The agent cursor after its window changed. A cursor must never point at a place that is no longer there: when the
+ * window is closed, minimized, maximized or restored, or resized (its content reflows), the cursor goes at once instead
+ * of floating until it fades. When the window was only moved, the cursor moves with it.
+ */
+export function cursorFollowsWindow(anchor: CursorAnchor, now: { bounds: CursorAnchor['bounds']; windowState: string } | undefined): CursorFollow {
+  if (!now || now.windowState === 'minimized' || now.windowState !== anchor.windowState) return { kind: 'hide' }
+  const a = anchor.bounds
+  const b = now.bounds
+  if (a.width !== b.width || a.height !== b.height) return { kind: 'hide' }
+  if (a.x !== b.x || a.y !== b.y) return { kind: 'move', dx: b.x - a.x, dy: b.y - a.y }
+  return { kind: 'stay' }
+}
+
 const rectOf = (r: { left: number; top: number; width: number; height: number }): Rect => ({ x: r.left, y: r.top, width: r.width, height: r.height })
 
 /** The smallest rectangle around all of them (null for none). */

@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "diagram-output",
+  "description": "T33.2: asked to draw the login flow, it waits 15 s (the panelist starts typing in Notepad), adds the first shapes to the open Agent Diagrams window, waits 5 s more and adds the rest. The Diagrams window stays behind; it never takes the focus.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "draw",
+      "match": {
+        "contains": "login flow",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Drawing the login flow.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_add",
+          "arguments": {
+            "shapes": [
+              { "ref": "start", "stencil": "flowchart.terminator", "text": "Start" },
+              { "ref": "check", "stencil": "flowchart.decision", "text": "Signed in?" }
+            ],
+            "connectors": [{ "from": "start", "to": "check" }],
+            "layout": { "direction": "TB" }
+          },
+          "saveAs": "first"
+        },
+        {
+          "type": "wait",
+          "ms": 5000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_add",
+          "arguments": {
+            "shapes": [
+              { "ref": "login", "stencil": "flowchart.process", "text": "Show login" },
+              { "ref": "home", "stencil": "flowchart.process", "text": "Show home" }
+            ],
+            "layout": { "direction": "TB" }
+          },
+          "saveAs": "second"
+        },
+        {
+          "type": "message",
+          "text": "The login flow is in Agent Diagrams."
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "The diagram is in Agent Diagrams."
+        }
+      ]
+    }
+  ]
+}

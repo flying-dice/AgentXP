@@ -315,7 +315,7 @@ describe('tool catalog', () => {
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find', 'code_read', 'code_search'])
     expect(byGroup('fs.write')).toEqual(['code_edit', 'code_write'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
-    expect(byGroup('show')).toEqual(['show', 'code_open', 'code_reveal', 'code_show_diff'])
+    expect(byGroup('show')).toEqual(['show'])
     expect(byGroup('terminal')).toEqual(['terminal_run', 'terminal_read'])
     expect(byGroup('browser')).toEqual([
       'browser_navigate',
@@ -362,7 +362,7 @@ describe('tool catalog', () => {
     expect(byGroup('settings')).toHaveLength(18)
     expect(byGroup('taskmgr')).toEqual(['taskmgr_chats', 'taskmgr_processes', 'taskmgr_terminals', 'taskmgr_open_chat', 'taskmgr_end_task', 'taskmgr_end_process'])
     expect(byGroup('help')).toEqual(['help_search', 'help_read'])
-    expect(TOOL_SPECS).toHaveLength(130)
+    expect(TOOL_SPECS).toHaveLength(127)
   })
 
   it('lists every group but those of closed output apps, falling back to shell for an unknown desktop', () => {
@@ -624,25 +624,26 @@ describe('notepad and code tools', () => {
     expect(textOf(await run('show', { target: { kind: 'file', path: 'README.md' }, note: 'Look' }))).toMatch(/^Shown now/)
   })
 
-  it('code_open, code_reveal and code_show_diff are aliases of show (the foreground rule applies)', async () => {
+  it('show lands file lines, queues a second show and finds a change by its path (the foreground rule applies)', async () => {
     const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
     desktops.focusWindow(chat.id)
-    expect(textOf(await run('code_open', { path: 'src/app.ts', line: 40 }))).toMatch(/^Shown now: app\.ts:40/)
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'src/app.ts', lines: [40, 40] }, note: 'The entry' }))).toMatch(/^Shown now: app\.ts:40/)
     let view = desktops.windowsOf(desktopId, 'code')[0]!.view
     expect(view).toMatchObject({ app: 'code', activePath: 'E:\\src\\app.ts', visibleLines: [40, 40] })
     const first = f.publisher.payloads('desktop.show').at(-1)!
-    expect(first.note).toBe('The agent pointed you here without saying why.')
+    expect(first.note).toBe('The entry')
     // A second show waits until the operator is done with the first.
-    expect(textOf(await run('code_reveal', { path: 'README.md', startLine: 3, endLine: 9, note: 'The intro' }))).toMatch(/^Queued: README\.md:3-9/)
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'README.md', lines: [3, 9] }, note: 'The intro' }))).toMatch(/^Queued: README\.md:3-9/)
     await shows.dismiss(desktopId, first.showId)
     view = desktops.windowsOf(desktopId, 'code')[0]!.view
     expect(view).toMatchObject({ activePath: 'E:\\README.md', visibleLines: [3, 9] })
     expect(f.publisher.payloads('desktop.showEnded').at(-1)).toMatchObject({ showId: first.showId, reason: 'dismissed' })
     changes = [{ id: 11, sessionId, path: 'E:\\src\\app.ts', kind: 'modified', additions: 3, deletions: 1, originalText: '', currentText: '' } as FileChangeDto]
     await shows.dismiss(desktopId, f.publisher.payloads('desktop.show').at(-1)!.showId)
-    expect(textOf(await run('code_show_diff', { path: 'e:\\SRC\\app.ts', note: 'The fix' }))).toMatch(/^Shown now: the change of app\.ts/)
+    expect(textOf(await run('show', { target: { kind: 'change', path: 'e:\\SRC\\app.ts' }, note: 'The fix' }))).toMatch(/^Shown now: the change of app\.ts/)
     expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
-    expect(textOf(await run('code_open', { path: 'G:\\x.ts' }))).toMatch(/Drive G: is not plugged in/)
+    expect(textOf(await run('show', { target: { kind: 'file', path: 'G:\\x.ts' }, note: 'Here' }))).toMatch(/Drive G: is not plugged in/)
+    for (const alias of ['code_open', 'code_reveal', 'code_show_diff']) expect(textOf(await run(alias, { path: 'src/app.ts' }))).toMatch(/Unknown tool/)
   })
 
   it('show opens a new window only when "Agent may open apps" allows it', async () => {

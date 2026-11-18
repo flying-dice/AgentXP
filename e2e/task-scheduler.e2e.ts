@@ -177,7 +177,13 @@ describe('Task Scheduler', () => {
     await see.eventually(async () => expect(await scheduler.action('end').isEnabled()).toBe(true))
     await scheduler.tab('history').click()
     await see.attribute(scheduler.historyRows.first(), 'data-result', 'running')
-    await scheduler.action('end').click()
+    // The run's agent asks to write a file at once; on a busy machine its prompt is already up and covers the desktop.
+    // Not now closes the prompt (the request stays open), so End can be clicked; the prompt may come a moment later.
+    await see.eventually(async () => {
+      const notNow = ctx.desktopPage.getByTestId('uac-not-now')
+      if (await notNow.isVisible()) await notNow.click()
+      await scheduler.action('end').click({ timeout: 1000 })
+    })
     await see.attribute(scheduler.row('Morning review'), 'data-status', 'ready')
     await see.attribute(scheduler.historyRows.first(), 'data-result', 'stopped')
     await see.text(scheduler.row('Morning review'), 'Stopped')

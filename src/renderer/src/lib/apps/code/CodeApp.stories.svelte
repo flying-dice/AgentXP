@@ -30,9 +30,9 @@
     height={620}
     setup={(host) => host.open({ app: 'chat' }, sampleChatView())}
     agent={[
-      { label: 'code_open src/index.ts', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\index.ts', visibleLines: null, selection: null, selectedChangeId: null } },
-      { label: 'code_reveal lines 14-20', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: [14, 20], selection: null, selectedChangeId: null } },
-      { label: 'code_show_diff', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: null, selection: null, selectedChangeId: 1 } }
+      { label: 'show src/index.ts', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\index.ts', visibleLines: null, selection: null, selectedChangeId: null } },
+      { label: 'show lines 14-20', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts', 'E:\\src\\index.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: [14, 20], selection: null, selectedChangeId: null } },
+      { label: 'show a change', view: { app: 'code', tabs: ['E:\\src\\auth\\redirect.ts'], activePath: 'E:\\src\\auth\\redirect.ts', visibleLines: null, selection: null, selectedChangeId: 1 } }
     ]}
   />
 </Story>

@@ -1,0 +1,207 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "builder-steps",
+  "description": "T34.1: the Builder works on the bug for about three minutes: twelve code_read calls on src/auth/redirect.ts, src/auth/login.ts and tests/redirect.test.ts, 15 s apart (so the turn is still running when the panelist stops following), then a message.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "work",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Working on the login redirect bug.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 1,
+            "endLine": 2
+          },
+          "saveAs": "read0"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/login.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read1"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 2,
+            "endLine": 4
+          },
+          "saveAs": "read2"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "tests/redirect.test.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read3"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 1,
+            "endLine": 2
+          },
+          "saveAs": "read4"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/login.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read5"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 2,
+            "endLine": 4
+          },
+          "saveAs": "read6"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "tests/redirect.test.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read7"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 1,
+            "endLine": 2
+          },
+          "saveAs": "read8"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/login.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read9"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "src/auth/redirect.ts",
+            "startLine": 2,
+            "endLine": 4
+          },
+          "saveAs": "read10"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_read",
+          "arguments": {
+            "path": "tests/redirect.test.ts",
+            "startLine": 1,
+            "endLine": 3
+          },
+          "saveAs": "read11"
+        },
+        {
+          "type": "wait",
+          "ms": 15000
+        },
+        {
+          "type": "message",
+          "text": "I read the files around the redirect. The fix goes into afterLogin."
+        }
+      ]
+    }
+  ]
+}

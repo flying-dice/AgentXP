@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { ControlClient } from '../agents/scripted-agent/controlClient'
 import type { AgentXPApi } from '../src/shared/ipc'
-import { createWorkspace, see, setToolPolicy, setWindowSize, shot as shotOf, startScriptedDesktop, type ScriptedDesktop, type Workspace } from './fixtures'
+import { createWorkspace, see, serveFixtureWeb, setToolPolicy, setWindowSize, shot as shotOf, startScriptedDesktop, type ScriptedDesktop, type WebServer, type Workspace } from './fixtures'
 
 const AUTH = Array.from({ length: 12 }, (_, i) => `// line ${i + 1}`).join('\n') + '\n'
 
@@ -205,5 +205,131 @@ describe('Follow', () => {
     await see.attribute(room, 'data-focused', 'true')
     await shot('12-member-projected')
     await see.gone(following())
+  })
+})
+
+/**
+ * Follow checked in the real app beyond the walk above: with **Agent may open apps** on Ask nothing asks and only windows
+ * that are already open follow; the agent cursor goes with its window (moved) and goes away at once when the window is
+ * minimized; the Browser cursor points for a followed chat that is in the background.
+ */
+describe('Follow: open apps on Ask, the cursor and its window, the Browser in the background', () => {
+  let ctx: ScriptedDesktop
+  let workspace: Workspace
+  let web: WebServer
+  let control: ControlClient
+  const shot = (name: string): Promise<void> => shotOf(ctx.desktopPage, `follow-${name}`)
+  const page = () => ctx.desktopPage
+  const following = () => page().getByTestId('topbar-following')
+  const cursor = () => page().getByTestId('agent-cursor')
+  const asks = () => page().getByTestId('uac-dialog')
+  const editor = () => ctx.desktop.window('code').getByTestId('code-editor')
+  const pauseAt = async (label: string): Promise<void> => {
+    expect((await control.waitForPause()).label).toBe(label)
+  }
+  const followFromMenu = async (): Promise<void> => {
+    await ctx.desktop.window('chat').getByTestId('menubar-view').click()
+    await page().getByTestId('chat-menu-follow').click()
+    await see.visible(following())
+  }
+  const left = async (): Promise<number> => cursor().evaluate((el) => (el as HTMLElement).getBoundingClientRect().left)
+
+  beforeAll(async () => {
+    web = await serveFixtureWeb()
+    workspace = await createWorkspace({ 'auth.ts': AUTH })
+    ctx = await startScriptedDesktop({ script: 'follow-steps', name: 'Builder', title: 'Follow ask desktop', workspace })
+    // Agent may open apps: Ask. Writing and running are allowed, so the only possible question is about opening a window.
+    await setToolPolicy(page(), { 'fs.write': 'allow', terminal: 'allow', browser: 'allow' }, 'ask')
+    await ctx.desktop.openApp('code')
+    await ctx.desktop.openApp('chat')
+    await see.visible(ctx.desktop.chat().composer)
+    while (await ctx.desktop.balloon.isVisible()) await page().getByTestId('balloon-close').click()
+    control = await ctx.scripted.control()
+  })
+  afterAll(async () => {
+    control?.close()
+    await ctx?.close()
+    await web?.close()
+  })
+
+  it('Agent may open apps on Ask: Code (open) follows, the Terminal (closed) does not open, and nothing asks', async () => {
+    await followFromMenu()
+    await ctx.desktop.chat().send('follow steps')
+    await pauseAt('read')
+    await control.next()
+    await see.attribute(editor(), 'data-highlight', '3-5')
+    await see.attribute(cursor(), 'data-agent', 'Builder')
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.count(asks(), 0)
+    await see.attribute(cursor(), 'data-state', 'arrived')
+    await shot('13-ask-code-follows')
+    // The window moves: the cursor goes with it (measured once the glide is over).
+    const before = await left()
+    const windowBefore = (await ctx.desktop.window('code').boundingBox())!
+    const title = ctx.desktop.window('code').getByTestId('window-title')
+    const box = (await title.boundingBox())!
+    await page().mouse.move(box.x + 200, box.y + box.height / 2)
+    await page().mouse.down()
+    await page().mouse.move(box.x + 120, box.y + box.height / 2 + 40, { steps: 6 })
+    await page().mouse.up()
+    const windowAfter = (await ctx.desktop.window('code').boundingBox())!
+    expect(windowAfter.x).toBeLessThan(windowBefore.x)
+    await see.eventually(async () => expect(Math.round((await left()) - before)).toBe(Math.round(windowAfter.x - windowBefore.x)))
+    await see.attribute(cursor(), 'data-state', /arrived|idle/)
+    await pauseAt('edit')
+    await control.next()
+    await see.attribute(editor(), 'data-highlight', '8-8')
+    await pauseAt('run')
+    await control.next()
+    await pauseAt('read again')
+    // The run did not open the Terminal and did not ask to.
+    await see.count(ctx.desktop.windows('terminal'), 0)
+    await see.count(asks(), 0)
+    await shot('14-ask-no-terminal-no-question')
+    await control.next()
+    await see.attribute(editor(), 'data-highlight', '10-11')
+    await see.attribute(cursor(), 'data-state', 'arrived')
+  })
+
+  it('the cursor goes at once when its window is minimized, instead of floating where the window was', async () => {
+    await ctx.desktop.minimizeWindow('code')
+    await see.attribute(cursor(), 'data-state', 'hidden')
+    await shot('15-cursor-gone-with-minimized-window')
+    await pauseAt('done')
+    await control.next()
+    await see.attribute(ctx.desktop.chat().transcript, 'data-running', 'false')
+    await see.count(asks(), 0)
+  })
+
+  it('the Browser: the cursor points for the followed chat while the operator is in another window, not for an unfollowed one', async () => {
+    await ctx.desktop.openApp('browser')
+    await see.visible(ctx.desktop.window('browser').getByTestId('browser-app'))
+    const notepad = await ctx.desktop.openApp('notepad')
+    await ctx.desktop.taskbarItem('chat').click()
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await ctx.desktop.chat().send(`browse along at ${web.origin}/`)
+    await pauseAt('click random')
+    // Not followed and in the background: the click happens without the cursor.
+    await ctx.desktop.taskbarItem('notepad').click()
+    await see.attribute(notepad, 'data-focused', 'true')
+    const pointed = await cursor().count()
+    await control.next()
+    await pauseAt('click general')
+    expect(await cursor().count()).toBe(pointed)
+    if (pointed > 0) expect(await cursor().getAttribute('data-state')).toMatch(/idle|hidden|cancelled/)
+    // Followed, still in the background: the cursor goes to the button before the click.
+    await ctx.desktop.taskbarItem('chat').click()
+    await followFromMenu()
+    await ctx.desktop.taskbarItem('notepad').click()
+    await see.attribute(notepad, 'data-focused', 'true')
+    await control.next()
+    await see.attribute(cursor(), 'data-state', /gliding|arrived/)
+    await see.attribute(cursor(), 'data-agent', 'Builder')
+    await see.attribute(cursor(), 'data-state', /arrived|idle/)
+    await see.attribute(notepad, 'data-focused', 'true')
+    await shot('16-browser-followed-background')
+    await pauseAt('browsed')
+    await control.next()
+    await see.attribute(ctx.desktop.chat().transcript, 'data-running', 'false')
   })
 })

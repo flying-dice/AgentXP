@@ -262,9 +262,6 @@ The agent uses the tool below to show you a file, some lines, or a change, with 
 | Tool | What it does |
 |---|---|
 | `show` | Shows you a file at a range of lines (target `file`), or a change that the agent made (target `change`), with a note. Code marks exactly those lines, or selects the change in the changes list. |
-| `code_open` | Old name of `show` with a file, optionally at a line. It follows the same rules. AgentXP keeps it for one release. |
-| `code_reveal` | Old name of `show` with a range of lines. It follows the same rules. AgentXP keeps it for one release. |
-| `code_show_diff` | Old name of `show` with a change. It follows the same rules. AgentXP keeps it for one release. |
 
 The agent reads and searches files with the tools below. Code does not need to be open, and these tools open nothing. The permission **Read files** controls them.
 

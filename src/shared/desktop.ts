@@ -265,7 +265,7 @@ export const TOOL_GROUPS = [
   'fs.read', // ACP fs/read_text_file, fs_list, fs_find, code_read, code_search
   'fs.write', // ACP fs/write_text_file, code_edit, code_write
   'notepad', // notepad_open, notepad_read
-  'show', // show (and its deprecated aliases code_open, code_reveal, code_show_diff): the agent points the operator at something
+  'show', // show: the agent points the operator at something
   'terminal', // ACP terminal/*, terminal_run, terminal_read
   'browser', // browser_* (the open Browser window)
   'paint', // paint_draw, paint_read, paint_clear, paint_resize (the open Agent Paint window)
