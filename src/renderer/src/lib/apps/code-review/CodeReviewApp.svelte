@@ -153,21 +153,22 @@
   )
 
   // ---- view state: report ours, follow the agent's ------------------------------------------------
-  const sync = new ViewSync<{ baseRef: string; selectedPath: string | null }>((v) => JSON.stringify([v.baseRef, v.selectedPath]))
+  const sync = new ViewSync<{ baseRef: string; selectedPath: string | null; selectedCommentId: number | null }>((v) => JSON.stringify([v.baseRef, v.selectedPath, v.selectedCommentId]))
   // svelte-ignore state_referenced_locally
-  sync.mark({ baseRef, selectedPath: chosenPath })
+  sync.mark({ baseRef, selectedPath: chosenPath, selectedCommentId: win.view.selectedCommentId ?? null })
 
   // Only what was chosen is reported: the file shown by default is not a choice, and reporting it would overwrite a file
   // another window asked for while this one was still loading (the Git list of the Code window, UX-78).
   $effect(() => {
-    const view = { baseRef, selectedPath: chosenPath }
+    // The comment the operator picked is reported too, so the desktop state (and the agent) sees it (panel r9c).
+    const view = { baseRef, selectedPath: chosenPath, selectedCommentId }
     untrack(() => {
       if (sync.report(view)) host.updateView(win.id, { app: 'code-review', root, sessionId, ...view })
     })
   })
   $effect(() => {
     const view = win.view
-    if (!sync.isExternal({ baseRef: view.baseRef, selectedPath: view.selectedPath })) return
+    if (!sync.isExternal({ baseRef: view.baseRef, selectedPath: view.selectedPath, selectedCommentId: view.selectedCommentId ?? null })) return
     untrack(() => {
       baseRef = view.baseRef
       baseDraft = view.baseRef
@@ -422,6 +423,7 @@
 
   async function showComment(c: ReviewCommentDto): Promise<void> {
     selectedCommentId = c.id
+    shownRequest = c.id
     mode = 'expanded'
     if (c.path !== selectedPath) {
       chosenPath = c.path

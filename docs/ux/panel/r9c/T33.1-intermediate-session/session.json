@@ -1,0 +1,27 @@
+{
+  "task": "T33.1",
+  "level": "intermediate",
+  "socket": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/ux.sock",
+  "admin": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/admin.sock",
+  "pid": 7147,
+  "build": {
+    "packaged": false,
+    "version": "0.1.0",
+    "commit": "f2be8055df6260c593108d04b8993e6230e94b32"
+  },
+  "tmp": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn",
+  "userData": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/user-data",
+  "testPageUrl": "http://127.0.0.1:64087/",
+  "home": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/home",
+  "fixtures": {
+    "loginApp": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/home/Documents/login-app",
+    "docsSite": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/home/Documents/docs-site",
+    "plain": "/Users/jonathanturnock/.ux-panel/a7ux-abpWTn/home/Documents/notes-folder"
+  },
+  "ready": true,
+  "preset": "missed-output",
+  "note": "Builder and Reviewer finished while Notepad had the focus; their balloons are closed (the Action Center keeps them)",
+  "context": {
+    "previousTasks": []
+  }
+}

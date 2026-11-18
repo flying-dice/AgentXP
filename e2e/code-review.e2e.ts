@@ -1,3 +1,4 @@
+import type { AgentXPApi } from '../src/shared/ipc'
 import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -175,6 +176,22 @@ describe('Code Review', () => {
     await see.text(review.frame.getByTestId('review-send-comments'), 'Comments sent')
     // The list names each level in words beside its colour.
     await see.text(review.frame.getByTestId('review-comment-level').first(), /^(Blocker|Major|Minor|Nit)$/)
+    // A comment the operator picks in the list is in the window view, so the desktop state (and the agent) sees it (panel r9c).
+    await ctx.desktop.taskbarItem('code-review').click()
+    const row = review.frame.getByTestId('review-comment-row').first()
+    await row.click()
+    await see.attribute(row, 'data-selected', 'true')
+    const picked = Number(await row.getAttribute('data-comment-id'))
+    await see.eventually(async () => {
+      const selected = await ctx.desktopPage.evaluate(async () => {
+        const state = await (window as unknown as { agentxp: AgentXPApi }).agentxp.desktop.current()
+        const win = state?.windows.find((w) => w.app === 'code-review')
+        return win && win.view.app === 'code-review' ? (win.view.selectedCommentId ?? null) : null
+      })
+      expect(selected).toBe(picked)
+    })
+    // Leave the chat in front, as Send left it (the next test raises the review from the taskbar).
+    await ctx.desktop.taskbarItem('chat').click()
   })
 
   it("the reviewer's show of a comment lands on that comment: cursor and note beside it", async () => {
