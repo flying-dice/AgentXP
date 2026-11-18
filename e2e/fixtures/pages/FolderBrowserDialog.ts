@@ -1,4 +1,6 @@
+import { expect } from 'vitest'
 import type { Locator, Page } from 'playwright'
+import { see } from '../expect'
 
 /** The in-app "Browse For Folder" dialog (New desktop > Browse..., Computer > Plug in a project...). Test ids only. */
 export class FolderBrowserDialog {
@@ -50,6 +52,29 @@ export class FolderBrowserDialog {
   /** A folder of the tree by its exact name. */
   node(name: string): Locator {
     return this.dialog.getByTestId('folder-browser-node').filter({ hasText: new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) })
+  }
+
+  /**
+   * Waits until the selected folder is open and its folders are listed. A folder with thousands of entries (the
+   * shared temp folder) takes seconds to list: until then type-ahead finds nothing under it (it wraps to the same name
+   * in "Projects you used before") and OK stays dimmed, so Enter does nothing.
+   */
+  async waitForSelectedOpen(): Promise<void> {
+    await see.eventually(async () => {
+      const state = await this.dialog.getByTestId('folder-browser-node').evaluateAll((rows) => {
+        const row = rows.find((r) => r.getAttribute('aria-selected') === 'true')
+        return row ? `${row.getAttribute('aria-expanded')} ${row.getAttribute('aria-busy') ?? 'listed'}` : 'none'
+      })
+      expect(state).toBe('true listed')
+    })
+  }
+
+  /** The folder of a path selected in the tree under Computer (not its entry in "Projects you used before"). */
+  async selectedPath(): Promise<{ path: string | null; level: number }> {
+    return this.dialog.getByTestId('folder-browser-node').evaluateAll((rows) => {
+      const row = rows.find((r) => r.getAttribute('aria-selected') === 'true')
+      return { path: row?.getAttribute('data-path') ?? null, level: Number(row?.getAttribute('aria-level') ?? 0) }
+    })
   }
 
   /** Types a folder path into the Folder box and presses OK. */

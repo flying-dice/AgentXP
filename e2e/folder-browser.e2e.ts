@@ -80,13 +80,17 @@ describe('Browse For Folder dialog (New desktop > Browse...)', () => {
     // The last row is the root of the disk; Right opens it, then each name is found by typing it.
     await page.keyboard.press('End')
     const names = workspace.path.split('/').filter(Boolean)
-    for (const name of names) {
+    for (const [i, name] of names.entries()) {
       await page.keyboard.press('ArrowRight')
-      await see.visible(browser.node(name))
+      // Type only once the folder is listed: the temp folder holds thousands of entries on a used machine, and the
+      // workspace is also in "Projects you used before", where type-ahead would land while the list still loads.
+      await browser.waitForSelectedOpen()
       await page.keyboard.type(name)
-      await see.eventually(async () => expect(await browser.path.inputValue()).toContain(name))
+      const at = `/${names.slice(0, i + 1).join('/')}`
+      await see.eventually(async () => expect(await browser.selectedPath()).toEqual({ path: at, level: i + 3 }))
     }
     await see.eventually(async () => expect(await browser.path.inputValue()).toBe(workspace.path))
+    await see.enabled(browser.ok)
     await page.keyboard.press('Tab')
     // Enter only once the focus is in the Folder box (a busy machine moves it a moment later).
     await see.eventually(async () => expect(await browser.path.evaluate((el) => el === document.activeElement)).toBe(true))
