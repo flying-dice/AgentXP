@@ -7,8 +7,9 @@ import { checks as desktop } from './desktop.mjs'
 import { checks as launch } from './launch.mjs'
 import { checks as settings } from './settings.mjs'
 import { checks as features } from './features.mjs'
+import { checks as presence } from './presence.mjs'
 
-export const CHECKS = { ...launch, ...chat, ...changes, ...desktop, ...settings, ...advanced, ...features }
+export const CHECKS = { ...launch, ...chat, ...changes, ...desktop, ...settings, ...advanced, ...features, ...presence }
 // Variants of one task share the checker of the base task.
 
 /** Runs the checker of a task: { status: 'PASS'|'FAIL'|'MANUAL', reason, notes }. */

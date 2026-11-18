@@ -63,7 +63,12 @@ export const TASKS = {
   'T30.1': { preset: 'project-desktop', options: { open: ['explorer'] } },
   'T30.2': { preset: 'project-desktop', options: { open: ['notepad'] } },
   'T31.1': { preset: 'project-desktop', options: { open: ['notepad'] } },
-  'T31.2': { preset: 'project-desktop', options: { open: ['terminal'] } }
+  'T31.2': { preset: 'project-desktop', options: { open: ['terminal'] } },
+  'T32.1': { preset: 'show-foreground' },
+  'T32.2': { preset: 'show-request' },
+  'T33.1': { preset: 'missed-output' },
+  'T33.2': { preset: 'diagram-behind' },
+  'T34.1': { preset: 'builder-working' }
 }
 
 /** Short notes the facilitator must hand to the panelist when a start state needs a spoken detail. */

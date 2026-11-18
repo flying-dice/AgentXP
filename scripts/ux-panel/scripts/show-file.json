@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "show-file",
+  "description": "T32.1: asked where the login redirect is checked, it answers and shows src/auth/redirect.ts lines 2-4 (the afterLogin function) with a note. Any later message is answered with a short thanks.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "where",
+      "match": {
+        "contains": "redirect",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "The redirect after sign-in is decided in afterLogin, in src/auth/redirect.ts.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "show",
+          "arguments": {
+            "target": {
+              "kind": "file",
+              "path": "src/auth/redirect.ts",
+              "lines": [2, 4]
+            },
+            "note": "afterLogin ignores the address in ?next= and always returns /home: this is why deep links are lost."
+          },
+          "saveAs": "shown"
+        },
+        {
+          "type": "message",
+          "text": "Do you agree that this is the place to fix?"
+        }
+      ]
+    },
+    {
+      "id": "reply",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Thanks. I will fix it there."
+        }
+      ]
+    }
+  ]
+}

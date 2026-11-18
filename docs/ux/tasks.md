@@ -468,41 +468,42 @@ While it works, watch the web page. When it has finished, tell the facilitator h
 - Answer: why typing does nothing in the Terminal (it is read only).
 - Min 2. Budget 6 / 8.
 
-### J32 An agent shows you something [planned]
+### J32 An agent shows you something
 
-**T32.1 - Why this line? [planned]**
+**T32.1 - Why this line?**
 - Scenario: "You asked the assistant where the login redirect is checked. It is pointing something out to you. Find out what it wants you to see and why, and tell it that you agree."
-- Start state: scripted agent `show-file` in the foreground chat calls `show` on `src/auth/redirect.ts:12-20` with a note.
-- Success check: the chat has a new user message that quotes the note (Reply was used) or a typed reply that agrees.
+- Start state: preset `show-foreground`. The foreground chat (agent "Builder", script `show-file`) answered "Where is the login redirect checked?" and called `show` on `src/auth/redirect.ts` lines 2-4 with a note. Code is in front at those lines without the focus, the agent cursor points at line 2, and the note callout (OK, Reply) is beside it. The keyboard is still in the chat.
+- Success check: the chat has a new message from the panelist after the start prompt that agrees or quotes the note (Reply puts the note in the composer).
 - Min 2 (**Reply**, type and send). Budget 6 / 8.
 
-**T32.2 - Someone else wants your attention [planned]**
+**T32.2 - Someone else wants your attention**
 - Scenario: "You are reading code. One of your team's assistants wants to show you something. Have a look at it when you are ready."
-- Start state: a team room; scripted member `Reviewer` calls `show` on a review comment from the background; the panelist's focus is in Code.
-- Success check: Code Review is open on that comment; the operator's view did not change before the panelist acted (`data-show-state` log).
+- Start state: preset `show-request`. The project `review-notes`; Code shows notes.txt and has the focus. The reviewer (agent "Reviewer", script `show-request`) left a blocker comment on notes.txt line 4 in Code Review and called `show` on it from the background, so the view did not move: a balloon "Reviewer wants to show you ..." with **Show** and **Not now**. **Not now** only closes the balloon; the request stays in the Action Center with **Show**.
+- Success check: the show was sent as a request (the reviewer's transcript), and at the end the Code Review window has the focus with that comment selected.
 - Min 1 (**Show** on the balloon, or from the Action Center). Budget 3 / 4.
 
-### J33 Hear about what the agents made [planned]
+### J33 Hear about what the agents made
 
-**T33.1 - What happened while I was busy? [planned]**
+**T33.1 - What happened while I was busy?**
 - Scenario: "Two assistants worked while you were in a meeting. Find out what each one did, and open the review comments one of them left."
-- Start state: scripted team run `two-agent-output` finished: Reviewer left 4 comments, Builder changed 6 files and ran tests; balloons have timed out.
-- Success check: Code Review is open on the first new comment, and the Action Center was opened during the session.
+- Start state: preset `missed-output`. The project `review-notes`. While Notepad had the focus, the chat "Builder" (script `two-agent-output`) wrote CHANGELOG.md and ran a command (a turn summary: "Builder finished: changed 1 file, ...", **Review changes**), and "Reviewer" left 2 comments on notes.txt in Code Review ("New review comments", **Open review**). The balloons were closed; the Action Center keeps both.
+- Success check: the Code Review window has the focus on the first new comment, and the answer says what each assistant did.
+- Answer: what each assistant did (Builder changed a file and ran the tests; Reviewer left comments).
 - Min 2 (tray flag, **Open review**). Budget 6 / 8.
 
-**T33.2 - Do not disturb me [planned]**
+**T33.2 - Do not disturb me**
 - Scenario: "Type a short note in Notepad while the assistant draws a diagram. Then look at the diagram."
-- Start state: scripted agent `diagram-output` opens Agent Diagrams and draws while Notepad has focus.
-- Success check: the Notepad text was typed without lost keys (focus never moved); the Diagrams window is focused at the end.
-- Min 3 (type, click the flashing taskbar button, look). Budget 9 / 12.
+- Start state: preset `diagram-behind`. Agent Diagrams is open; Notepad is open over it and has the focus. The chat (script `diagram-output`) was asked to draw the login flow and adds the shapes about 15 seconds after the start, in two steps, while Diagrams stays behind (its taskbar button flashes; at the end of the turn a balloon "Diagram updated" with **Open diagram**).
+- Success check: Notepad holds the typed note, both drawing steps are done, and the Diagrams window has the focus at the end. Lost keys are not measured by the check (compare with the record).
+- Min 3 (type, click the flashing taskbar button or **Open diagram**, look). Budget 9 / 12.
 
-### J34 Follow an agent as it works [planned]
+### J34 Follow an agent as it works
 
-**T34.1 - Watch the builder [planned]**
+**T34.1 - Watch the builder**
 - Scenario: "You want to watch the Builder assistant work on the bug for a while, then stop watching."
-- Start state: a team room with `Builder` running scripted agent `follow-steps` (several reads and edits).
-- Success check: Follow was on for Builder for at least one projected step, then off (`data-following` log).
-- Min 2 (**Follow**, **Stop following**). Budget 6 / 8.
+- Start state: preset `builder-working`. A chat with the agent "Builder" (script `builder-steps`) reads files for about three minutes (one read every 15 seconds); Code is closed. The harness records in the desktop page who is followed and what Code shows.
+- Success check: Follow was on for Builder while Code landed on one of its steps, then it was turned off while Builder still worked (the end of the turn would also end it: then the check is manual).
+- Min 2 (**View -> Follow this chat** or **Follow** in the top-bar agents list, **Stop following**). Budget 6 / 8.
 
 ## Coverage table
 

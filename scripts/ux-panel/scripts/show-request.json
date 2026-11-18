@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "show-request",
+  "description": "T32.2: the reviewer of the review-notes project. The review prompt waits 5 s (the harness moves the focus to Code meanwhile), leaves a blocker comment on notes.txt line 4 and shows it (show with a review-comment target). From the background this becomes a show request. Anything else gets a short answer.",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "review",
+      "match": {
+        "contains": "code review of the changes",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Reviewing the changes.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 5000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 4,
+            "severity": "blocker",
+            "body": "THREE is shouted in capitals; this breaks the naming of the other lines."
+          },
+          "saveAs": "added"
+        },
+        {
+          "type": "extract",
+          "from": "added",
+          "regex": "Comment (\\d+) added",
+          "saveAs": "commentId"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "show",
+          "arguments": {
+            "target": {
+              "kind": "review-comment",
+              "id": "{{commentId|number}}"
+            },
+            "note": "This line has to change before the work can go in."
+          },
+          "saveAs": "shown"
+        },
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I left one comment on notes.txt."
+        }
+      ]
+    }
+  ]
+}

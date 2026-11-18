@@ -4,8 +4,9 @@ import { presets as chat } from './chat.mjs'
 import { presets as desktops } from './desktops.mjs'
 import { presets as misc } from './misc.mjs'
 import { presets as features } from './features.mjs'
+import { presets as presence } from './presence.mjs'
 
-export const PRESETS = { ...basic, ...chat, ...desktops, ...misc, ...features }
+export const PRESETS = { ...basic, ...chat, ...desktops, ...misc, ...features, ...presence }
 
 export async function runPreset(ctx, taskId) {
   const task = TASKS[taskId]

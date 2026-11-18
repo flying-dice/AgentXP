@@ -1,0 +1,114 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "two-agent-output",
+  "description": "T33.1: two agents work on the review-notes project while the operator is elsewhere. The chat (Builder) is asked to \"tidy the notes\": it writes CHANGELOG.md (a recorded change) and runs a command (a turn summary). The Code Review prompt waits 3 s, then leaves two comments on notes.txt (lines 1 and 4).",
+  "agent": {
+    "name": "scripted-agent",
+    "version": "1.0.0"
+  },
+  "rules": [
+    {
+      "id": "builder",
+      "match": {
+        "contains": "tidy the notes",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Tidying.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 3000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "code_write",
+          "arguments": {
+            "path": "CHANGELOG.md",
+            "text": "# Changelog\n\n- Notes tidied.\n"
+          },
+          "saveAs": "written"
+        },
+        {
+          "type": "expect",
+          "from": "written.isError",
+          "equals": "false",
+          "message": "code_write failed: {{written}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "terminal_run",
+          "arguments": {
+            "command": "echo 3 tests passed"
+          },
+          "saveAs": "ran"
+        },
+        {
+          "type": "message",
+          "text": "Done: I added CHANGELOG.md and ran the tests."
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "match": {
+        "contains": "code review of the changes",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Reviewing the changes.\n"
+        },
+        {
+          "type": "wait",
+          "ms": 3000
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 1,
+            "severity": "minor",
+            "body": "A stray zero line was added at the top. Is it needed?"
+          },
+          "saveAs": "first"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "review_add_comment",
+          "arguments": {
+            "path": "notes.txt",
+            "line": 4,
+            "severity": "blocker",
+            "body": "THREE is shouted in capitals; this breaks the naming of the other lines."
+          },
+          "saveAs": "second"
+        },
+        {
+          "type": "message",
+          "text": "Two comments on notes.txt."
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "I added CHANGELOG.md and ran the tests."
+        }
+      ]
+    }
+  ]
+}
