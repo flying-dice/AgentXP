@@ -42,6 +42,7 @@ export interface AgentInput {
   args: string[]
   env: Record<string, string>
   defaultModeId?: string | null
+  defaultModelId?: string | null
 }
 
 /** What main sends on the `agui.event` channel: one AG-UI event of one run. */

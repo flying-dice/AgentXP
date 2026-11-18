@@ -37,10 +37,11 @@
     { key: 'about', header: 'About', width: 200 },
     { key: 'command', header: 'Command' },
     { key: 'mode', header: 'Start mode', width: 120 },
+    { key: 'model', header: 'Start model', width: 110 },
     { key: 'isDefault', header: 'Default', width: 56 }
   ]
   const rows = $derived<ListRow[]>(
-    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: aboutOf(a, stateOf(a)), command: commandOf(a), mode: a.defaultModeId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
+    agents.items.map((a) => ({ id: String(a.id), icon: 'agent', name: a.name, about: aboutOf(a, stateOf(a)), command: commandOf(a), mode: a.defaultModeId ?? '', model: a.defaultModelId ?? '', isDefault: a.isDefault ? 'Yes' : '' }))
   )
   const selectedAgent = $derived(agents.items.find((a) => String(a.id) === selected[0]) ?? null)
 

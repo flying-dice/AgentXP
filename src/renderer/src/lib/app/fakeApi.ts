@@ -19,8 +19,8 @@ import { sampleNew, sampleOld } from '../kit/organisms/stories.samples'
 import { completedTurn, modes } from './session/session.fixtures'
 
 export const sampleAgents: AgentDto[] = [
-  { id: 1, name: 'Claude Code', command: 'npx', args: ['-y', '@zed-industries/claude-code-acp'], env: {}, isDefault: true, defaultModeId: null },
-  { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false, defaultModeId: null }
+  { id: 1, name: 'Claude Code', command: 'npx', args: ['-y', '@agentclientprotocol/claude-agent-acp'], env: {}, isDefault: true, defaultModeId: null, defaultModelId: null },
+  { id: 2, name: 'Gemini CLI', command: 'gemini', args: ['--experimental-acp'], env: { GEMINI_API_KEY: 'example' }, isDefault: false, defaultModeId: null, defaultModelId: null }
 ]
 
 export const sampleMarkdown = `# claude-code-win
@@ -199,7 +199,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
     agents: {
       list: async () => agents,
       create: async (input) => {
-        const agent: AgentDto = { id: nextId++, isDefault: false, defaultModeId: null, ...input }
+        const agent: AgentDto = { id: nextId++, isDefault: false, defaultModeId: null, defaultModelId: null, ...input }
         agents = [...agents, agent]
         return agent
       },

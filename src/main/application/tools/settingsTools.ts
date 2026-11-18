@@ -34,7 +34,7 @@ const GATED = TOOL_GROUPS.filter((g): g is Exclude<ToolGroup, 'shell'> => g !== 
 const SECRET_MASK = '********'
 
 export const describeAgent = (a: AgentDto): string =>
-  `[${a.id}] ${a.name}${a.isDefault ? ' (default)' : ''}: ${[a.command, ...a.args].join(' ')}${a.defaultModeId ? `, starts in mode ${a.defaultModeId}` : ''}`
+  `[${a.id}] ${a.name}${a.isDefault ? ' (default)' : ''}: ${[a.command, ...a.args].join(' ')}${a.defaultModeId ? `, starts in mode ${a.defaultModeId}` : ''}${a.defaultModelId ? `, starts on model ${a.defaultModelId}` : ''}`
 export const describeSkill = (s: SkillDto): string => `[${s.id}] ${s.name} (${s.enabled ? 'on' : 'off'}): ${s.description}`
 /** A server as the agent sees it: secret values are never shown. */
 export const describeServer = (s: McpServerDto): string => {
@@ -59,7 +59,8 @@ export function createSettingsTools(deps: SettingsToolsDeps): ToolHandlers<Names
     command: a.command ?? base.command,
     args: a.args ?? base.args,
     env: a.env ?? base.env,
-    defaultModeId: a.startMode === undefined ? base.defaultModeId : a.startMode
+    defaultModeId: a.startMode === undefined ? base.defaultModeId : a.startMode,
+    defaultModelId: a.startModel === undefined ? base.defaultModelId : a.startModel
   })
 
   /** The vars the agent gave; a var without a value keeps the saved value of its key (the agent never sees secrets). */
@@ -106,7 +107,7 @@ export function createSettingsTools(deps: SettingsToolsDeps): ToolHandlers<Names
     agent_list: async () => textResult(agents.list().map(describeAgent).join('\n') || 'No agents.'),
     agent_add: ({ makeDefault, ...args }) =>
       attempt(() => {
-        const created = agents.create(agentInput({ name: '', command: '', args: [], env: {}, defaultModeId: null }, args))
+        const created = agents.create(agentInput({ name: '', command: '', args: [], env: {}, defaultModeId: null, defaultModelId: null }, args))
         if (makeDefault) agents.setDefault(created.id)
         return done('agents', `Added ${describeAgent(agents.list().find((a) => a.id === created.id) ?? created)}`)
       }),

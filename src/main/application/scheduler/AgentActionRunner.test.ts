@@ -8,7 +8,7 @@ import type { StopReason } from '../ports'
 import { AgentActionRunner, scheduledChatTitle, type ActionChats } from './AgentActionRunner'
 import type { ActionRunInput } from './ports'
 
-const agent = (id: number): AgentDto => ({ id, name: `Agent ${id}`, command: 'x', args: [], env: {}, isDefault: id === 1, defaultModeId: null })
+const agent = (id: number): AgentDto => ({ id, name: `Agent ${id}`, command: 'x', args: [], env: {}, isDefault: id === 1, defaultModeId: null, defaultModelId: null })
 const session = (id: Id, over: Partial<SessionDto> = {}): SessionDto =>
   ({ id, agentId: 1, role: 'chat', desktopId: 5, cwd: 'E:\\', title: 'New chat', status: 'idle', acpSessionId: null, currentModeId: null, currentModelId: null, modes: [], models: [], commands: [], contextUsed: 0, contextSize: 0, createdAt: '', updatedAt: '', ...over }) as SessionDto
 

@@ -14,7 +14,8 @@ const clean = (input: AgentInput): AgentInput => {
   // The name is optional: without one the agent is listed by its command line ("node my-agent.js").
   const name = input.name.trim() || [command, ...input.args].join(' ')
   const defaultModeId = input.defaultModeId?.trim() || null
-  return { name, command, args: input.args, env: input.env, defaultModeId }
+  const defaultModelId = input.defaultModelId?.trim() || null
+  return { name, command, args: input.args, env: input.env, defaultModeId, defaultModelId }
 }
 
 export class AgentService {

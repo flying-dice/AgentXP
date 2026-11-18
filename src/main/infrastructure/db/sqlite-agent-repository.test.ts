@@ -14,10 +14,11 @@ describe('SqliteAgentRepository', () => {
       id: 1,
       name: 'Claude Code',
       command: 'npx',
-      args: ['-y', '@zed-industries/claude-code-acp'],
+      args: ['-y', '@agentclientprotocol/claude-agent-acp'],
       env: {},
       isDefault: true,
-      defaultModeId: null
+      defaultModeId: null,
+      defaultModelId: 'sonnet'
     })
     expect(repo.list()).toHaveLength(1)
   })
@@ -76,5 +77,7 @@ describe('SqliteAgentRepository', () => {
     expect(repo.get(created.id)?.defaultModeId).toBe('acceptEdits')
     expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {}, defaultModeId: 'plan' })?.defaultModeId).toBe('plan')
     expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {} })?.defaultModeId).toBeNull()
+    expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {}, defaultModelId: 'opus' })?.defaultModelId).toBe('opus')
+    expect(repo.update(created.id, { name: 'A', command: 'a', args: [], env: {} })?.defaultModelId).toBeNull()
   })
 })

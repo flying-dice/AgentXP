@@ -56,6 +56,7 @@ The agent dialog box has these parts:
 - **Arguments** – One per line, for example `my-agent.js`.
 - **Environment** – KEY=VALUE, one per line.
 - **Start mode** – The mode that every new chat of the agent starts in. See below.
+- **Start model** – The model that every new chat of the agent starts on. See below.
 - **Make this the default agent for new desktops and chats** – A check box. It is on when you add an agent.
 
 **Start mode** is the mode that every new chat of the agent starts in. This is how you reduce the permission prompts. Choose **Agent default** to keep the mode that the agent chooses itself. For Claude Code the modes are:
@@ -67,6 +68,8 @@ The agent dialog box has these parts:
 - **Bypass Permissions** – Does not ask at all.
 
 Other agents can have other modes. You can type the id of a mode in the box. If the agent does not offer the mode, the chat starts in the mode of the agent. The setting does not change chats that already exist. In a chat you can still change the mode at any time.
+
+**Start model** is the model that every new chat of the agent starts on. Claude Code is set to **Sonnet**. Choose **Agent default** to keep the model that the agent chooses itself; for Claude Code that is the model in your own Claude settings. For Claude Code the choices are **Sonnet**, **Opus**, **Fable**, and **Haiku**. Every model the agent offers is also in the **Model** list of each chat, so you can switch to Opus there at any time. You can type the id of a model in the box. If the agent does not offer the model, the chat starts on the model of the agent. The setting does not change chats that already exist, and a chat keeps its model when it is opened again.
 
 ### The Permissions Page
 

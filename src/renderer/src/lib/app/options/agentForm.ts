@@ -45,6 +45,8 @@ export interface AgentFormValues {
   makeDefault: boolean
   /** An ACP session mode id, '' for the agent's own default. */
   defaultModeId: string
+  /** An ACP model id, '' for the agent's own default. */
+  defaultModelId: string
 }
 
 /** The session modes Claude Code offers; other agents may name their own (the field is editable). */
@@ -57,8 +59,17 @@ export const COMMON_MODES: { value: string; label: string }[] = [
   { value: 'bypassPermissions', label: 'Bypass Permissions (no prompts at all)' }
 ]
 
+/** The models Claude Code offers by alias; other agents may name their own (the field is editable). */
+export const COMMON_MODELS: { value: string; label: string }[] = [
+  { value: '', label: 'Agent default' },
+  { value: 'sonnet', label: 'Sonnet' },
+  { value: 'opus', label: 'Opus' },
+  { value: 'fable', label: 'Fable' },
+  { value: 'haiku', label: 'Haiku' }
+]
+
 /** A new agent is the default unless the person unticks the box. */
-export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '', makeDefault: true, defaultModeId: '' })
+export const emptyAgentForm = (): AgentFormValues => ({ name: '', command: '', args: '', env: '', makeDefault: true, defaultModeId: '', defaultModelId: '' })
 
 export const formFromAgent = (agent: AgentDto): AgentFormValues => ({
   name: agent.name,
@@ -66,7 +77,8 @@ export const formFromAgent = (agent: AgentDto): AgentFormValues => ({
   args: formatArgs(agent.args),
   env: formatEnv(agent.env),
   makeDefault: agent.isDefault,
-  defaultModeId: agent.defaultModeId ?? ''
+  defaultModeId: agent.defaultModeId ?? '',
+  defaultModelId: agent.defaultModelId ?? ''
 })
 
 /** One plain sentence for the agents list: what the agent is (the bundled sample agent has no AI behind it). */
@@ -93,7 +105,8 @@ export const inputFromForm = (values: AgentFormValues): AgentInput => ({
   command: values.command.trim(),
   args: parseArgs(values.args),
   env: parseEnv(values.env).env,
-  defaultModeId: values.defaultModeId.trim() || null
+  defaultModeId: values.defaultModeId.trim() || null,
+  defaultModelId: values.defaultModelId.trim() || null
 })
 
 /** The line under the Test button. */

@@ -90,7 +90,7 @@ export class SessionRuntime {
       // The agent's cwd is the real folder behind the chat's working directory; an ejected drive refuses here.
       const cwd = await this.deps.vfs.realPath(this.desktopOf(session), session.cwd)
       const connection = await this.openConnection(agent, cwd, sessionId, sink)
-      const live = await this.openSession(connection, session, cwd, sink, agent.defaultModeId)
+      const live = await this.openSession(connection, session, cwd, sink, agent.defaultModeId, agent.defaultModelId)
       if (!sessions.get(sessionId)) {
         // The chat was deleted while its agent was starting (it starts in the background): nobody wants this agent.
         await connection.dispose()
@@ -140,7 +140,8 @@ export class SessionRuntime {
     session: SessionDto,
     cwd: string,
     sink: MutableSink,
-    defaultModeId: string | null
+    defaultModeId: string | null,
+    defaultModelId: string | null
   ): Promise<LiveSession> {
     const mcpServers = [this.deps.a2uiMcpConfig(session.id), ...(this.deps.extraMcpServers?.(session.id) ?? [])]
     const systemPrompt = this.deps.systemPrompt?.(session.id) ?? null
@@ -154,7 +155,7 @@ export class SessionRuntime {
         ).finally(() => (sink.muted = false))
         if (state) {
           this.forgotten.delete(session.id)
-          this.storeState(session.id, state)
+          this.storeState(session.id, await this.applyModel(connection, acpSessionId, state, session.currentModelId ?? defaultModelId))
           return { connection, acpSessionId }
         }
       }
@@ -162,7 +163,10 @@ export class SessionRuntime {
       if (session.acpSessionId) this.forgotten.add(session.id)
       const opened = await connection.newSession(cwd, mcpServers, systemPrompt)
       this.deps.sessions.setAcpSessionId(session.id, opened.acpSessionId)
-      this.storeState(session.id, await this.applyDefaultMode(connection, opened, defaultModeId))
+      const inMode = await this.applyDefaultMode(connection, opened, defaultModeId)
+      // The model of a chat that lost its ACP session is the one the person chose; a brand new chat gets the agent's default.
+      const model = await this.applyModel(connection, opened.acpSessionId, inMode, session.currentModelId ?? defaultModelId)
+      this.storeState(session.id, model)
       return { connection, acpSessionId: opened.acpSessionId }
     } catch (error) {
       await connection.dispose()
@@ -181,6 +185,21 @@ export class SessionRuntime {
       return { ...opened, currentModeId: modeId }
     } catch {
       return opened
+    }
+  }
+
+  /**
+   * Puts the session on `modelId` when the agent offers it and is not already there. Agents start on a model of their own
+   * (Claude Code: the `model` of the person's own settings), so a chat that was on Sonnet would come back on Opus after a
+   * restart without this. A model the agent does not offer, or one that fails to apply, leaves the agent's choice.
+   */
+  private async applyModel<T extends AcpSessionState>(connection: LiveAgentConnection, acpSessionId: string, state: T, modelId: string | null): Promise<T> {
+    if (!modelId || modelId === state.currentModelId || !state.models.some((m) => m.id === modelId)) return state
+    try {
+      await connection.setModel(acpSessionId, modelId)
+      return { ...state, currentModelId: modelId }
+    } catch {
+      return state
     }
   }
 

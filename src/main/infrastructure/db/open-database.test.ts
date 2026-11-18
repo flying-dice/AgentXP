@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { migrate } from './migrate'
 import { MIGRATIONS, type Migration } from './migrations'
 import { openDatabase } from './open-database'
-import { readPragma } from './sql'
+import { openRaw, readPragma } from './sql'
 
 describe('openDatabase', () => {
   it('enables foreign keys and migrates to the latest version', () => {
@@ -28,11 +28,12 @@ describe('openDatabase', () => {
 
   it('seeds exactly one default agent', () => {
     const db = openDatabase(':memory:')
-    const agents = db.prepare('SELECT id, name, command, is_default FROM agents').all()
-    expect(agents).toEqual([{ id: 1, name: 'Claude Code', command: 'npx', is_default: 1 }])
+    const agents = db.prepare('SELECT id, name, command, is_default, default_model_id FROM agents').all()
+    // Claude Code runs the renamed ACP package and new chats start on Sonnet (migration 018).
+    expect(agents).toEqual([{ id: 1, name: 'Claude Code', command: 'npx', is_default: 1, default_model_id: 'sonnet' }])
     expect(db.prepare('SELECT value FROM agent_args ORDER BY position').all()).toEqual([
       { value: '-y' },
-      { value: '@zed-industries/claude-code-acp' }
+      { value: '@agentclientprotocol/claude-agent-acp' }
     ])
   })
 
@@ -70,5 +71,29 @@ describe('migrate', () => {
   it('rejects unordered migrations', () => {
     const db = openDatabase(':memory:')
     expect(() => migrate(db, [m(2, 'SELECT 1'), m(2, 'SELECT 1')])).toThrow(/ordered/)
+  })
+})
+
+describe('migration 018: agent default model', () => {
+  it('moves agents off the deprecated ACP package and starts them on Sonnet, whatever program starts them', () => {
+    const db = openRaw(':memory:')
+    db.exec('PRAGMA foreign_keys = ON')
+    migrate(db, MIGRATIONS.filter((x) => x.version < 18))
+    // The person's own setup: Claude Code started by bunx, plus an agent that has nothing to do with Claude.
+    db.exec("UPDATE agents SET command = 'bunx' WHERE id = 1")
+    db.exec("INSERT INTO agents (name, command) VALUES ('Gemini CLI', 'gemini')")
+    db.exec("INSERT INTO agent_args (agent_id, position, value) VALUES (2, 0, '--experimental-acp')")
+
+    migrate(db)
+
+    expect(db.prepare('SELECT name, command, default_model_id FROM agents ORDER BY id').all()).toEqual([
+      { name: 'Claude Code', command: 'bunx', default_model_id: 'sonnet' },
+      { name: 'Gemini CLI', command: 'gemini', default_model_id: null }
+    ])
+    expect(db.prepare('SELECT agent_id, value FROM agent_args ORDER BY agent_id, position').all()).toEqual([
+      { agent_id: 1, value: '-y' },
+      { agent_id: 1, value: '@agentclientprotocol/claude-agent-acp' },
+      { agent_id: 2, value: '--experimental-acp' }
+    ])
   })
 })

@@ -8,7 +8,7 @@ import { SqliteDriveRepository } from '../infrastructure/db/sqlite-drive-reposit
 import { DriveService } from './vfs/DriveService'
 import { VirtualFileSystem } from './vfs/VirtualFileSystem'
 import { afterEach } from 'vitest'
-import type { ContentBlockDto } from '@shared/models'
+import type { ContentBlockDto, SessionModelDto } from '@shared/models'
 import type { McpServerConfig } from '../domain/agent/McpServerConfig'
 import { createFixture, type Fixture } from '../infrastructure/db/test-helpers'
 import { SqliteA2uiSurfaceRepository } from '../infrastructure/db/sqlite-a2ui-surface-repository'
@@ -117,6 +117,9 @@ export class FakeLiveConnection implements LiveAgentConnection {
   loadError: Error | null = null
   readonly calls: string[] = []
   readonly prompts: ContentBlockDto[][] = []
+  /** The models the agent offers, and the one it starts on by itself (Claude Code: from the person's own settings). */
+  models: SessionModelDto[] = []
+  agentModelId: string | null = null
   mcpServers: McpServerConfig[] = []
   /** What the last newSession / loadSession asked to append to the agent's system prompt. */
   systemPrompt: string | null = null
@@ -139,9 +142,9 @@ export class FakeLiveConnection implements LiveAgentConnection {
         { id: 'default', name: 'Default', description: null },
         { id: 'acceptEdits', name: 'Accept Edits', description: null }
       ],
-      models: [],
+      models: this.models,
       currentModeId: 'default',
-      currentModelId: null
+      currentModelId: this.agentModelId
     }
   }
 
@@ -150,7 +153,7 @@ export class FakeLiveConnection implements LiveAgentConnection {
     this.mcpServers = mcpServers
     this.systemPrompt = systemPrompt ?? null
     if (this.loadError) throw this.loadError
-    return { modes: [], models: [], currentModeId: null, currentModelId: null }
+    return { modes: [], models: this.models, currentModeId: null, currentModelId: this.agentModelId }
   }
 
   async prompt(_acpSessionId: string, blocks: ContentBlockDto[]): Promise<StopReason> {
@@ -190,6 +193,8 @@ export class FakeConnector implements AgentConnector {
   canLoadSession = false
   loadError: Error | null = null
   openError: Error | null = null
+  models: SessionModelDto[] = []
+  agentModelId: string | null = null
 
   async open(launch: AgentLaunch): Promise<LiveAgentConnection> {
     if (this.openError) throw this.openError
@@ -197,6 +202,8 @@ export class FakeConnector implements AgentConnector {
     const connection = new FakeLiveConnection(`acp-${this.connections.length + 1}`)
     connection.canLoadSession = this.canLoadSession
     connection.loadError = this.loadError
+    connection.models = this.models
+    connection.agentModelId = this.agentModelId
     this.connections.push(connection)
     return connection
   }
