@@ -57,6 +57,9 @@ export interface DesktopServiceDeps {
   now?: () => number
 }
 
+/** Asks the user in the chat whether its agent may go on ("Agent may open apps" set to Ask); true when allowed. */
+export type OpenApproval = (sessionId: Id, title: string, reason: string) => Promise<boolean>
+
 /** A window the agent opens does not take the focus from a window the user typed in during this long. */
 export const TYPING_GRACE_MS = 2000
 
@@ -86,8 +89,15 @@ export class DesktopService implements DesktopStates {
   /** When the user last typed or clicked in a window, per desktop. */
   private readonly userActiveAt = new Map<Id, number>()
   private readonly asideStarts = new Map<Id, Promise<Id>>()
+  /** Asks the user when "Agent may open apps" is set to Ask (the tool gateway, attached after construction). */
+  private openApproval: OpenApproval | null = null
 
   constructor(private readonly deps: DesktopServiceDeps) {}
+
+  /** The gateway is built after this service (it needs the desktop state), so it is attached here. */
+  attachOpenApproval(ask: OpenApproval): void {
+    this.openApproval = ask
+  }
 
   // ---- desktops ----------------------------------------------------------------------------------
   // Creating, connecting and deleting desktops is the launcher's job (`LauncherService`).
@@ -177,10 +187,81 @@ export class DesktopService implements DesktopStates {
       if (input.topic !== undefined && existing.app === 'help') this.updateView(existing.id, { app: 'help', topic: input.topic })
       return this.windowState(existing.id)
     }
+    const record = this.createWindow(desktopId, input, focused, openedBy, size)
+    if (typing) {
+      this.flag(desktopId, record.id) // on top (new rows are), the focus stays where the user types
+    } else {
+      this.focus.set(desktopId, record.id)
+    }
+    this.emit(desktopId)
+    return this.windowState(record.id)
+  }
+
+  /**
+   * "Agent may open apps" (Control Center): resolves when the agent of `sessionId` may open a window of `app`, else
+   * rejects with a readable message (Never: blocked; Ask: the user is asked in the chat and may decline).
+   */
+  async assertMayOpen(sessionId: Id, app: AppKind): Promise<void> {
+    const decision = this.policy().openApps
+    const what = app === 'chat' ? 'a chat window' : `the ${APP_DISPLAY_NAMES[app]} app`
+    if (decision === 'deny') throw new AppError('Opening apps is blocked by the permission policy in Control Center.')
+    if (decision === 'allow') return
+    const allowed = this.openApproval ? await this.openApproval(sessionId, `Open ${what}`, 'Agent may open apps is set to Ask in Control Center') : false
+    if (!allowed) throw new AppError(`The user declined to open ${what}.`)
+  }
+
+  /**
+   * The one path for every window an agent opens (`docs/AGENT_PRESENCE.md`, rule 2): checks "Agent may open apps"
+   * (not for a window that is already there and only reused), then `placeOutputWindow`.
+   */
+  openOutputWindow(sessionId: Id, input: OpenWindowInput, size?: { width?: number; height?: number }): Promise<AppWindowState> {
+    try {
+      this.record(input.desktopId)
+      // No question to ask: the window is placed at once (the caller, e.g. an A2UI render, sees it open when this returns).
+      if (this.existingWindow(input) || this.policy().openApps === 'allow') return Promise.resolve(this.placeOutputWindow(input, size))
+      return this.assertMayOpen(sessionId, input.app).then(() => this.placeOutputWindow(input, size))
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
+  /**
+   * Opens a window for the agent without moving the operator's view: the new window goes just behind the focused
+   * window (the focus stays), is marked `openedBy: 'agent'` (the glow) and its taskbar button flashes (`attention`)
+   * until the operator focuses it. An existing singleton (or the chat's own window) is reused where it is, never
+   * raised; a Code window is told to show `path`. With no window on the desktop the new window simply is the front one.
+   */
+  placeOutputWindow(input: OpenWindowInput, size?: { width?: number; height?: number }): AppWindowState {
+    const desktopId = this.record(input.desktopId).id
+    const focused = this.focusedRecord(desktopId)
+    const existing = this.existingWindow(input)
+    if (existing) {
+      if (input.path !== undefined && existing.app === 'code') this.showInCode(existing, input.path)
+      if (input.topic !== undefined && existing.app === 'help') this.updateView(existing.id, { app: 'help', topic: input.topic })
+      if (focused && focused.id !== existing.id) this.flag(desktopId, existing.id)
+      this.emit(desktopId)
+      return this.windowState(existing.id)
+    }
+    const record = this.createWindow(desktopId, input, focused, 'agent', size)
+    if (focused) {
+      // New rows go on top: put the focused window back over it, so the new one sits right behind it.
+      this.deps.windows.raise(focused.id)
+      this.focus.set(desktopId, focused.id)
+      this.flag(desktopId, record.id)
+    } else {
+      this.focus.set(desktopId, record.id)
+    }
+    this.emit(desktopId)
+    return this.windowState(record.id)
+  }
+
+  /** Creates the window row: below the top bar and beside the focused window (`placeNewWindow`), with its first view. */
+  private createWindow(desktopId: Id, input: OpenWindowInput, focused: AppWindowRecord | null, openedBy: OpenedBy, size?: { width?: number; height?: number }): AppWindowRecord {
     // New windows start below the top bar and beside the focused window (`placeNewWindow`).
     const parent = focused && focused.windowState === 'normal' ? { app: focused.app, bounds: focused.bounds } : null
-    // A chat started from the Browser opens in the half the Browser does not use (UX-120); the Browser is narrowed to its half.
-    const beside = input.app === 'chat' && focused?.app === 'browser' && focused.windowState === 'normal' ? placeChatBesideBrowser(focused.bounds) : null
+    // A chat the user starts from the Browser opens in the half the Browser does not use (UX-120); the Browser is narrowed to
+    // its half. Never for the agent: its window must not move the operator's.
+    const beside = openedBy === 'user' && input.app === 'chat' && focused?.app === 'browser' && focused.windowState === 'normal' ? placeChatBesideBrowser(focused.bounds) : null
     if (beside?.browser) this.deps.windows.setBounds(focused!.id, beside.browser)
     const record = this.deps.windows.create({
       desktopId,
@@ -193,13 +274,7 @@ export class DesktopService implements DesktopStates {
     if (input.app === 'help' && input.topic !== undefined) this.views.set(record.id, { app: 'help', topic: input.topic })
     // The file of a review is part of its first view, so the window never shows another file first (the Git list of Code).
     if (input.app === 'code-review' && input.selectedPath !== undefined) this.views.set(record.id, initialView({ app: 'code-review', path: record.path || undefined, sessionId: record.sessionId ?? undefined, baseRef: record.baseRef ?? undefined, selectedPath: input.selectedPath }))
-    if (typing) {
-      this.flag(desktopId, record.id) // on top (new rows are), the focus stays where the user types
-    } else {
-      this.focus.set(desktopId, record.id)
-    }
-    this.emit(desktopId)
-    return this.windowState(record.id)
+    return record
   }
 
   closeWindow(windowId: Id): void {
@@ -239,6 +314,16 @@ export class DesktopService implements DesktopStates {
     const desktopId = this.deps.sessions.get(sessionId)?.desktopId
     if (desktopId == null) return null
     return this.openWindow({ desktopId, app: 'surface', sessionId, surfaceId }, openedBy, size)
+  }
+
+  /**
+   * The agent's own surface window (`a2ui_render` with target window): an output window, opened behind the focused
+   * window when "Agent may open apps" allows it. Null when the chat has no desktop; rejects when the policy refuses.
+   */
+  async openAgentSurfaceWindow(sessionId: Id, surfaceId: string, size?: { width?: number; height?: number }): Promise<AppWindowState | null> {
+    const desktopId = this.deps.sessions.get(sessionId)?.desktopId
+    if (desktopId == null) return null
+    return this.openOutputWindow(sessionId, { desktopId, app: 'surface', sessionId, surfaceId }, size)
   }
 
   /** Closes the window of a surface (the surface stays). False when it had none. */
@@ -357,12 +442,14 @@ export class DesktopService implements DesktopStates {
    * Starts a code review of `root` against `baseRef`: the review session first (its agent works in `root`), then the
    * Code Review window that owns it. Closing the window deletes the session and its comments.
    */
-  async openReview(desktopId: Id, root: VPath, baseRef: string = 'HEAD', agentId?: Id, selectedPath?: string): Promise<AppWindowState> {
+  async openReview(desktopId: Id, root: VPath, baseRef: string = 'HEAD', agentId?: Id, selectedPath?: string, openedBy: OpenedBy = 'user'): Promise<AppWindowState> {
     const desktop = this.record(desktopId)
     if (!isSafeRef(baseRef)) throw new AppError(`Not a valid git ref: ${baseRef}`)
     const session = await this.deps.chats.create(desktopId, agentId ?? desktop.agentId ?? undefined, root, 'review')
     try {
-      return this.openWindow({ desktopId, app: 'code-review', sessionId: session.id, path: root, baseRef, selectedPath })
+      const input: OpenWindowInput = { desktopId, app: 'code-review', sessionId: session.id, path: root, baseRef, selectedPath }
+      // The agent's review_open checked "Agent may open apps" first; its window opens behind, like every agent window.
+      return openedBy === 'agent' ? this.placeOutputWindow(input) : this.openWindow(input)
     } catch (error) {
       await this.deps.chats.remove(session.id).catch(() => {})
       throw error

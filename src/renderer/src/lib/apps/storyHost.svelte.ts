@@ -68,6 +68,7 @@ export class StoryHost implements DesktopHost {
     const window = await this.openApp({ app: 'agent-manager' })
     this.updateView(window.id, { app: 'agent-manager', tab, ...(chatId === undefined ? {} : { chatId }) })
   }
+  showToolTarget = async (): Promise<void> => {}
   chatProgress = (): string | null => null
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)

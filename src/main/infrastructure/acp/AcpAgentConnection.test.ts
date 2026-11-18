@@ -169,11 +169,11 @@ describe('AcpAgentConnection tool gate', () => {
   }
 
   it('answers fs/write_text_file with a JSON-RPC error carrying the message when the gate refuses', async () => {
-    const gate = refusing('fs.write', 'The Code app is closed on this desktop. Call desktop_open_app with app "code" to open it.')
+    const gate = refusing('fs.write', 'Writing files is blocked by the permission policy in Control Center.')
     start(allow, gate)
     await connection!.initialize()
     const { acpSessionId } = await connection!.newSession(workspace)
-    await expect(connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).rejects.toThrow(/The Code app is closed/)
+    await expect(connection!.prompt(acpSessionId, [{ kind: 'text', text: 'go' }])).rejects.toThrow(/Writing files is blocked/)
     await expect(readFile(join(workspace, 'fake-agent-output.txt'))).rejects.toThrow()
     expect(gate.seen).toEqual(['fake-session:fs.write:true'])
   })

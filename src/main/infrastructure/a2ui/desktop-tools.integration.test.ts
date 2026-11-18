@@ -61,7 +61,7 @@ describe('agentxp MCP server <-> bridge: desktop tools', () => {
     await connect('3')
     expect(client.getServerCapabilities()?.tools?.listChanged).toBe(true)
     expect(client.getServerVersion()?.name).toBe('agentxp')
-    expect(await names(client)).toEqual(['a2ui_catalog', 'a2ui_render', 'a2ui_delete_surface', 'desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app', 'chats_list', 'chat_read', 'chat_open'])
+    expect(await names(client)).toEqual(['a2ui_catalog', 'a2ui_render', 'a2ui_delete_surface', 'desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'chats_list', 'chat_read', 'chat_open'])
     host.groups = ['shell', 'terminal']
     expect(await names(client)).toContain('terminal_run')
     expect(await names(client)).not.toContain('browser_navigate')
@@ -69,7 +69,7 @@ describe('agentxp MCP server <-> bridge: desktop tools', () => {
     expect(open.inputSchema).toMatchObject({ type: 'object', properties: { app: { enum: [...AGENT_OPENABLE_APPS] } }, required: ['app'] })
   })
 
-  it('lists the tools of the new app groups only while those apps are open', async () => {
+  it('lists the tools of the other groups only while the host reports them', async () => {
     await connect('3')
     const base = await names(client)
     for (const tool of ['paint_draw', 'wordpad_read', 'notes_add', 'events_query', 'screen_capture', 'recycle_restore']) expect(base).not.toContain(tool)

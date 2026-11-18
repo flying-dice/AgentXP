@@ -1,14 +1,14 @@
 {
   "$schema": "../script.schema.json",
   "name": "desktop",
-  "description": "Desktop tools through the agentxp MCP server: a prompt containing \"closed\" is refused while the Terminal is closed; \"already open\" runs the command in an open Terminal; anything else opens the Terminal first, then runs a command. A prompt containing \"diagram\" opens Agent Diagrams, draws a four-step login flowchart, reads it back and saves it as C:\\Users\\Agent\\Documents\\login-flow.xpdiagram.",
+  "description": "Desktop tools through the agentxp MCP server: a prompt containing \"closed\" runs terminal_run while the Terminal is closed (it works: no app has to be open); \"already open\" runs the command in an open Terminal; anything else opens the Terminal first (desktop_open_app: behind the user's window, taskbar flashing), then runs a command. A prompt containing \"diagram\" opens Agent Diagrams, draws a four-step login flowchart, reads it back and saves it as C:\\Users\\Agent\\Documents\\login-flow.xpdiagram.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
   },
   "rules": [
     {
-      "id": "closed-app",
+      "id": "closed-terminal",
       "match": {
         "contains": "closed"
       },
@@ -18,23 +18,24 @@
           "server": "agentxp",
           "tool": "terminal_run",
           "arguments": {
-            "command": "echo nope"
+            "command": "echo works without a window"
           },
-          "saveAs": "refusal"
+          "saveAs": "ran",
+          "label": "run with the Terminal closed"
         },
         {
           "type": "expect",
-          "from": "refusal.isError",
-          "equals": "true"
+          "from": "ran.isError",
+          "equals": "false"
         },
         {
           "type": "expect",
-          "from": "refusal",
-          "contains": "is closed"
+          "from": "ran",
+          "contains": "works without a window"
         },
         {
           "type": "message",
-          "text": "Refused as expected: {{refusal}}"
+          "text": "Ran with the Terminal closed: {{ran}}"
         }
       ]
     },

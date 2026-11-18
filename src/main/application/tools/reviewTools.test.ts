@@ -82,7 +82,7 @@ beforeEach(async () => {
   tools = new DesktopToolService({
     states: desktops,
     gate: gateway,
-    handlers: { ...createShellTools({ desktops, paths: new ToolPaths(f.vfs, sessions), ask: async () => true }), ...createReviewTools({ reviews }) } as never
+    handlers: { ...createShellTools({ desktops, paths: new ToolPaths(f.vfs, sessions) }), ...createReviewTools({ reviews }) } as never
   })
   const chat = await desktops.newChat(desktopId, undefined, 'E:\\')
   chatId = chat.view.app === 'chat' ? chat.view.sessionId : 0

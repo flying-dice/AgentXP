@@ -195,8 +195,8 @@
   async function handle(method: string, params: unknown): Promise<unknown> {
     if (method === 'activity') {
       const p = (params ?? {}) as { label?: string; detail?: string; reading?: boolean; read?: boolean; box?: { x: number; y: number; width: number; height: number } }
-      // The first action of a turn brings the window to the front: the user sees what the agent does without hunting for it.
-      if (activity === null) void host.focusWindow(win.id)
+      // The agent's actions never move the operator's view (docs/AGENT_PRESENCE.md): the window stays where it is; the
+      // yellow bar shows the step to whoever looks, and the chat row's Show in Browser brings it forward.
       stopped = false
       clearTimeout(stoppedTimer)
       activity = p.label || 'working'

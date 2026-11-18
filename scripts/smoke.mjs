@@ -36,9 +36,7 @@ try {
       })
       const desktop = await api.launcher.create({ title: 'Smoke desktop', folderIds: [folder.id] })
       const session = await api.sessions.create(desktop.id, agent.id, 'E:\\')
-      // The fake agent writes a file and runs a command: tools follow apps, so open Code and Terminal first.
-      await api.desktop.openWindow({ desktopId: desktop.id, app: 'code' })
-      await api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
+      // The fake agent writes a file and runs a command: no app needs to be open, only the permission to run commands.
       const policy = await api.desktop.policy()
       await api.desktop.setPolicy({ ...policy, groups: { ...policy.groups, terminal: 'allow' } })
       const turn = api.sessions.prompt({ sessionId: session.id, text: 'Write the output file', attachments: [] })

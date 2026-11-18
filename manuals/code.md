@@ -53,7 +53,7 @@ The pane is at the left. It has three tabs.
 
 - **Projects** – Shows the tree of each project folder (plugged in). A colored mark shows the git status of a file. The buttons above the tree work on the row that you select. **New chat here** starts a chat that works in the selected project or folder. **Remove from desktop** takes the selected project off the desktop; its folder stays on your disk. It is dimmed unless you select a project.
 - **Files** – Lists the open files, then the files that git or the agent changed.
-- **Search** – Finds text in the files of a project (find in files). Type the text and press Enter, or click **Search**. **Match case** finds only the same upper and lower case. **Regular expression** reads the text as a pattern. **Files to include** limits the search to some files, for example `*.ts, *.svelte`, `*.{ts,tsx}`, or `src/**/*.ts` (a name with a slash matches the path below **Look in**). **Look in** is the project or folder to search. The results show each file in bold with its number of matches, and below it each matching line with its line number and the match marked. Click a line: the file opens at that line, and the line is marked. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB. When the agent searches, its search shows here too, with the agent icon before the result line, and the Management pane opens if there is room.
+- **Search** – Finds text in the files of a project (find in files). Type the text and press Enter, or click **Search**. **Match case** finds only the same upper and lower case. **Regular expression** reads the text as a pattern. **Files to include** limits the search to some files, for example `*.ts, *.svelte`, `*.{ts,tsx}`, or `src/**/*.ts` (a name with a slash matches the path below **Look in**). **Look in** is the project or folder to search. The results show each file in bold with its number of matches, and below it each matching line with its line number and the match marked. Click a line: the file opens at that line, and the line is marked. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB. The searches of the agent do not show here. To see one, click **Show in Code** under its step in the chat.
 
 ### The Logs and Others Pane
 
@@ -192,7 +192,7 @@ Each Code window has a chat pane at its right edge. The pane starts closed, as a
 | Files to include | Searches only the files whose name matches, for example `*.ts, *.svelte`. Empty searches all files. | `code-search-include` |
 | Look in | The project or folder to search. You can type a folder, for example `E:\src`. | `code-search-look-in` |
 | Search | Runs the search. Dimmed while the box is empty. | `code-search-run` |
-| Search result line | How many matches in how many files, "No results.", or why the search failed. The agent icon shows when the agent ran the search. | `code-search-summary` |
+| Search result line | How many matches in how many files, "No results.", or why the search failed. | `code-search-summary` |
 | Search results | The matching files and lines. | `code-search-results` |
 | Result file | A file with matches, its folder, and its number of matches. Click it to open the file at the first match. | `code-search-file` |
 | Result line | A matching line: its number and its text, with the match marked. Click it to open the file at that line. | `code-search-result` |
@@ -257,29 +257,29 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 ### What the Agent Can Do
 
-The agent uses the tools below when Code is open. The permission **Code** in **Control Center** controls them.
+The agent uses the tools below to show you a file, some lines, or a change. The permission **Code** in **Control Center** controls them. If Code is closed, it opens behind the window that you use and its taskbar button flashes. An open Code window stays where it is.
 
 | Tool | What it does |
 |---|---|
-| `code_open` | Opens a file in Code, optionally at a line. |
-| `code_reveal` | Scrolls to a range of lines and selects them, so that you see what the agent means. |
-| `code_show_diff` | Shows the change that the agent made to a file in the changes list. |
+| `code_open` | Shows you a file in Code, optionally at a line. |
+| `code_reveal` | Scrolls to a range of lines and selects them, to show you what the agent means. |
+| `code_show_diff` | Shows you the change that the agent made to a file in the changes list. |
 
-The agent reads and searches files with the tools below when Code or Explorer is open. The permission **Read files** controls them. Code opens when it is closed, so that you see what the agent reads.
-
-| Tool | What it does |
-|---|---|
-| `code_read` | Reads a file, or some of its lines, with line numbers. Code opens the file. When the agent reads some of the lines, Code scrolls to them and marks them. A very long line is cut at 2000 characters, and a big file is read in parts. |
-| `code_search` | Finds text in files (find in files), with the same options as the **Search** tab. The search and its results show in the **Search** tab. |
-
-The agent edits files with the tools below when Code or Notepad is open. The permission **Write files** controls them: set to Ask, each edit asks you first.
+The agent reads and searches files with the tools below. Code does not need to be open, and these tools open nothing. The permission **Read files** controls them.
 
 | Tool | What it does |
 |---|---|
-| `code_edit` | Replaces some exact text in a file with new text. Code opens the file at the changed lines and selects the change in the **Changes** tab. It keeps Windows line endings. It does not change a binary file or a file that is not UTF-8 text, because that would damage its other characters. |
-| `code_write` | Makes a new file, or writes all the text of a file again. Code opens the file and selects the change. |
+| `code_read` | Reads a file, or some of its lines, with line numbers. A very long line is cut at 2000 characters, and a big file is read in parts. |
+| `code_search` | Finds text in files (find in files), with the same options as the **Search** tab. The agent gets the matches. The **Search** tab shows only your own searches. |
 
-The agent is told to use these tools, and not its own built-in tools, so that its work shows on the desktop.
+The agent edits files with the tools below. Code does not need to be open, and these tools open nothing. The permission **Write files** controls them. If it is set to Ask, each edit asks you first.
+
+| Tool | What it does |
+|---|---|
+| `code_edit` | Replaces some exact text in a file with new text. The change appears in the **Changes** tab. If Code shows this file, Code reloads it and marks the changed lines. It keeps Windows line endings. It does not change a binary file or a file that is not UTF-8 text, because that would damage its other characters. |
+| `code_write` | Makes a new file, or writes all the text of a file again. The change appears in the **Changes** tab. |
+
+To see a step of the agent in Code, click **Show in Code** under the step in the chat. Code opens at the file and marks the lines that the agent read, or the first match of a search. Click **Show diff** under an edit to open Code on that change.
 
 ## 5 - Common Tasks
 
@@ -322,7 +322,7 @@ To find text in the files of a project, follow the steps below:
 3. Press Enter. The results show below.
 4. Click a line of the results. The file opens at that line.
 
-To see what the agent searched for, open the **Search** tab. The search of the agent is there, with the agent icon.
+To see what the agent searched for, read its step in the chat. Click **Show in Code** under the step to open the first match.
 
 ### Save a file
 

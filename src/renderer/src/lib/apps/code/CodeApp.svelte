@@ -1105,7 +1105,7 @@
             </div>
           {/each}
         </div>
-        <div class="view" data-testid="code-editor" data-path={active} bind:this={host_el} onfocusin={() => (codeFocused = true)} onfocusout={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && (codeFocused = false)}>
+        <div class="view" data-testid="code-editor" data-path={active} data-highlight={revealed ? `${revealed[0]}-${revealed[1]}` : null} bind:this={host_el} onfocusin={() => (codeFocused = true)} onfocusout={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && (codeFocused = false)}>
           {#if active === null}
             <div class="hint" data-testid="code-hint">Open a file from the tree to view it here.</div>
           {:else if files[active]?.error}

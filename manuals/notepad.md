@@ -118,7 +118,7 @@ The agent uses the tools below when a Notepad window is open. The permission **N
 
 | Tool | What it does |
 |---|---|
-| `notepad_open` | Shows a file in a Notepad window. It opens a window when none is open. |
+| `notepad_open` | Opens a file in a Notepad window for you, behind the window that you use. Its taskbar button flashes. A Notepad that shows the file already stays where it is. The control **Agent may open apps** applies. |
 | `notepad_read` | Reads the saved text of the file that Notepad shows. |
 
 ## 5 - Common Tasks

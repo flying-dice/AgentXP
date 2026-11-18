@@ -1,19 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { DESKTOP_INSTRUCTIONS, PREFER_DESKTOP_INSTRUCTIONS, TOOL_DEFS, desktopBriefing, desktopInstructions, desktopSystemPrompt, hostShellInstructions } from './catalog'
+import { DESKTOP_INSTRUCTIONS, TOOL_DEFS, WORK_QUIETLY_INSTRUCTIONS, desktopBriefing, desktopInstructions, desktopSystemPrompt, hostShellInstructions } from './catalog'
 
 describe('desktopInstructions', () => {
-  it('starts with which tools to prefer, then the shell, then the desktop', () => {
+  it('starts with how to work, then the shell, then the desktop', () => {
     const text = desktopInstructions('darwin')
-    expect(text.startsWith(PREFER_DESKTOP_INSTRUCTIONS)).toBe(true)
+    expect(text.startsWith(WORK_QUIETLY_INSTRUCTIONS)).toBe(true)
     expect(text.indexOf('macOS /bin/sh')).toBeLessThan(text.indexOf(DESKTOP_INSTRUCTIONS))
     expect(text.endsWith(DESKTOP_INSTRUCTIONS)).toBe(true)
   })
 
-  it('steers built-in tools to the desktop apps without forbidding them', () => {
-    for (const steer of ['terminal_run', 'fs_find', 'code_search', 'code_read', 'code_edit', 'code_write', 'code_open', 'browser_navigate', 'scheduler_*', 'Bash or shell sub-agent']) {
-      expect(PREFER_DESKTOP_INSTRUCTIONS).toContain(steer)
-    }
-    expect(PREFER_DESKTOP_INSTRUCTIONS).toContain('Use a built-in tool only when no AgentXP tool can do the job')
+  it('tells the agent to work quietly: built-in and AgentXP tools are both fine and nothing opens', () => {
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('Work quietly')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('Your own built-in tools and the AgentXP tools are both fine')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('neither opens anything on the user\'s screen')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('Output apps open behind the user\'s window')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('never just so the user can watch you work')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('Bash or shell sub-agent')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('scheduler_*')
+    // The old rule is gone: no tool is preferred "because the user watches", and tools no longer follow apps.
+    expect(WORK_QUIETLY_INSTRUCTIONS).not.toContain('Prefer AgentXP tools')
+    expect(DESKTOP_INSTRUCTIONS).not.toContain('Tools follow the apps that are open')
   })
 
   it('names the real shell of the host', () => {
@@ -24,18 +30,32 @@ describe('desktopInstructions', () => {
     expect(hostShellInstructions('win32')).not.toContain('schtasks')
   })
 
-  it('gives the system prompt the whole text under a heading, and the briefing the tool preference and the shell', () => {
+  it('gives the system prompt the whole text under a heading, and the briefing the work rules and the shell', () => {
     expect(desktopSystemPrompt('darwin')).toBe(`# Working on the AgentXP desktop\n\n${desktopInstructions('darwin')}`)
     const briefing = desktopBriefing('linux')
     expect(briefing.startsWith('## Working on the AgentXP desktop\n')).toBe(true)
-    expect(briefing).toContain(PREFER_DESKTOP_INSTRUCTIONS)
+    expect(briefing).toContain(WORK_QUIETLY_INSTRUCTIONS)
     expect(briefing).toContain('Linux /bin/sh')
     expect(briefing).not.toContain(DESKTOP_INSTRUCTIONS) // the long part stays in the system prompt and the MCP instructions
   })
 
   it('every tool the instructions point at exists', () => {
-    const named = PREFER_DESKTOP_INSTRUCTIONS.match(/\b(?:terminal|fs|code|browser)_[a-z_]+/g) ?? []
+    const named = WORK_QUIETLY_INSTRUCTIONS.match(/\b(?:terminal|fs|code|browser|a2ui)_[a-z_]+/g) ?? []
     expect(named.length).toBeGreaterThan(0)
-    for (const name of named) expect(Object.keys(TOOL_DEFS)).toContain(name)
+    for (const name of named) expect(Object.keys(TOOL_DEFS).concat(['a2ui_render'])).toContain(name)
+  })
+})
+
+describe('tool descriptions', () => {
+  it('never promise that a Work tool opens a window', () => {
+    for (const tool of ['fs_list', 'fs_find', 'code_read', 'code_search', 'code_edit', 'code_write', 'terminal_run'] as const) {
+      const text = TOOL_DEFS[tool].description
+      expect(text, tool).toContain('Opens nothing')
+      expect(text, tool).not.toMatch(/opens when needed|Needs the Explorer|Code shows|appears in/i)
+    }
+  })
+
+  it('has no tool that moves the focus', () => {
+    expect(Object.keys(TOOL_DEFS)).not.toContain('desktop_focus_app')
   })
 })

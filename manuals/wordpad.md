@@ -119,8 +119,8 @@ The agent uses the tools below when WordPad is open. The permission **WordPad** 
 
 | Tool | What it does |
 |---|---|
-| `wordpad_open` | Shows a markdown file in a WordPad window. |
-| `wordpad_read` | Reads the text that WordPad shows, also changes that you did not save. |
+| `wordpad_open` | Shows a markdown file in a WordPad window. An open WordPad stays where it is and does not take the focus. If no WordPad is open, one opens behind the window that you use. |
+| `wordpad_read` | Reads the text that WordPad shows, also changes that you did not save. It needs an open WordPad window. |
 | `wordpad_write` | Writes a markdown file and shows it in WordPad. The change appears in the Changes list. |
 
 ## 5 - Common Tasks

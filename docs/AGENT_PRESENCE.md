@@ -1,6 +1,6 @@
 # Agent presence: Work, Show, Output
 
-Status: accepted, being built (PR 0 of 5: this note and the `agent-presence-ux` skill). It replaces "tools follow
+Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill) and PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions) have landed. It replaces "tools follow
 apps" (`DESKTOP_DESIGN.md` sections 1 and 3) as the rule for how agents appear on the desktop. The UX rules for
 contributors are in `.claude/skills/agent-presence-ux/SKILL.md`; this note is the design and the build plan.
 

@@ -49,8 +49,8 @@ describe('Team room: what a member does in the background shows on the desktop',
   })
 
   it('the member\'s Session pane, opened before the next turn, follows that turn live', async () => {
-    // The Terminal the member opened comes to the front while the focus stays in the room (UX-55): put it away.
-    await ctx.desktop.minimizeWindow('terminal')
+    // The Terminal the member opened went behind the room, unfocused (docs/AGENT_PRESENCE.md): nothing to put away.
+    await see.attribute(room(), 'data-focused', 'true')
     await room().getByTestId('team-chat-member-session').click()
     const pane = room().getByTestId('team-chat-session-panel')
     await see.visible(pane)

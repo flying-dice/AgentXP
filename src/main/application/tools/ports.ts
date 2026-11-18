@@ -85,10 +85,14 @@ export interface CommandRunner {
   run(command: string, options: { cwd: string; timeoutMs: number; onOutput?: (text: string) => void }): Promise<CommandResult>
 }
 
-/** What the tools need from `DesktopService`. */
+/**
+ * What the tools need from `DesktopService`. There is no `openWindow` or `focusWindow` here on purpose: Work tools never
+ * open or focus a window, and every window an agent opens goes through `openOutputWindow` (behind the focused window,
+ * flashing, after "Agent may open apps"). See `.claude/skills/agent-presence-ux/SKILL.md`.
+ */
 export type DesktopOps = Pick<
   DesktopService,
-  'state' | 'openWindow' | 'openReview' | 'closeWindow' | 'focusWindow' | 'updateView' | 'policy'
+  'state' | 'openOutputWindow' | 'assertMayOpen' | 'openReview' | 'closeWindow' | 'updateView' | 'policy'
 >
 
 /** Asks an app window in the renderer (see `AppRequestBroker`). Rejects with a readable message on timeout. */

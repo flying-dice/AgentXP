@@ -130,18 +130,18 @@ Folder fixture "project": a small Git project `login-app` with `src/auth/redirec
 - Success check: `redirect.ts` on disk equals the agent's version; the Recycle Bin is empty.
 - Min 4 (open bin, select, Restore, close). Budget 12 / 16.
 
-### J10 Agents work quietly [planned]
+### J10 Agents work quietly
 
-Run after PR 1 of `docs/AGENT_PRESENCE.md`. The old T10.1 and T10.2 (closing the Terminal, reading chips that follow open apps) are retired with "tools follow apps".
+Needs PR 1 of `docs/AGENT_PRESENCE.md` (headless Work). The old T10.1 and T10.2 (closing the Terminal, reading chips that follow open apps) are retired with "tools follow apps".
 
-**T10.1 - What did it just do? [planned]**
-- Scenario: "The assistant just finished a job. Without asking it, find out which file it looked at first, and show me the part of that file it read."
-- Start state: scripted agent `quiet-work` finished a turn that read `src/auth/redirect.ts` lines 10-24, searched, edited `src/auth/login.ts` and ran a command; no Code, Explorer or Terminal window open.
-- Success check: Code is open with `src/auth/redirect.ts` active and lines 10-24 highlighted; the panelist names `redirect.ts` (answer check).
-- Answer: `src/auth/redirect.ts`, and Code shows the lines it read.
-- Min 2 (open the chat from the top bar or InfoPanels, **Show in Code** on the first read row). Budget 6 / 8.
+**T10.1 - What did it just do?**
+- Scenario: "The assistant just finished a job. Without asking it, tell me which files it changed, and show me what it changed in the redirect file."
+- Start state: preset `changes-to-review` (scripted agent `two-edits` changed `src/auth/login.ts` and `src/auth/redirect.ts`); no Code, Explorer or Terminal window open, because agent work opens nothing.
+- Success check: a Code window shows `src/auth/redirect.ts`; the panelist names both files (answer check).
+- Answer: the files the assistant changed (login.ts and redirect.ts), and Code shows the change in redirect.ts.
+- Min 2 (open the chat from the top bar or the activity feed, **Show diff** on the redirect row). Budget 6 / 8.
 
-**T10.2 - Stop it running commands [planned]**
+**T10.2 - Stop it running commands**
 - Scenario: "You want to be sure that, from now on, the assistant cannot run commands. Make that true, and show me how you can tell."
 - Start state: a connected desktop, all permissions default, no Terminal window open.
 - Success check: the Terminal permission is Deny; the panelist names the Control Center row or the top-bar chip as the proof (answer check).

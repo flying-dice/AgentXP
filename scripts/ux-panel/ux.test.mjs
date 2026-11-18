@@ -155,18 +155,18 @@ describe('H-02 T08.2 file name and count words', () => {
   })
 })
 
-describe('H-03 T10.1 routes', () => {
-  const closed = { desktop: { windows: [], tools: ['fs.read'] }, policy: { groups: { terminal: 'ask' } } }
-  it('passes when Terminal is closed, with the Workspace bar wording', async () => {
-    expect((await run('T10.1', fakeCtx(closed), 'The Workspace bar, Agent can use, has no Terminal')).status).toBe('PASS')
+describe('H-03 T10.1 and T10.2 (J10 agents work quietly)', () => {
+  it('T10.1 passes when Code shows redirect.ts and the answer names both files', async () => {
+    const ctx = fakeCtx({ desktop: { windows: [win('code', { activePath: 'W:/src/auth/redirect.ts' })], tools: [] } })
+    expect((await run('T10.1', ctx, 'It changed login.ts and redirect.ts')).status).toBe('PASS')
   })
-  it('passes when the Terminal policy is Deny although a Terminal window is open', async () => {
-    const ctx = fakeCtx({ desktop: { windows: [win('terminal')], tools: ['terminal'] }, policy: { groups: { terminal: 'deny' } } })
-    expect((await run('T10.1', ctx, 'I set it to deny')).status).toBe('PASS')
+  it('T10.1 fails without a Code window on redirect.ts', async () => {
+    const ctx = fakeCtx({ desktop: { windows: [], tools: [] } })
+    expect((await run('T10.1', ctx, 'login.ts and redirect.ts')).status).toBe('FAIL')
   })
-  it('fails when the command line is still usable', async () => {
-    const ctx = fakeCtx({ desktop: { windows: [win('terminal')], tools: ['terminal'] }, policy: { groups: { terminal: 'allow' } } })
-    expect((await run('T10.1', ctx)).status).toBe('FAIL')
+  it('T10.2 passes on Deny and fails otherwise', async () => {
+    expect((await run('T10.2', fakeCtx({ desktop: { windows: [], tools: [] }, policy: { groups: { terminal: 'deny' } } }), 'I set it to deny in Control Center')).status).toBe('PASS')
+    expect((await run('T10.2', fakeCtx({ desktop: { windows: [], tools: [] }, policy: { groups: { terminal: 'ask' } } }), 'I set it to deny')).status).toBe('FAIL')
   })
   it('tasks.md has T10.1 budget 6 / 8, T10.2 Min 4, T22.1 Min 2, T06.1 Min 1 (J10 rewritten by docs/AGENT_PRESENCE.md)', () => {
     const t = loadTasks()
@@ -1169,12 +1169,11 @@ describe('H-82 answer tasks need an answer; keyword checks', () => {
     expect((await run('T02.2', ctx, 'it was refused')).status).toBe('FAIL')
     expect((await run('T02.2', ctx, 'I chose a different name')).status).toBe('FAIL')
   })
-  it('T10.1 keywords include Deny and never', async () => {
-    const desktop = { windows: [], tools: ['fs.read'] }
-    const ctx = fakeCtx({ desktop, policy: { groups: { terminal: 'deny' } } })
-    expect((await run('T10.1', ctx, 'Terminal is set to Deny in Permissions')).status).toBe('PASS')
-    expect((await run('T10.1', ctx, 'it will never run commands')).status).toBe('PASS')
-    expect((await run('T10.1', ctx, 'I just looked')).status).toBe('FAIL')
+  it('T10.2 keywords include Deny and the chip', async () => {
+    const ctx = fakeCtx({ desktop: { windows: [], tools: [] }, policy: { groups: { terminal: 'deny' } } })
+    expect((await run('T10.2', ctx, 'Terminal is set to Deny in Permissions')).status).toBe('PASS')
+    expect((await run('T10.2', ctx, 'the chip in the top bar says so')).status).toBe('PASS')
+    expect((await run('T10.2', ctx, 'I just looked')).status).toBe('FAIL')
   })
 })
 

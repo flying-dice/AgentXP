@@ -34,7 +34,7 @@ Task Scheduler works like the Scheduled Tasks folder of Windows XP, with more ch
 
 AgentXP runs the tasks while it runs. The Task Scheduler window does not need to be open. If AgentXP is closed at the time that a task is due, the task does not start. Look at **Run missed tasks** in chapter 3 for the one exception.
 
-**Note:** A task starts a new chat in the project, or sends the prompt to a chat that you choose. The chat has no window of its own. The agent can use the tools of the apps that are open on the desktop. If the agent asks for permission, the question waits in the Action Center until you answer.
+**Note:** A task starts a new chat in the project, or sends the prompt to a chat that you choose. The chat has no window of its own. The agent can use the tools that the permissions in Control Center allow. No app has to be open. If the agent asks for permission, the question waits in the Action Center until you answer.
 
 ## 2 - Open It
 
@@ -458,7 +458,7 @@ To delete a task, select it, click **Delete**, and click **Yes**. AgentXP delete
 | The run failed with "The chat is busy with another message." | The task sends its prompt to a chat that works on another answer. Wait for the chat to finish, or select **Start a new chat for every run**. |
 | The run failed with "The chat of this task no longer exists." | Someone deleted the chat. Open **Properties...**, click the **Actions** tab, and select another chat. |
 | The run failed with a message about a skill, an MCP server, a profile, or a team. | The choice in the action names something that was removed or switched off. Open **Properties...**, click the **Actions** tab, edit the action, and change **Skills and tools**. |
-| The agent cannot use a tool. | The agent uses the tools of the apps that are open on the desktop. Open the app, or change the permissions in **[Control Center](control-centre.md)**. |
+| The agent cannot use a tool. | The permissions in **[Control Center](control-centre.md)** decide the tools. Change the setting of the tool. The Browser, Agent Paint, Agent Diagrams, and Code Review tools also need an open window of their app. |
 | A monthly task did not start in February. | The month does not have the day that you selected. Select **Last** to start on the last day of each month. |
 | A task started one hour later than set. | The clocks went forward. A time that does not exist moves to the first time after the gap. |
 

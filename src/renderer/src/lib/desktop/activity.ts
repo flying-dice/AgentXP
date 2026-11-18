@@ -2,8 +2,9 @@
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
 import { liveToolTitle } from '../app/session/toolTitles'
+import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from '../app/session/toolShowTarget'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
-import { ALWAYS_ON_TOOL_GROUPS, APP_DISPLAY_NAMES, TOOL_GROUP_PROVIDERS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
+import { TOOL_GROUPS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
 export interface ChatActivityInput {
   sessionId: number
@@ -11,6 +12,8 @@ export interface ChatActivityInput {
   status: SessionStatus
   /** ISO date; newest chats come first in the feed. */
   updatedAt?: string
+  /** The chat's working directory (relative paths of its steps are relative to it). */
+  cwd?: string | null
   toolCalls: Record<string, AguiToolCallState>
 }
 
@@ -47,13 +50,37 @@ export function workingText(chats: readonly ChatActivityInput[], waiting?: numbe
   return first.status === 'connecting' ? 'Starting the agent...' : first.title || 'Thinking'
 }
 
+/** The chat the "Working: ..." link opens: the focused chat when it works, else the newest chat that works; null when none does. */
+export function workingChatId(chats: readonly ChatActivityInput[], focusedId: number | null = null): number | null {
+  const busy = (c: ChatActivityInput): boolean => c.status === 'working' || c.status === 'awaiting_permission'
+  const focused = focusedId === null ? undefined : chats.find((c) => c.sessionId === focusedId && busy(c))
+  if (focused) return focused.sessionId
+  return [...chats].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')).find(busy)?.sessionId ?? null
+}
+
 export interface FeedItem {
+  /** `<sessionId>:<toolCallId>` of the latest call the line stands for. */
   key: string
+  sessionId: number
+  toolCallId: string
+  /** The latest call the line stands for (its **Show in...** target is derived from it). */
+  call: AguiToolCallState
+  /** The chat's working directory. */
+  cwd: string | null
   chatTitle: string
   title: string
   status: ToolCallStatus
   /** How many equal calls in a row this line stands for ("Read the page (24 times)"); 1 for a single call. */
   count: number
+}
+
+/** The place a feed line shows when clicked (Code, Terminal, Browser), or null: the line then opens its chat. */
+export const feedTarget = (item: FeedItem): ToolShowTarget | null => toolShowTargets({ ...item.call, result: null, cwd: item.cwd })[0] ?? null
+
+/** What a click on a feed line does, for its tooltip: "Show in Code", ..., or "Open the chat". */
+export const feedAction = (item: FeedItem): string => {
+  const target = feedTarget(item)
+  return target ? SHOW_LABELS[target.kind] : 'Open the chat'
 }
 
 /** "Read the page (24 times)" for a repeated call, the title alone for a single one. */
@@ -68,16 +95,19 @@ export function recentToolCalls(chats: readonly ChatActivityInput[], limit = 8):
     for (let i = entries.length - 1; i >= 0; i--) {
       const last = items[items.length - 1]
       if (last && last.chatTitle === chat.title && last.title === entries[i][1].title) last.count++
-      else items.push({ key: `${chat.sessionId}:${entries[i][0]}`, chatTitle: chat.title, title: entries[i][1].title, status: entries[i][1].status, count: 1 })
+      else items.push({ key: `${chat.sessionId}:${entries[i][0]}`, sessionId: chat.sessionId, toolCallId: entries[i][0], call: entries[i][1], cwd: chat.cwd ?? null, chatTitle: chat.title, title: entries[i][1].title, status: entries[i][1].status, count: 1 })
     }
   }
   return items.slice(0, limit)
 }
 
-/** The three chips the bar always shows, so "Run commands: Ask" can be read without guessing. */
-const HEADLINE: Exclude<ToolGroup, 'shell'>[] = ['fs.read', 'terminal', 'browser']
+/**
+ * The chips the bar always shows: the Work the agent does most (read, write, run) and the Browser. What the agent may use
+ * is the Control Center policy alone; no app has to be open (`docs/AGENT_PRESENCE.md`).
+ */
+const HEADLINE: Exclude<ToolGroup, 'shell'>[] = ['fs.read', 'fs.write', 'terminal', 'browser']
 
-/** `on`: the agent just uses it; `asks`: it must ask first; `off`: not available (denied, or no app that gives it is open). */
+/** `on`: the agent just uses it; `asks`: it must ask first; `off`: denied in Control Center. */
 export type ChipState = 'on' | 'asks' | 'off'
 
 /** The word after the colon of a chip: the setting of Control Center, or Ask while "Ask before every action" is on. Off is never shown: a denied tool reads Deny. */
@@ -85,17 +115,12 @@ export type ChipWord = 'Allow' | 'Ask' | 'Deny'
 
 export interface ToolChip {
   group: Exclude<ToolGroup, 'shell'>
-  /**
-   * The chip text: `<Name>: <Allow|Ask first|Deny>`. "(now)" follows Ask first while "Ask before every action" is on and the saved
-   * setting is another (UX-173). That no app that provides the tool is open is not in the text; the tooltip says it (UX-200).
-   */
+  /** The chip text: `<Name>: <Allow|Ask first|Deny>`. "(now)" follows Ask first while "Ask before every action" is on and the saved setting is another (UX-173). */
   label: string
   /** The name before the colon. */
   name: string
   word: ChipWord
   state: ChipState
-  /** No app that provides the tool is open, so the agent cannot use it yet (never true for Deny: it reads Deny). */
-  closed: boolean
   /** The tooltip: "Open Control Center to change this.", then the setting and why the chip is as it is. */
   tooltip: string
 }
@@ -111,66 +136,40 @@ export const chipAriaLabel = (chip: Pick<ToolChip, 'label' | 'word'>): string =>
 
 const DECISION_WORD: Record<PolicyDecision, ChipWord> = { allow: 'Allow', ask: 'Ask', deny: 'Deny' }
 
-/** The apps a person opens to get a tool back, long form: "Explorer, Code or Code Review". */
-function providerText(group: Exclude<ToolGroup, 'shell'>): string {
-  const apps = TOOL_GROUP_PROVIDERS[group].map((k) => APP_DISPLAY_NAMES[k])
-  return apps.length <= 1 ? (apps[0] ?? 'app') : `${apps.slice(0, -1).join(', ')} or ${apps[apps.length - 1]}`
-}
+/** The groups that are never a chip: the shell has no setting, and the apps that manage AgentXP ask on their own. */
+const NOT_CHIPS: readonly ToolGroup[] = ['shell', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help']
 
 /**
  * The tooltip of a chip; every chip has one. It names the setting and, when the chip differs from it, the reason; a chip that
  * reads Ask adds "Asks you first." on a second line (UX-178):
  * "Open Control Center to change this. Saved setting: Allow. You are in control, so the agent asks first." and "Asks you first."
  */
-export function chipTooltip(group: Exclude<ToolGroup, 'shell'>, name: string, word: ChipWord, setting: ChipWord, closed: boolean): string {
+export function chipTooltip(name: string, word: ChipWord, setting: ChipWord): string {
   const parts = word === setting ? [`${name} is set to ${setting}.`] : [`Saved setting: ${setting}.`, 'You are in control, so the agent asks first.']
   if (word === 'Deny') parts.push('The agent cannot use it.')
-  else if (closed) parts.push(`The agent cannot use it yet because no ${providerText(group)} is open.`)
   const lines = [`${OPEN_CONTROL_CENTRE} ${parts.join(' ')}`]
   if (word === 'Ask') lines.push(ASKS_YOU_FIRST)
   return lines.join('\n')
 }
 
 /**
- * Chips for the top bar, one pattern `<Name>: <Allow|Ask|Deny>`. Read files, Run commands and Browser are always there;
- * the other tool groups appear while their app is open (`tools` is what the open apps give the agent). The word is the setting
- * (or Ask while `askFirst`, "Ask before every action"); "Off" is not a word of the bar. A chip that reads Ask only because of the box
- * reads "Ask (now)", because the saved setting is another. While no app that provides the tool is open the chip adds
- * "(Terminal is closed)" and a distinct style, so the setting and the reason can be read together.
+ * Chips for the top bar, one pattern `<Name>: <Allow|Ask|Deny>`, from the Control Center policy (not from the open apps):
+ * Read files, Write files, Run commands and Browser always, then every other tool that is set to Deny, so a blocked
+ * tool is never hidden. The word is the setting (or Ask while `askFirst`, "Ask before every action"); "Off" is not a word
+ * of the bar. A chip that reads Ask only because of the box reads "Ask first (now)", because the saved setting is another.
  */
-export function toolChips(tools: readonly ToolGroup[], policy: ToolPolicyDto | null = null, askFirst = false): ToolChip[] {
-  const open = new Set(tools)
+export function toolChips(policy: ToolPolicyDto | null = null, askFirst = false): ToolChip[] {
   const chip = (group: Exclude<ToolGroup, 'shell'>, name: string): ToolChip => {
     const decision = policy?.groups[group] ?? 'allow'
     const setting = DECISION_WORD[decision]
     const word: ChipWord = decision === 'deny' ? 'Deny' : askFirst || decision === 'ask' ? 'Ask' : 'Allow'
-    const closed = word !== 'Deny' && !open.has(group)
-    const state: ChipState = word === 'Deny' || closed ? 'off' : word === 'Ask' ? 'asks' : 'on'
+    const state: ChipState = word === 'Deny' ? 'off' : word === 'Ask' ? 'asks' : 'on'
     const label = `${name}: ${word === 'Ask' ? 'Ask first' : word}${word !== setting && word === 'Ask' ? ' (now)' : ''}`
-    return { group, name, word, state, closed, label, tooltip: chipTooltip(group, name, word, setting, closed) }
+    return { group, name, word, state, label, tooltip: chipTooltip(name, word, setting) }
   }
   const headline = new Set<ToolGroup>(HEADLINE)
-  // Always-on groups (Kanban boards, Task Scheduler, Control Center...) need no window, so they are not chips of the bar.
-  const others = tools.filter((g): g is Exclude<ToolGroup, 'shell'> => !ALWAYS_ON_TOOL_GROUPS.includes(g) && !headline.has(g))
-  return [...HEADLINE, ...others].map((g) => chip(g, PERMISSION_NAMES[g]))
-}
-
-/** The apps that are not open for the chips that need one and are not denied: "Terminal and Browser" (the take-over text). */
-export function closedAppNames(chips: readonly ToolChip[]): string[] {
-  const names = chips.filter((c) => c.closed).flatMap((c) => TOOL_GROUP_PROVIDERS[c.group].length === 1 ? [APP_DISPLAY_NAMES[TOOL_GROUP_PROVIDERS[c.group][0]]] : [])
-  return [...new Set(names)]
-}
-
-/** A group the agent has with no app open: not something an open app gave it. */
-const alwaysOn = (g: ToolGroup): boolean => ALWAYS_ON_TOOL_GROUPS.includes(g)
-
-/** True when no app and no chat is open; an open chat is something the agent can use. */
-export const noToolsOpen = (tools: readonly ToolGroup[], chatsOpen = 0): boolean => chatsOpen === 0 && tools.every(alwaysOn)
-
-/** The line next to the chips: "nothing yet" when no app and no chat is open, "this chat" when only chats are, otherwise none. */
-export function toolsLine(tools: readonly ToolGroup[], chatsOpen: number): string | null {
-  if (noToolsOpen(tools, chatsOpen)) return 'Open an app (Terminal, Browser, Code) to give the agent a tool.'
-  return tools.every(alwaysOn) ? 'The agent can use this chat.' : null
+  const denied = TOOL_GROUPS.filter((g): g is Exclude<ToolGroup, 'shell'> => !NOT_CHIPS.includes(g) && !headline.has(g) && policy?.groups[g as Exclude<ToolGroup, 'shell'>] === 'deny')
+  return [...HEADLINE, ...denied].map((g) => chip(g, PERMISSION_NAMES[g]))
 }
 
 /** What the status area of the top bar shows; `data-state` of the bar and its dot. */
@@ -188,8 +187,6 @@ export interface BarStatusInput {
   waiting?: number
   /** A short line that replaces "Idle" for a few seconds ("Resumed. Nothing was stopped."). */
   notice?: string | null
-  /** Apps whose tool is not open (`closedAppNames` of the chips); named in the take-over line. */
-  closedApps?: readonly string[]
 }
 
 /** What taking control does to every tool, in one sentence (the bar, the Activity tile and the Take over tooltip use it). */
@@ -197,14 +194,8 @@ const CONTROL_SENTENCE = 'You are in control. All tools ask first until you clic
 /** The bar adds that the mode is not kept (UX-199: the box, the bar and the Permissions page say the same thing). */
 const NOT_KEPT = 'This is not saved.'
 export const PAUSED_TEXT = 'Paused: no agent will act until you resume.'
-/**
- * The take-over line. It agrees with the chips: every tool asks first, and when some tools need an app that is not open
- * it says which ("Tools that need an app ask first. Terminal and Browser are not open.").
- */
-export function controlText(closedApps: readonly string[] = []): string {
-  const closed = closedApps.length === 0 ? '' : ` ${closedApps.length === 1 ? closedApps[0] : `${closedApps.slice(0, -1).join(', ')} and ${closedApps[closedApps.length - 1]}`} ${closedApps.length === 1 ? 'is' : 'are'} not open.`
-  return `${CONTROL_SENTENCE}${closed} ${NOT_KEPT}`
-}
+/** The take-over line. It agrees with the chips: every tool asks first. */
+export const controlText = (): string => `${CONTROL_SENTENCE} ${NOT_KEPT}`
 /** The first line of the Activity taskpane while the user is in control and a step was running (UX-178: no "Stopped:"). */
 export const CONTROL_NOTE = `You are in control. The agent asks first. ${NOT_KEPT}`
 /**
@@ -238,9 +229,9 @@ export const RESUME_BUTTON = 'Resume agents and continue'
  * Idle (or the short notice that stands in for Idle). Paused wins over control, control over the rest, so what the
  * agent may do is never hidden by what it is doing.
  */
-export function barStatus({ paused, userInControl, working, waiting = 0, waitingFor = null, notice = null, closedApps = [] }: BarStatusInput): { state: BarState; text: string } {
+export function barStatus({ paused, userInControl, working, waiting = 0, waitingFor = null, notice = null }: BarStatusInput): { state: BarState; text: string } {
   if (paused) return { state: 'paused', text: PAUSED_TEXT }
-  if (userInControl) return { state: 'control', text: controlText(closedApps) }
+  if (userInControl) return { state: 'control', text: controlText() }
   if (waiting > 0) return { state: 'waiting', text: waitingFor ?? waitingText(waiting) }
   if (working) return { state: 'working', text: `Working: ${working}` }
   return { state: 'idle', text: notice ?? 'Idle' }

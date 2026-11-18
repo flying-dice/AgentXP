@@ -7,8 +7,9 @@ const INDEX = 'export const answer = 42\nexport const needle = 1\nexport const o
 
 /**
  * Finding and searching files in the apps: the Code app's Search tab (find in files) and Explorer's Search Companion
- * (find files by name and contents), by hand and by the agent (search.json: fs_find, code_search, code_read, code_edit,
- * code_write), so the agent's work shows on the desktop.
+ * (find files by name and contents) by hand; and the agent's Work (search.json: fs_find, code_search, code_read,
+ * code_edit, code_write), which opens nothing: its chat rows say where to look (Show in Code, Show diff), and a file
+ * that Code already shows reloads in place (docs/AGENT_PRESENCE.md).
  */
 describe('search in Code and Explorer', () => {
   let ctx: ScriptedDesktop
@@ -25,10 +26,7 @@ describe('search in Code and Explorer', () => {
     })
     ctx = await startScriptedDesktop({ script: 'search', title: 'Search desktop', workspace })
   })
-  /**
-   * The agent's windows come to the front while the focus stays in the chat you typed in (UX-55), so they can cover its
-   * Send button: type and press Enter, as a person does, instead of clicking it.
-   */
+  /** Type and press Enter, as a person does. */
   async function sendToChat(text: string): Promise<void> {
     const chat = ctx.desktop.chat()
     await chat.composer.fill(text)
@@ -130,23 +128,26 @@ describe('search in Code and Explorer', () => {
     await see.eventually(async () => expect(await code.searchQuery.evaluate((el) => el === document.activeElement)).toBe(true))
   })
 
-  it('the agent finds files: Explorer\'s Search Companion shows its criteria and results', async () => {
-    // The script opens an Explorer of its own (desktop_open_app); with none open there is exactly one to look at.
-    if ((await ctx.desktop.window('explorer').getAttribute('data-focused')) !== 'true') await ctx.desktop.taskbarItem('explorer').click()
-    await see.attribute(ctx.desktop.window('explorer'), 'data-focused', 'true')
-    await ctx.desktop.closeWindow('explorer')
+  it('the agent finds files: nothing opens and nothing takes the focus', async () => {
+    for (const app of ['explorer', 'code'] as const) {
+      // Bring it forward first (a window behind another cannot be clicked), then close it.
+      if ((await ctx.desktop.window(app).getAttribute('data-focused')) !== 'true') await ctx.desktop.taskbarItem(app).click()
+      await see.attribute(ctx.desktop.window(app), 'data-focused', 'true')
+      await shot(ctx.desktopPage, `search-debug-${app}`)
+      await ctx.desktop.closeWindow(app)
+    }
     await see.count(ctx.desktop.windows('explorer'), 0)
+    await see.count(ctx.desktop.windows('code'), 0)
     await ctx.desktop.openApp('chat')
     const chat = ctx.desktop.chat()
     await chat.send('please find files with the needle')
     await see.visible(chat.agentMessage('Found the files'))
-    const explorer = ctx.desktop.explorer()
-    await see.visible(explorer.searchPane)
-    await see.eventually(async () => expect(await explorer.searchName.inputValue()).toBe('*.ts'))
-    expect(await explorer.searchContaining.inputValue()).toBe('needle')
-    await see.text(explorer.searchStatus, '1 file found')
-    await see.visible(explorer.searchResult('index.ts'))
-    await shot(ctx.desktopPage, 'search-07-agent-fs-find')
+    await see.text(chat.agentMessage('Found the files'), 'index.ts')
+    await see.count(ctx.desktop.windows('explorer'), 0)
+    await see.count(ctx.desktop.windows('code'), 0)
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.visible(chat.toolCalls.filter({ hasText: 'Find files' }))
+    await shot(ctx.desktopPage, 'search-07-agent-fs-find-nothing-opens')
   })
 
   it('the agent was told how to work on the desktop: in its system prompt and in the briefing of the first prompt', async () => {
@@ -156,38 +157,55 @@ describe('search in Code and Explorer', () => {
     expect(opened, 'session/new sent to the agent').toBeDefined()
     const params = (JSON.parse(opened!.payload) as { params: { _meta?: { systemPrompt?: { append?: string } } } }).params
     expect(params._meta?.systemPrompt?.append).toContain('# Working on the AgentXP desktop')
-    expect(params._meta?.systemPrompt?.append).toContain('Prefer AgentXP tools')
+    expect(params._meta?.systemPrompt?.append).toContain('Work quietly')
     const prompt = acp.find((e) => e.direction === 'out' && e.name.startsWith('session/prompt'))
     expect(prompt?.payload).toContain('agentxp://briefing')
-    expect(prompt?.payload).toContain('Prefer AgentXP tools')
+    expect(prompt?.payload).toContain('Work quietly')
   })
 
-  it('the agent searches and reads code: the Search tab shows its search and Code opens the lines it read', async () => {
+  it('the agent searches and reads code: nothing opens; Show in Code on the read step opens the lines it read', async () => {
     const chat = ctx.desktop.chat()
     await sendToChat('search code for the needle')
     await see.visible(chat.agentMessage('Searched and read'))
+    await see.count(ctx.desktop.windows('code'), 0)
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await shot(ctx.desktopPage, 'search-08-agent-code-search-read-nothing-opens')
+    const read = chat.toolCalls.filter({ hasText: 'Read a file' })
+    await see.visible(read.getByTestId('tool-call-show-code'))
+    await see.visible(chat.toolCalls.filter({ hasText: 'Search the files' }).getByTestId('tool-call-show-code'))
+    await read.getByTestId('tool-call-show-code').click()
     const code = ctx.desktop.code()
-    await see.attribute(code.searchTab, 'aria-selected', 'true')
-    expect(await code.searchQuery.inputValue()).toBe('needle')
-    await see.text(code.searchSummary, '2 results in 2 files')
+    await see.attribute(ctx.desktop.window('code'), 'data-focused', 'true') // the operator asked: Code comes forward
     await see.attribute(code.editor, 'data-path', /src\\index\.ts$/)
-    await shot(ctx.desktopPage, 'search-08-agent-code-search-read')
+    await see.attribute(code.editor, 'data-highlight', '2-3')
+    await shot(ctx.desktopPage, 'search-13-show-in-code-lines')
   })
 
-  it('the agent edits code: the file changes on disk, Code shows it, and both changes are listed', async () => {
+  it('the agent edits the file Code shows: it reloads in place, no tab switch, no focus; Show diff opens the change', async () => {
     await allowFileWrites(ctx.desktopPage)
+    const code = ctx.desktop.code()
+    await see.attribute(code.editor, 'data-path', /src\\index\.ts$/)
+    await ctx.desktop.taskbarItem('chat').click()
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
     const chat = ctx.desktop.chat()
     await sendToChat('edit code please')
     await see.visible(chat.agentMessage('Edited'))
     await see.eventually(async () => expect(await readFile(join(workspace.path, 'src/index.ts'), 'utf8')).toBe(INDEX.replace('needle = 1', 'needle = 2')))
     expect(await readFile(join(workspace.path, 'src/fresh.ts'), 'utf8')).toBe('export const fresh = true\n')
-    const code = ctx.desktop.code()
-    await see.visible(code.tab('fresh.ts'))
+    // Live where open: the active file reloads with the change; the new file is not opened, the focus stays in the chat.
+    await see.text(code.editor, 'needle = 2')
+    await see.attribute(code.editor, 'data-path', /src\\index\.ts$/)
+    await see.count(code.tab('fresh.ts'), 0)
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.attribute(ctx.desktop.window('code'), 'data-focused', 'false')
+    await shot(ctx.desktopPage, 'search-09-agent-edits-in-place')
+    await chat.toolCalls.filter({ hasText: 'Write a file' }).getByTestId('tool-call-show-diff').click()
+    await see.attribute(ctx.desktop.window('code'), 'data-focused', 'true')
     await see.attribute(code.editor, 'data-path', /src\\fresh\.ts$/)
     await code.showChanges()
     await see.visible(code.changes.filter({ hasText: 'index.ts' }))
     await see.visible(code.changes.filter({ hasText: 'fresh.ts' }))
-    await shot(ctx.desktopPage, 'search-09-agent-edits')
+    await shot(ctx.desktopPage, 'search-14-show-diff')
   })
 
   it('the agent cannot damage a file that is not UTF-8: code_edit refuses it and the bytes stay', async () => {
@@ -211,9 +229,9 @@ describe('search in Code and Explorer', () => {
     await setWindowSize(ctx.app, ctx.desktopPage, 900, 600)
     await ctx.desktop.focusWindow('code')
     await shot(ctx.desktopPage, 'search-05-code-small')
-    // In a small screen Code covers Explorer: minimise it, then Explorer comes forward.
+    // In a small screen Code covers Explorer: minimise it, then open Explorer (the agent never opened one).
     await ctx.desktop.minimizeWindow('code')
-    await ctx.desktop.focusWindow('explorer')
+    await ctx.desktop.openApp('explorer')
     await ctx.desktop.explorer().find({ name: '*.md' })
     await see.visible(ctx.desktop.explorer().searchResult('README.md'))
     await shot(ctx.desktopPage, 'search-06-explorer-small')

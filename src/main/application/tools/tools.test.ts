@@ -1,5 +1,3 @@
-/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
-const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -197,6 +195,7 @@ beforeEach(async () => {
     asked.push(title)
     return allowAsk
   }
+  desktops.attachOpenApproval(ask)
   const gateway = new ToolGateway({
     desktops,
     broker: { prompt: async () => ({ outcome: 'selected', optionId: 'allow' }), observe: () => () => {} },
@@ -228,9 +227,9 @@ beforeEach(async () => {
     },
     gate: gateway,
     handlers: {
-      ...createShellTools({ desktops, paths, ask }),
-      ...createChatTools({ desktops, sessions: f.repos.sessions, transcripts: f.repos.transcripts, ask }),
-      ...createFsTools({ desktops, vfs: f.vfs, search: new FileSearch(f.vfs), paths }),
+      ...createShellTools({ desktops, paths }),
+      ...createChatTools({ desktops, sessions: f.repos.sessions, transcripts: f.repos.transcripts }),
+      ...createFsTools({ vfs: f.vfs, search: new FileSearch(f.vfs), paths }),
       ...createNotepadTools({ desktops, vfs: f.vfs, paths }),
       ...createCodeTools({
         desktops,
@@ -285,7 +284,7 @@ beforeEach(async () => {
 describe('tool catalog', () => {
   it('groups the tools as documented', () => {
     const byGroup = (g: ToolGroup): string[] => specsForGroups([g]).map((s) => s.name)
-    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'desktop_focus_app', 'chats_list', 'chat_read', 'chat_open'])
+    expect(byGroup('shell')).toEqual(['desktop_state', 'drives_list', 'desktop_open_app', 'review_open', 'desktop_close_app', 'chats_list', 'chat_read', 'chat_open'])
     expect(byGroup('fs.read')).toEqual(['fs_list', 'fs_find', 'code_read', 'code_search'])
     expect(byGroup('fs.write')).toEqual(['code_edit', 'code_write'])
     expect(byGroup('notepad')).toEqual(['notepad_open', 'notepad_read'])
@@ -336,25 +335,31 @@ describe('tool catalog', () => {
     expect(byGroup('settings')).toHaveLength(18)
     expect(byGroup('taskmgr')).toEqual(['taskmgr_chats', 'taskmgr_processes', 'taskmgr_terminals', 'taskmgr_open_chat', 'taskmgr_end_task', 'taskmgr_end_process'])
     expect(byGroup('help')).toEqual(['help_search', 'help_read'])
-    expect(TOOL_SPECS).toHaveLength(130)
+    expect(TOOL_SPECS).toHaveLength(129)
   })
 
-  it('lists the enabled groups of the desktop, falling back to shell for an unknown desktop', () => {
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'board', ...ADMIN_GROUPS])
+  it('lists every group but those of closed output apps, falling back to shell for an unknown desktop', () => {
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'fs.read', 'fs.write', 'notepad', 'code', 'terminal', 'wordpad', 'notes', 'events', 'snip', 'recycle', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'])
     desktops.openWindow({ desktopId, app: 'browser' })
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'browser', 'board', ...ADMIN_GROUPS])
+    expect(tools.enabledGroups(desktopId)).toContain('browser')
     expect(tools.enabledGroups(999)).toEqual(['shell'])
   })
 })
 
 describe('DesktopToolService gating', () => {
-  it('returns an MCP error result with the open-the-app message when the app is closed', async () => {
+  it('returns an MCP error result with the open-the-app message when an output app is closed', async () => {
     const res = await run('browser_read')
     expect(res.isError).toBe(true)
     expect(textOf(res)).toBe(closedAppMessage('browser'))
     expect(driver.calls).toEqual([])
-    expect(textOf(await run('terminal_run', { command: 'ls' }))).toBe(closedAppMessage('terminal'))
-    expect(textOf(await run('fs_list'))).toBe(closedAppMessage('fs.read'))
+  })
+
+  it('does not gate Work tools on open apps: reading, listing and running work with nothing open', async () => {
+    for (const w of desktops.state(desktopId).windows) desktops.closeWindow(w.id)
+    expect((await run('fs_list')).isError).toBeUndefined()
+    expect((await run('code_read', { path: 'README.md' })).isError).toBeUndefined()
+    expect(textOf(await run('terminal_run', { command: 'ls' }))).toContain('[exit code 0]')
+    expect(desktops.state(desktopId).windows).toEqual([])
   })
 
   it('rejects unknown tools and bad arguments', async () => {
@@ -376,14 +381,31 @@ describe('DesktopToolService gating', () => {
 })
 
 describe('shell tools', () => {
-  it('opens an app, which enables its tools, and closes it again', async () => {
-    const opened = await run('desktop_open_app', { app: 'terminal' })
-    expect(textOf(opened)).toMatch(/Opened Terminal window/)
-    expect(desktops.state(desktopId).tools).toContain('terminal')
-    expect(desktops.state(desktopId).windows.find((w) => w.app === 'terminal')?.openedBy).toBe('agent')
-    expect(textOf(await run('desktop_close_app', { app: 'terminal' }))).toMatch(/Closed/)
-    expect(desktops.state(desktopId).tools).not.toContain('terminal')
-    expect((await run('desktop_close_app', { app: 'terminal' })).isError).toBe(true)
+  it('opens an output app behind the focused window, which enables its tools, and closes it again', async () => {
+    const chat = desktops.state(desktopId).focusedWindowId
+    const opened = await run('desktop_open_app', { app: 'browser' })
+    expect(textOf(opened)).toMatch(/Opened Browser window \d+ .*behind the user's window/)
+    const state = desktops.state(desktopId)
+    const browser = state.windows.find((w) => w.app === 'browser')!
+    expect(state.tools).toContain('browser')
+    expect(browser).toMatchObject({ openedBy: 'agent', attention: true })
+    expect(state.focusedWindowId).toBe(chat) // the focus stays with the user's chat
+    expect(state.windows.at(-1)?.id).toBe(chat) // and the chat stays on top: the Browser is right behind it
+    expect(textOf(await run('desktop_close_app', { app: 'browser' }))).toMatch(/Closed/)
+    expect(desktops.state(desktopId).tools).not.toContain('browser')
+    expect((await run('desktop_close_app', { app: 'browser' })).isError).toBe(true)
+  })
+
+  it('reuses an open singleton where it is, without raising or focusing it', async () => {
+    const code = desktops.openWindow({ desktopId, app: 'code' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    const order = desktops.state(desktopId).windows.map((w) => w.id)
+    await run('desktop_open_app', { app: 'code' })
+    const state = desktops.state(desktopId)
+    expect(state.windows.map((w) => w.id)).toEqual(order)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.find((w) => w.id === code.id)?.attention).toBe(true)
   })
 
   it('follows the "Agent may open apps" policy', async () => {
@@ -420,17 +442,18 @@ describe('shell tools', () => {
     expect(textOf(await run('desktop_close_app', { window: chat.id }))).toMatch(/belongs to the user/)
   })
 
-  it('focuses a window by app', async () => {
-    const a = desktops.openWindow({ desktopId, app: 'notepad' })
-    desktops.openWindow({ desktopId, app: 'terminal' })
-    await run('desktop_focus_app', { app: 'notepad' })
-    expect(desktops.state(desktopId).focusedWindowId).toBe(a.id)
+  it('has no tool that moves the focus', async () => {
+    expect(textOf(await run('desktop_focus_app', { app: 'notepad' }))).toMatch(/Unknown tool/)
   })
 })
 
-describe('fs tools', () => {
-  beforeEach(() => void desktops.openWindow({ desktopId, app: 'explorer' }))
+/** What the operator sees: the windows (their order, state and views) and the focus. Work tools must leave it alone. */
+const screen = (): string => {
+  const state = desktops.state(desktopId)
+  return JSON.stringify({ windows: state.windows, focus: state.focusedWindowId })
+}
 
+describe('fs tools', () => {
   it('lists a directory (default: the chat\'s working directory) and finds files by name or glob; VPaths come back', async () => {
     expect(textOf(await run('fs_list'))).toBe('E:\\docs\\\nE:\\src\\\nE:\\notes.md\nE:\\other.txt\nE:\\README.md') // .git and node_modules hidden
     expect(textOf(await run('fs_list', { path: 'src' }))).toBe('E:\\src\\app.test.ts\nE:\\src\\app.ts')
@@ -442,19 +465,22 @@ describe('fs tools', () => {
     expect(textOf(await run('fs_find', { pattern: 'app', limit: 1 }))).toBe('E:\\src\\app.test.ts\n(more not shown: raise limit or narrow the search)')
   })
 
-  it('fs_find finds by a word in the file and shows the search in Explorer\'s Search Companion', async () => {
+  it('fs_find finds by a word in the file and opens nothing', async () => {
+    const before = screen()
     expect(textOf(await run('fs_find', { containing: 'TEXT OF' }))).toBe('E:\\notes.md\nE:\\other.txt\nE:\\README.md')
     expect(textOf(await run('fs_find', { pattern: '*.md', containing: 'notes', path: 'E:\\' }))).toBe('E:\\notes.md')
-    const [explorer] = desktops.windowsOf(desktopId, 'explorer')
-    expect(explorer!.view).toMatchObject({ app: 'explorer', path: 'E:\\', selected: [], search: { name: '*.md', containing: 'notes', root: 'E:\\', by: 'agent' } })
+    expect(screen()).toBe(before)
     expect(textOf(await run('fs_find', {}))).toMatch(/Give pattern/)
   })
 
-  it('fs_find opens an Explorer for its results when only Code is open', async () => {
-    for (const w of desktops.windowsOf(desktopId, 'explorer')) desktops.closeWindow(w.id)
-    desktops.openWindow({ desktopId, app: 'code' })
+  it('fs_find leaves an open Explorer as it is (no search, no folder change, no focus)', async () => {
+    desktops.openWindow({ desktopId, app: 'explorer', path: 'C:\\' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    const before = screen()
     await run('fs_find', { pattern: 'readme' })
-    expect(desktops.windowsOf(desktopId, 'explorer').map((w) => w.view)).toMatchObject([{ search: { name: 'readme', containing: '', root: 'E:\\' } }])
+    await run('fs_list', { path: 'src' })
+    expect(screen()).toBe(before)
   })
 
   it('lists C: (seeded) and refuses paths outside the drives and missing folders', async () => {
@@ -498,11 +524,15 @@ describe('fs tools', () => {
 })
 
 describe('notepad and code tools', () => {
-  it('notepad_open shows the file (one window per file) and notepad_read reads it', async () => {
+  it('notepad_open opens the file behind the user\'s window (one window per file) and notepad_read reads it', async () => {
     desktops.openWindow({ desktopId, app: 'notepad' })
-    await run('notepad_open', { path: 'notes.md' })
-    await run('notepad_open', { path: 'E:\\notes.md' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    expect(textOf(await run('notepad_open', { path: 'notes.md' }))).toMatch(/behind the user's window/)
+    expect(textOf(await run('notepad_open', { path: 'E:\\notes.md' }))).toMatch(/already shows/)
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id)
     const pads = desktops.windowsOf(desktopId, 'notepad')
+    expect(pads[1]).toMatchObject({ openedBy: 'agent', attention: true })
     expect(pads.map((w) => w.view)).toMatchObject([{ path: null }, { path: 'E:\\notes.md' }])
     expect(textOf(await run('notepad_read'))).toBe('text of notes.md')
     desktops.updateView(pads[1]!.id, { app: 'notepad', path: 'E:\\notes.md', dirty: true, caretLine: 1 })
@@ -513,6 +543,8 @@ describe('notepad and code tools', () => {
 
   it('code_open and code_reveal drive the singleton Code window as the agent', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
     await run('code_open', { path: 'src/app.ts', line: 40 })
     let view = desktops.windowsOf(desktopId, 'code')[0]!.view
     expect(view).toMatchObject({ app: 'code', tabs: ['E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', selection: { startLine: 40, endLine: 40 }, visibleLines: [35, 65] })
@@ -520,7 +552,23 @@ describe('notepad and code tools', () => {
     view = desktops.windowsOf(desktopId, 'code')[0]!.view
     expect(view).toMatchObject({ tabs: ['E:\\src\\app.ts', 'E:\\README.md'], activePath: 'E:\\README.md', selection: { startLine: 3, endLine: 9 } })
     expect(desktops.windowsOf(desktopId, 'code')).toHaveLength(1)
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id) // shown behind; the focus stays where the user is
     expect(textOf(await run('code_open', { path: 'G:\\x.ts' }))).toMatch(/Drive G: is not plugged in/)
+  })
+
+  it('code_open opens a Code window behind the user\'s window and follows "Agent may open apps"', async () => {
+    const chat = desktops.state(desktopId).focusedWindowId
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
+    expect(textOf(await run('code_open', { path: 'README.md' }))).toMatch(/blocked by the permission policy/)
+    expect(desktops.windowsOf(desktopId, 'code')).toEqual([])
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'ask' })
+    allowAsk = false
+    expect(textOf(await run('code_open', { path: 'README.md' }))).toMatch(/declined to open the Code app/)
+    allowAsk = true
+    expect((await run('code_open', { path: 'README.md' })).isError).toBeUndefined()
+    expect(asked).toEqual(['Open the Code app', 'Open the Code app'])
+    expect(desktops.windowsOf(desktopId, 'code')[0]).toMatchObject({ openedBy: 'agent', attention: true })
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat)
   })
 
   it('code_show_diff selects the recorded change', async () => {
@@ -532,40 +580,50 @@ describe('notepad and code tools', () => {
     expect(desktops.windowsOf(desktopId, 'code')[0]?.view).toMatchObject({ selectedChangeId: 11 })
   })
 
-  it('code_read returns numbered lines and shows the file in Code, highlighting a range it read', async () => {
+  it('code_read returns numbered lines and leaves an open Code window as it is', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
     await writeFile(join(f.projectDir, 'src/long.ts'), Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n') + '\n')
+    const before = screen()
     expect(textOf(await run('code_read', { path: 'src/long.ts' }))).toBe(`E:\\src\\long.ts, lines 1-10 of 10:\n${Array.from({ length: 10 }, (_, i) => `${i + 1}\tline ${i + 1}`).join('\n')}`)
-    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\long.ts', visibleLines: null, selection: null })
     expect(textOf(await run('code_read', { path: 'src/long.ts', startLine: 3, endLine: 4 }))).toBe('E:\\src\\long.ts, lines 3-4 of 10:\n3\tline 3\n4\tline 4\n(6 more lines: read from startLine 5)')
-    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ visibleLines: [3, 4], selection: null })
+    expect(screen()).toBe(before)
     expect(textOf(await run('code_read', { path: 'src/long.ts', startLine: 20 }))).toMatch(/has 10 lines/)
     expect(textOf(await run('code_read', { path: 'missing.ts' }))).toMatch(/ENOENT|no such/i)
   })
 
-  it('code_read is a fs.read tool: it works with only Explorer open and opens Code', async () => {
-    desktops.openWindow({ desktopId, app: 'explorer' })
+  it('Work tools open nothing and leave the focus alone: code_read, code_search, code_edit, code_write with no Code window', async () => {
+    const before = screen()
     expect((await run('code_read', { path: 'README.md' })).isError).toBeUndefined()
-    expect(desktops.windowsOf(desktopId, 'code')).toHaveLength(1)
+    expect((await run('code_search', { query: 'text of' })).isError).toBeUndefined()
+    expect((await run('code_write', { path: 'src/fresh.ts', text: 'export const fresh = 1\n' })).isError).toBeUndefined()
+    expect((await run('code_edit', { path: 'src/fresh.ts', oldText: '= 1', newText: '= 2' })).isError).toBeUndefined()
+    expect(screen()).toBe(before)
+    expect(desktops.windowsOf(desktopId, 'code')).toEqual([])
   })
 
-  it('code_search lists path:line:column matches and shows the search in the Search tab of Code', async () => {
+  it('code_search lists path:line:column matches and does not touch the Code window', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
+    const before = screen()
     const text = textOf(await run('code_search', { query: 'TEXT OF', include: '*.md' }))
-    expect(text).toBe('2 results in 2 files (searched 3 files below E:\\; the Search tab of Code shows them).\nE:\\notes.md:1:1: text of notes.md\nE:\\README.md:1:1: text of README.md')
-    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ search: { query: 'TEXT OF', root: 'E:\\', regex: false, matchCase: false, include: '*.md', by: 'agent' } })
+    expect(text).toBe('2 results in 2 files (searched 3 files below E:\\).\nE:\\notes.md:1:1: text of notes.md\nE:\\README.md:1:1: text of README.md')
+    expect(screen()).toBe(before)
     expect(textOf(await run('code_search', { query: 'nothing like this' }))).toMatch(/^No results\./)
     expect(textOf(await run('code_search', { query: '(', regex: true }))).toMatch(/Not a valid regular expression/)
   })
 
-  it('code_edit replaces exact text once, records the change and shows it in Code', async () => {
-    desktops.openWindow({ desktopId, app: 'code' })
+  it('code_edit replaces exact text once, records the change and highlights it where Code already shows the file', async () => {
+    const code = desktops.openWindow({ desktopId, app: 'code' })
+    desktops.updateView(code.id, { app: 'code', tabs: ['E:\\README.md', 'E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', visibleLines: null, selection: null, selectedChangeId: null })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
     await writeFile(join(f.projectDir, 'src/app.ts'), 'one\ntwo\nthree\ntwo\n')
     expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'missing', newText: 'x' }))).toMatch(/was not found/)
     expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'two', newText: 'x' }))).toMatch(/occurs 2 times/)
-    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'three', newText: 'THREE\nAND A HALF' }))).toBe('Edited E:\\src\\app.ts (lines 3-4); Code shows the change.')
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'three', newText: 'THREE\nAND A HALF' }))).toBe('Edited E:\\src\\app.ts (lines 3-4).')
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\ntwo\nTHREE\nAND A HALF\ntwo\n')
-    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\app.ts', visibleLines: [3, 4], selectedChangeId: changes[0]!.id })
+    // Same tabs, same active file, no change selected, focus where it was: only the changed lines are highlighted.
+    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ tabs: ['E:\\README.md', 'E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', visibleLines: [3, 4], selectedChangeId: null })
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id)
     expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'two', newText: '2', replaceAll: true }))).toMatch(/2 places/)
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\n2\nTHREE\nAND A HALF\n2\n')
   })
@@ -573,7 +631,7 @@ describe('notepad and code tools', () => {
   it('code_edit edits several lines of a file with Windows line endings, copied from code_read (which shows no \\r)', async () => {
     desktops.openWindow({ desktopId, app: 'code' })
     await writeFile(join(f.projectDir, 'src/win.ts'), 'one\r\ntwo\r\nthree\r\n')
-    expect(textOf(await run('code_edit', { path: 'src/win.ts', oldText: 'one\ntwo', newText: 'ONE\nTWO\nTWO AND A HALF' }))).toBe('Edited E:\\src\\win.ts (lines 1-3); Code shows the change.')
+    expect(textOf(await run('code_edit', { path: 'src/win.ts', oldText: 'one\ntwo', newText: 'ONE\nTWO\nTWO AND A HALF' }))).toBe('Edited E:\\src\\win.ts (lines 1-3).')
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\win.ts')).toBe('ONE\r\nTWO\r\nTWO AND A HALF\r\nthree\r\n')
   })
 
@@ -597,12 +655,13 @@ describe('notepad and code tools', () => {
     expect(text).toMatch(/more lines: read from startLine \d+/)
   })
 
-  it('code_write creates or replaces a file and shows it in Code', async () => {
-    desktops.openWindow({ desktopId, app: 'code' })
-    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'a\nb\n' }))).toBe('Created E:\\src\\new.ts (2 lines); Code shows it.')
-    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'c' }))).toBe('Replaced E:\\src\\new.ts (1 lines); Code shows it.')
+  it('code_write creates or replaces a file and does not switch the Code window to it', async () => {
+    desktops.openWindow({ desktopId, app: 'code', path: 'E:\\README.md' })
+    const before = screen()
+    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'a\nb\n' }))).toBe('Created E:\\src\\new.ts (2 lines).')
+    expect(textOf(await run('code_write', { path: 'src/new.ts', text: 'c' }))).toBe('Replaced E:\\src\\new.ts (1 lines).')
     expect(await f.vfs.readFile(desktopId, 'E:\\src\\new.ts')).toBe('c')
-    expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ activePath: 'E:\\src\\new.ts', tabs: ['E:\\src\\new.ts'] })
+    expect(screen()).toBe(before)
   })
 
   it('code_edit and code_write follow the "Writing files" permission (fs.write)', async () => {
@@ -661,6 +720,14 @@ describe('terminal tools', () => {
     const res = await run('terminal_run', { command: 'fail' })
     expect(res.isError).toBe(true)
     expect(textOf(res)).toContain('[exit code 2]')
+  })
+
+  it('runs with the Terminal closed and opens nothing', async () => {
+    for (const w of desktops.windowsOf(desktopId, 'terminal')) desktops.closeWindow(w.id)
+    const before = screen()
+    expect(textOf(await run('terminal_run', { command: 'echo hi' }))).toBe('line1\nline2\n[exit code 0]')
+    expect(screen()).toBe(before)
+    expect(recorded).toHaveLength(4)
   })
 
   it('finishes the run when the Terminal window is closed meanwhile, still recording the output for the chat', async () => {
@@ -815,30 +882,23 @@ describe('browser tools', () => {
 const PNG = 'data:image/png;base64,UE5H'
 
 describe('new app groups: gating and listing', () => {
-  it('lists the tools of a group only while its app is open', () => {
+  it('lists the tools of an output app only while its window is open; the others always', () => {
     const listed = (): string[] => specsForGroups(tools.enabledGroups(desktopId)).map((s) => s.name)
     expect(listed()).not.toContain('paint_draw')
+    expect(listed()).toEqual(expect.arrayContaining(['notes_add', 'wordpad_open', 'wordpad_read', 'recycle_list', 'events_query', 'screen_capture']))
     desktops.openWindow({ desktopId, app: 'paint' })
-    desktops.openWindow({ desktopId, app: 'sticky-notes' })
-    expect(listed()).toEqual(expect.arrayContaining(['paint_draw', 'paint_read', 'notes_add']))
-    expect(listed()).not.toContain('wordpad_read')
-    expect(listed()).not.toContain('recycle_list')
+    expect(listed()).toEqual(expect.arrayContaining(['paint_draw', 'paint_read']))
     const paint = desktops.state(desktopId).windows.find((w) => w.app === 'paint')!
     desktops.closeWindow(paint.id)
     expect(listed()).not.toContain('paint_draw')
   })
 
-  it('answers with the open-the-app hint while an app is closed', async () => {
-    for (const [tool, group] of [
-      ['paint_read', 'paint'],
-      ['wordpad_read', 'wordpad'],
-      ['notes_list', 'notes'],
-      ['events_query', 'events'],
-      ['screen_capture', 'snip'],
-      ['recycle_list', 'recycle']
-    ] as const) {
-      expect(textOf(await run(tool))).toBe(closedAppMessage(group))
-    }
+  it('answers with the open-the-app hint while an output app is closed', async () => {
+    expect(textOf(await run('paint_read'))).toBe(closedAppMessage('paint'))
+    expect(textOf(await run('diagram_read'))).toBe(closedAppMessage('diagrams'))
+    expect(textOf(await run('wordpad_read'))).toBe('No WordPad window is open. Call wordpad_open with a file first.')
+    expect((await run('notes_list')).isError).toBeUndefined()
+    expect((await run('events_query', {})).isError).toBeUndefined()
   })
 
   it('asks for WordPad and Recycle Bin by default (policy), allows the rest', async () => {
@@ -976,15 +1036,30 @@ describe('diagram tools', () => {
 })
 
 describe('wordpad tools', () => {
-  it('opens a file in a new or the existing window and updates its view', async () => {
+  it('opens a file in the existing window without focusing or raising it, and updates its view', async () => {
     desktops.openWindow({ desktopId, app: 'wordpad' })
+    const chat = desktops.state(desktopId).windows.find((w) => w.app === 'chat')!
+    desktops.focusWindow(chat.id)
+    const order = desktops.state(desktopId).windows.map((w) => w.id)
     expect(textOf(await run('wordpad_open', { path: 'docs/a.md' }))).toBe('WordPad shows E:\\docs\\a.md.')
     const view = desktops.state(desktopId).windows.find((w) => w.app === 'wordpad')!.view
     expect(view).toMatchObject({ app: 'wordpad', path: 'E:\\docs\\a.md', dirty: false })
     expect(desktops.state(desktopId).windows.filter((w) => w.app === 'wordpad')).toHaveLength(1)
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id)
+    expect(desktops.state(desktopId).windows.map((w) => w.id)).toEqual(order)
     expect(appCalls).toEqual([{ windowId: expect.any(Number), method: 'open', params: { path: 'E:\\docs\\a.md' } }])
     expect((await run('wordpad_open', { path: 'missing.txt' })).isError).toBe(true)
     expect((await run('wordpad_open', { path: '../x.md' })).isError).toBe(true)
+  })
+
+  it('opens WordPad behind the user\'s window when none is open, following "Agent may open apps"', async () => {
+    const chat = desktops.state(desktopId).focusedWindowId
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
+    expect(textOf(await run('wordpad_open', { path: 'docs/a.md' }))).toMatch(/blocked/)
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'allow' })
+    await run('wordpad_open', { path: 'docs/a.md' })
+    expect(desktops.windowsOf(desktopId, 'wordpad')[0]).toMatchObject({ openedBy: 'agent', attention: true, view: { path: 'E:\\docs\\a.md' } })
+    expect(desktops.state(desktopId).focusedWindowId).toBe(chat)
   })
 
   it('reads the text the window shows, unsaved edits included', async () => {
@@ -1159,13 +1234,19 @@ describe('chat tools', () => {
     expect((await run('chat_read', { chat: 99_999 })).isError).toBe(true)
   })
 
-  it('opens a closed chat again in a Chat window, following the open-apps policy', async () => {
+  it('opens a closed chat again in a Chat window behind the user\'s, following the open-apps policy', async () => {
     const id = closedChat('Write the docs')
+    const focused = desktops.state(desktopId).focusedWindowId
     desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
     expect((await run('chat_open', { chat: id })).isError).toBe(true)
-    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'allow' })
+    desktops.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'ask' })
+    allowAsk = false
+    expect(textOf(await run('chat_open', { chat: id }))).toBe('The user declined to open a chat window.')
+    expect(asked).toEqual(['Open a chat window'])
+    allowAsk = true
     expect(textOf(await run('chat_open', { chat: id }))).toMatch(/Opened chat \d+ \("Write the docs"\) in Chat window \d+/)
     expect(desktops.windowsOf(desktopId, 'chat').map((w) => (w.view.app === 'chat' ? w.view.sessionId : 0))).toContain(id)
+    expect(desktops.state(desktopId).focusedWindowId).toBe(focused)
   })
 
   it('does not reach a pane chat that is still in its window', async () => {

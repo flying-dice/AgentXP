@@ -1,4 +1,4 @@
-// J10, J12-J15, J19, J20: tools follow apps, drives, disconnect, many desktops, browser, investigate.
+// J10, J12-J15, J19, J20: agents work quietly, drives, disconnect, many desktops, browser, investigate.
 import { LOGIN_ORIGINAL, REDIRECT_BUG, TEST_PAGE_URL } from '../lib/fixtures.mjs'
 import { all, fail, lastProgress, manual, pass, projectRoot, readText, windowsOf, withAnswer } from './util.mjs'
 
@@ -11,30 +11,25 @@ export const PAGE_HEADING = 'Example Domain'
 export const BLOCKED_PORT_WORDS = ['port', 'blocked', 'address', 'refused', 'not load', 'could not connect', "couldn't connect", "can't connect", 'cannot connect', 'not connect', 'unreachable', 'no network', 'no internet']
 
 export const checks = {
+  // J10 rewritten by docs/AGENT_PRESENCE.md: agents work quietly; the operator finds the work from the chat or the activity feed.
   async 'T10.1'(ctx, { answer }) {
     const state = await ctx.desktopState(ctx.state.desktopId)
     if (!state) return fail('the desktop window is closed')
-    const denied = (await ctx.policy()).groups.terminal === 'deny'
-    const closed = windowsOf(state, 'terminal').length === 0 && !state.tools.includes('terminal')
-    const stateResult = denied ? pass('Terminal policy is Deny (Permissions route)') : closed ? pass('no Terminal window is open and the terminal tool is off (closing route)') : fail('Terminal is still usable: a Terminal window is open or its tool is on, and the policy is not Deny')
+    const code = windowsOf(state, 'code')[0]
+    const active = code?.view?.activePath ?? ''
+    const stateResult = /redirect\.ts$/.test(active) ? pass('Code shows redirect.ts (Show in Code or Show diff from the chat or the activity feed)') : fail(`Code does not show redirect.ts (active: ${active || 'no Code window'})`)
     return withAnswer(stateResult, answer, {
-      keywords: [['chip', 'top bar', 'tools', 'workspace bar', 'agent can use', 'closed', 'deny', 'denied', 'never', 'no terminal']],
-      expect: 'the panelist names the chip list (Workspace bar / Agent can use), the closed Terminal or the Deny policy as the proof'
+      keywords: [['login'], ['redirect']],
+      expect: 'the panelist names login.ts and redirect.ts as the changed files'
     })
   },
 
   async 'T10.2'(ctx, { answer }) {
-    const state = await ctx.desktopState(ctx.state.desktopId)
-    if (!state) return fail('the desktop window is closed')
-    return withAnswer(
-      all([
-        [state.tools.includes('fs.read'), 'read files is on'],
-        [!state.tools.includes('terminal'), 'run commands is off'],
-        [state.tools.includes('browser'), 'browse is on']
-      ]),
-      answer,
-      { expect: 'read files: yes, run commands: no, browse the web: yes' }
-    )
+    const denied = (await ctx.policy()).groups.terminal === 'deny'
+    return withAnswer(denied ? pass('the Terminal permission is Deny') : fail('the Terminal permission is not Deny'), answer, {
+      keywords: [['deny', 'denied', 'chip', 'control center', 'permission', 'top bar', 'agent can use']],
+      expect: 'the panelist names the Deny setting in Control Center or the top-bar chip as the proof'
+    })
   },
 
   async 'T12.1'(ctx) {

@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { see, serveFixtureWeb, startScriptedDesktop, type ScriptedDesktop, type WebServer } from './fixtures'
+import { see, serveFixtureWeb, shot, startScriptedDesktop, type ScriptedDesktop, type WebServer } from './fixtures'
 import { projectRoot } from './fixtures/launch'
 
 /**
@@ -63,6 +63,10 @@ describe('Browser agent: a local chat web app', () => {
     await see.text(chat.agentMessage('DONE'), 'You Second message via submit')
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.count(chat.errors, 0)
+    // The Browser never took the focus for the agent's steps (docs/AGENT_PRESENCE.md): the chat the user typed in keeps it.
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await see.attribute(browser, 'data-focused', 'false')
+    await shot(ctx.desktopPage, 'browser-agent-no-focus-steal')
 
     // The turn ended: the bar says that the agent stopped, for a few seconds, and then goes (UX-214; it does not wait 20 seconds, UX-156).
     await see.text(browser.getByTestId('browser-agent-bar-text'), 'The agent stopped using this page.')

@@ -3,6 +3,7 @@
   import Button from '../../kit/atoms/Button.svelte'
   import ToolStatusIcon from './ToolStatusIcon.svelte'
   import { SHOW_EVENT_LABEL, offersEventLink, type ToolStatusView } from './toolStatus'
+  import type { ToolShowTarget } from './toolShowTarget'
 
   interface Props {
     /** Bold tool name: Read, Edit, Bash... */
@@ -18,13 +19,16 @@
     note?: string
     /** "Show in Event Viewer": opens the viewer on the event of this step; shown under a failed step. */
     onshowevent?: () => void
+    /** "Show in Code", "Show diff", "Show in Terminal", "Show in Browser": where the step can be seen (`toolShowTargets`); shown while it runs and when it is done. */
+    showActions?: readonly { kind: ToolShowTarget['kind']; label: string; run: () => void }[]
     /** The card belongs to an earlier step: a separator line "Earlier step" comes first. */
     earlier?: boolean
     /** The body (result, diff, console). */
     children?: Snippet
   }
 
-  let { name, argument, status, expandable = false, open = false, onopenchange, note, onshowevent, earlier = false, children }: Props = $props()
+  let { name, argument, status, expandable = false, open = false, onopenchange, note, onshowevent, showActions = [], earlier = false, children }: Props = $props()
+  const showsPlace = $derived(showActions.length > 0 && (status.kind === 'done' || status.kind === 'running'))
 </script>
 
 {#if earlier}<div class="earlier" data-testid="tool-call-earlier">Earlier step</div>{/if}
@@ -41,6 +45,9 @@
   {#if note}<div class="note" data-testid="tool-call-note">{note}</div>{/if}
   {#if onshowevent && offersEventLink(status.kind)}
     <div class="note"><button type="button" class="link" data-testid="tool-call-show-event" onclick={onshowevent}>{SHOW_EVENT_LABEL}</button></div>
+  {/if}
+  {#if showsPlace}
+    <div class="note actions">{#each showActions as action, i (action.kind)}{#if i > 0}<span class="sep" aria-hidden="true">|</span>{/if}<button type="button" class="link" data-testid="tool-call-show-{action.kind}" onclick={action.run}>{action.label}</button>{/each}</div>
   {/if}
   {#if expandable && open}<div class="body">{@render children?.()}</div>{/if}
 </div>
@@ -92,6 +99,13 @@
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
+  }
+  .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .sep {
+    color: #8a96a8;
   }
   .earlier {
     display: flex;

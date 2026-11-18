@@ -16,20 +16,21 @@ const path = (what: string) =>
   z.string().min(1).describe(`${what}: a full virtual path such as E:\\src\\index.ts or C:\\Users\\Agent\\notes.md, or relative to your working directory`)
 
 /**
- * Which tool to reach for. Agents bring their own built-in tools (shell, file search, web fetch, sub-agents); those
- * stay available but run out of the user's sight, so the agent is told to do the work in the desktop's apps first.
+ * How to work on the desktop: quietly. The desktop is the operator's environment, not the agent's
+ * (`docs/AGENT_PRESENCE.md`): reads, searches, edits and commands open nothing, and only output apps open windows, behind
+ * the operator's window. The operator follows the work in the chat, the activity feed and the top bar.
  */
-export const PREFER_DESKTOP_INSTRUCTIONS =
-  'Prefer AgentXP tools: the user watches you work on this desktop, so do the work in its apps rather than with your own built-in tools, ' +
-  'which run out of sight. Shell commands: terminal_run (the Terminal app shows the command and its output), not your built-in Bash or shell tool, ' +
-  'and never a Bash or shell sub-agent (a sub-agent has no shell here and can only pretend to run commands; do shell work yourself). ' +
-  'Finding files: fs_find (by name and/or a word in the file; Explorer\'s Search Companion shows the results) and fs_list, not Glob, find or ls. ' +
-  'Searching inside files: code_search (the Code app\'s Search tab shows the matches), not your built-in Grep or grep in the terminal. ' +
-  'Reading files: code_read (Code opens the file at the lines you read), not your built-in Read. ' +
-  'Editing files: code_edit for a change and code_write for a new or rewritten file (recorded in the Changes pane and shown in Code), not your built-in Edit or Write. ' +
-  'Pointing at code: code_open for a file, code_reveal for the lines you mean, code_show_diff for a change. ' +
-  'Web pages: the Browser (browser_navigate, browser_read), not WebFetch. Scheduling: scheduler_* (Task Scheduler), never cron, at or schtasks. ' +
-  'Use a built-in tool only when no AgentXP tool can do the job, and say why in the chat. '
+export const WORK_QUIETLY_INSTRUCTIONS =
+  'Work quietly: this desktop is the user\'s screen, not yours. Your own built-in tools and the AgentXP tools are both fine for reading, searching, ' +
+  'editing and running commands, and neither opens anything on the user\'s screen: the user follows your work in the chat (each step has a Show in Code, ' +
+  'Show diff or Show in Terminal link), in the activity list and in the top bar. AgentXP tools record more for the user: code_edit and code_write record ' +
+  'each change in the Changes pane (with Revert), terminal_run records the command and its output for the Terminal app, fs_find, code_search and code_read ' +
+  'return what they find with paths and line numbers. Never use a Bash or shell sub-agent (a sub-agent has no shell here and can only pretend to run commands; ' +
+  'do shell work yourself). Scheduling: scheduler_* (Task Scheduler), never cron, at or schtasks. ' +
+  'Output apps open behind the user\'s window, with a flashing taskbar button, and never take the focus: the Browser (browser_*), Agent Paint, ' +
+  'Agent Diagrams, WordPad, Code Review and windows you draw with a2ui_render. Open an app only to put your output in it or when the user asks, ' +
+  'never just so the user can watch you work. code_open, code_reveal and code_show_diff show the user a file, lines or a change in the Code app: ' +
+  'use them only when you want the user to look at it, and say why in the chat. '
 
 /** The shell terminal_run uses on this host, so the agent writes commands it understands. */
 export function hostShellInstructions(platform: string): string {
@@ -42,12 +43,12 @@ export function hostShellInstructions(platform: string): string {
 }
 
 /**
- * Which tools to prefer, how the desktop and its file system look. Agents get it three ways, because not every agent
+ * How to work on the desktop, how the desktop and its file system look. Agents get it three ways, because not every agent
  * reads every channel: appended to their system prompt (ACP `_meta.systemPrompt`), as the agentxp MCP server's
- * instructions, and (the tool preference part) in the briefing of a chat's first prompt.
+ * instructions, and (the "work quietly" part) in the briefing of a chat's first prompt.
  */
 export function desktopInstructions(platform: string): string {
-  return `${PREFER_DESKTOP_INSTRUCTIONS}${hostShellInstructions(platform)} ${DESKTOP_INSTRUCTIONS}`
+  return `${WORK_QUIETLY_INSTRUCTIONS}${hostShellInstructions(platform)} ${DESKTOP_INSTRUCTIONS}`
 }
 
 /** The system prompt addition of a desktop chat: a heading, so the agent sees where AgentXP's part starts. */
@@ -60,7 +61,7 @@ ${desktopInstructions(platform)}`
 /** The part of the first prompt's briefing that every agent reads, even one that ignores system prompt additions and MCP instructions. */
 export function desktopBriefing(platform: string): string {
   return `## Working on the AgentXP desktop
-${PREFER_DESKTOP_INSTRUCTIONS}${hostShellInstructions(platform)}`
+${WORK_QUIETLY_INSTRUCTIONS}${hostShellInstructions(platform)}`
 }
 
 /** How the desktop and its file system look, and how to use its apps. */
@@ -68,12 +69,13 @@ export const DESKTOP_INSTRUCTIONS =
   'You work on a virtual Windows desktop. All paths are virtual paths with a drive letter and backslashes: C:\\ is your private system disk ' +
   '(your home is C:\\Users\\Agent) and projects are USB drives the user plugs in (E:\\, F:\\, ...). Call drives_list to see which drives exist. ' +
   'A drive can be ejected at any time; then every path on it is refused until the user plugs the project in again. ' +
-  'Relative paths are relative to your working directory. Tools follow the apps that are open: call desktop_open_app to get more. ' +
+  'Relative paths are relative to your working directory. Every tool is available whether or not its app is open, as far as the permissions in Control Center allow; ' +
+  'only the tools of an output app that need its window (browser_*, paint_*, diagram_*, review_*) wait until it is open (desktop_open_app, review_open). ' +
   'UI you draw with a2ui_render appears where you choose with target: inline in the chat (short conversational forms), in a sidebar beside the chat ' +
   '(a companion panel), or in its own window (an app-like UI the user keeps open). Sidebar tabs and windows can be closed and reopened by the user, ' +
   'windows show up in desktop_state, and a2ui_delete_surface closes a surface\'s window. ' +
   'If you are asked to do a code review (in any chat, also the chat pane of the Code window), do it in a Code Review window and act as a merge-request reviewer: ' +
-  'call review_open with the project path (it opens a Code Review window, or reuses the open one), then review_list_changes lists the changed files, ' +
+  'call review_open with the project path (it opens a Code Review window behind the user\'s window, or reuses the open one), then review_list_changes lists the changed files, ' +
   'review_read_diff shows one file with line numbers, review_add_comment leaves an inline comment ' +
   '(a specific line, a severity of blocker, major, minor or nit, and what is wrong and why) that appears in that window, and review_submit ends the review with a verdict and a summary. ' +
   'Never list review comments as plain text in the chat instead of adding them. When the review is submitted, tell the user the verdict and a short summary of the comments in the chat they asked in. ' +
@@ -186,7 +188,7 @@ export interface ToolDefinition {
 export const TOOL_DEFS = {
   desktop_state: {
     group: 'shell',
-    description: 'The current desktop as JSON: drives, open windows (with what each shows), focus, enabled tool groups, pause and control flags.',
+    description: 'The current desktop as JSON: drives, open windows (with what each shows), focus, enabled tool groups, permissions, pause and control flags.',
     input: z.object({})
   },
   drives_list: {
@@ -197,7 +199,9 @@ export const TOOL_DEFS = {
   desktop_open_app: {
     group: 'shell',
     description:
-      'Open an app window on the desktop. Opening an app enables its tools (Terminal: terminal_*, Browser: browser_*, Notepad: notepad_*, Code: code_*, Explorer: fs_*, Agent Paint: paint_*, WordPad: wordpad_*, Sticky Notes: notes_*, Event Viewer: events_query, Snipping Tool: screen_capture, Recycle Bin: recycle_*, Agent Diagrams: diagram_*).',
+      'Open an app window for your output: it opens behind the user\'s window, without the focus, and its taskbar button flashes (an open window of a single-window app is reused where it is). ' +
+      'Returns the window id. The tools of output apps that need a window become available once it is open (Browser: browser_*, Agent Paint: paint_*, Agent Diagrams: diagram_*); ' +
+      'every other tool works without opening anything. Do not open an app just so the user can watch. Follows the Control Center policy "Agent may open apps".',
     input: z.object({
       app,
       path: z.string().optional().describe('explorer, notepad, code, wordpad, paint, diagrams: virtual path to show (E:\\src, relative to your working directory, ...); an Explorer without a path shows Computer (the drives)'),
@@ -207,7 +211,7 @@ export const TOOL_DEFS = {
   review_open: {
     group: 'shell',
     description:
-      'Open a Code Review window for a project folder (or reuse the open one for it) so you can review its uncommitted changes there. Call this first when you are asked for a code review and no Code Review window is open; then use review_list_changes, review_read_diff, review_add_comment and review_submit.',
+      'Open a Code Review window for a project folder behind the user\'s window (or reuse the open one for it) so you can review its uncommitted changes there. Follows "Agent may open apps". Call this first when you are asked for a code review and no Code Review window is open; then use review_list_changes, review_read_diff, review_add_comment and review_submit.',
     input: z.object({
       path: z.string().optional().describe('The project folder to review (E:\\, E:\\src, relative to your working directory); default: your working directory'),
       baseRef: z.string().optional().describe('The git ref to compare with; default HEAD (the working tree against the last commit)')
@@ -215,13 +219,8 @@ export const TOOL_DEFS = {
   },
   desktop_close_app: {
     group: 'shell',
-    description: 'Close an app window. Its tools disappear when no window of that app is left.',
+    description: 'Close an app window. The tools that need that window (browser_*, paint_*, diagram_*, review_*) disappear when no window of its app is left.',
     input: z.object({ window: z.number().int().optional().describe('Window id'), app: app.optional().describe('Closes the windows of this app when no window id is given') })
-  },
-  desktop_focus_app: {
-    group: 'shell',
-    description: 'Bring an app window to the front (restores it when minimised).',
-    input: z.object({ window: z.number().int().optional().describe('Window id'), app: app.optional() })
   },
   chats_list: {
     group: 'shell',
@@ -244,20 +243,19 @@ export const TOOL_DEFS = {
   chat_open: {
     group: 'shell',
     description:
-      'Open a chat of this desktop again in a Chat window with its whole history (or bring its open window forward). Follows the Control Center policy "Agent may open apps".',
+      'Open a chat of this desktop again in a Chat window with its whole history, behind the user\'s window (an open window is left where it is). Follows the Control Center policy "Agent may open apps".',
     input: z.object({ chat: z.number().int().describe('Chat id from chats_list') })
   },
   fs_list: {
     group: 'fs.read',
-    description: 'List one directory (folders first; .git and node_modules are hidden). Needs the Explorer or Code app. Use this instead of ls or your built-in directory listing.',
+    description: 'List one directory: returns its entries, folders first, one virtual path per line (folders end with \\; .git and node_modules are hidden). Opens nothing.',
     input: z.object({ path: z.string().optional().describe('Directory as a virtual path or relative to your working directory; default: your working directory') })
   },
   fs_find: {
     group: 'fs.read',
     description:
       'Find files and folders below a directory by name, by a word or phrase in the file, or both (.git and node_modules are skipped). ' +
-      'Case-insensitive; `*` in the name matches any characters. The results appear in Explorer\'s Search Companion (an Explorer window opens when none is open). ' +
-      'Needs the Explorer or Code app. Use this instead of your built-in Glob or find.',
+      'Case-insensitive; `*` in the name matches any characters. Returns the virtual paths found, one per line. Opens nothing.',
     input: z.object({
       pattern: z.string().optional().describe('All or part of the file name, or a glob: "*.test.ts", "*.{ts,svelte}", "src/**/*.ts" (a pattern with a slash matches the path below the folder searched)'),
       containing: z.string().optional().describe('A word or phrase in the file (plain text, not case-sensitive); only files that contain it are found'),
@@ -267,7 +265,7 @@ export const TOOL_DEFS = {
   },
   notepad_open: {
     group: 'notepad',
-    description: 'Show a file in a Notepad window (opens one when needed).',
+    description: 'Open a text file in a Notepad window for the user, behind the user\'s window (a Notepad that shows the file already is left where it is). Follows "Agent may open apps". To read a file use code_read.',
     input: z.object({ path: path('File') })
   },
   notepad_read: {
@@ -277,24 +275,23 @@ export const TOOL_DEFS = {
   },
   code_open: {
     group: 'code',
-    description: 'Open a file in the Code app (opens the app when needed) and show it, optionally at a line.',
+    description: 'Shows the user a file in the Code app, optionally at a line: use it only when you want the user to look, and say why in the chat. A new Code window opens behind the user\'s window; an open one is used where it is.',
     input: z.object({ path: path('File'), line: z.number().int().min(1).optional() })
   },
   code_reveal: {
     group: 'code',
-    description: 'Scroll the Code app to a line range of a file and select it, so the user sees what you mean.',
+    description: 'Shows the user a line range of a file in the Code app, selected: use it only when you want the user to look at those lines, and say why in the chat.',
     input: z.object({ path: path('File'), startLine: z.number().int().min(1), endLine: z.number().int().min(1).optional() })
   },
   code_show_diff: {
     group: 'code',
-    description: 'Show the recorded change of a file you edited in the Code app\'s changes list.',
+    description: 'Shows the user the recorded change of a file you edited, in the Code app\'s changes list: use it only when you want the user to look at it.',
     input: z.object({ path: path('File') })
   },
   code_read: {
     group: 'fs.read',
     description:
-      'Read a text file, or a range of its lines, with line numbers ("12\\tline text"). The Code app opens the file (and scrolls to and highlights a range of lines you read), ' +
-      'so the user sees what you are reading (Code opens when needed). Use this instead of your built-in Read tool.',
+      'Read a text file, or a range of its lines: returns the lines with line numbers ("12\\tline text") and how many lines the file has. Opens nothing.',
     input: z.object({
       path: path('File'),
       startLine: z.number().int().min(1).optional().describe('First line to read (default 1)'),
@@ -305,8 +302,7 @@ export const TOOL_DEFS = {
     group: 'fs.read',
     description:
       'Find in files: every line below a folder (or in one file) that contains the text or matches the regular expression, as "path:line:column: text". ' +
-      'The results appear in the Search tab of the Code app (Code opens when needed), where the user can open each match. ' +
-      '.git and node_modules are skipped, and big or binary files too. Use this instead of your built-in Grep and instead of grep in the terminal.',
+      'Returns a summary line and one line per match. .git and node_modules are skipped, and big or binary files too. Opens nothing.',
     input: z.object({
       query: z.string().min(1).describe('The text to find, or a JavaScript regular expression when regex is true'),
       path: z.string().optional().describe('Folder (or file) to search, as a virtual path or relative to your working directory; default: your working directory'),
@@ -320,8 +316,8 @@ export const TOOL_DEFS = {
     group: 'fs.write',
     description:
       'Edit a text file in the Code app: replace oldText with newText. oldText must match the file exactly (spaces and line breaks too) and only once, ' +
-      'unless replaceAll is true. The change is recorded in the Changes pane and the Code app shows it (Code opens when needed). ' +
-      'Read the file first (code_read). Use this instead of your built-in Edit tool.',
+      'unless replaceAll is true. Returns the lines changed. The change is recorded in the Changes pane (the user can review and revert it); ' +
+      'a Code window that shows the file already reloads it. Opens nothing. Read the file first (code_read).',
     input: z.object({
       path: path('File'),
       oldText: z.string().min(1).describe('The exact text to replace'),
@@ -332,8 +328,8 @@ export const TOOL_DEFS = {
   code_write: {
     group: 'fs.write',
     description:
-      'Create a text file, or replace all of its text, in the Code app. The change is recorded in the Changes pane and the Code app shows the file ' +
-      '(Code opens when needed). For a small change to an existing file use code_edit. Use this instead of your built-in Write tool.',
+      'Create a text file, or replace all of its text. Returns whether it was created or replaced and its line count. The change is recorded in the Changes pane ' +
+      '(the user can review and revert it). Opens nothing. For a small change to an existing file use code_edit.',
     input: z.object({
       path: path('File'),
       text: z.string().describe('The whole new text of the file')
@@ -342,8 +338,8 @@ export const TOOL_DEFS = {
   terminal_run: {
     group: 'terminal',
     description:
-      'Run a shell command and wait for it (it runs in a real folder behind a drive; ejected drives are refused). Output appears in the Terminal app and is returned (last 20k characters). ' +
-      'Use this instead of your built-in Bash or shell tool and instead of a shell sub-agent, so the user sees the command run.',
+      'Run a shell command and wait for it (it runs in a real folder behind a drive; ejected drives are refused). Returns the output (last 20k characters) and the exit code. ' +
+      'The run is recorded for the Terminal app (an open Terminal shows it live). Opens nothing. Never use a shell sub-agent instead.',
     input: z.object({
       command: z.string().min(1),
       cwd: z.string().optional().describe('Working directory as a virtual path or relative to your working directory; default: your working directory'),
@@ -358,7 +354,7 @@ export const TOOL_DEFS = {
   browser_navigate: {
     group: 'browser',
     description:
-      'Load a web page (http or https) in a Browser window and wait until it has loaded. Use the Browser instead of your built-in WebFetch, so the user sees the page. Using a web app (chat, mail, docs): navigate once, then loop browser_read (mode tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. The user signs in themselves in the window (the session is kept); never type passwords.',
+      'Load a web page (http or https) in the open Browser window and wait until it has loaded; returns the title and address. The Browser stays where it is and does not take the focus. Using a web app (chat, mail, docs): navigate once, then loop browser_read (mode tree) -> browser_find -> browser_click / browser_type / browser_press -> browser_wait -> browser_read. The user signs in themselves in the window (the session is kept); never type passwords.',
     input: z.object({ url: z.string().min(1), window: windowId })
   },
   browser_read: {
@@ -480,7 +476,7 @@ export const TOOL_DEFS = {
   },
   wordpad_open: {
     group: 'wordpad',
-    description: 'Show a markdown file in a WordPad window (opens one when needed).',
+    description: 'Put a markdown file in a WordPad window for the user: an open WordPad is used where it is, otherwise one opens behind the user\'s window (follows "Agent may open apps").',
     input: z.object({ path: path('File'), windowId: windowIdParam })
   },
   wordpad_read: {

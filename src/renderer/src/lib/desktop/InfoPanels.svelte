@@ -7,7 +7,7 @@
   import { toolTitleOr } from '../app/session/toolTitles'
   import ContextMenuStrip from '../kit/organisms/ContextMenuStrip.svelte'
   import { ContextMenu } from '../apps/shared/ContextMenu.svelte'
-  import { NOT_SAVED_NOTE, WAITING_FOR_YOU, feedText, type FeedItem } from './activity'
+  import { NOT_SAVED_NOTE, WAITING_FOR_YOU, feedAction, feedText, type FeedItem } from './activity'
   import { lastFinished, lastProblem, LEVEL_LABEL } from '../apps/event-viewer/eventModel'
   import type { ProtocolEventDto } from '@shared/desktop'
   import type { AgentXPApi } from '@shared/ipc'
@@ -22,6 +22,8 @@
     /** Session start for the running-time line; defaults to when the infopanels appeared. */
     since?: Date
     now?: Date
+    /** A click on a line of the list: its **Show in...** place (Code, Terminal, Browser), else the chat that did it. */
+    onshowfeeditem?: (item: FeedItem) => void
     /** Opens the Event Viewer: the link under the Activity list, a double-click on the infopanel and its right-click menu. */
     onopeneventviewer?: () => void
     /** The link of the "This is not saved" sentence (UX-173): opens Control Center at Permissions. */
@@ -33,7 +35,7 @@
     working?: string | null
   }
 
-  let { chatTitle, contextUsed, contextSize, feed, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId, working = null }: Props = $props()
+  let { chatTitle, contextUsed, contextSize, feed, onshowfeeditem, controlNote = null, since = new Date(), now: fixedNow, onopeneventviewer, onopenpermissions, api, desktopId, working = null }: Props = $props()
 
   const menu = new ContextMenu()
   const menuItems = () => [{ id: 'infopanel-activity-menu-event-viewer', testid: 'infopanel-activity-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog' as const, action: () => onopeneventviewer?.() }]
@@ -105,7 +107,7 @@
       {#if problem}<li class="problem" data-testid="infopanel-activity-problem" data-level={problem.level} title="{LEVEL_LABEL[problem.level]}: {problem.text}"><span class="t">{LEVEL_LABEL[problem.level]}: {problem.text}</span></li>{/if}
       {#if workingLine}<li class="working" data-testid="infopanel-activity-working"><span class="t" title={workingLine}>{workingLine}</span></li>{/if}
       {#each feed as item (item.key)}
-        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} /><span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span></li>
+        <li><ToolStatusIcon kind={toolStatusView(item.status).kind} label={toolStatusView(item.status).label} />{#if onshowfeeditem}<button type="button" class="t item" data-testid="infopanel-activity-item" data-action={feedAction(item)} data-session-id={item.sessionId} title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}. Click: {feedAction(item)}." onclick={() => onshowfeeditem?.(item)}>{feedText(toolTitleOr(item.title), item.count)}</button>{:else}<span class="t" title="{item.chatTitle}: {feedText(toolTitleOr(item.title), item.count)}">{feedText(toolTitleOr(item.title), item.count)}</span>{/if}</li>
       {:else}
         {#if !problem && !working}<li class="muted" data-testid="infopanel-activity-last">{finished ?? 'Nothing has happened yet.'}</li>{/if}
       {/each}
@@ -192,6 +194,22 @@
     margin: 0;
   }
   .open-events:focus-visible {
+    outline: var(--xp-focus-outline);
+  }
+  /* A line of the list is a link to where its step can be seen (Show in Code, Terminal, Browser, or the chat). */
+  .item {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .item:hover {
+    text-decoration: underline;
+  }
+  .item:focus-visible {
     outline: var(--xp-focus-outline);
   }
   .t {

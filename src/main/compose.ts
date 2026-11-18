@@ -433,10 +433,14 @@ export function composeApp(options: ComposeOptions): AppServices {
     log: schedulerLog
   })
   const gateway = new ToolGateway({ desktops, broker, events: eventBus })
+  // "Agent may open apps" set to Ask: every agent open asks in the chat, like a gated tool call.
+  desktops.attachOpenApproval((sessionId, title, reason) => gateway.ask(sessionId, title, reason))
   const reviews = new ReviewService({ reviews: repos.reviews, sessions: repos.sessions, vfs, cli: gitCli, events: publisher, states: desktops })
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
   a2ui.attachWindows({
-    open: (sessionId, surfaceId, by, size) => desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null,
+    // The agent's surface window is an output window: behind the user's window, after "Agent may open apps" (a refusal leaves the surface closed).
+    open: (sessionId, surfaceId, by, size) =>
+      by === 'agent' ? (void desktops.openAgentSurfaceWindow(sessionId, surfaceId, size).catch(() => {}), true) : desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null,
     close: (sessionId, surfaceId) => void desktops.closeSurfaceWindow(sessionId, surfaceId),
     isOpen: (sessionId, surfaceId) => desktops.hasSurfaceWindow(sessionId, surfaceId),
     refresh: (sessionId) => {
@@ -474,9 +478,9 @@ export function composeApp(options: ComposeOptions): AppServices {
     states: desktops,
     gate: gateway,
     handlers: {
-      ...createShellTools({ desktops, paths: toolPaths, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
-      ...createChatTools({ desktops, sessions: repos.sessions, transcripts: repos.transcripts, ask: (sessionId, title, reason) => gateway.ask(sessionId, title, reason) }),
-      ...createFsTools({ desktops, vfs, search: fileSearch, paths: toolPaths }),
+      ...createShellTools({ desktops, paths: toolPaths }),
+      ...createChatTools({ desktops, sessions: repos.sessions, transcripts: repos.transcripts }),
+      ...createFsTools({ vfs, search: fileSearch, paths: toolPaths }),
       ...createNotepadTools({ desktops, vfs, paths: toolPaths }),
       ...createCodeTools({
         desktops,
@@ -517,7 +521,7 @@ export function composeApp(options: ComposeOptions): AppServices {
         sessions: { list: (id) => queries.list(id), terminalsOf: (id) => queries.terminalsOf(id), cancel: (id) => sessions.cancel(id) },
         processes,
         agents: agentService,
-        desktops: { state: (id) => desktops.state(id), openChat: (desktopId, sessionId) => void desktops.openWindow({ desktopId, app: 'chat', sessionId }, 'agent') }
+        desktops: { state: (id) => desktops.state(id), openChat: async (callerSessionId, desktopId, sessionId) => void (await desktops.openOutputWindow(callerSessionId, { desktopId, app: 'chat', sessionId })) }
       }),
       ...createHelpTools({ help })
     },

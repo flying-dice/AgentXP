@@ -1,7 +1,5 @@
-/** The always-on groups of the apps that manage AgentXP (scheduler_*, profile_*, room_*, settings_*, taskmgr_*, help_*). */
-const ADMIN_GROUPS = ['scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'] as const
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DEFAULT_TOOL_POLICY, type AppView, type DesktopState } from '@shared/desktop'
+import { DEFAULT_TOOL_POLICY, enabledToolGroups, type AppView, type DesktopState } from '@shared/desktop'
 import type { SessionDto, SessionRole } from '@shared/models'
 import { WINDOW_MIN_Y } from '@shared/desktop-views'
 import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-window-repository'
@@ -91,11 +89,11 @@ describe('DesktopService: windows and state', () => {
     const state = service.state(desktopId)
     expect(state.windows.map((w) => w.id)).toEqual([terminal.id, browser.id])
     expect(state.focusedWindowId).toBe(browser.id)
-    expect(state.tools).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
+    expect(state.tools).toEqual(enabledToolGroups(['browser']))
     expect(state.drives.map((d) => `${d.letter}:${d.kind}`)).toEqual(['C:system', 'E:removable'])
     expect(state.home).toBe('C:\\Users\\Agent')
     expect(browser).toMatchObject({ openedBy: 'agent', view: { app: 'browser', url: 'https://example.com/' } })
-    expect(changes().at(-1)?.tools).toEqual(['shell', 'terminal', 'browser', 'board', ...ADMIN_GROUPS])
+    expect(changes().at(-1)?.tools).toEqual(enabledToolGroups(['browser']))
   })
 
   it('enforces singleton apps: opening Code twice focuses the window and shows the new file', () => {
@@ -117,21 +115,22 @@ describe('DesktopService: windows and state', () => {
     expect(service.windowsOf(desktopId, 'notepad')).toHaveLength(2)
   })
 
-  it('closing the last window of an app removes its tools and moves focus', () => {
-    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+  it('closing the last window of an output app removes its tools (the others stay) and moves focus', () => {
+    const browser = service.openWindow({ desktopId, app: 'browser' })
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
     service.closeWindow(notepad.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: terminal.id, tools: ['shell', 'terminal', 'board', ...ADMIN_GROUPS] })
-    service.closeWindow(terminal.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: ['shell', 'board', ...ADMIN_GROUPS] })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: browser.id, tools: enabledToolGroups(['browser']) })
+    service.closeWindow(browser.id)
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: enabledToolGroups([]) })
+    expect(service.state(desktopId).tools).toEqual(expect.arrayContaining(['fs.read', 'fs.write', 'terminal'])) // Work tools need no window
   })
 
   it('minimised windows keep their tools; focusing restores them', () => {
-    const terminal = service.openWindow({ desktopId, app: 'terminal' })
-    service.setWindowState(terminal.id, 'minimized')
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: ['shell', 'terminal', 'board', ...ADMIN_GROUPS] })
-    service.focusWindow(terminal.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: terminal.id, windows: [{ windowState: 'normal' }] })
+    const browser = service.openWindow({ desktopId, app: 'browser' })
+    service.setWindowState(browser.id, 'minimized')
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: enabledToolGroups(['browser']) })
+    service.focusWindow(browser.id)
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: browser.id, windows: [{ windowState: 'normal' }] })
   })
 
   it('persists bounds, path and url, but views come back from the persisted subtype', () => {
@@ -237,53 +236,87 @@ describe('DesktopService: window placement and focus', () => {
     expect(help.bounds.y).toBeGreaterThanOrEqual(WINDOW_MIN_Y)
   })
 
-  it('a window the agent opens comes to the front and takes the focus', async () => {
+  it('an agent window opens right behind the focused window: no focus change, glow and taskbar flash', async () => {
+    const notepad = service.openWindow({ desktopId, app: 'notepad' })
     const chat = await openChat()
-    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
+    const code = await service.openOutputWindow(1, { desktopId, app: 'code' })
     const state = service.state(desktopId)
-    expect(state.focusedWindowId).toBe(code.id)
-    expect(state.windows.map((w) => w.id)).toEqual([chat.id, code.id]) // back to front: the new window on top
-    expect(state.windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
-  })
-
-  it('while the user types, an agent window is in front without the focus and flashes until focused', async () => {
-    const chat = await openChat()
-    service.noteUserActivity(desktopId)
-    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
-    let state = service.state(desktopId)
     expect(state.focusedWindowId).toBe(chat.id)
-    expect(state.windows.at(-1)?.id).toBe(code.id)
-    expect(state.windows.find((w) => w.id === code.id)?.attention).toBe(true)
+    expect(state.windows.map((w) => w.id)).toEqual([notepad.id, code.id, chat.id]) // back to front: behind the chat, over the rest
+    expect(state.windows.find((w) => w.id === code.id)).toMatchObject({ openedBy: 'agent', attention: true })
     service.focusWindow(code.id)
-    state = service.state(desktopId)
-    expect(state.focusedWindowId).toBe(code.id)
-    expect(state.windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
+    expect(service.state(desktopId).windows.find((w) => w.id === code.id)?.attention).toBeUndefined()
   })
 
-  it('two seconds after the last key the agent takes the focus again', async () => {
+  it('keeps the focus with the user also when the focus was only implied (the front-most window)', async () => {
+    const terminal = service.openWindow({ desktopId, app: 'terminal' })
+    service.closeWindow(service.openWindow({ desktopId, app: 'notepad' }).id) // no stored focus left: the front-most window has it
+    await service.openOutputWindow(1, { desktopId, app: 'browser' })
+    expect(service.state(desktopId).focusedWindowId).toBe(terminal.id)
+  })
+
+  it('never takes the focus, while the user types or long after', async () => {
     let now = 10_000
     service = new DesktopService(deps(() => now))
     const chat = await openChat()
     service.noteUserActivity(desktopId)
+    await service.openOutputWindow(1, { desktopId, app: 'code' })
     now += TYPING_GRACE_MS + 1
-    const code = service.openWindow({ desktopId, app: 'code' }, 'agent')
-    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
-    expect(chat.id).not.toBe(code.id)
+    await service.openOutputWindow(1, { desktopId, app: 'browser' })
+    expect(service.state(desktopId).focusedWindowId).toBe(chat.id)
   })
 
-  it('an agent that reopens an existing window raises it; while the user types it only flashes', async () => {
+  it('on an empty desktop the agent window is simply the front window', async () => {
+    const code = await service.openOutputWindow(1, { desktopId, app: 'code' })
+    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
+  })
+
+  it('reuses an existing singleton where it is: not raised, not focused, flashing, showing the new file', async () => {
     const code = service.openWindow({ desktopId, app: 'code' })
     const chat = await openChat()
-    service.openWindow({ desktopId, app: 'code', path: 'C:\\Users\\Agent\\a.ts' }, 'agent')
-    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
-    expect(service.state(desktopId).windows.at(-1)?.id).toBe(code.id)
-    service.focusWindow(chat.id)
-    service.noteUserActivity(desktopId)
-    service.focusWindow(code.id, 'agent')
+    const order = service.state(desktopId).windows.map((w) => w.id)
+    await service.openOutputWindow(1, { desktopId, app: 'code', path: 'C:\\Users\\Agent\\a.ts' })
     const state = service.state(desktopId)
     expect(state.focusedWindowId).toBe(chat.id)
-    expect(state.windows.at(-1)?.id).toBe(code.id)
+    expect(state.windows.map((w) => w.id)).toEqual(order)
     expect(state.windows.find((w) => w.id === code.id)).toMatchObject({ attention: true, view: { activePath: 'C:\\Users\\Agent\\a.ts' } })
+  })
+
+  it('never narrows the Browser for a chat the agent opens (only for the user\'s)', async () => {
+    const browser = service.openWindow({ desktopId, app: 'browser' })
+    const before = service.state(desktopId).windows.find((w) => w.id === browser.id)!.bounds
+    const chat = await chats.create(desktopId, undefined, undefined, 'chat')
+    await service.openOutputWindow(1, { desktopId, app: 'chat', sessionId: chat.id })
+    expect(service.state(desktopId).windows.find((w) => w.id === browser.id)!.bounds).toEqual(before)
+    expect(service.state(desktopId).focusedWindowId).toBe(browser.id)
+  })
+
+  it('follows "Agent may open apps": Never refuses, Ask asks in the chat, a reused window does not ask', async () => {
+    const asked: [number, string][] = []
+    let answer = false
+    service.attachOpenApproval(async (sessionId, title) => {
+      asked.push([sessionId, title])
+      return answer
+    })
+    service.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
+    await expect(service.openOutputWindow(7, { desktopId, app: 'code' })).rejects.toThrow('Opening apps is blocked by the permission policy in Control Center.')
+    service.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'ask' })
+    await expect(service.openOutputWindow(7, { desktopId, app: 'code' })).rejects.toThrow('The user declined to open the Code app.')
+    expect(service.state(desktopId).windows).toEqual([])
+    answer = true
+    await service.openOutputWindow(7, { desktopId, app: 'code' })
+    await service.openOutputWindow(7, { desktopId, app: 'code' }) // reused: no question
+    expect(asked).toEqual([[7, 'Open the Code app'], [7, 'Open the Code app']])
+    expect(service.windowsOf(desktopId, 'code')).toHaveLength(1)
+  })
+
+  it('opens a surface window for the agent behind the user\'s window and a review window the same way', async () => {
+    const chat = await openChat()
+    const review = await service.openReview(desktopId, 'E:\\', 'HEAD', undefined, undefined, 'agent')
+    const state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.find((w) => w.id === review.id)).toMatchObject({ openedBy: 'agent', attention: true })
+    expect(await service.openAgentSurfaceWindow(99_999, 's1')).toBeNull() // a chat without a desktop
   })
 
   it('raiseWindow restores a minimized window, raises it and focuses it', async () => {
@@ -366,7 +399,7 @@ describe('DesktopService: control flags and policy', () => {
   it('builds the prompt context from the chat desktop', async () => {
     const chat = await service.newChat(desktopId)
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
-    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: ['shell', 'board', ...ADMIN_GROUPS] })
+    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: enabledToolGroups([]) })
     expect(service.contextOfSession(f.sessionId)).toBeNull() // the fixture chat has no desktop
   })
 

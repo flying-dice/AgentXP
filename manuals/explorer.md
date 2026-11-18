@@ -59,7 +59,7 @@ Click **Search**, click **View -> Search**, or press F3 or Ctrl+F. The Search Co
 
 Click **Search**, or press Enter. The file list becomes **Search Results**, with the columns **Name**, **In Folder**, and **Type**. The line under **Search** says how many files were found. Double-click a file to open it. Double-click a folder to close the search and open the folder. Right-click a result for the same menu as in a folder. Click **Back**, or **Search** again, to close the Search Companion. The search skips `.git`, `node_modules`, binary files, and files bigger than 1 MB.
 
-When the agent finds files (`fs_find`), the Search Companion opens with its criteria and shows its results, with the agent icon before the line under **Search**. If no Explorer is open, one opens.
+When the agent finds files (`fs_find`), no window opens and the Search Companion does not change. The agent gets the results, and the chat shows the step.
 
 ### The File List
 
@@ -100,7 +100,7 @@ Each Explorer window has a chat pane at its right edge. The pane starts closed, 
 | Look in | The folder or drive to search. You can type a folder. | `explorer-search-look-in` |
 | Search (button) | Runs the search. Dimmed until you type a name or a word. | `explorer-search-run` |
 | Back (search) | Closes the Search Companion and its results. | `explorer-search-back` |
-| Search status | Says what to type, "Searching...", how many files were found, or why the search failed. The agent icon shows when the agent ran the search. | `explorer-search-status` |
+| Search status | Says what to type, "Searching...", how many files were found, or why the search failed. | `explorer-search-status` |
 | Search Results | The files and folders that the search found. | `explorer-search-results` |
 | Search result | One file or folder that the search found. Double-click it to open it. | `explorer-search-result` |
 | Plug in a project... | Opens the **Browse For Folder** dialog box and plugs the folder in as a drive. | `explorer-plug-in` |
@@ -177,15 +177,15 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 ### What the Agent Can Do
 
-The agent uses the tools below when Explorer or Code is open. The permission **Read files** in **Control Center** controls them.
+The agent uses the tools below at any time. They open nothing. The permission **Read files** in **Control Center** controls them.
 
 | Tool | What it does |
 |---|---|
 | `drives_list` | Lists the drives of the desktop. C: is the private disk of the agent. USB drives are your projects. |
 | `fs_list` | Lists the files and folders of one folder. It hides `.git` and `node_modules`. |
-| `fs_find` | Finds files and folders below a folder by name, by a word or phrase in the file, or both. A `*` in the name matches any characters. The Search Companion shows the search and its results; if no Explorer is open, one opens. |
+| `fs_find` | Finds files and folders below a folder by name, by a word or phrase in the file, or both. A `*` in the name matches any characters. It returns the paths that it found. |
 
-The agent is told to use `fs_find`, and not its own built-in tools, so that you see what it looks for. To find text inside files line by line, the agent uses `code_search` in **[Code](code.md)**.
+To find text inside files line by line, the agent uses `code_search` in **[Code](code.md)**.
 
 ## 5 - Common Tasks
 

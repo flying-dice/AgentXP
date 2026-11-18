@@ -302,7 +302,7 @@
     <div class="body">
       {#if shared && session}
         {#key sessionId}
-          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} stoppedByPause={host.stoppedByPause(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} {loadDetails} onshowevents={() => void showInEventViewer()} onshowtoolevent={(id) => void showToolEvent(id)} onopenagents={() => void openAgents()} onnewchat={startNewChat} {newDefaultAgent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
+          <SessionView store={shared} {session} {folder} {folderText} {agent} paused={host.state.paused} stoppedByPause={host.stoppedByPause(sessionId)} askFirst={host.state.userInControl} onaskfirst={setAskFirst} {loadDetails} onshowevents={() => void showInEventViewer()} onshowtoolevent={(id) => void showToolEvent(id)} onshowtooltarget={(target) => void host.showToolTarget(target, sessionId > 0 ? sessionId : null)} onopenagents={() => void openAgents()} onnewchat={startNewChat} {newDefaultAgent} {openFilePath} {setMode} {pickFiles} {surfaceControls} {contained} compact={compact || collapsible} {suggestions} {prefill} {onprefilled} dense={role === 'aside'} />
         {/key}
       {:else if sessionId <= 0 && onstart}
         <div class="blank start" data-testid="embedded-chat-blank">{startError ?? (starting ? 'Starting...' : (blankText ?? PANE_EMPTY_TEXT))}</div>
