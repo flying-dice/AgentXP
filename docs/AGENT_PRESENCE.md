@@ -1,6 +1,6 @@
 # Agent presence: Work, Show, Output
 
-Status: accepted; all PRs have landed. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions), PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking), PR 3 (`show`, the agent cursor, the note callout, show requests) and PR 4 (Follow, the top-bar agents popup, identities on every surface, team room step text). It replaces "tools follow
+Status: accepted; all PRs and the follow-ups have landed. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions), PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking), PR 3 (`show`, the agent cursor, the note callout, show requests) and PR 4 (Follow, the top-bar agents popup, identities on every surface, team room step text). It replaces "tools follow
 apps" (`DESKTOP_DESIGN.md` sections 1 and 3) as the rule for how agents appear on the desktop. The UX rules for
 contributors are in `.claude/skills/agent-presence-ux/SKILL.md`; this note is the design and the build plan.
 
@@ -120,7 +120,7 @@ show ("Showed you auth.ts:40-62: <note>") with **Show again**.
 Policy: Control Center row **Agent may show you things**, Always (default), Ask or Never. Never keeps the transcript
 row only.
 
-`code_open`, `code_reveal` and `code_show_diff` become aliases of `show` for one release, then go.
+`code_open`, `code_reveal` and `code_show_diff` became aliases of `show` for one release and are now gone (follow-ups PR).
 
 As built (PR 3, `src/main/application/show/ShowService.ts` and `ShowTargets.ts`, tool handlers in `tools/showTools.ts`):
 
@@ -230,6 +230,11 @@ As built (PR 4, `src/main/application/show/FollowService.ts`, `src/shared/follow
   arrives first and then the click happens. That is the one place where the cursor shows real control.
 - The cursor appears only for Show, Browser actions and Follow. Never for background Work.
 
+As built (follow-ups PR): a cursor remembers the window it points into (`CursorAnchor`). When that window is closed,
+minimized, maximized, restored or resized, the cursor hides at once (`data-state="hidden"`) instead of floating where
+the window was until it fades; when the window is moved (also while it is dragged, through its live bounds) the cursor
+moves with it. The rule is the pure `cursorFollowsWindow` in `showResolvers.ts`.
+
 As built (PR 4): the overlay takes a short list of pointings (`cursorPings`), so two agents pointing at once each move
 their own cursor. A team member's glide starts at its row in the Team Chat window. Paint's drawing cursor honours
 `prefers-reduced-motion` (it jumps, without the pulse ring on every point).
@@ -320,5 +325,11 @@ open behind the operator. Tool descriptions that promise a window are rewritten.
 | 2 (landed) | Notices and Output: `desktop.notice`, balloon queue and history, Action Center actions, turn summaries, change cues in Code Review and Kanban, `AgentIdentity`, foreground tracking (moved forward from PR 3) | `NoticeService.test.ts`, `e2e/notices.e2e.ts` |
 | 3 (landed) | Show and the cursor: `show`, `ShowService`, foreground rule (uses PR 2's `foregroundSessionId`), queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
 | 4 (landed) | Follow and team presence: Follow toggle, projection with typing pause, a cursor per member, member step text, the top-bar agents popup, identities on feed rows; show targets for review comments, cards and shapes checked in the real app, a shown or changed Kanban card scrolls into view | `FollowService.test.ts`, `e2e/follow.e2e.ts` |
+
+Follow-ups (after PR 4): the deprecated `code_open`, `code_reveal` and `code_show_diff` aliases are removed (`show` is
+the one tool of its group); the idle agent cursor hides with its window (section 8); ux-panel presets and checkers for
+T32.1, T32.2, T33.1, T33.2 and T34.1; real-app checks (e2e) of the Diagrams, Paint and WordPad output balloons with the
+window behind, Follow with **Agent may open apps** on Ask (nothing asks, only open windows follow), the Browser cursor
+for a followed background chat, and Paint's drawing cursor with reduced motion.
 
 Each PR follows `verify-change` and `agent-presence-ux` and runs every gate in `AGENTS.md`.
