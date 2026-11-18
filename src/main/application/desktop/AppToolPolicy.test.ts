@@ -37,6 +37,15 @@ describe('enabledToolGroups (policy gates the tools; only output apps need their
 })
 
 describe('evaluateToolAccess', () => {
+  it('refuses disabled Teams groups even when policy allows them', () => {
+    for (const group of ['teams', 'rooms'] as const) {
+      expect(evaluateToolAccess({
+        state: state({ tools: enabledToolGroups([]).filter((g) => g !== 'teams' && g !== 'rooms') }),
+        group, policy: policy({ teams: 'allow', rooms: 'allow' })
+      })).toMatchObject({ kind: 'refuse', message: expect.stringContaining('Teams is disabled') })
+    }
+  })
+
   it('refuses a group whose app is closed, with the "open the app" hint', () => {
     expect(evaluateToolAccess({ state: state(), group: 'browser', policy: policy() })).toEqual({
       kind: 'refuse',

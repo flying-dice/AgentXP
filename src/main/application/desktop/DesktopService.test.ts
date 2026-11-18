@@ -89,11 +89,11 @@ describe('DesktopService: windows and state', () => {
     const state = service.state(desktopId)
     expect(state.windows.map((w) => w.id)).toEqual([terminal.id, browser.id])
     expect(state.focusedWindowId).toBe(browser.id)
-    expect(state.tools).toEqual(enabledToolGroups(['browser']))
+    expect(state.tools).toEqual(enabledToolGroups(['browser']).filter((g) => g !== 'teams' && g !== 'rooms'))
     expect(state.drives.map((d) => `${d.letter}:${d.kind}`)).toEqual(['C:system', 'E:removable'])
     expect(state.home).toBe('C:\\Users\\Agent')
     expect(browser).toMatchObject({ openedBy: 'agent', view: { app: 'browser', url: 'https://example.com/' } })
-    expect(changes().at(-1)?.tools).toEqual(enabledToolGroups(['browser']))
+    expect(changes().at(-1)?.tools).toEqual(enabledToolGroups(['browser']).filter((g) => g !== 'teams' && g !== 'rooms'))
   })
 
   it('enforces singleton apps: opening Code twice focuses the window and shows the new file', () => {
@@ -119,16 +119,16 @@ describe('DesktopService: windows and state', () => {
     const browser = service.openWindow({ desktopId, app: 'browser' })
     const notepad = service.openWindow({ desktopId, app: 'notepad' })
     service.closeWindow(notepad.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: browser.id, tools: enabledToolGroups(['browser']) })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: browser.id, tools: enabledToolGroups(['browser']).filter((g) => g !== 'teams' && g !== 'rooms') })
     service.closeWindow(browser.id)
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: enabledToolGroups([]) })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, windows: [], tools: enabledToolGroups([]).filter((g) => g !== 'teams' && g !== 'rooms') })
     expect(service.state(desktopId).tools).toEqual(expect.arrayContaining(['fs.read', 'fs.write', 'terminal'])) // Work tools need no window
   })
 
   it('minimised windows keep their tools; focusing restores them', () => {
     const browser = service.openWindow({ desktopId, app: 'browser' })
     service.setWindowState(browser.id, 'minimized')
-    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: enabledToolGroups(['browser']) })
+    expect(service.state(desktopId)).toMatchObject({ focusedWindowId: null, tools: enabledToolGroups(['browser']).filter((g) => g !== 'teams' && g !== 'rooms') })
     service.focusWindow(browser.id)
     expect(service.state(desktopId)).toMatchObject({ focusedWindowId: browser.id, windows: [{ windowState: 'normal' }] })
   })
@@ -424,7 +424,7 @@ describe('DesktopService: control flags and policy', () => {
   it('builds the prompt context from the chat desktop', async () => {
     const chat = await service.newChat(desktopId)
     const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
-    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: enabledToolGroups([]) })
+    expect(JSON.parse(service.contextOfSession(sessionId)!)).toMatchObject({ desktopId, tools: enabledToolGroups([]).filter((g) => g !== 'teams' && g !== 'rooms') })
     expect(service.contextOfSession(f.sessionId)).toBeNull() // the fixture chat has no desktop
   })
 
@@ -570,6 +570,7 @@ describe('DesktopService: the chat pane (aside sessions)', () => {
 })
 
 describe('DesktopService: Teams and Team Chat windows', () => {
+  beforeEach(() => { service = new DesktopService({ ...deps(), teamsEnabled: true }) })
   it('opens Teams once per desktop', () => {
     const first = service.openWindow({ desktopId, app: 'teams' })
     expect(service.openWindow({ desktopId, app: 'teams' }).id).toBe(first.id)
@@ -583,7 +584,7 @@ describe('DesktopService: Teams and Team Chat windows', () => {
     expect(two.id).not.toBe(one.id)
     expect(one.view).toMatchObject({ app: 'team-chat', roomId: 7 })
     // A new service over the same rows (a restart) rebuilds the view from the stored room number.
-    const again = new DesktopService(deps())
+    const again = new DesktopService({ ...deps(), teamsEnabled: true })
     expect(again.state(desktopId).windows.find((w) => w.id === two.id)?.view).toMatchObject({ app: 'team-chat', roomId: 8 })
     expect(() => service.openWindow({ desktopId, app: 'team-chat' })).toThrow(/needs a room/)
   })
@@ -654,5 +655,29 @@ describe('DesktopService: presence (Follow and identities)', () => {
     const state = service.state(desktopId)
     expect(state.following).toMatchObject({ sessionId: a.id })
     expect(state.identities).toEqual({ [String(a.id)]: { name: `Agent ${a.id}`, color: '#123456' } })
+  })
+})
+
+
+describe('DesktopService: Teams feature toggle', () => {
+  it('defaults off, rejects opens, and omits tools', async () => {
+    expect(service.state(desktopId).teamsEnabled).toBe(false)
+    for (const app of ['teams', 'team-chat'] as const) {
+      expect(() => service.openWindow({ desktopId, app, roomId: 7 })).toThrow(/Teams is disabled/)
+      await expect(service.openOutputWindow(1, { desktopId, app, roomId: 7 })).rejects.toThrow(/Teams is disabled/)
+    }
+    expect(service.state(desktopId).tools).not.toContain('teams')
+    expect(service.state(desktopId).tools).not.toContain('rooms')
+  })
+
+  it('hides persisted windows and focus when off, and restores them on opt-in', () => {
+    const enabled = new DesktopService({ ...deps(), teamsEnabled: true })
+    const normal = enabled.openWindow({ desktopId, app: 'notepad' })
+    const teams = enabled.openWindow({ desktopId, app: 'teams' })
+    enabled.openWindow({ desktopId, app: 'team-chat', roomId: 7 })
+    expect(service.state(desktopId).windows.map((w) => w.id)).toEqual([normal.id])
+    expect(service.state(desktopId).focusedWindowId).toBe(normal.id)
+    expect(() => service.focusWindow(teams.id)).toThrow(/Teams is disabled/)
+    expect(new DesktopService({ ...deps(), teamsEnabled: true }).state(desktopId).windows).toHaveLength(3)
   })
 })

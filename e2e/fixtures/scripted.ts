@@ -127,9 +127,10 @@ export interface ScriptedDesktop extends ConnectedDesktop {
 }
 
 /** App + desktop + scripted agent as the default agent (+ optional workspace added as a project). */
-export async function startScriptedDesktop(options: ScriptedAgentOptions & { title?: string; workspace?: Workspace }): Promise<ScriptedDesktop> {
+export async function startScriptedDesktop(options: ScriptedAgentOptions & { teamsEnabled?: boolean; title?: string; workspace?: Workspace }): Promise<ScriptedDesktop> {
   let scripted: ScriptedAgent | undefined
   const ctx = await startConnectedDesktop({
+    teamsEnabled: options.teamsEnabled,
     title: options.title ?? `Scripted ${options.script}`,
     workspace: options.workspace,
     agent: async (page) => {

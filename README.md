@@ -725,3 +725,18 @@ To learn more about the protocols that AgentXP uses, go to these sites:
 - **[agentclientprotocol.com](https://agentclientprotocol.com)** – The Agent Client Protocol.
 - **[docs.ag-ui.com](https://docs.ag-ui.com)** – The AG-UI protocol.
 - **[a2ui.org](https://a2ui.org)** – The A2UI format.
+
+### Experimental Teams feature
+
+Teams and Team Chat are disabled by default while they are being repaired (GitHub issue [#52](https://github.com/flying-dice/AgentXP/issues/52)).
+To opt in for development, set `AGENTXP_ENABLE_TEAMS=1` before launching AgentXP, then restart it. In PowerShell:
+
+```powershell
+$env:AGENTXP_ENABLE_TEAMS = '1'
+npm run dev
+```
+
+Remove the variable (or set it to `0`) and restart to disable Teams again. This also applies to packaged builds.
+When disabled, Teams is absent from Start, saved Teams and Team Chat windows stay closed, room API actions are blocked,
+and agents are not offered Teams or room tools. Existing profiles, teams, rooms and window records are retained;
+profiles and teams remain readable and editable through the registry APIs used by other apps, including Task Scheduler.

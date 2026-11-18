@@ -20,7 +20,7 @@ describe('Team room: what a member does in the background shows on the desktop',
   const popup = () => ctx.desktopPage.getByTestId('uac-dialog')
 
   beforeAll(async () => {
-    ctx = await startScriptedDesktop({ script: 'desktop', title: 'Room approvals' })
+    ctx = await startScriptedDesktop({ teamsEnabled: true, script: 'desktop', title: 'Room approvals' })
     roomId = await ctx.desktopPage.evaluate(async (desktopId) => {
       const api = (window as unknown as { agentxp: AgentXPApi }).agentxp
       const tester = await api.profiles.create({ name: 'Tester', instructions: '', agentId: null, model: null, skillIds: [], mcpServerIds: [] })

@@ -233,13 +233,34 @@ export function createApi(s: ApiServices): InvokeApi {
       remove: async (id) => s.teamService.removeTeam(id)
     },
     rooms: {
-      list: async (desktopId) => s.rooms.list(desktopId),
-      create: async (desktopId, teamId, cwd) => s.rooms.create(desktopId, teamId, cwd),
-      state: async (roomId) => s.rooms.state(roomId),
-      remove: (roomId) => s.rooms.remove(roomId),
-      rename: async (roomId, title) => s.rooms.rename(roomId, title),
-      say: (roomId, text) => s.rooms.say(roomId, text),
-      stop: (roomId, profileId) => s.rooms.stop(roomId, profileId)
+      list: async (desktopId) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.list(desktopId)
+      },
+      create: async (desktopId, teamId, cwd) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.create(desktopId, teamId, cwd)
+      },
+      state: async (roomId) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.state(roomId)
+      },
+      remove: (roomId) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.remove(roomId)
+      },
+      rename: async (roomId, title) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.rename(roomId, title)
+      },
+      say: (roomId, text) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.say(roomId, text)
+      },
+      stop: (roomId, profileId) => {
+        s.desktops.requireAppEnabled('teams')
+        return s.rooms.stop(roomId, profileId)
+      }
     },
     notes: {
       list: async (desktopId) => s.notes.list(desktopId),

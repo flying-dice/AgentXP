@@ -213,6 +213,8 @@ export interface DesktopDto {
 
 /** The whole live desktop: AG-UI `state.desktop` and the agent's `desktop_state`. */
 export interface DesktopState {
+  /** Experimental Teams and Team Chat opt-in; disabled when absent. */
+  teamsEnabled?: boolean
   desktopId: Id
   /** Agent used for new conversations on this desktop; absent in older fixtures. */
   agentId?: Id | null

@@ -50,6 +50,7 @@ export function evaluateToolAccess(input: {
   policy: ToolPolicyDto
 }): ToolAccess {
   const { state, group, policy } = input
+  if ((group === 'teams' || group === 'rooms') && !state.tools.includes(group)) return { kind: 'refuse', message: 'Teams is disabled. Set AGENTXP_ENABLE_TEAMS=1 and restart to enable it.' }
   if (state.paused) return { kind: 'refuse', message: PAUSED_MESSAGE }
   if (isWindowToolGroup(group) && !state.tools.includes(group)) return { kind: 'refuse', message: closedAppMessage(group) }
   const decision = decisionFor(policy, group)

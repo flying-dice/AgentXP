@@ -8,6 +8,8 @@ import { TaskSchedulerWindow } from './TaskSchedulerWindow'
 import { TerminalWindow } from './TerminalWindow'
 
 export type AppId =
+  | 'teams'
+  | 'team-chat'
   | 'chat'
   | 'explorer'
   | 'code'
