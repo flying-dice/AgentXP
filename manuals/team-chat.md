@@ -7,9 +7,10 @@ This manual describes Team Chat. Team Chat is a chat room where the agents of a 
 - 1 - What It Is For
 - 2 - Open It
 - 3 - The Window
-  - The Members
+  - The To Line
   - The Messages
   - The Message Box
+  - The Side Bar
   - The Member Session
 - 4 - Controls Reference
   - What the Agent Can Do
@@ -31,22 +32,17 @@ Select a team in **[Teams](teams.md)** and click **Start chat room...**. To open
 
 ## 3 - The Window
 
-### The Members
+The window looks like a Windows Messenger conversation. The conversation is at the left and the blue side bar is at the right.
 
-The bar at the top lists the members. Each member shows a colored letter, its name, and what it does now:
+### The To Line
 
-- **thinking…** – The member works on a message.
-- **starting…** – The agent program of the member starts.
-- **waiting for approval** – The member asked for permission. The permission box opens over the desktop, for example **Allow Tester to run a command?** with **Requested by Tester in the room Development Team**. Click **Allow** or **Deny**. If you click **Not now**, the request stays in the Action Center and in the link on the top bar.
-- **stopped with an error** – The last message of the member failed.
-
-While the member works, its row also says its step in plain words, for example **reading auth.ts** or **running npm test**. If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Session** to show the chat of that member in the pane at the right. The pane shows what the member does while it works: its messages and each step, as it happens.
-
-Click **Follow** to watch the member work. Code and the Terminal come to the front at each step of the member, and the agent cursor of the member, in the color of the member, moves there. The button then reads **Following**. Click it again, or click **Stop following** on the top bar, to stop. The follow also stops when the turn of the member ends, unless **Keep following** on the top bar is selected. See **[Using the Desktop](desktop.md)**.
+The dark blue line at the top says who is in the room, for example **To: Coder, Reviewer (Development Team)**.
 
 ### The Messages
 
-The list shows every message of the room with the name, the time, and the text. Your messages come first in the name **You**. A line at the end says who works now. The list scrolls down by itself, unless you scrolled up to read.
+The list shows every message of the room. Each message starts with a gray line with the name, for example **Coder says:**, and the text is under it. Your messages start with **You say:**. Point to a message to see its time. A green line at the end says who works now. The list scrolls down by itself, unless you scrolled up to read.
+
+The status bar says when the last message of a member came in, for example **Last message received on 14.9.2015 at 00:13.**
 
 ### The Message Box
 
@@ -56,7 +52,29 @@ Type a message and press Enter, or click **Send**. Press Shift+Enter to start a 
 - Write **@all** to call every member.
 - If the message has no mention, the member that spoke last answers. If nobody spoke yet, the first member of the team answers.
 
-A member can call other members in the same way. The status bar shows who your message calls.
+Click **Call** above the box to add a mention of a member, or of everyone. A member can call other members in the same way. The status bar shows who your message calls.
+
+### The Side Bar
+
+**Members** lists the members. Each member shows a colored letter, its name, and what it does now:
+
+- **online** – The member waits for a message.
+- **thinking…** – The member works on a message.
+- **starting…** – The agent program of the member starts.
+- **waiting for approval** – The member asked for permission. The permission box opens over the desktop, for example **Allow Tester to run a command?** with **Requested by Tester in the room Development Team**. Click **Allow** or **Deny**. If you click **Not now**, the request stays in the Action Center and in the link on the top bar.
+- **stopped with an error** – The last message of the member failed.
+
+While the member works, a line under its name says its step in plain words, for example **reading auth.ts** or **running npm test**. If messages wait behind the one that the member works on, the line also says how many. Click a name to add a mention of that member to your message. Click **Stop** to stop the member and to drop the messages that wait for it. Click **Show session** to show the chat of that member in the pane at the right, and **Hide session** to close it. The pane shows what the member does while it works: its messages and each step, as it happens.
+
+Click **Follow** under a name to watch the member work. Code and the Terminal come to the front at each step of the member, and the agent cursor of the member, in the color of the member, moves there. The link then reads **Following**. Click it again, or click **Stop following** on the top bar, to stop. The follow also stops when the turn of the member ends, unless **Keep following** on the top bar is selected. See **[Using the Desktop](desktop.md)**.
+
+**I want to...** has these links:
+
+- **Call everyone in this room** – Adds **@all** to your message.
+- **Stop every member** – Stops every member that works. It is dimmed when nobody works.
+- **Change the team in Teams** – Opens **[Teams](teams.md)**.
+
+Click the title of a panel to close or open it.
 
 ### The Member Session
 
@@ -67,20 +85,32 @@ The pane at the right shows the full chat of one member, with its tool calls. Yo
 | Name | What it does | data-testid |
 |---|---|---|
 | Team Chat window | The root of the window. | `team-chat-app` |
-| Members | The bar of members. | `team-chat-members` |
+| To line | Says who is in the room. | `team-chat-to` |
+| Side bar | The blue bar at the right. | `team-chat-side` |
+| Members panel | The panel of members in the side bar. | `team-chat-panel-members` |
+| Members panel title | Closes or opens the panel of members. | `team-chat-panel-members-toggle` |
+| Members | The list of members. | `team-chat-members` |
 | Member | One member. The attribute `data-activity` says what it does. | `team-chat-member` |
 | Member name | Adds a mention of the member to your message. | `team-chat-member-call` |
 | Member activity | Says what the member does now. | `team-chat-member-activity` |
 | Member step | The step of the member in plain words while it works, for example **reading auth.ts**. | `team-chat-member-step` |
 | Follow | Follows the member: its steps appear in Code and the Terminal, with its agent cursor. It reads **Following** while you follow it; click it again to stop. The member row then has `data-following`. | `team-chat-member-follow` |
 | Stop | Stops the member and drops the messages that wait. | `team-chat-member-stop` |
-| Session | Shows or hides the chat of the member. | `team-chat-member-session` |
+| Show session / Hide session | Shows or hides the chat of the member. | `team-chat-member-session` |
+| I want to panel | The panel of tasks in the side bar. | `team-chat-panel-tasks` |
+| I want to panel title | Closes or opens the panel of tasks. | `team-chat-panel-tasks-toggle` |
+| Call everyone in this room | Adds @all to your message. | `team-chat-task-call-all` |
+| Stop every member | Stops every member that works. | `team-chat-task-stop-all` |
+| Change the team in Teams | Opens Teams. | `team-chat-task-teams` |
 | Messages | The list of messages. | `team-chat-messages` |
 | Message | One message. The attribute `data-author` is the name. | `team-chat-message` |
 | Author | The name of the author of a message. | `team-chat-message-author` |
 | Text | The text of a message. | `team-chat-message-text` |
 | Empty note | Shows in a room without messages. | `team-chat-empty` |
 | Working line | Says who works now. | `team-chat-working` |
+| Call | Opens the list of members to call. | `team-chat-call` |
+| Call -> member | Adds a mention of the member. | `team-chat-call-member` |
+| Call -> Everyone (@all) | Adds @all to your message. | `team-chat-call-all` |
 | Message box | Where you type. | `team-chat-input` |
 | Send | Sends the message. | `team-chat-send` |
 | Member session pane | The chat of one member. | `team-chat-session-panel` |
@@ -105,17 +135,17 @@ The agent of any chat can use the tools below. The permission **Team chat** in *
 
 To call one member, follow the steps below:
 
-1. Click the name of the member in the bar. The mention appears in the message box.
+1. Click the name of the member in the side bar, or click **Call** and select the member. The mention appears in the message box.
 2. Type your request after the mention.
 3. Press Enter. The member shows **thinking…** until it answers.
 
-To see what a member did, click **Session** next to its name. The pane shows the messages and the tool calls of that member.
+To see what a member did, click **Show session** under its name. The pane shows the messages and the tool calls of that member.
 
 ## 6 - Troubleshooting
 
-- **A member shows stopped with an error.** Read its last message in the room. Click **Session** to see the problem. Send a new message to try again.
+- **A member shows stopped with an error.** Read its last message in the room. Click **Show session** to see the problem. Send a new message to try again.
 - **A member does not answer.** If the member shows **waiting for approval**, answer the permission box. If you closed it with **Not now**, click the link on the top bar or open the Action Center.
-- **Members call each other without end.** Click **Stop** next to each member. Then change the instructions of the profiles to say when a member must not call another one.
+- **Members call each other without end.** Click **Stop every member** in the side bar. Then change the instructions of the profiles to say when a member must not call another one.
 
 ## 7 - Need Help?
 
