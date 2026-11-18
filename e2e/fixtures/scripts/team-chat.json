@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../agents/scripted-agent/script.schema.json",
+  "name": "team-chat",
+  "description": "Team Chat members: a prompt about a slow job keeps the member thinking for a while; every other prompt gets a short answer.",
+  "agent": { "name": "scripted-agent", "version": "1.0.0" },
+  "rules": [
+    {
+      "id": "slow",
+      "match": { "contains": "slow" },
+      "steps": [{ "type": "message", "text": "Done with the slow job.", "delayMs": 60000 }]
+    },
+    {
+      "id": "ok",
+      "match": { "any": true },
+      "steps": [{ "type": "message", "text": "On it. I read the change and it looks fine to me." }]
+    }
+  ]
+}

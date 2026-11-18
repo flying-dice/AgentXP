@@ -33,3 +33,16 @@ export const timeOf = (iso: string): string => {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
+
+/** A date for the status bar ("14.9.2015"), as Windows Messenger wrote it. */
+export const dateOf = (iso: string): string => {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`
+}
+
+/** The status bar line of Windows Messenger: when the last message of a member came in, or '' before any did. */
+export function lastReceivedLine(messages: readonly { profileId: number | null; createdAt: string }[]): string {
+  const last = messages.findLast((m) => m.profileId !== null)
+  if (!last || !dateOf(last.createdAt)) return ''
+  return `Last message received on ${dateOf(last.createdAt)} at ${timeOf(last.createdAt)}.`
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { RoomMemberDto } from '@shared/teams'
-import { initialOf, insertMention, mentionOf, nearBottom, workingLine } from './roomModel'
+import { dateOf, initialOf, insertMention, lastReceivedLine, mentionOf, nearBottom, workingLine } from './roomModel'
 
 const member = (name: string, activity: RoomMemberDto['activity'] = 'idle', queued = 0): RoomMemberDto => ({ profileId: 1, name, color: '#000', sessionId: null, activity, queued })
 
@@ -28,5 +28,13 @@ describe('room model', () => {
   it('knows when the list is at the bottom', () => {
     expect(nearBottom({ scrollTop: 460, clientHeight: 100, scrollHeight: 600 })).toBe(true)
     expect(nearBottom({ scrollTop: 100, clientHeight: 100, scrollHeight: 600 })).toBe(false)
+  })
+
+  it('says when the last message of a member came in, as Messenger did', () => {
+    const at = new Date(2015, 8, 14, 0, 13).toISOString()
+    expect(dateOf(at)).toBe('14.9.2015')
+    expect(lastReceivedLine([])).toBe('')
+    expect(lastReceivedLine([{ profileId: null, createdAt: at }])).toBe('')
+    expect(lastReceivedLine([{ profileId: 2, createdAt: at }, { profileId: null, createdAt: new Date().toISOString() }])).toBe('Last message received on 14.9.2015 at 00:13.')
   })
 })
