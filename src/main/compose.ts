@@ -191,6 +191,8 @@ export interface ComposeOptions {
   manuals?: Record<string, string>
   /** How the proxy that hides switched-off MCP tools is launched; without it a server is handed over whole (tests). */
   mcpProxy?: McpProxyLaunch
+  /** Experimental Teams and Team Chat opt-in; defaults off. */
+  teamsEnabled?: boolean
   /** Poll interval of `git.changed` while a Code window is open (ms); default 5000, 0 disables. */
   gitPollMs?: number
 }
@@ -372,6 +374,7 @@ export function composeApp(options: ComposeOptions): AppServices {
     events: publisher
   })
   const desktops = new DesktopService({
+    teamsEnabled: options.teamsEnabled,
     desktops: repos.desktops,
     windows: repos.windows,
     policies: repos.toolPolicies,

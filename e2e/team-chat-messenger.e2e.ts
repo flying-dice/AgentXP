@@ -18,7 +18,7 @@ describe('Team Chat: a Messenger conversation', () => {
     }, roomId)
 
   beforeAll(async () => {
-    ctx = await startScriptedDesktop({ script: 'e2e/fixtures/scripts/team-chat.json', title: 'Team Chat look' })
+    ctx = await startScriptedDesktop({ teamsEnabled: true, script: 'e2e/fixtures/scripts/team-chat.json', title: 'Team Chat look' })
     roomId = await ctx.desktopPage.evaluate(async (desktopId) => {
       const api = (window as unknown as { agentxp: AgentXPApi }).agentxp
       const coder = await api.profiles.create({ name: 'Coder', instructions: '', agentId: null, model: null, skillIds: [], mcpServerIds: [] })

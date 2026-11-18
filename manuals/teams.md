@@ -1,5 +1,7 @@
 # Using Teams
 
+Teams and Team Chat are experimental and disabled by default. They are unavailable in Start and saved windows stay closed. To opt in, launch AgentXP with `AGENTXP_ENABLE_TEAMS=1` and restart it. Disabling the feature keeps your data.
+
 This manual describes Teams. Teams holds the profiles and the teams of agents, and the chat rooms where a team works with you.
 
 ## Table of Contents

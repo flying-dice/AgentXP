@@ -55,6 +55,8 @@ export interface DesktopServiceDeps {
   /** The drives of a desktop (C: and the plugged-in projects). */
   drives: { list(desktopId: Id): DriveDto[]; removed(desktopId: Id): RemovedProjectDto[] }
   events: EventPublisher
+  /** Experimental Teams and Team Chat opt-in; defaults off. */
+  teamsEnabled?: boolean
   /** Clock in milliseconds (tests); defaults to `Date.now`. */
   now?: () => number
 }
@@ -183,22 +185,31 @@ export class DesktopService implements DesktopStates {
     this.lastPublished.delete(id)
   }
 
+  private appEnabled(app: AppKind): boolean {
+    return this.deps.teamsEnabled === true || (app !== 'teams' && app !== 'team-chat')
+  }
+
+  requireAppEnabled(app: AppKind): void {
+    if (!this.appEnabled(app)) throw new AppError('Teams is disabled. Set AGENTXP_ENABLE_TEAMS=1 and restart to enable it.')
+  }
+
   // ---- state -------------------------------------------------------------------------------------
 
   state(desktopId: Id): DesktopState {
     const desktop = this.record(desktopId)
-    const records = this.deps.windows.list(desktopId)
+    const records = this.deps.windows.list(desktopId).filter((r) => this.appEnabled(r.app))
     const windows = numberDuplicateTitles(records.map((r) => this.toWindowState(r)))
     return {
       desktopId,
       agentId: desktop.agentId,
+      teamsEnabled: this.deps.teamsEnabled === true,
       title: desktop.title,
       drives: this.deps.drives.list(desktopId),
       removedProjects: this.deps.drives.removed(desktopId),
       home: AGENT_HOME,
       focusedWindowId: this.focusedId(desktopId, windows),
       windows,
-      tools: enabledToolGroups(windows.map((w) => w.app)),
+      tools: enabledToolGroups(windows.map((w) => w.app)).filter((g) => this.deps.teamsEnabled || (g !== 'teams' && g !== 'rooms')),
       paused: desktop.paused,
       stoppedByPause: this.deps.desktops.stoppedChats(desktopId),
       userInControl: desktop.userInControl,
@@ -246,6 +257,7 @@ export class DesktopService implements DesktopStates {
    * taskbar button flashes until the user focuses it.
    */
   openWindow(input: OpenWindowInput, openedBy: OpenedBy = 'user', size?: { width?: number; height?: number }): AppWindowState {
+    this.requireAppEnabled(input.app)
     const desktopId = this.record(input.desktopId).id
     const focused = this.focusedRecord(desktopId)
     const typing = openedBy === 'agent' && focused !== null && this.userIsTyping(desktopId)
@@ -285,6 +297,7 @@ export class DesktopService implements DesktopStates {
    */
   openOutputWindow(sessionId: Id, input: OpenWindowInput, size?: { width?: number; height?: number }): Promise<AppWindowState> {
     try {
+      this.requireAppEnabled(input.app)
       this.record(input.desktopId)
       // No question to ask: the window is placed at once (the caller, e.g. an A2UI render, sees it open when this returns).
       if (this.existingWindow(input) || this.policy().openApps === 'allow') return Promise.resolve(this.placeOutputWindow(input, size))
@@ -301,6 +314,7 @@ export class DesktopService implements DesktopStates {
    * raised; a Code window is told to show `path`. With no window on the desktop the new window simply is the front one.
    */
   placeOutputWindow(input: OpenWindowInput, size?: { width?: number; height?: number }): AppWindowState {
+    this.requireAppEnabled(input.app)
     const desktopId = this.record(input.desktopId).id
     const focused = this.focusedRecord(desktopId)
     const existing = this.existingWindow(input)
@@ -332,6 +346,7 @@ export class DesktopService implements DesktopStates {
    * apps"; `windowId` names an open window (the Browser or Agent Diagrams window of the target).
    */
   async presentWindow(sessionId: Id, input: OpenWindowInput & { windowId?: Id }, focus: boolean): Promise<AppWindowState> {
+    this.requireAppEnabled(input.app)
     const desktopId = this.record(input.desktopId).id
     const existing = input.windowId !== undefined ? this.windowRecord(input.windowId) : this.existingWindow(input)
     if (focus) {
@@ -665,7 +680,9 @@ export class DesktopService implements DesktopStates {
   }
 
   private windowRecord(windowId: Id): AppWindowRecord {
-    return required(this.deps.windows.get(windowId), 'Window')
+    const record = required(this.deps.windows.get(windowId), 'Window')
+    this.requireAppEnabled(record.app)
+    return record
   }
 
   private windowState(windowId: Id): AppWindowState {
@@ -745,7 +762,7 @@ export class DesktopService implements DesktopStates {
 
   /** The window that has focus (same rule as `state().focusedWindowId`), as its row. */
   private focusedRecord(desktopId: Id): AppWindowRecord | null {
-    const records = this.deps.windows.list(desktopId)
+    const records = this.deps.windows.list(desktopId).filter((r) => this.appEnabled(r.app))
     const stored = this.focus.get(desktopId)
     const visible = (r: AppWindowRecord): boolean => r.windowState !== 'minimized'
     return records.find((r) => r.id === stored && visible(r)) ?? records.findLast(visible) ?? null

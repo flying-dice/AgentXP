@@ -31,7 +31,7 @@ describe('Follow', () => {
 
   beforeAll(async () => {
     workspace = await createWorkspace({ 'auth.ts': AUTH })
-    ctx = await startScriptedDesktop({ script: 'follow-steps', name: 'Builder', title: 'Follow desktop', workspace })
+    ctx = await startScriptedDesktop({ teamsEnabled: true, script: 'follow-steps', name: 'Builder', title: 'Follow desktop', workspace })
     await setToolPolicy(page(), { 'fs.write': 'allow', terminal: 'allow' })
     await ctx.desktop.openApp('chat')
     await see.visible(ctx.desktop.chat().composer)
@@ -246,7 +246,7 @@ describe('Follow: open apps on Ask, the cursor and its window, the Browser in th
   beforeAll(async () => {
     web = await serveFixtureWeb()
     workspace = await createWorkspace({ 'auth.ts': AUTH })
-    ctx = await startScriptedDesktop({ script: 'follow-steps', name: 'Builder', title: 'Follow ask desktop', workspace })
+    ctx = await startScriptedDesktop({ teamsEnabled: true, script: 'follow-steps', name: 'Builder', title: 'Follow ask desktop', workspace })
     // Agent may open apps: Ask. Writing and running are allowed, so the only possible question is about opening a window.
     await setToolPolicy(page(), { 'fs.write': 'allow', terminal: 'allow', browser: 'allow' }, 'ask')
     await ctx.desktop.openApp('code')

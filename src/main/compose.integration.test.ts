@@ -171,7 +171,7 @@ describe('app composition with the fake ACP agent', () => {
 
     await app.api.desktop.openWindow({ desktopId: desktop.id, app: 'terminal' })
     const changed = publisher.payloads('desktop.changed')
-    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: enabledToolGroups([]), home: 'C:\\Users\\Agent' })
+    expect(changed.at(-1)).toMatchObject({ desktopId: desktop.id, tools: enabledToolGroups([]).filter((g) => g !== 'teams' && g !== 'rooms'), home: 'C:\\Users\\Agent' })
     expect(changed.at(-1)?.drives.map((d) => d.letter)).toEqual(['C', 'E'])
     expect(changed.at(-1)?.windows.map((w) => w.app)).toEqual(['chat', 'terminal'])
 

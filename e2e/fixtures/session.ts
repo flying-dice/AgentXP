@@ -17,9 +17,9 @@ export interface ConnectedDesktop {
  * Starts the app, registers the fake agent, creates a desktop through the launcher UI (optionally with the
  * workspace plugged in at creation) and connects to it.
  */
-export async function startConnectedDesktop(options: { title?: string; workspace?: Workspace; userData?: string; /** Registers the agent of the run (default: the fake agent). */ agent?: (launcherPage: Page) => Promise<unknown> } = {}): Promise<ConnectedDesktop> {
+export async function startConnectedDesktop(options: { teamsEnabled?: boolean; title?: string; workspace?: Workspace; userData?: string; /** Registers the agent of the run (default: the fake agent). */ agent?: (launcherPage: Page) => Promise<unknown> } = {}): Promise<ConnectedDesktop> {
   const title = options.title ?? 'E2E desktop'
-  const app = await launchAgentXP({ userData: options.userData })
+  const app = await launchAgentXP({ userData: options.userData, teamsEnabled: options.teamsEnabled })
   const launcherPage = await app.launcherWindow()
   const launcher = new LauncherPage(launcherPage)
   await (options.agent ?? registerFakeAgent)(launcherPage)
@@ -34,8 +34,8 @@ export async function startConnectedDesktop(options: { title?: string; workspace
 }
 
 /** Starts AgentXP again on the same user data and reconnects to the desktop `title` (for "it is still there after a restart"). */
-export async function reconnectDesktop(userData: string, title: string): Promise<ConnectedDesktop> {
-  const app = await launchAgentXP({ userData })
+export async function reconnectDesktop(userData: string, title: string, teamsEnabled = false): Promise<ConnectedDesktop> {
+  const app = await launchAgentXP({ userData, teamsEnabled })
   const launcherPage = await app.launcherWindow()
   const launcher = new LauncherPage(launcherPage)
   await launcher.connect(title)

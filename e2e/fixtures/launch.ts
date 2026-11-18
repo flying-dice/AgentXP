@@ -31,6 +31,7 @@ export interface AgentXPInstance {
 }
 
 export interface LaunchOptions {
+  teamsEnabled?: boolean
   /** Reuse a user-data directory (restart tests). It is NOT deleted on close. */
   userData?: string
 }
@@ -43,7 +44,7 @@ export async function launchAgentXP(options: LaunchOptions = {}): Promise<AgentX
     // A7_E2E_SCALE=2 renders at 2x for screenshots a person looks at (PR descriptions).
     args: [join(projectRoot, 'out/main/index.js'), '--no-sandbox', ...(process.env.A7_E2E_SCALE ? [`--force-device-scale-factor=${process.env.A7_E2E_SCALE}`] : [])],
     cwd: projectRoot,
-    env: { ...process.env, AGENTXP_USER_DATA: userData } as Record<string, string>
+    env: { ...process.env, AGENTXP_USER_DATA: userData, AGENTXP_ENABLE_TEAMS: options.teamsEnabled ? '1' : '0' } as Record<string, string>
   })
   app.context().setDefaultTimeout(WAIT_MS)
   // The specs look at tool cards and narration, which the app folds by default (View > Show thinking and tool details).

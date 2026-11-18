@@ -106,7 +106,7 @@
     groupOf('system-tools', 'System Tools', ['agent-manager', 'control-centre', 'task-scheduler'])
   ]
   const programs = $derived<StartItem[]>(
-    START_APPS.map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
+    START_APPS.filter((k) => k !== 'teams' || desktop.state.teamsEnabled).map((k) => ({ id: k, title: k === 'chat' ? 'New chat' : appRegistry[k].title, description: appRegistry[k].description, icon: appRegistry[k].icon }))
   )
   const recent = $derived<StartItem[]>(desktop.chats.slice(0, 8).map((s) => ({ id: String(s.id), title: s.title || 'New chat' })))
   const places: StartItem[] = [

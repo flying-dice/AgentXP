@@ -47,6 +47,7 @@ async function bootstrap(): Promise<Running> {
     }
   )
   services = composeApp({
+    teamsEnabled: process.env.AGENTXP_ENABLE_TEAMS === '1',
     db,
     publisher: new ElectronEventPublisher({
       webContentsOf: (desktopId) => windows.webContentsOf(desktopId),

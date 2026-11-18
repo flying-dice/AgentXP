@@ -366,7 +366,7 @@ describe('tool catalog', () => {
   })
 
   it('lists every group but those of closed output apps, falling back to shell for an unknown desktop', () => {
-    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'fs.read', 'fs.write', 'notepad', 'show', 'terminal', 'wordpad', 'notes', 'events', 'snip', 'recycle', 'board', 'scheduler', 'teams', 'rooms', 'settings', 'taskmgr', 'help'])
+    expect(tools.enabledGroups(desktopId)).toEqual(['shell', 'fs.read', 'fs.write', 'notepad', 'show', 'terminal', 'wordpad', 'notes', 'events', 'snip', 'recycle', 'board', 'scheduler', 'settings', 'taskmgr', 'help'])
     desktops.openWindow({ desktopId, app: 'browser' })
     expect(tools.enabledGroups(desktopId)).toContain('browser')
     expect(tools.enabledGroups(999)).toEqual(['shell'])

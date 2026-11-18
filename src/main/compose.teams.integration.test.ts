@@ -19,6 +19,7 @@ beforeEach(async () => {
   publisher = new RecordingPublisher()
   connector = new FakeConnector()
   app = composeApp({
+    teamsEnabled: true,
     db,
     publisher,
     connector,

@@ -356,6 +356,7 @@ export class DesktopController implements DesktopHost {
 
   /** The rooms of this desktop and who their members are (for the approvals of members). */
   private async loadRooms(): Promise<void> {
+    if (!this.state.teamsEnabled) return
     try {
       const rooms = await this.api.rooms.list(this.state.desktopId)
       for (const room of rooms) this.applyRoom(await this.api.rooms.state(room.id))

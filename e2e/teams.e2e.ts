@@ -11,7 +11,7 @@ describe('Teams and Team Chat', () => {
 
   beforeAll(async () => {
     userData = await mkdtemp(join(tmpdir(), 'a7-e2e-teams-'))
-    ctx = await startConnectedDesktop({ title: 'Teams desktop', userData })
+    ctx = await startConnectedDesktop({ title: 'Teams desktop', userData, teamsEnabled: true })
   })
   afterAll(async () => {
     await ctx?.app.close()
@@ -99,7 +99,7 @@ describe('Teams and Team Chat', () => {
 
   it('keeps profiles, teams and the room with its messages over a restart', async () => {
     await ctx.app.close()
-    ctx = await reconnectDesktop(userData, 'Teams desktop')
+    ctx = await reconnectDesktop(userData, 'Teams desktop', true)
     // The room window comes back with the message; it sits on top of Teams, so it is closed after the check.
     if ((await ctx.desktop.windows('team-chat').count()) > 0) {
       await see.text(ctx.desktop.window('team-chat').getByTestId('team-chat-message').first(), 'Hello team')
