@@ -18,6 +18,8 @@ export interface AgentDto {
   isDefault: boolean
   /** The ACP session mode id new sessions start in (Default, Accept Edits, ...); null keeps the agent's own choice. */
   defaultModeId: string | null
+  /** The ACP model id new chats start on (`sonnet`, `opus`, ...); null keeps the agent's own choice. */
+  defaultModelId: string | null
 }
 
 export interface FolderDto {

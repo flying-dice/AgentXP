@@ -13,19 +13,19 @@ describe('agentForm', () => {
 
   it('validates and builds the input', () => {
     expect(validateAgentForm({ ...emptyAgentForm(), command: '' })).toMatch(/program/)
-    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad', makeDefault: false, defaultModeId: '' })).toMatch(/KEY=VALUE/)
+    expect(validateAgentForm({ name: 'n', command: 'x', args: '', env: 'bad', makeDefault: false, defaultModeId: '', defaultModelId: '' })).toMatch(/KEY=VALUE/)
     expect(validateAgentForm({ ...emptyAgentForm(), command: 'node' })).toBeNull()
-    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1', makeDefault: false, defaultModeId: ' acceptEdits ' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' }, defaultModeId: 'acceptEdits' })
+    expect(inputFromForm({ name: ' n ', command: ' npx ', args: '-y', env: 'A=1', makeDefault: false, defaultModeId: ' acceptEdits ', defaultModelId: ' sonnet ' })).toEqual({ name: 'n', command: 'npx', args: ['-y'], env: { A: '1' }, defaultModeId: 'acceptEdits', defaultModelId: 'sonnet' })
   })
 
   it('names an agent after its command line when no name is typed', () => {
-    expect(inputFromForm({ name: ' ', command: 'node', args: 'my-agent.js\n\n--x', env: '', makeDefault: true, defaultModeId: '' }).name).toBe('node my-agent.js --x')
+    expect(inputFromForm({ name: ' ', command: 'node', args: 'my-agent.js\n\n--x', env: '', makeDefault: true, defaultModeId: '', defaultModelId: '' }).name).toBe('node my-agent.js --x')
     expect(commandLine({ command: ' node ', args: '' })).toBe('node')
   })
 
   it('starts as the default agent in Add and keeps the flag of an existing agent in Edit', () => {
     expect(emptyAgentForm().makeDefault).toBe(true)
-    expect(formFromAgent({ id: 1, name: 'a', command: 'c', args: ['x'], env: {}, isDefault: false, defaultModeId: null }).makeDefault).toBe(false)
+    expect(formFromAgent({ id: 1, name: 'a', command: 'c', args: ['x'], env: {}, isDefault: false, defaultModeId: null, defaultModelId: null }).makeDefault).toBe(false)
   })
 
   it('words the result of Test', () => {

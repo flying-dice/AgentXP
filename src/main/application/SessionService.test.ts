@@ -14,7 +14,7 @@ import { TerminalRecorder } from './TerminalRecorder'
 import { HISTORY_RESOURCE_URI } from './historyBlock'
 import type { ContentBlockDto } from '@shared/models'
 import { SessionFiles } from './SessionFiles'
-import { createVfsFixture, FakeConnector } from './test-helpers'
+import { createVfsFixture, FakeConnector, FakeLiveConnection } from './test-helpers'
 
 let f: Awaited<ReturnType<typeof createVfsFixture>>
 let connector: FakeConnector
@@ -116,6 +116,56 @@ describe('SessionService.create default mode', () => {
     const session = await service.create(f.desktop.id, unknown.id)
     expect(connector.connections.flatMap((c) => c.calls).some((c) => c.startsWith('setMode'))).toBe(false)
     expect(f.repos.sessions.get(session.id)?.currentModeId).toBe('default')
+  })
+})
+
+describe('SessionService default model', () => {
+  const offered = [
+    { id: 'opus', name: 'Opus', description: null },
+    { id: 'sonnet', name: 'Sonnet', description: null }
+  ]
+  const sonnetAgent = () => f.repos.agents.create({ name: 'Sonny', command: 'x', args: [], env: {}, defaultModelId: 'sonnet' })
+
+  beforeEach(() => {
+    connector.models = offered
+    connector.agentModelId = 'opus' // the agent starts on Opus by itself
+  })
+
+  it('starts a new session on the default model of its agent, and still offers Opus', async () => {
+    const session = await service.create(f.desktop.id, sonnetAgent().id)
+    expect(connector.connections[0]!.calls).toContain('setModel:sonnet')
+    expect(f.repos.sessions.get(session.id)).toMatchObject({ currentModelId: 'sonnet', models: offered })
+  })
+
+  it('leaves the model alone when the agent has none set, or does not offer the model', async () => {
+    const bare = f.repos.agents.create({ name: 'Bare', command: 'x', args: [], env: {} })
+    await service.create(f.desktop.id, bare.id)
+    const unknown = f.repos.agents.create({ name: 'Odd', command: 'x', args: [], env: {}, defaultModelId: 'nope' })
+    const session = await service.create(f.desktop.id, unknown.id)
+    expect(connector.connections.flatMap((c) => c.calls).some((c) => c.startsWith('setModel'))).toBe(false)
+    expect(f.repos.sessions.get(session.id)?.currentModelId).toBe('opus')
+  })
+
+  it('keeps the agent\'s model when setting the default fails', async () => {
+    const session = await service.create(f.desktop.id)
+    const agent = sonnetAgent()
+    const failing = vi.spyOn(FakeLiveConnection.prototype, 'setModel').mockRejectedValueOnce(new Error('nope'))
+    const other = await service.create(f.desktop.id, agent.id)
+    failing.mockRestore()
+    expect(f.repos.sessions.get(other.id)?.currentModelId).toBe('opus')
+    expect(session.id).not.toBe(other.id)
+  })
+
+  it('a chat comes back on the model the person chose, not the agent\'s own', async () => {
+    connector.canLoadSession = true
+    const session = await service.create(f.desktop.id, sonnetAgent().id)
+    await service.setModel(session.id, 'opus')
+    await service.setModel(session.id, 'sonnet')
+    await pool.disposeAll()
+    service.recoverAfterRestart()
+    await service.prompt({ sessionId: session.id, text: 'again', attachments: [] })
+    expect(connector.connections[1]!.calls).toEqual(['loadSession:acp-1', 'setModel:sonnet', 'prompt'])
+    expect(f.repos.sessions.get(session.id)?.currentModelId).toBe('sonnet')
   })
 })
 

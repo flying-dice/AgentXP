@@ -69,7 +69,8 @@ const AGENT_FIELDS = {
   command: z.string().min(1).describe('The program, for example "node" or "claude-code-acp"'),
   args: z.array(z.string()).optional(),
   env: z.record(z.string(), z.string()).optional(),
-  startMode: z.string().nullable().optional().describe('The session mode id new chats start in; null keeps the agent\'s choice')
+  startMode: z.string().nullable().optional().describe('The session mode id new chats start in; null keeps the agent\'s choice'),
+  startModel: z.string().nullable().optional().describe('The model id new chats start on (for Claude Code: sonnet, opus, fable, haiku); null keeps the agent\'s choice')
 }
 const MCP_VAR = z.object({ key: z.string().min(1), value: z.string().optional().describe('Leave out to keep the saved value of this key'), secret: z.boolean().optional() })
 const MCP_FIELDS = {

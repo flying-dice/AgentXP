@@ -45,8 +45,8 @@ import {
 } from './taskModel'
 
 const agents: AgentDto[] = [
-  { id: 1, name: 'Claude Code', command: 'npx', args: [], env: {}, isDefault: true, defaultModeId: null },
-  { id: 2, name: 'Gemini CLI', command: 'gemini', args: [], env: {}, isDefault: false, defaultModeId: null }
+  { id: 1, name: 'Claude Code', command: 'npx', args: [], env: {}, isDefault: true, defaultModeId: null, defaultModelId: null },
+  { id: 2, name: 'Gemini CLI', command: 'gemini', args: [], env: {}, isDefault: false, defaultModeId: null, defaultModelId: null }
 ]
 const drives: DriveDto[] = [
   { letter: 'E', kind: 'removable', label: 'claude-code-win', folderId: 1, path: 'C:\\src\\claude-code-win', pluggedAt: '2026-11-17T08:00:00Z' } as unknown as DriveDto,

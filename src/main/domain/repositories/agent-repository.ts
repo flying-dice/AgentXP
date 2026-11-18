@@ -1,6 +1,6 @@
 import type { AgentDto, Id } from '@shared/models'
 
-export type NewAgent = Omit<AgentDto, 'id' | 'isDefault' | 'defaultModeId'> & { defaultModeId?: string | null }
+export type NewAgent = Omit<AgentDto, 'id' | 'isDefault' | 'defaultModeId' | 'defaultModelId'> & { defaultModeId?: string | null; defaultModelId?: string | null }
 
 export interface AgentRepository {
   list(): AgentDto[]
