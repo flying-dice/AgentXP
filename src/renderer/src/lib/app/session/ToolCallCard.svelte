@@ -3,7 +3,7 @@
   import Button from '../../kit/atoms/Button.svelte'
   import ToolStatusIcon from './ToolStatusIcon.svelte'
   import { SHOW_EVENT_LABEL, offersEventLink, type ToolStatusView } from './toolStatus'
-  import type { ToolShowTarget } from './toolShowTarget'
+  import type { ToolShowTarget } from '@shared/toolShowTarget'
 
   interface Props {
     /** Bold tool name: Read, Edit, Bash... */

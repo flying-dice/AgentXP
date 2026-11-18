@@ -20,7 +20,7 @@ const reasonOf = (input: unknown): string => {
 describe('validateScript', () => {
   it('accepts every bundled sample script', () => {
     const files = readdirSync(join(here, 'scripts')).filter((f) => f.endsWith('.json'))
-    expect(files.sort()).toEqual(['a2ui.json', 'aside.json', 'demo.json', 'desktop.json', 'errors.json', 'notices.json', 'review.json', 'search.json', 'show.json', 'stepping.json'])
+    expect(files.sort()).toEqual(['a2ui.json', 'aside.json', 'demo.json', 'desktop.json', 'errors.json', 'follow-steps.json', 'notices.json', 'review.json', 'search.json', 'show.json', 'stepping.json'])
     for (const file of files) expect(() => loadScript(join(here, 'scripts', file)), file).not.toThrow()
   })
 

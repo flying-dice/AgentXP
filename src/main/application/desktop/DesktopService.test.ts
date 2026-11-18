@@ -625,3 +625,18 @@ describe('DesktopService: foreground chat', () => {
     expect(service.foregroundSessionId(9999)).toBeNull()
   })
 })
+
+describe('DesktopService: presence (Follow and identities)', () => {
+  it('the state carries the followed chat and the identity of each chat with a window', async () => {
+    const a = await chats.create(desktopId, undefined, undefined, 'chat')
+    expect(service.state(desktopId)).toMatchObject({ following: null, identities: {} })
+    service.openWindow({ desktopId, app: 'chat', sessionId: a.id })
+    service.attachPresence({
+      following: () => ({ sessionId: a.id, keep: false, identity: { name: 'Builder', color: '#123456' } }),
+      identities: (_desktopId, ids) => Object.fromEntries(ids.map((id) => [String(id), { name: `Agent ${id}`, color: '#123456' }]))
+    })
+    const state = service.state(desktopId)
+    expect(state.following).toMatchObject({ sessionId: a.id })
+    expect(state.identities).toEqual({ [String(a.id)]: { name: `Agent ${a.id}`, color: '#123456' } })
+  })
+})

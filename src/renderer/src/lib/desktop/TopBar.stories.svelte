@@ -50,6 +50,15 @@
 <Story name="PermissionsShownOnChips" args={{ policy: { ...DEFAULT_TOOL_POLICY, groups: { ...DEFAULT_TOOL_POLICY.groups, browser: 'deny' } } }}>
   {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
 </Story>
+<Story name="SeveralAgentsWorking" args={{ working: 'Read a file', agents: [{ sessionId: 1, title: 'Fix login', identity: { name: 'Builder', color: '#1f6feb' }, step: 'reading auth.ts' }, { sessionId: 2, title: 'Review', identity: { name: 'Reviewer', color: '#b5179e' }, step: 'running npm test' }] }}>
+  {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
+</Story>
+<Story name="Following" args={{ working: 'Read a file', following: { sessionId: 1, keep: false, identity: { name: 'Builder', color: '#1f6feb' } } }}>
+  {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
+</Story>
+<Story name="FollowEnded" args={{ working: null, followNotice: 'Stopped following Builder: the turn ended.' }}>
+  {#snippet template(args)}<div class="stage"><TopBar {...args} /></div>{/snippet}
+</Story>
 
 <style>
   .stage {

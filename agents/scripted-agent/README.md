@@ -110,6 +110,7 @@ refusals such as an ejected drive.
 | `search.json` | find, read and edit files headless (nothing opens): "find files" calls `fs_find`, "search code" calls `code_search` and `code_read`, "edit code" calls `code_edit` and `code_write` |
 | `notices.json` | notices of agent work (`e2e/notices.e2e.ts`): "background job" pauses before it ends (a turn summary), "plan the sprint" adds a Kanban card and writes `E:\PLAN.md` (two notices that queue), "move the login card" moves it to Done, the Code Review prompt waits 3 s and leaves two comments |
 | `show.json` | Show and the agent cursor (`e2e/show.e2e.ts`): "show the token check" calls `show` on `E:\auth.ts` lines 3-5 with a note, "background show" pauses before its `show` (a request when the operator went elsewhere), "show the end" shows line 12, "show the board" shows the Kanban window |
+| `follow-steps.json` | Follow (`e2e/follow.e2e.ts`): "follow steps" reads `E:\auth.ts` lines 3-5, edits line 8, runs `echo followed` and reads lines 10-11, each step waiting for `next`; "member steps" (a team room member, which runs in its own agent program) has an ACP read running for 5 s, then a `code_read` of lines 6-7, then answers after 3 s; "keep busy" has a read running for 8 s (a second working chat for the top-bar agents popup) |
 | `stepping.json` | every step manual and labelled |
 | `errors.json` | prompts containing `error`, `refuse`, `long`, `cancelled`, `expect`, `template`, `slow` take the failure paths |
 

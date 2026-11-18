@@ -7,6 +7,8 @@
  */
 import type { A2uiSurfaceTarget } from './a2ui'
 import type { Id, IsoDate } from './models'
+import type { FollowStateDto } from './follow'
+import type { AgentIdentity } from './identity'
 import type { ShowTarget } from './show'
 import type { DriveDto, RemovedProjectDto, VPath } from './vfs'
 
@@ -238,6 +240,13 @@ export interface DesktopState {
   notes: StickyNoteDto[]
   /** Every A2UI surface of the desktop's chats and where it is shown. */
   surfaces: SurfaceStateDto[]
+  /** The chat the operator follows (Follow, `docs/AGENT_PRESENCE.md` section 7); null when none. Absent in older fixtures. */
+  following?: FollowStateDto | null
+  /**
+   * The name and colour of each agent the desktop shows (chats with a window, busy chats, team room members), by
+   * session id (`agentIdentity`): the feed rows, the top bar and the cursor use the same one. Absent in older fixtures.
+   */
+  identities?: Record<string, AgentIdentity>
 }
 
 /** Where one A2UI surface is: inline in its chat, in the chat's sidebar or in its own window; `closed` = the user closed the tab or window (it still updates). */
@@ -473,6 +482,10 @@ export interface DesktopApi {
   acceptShow(desktopId: Id, showId: string): Promise<void>
   /** **Show again** on a transcript row: the target opens at the spot with the note, without the cursor. */
   showAgain(desktopId: Id, sessionId: Id, target: ShowTarget, note: string): Promise<void>
+  /** **Follow**: the operator watches this chat's work live (one at a time; another replaces it). `null` stops following. */
+  follow(desktopId: Id, sessionId: Id | null, keep?: boolean): Promise<void>
+  /** **Keep following**: the follow stays after the chat's turn ends. */
+  setKeepFollowing(desktopId: Id, keep: boolean): Promise<void>
 }
 
 export interface AgentProcessDto {

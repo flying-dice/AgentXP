@@ -170,6 +170,7 @@ export function chatRect(root: ParentNode, sessionId: number, windows: readonly 
   const chat = windows.find((w) => w.view.app === 'chat' && w.view.sessionId === sessionId && w.windowState !== 'minimized')
   if (chat) return visibleRect(windowFrame(root, chat.id))
   const host = windows.find((w) => w.asideSessionId === sessionId && w.windowState !== 'minimized')
-  if (!host) return null
+  // A team room member: its row in the Team Chat window.
+  if (!host) return visibleRect(root.querySelector(`[data-testid="team-chat-member"][data-session-id="${escapeAttr(sessionId)}"]`))
   return visibleRect(root.querySelector(`[data-testid="chat-pane"][data-window-id="${escapeAttr(host.id)}"]`)) ?? visibleRect(windowFrame(root, host.id))
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AguiToolCallState } from '@shared/agui-state'
 import { DEFAULT_TOOL_POLICY, type ToolPolicyDto } from '@shared/desktop'
-import { CONTROL_IDLE_NOTE, CONTROL_NOTE, NOT_SAVED_TEXT, barStatus, controlNote, TAKE_OVER_TIP, chipAriaLabel, controlText, feedAction, feedTarget, feedText, recentToolCalls, toolChips, waitingText, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
+import { workingAgents, CONTROL_IDLE_NOTE, CONTROL_NOTE, NOT_SAVED_TEXT, barStatus, controlNote, TAKE_OVER_TIP, chipAriaLabel, controlText, feedAction, feedTarget, feedText, recentToolCalls, toolChips, waitingText, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
 
 const call = (title: string, status: AguiToolCallState['status'] = 'completed'): AguiToolCallState => ({ title, kind: 'read', status, rawInput: null, locations: [], contents: [] })
 const chat = (id: number, over: Partial<ChatActivityInput> = {}): ChatActivityInput => ({ sessionId: id, title: `Chat ${id}`, status: 'idle', toolCalls: {}, ...over })
@@ -131,6 +131,11 @@ describe('barStatus', () => {
     expect(barStatus({ ...base, working: 'Read a.ts', waiting: 2 })).toEqual({ state: 'waiting', text: 'Waiting for you: 2 requests to approve' })
     expect(waitingText(1)).toBe('Waiting for you: 1 request to approve')
   })
+  it('with two or more chats working it reads "N agents working"; a waiting request still comes first', () => {
+    expect(barStatus({ ...base, working: 'Read a.ts', agents: 3 })).toEqual({ state: 'working', text: '3 agents working' })
+    expect(barStatus({ ...base, working: 'Read a.ts', agents: 1 })).toEqual({ state: 'working', text: 'Working: Read a.ts' })
+    expect(barStatus({ ...base, working: 'Read a.ts', agents: 2, waiting: 1 }).state).toBe('waiting')
+  })
   it('Paused wins over You are in control, which wins over Working; a notice never hides them', () => {
     const busy = { ...base, working: 'Read a.ts', notice: 'x' }
     expect(barStatus({ ...busy, userInControl: true })).toEqual({ state: 'control', text: 'You are in control. All tools ask first until you click Resume. This is not saved.' })
@@ -214,5 +219,22 @@ describe('toolChips', () => {
     const chips = toolChips(policy({}), true)
     expect(chips.map((c) => c.label)).toEqual(['Read files: Ask first (now)', 'Write files: Ask first', 'Run commands: Ask first', 'Browser: Ask first (now)'])
     expect(controlText()).toBe('You are in control. All tools ask first until you click Resume. This is not saved.')
+  })
+})
+
+describe('workingAgents: the rows of the top-bar agents popup', () => {
+  const identityOf = (id: number) => ({ name: id === 1 ? 'Builder' : 'Reviewer', color: id === 1 ? '#1f6feb' : '#b5179e' })
+  it('lists each working chat, newest first, with its identity and its step in plain words', () => {
+    const chats: ChatActivityInput[] = [
+      { sessionId: 1, title: 'Fix login', status: 'working', updatedAt: '2026-11-17T10:00:00Z', toolCalls: { a: { title: 'agentxp.code_read', kind: 'other', status: 'in_progress', rawInput: '{"path":"E:\\\\auth.ts"}', locations: [], contents: [] } } },
+      { sessionId: 2, title: 'Review', status: 'awaiting_permission', updatedAt: '2026-11-17T10:01:00Z', toolCalls: {} },
+      { sessionId: 3, title: 'Idle', status: 'idle', updatedAt: '2026-11-17T10:02:00Z', toolCalls: {} },
+      { sessionId: 4, title: 'Thinker', status: 'working', updatedAt: '2026-11-17T09:00:00Z', toolCalls: {} }
+    ]
+    expect(workingAgents(chats, identityOf).map((a) => [a.sessionId, a.identity.name, a.step])).toEqual([
+      [2, 'Reviewer', 'waiting for you'],
+      [1, 'Builder', 'reading auth.ts'],
+      [4, 'Reviewer', 'thinking']
+    ])
   })
 })

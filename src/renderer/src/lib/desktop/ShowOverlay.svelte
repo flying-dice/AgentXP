@@ -137,11 +137,17 @@
     })
   })
 
-  // A Browser action: the cursor goes to the element before the click.
+  // A Browser action (the cursor goes to the element before the click) or a step of the followed chat: each agent's own
+  // cursor moves, so two agents pointing at once each keep theirs.
+  let seenPing = 0
   $effect(() => {
-    const ping = desktop.cursorPing
+    const pings = desktop.cursorPings
     untrack(() => {
-      if (ping) void point(ping.sessionId, ping.identity, ping.spot)
+      for (const ping of pings) {
+        if (ping.seq <= seenPing) continue
+        seenPing = ping.seq
+        void point(ping.sessionId, ping.identity, ping.spot)
+      }
     })
   })
 

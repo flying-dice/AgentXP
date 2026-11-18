@@ -738,8 +738,10 @@ describe('notepad and code tools', () => {
     // Same tabs, same active file, no change selected, focus where it was: only the changed lines are highlighted.
     expect(desktops.windowsOf(desktopId, 'code')[0]!.view).toMatchObject({ tabs: ['E:\\README.md', 'E:\\src\\app.ts'], activePath: 'E:\\src\\app.ts', visibleLines: [3, 4], selectedChangeId: null })
     expect(desktops.state(desktopId).focusedWindowId).toBe(chat.id)
+    // A replacement that ends with its line break is one line, not two.
+    expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'AND A HALF\n', newText: 'AND A THIRD\n' }))).toBe('Edited E:\\src\\app.ts (line 4).')
     expect(textOf(await run('code_edit', { path: 'src/app.ts', oldText: 'two', newText: '2', replaceAll: true }))).toMatch(/2 places/)
-    expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\n2\nTHREE\nAND A HALF\n2\n')
+    expect(await f.vfs.readFile(desktopId, 'E:\\src\\app.ts')).toBe('one\n2\nTHREE\nAND A THIRD\n2\n')
   })
 
   it('code_edit edits several lines of a file with Windows line endings, copied from code_read (which shows no \\r)', async () => {

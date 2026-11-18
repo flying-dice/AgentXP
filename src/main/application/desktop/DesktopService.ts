@@ -19,6 +19,8 @@ import {
 } from '@shared/desktop'
 import { DEFAULT_BOUNDS, atLeastMinSize, SURFACE_FALLBACK_TITLE, asideCwd, initialView, numberDuplicateTitles, placeChatBesideBrowser, placeNewWindow, windowTitle } from '@shared/desktop-views'
 import type { Id, SessionDto, SessionRole } from '@shared/models'
+import type { FollowStateDto } from '@shared/follow'
+import type { AgentIdentity } from '@shared/identity'
 import { isSafeRef } from '@shared/review'
 import { AGENT_HOME, parseVPath, type DriveDto, type RemovedProjectDto, type VPath } from '@shared/vfs'
 import type { A2uiSurfaceRepository } from '../../domain/repositories/a2ui-surface-repository'
@@ -55,6 +57,16 @@ export interface DesktopServiceDeps {
   events: EventPublisher
   /** Clock in milliseconds (tests); defaults to `Date.now`. */
   now?: () => number
+}
+
+/**
+ * What the desktop state says about agents that lives outside this service (attached after construction): the chat
+ * the operator follows (`FollowService`), and the identity of each agent the desktop shows (`agentIdentity`).
+ */
+export interface DesktopPresence {
+  following(desktopId: Id): FollowStateDto | null
+  /** The identities of these sessions and of every other agent the desktop shows (team room members), by session id. */
+  identities(desktopId: Id, sessionIds: readonly Id[]): Record<string, AgentIdentity>
 }
 
 /** Asks the user in the chat whether its agent may go on ("Agent may open apps" set to Ask); true when allowed. */
@@ -96,12 +108,19 @@ export class DesktopService implements DesktopStates {
   private readonly paneFocus = new Map<Id, Id>()
   /** Asks the user when "Agent may open apps" is set to Ask (the tool gateway, attached after construction). */
   private openApproval: OpenApproval | null = null
+  /** Follow and identities (attached after construction, `attachPresence`). */
+  private presence: DesktopPresence | null = null
 
   constructor(private readonly deps: DesktopServiceDeps) {}
 
   /** The gateway is built after this service (it needs the desktop state), so it is attached here. */
   attachOpenApproval(ask: OpenApproval): void {
     this.openApproval = ask
+  }
+
+  /** Follow and the identities are built after this service (they need it), so they are attached here. */
+  attachPresence(presence: DesktopPresence): void {
+    this.presence = presence
   }
 
   // ---- desktops ----------------------------------------------------------------------------------
@@ -144,6 +163,11 @@ export class DesktopService implements DesktopStates {
     return null
   }
 
+  /** True while the operator typed or clicked in the desktop during the last `TYPING_GRACE_MS` (Follow waits for that). */
+  operatorActive(desktopId: Id): boolean {
+    return this.userIsTyping(desktopId)
+  }
+
   private userIsTyping(desktopId: Id): boolean {
     const at = this.userActiveAt.get(desktopId)
     return at !== undefined && (this.deps.now ?? Date.now)() - at < TYPING_GRACE_MS
@@ -179,8 +203,22 @@ export class DesktopService implements DesktopStates {
       userInControl: desktop.userInControl,
       policy: this.policy(),
       notes: this.deps.notes.list(desktopId),
-      surfaces: this.surfacesOf(desktopId, records)
+      surfaces: this.surfacesOf(desktopId, records),
+      following: this.presence?.following(desktopId) ?? null,
+      identities: this.identitiesOf(desktopId, records)
     }
+  }
+
+  /** The agents the desktop shows: the chats of its windows (Chat, pane, Code Review) and the busy chats, by session id. */
+  private identitiesOf(desktopId: Id, records: readonly AppWindowRecord[]): Record<string, AgentIdentity> {
+    if (!this.presence) return {}
+    const ids = new Set<Id>()
+    for (const r of records) {
+      if (r.sessionId !== null && (r.app === 'chat' || r.app === 'code-review')) ids.add(r.sessionId)
+      if (r.asideSessionId !== null) ids.add(r.asideSessionId)
+    }
+    for (const s of this.deps.sessions.listByDesktop(desktopId)) if (BUSY_STATUSES.includes(s.status)) ids.add(s.id)
+    return this.presence.identities(desktopId, [...ids])
   }
 
   stateOfSession(sessionId: Id): DesktopState | null {

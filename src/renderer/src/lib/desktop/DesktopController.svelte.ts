@@ -31,8 +31,8 @@ import { DELETE_WARNING } from '../launcher/launcherModel'
 import { effectiveStatus, isBusy } from '../app/sessionStatus'
 import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE, resumedLine, stoppedLine } from '../app/session/resumeNote'
 import { SessionsStore } from '../stores/SessionsStore.svelte'
-import { feedTarget, recentToolCalls, workingChatId, workingText, type ChatActivityInput, type FeedItem } from './activity'
-import type { ToolShowTarget } from '../app/session/toolShowTarget'
+import { feedTarget, recentToolCalls, workingAgents, workingChatId, workingText, type ChatActivityInput, type FeedItem, type WorkingAgent } from './activity'
+import type { ToolShowTarget } from '@shared/toolShowTarget'
 import { nextApproval, waitingLinkText, type PendingApproval } from './approval'
 import { DEFAULT_PANE, composeAppContext, localStore, paneKey, readPane, writePane, type PaneState } from './chatPane'
 import { KeyedDebouncer } from './debounce'
@@ -43,7 +43,9 @@ import { ICON_HINT, PROJECT_HINT, takeIconHint, takeProjectHint } from './shellH
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
 import type { NoticeAction, NoticeDto, NoticeTarget } from '@shared/notices'
-import type { AgentIdentity } from '@shared/identity'
+import { agentIdentity, type AgentIdentity } from '@shared/identity'
+import { followEndedText, type FollowStateDto } from '@shared/follow'
+import { currentStep } from '../app/session/stepWords'
 import type { AgentCursorDto, ShowDto } from '@shared/show'
 import { drop, next, push, type BalloonQueueState } from './balloonQueue'
 import type { ActionCenterMessage } from '../kit/organisms/ActionCenter.svelte'
@@ -144,8 +146,14 @@ export class DesktopController implements DesktopHost {
   notice = $state<string | null>(null)
   /** The show on screen (`desktop.show`): the cursor glides to its spot and the note callout shows; null when none. */
   currentShow = $state.raw<ShowDto | null>(null)
-  /** The latest pointing of the agent cursor without a note (a Browser action), numbered so the same box twice moves again. */
-  cursorPing = $state.raw<(AgentCursorDto & { seq: number }) | null>(null)
+  /**
+   * The latest pointings of the agent cursor without a note (a Browser action, a step of the followed chat), numbered so
+   * the same box twice moves again; several agents can point at once (one cursor each), so the last few are kept.
+   */
+  cursorPings = $state.raw<readonly (AgentCursorDto & { seq: number })[]>([])
+  /** The short line after a follow ended on its own ("Stopped following Builder: the turn ended."); null when none. */
+  followNotice = $state<string | null>(null)
+  private followNoticeTimer: ReturnType<typeof setTimeout> | null = null
   /** Shows waiting their turn plus show requests nobody answered ("2 things to look at"). */
   waitingShows = $state(0)
   private cursorSeq = 0
@@ -162,7 +170,7 @@ export class DesktopController implements DesktopHost {
   infopanelsVisible = $state(true)
   reviewing = $state.raw<PendingApproval | null>(null)
   /** The sessions of team chat room members: the member's name and its room, so an approval says who asks and where. */
-  roomMembers = $state.raw<ReadonlyMap<Id, { member: string; room: string; roomId: Id }>>(new Map())
+  roomMembers = $state.raw<ReadonlyMap<Id, { member: string; color?: string; room: string; roomId: Id }>>(new Map())
   /** Requests whose popup the user closed with "Not now": they stay in the Action Center and in the chat's waiting line. */
   private dismissed = $state.raw<ReadonlySet<string>>(new Set())
   selectedIcon = $state<string | null>(null)
@@ -308,7 +316,12 @@ export class DesktopController implements DesktopHost {
         if (this.ours(desktopId)) this.waitingShows = waiting
       }),
       this.api.on('desktop.agentCursor', (cursor) => {
-        if (this.ours(cursor.desktopId) && !this.state.paused) this.cursorPing = { ...cursor, seq: ++this.cursorSeq }
+        if (this.ours(cursor.desktopId) && !this.state.paused) this.onAgentCursor(cursor)
+      }),
+      this.api.on('desktop.followEnded', (ended) => {
+        if (!this.ours(ended.desktopId)) return
+        const text = followEndedText(ended.identity.name, ended.reason)
+        if (text) this.showFollowNotice(text)
       }),
       this.api.on('room.changed', (room) => this.applyRoom(room)),
       this.api.on('room.removed', ({ id }) => this.dropRoom(id)),
@@ -337,6 +350,7 @@ export class DesktopController implements DesktopHost {
     this.glowTimers.clear()
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
     if (this.noticeTimer) clearTimeout(this.noticeTimer)
+    if (this.followNoticeTimer) clearTimeout(this.followNoticeTimer)
     for (const store of this.inbox.stores.values()) if (store instanceof SessionAgentStore) store.dispose()
   }
 
@@ -353,7 +367,7 @@ export class DesktopController implements DesktopHost {
   private applyRoom({ room, members }: RoomStateDto): void {
     if (room.desktopId !== this.state.desktopId) return
     const next = new Map([...this.roomMembers].filter(([, m]) => m.roomId !== room.id))
-    for (const m of members) if (m.sessionId !== null) next.set(m.sessionId, { member: m.name, room: room.title, roomId: room.id })
+    for (const m of members) if (m.sessionId !== null) next.set(m.sessionId, { member: m.name, color: m.color, room: room.title, roomId: room.id })
     this.roomMembers = next
   }
 
@@ -404,7 +418,7 @@ export class DesktopController implements DesktopHost {
     if (next.paused) {
       // Pause stops all motion: the show and the cursors go (main drops the queue).
       this.currentShow = null
-      this.cursorPing = null
+      this.cursorPings = []
     }
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
@@ -515,6 +529,63 @@ export class DesktopController implements DesktopHost {
     }
     const window = await this.openApp({ app: 'chat', sessionId: show.sessionId })
     this.prefillPane(window.id, quoted)
+  }
+
+  /**
+   * The agent cursor points without a note: a Browser action, or a step of the followed chat (Follow). Like a show, a
+   * view report of the target window still waiting in the debouncer is sent first and main's view (the spot) again.
+   */
+  private onAgentCursor(cursor: AgentCursorDto): void {
+    this.cursorPings = [...this.cursorPings, { ...cursor, seq: ++this.cursorSeq }].slice(-8)
+    const window = this.windowById(cursor.spot.windowId)
+    if (window && this.views.flush(window.id)) void this.api.desktop.updateView(window.id, window.view).catch(() => {})
+  }
+
+  // ---- follow and identities (docs/AGENT_PRESENCE.md, sections 7 and 9) -------------------------
+
+  /** The chat this desktop follows, with its agent; null when none. */
+  get following(): FollowStateDto | null {
+    return this.state.following ?? null
+  }
+
+  /** **Follow** a chat (the one followed before stops); `null`: **Stop following**. */
+  async follow(sessionId: Id | null, keep = false): Promise<void> {
+    try {
+      await this.api.desktop.follow(this.state.desktopId, sessionId, keep)
+    } catch (error) {
+      this.showBalloon({ title: 'Cannot follow', text: errorText(error), icon: 'info' })
+    }
+  }
+
+  /** **Keep following**: the follow stays after the chat's turn ends. */
+  async setKeepFollowing(keep: boolean): Promise<void> {
+    await this.api.desktop.setKeepFollowing(this.state.desktopId, keep).catch(() => {})
+  }
+
+  private showFollowNotice(text: string): void {
+    this.followNotice = text
+    this.announcement = text
+    if (this.followNoticeTimer) clearTimeout(this.followNoticeTimer)
+    this.followNoticeTimer = setTimeout(() => (this.followNotice = null), NOTICE_MS)
+  }
+
+  /** The name and colour of a chat's agent (`agentIdentity`, resolved in main); the same in every surface. */
+  identityOf(sessionId: Id): AgentIdentity {
+    const known = this.state.identities?.[String(sessionId)]
+    if (known) return known
+    const member = this.roomMembers.get(sessionId)
+    return agentIdentity({ sessionId, member: member?.color ? { name: member.member, color: member.color } : null, agentName: null })
+  }
+
+  /** The step a chat is on, in plain words ("reading auth.ts"), or null when it runs no tool now. */
+  agentStep(sessionId: Id): string | null {
+    const input = this.activityInputs.find((c) => c.sessionId === sessionId)
+    return input ? currentStep(input.toolCalls) : null
+  }
+
+  /** The chats that work now, with their agent and step: the top-bar agents popup. */
+  get workingAgents(): WorkingAgent[] {
+    return workingAgents(this.activityInputs, (id) => this.identityOf(id))
   }
 
   /** "2 things to look at" in the Action Center; null when nothing waits. */
@@ -928,7 +999,7 @@ export class DesktopController implements DesktopHost {
     if (!this.state.paused) {
       if (this.current) this.current = { ...this.current, paused: true }
       this.currentShow = null
-      this.cursorPing = null
+      this.cursorPings = []
       await this.api.desktop.setPaused(desktopId, true)
       return
     }

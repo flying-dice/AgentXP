@@ -54,6 +54,8 @@ A card shows its title, the first line of its description, and its assignee. Dou
 
 Right-click a card to edit it, move it to another list, assign it, or delete it.
 
+When an agent changes a card, the card has an orange frame for a moment. If the card is out of view and you do not work in Kanban, the board scrolls to the card. If you work in Kanban, the board stays where it is, and a yellow bar says **An agent changed a card that is out of view.** Click **Show it** to scroll to the card. When an agent shows you a card, the board scrolls to it.
+
 ### Drag and Drop
 
 Drag a card to another place in its list or to another list. A blue line shows where the card will land.
@@ -85,6 +87,9 @@ Each Kanban window has a chat pane at its right edge. The pane starts closed, as
 | Card | One card. Drag it to move it. | `kanban-card` |
 | Card title | The title of a card. | `kanban-card-title` |
 | Card assignee | The assignee of a card. | `kanban-card-assignee` |
+| Changed card bar | A yellow bar that says an agent changed a card that is out of view. | `kanban-flash-cue` |
+| Show it | Scrolls the board to the changed card and closes the bar. | `kanban-flash-cue-show` |
+| Close (bar) | Closes the bar. | `kanban-flash-cue-close` |
 | Drop line: card | Shows where a dragged card will land. | `kanban-drop-card` |
 | Drop line: list | Shows where a dragged list will land. | `kanban-drop-column` |
 | No boards | The text that shows when there is no board. | `kanban-empty` |

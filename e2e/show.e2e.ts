@@ -23,9 +23,10 @@ describe('Show', () => {
   }
   const sendAndWait = async (text: string, reply: string | RegExp): Promise<void> => {
     const chat = ctx.desktop.chat()
-    const before = await chat.agentMessages.count()
+    // The agent says when its turn ended (the transcript may fold older messages, so their count is no signal).
+    const ended = control.waitForEvent('turn_ended', 20_000)
     await chat.send(text)
-    await see.eventually(async () => expect(await chat.agentMessages.count()).toBeGreaterThan(before))
+    await ended
     await see.attribute(chat.transcript, 'data-running', 'false')
     await see.text(chat.agentMessages.last(), reply)
   }
@@ -180,5 +181,40 @@ describe('Show', () => {
     await see.count(callout(), 0)
     await shot('08-never')
     await setToolPolicy(ctx.desktopPage, { show: 'allow' })
+  })
+
+  it('a card out of view: the board scrolls to it, the cursor and the note land on the card', async () => {
+    await ctx.desktopPage.evaluate(async (desktopId) => {
+      const api = (window as unknown as { agentxp: import('../src/shared/ipc').AgentXPApi }).agentxp
+      let board = await api.kanban.createBoard(desktopId, 'Sprint')
+      const column = board.columns[0]!.id
+      for (let i = 1; i <= 14; i++) board = await api.kanban.addCard(column, { title: `Task ${i}` })
+      await api.kanban.addCard(column, { title: 'Ship it' })
+    }, ctx.desktopId)
+    await ctx.desktop.openApp('kanban')
+    await ctx.desktop.focusWindow('chat')
+    await sendAndWait('show the last card', /Shown now: card/)
+    const card = ctx.desktop.window('kanban').getByTestId('kanban-card').filter({ hasText: 'Ship it' })
+    await see.attribute(card, 'data-selected', 'true')
+    await see.visible(callout())
+    await see.text(callout().getByTestId('show-callout-label'), "card 'Ship it'")
+    const [cardBox, calloutBox, boardBox] = await Promise.all([card.boundingBox(), callout().boundingBox(), ctx.desktop.window('kanban').getByTestId('kanban-board').boundingBox()])
+    // The card is scrolled into the board's view, and the callout sits beside it.
+    expect(cardBox!.y + cardBox!.height).toBeLessThanOrEqual(boardBox!.y + boardBox!.height + 1)
+    expect(Math.abs(calloutBox!.y - cardBox!.y)).toBeLessThan(200)
+    await shot('09-card')
+    await ctx.desktopPage.getByTestId('show-callout-ok').click()
+    await see.gone(callout())
+  })
+
+  it('a shape of Agent Diagrams: the cursor and the note land on the shape', async () => {
+    await ctx.desktop.focusWindow('chat')
+    await sendAndWait('show the login shape', /Shown now/)
+    await see.visible(callout())
+    await see.text(callout().getByTestId('show-callout-note'), 'The login step starts here')
+    await see.text(callout().getByTestId('show-callout-label'), /Show login/)
+    await shot('10-shape')
+    await ctx.desktopPage.getByTestId('show-callout-ok').click()
+    await see.gone(callout())
   })
 })

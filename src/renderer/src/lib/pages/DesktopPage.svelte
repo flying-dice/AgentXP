@@ -259,7 +259,7 @@
       onbackground={() => desktop.closePopups()}
     />
     {#if desktop.infopanelsVisible && !desktop.needsDesktop}
-      <InfoPanels chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} onshowfeeditem={(item) => void desktop.showFeedItem(item)} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
+      <InfoPanels chatTitle={desktop.context.title} contextUsed={desktop.context.used} contextSize={desktop.context.size} feed={desktop.feed} onshowfeeditem={(item) => void desktop.showFeedItem(item)} identityOf={(id) => desktop.identityOf(id)} controlNote={controlNote(desktop.state.userInControl, desktop.feed, desktop.stoppedStep)} {since} onopeneventviewer={() => void desktop.openEventViewer()} onopenpermissions={() => void desktop.openControlCentre('permissions')} {api} desktopId={desktop.state.desktopId} working={desktop.working} />
     {/if}
     <StickyNotesLayer {desktop} />
     <WindowLayer {desktop} />
@@ -273,6 +273,12 @@
         onopenrequest={() => void desktop.openNextRequest()}
         onopenworking={() => { const id = desktop.workingChatId; if (id !== null) void desktop.openChatOf(id) }}
         agentProblem={desktop.agentProblem}
+        agents={desktop.workingAgents}
+        following={desktop.following}
+        followNotice={desktop.followNotice}
+        onopenchat={(id) => void desktop.openChatOf(id)}
+        onfollow={(id) => void desktop.follow(id)}
+        onkeepfollowing={(keep) => void desktop.setKeepFollowing(keep)}
         paused={desktop.state.paused}
         userInControl={desktop.state.userInControl}
         notice={desktop.notice}

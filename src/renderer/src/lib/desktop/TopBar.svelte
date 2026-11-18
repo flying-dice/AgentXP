@@ -5,6 +5,9 @@
   import type { ToolPolicyDto } from '@shared/desktop'
   import { NOT_SAVED_NOTE, PAUSE_TIP, RESUME_BUTTON, RESUME_CONTROL_BUTTON, RESUME_CONTROL_TIP, TAKE_CONTROL_LABEL, barStatus, chipAriaLabel, toolChips } from './activity'
   import ConnectionBar from './ConnectionBar.svelte'
+  import AgentsPopup from './AgentsPopup.svelte'
+  import type { WorkingAgent } from './activity'
+  import type { FollowStateDto } from '@shared/follow'
 
   interface Props {
     title: string
@@ -38,9 +41,29 @@
     ondisconnect?: () => void
     /** A red chip next to the status when an agent could not start ("Agent: not started"); null = all is well. */
     agentProblem?: string | null
+    /** The chats that work now: with two or more the line reads "3 agents working" and opens the agents popup. */
+    agents?: readonly WorkingAgent[]
+    /** The chat the desktop follows: "Following <Name>" with **Stop following** and **Keep following**. */
+    following?: FollowStateDto | null
+    /** The short line after a follow ended on its own ("Stopped following Builder: the turn ended."). */
+    followNotice?: string | null
+    /** **Open chat** of a row of the agents popup. */
+    onopenchat?: (sessionId: number) => void
+    /** **Follow** (a session) or **Stop following** (null). */
+    onfollow?: (sessionId: number | null) => void
+    /** The **Keep following** check box. */
+    onkeepfollowing?: (keep: boolean) => void
   }
 
-  let { title, working, waiting = 0, waitingFor = null, paused, userInControl, policy = null, notice = null, onpause, onopenrequest, onopenworking, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null }: Props = $props()
+  let { title, working, waiting = 0, waitingFor = null, paused, userInControl, policy = null, notice = null, onpause, onopenrequest, onopenworking, ontakecontrol, onopenpermissions, maximized = false, onminimize, onmaximize, ondisconnect, agentProblem = null, agents = [], following = null, followNotice = null, onopenchat, onfollow, onkeepfollowing }: Props = $props()
+
+  let agentsOpen = $state(false)
+  let agentsLink = $state<HTMLButtonElement | null>(null)
+  const several = $derived(agents.length >= 2)
+  // The popup closes when fewer than two agents work (its rows would be stale).
+  $effect(() => {
+    if (!several) agentsOpen = false
+  })
 
   let pinned = $state(true)
   /** The tooltip of the chip that has the keyboard focus, shown in a line of the bar (a tooltip needs a pointer to appear). */
@@ -48,7 +71,7 @@
 
   const chips = $derived(toolChips(policy, userInControl))
   // One derivation for the text, the dot and `data-state`, so they cannot disagree.
-  const view = $derived(barStatus({ paused, userInControl, working, waiting, waitingFor, notice }))
+  const view = $derived(barStatus({ paused, userInControl, working, waiting, waitingFor, notice, agents: agents.length }))
   const status = $derived(view.text)
   const mode = $derived(view.state)
 </script>
@@ -57,7 +80,7 @@
   <ConnectionBar {title} bind:pinned {maximized} {onminimize} {onmaximize} {ondisconnect}>
     <span class="dot" class:working={mode === 'working'} class:idle={mode === 'idle'} class:paused={mode === 'paused'} class:control={mode === 'control'} class:waiting={mode === 'waiting'} data-testid="topbar-dot" data-state={mode} aria-hidden="true"></span>
     <span class="status" class:alert={mode === 'paused' || mode === 'control' || mode === 'waiting'} role="status" data-testid="topbar-status" title={status}>
-      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else if mode === 'working' && onopenworking}<button type="button" class="link" data-testid="topbar-working-link" title="Go to the chat that is doing this. Its steps show what it read, changed and ran." onclick={() => onopenworking?.()}>{status}</button>{:else}{status}{/if}
+      {#if mode === 'waiting'}<button type="button" class="link" data-testid="topbar-waiting-link" title="Go to the chat that waits, where you can allow or deny the request." onclick={() => onopenrequest?.()}>{status}</button>{:else if mode === 'working' && several}<button type="button" class="link" data-testid="topbar-agents-link" aria-haspopup="dialog" aria-expanded={agentsOpen} title="See what each agent is doing. Open its chat or follow it." bind:this={agentsLink} onclick={() => (agentsOpen = !agentsOpen)}>{status}</button>{:else if mode === 'working' && onopenworking}<button type="button" class="link" data-testid="topbar-working-link" title="Go to the chat that is doing this. Its steps show what it read, changed and ran." onclick={() => onopenworking?.()}>{status}</button>{:else}{status}{/if}
     </span>
     {#if userInControl && !paused}
       <button type="button" class="give-back" data-testid="topbar-give-back" title={RESUME_CONTROL_TIP} onclick={() => ontakecontrol?.()}>{RESUME_CONTROL_BUTTON}</button>
@@ -85,7 +108,22 @@
     <p class="note" data-testid="topbar-control-note">{NOT_SAVED_NOTE.before}<button type="button" class="link" data-testid="topbar-control-note-link" onclick={() => onopenpermissions?.('')}>{NOT_SAVED_NOTE.link}</button>{NOT_SAVED_NOTE.after}</p>
   {/if}
   {#if focusTip}<p class="note tip" role="status" data-testid="topbar-chip-tip">{focusTip}</p>{/if}
+  {#if following && !paused}
+    <div class="following" data-testid="topbar-following" data-session-id={following.sessionId} data-agent={following.identity.name} role="status">
+      <span class="swatch" style:background={following.identity.color} aria-hidden="true"></span>
+      <span class="following-text">Following <b>{following.identity.name}</b></span>
+      <button type="button" class="give-back" data-testid="topbar-stop-following" title="Stop following. Code and the Terminal stay where they are." onclick={() => onfollow?.(null)}>Stop following</button>
+      <span class="keep" title="Keep following after this turn ends. Pause or Stop following still end it.">
+        <CheckBox testid="topbar-keep-following" label="Keep following" checked={following.keep} onchange={(checked: boolean) => onkeepfollowing?.(checked)} />
+      </span>
+    </div>
+  {:else if followNotice}
+    <p class="note follow-ended" role="status" data-testid="topbar-follow-ended">{followNotice}</p>
+  {/if}
 </div>
+{#if agentsOpen && agentsLink}
+  <AgentsPopup anchor={agentsLink} {agents} followingId={following?.sessionId ?? null} {onopenchat} {onfollow} onclose={() => (agentsOpen = false)} />
+{/if}
 
 <style>
   .xp-topbar {
@@ -276,6 +314,31 @@
   .note.tip {
     color: #1b2433;
     white-space: pre-line;
+  }
+  .following {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 0;
+    padding: 1px 2px;
+    border-top: 1px solid #c3cfe2;
+    font-size: 11px;
+    color: #1b2433;
+  }
+  .following .give-back {
+    margin-left: 4px;
+  }
+  .swatch {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.45);
+  }
+  .keep {
+    flex: none;
+  }
+  .note.follow-ended {
+    color: #1b2433;
   }
   .ask-slot {
     flex: none;

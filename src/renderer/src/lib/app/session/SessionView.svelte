@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ToolShowTarget } from './toolShowTarget'
+  import type { ToolShowTarget } from '@shared/toolShowTarget'
   import { onDestroy, untrack } from 'svelte'
   import { effectiveStatus, isStarting } from '../sessionStatus'
   import type { AgentDto, FolderDto, SessionDto } from '@shared/models'

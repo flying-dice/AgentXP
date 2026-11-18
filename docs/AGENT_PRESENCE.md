@@ -1,6 +1,6 @@
 # Agent presence: Work, Show, Output
 
-Status: accepted, being built. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions), PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking) and PR 3 (`show`, the agent cursor, the note callout, show requests) have landed. It replaces "tools follow
+Status: accepted; all PRs have landed. PR 0 (this note and the `agent-presence-ux` skill), PR 1 (headless Work, policy-only gating, `openOutputWindow`, **Show in...** actions), PR 2 (notices, the balloon queue, Action Center actions, change cues, `AgentIdentity`, foreground tracking), PR 3 (`show`, the agent cursor, the note callout, show requests) and PR 4 (Follow, the top-bar agents popup, identities on every surface, team room step text). It replaces "tools follow
 apps" (`DESKTOP_DESIGN.md` sections 1 and 3) as the rule for how agents appear on the desktop. The UX rules for
 contributors are in `.claude/skills/agent-presence-ux/SKILL.md`; this note is the design and the build plan.
 
@@ -71,6 +71,19 @@ window opening on its own.
   changed lines get a short highlight. `terminal_run` keeps mirroring into an open Terminal (`showInTerminal`).
   Nothing opens.
 - **Event Viewer** stays the full record.
+
+As built (PR 4):
+
+- `workingAgents` (`lib/desktop/activity.ts`) lists the chats that work (working or waiting for approval), newest first,
+  with identity and step; `barStatus` reads "N agents working" with two or more and the line becomes
+  `topbar-agents-link`, which opens `lib/desktop/AgentsPopup.svelte` (portal, XP task pane look, rows
+  `topbar-agents-row` with the chat title, `topbar-agents-step`, **Open chat** and **Follow** / **Stop following**).
+  With one agent the PR 1 link stays.
+- The step in words is `stepWords` / `currentStep` (`lib/app/session/stepWords.ts`): "reading auth.ts", "editing
+  auth.ts", "running npm test", "searching for \"token\"", browser steps through `browserNow`, the rest through
+  `plainToolTitle`. The team room member rows show it (`team-chat-member-step`) beside the activity label.
+- Feed rows start with the swatch and name of the agent (`infopanel-activity-agent`). Chat tool rows do not carry it:
+  a chat, a pane and a member session panel each show one agent, whose name heads its messages.
 
 ## 5. Show: the colleague turning their screen
 
@@ -175,6 +188,33 @@ As built (PR 2, `src/main/application/notices/NoticeService.ts`):
 - One followed agent at a time. Follow ends on **Stop following**, on Pause, at the end of the agent's turn (unless
   **Keep following** is checked), or when its chat closes.
 
+As built (PR 4, `src/main/application/show/FollowService.ts`, `src/shared/follow.ts`):
+
+- `follow(desktopId, sessionId, keep)` / `stop` / `setKeep`; API `desktop.follow(desktopId, sessionId | null, keep?)`
+  and `desktop.setKeepFollowing`. `DesktopState.following` is `{ sessionId, keep, identity } | null`, so the agent (in
+  `desktop_state` and the prompt's desktop resource) and the UI see it. Following while paused is refused.
+- Projection listens to `transcript.upserted`: every tool call of the followed chat, from the agentxp tools and the
+  agent's own (ACP kind, location, diff, terminal), goes through `followTarget`, which is the first **Show in...** place
+  (`toolShowTargets`, moved to `src/shared/toolShowTarget.ts`). An edit without lines goes to the lines its result names
+  (`code_edit` says "lines 3-5"; its count no longer adds a line for a trailing line break). Each tool call lands once per
+  place: an update that names the same place does not move the view again; a search lands when its first match is known.
+- Code: `ShowTargets.land` (file, lines as `visibleLines`, no focus). Terminal: the Terminal comes to the front without
+  the focus (`presentWindow`), on the ACP terminal when the step has one; `terminal_run` mirrors into it. Then
+  `desktop.agentCursor` (no note) with the lines or the window. Browser steps are not projected: `ShowService.pointAt`
+  now also points for the followed chat, so the cursor reaches the element before the click.
+- Follow never asks: when **Agent may open apps** is not Allow and the window is not open, the step is not projected.
+- The operator wins: while `DesktopService.operatorActive` (typing or clicking in the last `TYPING_GRACE_MS`) or while
+  a show's note is on screen (`ShowService.onScreen`), the newest step waits and lands after `FOLLOW_RETRY_MS`.
+- Shows are unchanged: the followed chat counts like the foreground chat only for projection, not for `show`. Its
+  `show` from the background is still a request, so a note never lands without the foreground rule.
+- Follow ends on Stop following (no line), on Pause, at the end of the turn (`SessionService.observeTurns`) unless
+  Keep following, when the chat's home window closes (its Chat window, the window of its pane, or its Team Chat room)
+  and when the chat is deleted. `desktop.followEnded` carries the reason; the top bar shows one line for a few seconds
+  ("Stopped following Builder: the turn ended.", `topbar-follow-ended`), not a balloon.
+- Controls: **View -> Follow this chat** (`chat-menu-follow`, checked), **Follow** on a member row
+  (`team-chat-member-follow`, the row gets `data-following`), the agents popup; the top bar line `topbar-following`
+  with `topbar-stop-following` and `topbar-keep-following`.
+
 ## 8. The agent cursor
 
 - Kit organism `AgentCursor`, generalised from the Paint ghost cursor (`apps/paint/PaintApp.svelte`): the XP arrow
@@ -189,6 +229,10 @@ As built (PR 2, `src/main/application/notices/NoticeService.ts`):
 - In the Browser the box is sent **before** the click (`driver.elementOf` in `browserTools.ts`), so the cursor
   arrives first and then the click happens. That is the one place where the cursor shows real control.
 - The cursor appears only for Show, Browser actions and Follow. Never for background Work.
+
+As built (PR 4): the overlay takes a short list of pointings (`cursorPings`), so two agents pointing at once each move
+their own cursor. A team member's glide starts at its row in the Team Chat window. Paint's drawing cursor honours
+`prefers-reduced-motion` (it jumps, without the pulse ring on every point).
 
 As built (PR 3):
 
@@ -216,8 +260,13 @@ As built (PR 3):
 - Plain chat: the agent display name and `colorOfName(sessionId)` (`src/shared/teams.ts`). No migration.
 
 As built (PR 2): `agentIdentity()` in `src/shared/identity.ts`, resolved in main by compose (`TeamRoomService.memberOfSession`,
-then the agent row). Balloons and Action Center messages show it now; feed rows, tool rows, the cursor and the top bar
-take it in PR 3 (the cursor and the note callout) and PR 4.
+then the agent row). Balloons and Action Center messages show it now; the cursor and the note callout since PR 3.
+
+As built (PR 4): `DesktopState.identities` maps the session id of every agent the desktop shows (chats with a window
+or pane, Code Review sessions, busy chats, team room members) to its identity, resolved in main by the same
+`identityOf`. The renderer's `DesktopController.identityOf` reads it and falls back to `agentIdentity` (the room member
+colour, or the session colour). The feed, the agents popup, the Follow line and the cursor use it; team room rows use the
+profile colour, which is the same one.
 
 ## 10. Architecture changes
 
@@ -270,6 +319,6 @@ open behind the operator. Tool descriptions that promise a window are rewritten.
 | 1 | Headless Work: retire the gate, strip side effects, `openOutputWindow`, Browser and WordPad stop stealing focus, new instructions, **Show in...** on tool rows and feed rows, top-bar working link, README chapter 6 and manuals | `tools.test.ts`, `AppToolPolicy.test.ts`, `desktop-tools.integration.test.ts`, `catalog.test.ts`, `e2e/search.e2e.ts`, `e2e/scripted-desktop-tools.e2e.ts`, `e2e/desktop-tools.e2e.ts`, `e2e/scripted-demo.e2e.ts` |
 | 2 (landed) | Notices and Output: `desktop.notice`, balloon queue and history, Action Center actions, turn summaries, change cues in Code Review and Kanban, `AgentIdentity`, foreground tracking (moved forward from PR 3) | `NoticeService.test.ts`, `e2e/notices.e2e.ts` |
 | 3 (landed) | Show and the cursor: `show`, `ShowService`, foreground rule (uses PR 2's `foregroundSessionId`), queue, policy row, `AgentCursor` and overlay, note callout, per-app resolvers, Browser box before click, transcript rows; Paint uses the shared cursor | `e2e/show.e2e.ts`, scripted-agent scripts |
-| 4 | Follow and team presence: Follow toggle, projection with typing pause, a cursor per member, member step text | `e2e/follow.e2e.ts` |
+| 4 (landed) | Follow and team presence: Follow toggle, projection with typing pause, a cursor per member, member step text, the top-bar agents popup, identities on feed rows; show targets for review comments, cards and shapes checked in the real app, a shown or changed Kanban card scrolls into view | `FollowService.test.ts`, `e2e/follow.e2e.ts` |
 
 Each PR follows `verify-change` and `agent-presence-ux` and runs every gate in `AGENTS.md`.

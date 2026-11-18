@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ToolShowTarget } from './toolShowTarget'
+  import type { ToolShowTarget } from '@shared/toolShowTarget'
   import { tick, untrack } from 'svelte'
   import type { Message } from '@ag-ui/core'
   import type { A2uiClientEvent } from '@shared/a2ui'

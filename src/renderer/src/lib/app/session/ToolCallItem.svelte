@@ -7,7 +7,7 @@
   import { DENIED_NOTE, FAILED_NOTE, toolStatusView } from './toolStatus'
   import { plainToolTitle } from './toolTitles'
   import { browserNow, browserStep } from './browserSteps'
-  import { SHOW_LABELS, showRowOf, toolShowTargets, type ToolShowTarget } from './toolShowTarget'
+  import { SHOW_LABELS, showRowOf, toolShowTargets, type ToolShowTarget } from '@shared/toolShowTarget'
 
   interface Props {
     row: Extract<TranscriptRow, { kind: 'tool' }>

@@ -17,6 +17,7 @@ This manual describes the parts of the desktop that do not belong to one app: th
   - The Action Center
   - Notices About Agent Work
   - When the Agent Shows You Something
+  - Follow an Agent
   - Permission Prompts
   - Other Dialog Boxes
 - 4 - Controls Reference
@@ -57,9 +58,10 @@ The connection bar is at the top edge of the window. It looks like the bar of a 
 
 The top bar is below the connection bar. It shows what the agent does now and what the agent can use.
 
-- **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the agent works, the status is a link, for example **Working: Read a file**. Click it to go to the chat that does the work. While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
+- **Status** – Shows Idle, Working, Waiting for you, You are in control, or Paused. A colored dot shows the same state. While the agent works, the status is a link, for example **Working: Read a file**. Click it to go to the chat that does the work. While two or more chats work, the status reads, for example, **3 agents working**. Click it to open the list of the agents that work (see **Follow an Agent**). While the desktop is paused, the status reads **Paused: no agent will act until you resume.** See **[Pause, Stop, and Resume](pause-stop-resume.md)**.
 - **Agent can use** – Always has the chips **Read files**, **Write files**, **Run commands**, and **Browser**. Each chip reads *Name*: *Allow*, *Ask first*, or *Deny*, for example **Run commands: Ask first**. The chips show the permissions of Control Center. No app has to be open for a tool. A chip that says **Ask first** also says **Asks you first.** in its tooltip. While **Ask before every action** is on, a chip that is not on Ask in Control Center reads **Ask first (now)**. Point to a chip to read what it means. A chip appears for each other tool that is set to **Deny**. Each chip is a button with a border. Click it to open the Permissions page of Control Center.
 - **Pause all agents or Resume agents and continue** – Its tooltip reads **Pause every agent on this desktop**. Stops every agent on this desktop now and keeps them from doing anything until you click **Resume agents and continue**. Then each chat that was stopped gets the message **Please continue where you stopped.** and carries on. The Action Center has a line for each chat that was stopped.
+- **Following** – A line under the bar while you follow an agent, for example **Following Builder**, with the color square of the agent, the button **Stop following**, and the check box **Keep following**. After a follow ends by itself, the line says why for a few seconds, for example **Stopped following Builder: the turn ended.**
 - **Ask before every action (this session only)** – A check box. It works for this desktop only and is not saved. When it is on, the agent must ask you before it reads, writes, runs a command, or uses the browser. The status then reads **You are in control. All tools ask first until you click Resume. This is not saved.** and the button **Resume** shows. Click the button, or clear the box, to go back to the settings in Control Center.
 
 ### The Desktop Icons
@@ -145,6 +147,28 @@ You can turn shows off. In **[Control Center](control-centre.md)**, set **Agent 
 
 The agent cursor appears only when an agent shows you something, when it clicks or types in a Browser window that you can see while you work in its chat, and when you follow an agent. If your computer asks for less motion (the **prefers-reduced-motion** setting), the agent cursor jumps to the spot and shows a short ring instead of moving.
 
+### Follow an Agent
+
+You can watch one agent while it works. This is Follow. While you follow an agent, its steps appear on your screen as it does them. There is no note. Nothing takes the keyboard focus.
+
+- **Reads and edits** – Code comes to the front at the file and marks the lines that the agent reads or changes. The agent cursor moves there.
+- **Commands** – The Terminal comes to the front and shows the command and its output.
+- **Browser** – The agent cursor moves to each element before the agent clicks or types in a Browser window that you can see.
+
+To follow an agent, do one of these steps:
+
+a. In its Chat window, click **View -> Follow this chat**.
+b. In a Team Chat room, click **Follow** on the row of the member.
+c. While two or more agents work, click **3 agents working** (the number changes) on the top bar, then click **Follow** on the row of the agent.
+
+The list of the agents that work has one row for each agent: the color square and the name of the agent, the chat, and the step in plain words, for example **reading auth.ts**. Click **Open chat** to go to the chat of that agent. Press Esc or click outside the list to close it.
+
+You can follow one agent at a time. If you follow another agent, the first follow stops. While you type or click, the steps wait. When you stop for two seconds, the newest step appears. While the note of a show is open, the steps also wait.
+
+The follow stops when you click **Stop following**, when you click **Pause all agents**, when the chat closes, or when the turn of the agent ends. To follow the next turns too, select **Keep following** on the top bar. Follow opens a window only if **Agent may open apps** is set to **Allow** in **[Control Center](control-centre.md)**. With **Ask** or **Never**, only windows that are already open follow the agent.
+
+**Note:** A show of the agent that you follow is still a request when you do not work in its chat. Follow moves the windows for the steps of the agent, not for its shows.
+
 ### Permission Prompts
 
 AgentXP asks before the agent does an action that you set to **Ask** in **[Control Center](control-centre.md)**. The permission dialog box opens by itself over the whole desktop and dims it, whichever window or chat asked, and it waits for your answer. The oldest request comes first. A request also appears in the Action Center, where **Review** opens its box again.
@@ -181,6 +205,17 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Agent can use | Holds the chips of the tool groups. | `topbar-tool-chips` |
 | Tool chip | A button that names one tool group and its setting, for example **Run commands: Ask first**. Its tooltip starts with **Open Control Center to change this.** A click opens Control Center at Permissions with the row of that tool selected. | `topbar-tool-chip-*` |
 | Working link | The status while the agent works, for example **Working: Read a file**. Click it to go to the chat that does the work. | `topbar-working-link` |
+| Agents working | The status while two or more chats work, for example **3 agents working**. Click it to open the list of the agents that work. | `topbar-agents-link` |
+| Agents list | The list of the agents that work, under the top bar. | `topbar-agents-menu` |
+| Agent row | One agent in the list. `data-session-id` is its chat and `data-agent` is its name. | `topbar-agents-row` |
+| Agent chat | The name of the chat of the agent. | `topbar-agents-chat` |
+| Agent step | What the agent does now, in plain words, for example **reading auth.ts**. | `topbar-agents-step` |
+| Open chat | Goes to the chat of the agent. | `topbar-agents-open` |
+| Follow | Follows the agent. On the agent that you follow, it reads **Stop following**. | `topbar-agents-follow` |
+| Following | The line **Following Builder** while you follow an agent. `data-agent` is the name of the agent. | `topbar-following` |
+| Stop following | Stops the follow. Code and the Terminal stay where they are. | `topbar-stop-following` |
+| Keep following | A check box. When it is on, the follow stays after the turn of the agent ends. | `topbar-keep-following` |
+| Follow ended | Says for a few seconds why a follow stopped by itself, for example **Stopped following Builder: the turn ended.** | `topbar-follow-ended` |
 | Waiting link | The status while requests wait. It names the chat, for example "Fix login redirect is waiting: run a command (1 of 2 waiting)". Click it to go to the chat with the oldest request. | `topbar-waiting-link` |
 | Pause all agents, Resume agents | Pauses every agent or lets them work. | `topbar-pause` |
 | Ask before every action | A check box that reads **Ask before every action (this session only)**. Makes the agent ask before every action, for this desktop only. | `topbar-take-control` |
@@ -203,7 +238,8 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 | Resize edges | Drag an edge or a corner of a window to change its size. The name ends with the side: `n`, `s`, `e`, `w`, `ne`, `nw`, `se`, `sw`. Each app has a smallest size: you cannot make a window smaller than its app needs, for example 760 by 520 pixels for Task Scheduler. | `window-grip-*` |
 | Sticky notes layer | Holds the notes on the desktop. | `sticky-notes-layer` |
 | Activity list | The infopanel that says what the agent does now, the last problem, and what finished. The Event Viewer button and the right-click item open the Event Viewer. | `infopanel-activity`, `infopanel-activity-control`, `infopanel-activity-not-saved`, `infopanel-activity-problem`, `infopanel-activity-working`, `infopanel-activity-last`, `infopanel-activity-open-event-viewer`, `infopanel-activity-open-permissions`, `infopanel-activity-menu-event-viewer` |
-| Activity line | One step of the agent in the Activity list. Click it to see the step: **Show in Code**, **Show in Terminal**, or **Show in Browser**. A step with no place to show opens the chat that did it. The tooltip ends with what a click does. | `infopanel-activity-item` |
+| Activity agent | The color square and the name of the agent at the start of an activity line. | `infopanel-activity-agent` |
+| Activity line | One step of the agent in the Activity list. It starts with the color square and the name of the agent. Click it to see the step: **Show in Code**, **Show in Terminal**, or **Show in Browser**. A step with no place to show opens the chat that did it. The tooltip ends with what a click does. | `infopanel-activity-item` |
 | Desktop menu items | Open from the right-click menu. | `menu-item-desktop-new-chat`, `menu-item-desktop-open-computer`, `menu-item-desktop-infopanels`, `menu-item-desktop-control-centre` |
 
 ### Taskbar
@@ -234,7 +270,7 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Agent cursor | The arrow of an agent that shows you something. `data-agent` is the name of the agent. `data-state` is ready, gliding, arrived, idle (faded), cancelled (you took over), or hidden. `data-motion` is glide, or reduced when the agent cursor jumps. | `agent-cursor` |
+| Agent cursor | The arrow of an agent that shows you something, that clicks in the Browser, or that you follow. Each agent has its own arrow in its color. `data-agent` is the name of the agent. `data-state` is ready, gliding, arrived, idle (faded), cancelled (you took over), or hidden. `data-motion` is glide, or reduced when the agent cursor jumps. | `agent-cursor` |
 | Agent name | The name of the agent next to its arrow. | `agent-cursor-name` |
 | Arrival ring | A short ring where the agent cursor jumped to, when less motion is set. | `agent-cursor-pulse` |
 | Show note | The note next to the spot. `data-agent` is the name of the agent. | `show-callout` |

@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "show",
-  "description": "Show and the agent cursor for e2e/show.e2e.ts (the project at E:\\ has auth.ts with 12 lines). \"show the token check\" calls show on E:\\auth.ts lines 3-5 with a note. \"background show\" pauses before its show (the test moves the focus to another window), then calls show on lines 8-9: a request. \"show the end\" shows line 12 (near the bottom of the window). \"show the board\" shows the Kanban window. Anything else answers at once.",
+  "description": "Show and the agent cursor for e2e/show.e2e.ts (the project at E:\\ has auth.ts with 12 lines). \"show the token check\" calls show on E:\\auth.ts lines 3-5 with a note. \"background show\" pauses before its show (the test moves the focus to another window), then calls show on lines 8-9: a request. \"show the end\" shows line 12 (near the bottom of the window). \"show the board\" shows the Kanban window. Anything else answers at once. \"show the last card\" shows card 'Ship it' of the board Sprint (the test makes the board); \"show the login shape\" draws two shapes in Agent Diagrams and shows the Show login shape.",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -9,69 +9,265 @@
   "rules": [
     {
       "id": "token",
-      "match": { "contains": "show the token check", "ignoreCase": true },
+      "match": {
+        "contains": "show the token check",
+        "ignoreCase": true
+      },
       "steps": [
         {
           "type": "mcpCall",
           "server": "agentxp",
           "tool": "show",
-          "arguments": { "target": { "kind": "file", "path": "E:\\auth.ts", "lines": [3, 5] }, "note": "Here the token is checked before it expires" },
+          "arguments": {
+            "target": {
+              "kind": "file",
+              "path": "E:\\auth.ts",
+              "lines": [
+                3,
+                5
+              ]
+            },
+            "note": "Here the token is checked before it expires"
+          },
           "saveAs": "shown"
         },
-        { "type": "expect", "from": "shown.isError", "equals": "false" },
-        { "type": "message", "text": "{{shown}}" }
+        {
+          "type": "expect",
+          "from": "shown.isError",
+          "equals": "false"
+        },
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
       ]
     },
     {
       "id": "background",
-      "match": { "contains": "background show", "ignoreCase": true },
+      "match": {
+        "contains": "background show",
+        "ignoreCase": true
+      },
       "steps": [
-        { "type": "message", "text": "Looking into it.\n" },
+        {
+          "type": "message",
+          "text": "Looking into it.\n"
+        },
         {
           "type": "mcpCall",
           "server": "agentxp",
           "tool": "show",
           "step": "manual",
           "label": "show",
-          "arguments": { "target": { "kind": "file", "path": "E:\\auth.ts", "lines": [8, 9] }, "note": "This branch never runs" },
+          "arguments": {
+            "target": {
+              "kind": "file",
+              "path": "E:\\auth.ts",
+              "lines": [
+                8,
+                9
+              ]
+            },
+            "note": "This branch never runs"
+          },
           "saveAs": "asked"
         },
-        { "type": "expect", "from": "asked.isError", "equals": "false" },
-        { "type": "message", "text": "{{asked}}" }
+        {
+          "type": "expect",
+          "from": "asked.isError",
+          "equals": "false"
+        },
+        {
+          "type": "message",
+          "text": "{{asked}}"
+        }
       ]
     },
     {
       "id": "end",
-      "match": { "contains": "show the end", "ignoreCase": true },
+      "match": {
+        "contains": "show the end",
+        "ignoreCase": true
+      },
       "steps": [
         {
           "type": "mcpCall",
           "server": "agentxp",
           "tool": "show",
-          "arguments": { "target": { "kind": "file", "path": "E:\\auth.ts", "lines": [12, 12] }, "note": "The last line exports it" },
+          "arguments": {
+            "target": {
+              "kind": "file",
+              "path": "E:\\auth.ts",
+              "lines": [
+                12,
+                12
+              ]
+            },
+            "note": "The last line exports it"
+          },
           "saveAs": "shown"
         },
-        { "type": "message", "text": "{{shown}}" }
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
       ]
     },
     {
       "id": "board",
-      "match": { "contains": "show the board", "ignoreCase": true },
+      "match": {
+        "contains": "show the board",
+        "ignoreCase": true
+      },
       "steps": [
         {
           "type": "mcpCall",
           "server": "agentxp",
           "tool": "show",
-          "arguments": { "target": { "kind": "window", "app": "kanban" }, "note": "The plan is on the board" },
+          "arguments": {
+            "target": {
+              "kind": "window",
+              "app": "kanban"
+            },
+            "note": "The plan is on the board"
+          },
           "saveAs": "shown"
         },
-        { "type": "message", "text": "{{shown}}" }
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "match": {
+        "contains": "show the last card",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "board_get",
+          "arguments": {
+            "board": "Sprint"
+          },
+          "saveAs": "board"
+        },
+        {
+          "type": "extract",
+          "from": "board",
+          "regex": "Card \\[(\\d+)\\] Ship it",
+          "saveAs": "card"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "show",
+          "saveAs": "shown",
+          "arguments": {
+            "target": {
+              "kind": "card",
+              "boardId": "Sprint",
+              "cardId": "{{card|number}}"
+            },
+            "note": "This card is the last one left"
+          }
+        },
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
+      ]
+    },
+    {
+      "id": "shape",
+      "match": {
+        "contains": "show the login shape",
+        "ignoreCase": true
+      },
+      "steps": [
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "desktop_open_app",
+          "arguments": {
+            "app": "diagrams"
+          },
+          "saveAs": "opened"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_add",
+          "saveAs": "added",
+          "arguments": {
+            "shapes": [
+              {
+                "ref": "start",
+                "stencil": "flowchart.terminator",
+                "text": "Start"
+              },
+              {
+                "ref": "login",
+                "stencil": "flowchart.process",
+                "text": "Show login"
+              }
+            ],
+            "connectors": [
+              {
+                "from": "start",
+                "to": "login"
+              }
+            ],
+            "layout": {
+              "direction": "TB"
+            }
+          }
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "diagram_read",
+          "saveAs": "read"
+        },
+        {
+          "type": "extract",
+          "from": "read",
+          "regex": "(\\S+) flowchart\\.process \"Show login\"",
+          "saveAs": "shape"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "show",
+          "saveAs": "shown",
+          "arguments": {
+            "target": {
+              "kind": "diagram-shape",
+              "id": "{{shape}}"
+            },
+            "note": "The login step starts here"
+          }
+        },
+        {
+          "type": "message",
+          "text": "{{shown}}"
+        }
       ]
     },
     {
       "id": "fallback",
-      "match": { "any": true },
-      "steps": [{ "type": "message", "text": "Nothing to do." }]
+      "match": {
+        "any": true
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Nothing to do."
+        }
+      ]
     }
   ]
 }

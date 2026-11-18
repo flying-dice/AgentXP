@@ -63,6 +63,16 @@
   let ghost = $state<{ x: number; y: number } | null>(null)
   /** Who is drawing: the name and colour of the agent cursor (`paint_draw` sends them). */
   let ghostAgent = $state<{ name: string; color: string }>({ name: 'Agent', color: '#3a6fd8' })
+  /** `prefers-reduced-motion`: the drawing cursor jumps from point to point instead of gliding. */
+  let reducedMotion = $state(false)
+  $effect(() => {
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!query) return
+    reducedMotion = query.matches
+    const changed = (e: MediaQueryListEvent): void => void (reducedMotion = e.matches)
+    query.addEventListener('change', changed)
+    return () => query.removeEventListener('change', changed)
+  })
   let textBox = $state<{ x: number; y: number; value: string } | null>(null)
   let textInput = $state<HTMLInputElement | null>(null)
   let resizing = $state<{ width: number; height: number } | null>(null)
@@ -475,7 +485,7 @@
         oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation())}
       ></canvas>
       {#if ghost}
-        <div class="ghost"><AgentCursor name={ghostAgent.name} color={ghostAgent.color} x={ghost.x} y={ghost.y} state="gliding" glideMs={70} testid="paint-agent-cursor" /></div>
+        <div class="ghost"><AgentCursor name={ghostAgent.name} color={ghostAgent.color} x={ghost.x} y={ghost.y} state="gliding" glideMs={70} {reducedMotion} pulse={false} testid="paint-agent-cursor" /></div>
       {/if}
       {#if textBox}
         <input data-testid="paint-text-input"

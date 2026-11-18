@@ -70,6 +70,8 @@ export class StoryHost implements DesktopHost {
   }
   showToolTarget = async (): Promise<void> => {}
   chatProgress = (): string | null => null
+  agentStep = (): string | null => null
+  follow = async (): Promise<void> => {}
   closeWindow = (windowId: Id): Promise<void> => this.api.desktop.closeWindow(windowId)
   focusWindow = (windowId: Id): Promise<void> => this.api.desktop.focusWindow(windowId)
   returnToOpener = async (): Promise<void> => {}

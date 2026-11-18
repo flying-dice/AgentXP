@@ -51,3 +51,27 @@ export function initials(name: string): string {
 export const cardCount = (board: BoardDto | null): number => board?.columns.reduce((n, c) => n + c.cards.length, 0) ?? 0
 
 export const cardLabel = (c: Pick<CardDto, 'title' | 'assignee'>): string => (c.assignee ? `${c.title}, assigned to ${c.assignee}` : c.title)
+
+/** A box on screen (`getBoundingClientRect`). */
+export interface Box {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/** True when the card box is fully inside the visible part of its scroll area. */
+export const inView = (card: Box, area: Box): boolean => card.left >= area.left && card.right <= area.right && card.top >= area.top && card.bottom <= area.bottom
+
+/**
+ * How far to scroll an area so the card is in view, the least distance ("nearest"): 0 when it already is. A card bigger
+ * than the area lines up with its start.
+ */
+export function revealDelta(card: Box, area: Box): { x: number; y: number } {
+  const axis = (start: number, end: number, from: number, to: number): number => {
+    if (start >= from && end <= to) return 0
+    if (start < from || end - start > to - from) return start - from
+    return end - to
+  }
+  return { x: axis(card.left, card.right, area.left, area.right), y: axis(card.top, card.bottom, area.top, area.bottom) }
+}

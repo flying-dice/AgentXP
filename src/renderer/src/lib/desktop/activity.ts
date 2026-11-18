@@ -2,7 +2,9 @@
 import type { AguiToolCallState } from '@shared/agui-state'
 import type { SessionStatus, ToolCallStatus } from '@shared/models'
 import { liveToolTitle } from '../app/session/toolTitles'
-import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from '../app/session/toolShowTarget'
+import { currentStep } from '../app/session/stepWords'
+import type { AgentIdentity } from '@shared/identity'
+import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from '@shared/toolShowTarget'
 import { PERMISSION_NAMES } from '@shared/permissionNames'
 import { TOOL_GROUPS, type PolicyDecision, type ToolGroup, type ToolPolicyDto } from '@shared/desktop'
 
@@ -56,6 +58,27 @@ export function workingChatId(chats: readonly ChatActivityInput[], focusedId: nu
   const focused = focusedId === null ? undefined : chats.find((c) => c.sessionId === focusedId && busy(c))
   if (focused) return focused.sessionId
   return [...chats].sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')).find(busy)?.sessionId ?? null
+}
+
+/** The top-bar line while several chats work: "3 agents working". */
+export const agentsWorkingText = (count: number): string => `${count} agents working`
+
+/** One row of the top-bar agents popup (`docs/AGENT_PRESENCE.md`, section 4). */
+export interface WorkingAgent {
+  sessionId: number
+  /** The chat's title (the tooltip of **Open chat**). */
+  title: string
+  identity: AgentIdentity
+  /** The step in plain words ("reading auth.ts"), "waiting for you" or "thinking". */
+  step: string
+}
+
+/** The chats that work now, newest first, each with its agent and its step: the rows of the agents popup. */
+export function workingAgents(chats: readonly ChatActivityInput[], identityOf: (sessionId: number) => AgentIdentity): WorkingAgent[] {
+  return [...chats]
+    .filter((c) => c.status === 'working' || c.status === 'awaiting_permission')
+    .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+    .map((c) => ({ sessionId: c.sessionId, title: c.title, identity: identityOf(c.sessionId), step: c.status === 'awaiting_permission' ? 'waiting for you' : (currentStep(c.toolCalls) ?? 'thinking') }))
 }
 
 export interface FeedItem {
@@ -187,6 +210,8 @@ export interface BarStatusInput {
   waiting?: number
   /** A short line that replaces "Idle" for a few seconds ("Resumed. Nothing was stopped."). */
   notice?: string | null
+  /** How many chats work now: with two or more the line reads "3 agents working" and opens the agents popup. */
+  agents?: number
 }
 
 /** What taking control does to every tool, in one sentence (the bar, the Activity tile and the Take over tooltip use it). */
@@ -229,10 +254,11 @@ export const RESUME_BUTTON = 'Resume agents and continue'
  * Idle (or the short notice that stands in for Idle). Paused wins over control, control over the rest, so what the
  * agent may do is never hidden by what it is doing.
  */
-export function barStatus({ paused, userInControl, working, waiting = 0, waitingFor = null, notice = null }: BarStatusInput): { state: BarState; text: string } {
+export function barStatus({ paused, userInControl, working, waiting = 0, waitingFor = null, notice = null, agents = 0 }: BarStatusInput): { state: BarState; text: string } {
   if (paused) return { state: 'paused', text: PAUSED_TEXT }
   if (userInControl) return { state: 'control', text: controlText() }
   if (waiting > 0) return { state: 'waiting', text: waitingFor ?? waitingText(waiting) }
+  if (agents >= 2) return { state: 'working', text: agentsWorkingText(agents) }
   if (working) return { state: 'working', text: `Working: ${working}` }
   return { state: 'idle', text: notice ?? 'Idle' }
 }

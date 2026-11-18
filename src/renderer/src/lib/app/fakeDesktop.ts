@@ -175,7 +175,9 @@ export function createFakeDesktop(options: FakeDesktopOptions = {}): FakeDesktop
     notePaneFocus: async () => {},
     dismissShow: async () => {},
     acceptShow: async () => {},
-    showAgain: async () => {}
+    showAgain: async () => {},
+    follow: async () => {},
+    setKeepFollowing: async () => {}
   }
   for (const app of options.windows ?? []) void api.openWindow({ desktopId: desktop.id, app })
   return api

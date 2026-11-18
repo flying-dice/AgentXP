@@ -14,6 +14,7 @@ import type { RecycleService } from '../application/RecycleService'
 import type { SchedulerService } from '../application/scheduler/SchedulerService'
 import type { StickyNoteService } from '../application/desktop/StickyNoteService'
 import type { KanbanService } from '../application/kanban/KanbanService'
+import type { FollowService } from '../application/show/FollowService'
 import type { ShowService } from '../application/show/ShowService'
 import type { DesktopService } from '../application/desktop/DesktopService'
 import type { ProcessService } from '../application/ProcessService'
@@ -43,6 +44,7 @@ export interface ApiServices {
   shell: ShellService
   desktops: DesktopService
   shows: ShowService
+  follows: FollowService
   vfs: VirtualFileSystem
   fileSearch: FileSearch
   git: GitService
@@ -126,7 +128,9 @@ export function createApi(s: ApiServices): InvokeApi {
       notePaneFocus: async (windowId, active) => s.desktops.notePaneFocus(windowId, active),
       dismissShow: async (desktopId, showId) => s.shows.dismiss(desktopId, showId),
       acceptShow: async (desktopId, showId) => s.shows.accept(desktopId, showId),
-      showAgain: async (desktopId, sessionId, target, note) => s.shows.again({ desktopId, sessionId }, target, note)
+      showAgain: async (desktopId, sessionId, target, note) => s.shows.again({ desktopId, sessionId }, target, note),
+      follow: async (desktopId, sessionId, keep) => (sessionId === null ? s.follows.stop(desktopId, 'stopped') : s.follows.follow(desktopId, sessionId, keep ?? false)),
+      setKeepFollowing: async (desktopId, keep) => s.follows.setKeep(desktopId, keep)
     },
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),

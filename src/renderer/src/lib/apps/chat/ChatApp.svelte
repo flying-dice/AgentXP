@@ -317,6 +317,8 @@
 
   /** Review changes: asks what to review, with the project drive of this chat preselected. */
   const reviewChanges = (): void => host.chooseReview(session?.cwd)
+  /** The desktop follows this chat (View > Follow this chat is checked). */
+  const following = $derived(sessionId > 0 && host.state.following?.sessionId === sessionId)
 
   const menus = $derived<MenuDef[]>(
     menuBar([
@@ -348,7 +350,7 @@
           { id: 'chat-events', testid: 'chat-menu-event-viewer', label: '&Event Viewer', icon: 'eventlog', action: () => void host.openEventViewer({ sessionId: sessionId > 0 ? sessionId : null }) }
         ]
       },
-      { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: '&Changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }] },
+      { label: '&View', items: [{ id: 'chat-details', testid: 'chat-menu-details', label: 'Show &thinking and tool details', checked: transcriptDetail.showAll, action: () => transcriptDetail.toggle() }, { separator: true }, { id: 'chat-panel', testid: 'chat-menu-panel', label: '&Changes', checked: panelOpen, action: () => (panelOpen = !panelOpen) }, { separator: true }, { id: 'chat-follow', testid: 'chat-menu-follow', label: '&Follow this chat', title: 'Watch this agent work: Code and the Terminal follow its steps and its cursor shows where it is. Ends with the turn, on Pause or with Stop following on the top bar.', checked: following, disabled: sessionId <= 0, action: () => void host.follow(following ? null : sessionId) }] },
       help.menu()
     ])
   )
