@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "follow-steps",
-  "description": "Follow for e2e/follow.e2e.ts (the project at E:\\ has auth.ts with 12 lines). \"follow steps\" works in steps that each wait for next: code_read of auth.ts lines 3-5, code_edit of line 8, terminal_run of an echo, code_read of lines 10-11, then a message. \"member steps\" (a team room member) has a read of auth.ts running for 5 s (an ACP read with a location), then a code_read of lines 6-7, waits 3 s and answers (a member runs in its own agent program, so it does not use the control socket). \"keep busy\" has a read running for 8 s before it answers (a second chat may run in another agent program) (two chats working for the top-bar agents popup). Anything else answers at once.",
+  "description": "Follow for e2e/follow.e2e.ts (the project at E:\\ has auth.ts with 12 lines). \"follow steps\" works in steps that each wait for next: code_read of auth.ts lines 3-5, code_edit of line 8, terminal_run of an echo, code_read of lines 10-11, then a message. \"member steps\" (a team room member) has a read of auth.ts running for 5 s (an ACP read with a location), then a code_read of lines 6-7, waits 3 s and answers (a member runs in its own agent program, so it does not use the control socket). \"keep busy\" has a read running for 8 s before it answers (a second chat may run in another agent program) (two chats working for the top-bar agents popup). Anything else answers at once. \"browse along at <url>\" opens the page in the Browser, then clicks the channel buttons random and general, each click waiting for next (labels \"click random\" and \"click general\"), and answers after a last manual step (\"browsed\").",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -163,6 +163,117 @@
         {
           "type": "message",
           "text": "Still here."
+        }
+      ]
+    },
+    {
+      "id": "browse",
+      "match": {
+        "regex": "browse along at (http\\S+)"
+      },
+      "steps": [
+        {
+          "type": "message",
+          "text": "Opening the chat app.\n"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "browser_navigate",
+          "arguments": {
+            "url": "{{match.1}}"
+          },
+          "saveAs": "nav"
+        },
+        {
+          "type": "expect",
+          "from": "nav.isError",
+          "equals": "false",
+          "message": "browser_navigate failed: {{nav}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "button",
+            "name": "random"
+          },
+          "saveAs": "f1"
+        },
+        {
+          "type": "expect",
+          "from": "f1.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f1}}"
+        },
+        {
+          "type": "extract",
+          "from": "f1",
+          "regex": "\\[(\\d+)\\] button \\\"random\\\"",
+          "saveAs": "random"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "browser_click",
+          "step": "manual",
+          "label": "click random",
+          "arguments": {
+            "ref": "{{random|number}}"
+          },
+          "saveAs": "c1"
+        },
+        {
+          "type": "expect",
+          "from": "c1.isError",
+          "equals": "false",
+          "message": "browser_click failed: {{c1}}"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "browser_find",
+          "arguments": {
+            "role": "button",
+            "name": "general"
+          },
+          "saveAs": "f2"
+        },
+        {
+          "type": "expect",
+          "from": "f2.isError",
+          "equals": "false",
+          "message": "browser_find failed: {{f2}}"
+        },
+        {
+          "type": "extract",
+          "from": "f2",
+          "regex": "\\[(\\d+)\\] button \\\"general\\\"",
+          "saveAs": "general"
+        },
+        {
+          "type": "mcpCall",
+          "server": "agentxp",
+          "tool": "browser_click",
+          "step": "manual",
+          "label": "click general",
+          "arguments": {
+            "ref": "{{general|number}}"
+          },
+          "saveAs": "c2"
+        },
+        {
+          "type": "expect",
+          "from": "c2.isError",
+          "equals": "false",
+          "message": "browser_click failed: {{c2}}"
+        },
+        {
+          "type": "message",
+          "step": "manual",
+          "label": "browsed",
+          "text": "Browsed the chat app."
         }
       ]
     },

@@ -1,7 +1,7 @@
 {
   "$schema": "../script.schema.json",
   "name": "notices",
-  "description": "Output and turn summaries for e2e/notices.e2e.ts (the project is a git repository at E:\\ with a changed notes.txt). \"quick hello\" answers at once. \"background job\" pauses before its last message (the test moves the focus away), then ends: a turn summary. \"plan the sprint\" pauses, then creates the board Sprint with the card 'Login bug' and writes E:\\PLAN.md: a board notice and a summary that queue. \"move the login card\" moves 'Login bug' to Done. The Code Review prompt (\"code review of the changes\") waits 3 seconds (the review session has its own agent process, so no control socket: the test moves the focus meanwhile), then leaves two comments on notes.txt (lines 1 and 4).",
+  "description": "Output and turn summaries for e2e/notices.e2e.ts (the project is a git repository at E:\\ with a changed notes.txt). \"quick hello\" answers at once. \"background job\" pauses before its last message (the test moves the focus away), then ends: a turn summary. \"plan the sprint\" pauses, then creates the board Sprint with the card 'Login bug' and writes E:\\PLAN.md: a board notice and a summary that queue. \"move the login card\" moves 'Login bug' to Done. The Code Review prompt (\"code review of the changes\") waits 3 seconds (the review session has its own agent process, so no control socket: the test moves the focus meanwhile), then leaves two comments on notes.txt (lines 1 and 4). \"draw the login flow\", \"paint a zigzag\" and \"write the release notes\" pause, then put output in the open Agent Diagrams, Agent Paint or WordPad window (the test focuses another window meanwhile, so each output window is behind).",
   "agent": {
     "name": "scripted-agent",
     "version": "1.0.0"
@@ -68,6 +68,36 @@
         },
         { "type": "expect", "from": "second.isError", "equals": "false" },
         { "type": "message", "text": "Review done: 2 comments." }
+      ]
+    },
+    {
+      "id": "diagram",
+      "match": { "contains": "draw the login flow", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Drawing.\n", "step": "manual", "label": "draw" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "diagram_add", "arguments": { "shapes": [{ "ref": "start", "stencil": "flowchart.terminator", "text": "Start" }, { "ref": "login", "stencil": "flowchart.process", "text": "Show login" }], "connectors": [{ "from": "start", "to": "login" }], "layout": { "direction": "TB" } }, "saveAs": "added" },
+        { "type": "expect", "from": "added.isError", "equals": "false", "message": "diagram_add failed: {{added}}" },
+        { "type": "message", "text": "Drawn." }
+      ]
+    },
+    {
+      "id": "paint",
+      "match": { "contains": "paint a zigzag", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Painting.\n", "step": "manual", "label": "paint" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "paint_draw", "arguments": { "ops": [{ "type": "rect", "x": 10, "y": 10, "w": 120, "h": 60, "color": "#0a246a", "fill": "#a6caf0" }, { "type": "line", "points": [{ "x": 20, "y": 100 }, { "x": 32, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 32, "y": 130 }, { "x": 44, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 44, "y": 100 }, { "x": 56, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 56, "y": 130 }, { "x": 68, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 68, "y": 100 }, { "x": 80, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 80, "y": 130 }, { "x": 92, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 92, "y": 100 }, { "x": 104, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 104, "y": 130 }, { "x": 116, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 116, "y": 100 }, { "x": 128, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 128, "y": 130 }, { "x": 140, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 140, "y": 100 }, { "x": 152, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 152, "y": 130 }, { "x": 164, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 164, "y": 100 }, { "x": 176, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 176, "y": 130 }, { "x": 188, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 188, "y": 100 }, { "x": 200, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 200, "y": 130 }, { "x": 212, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 212, "y": 100 }, { "x": 224, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 224, "y": 130 }, { "x": 236, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 236, "y": 100 }, { "x": 248, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 248, "y": 130 }, { "x": 260, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 260, "y": 100 }, { "x": 272, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 272, "y": 130 }, { "x": 284, "y": 100 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 284, "y": 100 }, { "x": 296, "y": 130 }], "color": "#c00000", "width": 3 }, { "type": "line", "points": [{ "x": 296, "y": 130 }, { "x": 308, "y": 100 }], "color": "#c00000", "width": 3 }] }, "saveAs": "drawn" },
+        { "type": "expect", "from": "drawn.isError", "equals": "false", "message": "paint_draw failed: {{drawn}}" },
+        { "type": "message", "text": "Painted." }
+      ]
+    },
+    {
+      "id": "wordpad",
+      "match": { "contains": "write the release notes", "ignoreCase": true },
+      "steps": [
+        { "type": "message", "text": "Writing.\n", "step": "manual", "label": "write" },
+        { "type": "mcpCall", "server": "agentxp", "tool": "wordpad_write", "arguments": { "path": "E:\\RELEASE.md", "markdown": "# Release notes\n\n- Login bug fixed\n" }, "saveAs": "wrote" },
+        { "type": "expect", "from": "wrote.isError", "equals": "false", "message": "wordpad_write failed: {{wrote}}" },
+        { "type": "message", "text": "Written." }
       ]
     },
     {

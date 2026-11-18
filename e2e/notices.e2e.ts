@@ -36,7 +36,7 @@ describe('Notices', () => {
     await writeFile(join(workspace.path, 'notes.txt'), WORKING)
     ctx = await startScriptedDesktop({ script: 'notices', name: 'Builder', title: 'Notices desktop', workspace })
     // code_write writes E:\PLAN.md without asking (the permission prompt is not what this spec is about).
-    await setToolPolicy(ctx.desktopPage, { 'fs.write': 'allow' })
+    await setToolPolicy(ctx.desktopPage, { 'fs.write': 'allow', wordpad: 'allow' })
     await ctx.desktop.openApp('chat')
     await see.visible(ctx.desktop.chat().composer)
     // The welcome balloons of a new desktop are not what this spec is about.
@@ -169,6 +169,74 @@ describe('Notices', () => {
     await ctx.desktop.openActionCenter()
     await see.count(messages(), before)
     await closeActionCenter()
+  })
+
+  // Output apps (docs/AGENT_PRESENCE.md, section 6): the window is open but behind the window the operator works in.
+  const outputBehind = async (prompt: string, label: string, focus: 'notepad' | 'paint' = 'notepad'): Promise<void> => {
+    const chat = ctx.desktop.chat()
+    await ctx.desktop.taskbarItem('chat').click()
+    await see.attribute(ctx.desktop.window('chat'), 'data-focused', 'true')
+    await chat.send(prompt)
+    expect((await control.waitForPause()).label).toBe(label)
+    await ctx.desktop.taskbarItem(focus).click()
+    await see.attribute(ctx.desktop.window(focus), 'data-focused', 'true')
+    await control.next()
+  }
+
+  it('output in Agent Diagrams, Agent Paint and WordPad behind the operator: one balloon each, whose one action brings the window forward', async () => {
+    await ctx.desktop.openApp('diagrams')
+    await ctx.desktop.openApp('paint')
+    await ctx.desktop.openApp('wordpad')
+    // Reduced motion: Paint's drawing cursor jumps instead of gliding (checked while it draws behind).
+    await ctx.desktopPage.emulateMedia({ reducedMotion: 'reduce' })
+
+    await outputBehind('draw the login flow', 'draw')
+    await see.text(ctx.desktop.balloonTitle, 'Diagram updated')
+    await see.text(ctx.desktop.balloonText, 'Builder updated the diagram')
+    await see.text(ctx.desktop.balloonAction, 'Open diagram')
+    await see.count(ctx.desktopPage.getByTestId('balloon-more'), 0)
+    await see.attribute(ctx.desktop.window('notepad'), 'data-focused', 'true')
+    await shot('11-diagram-behind-balloon')
+    await ctx.desktop.balloonAction.click()
+    await see.attribute(ctx.desktop.window('diagrams'), 'data-focused', 'true')
+    await see.count(ctx.desktop.balloon, 0)
+
+    await outputBehind('paint a zigzag', 'paint')
+    const paint = ctx.desktop.window('paint')
+    await see.attribute(paint.getByTestId('paint-agent-cursor'), 'data-motion', 'reduced')
+    await see.attribute(paint.getByTestId('paint-agent-cursor'), 'data-agent', 'Builder')
+    await see.text(ctx.desktop.balloonTitle, 'Picture updated')
+    await see.text(ctx.desktop.balloonText, 'Builder drew in Paint')
+    await see.text(ctx.desktop.balloonAction, 'Open Paint')
+    await see.attribute(ctx.desktop.window('notepad'), 'data-focused', 'true')
+    await shot('12-paint-behind-balloon')
+    await ctx.desktop.balloonAction.click()
+    await see.attribute(paint, 'data-focused', 'true')
+    await see.count(ctx.desktop.balloon, 0)
+    // With Paint in front the drawing shows live: the cursor jumps from point to point, and no Paint balloon comes
+    // (only the turn summary of the chat behind).
+    await outputBehind('paint a zigzag', 'paint', 'paint')
+    await see.attribute(paint.getByTestId('paint-agent-cursor'), 'data-motion', 'reduced')
+    await shot('12b-paint-reduced-motion-cursor')
+    await see.text(ctx.desktop.balloonTitle, 'Chat finished')
+    await see.text(ctx.desktop.balloonText, 'Builder finished')
+    await ctx.desktopPage.getByTestId('balloon-close').click()
+    await see.count(ctx.desktop.balloon, 0)
+    await ctx.desktopPage.emulateMedia({ reducedMotion: 'no-preference' })
+
+    // WordPad's write is also a file change: the summary with Review changes queues behind the output balloon.
+    await outputBehind('write the release notes', 'write')
+    await see.text(ctx.desktop.balloonTitle, 'Document updated')
+    await see.text(ctx.desktop.balloonText, 'Builder wrote in WordPad')
+    await see.text(ctx.desktop.balloonAction, 'Open WordPad')
+    await see.text(ctx.desktopPage.getByTestId('balloon-more'), '1 more')
+    await shot('13-wordpad-behind-balloon')
+    await ctx.desktop.balloonAction.click()
+    await see.attribute(ctx.desktop.window('wordpad'), 'data-focused', 'true')
+    await see.text(ctx.desktop.balloonTitle, 'Chat finished')
+    await see.text(ctx.desktop.balloonText, 'Builder finished: changed 1 file')
+    await ctx.desktopPage.getByTestId('balloon-close').click()
+    await see.count(ctx.desktop.balloon, 0)
   })
 
   it('balloons stay readable over a maximized window and in a small app window', async () => {
