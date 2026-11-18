@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clipRect, cursorPoint, glideStart, pageBoxRect, placeCallout, unionRect } from './showResolvers'
+import { clipRect, cursorFollowsWindow, cursorPoint, glideStart, pageBoxRect, placeCallout, unionRect } from './showResolvers'
 
 const area = { x: 0, y: 0, width: 1600, height: 960 }
 const size = { width: 260, height: 110 }
@@ -69,5 +69,30 @@ describe('placeCallout', () => {
 
   it('in a small window by the left edge the callout goes to its right', () => {
     expect(placeCallout({ x: 8, y: 400, width: 120, height: 20 }, size, { x: 0, y: 0, width: 900, height: 600 })).toMatchObject({ side: 'right', x: 142 })
+  })
+})
+
+describe('cursorFollowsWindow', () => {
+  const anchor = { windowId: 7, bounds: { x: 100, y: 80, width: 640, height: 480 }, windowState: 'normal' }
+  const at = (bounds: Partial<typeof anchor.bounds>, windowState = 'normal') => ({ bounds: { ...anchor.bounds, ...bounds }, windowState })
+
+  it('stays while its window does not change', () => {
+    expect(cursorFollowsWindow(anchor, at({}))).toEqual({ kind: 'stay' })
+  })
+
+  it('goes at once when its window is closed or minimized', () => {
+    expect(cursorFollowsWindow(anchor, undefined)).toEqual({ kind: 'hide' })
+    expect(cursorFollowsWindow(anchor, at({}, 'minimized'))).toEqual({ kind: 'hide' })
+  })
+
+  it('goes when its window is maximized, restored or resized (the content moved inside it)', () => {
+    expect(cursorFollowsWindow(anchor, at({}, 'maximized'))).toEqual({ kind: 'hide' })
+    expect(cursorFollowsWindow({ ...anchor, windowState: 'maximized' }, at({}))).toEqual({ kind: 'hide' })
+    expect(cursorFollowsWindow(anchor, at({ width: 700 }))).toEqual({ kind: 'hide' })
+    expect(cursorFollowsWindow(anchor, at({ x: 0, height: 400 }))).toEqual({ kind: 'hide' })
+  })
+
+  it('moves with its window when the window was only moved', () => {
+    expect(cursorFollowsWindow(anchor, at({ x: 160, y: 50 }))).toEqual({ kind: 'move', dx: 60, dy: -30 })
   })
 })

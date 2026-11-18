@@ -135,7 +135,7 @@ If you work in the chat of that agent, the show happens at once:
 2. The agent cursor moves to the spot. The agent cursor is an arrow in the color of the agent, with the name of the agent next to it. It moves there in about a third of a second.
 3. A note appears next to the spot. The note has the color square and the name of the agent, the target (for example **auth.ts:40-62**), and the reason. Click **OK** to close the note. Click **Reply** to put the note, quoted, in the message box of that chat.
 
-The marked lines, comment, or card stay selected after the note closes. The agent cursor fades after about 1.5 seconds without movement. Press Esc, click anywhere else, or press any key to close the note. A key or a click also stops the agent cursor if it is still moving.
+The marked lines, comment, or card stay selected after the note closes. The agent cursor fades after about 1.5 seconds without movement. If you minimize, close, maximize, restore, or resize the window that the agent cursor points into, the agent cursor goes away at once. If you move that window, the agent cursor moves with it. Press Esc, click anywhere else, or press any key to close the note. A key or a click also stops the agent cursor if it is still moving.
 
 If you do not work in the chat of that agent, nothing on your screen moves. A balloon **Show request** appears instead, for example **Builder wants to show you auth.ts:40-62: Here the token is checked**. Click **Show** to see it. Click **Not now** to close the balloon. The request stays in the Action Center, with its **Show** button.
 
@@ -270,7 +270,7 @@ Press Esc or click **Not now** to close the dialog box without an answer. The re
 
 | Name | What it does | data-testid |
 |---|---|---|
-| Agent cursor | The arrow of an agent that shows you something, that clicks in the Browser, or that you follow. Each agent has its own arrow in its color. `data-agent` is the name of the agent. `data-state` is ready, gliding, arrived, idle (faded), cancelled (you took over), or hidden. `data-motion` is glide, or reduced when the agent cursor jumps. | `agent-cursor` |
+| Agent cursor | The arrow of an agent that shows you something, that clicks in the Browser, or that you follow. Each agent has its own arrow in its color. `data-agent` is the name of the agent. `data-state` is ready, gliding, arrived, idle (faded), cancelled (you took over), or hidden (its window was minimized, closed, or resized). `data-motion` is glide, or reduced when the agent cursor jumps. | `agent-cursor` |
 | Agent name | The name of the agent next to its arrow. | `agent-cursor-name` |
 | Arrival ring | A short ring where the agent cursor jumped to, when less motion is set. | `agent-cursor-pulse` |
 | Show note | The note next to the spot. `data-agent` is the name of the agent. | `show-callout` |
