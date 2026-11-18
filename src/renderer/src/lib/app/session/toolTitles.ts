@@ -103,6 +103,7 @@ const TITLES: Record<string, string> = {
   code_search: 'Search the files',
   code_edit: 'Change a file',
   code_write: 'Write a file',
+  show: 'Show you something',
   code_open: 'Show a file in Code',
   code_reveal: 'Point at lines in Code',
   code_show_diff: 'Show a change in Code',

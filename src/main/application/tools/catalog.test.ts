@@ -55,6 +55,24 @@ describe('tool descriptions', () => {
     }
   })
 
+  it('show: only when the user should look, one target, always a reason; the old code_* names say they are deprecated', () => {
+    const show = TOOL_DEFS.show
+    expect(show.group).toBe('show')
+    expect(show.description).toContain('Use it only when you want the user to look')
+    expect(show.description).toContain('The note is required')
+    expect(show.description).toMatch(/shown now, queued, sent as a request, or not shown/)
+    expect(show.input.safeParse({ target: { kind: 'file', path: 'a.ts', lines: [1, 2] }, note: 'Why' }).success).toBe(true)
+    expect(show.input.safeParse({ target: { kind: 'file', path: 'a.ts' }, note: '  ' }).success).toBe(false)
+    expect(show.input.safeParse({ target: { kind: 'file', path: 'a.ts' } }).success).toBe(false)
+    expect(show.input.safeParse({ target: { kind: 'card', boardId: 'Sprint', cardId: 3 }, note: 'x' }).success).toBe(true)
+    for (const alias of ['code_open', 'code_reveal', 'code_show_diff'] as const) {
+      expect(TOOL_DEFS[alias].group).toBe('show')
+      expect(TOOL_DEFS[alias].description).toMatch(/^Deprecated: use show/)
+    }
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('call show: one target')
+    expect(WORK_QUIETLY_INSTRUCTIONS).toContain('always a short note saying why')
+  })
+
   it('has no tool that moves the focus', () => {
     expect(Object.keys(TOOL_DEFS)).not.toContain('desktop_focus_app')
   })

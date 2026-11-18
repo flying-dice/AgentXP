@@ -26,6 +26,7 @@ import type { KanbanApi, KanbanEvents } from './kanban'
 import type { McpApi, ProfilesApi, RoomsApi, SkillsApi, TeamsApi, TeamsEvents } from './teams'
 import type { SchedulerApi, SchedulerEvents } from './scheduler'
 import type { NoticeEvents } from './notices'
+import type { ShowEvents } from './show'
 
 export interface PromptInput {
   sessionId: Id
@@ -190,7 +191,7 @@ export interface AgentXPApi {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents, SchedulerEvents, NoticeEvents {
+export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents, SchedulerEvents, NoticeEvents, ShowEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]

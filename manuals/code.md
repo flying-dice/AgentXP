@@ -257,13 +257,14 @@ Every window has a menu bar with **Help** as the last menu. **Help -> View Help*
 
 ### What the Agent Can Do
 
-The agent uses the tools below to show you a file, some lines, or a change. The permission **Code** in **Control Center** controls them. If Code is closed, it opens behind the window that you use and its taskbar button flashes. An open Code window stays where it is.
+The agent uses the tool below to show you a file, some lines, or a change, with a note that tells why. This is a show. The permission **Agent may show you things** in **Control Center** controls it. If you work in the chat of that agent, Code comes to the front at the lines, the agent cursor points at them, and the note appears. The keyboard focus stays in your chat. Any other chat sends a **Show request** balloon instead. See **[Using the Desktop](desktop.md)**.
 
 | Tool | What it does |
 |---|---|
-| `code_open` | Shows you a file in Code, optionally at a line. |
-| `code_reveal` | Scrolls to a range of lines and selects them, to show you what the agent means. |
-| `code_show_diff` | Shows you the change that the agent made to a file in the changes list. |
+| `show` | Shows you a file at a range of lines (target `file`), or a change that the agent made (target `change`), with a note. Code marks exactly those lines, or selects the change in the changes list. |
+| `code_open` | Old name of `show` with a file, optionally at a line. It follows the same rules. AgentXP keeps it for one release. |
+| `code_reveal` | Old name of `show` with a range of lines. It follows the same rules. AgentXP keeps it for one release. |
+| `code_show_diff` | Old name of `show` with a change. It follows the same rules. AgentXP keeps it for one release. |
 
 The agent reads and searches files with the tools below. Code does not need to be open, and these tools open nothing. The permission **Read files** controls them.
 

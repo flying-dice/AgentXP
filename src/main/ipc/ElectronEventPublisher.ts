@@ -29,6 +29,11 @@ function desktopOf<K extends AppEventName>(event: K, payload: AppEvents[K]): Id 
       return (payload as AppEvents['git.changed']).desktopId
     case 'desktop.notice':
       return (payload as AppEvents['desktop.notice']).desktopId
+    case 'desktop.show':
+    case 'desktop.showEnded':
+    case 'desktop.showQueue':
+    case 'desktop.agentCursor':
+      return (payload as { desktopId: Id }).desktopId
     case 'review.changed':
       return (payload as AppEvents['review.changed']).desktopId
     case 'scheduler.changed':

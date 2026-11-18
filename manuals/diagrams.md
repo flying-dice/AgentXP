@@ -193,6 +193,8 @@ When Agent Diagrams is open, the agent can use these tools. **Control Center -> 
 | `diagram_save` | Saves the drawing as an `.xpdiagram` file. |
 | `diagram_open` | Opens an `.xpdiagram` file. |
 
+The agent can also show you one shape or connector with the `show` tool (target `diagram-shape`). Agent Diagrams goes to the page of the shape, selects it, and comes to the front, and a note tells why. If you do not work in the chat of that agent, you get a **Show request** balloon instead. The permission **Agent may show you things** controls it. See **[Using the Desktop](desktop.md)**.
+
 Each change by the agent is one step in **Edit -> Undo**. Press Ctrl+Z to undo the last change of the agent.
 
 ## 6 - Controls Reference

@@ -407,6 +407,20 @@ function newMethod(params: Params): AgentOutcome {
   return { session: { doc, page: 0, selection: [] }, text: `Started a new diagram "${doc.title}" with one empty page. Add shapes with diagram_add.`, change: 'Agent: new diagram' }
 }
 
+/**
+ * The shape or connector a `show` points at, on any page: its 1-based page and its words for the operator
+ * ("the shape 'Start' (s1)"). Null when the diagram has no item with that id.
+ */
+export function findShowItem(doc: DiagramDoc, id: string): { page: number; label: string } | null {
+  for (const [index, page] of doc.pages.entries()) {
+    const shape = page.shapes.find((s) => s.id === id)
+    if (shape) return { page: index + 1, label: shape.text?.trim() ? `the shape '${shape.text.trim().replace(/\s+/g, ' ').slice(0, 40)}'` : `the shape ${id}` }
+    const connector = page.connectors.find((c) => c.id === id)
+    if (connector) return { page: index + 1, label: connector.label?.trim() ? `the connector '${connector.label.trim().slice(0, 40)}'` : `the connector ${id}` }
+  }
+  return null
+}
+
 function selectMethod(s: DiagramSession, params: Params): AgentOutcome {
   const index = pageIndexFor(s.doc, s.page, params['page'])
   const ids = list(params['ids']).filter((v): v is string => typeof v === 'string')

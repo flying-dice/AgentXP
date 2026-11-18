@@ -71,6 +71,11 @@ export interface BrowserToolsDeps {
   driver: BrowserDriver
   /** Asks the Browser app (tabs, the highlight ring). Without it `browser_tabs` is unavailable and nothing is highlighted. */
   requests?: AppRequests
+  /**
+   * The agent cursor (`ShowService.pointAt`): before a click, a typing or a choice, the cursor glides to the element's box
+   * and the action waits for it. It is told only when the operator watches (the Browser on screen, the foreground chat).
+   */
+  cursor?: { pointAt(context: ToolContext, windowId: Id, box: PageBox): Promise<boolean> }
 }
 
 type BrowserToolName =
@@ -90,7 +95,7 @@ type BrowserToolName =
   | 'browser_reload'
 
 /** browser_*: drives a Browser window's page through the `BrowserDriver`. */
-export function createBrowserTools({ desktops, driver, requests }: BrowserToolsDeps): ToolHandlers<BrowserToolName> {
+export function createBrowserTools({ desktops, driver, requests, cursor }: BrowserToolsDeps): ToolHandlers<BrowserToolName> {
   const windowId = (desktopId: Id, requested?: number): Id => pickWindow(desktops.state(desktopId), 'browser', requested).id
 
   /** Mirrors what the page is doing into the window's view (the Browser app and the desktop state show it). */
@@ -130,20 +135,36 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
   /** The accessible name of the element a ref points to, for the words of the bar. Never fails. */
   const elementOf = async (id: Id, ref: number | undefined): Promise<ElementName | undefined> => (ref === undefined ? undefined : driver.elementOf(id, ref).catch(() => undefined))
 
-  /** A tool that acts on the page and reports where it ended up. */
+  /**
+   * The cursor goes first (docs/AGENT_PRESENCE.md, section 8): the element's box is sent before the action, the cursor
+   * glides there, then the action happens. Never fails: without a box or a watcher the action simply goes on.
+   */
+  const pointFirst = async (context: ToolContext, id: Id, ref: number | undefined): Promise<void> => {
+    if (!cursor || ref === undefined) return
+    const box = await driver.locate(id, ref).catch(() => undefined)
+    if (box) await cursor.pointAt(context, id, box).catch(() => false)
+  }
+
+  /** A tool that acts on the page and reports where it ended up. `point`: the agent cursor arrives at the element first. */
   const act =
     <A extends { window?: number; ref?: number }>(
       label: (args: A, element: ElementName | undefined) => string,
       run: (id: Id, args: A, guard: BrowserGuard) => Promise<ActionResult>,
-      done: (result: ActionResult, args: A, element: ElementName | undefined) => string
+      done: (result: ActionResult, args: A, element: ElementName | undefined) => string,
+      point = false
     ) =>
-    (args: A, { desktopId }: ToolContext) =>
+    (args: A, context: ToolContext) =>
       attempt(async () => {
+        const { desktopId } = context
         const id = windowId(desktopId, args.window)
         const guard = guardFor(desktopId)
         guard()
         const element = await elementOf(id, args.ref)
         const words = label(args, element)
+        if (point) {
+          await pointFirst(context, id, args.ref)
+          guard()
+        }
         const result = await whileAnnounced(desktopId, id, words, () => run(id, args, guard))
         showPage(desktopId, id, result, false)
         announce(desktopId, id, words, result.box)
@@ -205,13 +226,15 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
     browser_click: act(
       ({ double }, element) => clickLabel(element, double),
       (id, { ref, button, double }, guard) => driver.click(id, ref, { button: button ?? 'left', double: double ?? false }, guard),
-      (r, { ref, double }, element) => say(r, `${double ? 'Double-clicked' : 'Clicked'} ${clickTarget(element)} [${ref}].`)
+      (r, { ref, double }, element) => say(r, `${double ? 'Double-clicked' : 'Clicked'} ${clickTarget(element)} [${ref}].`),
+      true
     ),
 
     browser_type: act(
       (_args, element) => typeLabel(element),
       (id, { ref, text, submit }, guard) => driver.type(id, ref, text, submit ?? false, guard),
-      (r, { ref, submit }, element) => say(r, `Typed into ${ref === undefined ? 'the focused element' : `${typeTarget(element) ? `${typeTarget(element)} ` : ''}[${ref}]`}${submit ? ' and pressed Enter' : ''}.`)
+      (r, { ref, submit }, element) => say(r, `Typed into ${ref === undefined ? 'the focused element' : `${typeTarget(element) ? `${typeTarget(element)} ` : ''}[${ref}]`}${submit ? ' and pressed Enter' : ''}.`),
+      true
     ),
 
     browser_press: act(
@@ -239,7 +262,8 @@ export function createBrowserTools({ desktops, driver, requests }: BrowserToolsD
     browser_select: act(
       (_args, element) => selectLabel(element),
       (id, { ref, option }, guard) => driver.select(id, ref, option, guard),
-      (r, { ref }) => say(r, `Chose an option in [${ref}].`)
+      (r, { ref }) => say(r, `Chose an option in [${ref}].`),
+      true
     ),
 
     browser_tabs: ({ action, url, tab, window }, { desktopId }) =>

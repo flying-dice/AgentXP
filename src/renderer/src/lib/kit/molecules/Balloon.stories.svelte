@@ -42,6 +42,10 @@
   {#snippet template(args)}<div class="stage"><Balloon {...args} /></div>{/snippet}
 </Story>
 
+<Story name="ShowRequest" args={{ title: 'Show request', text: 'Reviewer wants to show you auth.ts:40-62: The token is checked after it expired', identity: { name: 'Reviewer', color: '#c0612b' }, action: { label: 'Show', onclick: fn() }, secondary: { label: 'Not now', onclick: fn() } }}>
+  {#snippet template(args)}<div class="stage"><Balloon {...args} /></div>{/snippet}
+</Story>
+
 <style>
   .stage {
     padding: 24px 24px 40px;

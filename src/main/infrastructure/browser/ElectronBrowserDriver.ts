@@ -248,6 +248,11 @@ export class ElectronBrowserDriver implements BrowserDriver {
     return { ...info(contents), box, note: `selected "${value.label}"` }
   }
 
+  async locate(windowId: Id, ref: number): Promise<PageBox> {
+    const contents = await this.guest(windowId)
+    return this.boxOf(contents, this.target(contents, ref), ref)
+  }
+
   async elementOf(windowId: Id, ref: number): Promise<{ role: string; name: string } | undefined> {
     const target = this.session(await this.guest(windowId)).refs.get(ref)
     return target ? { role: target.role, name: target.name } : undefined

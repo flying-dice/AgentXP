@@ -1,8 +1,8 @@
 <script lang="ts">
   /**
    * A WinXP notification-area balloon: pale yellow, rounded, with a tail pointing down at the tray. A notice about an
-   * agent shows the agent's colour swatch beside the title (the name is in the text, never colour alone), at most one
-   * button, and "2 more" when other balloons wait their turn.
+   * agent shows the agent's colour swatch beside the title (the name is in the text, never colour alone), a button (two
+   * for a show request: Show and Not now), and "2 more" when other balloons wait their turn.
    */
   import Button from '../atoms/Button.svelte'
   import Icon from '../atoms/Icon.svelte'
@@ -19,6 +19,8 @@
     onhold?: (held: boolean) => void
     /** A button under the text (for example "Open Task Manager", "Open review"). */
     action?: { label: string; onclick: () => void }
+    /** A second button beside it ("Not now" of a show request). */
+    secondary?: { label: string; onclick: () => void }
     /** "2 more": other balloons wait behind this one. */
     more?: string | null
     /** Announce the balloon to screen readers when it appears (off when the page announced it already). */
@@ -27,7 +29,7 @@
     tail?: number
   }
 
-  let { title, text, icon = 'info', identity = null, onclose, onhold, action, more = null, live = true, tail = 44 }: Props = $props()
+  let { title, text, icon = 'info', identity = null, onclose, onhold, action, secondary, more = null, live = true, tail = 44 }: Props = $props()
 </script>
 
 <div
@@ -53,6 +55,7 @@
   {#if action || more}
     <div class="foot">
       {#if action}<Button data-testid="balloon-action" onclick={action.onclick}>{action.label}</Button>{/if}
+      {#if secondary}<Button data-testid="balloon-secondary" onclick={secondary.onclick}>{secondary.label}</Button>{/if}
       {#if more}<span class="more" data-testid="balloon-more">{more}</span>{/if}
     </div>
   {/if}

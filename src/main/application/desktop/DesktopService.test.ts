@@ -6,7 +6,7 @@ import { SqliteAppWindowRepository } from '../../infrastructure/db/sqlite-app-wi
 import { SqliteStickyNoteRepository } from '../../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../../infrastructure/db/sqlite-tool-policy-repository'
 import { createVfsFixture } from '../test-helpers'
-import { DesktopService, TYPING_GRACE_MS, type ChatLifecycle, type DesktopServiceDeps } from './DesktopService'
+import { DesktopService, OPEN_APPS_BLOCKED, TYPING_GRACE_MS, type ChatLifecycle, type DesktopServiceDeps } from './DesktopService'
 
 class FakeChats implements ChatLifecycle {
   cancelled: number[] = []
@@ -280,6 +280,31 @@ describe('DesktopService: window placement and focus', () => {
     expect(state.focusedWindowId).toBe(chat.id)
     expect(state.windows.map((w) => w.id)).toEqual(order)
     expect(state.windows.find((w) => w.id === code.id)).toMatchObject({ attention: true, view: { activePath: 'C:\\Users\\Agent\\a.ts' } })
+  })
+
+  it('presentWindow (a show of the foreground chat): the target comes to the front, restored, while the focus stays in the chat', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
+    service.setWindowState(code.id, 'minimized')
+    const chat = await openChat()
+    await service.presentWindow(1, { desktopId, app: 'code', path: 'C:\\Users\\Agent\\a.ts' }, false)
+    let state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.at(-1)).toMatchObject({ id: code.id, windowState: 'normal', view: { activePath: 'C:\\Users\\Agent\\a.ts' } })
+    // A new window opens in front, beside the chat, still without the focus.
+    const terminal = await service.presentWindow(1, { desktopId, app: 'terminal' }, false)
+    state = service.state(desktopId)
+    expect(state.focusedWindowId).toBe(chat.id)
+    expect(state.windows.at(-1)?.id).toBe(terminal.id)
+    // The operator asked (Show on a request): it comes forward with the focus.
+    await service.presentWindow(1, { desktopId, app: 'code', windowId: code.id }, true)
+    expect(service.state(desktopId).focusedWindowId).toBe(code.id)
+  })
+
+  it('presentWindow follows "Agent may open apps" for a new window only', async () => {
+    service.setPolicy({ ...DEFAULT_TOOL_POLICY, openApps: 'deny' })
+    await expect(service.presentWindow(1, { desktopId, app: 'terminal' }, false)).rejects.toThrow(OPEN_APPS_BLOCKED)
+    const code = service.openWindow({ desktopId, app: 'code' })
+    await expect(service.presentWindow(1, { desktopId, app: 'code' }, false)).resolves.toMatchObject({ id: code.id })
   })
 
   it('never narrows the Browser for a chat the agent opens (only for the user\'s)', async () => {

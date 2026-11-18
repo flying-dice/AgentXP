@@ -44,6 +44,7 @@ import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
 import type { NoticeAction, NoticeDto, NoticeTarget } from '@shared/notices'
 import type { AgentIdentity } from '@shared/identity'
+import type { AgentCursorDto, ShowDto } from '@shared/show'
 import { drop, next, push, type BalloonQueueState } from './balloonQueue'
 import type { ActionCenterMessage } from '../kit/organisms/ActionCenter.svelte'
 
@@ -64,6 +65,8 @@ export interface Balloon {
   icon: 'usb-safe' | 'info'
   /** A button under the text; clicking it runs `run`, waits for it, and then hides the balloon. */
   action?: { label: string; run: () => void | Promise<unknown> }
+  /** A second button ("Not now" of a show request); it hides the balloon too. */
+  secondary?: { label: string; run: () => void | Promise<unknown> }
   /** How long it stays when the pointer is not on it, in ms (`BALLOON_MS` when absent). `null`: until the user closes it or uses its button. */
   stayMs?: number | null
   /** The balloon is dismissed when this app is opened by any route (its message is done then). */
@@ -139,6 +142,13 @@ export class DesktopController implements DesktopHost {
   policy = $state.raw<ToolPolicyDto | null>(null)
   /** A short line that stands in for "Idle" on the top bar ("Resumed. Nothing was stopped."); null when there is none. */
   notice = $state<string | null>(null)
+  /** The show on screen (`desktop.show`): the cursor glides to its spot and the note callout shows; null when none. */
+  currentShow = $state.raw<ShowDto | null>(null)
+  /** The latest pointing of the agent cursor without a note (a Browser action), numbered so the same box twice moves again. */
+  cursorPing = $state.raw<(AgentCursorDto & { seq: number }) | null>(null)
+  /** Shows waiting their turn plus show requests nobody answered ("2 things to look at"). */
+  waitingShows = $state(0)
+  private cursorSeq = 0
 
   // shell UI state
   startOpen = $state(false)
@@ -290,6 +300,16 @@ export class DesktopController implements DesktopHost {
       this.sessions.start(this.api, (id) => this.forgetSession(id)),
       this.api.on('session.changed', () => this.syncStores()),
       this.api.on('desktop.notice', (notice) => this.onNotice(notice)),
+      this.api.on('desktop.show', (show) => this.onShow(show)),
+      this.api.on('desktop.showEnded', ({ desktopId, showId }) => {
+        if (this.ours(desktopId) && this.currentShow?.showId === showId) this.currentShow = null
+      }),
+      this.api.on('desktop.showQueue', ({ desktopId, waiting }) => {
+        if (this.ours(desktopId)) this.waitingShows = waiting
+      }),
+      this.api.on('desktop.agentCursor', (cursor) => {
+        if (this.ours(cursor.desktopId) && !this.state.paused) this.cursorPing = { ...cursor, seq: ++this.cursorSeq }
+      }),
       this.api.on('room.changed', (room) => this.applyRoom(room)),
       this.api.on('room.removed', ({ id }) => this.dropRoom(id)),
       this.api.on('recycle.changed', () => void this.refreshRecycle()),
@@ -381,6 +401,11 @@ export class DesktopController implements DesktopHost {
     // "Plug in a project..." is wrong once a project is plugged in, whoever plugged it (the agent, Code, Computer).
     if (next.drives.some((d) => d.kind === 'removable')) this.dropBalloons((b) => !b.queued && b.title === PROJECT_HINT.title)
     this.current = next
+    if (next.paused) {
+      // Pause stops all motion: the show and the cursors go (main drops the queue).
+      this.currentShow = null
+      this.cursorPing = null
+    }
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
     }
@@ -435,7 +460,7 @@ export class DesktopController implements DesktopHost {
     if (this.state.desktopId !== 0 && notice.desktopId !== this.state.desktopId) return
     this.pushMessage(notice.text, { title: notice.title, identity: notice.identity, actions: notice.actions })
     this.announcement = `${notice.title}: ${notice.text}`
-    const action = notice.actions[0]
+    const [action, second] = notice.actions
     this.showBalloon({
       key: notice.id,
       queued: true,
@@ -443,8 +468,59 @@ export class DesktopController implements DesktopHost {
       text: notice.text,
       icon: 'info',
       identity: notice.identity,
-      action: action ? { label: action.label, run: () => this.runNoticeAction(action.target) } : undefined
+      action: action ? { label: action.label, run: () => this.runNoticeAction(action.target) } : undefined,
+      secondary: second ? { label: second.label, run: () => this.runNoticeAction(second.target) } : undefined
     })
+  }
+
+  private ours(desktopId: Id): boolean {
+    return this.state.desktopId === 0 || desktopId === this.state.desktopId
+  }
+
+  // ---- show (docs/AGENT_PRESENCE.md, section 5) -------------------------------------------------
+
+  /** A show landed: the overlay glides the cursor to its spot and shows the note; screen readers hear it once. */
+  private onShow(show: ShowDto): void {
+    if (!this.ours(show.desktopId) || this.state.paused) return
+    // A show request the operator accepted is done: its balloon goes (its line stays in the Action Center history).
+    this.dropBalloons((b) => b.key === `show-${show.showId}`)
+    this.currentShow = show
+    this.announcement = `${show.identity.name} shows you ${show.label}: ${show.note}`
+    // A view report of the target window still waiting in the debouncer (its scroll after an earlier show) would land in
+    // main after the show's view and undo it: send it first, then main's view of the window (the show's spot) again.
+    const window = this.windowById(show.spot.windowId)
+    if (window && this.views.flush(window.id)) void this.api.desktop.updateView(window.id, window.view).catch(() => {})
+  }
+
+  /** The operator is done with the show (OK, Esc, any click or key elsewhere): it goes, and the next one waiting can land. */
+  dismissShow(): void {
+    const show = this.currentShow
+    if (!show) return
+    this.currentShow = null
+    void this.api.desktop.dismissShow?.(this.state.desktopId, show.showId).catch(() => {})
+  }
+
+  /** **Reply** on the note callout: that chat's composer gets the note quoted and the focus; the show is done. */
+  async replyToShow(): Promise<void> {
+    const show = this.currentShow
+    if (!show) return
+    this.dismissShow()
+    const quoted = `${show.note.split('\n').map((line) => `> ${line}`).join('\n')}\n\n`
+    const pane = this.state.windows.find((w) => w.asideSessionId === show.sessionId)
+    if (pane) {
+      await this.raiseWindow(pane.id)
+      this.setChatPane(pane.id, true)
+      this.prefillPane(pane.id, quoted)
+      return
+    }
+    const window = await this.openApp({ app: 'chat', sessionId: show.sessionId })
+    this.prefillPane(window.id, quoted)
+  }
+
+  /** "2 things to look at" in the Action Center; null when nothing waits. */
+  get toLook(): string | null {
+    const n = this.waitingShows
+    return n > 0 ? `${n} ${n === 1 ? 'thing' : 'things'} to look at` : null
   }
 
   /** A button of an Action Center message (a notice's action). */
@@ -461,6 +537,15 @@ export class DesktopController implements DesktopHost {
    */
   async runNoticeAction(target: NoticeTarget): Promise<void> {
     switch (target.kind) {
+      case 'later':
+        return
+      case 'show':
+        try {
+          await this.api.desktop.acceptShow(this.state.desktopId, target.showId)
+        } catch (error) {
+          this.showBalloon({ title: 'Nothing to show', text: errorText(error), icon: 'info' })
+        }
+        return
       case 'chat':
         return this.openChatOf(target.sessionId)
       case 'changes':
@@ -766,6 +851,16 @@ export class DesktopController implements DesktopHost {
    */
   async showToolTarget(target: ToolShowTarget, sessionId: Id | null = null): Promise<void> {
     switch (target.kind) {
+      case 'again': {
+        // **Show again** of a show row: the operator asked, so the target opens at the spot with the focus and the note.
+        if (sessionId === null) return
+        try {
+          await this.api.desktop.showAgain(this.state.desktopId, sessionId, target.target, target.note)
+        } catch (error) {
+          this.showBalloon({ title: 'Nothing to show', text: errorText(error), icon: 'info' })
+        }
+        return
+      }
       case 'code':
       case 'diff': {
         const change = target.kind === 'diff' && sessionId !== null ? (await this.api.sessions.changes(sessionId).catch(() => [])).findLast((c) => (normaliseVPath(c.path) ?? c.path).toLowerCase() === target.path.toLowerCase()) : undefined
@@ -832,6 +927,8 @@ export class DesktopController implements DesktopHost {
     const desktopId = this.state.desktopId
     if (!this.state.paused) {
       if (this.current) this.current = { ...this.current, paused: true }
+      this.currentShow = null
+      this.cursorPing = null
       await this.api.desktop.setPaused(desktopId, true)
       return
     }
@@ -1326,6 +1423,14 @@ export class DesktopController implements DesktopHost {
     const balloon = this.balloon
     if (!balloon?.action) return
     await balloon.action.run()
+    if (this.balloon === balloon) this.dismissBalloon()
+  }
+
+  /** The balloon's second button ("Not now"): runs it and hides the balloon. */
+  async runBalloonSecondary(): Promise<void> {
+    const balloon = this.balloon
+    if (!balloon?.secondary) return
+    await balloon.secondary.run()
     if (this.balloon === balloon) this.dismissBalloon()
   }
 

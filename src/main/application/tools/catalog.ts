@@ -6,6 +6,7 @@
 import { z } from 'zod'
 import { AGENT_OPENABLE_APPS, type ToolGroup } from '@shared/desktop'
 import { REVIEW_SEVERITIES, REVIEW_VERDICTS } from '@shared/review'
+import { SHOW_NOTE_MAX } from '@shared/show'
 import type { ToolContext, ToolResult } from './types'
 import { ADMIN_TOOL_DEFS } from './adminCatalog'
 
@@ -29,8 +30,9 @@ export const WORK_QUIETLY_INSTRUCTIONS =
   'do shell work yourself). Scheduling: scheduler_* (Task Scheduler), never cron, at or schtasks. ' +
   'Output apps open behind the user\'s window, with a flashing taskbar button, and never take the focus: the Browser (browser_*), Agent Paint, ' +
   'Agent Diagrams, WordPad, Code Review and windows you draw with a2ui_render. Open an app only to put your output in it or when the user asks, ' +
-  'never just so the user can watch you work. code_open, code_reveal and code_show_diff show the user a file, lines or a change in the Code app: ' +
-  'use them only when you want the user to look at it, and say why in the chat. '
+  'never just so the user can watch you work. To point the user at something, call show: one target (lines of a file, a change, a review comment, ' +
+  'a card, a diagram shape, a page element or a window) and always a short note saying why. Use it sparingly, only when you want the user to look now; ' +
+  'if the user is in another chat it becomes a request they can accept later. code_open, code_reveal and code_show_diff are deprecated names of show. '
 
 /** The shell terminal_run uses on this host, so the agent writes commands it understands. */
 export function hostShellInstructions(platform: string): string {
@@ -273,20 +275,48 @@ export const TOOL_DEFS = {
     description: 'Read the saved text of the file a Notepad window shows (or of `path`).',
     input: z.object({ path: z.string().optional().describe('File as a virtual path or relative to your working directory; default: the file of the focused Notepad') })
   },
+  show: {
+    group: 'show',
+    description:
+      'Show the user one thing, with a reason: a file at a line range, one of your recorded changes, a review comment, a Kanban card, a shape of the Agent Diagrams window, ' +
+      'an element of the Browser page (a ref from browser_read or browser_find) or an app window. Use it only when you want the user to look, now, at that one thing; ' +
+      'never to let the user watch you work. The note is required: say why in one short sentence ("Here the token is checked before it expires"), not "see this". ' +
+      'If the user is in your chat, the target opens at the exact spot, your cursor points at it and your note shows beside it; if the user is elsewhere they get a ' +
+      'request ("<your name> wants to show you ...") with Show and Not now, and one show waits while another is on screen. ' +
+      'Returns whether it was shown now, queued, sent as a request, or not shown (the user declined, or "Agent may show you things" is Never). A target that is not there (no such file, comment, card or shape) is an error.',
+    input: z.object({
+      target: z
+        .discriminatedUnion('kind', [
+          z.object({ kind: z.literal('file'), path: path('File'), lines: z.tuple([z.number().int().min(1), z.number().int().min(1)]).optional().describe('First and last line to point at, e.g. [40, 62]') }),
+          z.object({
+            kind: z.literal('change'),
+            path: z.string().optional().describe('The file of the recorded change (virtual path or relative to your working directory); default: your latest change'),
+            changeId: z.number().int().optional().describe('A change id, when you know it')
+          }),
+          z.object({ kind: z.literal('review-comment'), id: z.number().int().describe('The comment id (review_add_comment returns it)') }),
+          z.object({ kind: z.literal('card'), boardId: BOARD_REF, cardId: z.number().int().describe('The card id (board_get lists them)') }),
+          z.object({ kind: z.literal('diagram-shape'), id: z.string().min(1).describe('A shape or connector id of the Agent Diagrams window (diagram_read lists them)') }),
+          z.object({ kind: z.literal('page-element'), ref: z.number().int().describe('A ref from browser_read or browser_find on the current page') }),
+          z.object({ kind: z.literal('window'), app: app.describe('The app whose window to bring forward') })
+        ])
+        .describe('The one thing to show'),
+      note: z.string().trim().min(1).max(SHOW_NOTE_MAX).describe('Why the user should look, in one short sentence')
+    })
+  },
   code_open: {
-    group: 'code',
-    description: 'Shows the user a file in the Code app, optionally at a line: use it only when you want the user to look, and say why in the chat. A new Code window opens behind the user\'s window; an open one is used where it is.',
-    input: z.object({ path: path('File'), line: z.number().int().min(1).optional() })
+    group: 'show',
+    description: 'Deprecated: use show with target {kind: "file"}. Shows the user a file in Code, optionally at a line, like show (the same rules: only when you want the user to look; a request when the user is in another chat).',
+    input: z.object({ path: path('File'), line: z.number().int().min(1).optional(), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
   },
   code_reveal: {
-    group: 'code',
-    description: 'Shows the user a line range of a file in the Code app, selected: use it only when you want the user to look at those lines, and say why in the chat.',
-    input: z.object({ path: path('File'), startLine: z.number().int().min(1), endLine: z.number().int().min(1).optional() })
+    group: 'show',
+    description: 'Deprecated: use show with target {kind: "file", lines: [start, end]}. Shows the user a line range of a file in Code, like show.',
+    input: z.object({ path: path('File'), startLine: z.number().int().min(1), endLine: z.number().int().min(1).optional(), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
   },
   code_show_diff: {
-    group: 'code',
-    description: 'Shows the user the recorded change of a file you edited, in the Code app\'s changes list: use it only when you want the user to look at it.',
-    input: z.object({ path: path('File') })
+    group: 'show',
+    description: 'Deprecated: use show with target {kind: "change", path}. Shows the user the recorded change of a file you edited, like show.',
+    input: z.object({ path: path('File'), note: z.string().max(SHOW_NOTE_MAX).optional().describe('Why the user should look') })
   },
   code_read: {
     group: 'fs.read',

@@ -129,8 +129,8 @@
     {#each group.rows as row (row.key)}
       <div class="row" class:selected={row.key === selectedRow} use:reveal={row.key === selectedRow} role="row" data-testid="permissions-row" data-key={row.key} data-selected={row.key === selectedRow}>
         <span class="name" role="cell" title={row.tooltip}>{row.label}</span>
-        <span class="setting" role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
-        <span class="mode" role="cell" data-testid="permissions-mode">{decisionNote(row.decision)}.</span>
+        <span class="setting" role="cell"><ComboBox testid={settingTestid(row.key)} aria-label={row.label} items={row.items ?? DECISION_ITEMS} value={row.decision} onchange={(v) => set(row.key, v)} style="width:96px" /></span>
+        <span class="mode" role="cell" data-testid="permissions-mode">{decisionNote(row.decision, row.items)}.</span>
         <span class="what" role="cell" data-testid="permissions-covers">{row.description}</span>
       </div>
     {/each}

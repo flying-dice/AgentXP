@@ -69,6 +69,15 @@ If the agent only worked in the Browser, the Thinking line reads **Used 28 steps
 
 The agent works out of sight. When it reads, searches, changes a file, or runs a command, no window opens and nothing takes the focus. Each step has a link to the place where you can see it: **Show in Code**, **Show diff**, **Show in Terminal**, or **Show in Browser**. The links show while the step runs and when it is done. You clicked the link, so the window opens in front with the focus.
 
+When the agent shows you something on purpose (the `show` tool), the step says what and why:
+
+- **Showed you auth.ts:40-62: Here the token is checked** – You saw it. The window came to the front at the spot, with the note of the agent.
+- **Will show you ...** – Another show was on the screen. This one comes when you close that note.
+- **Asked to show you ...** – You worked in another window, so a **Show request** balloon appeared instead. The request stays in the Action Center.
+- **Not shown (Never): ...** – **Agent may show you things** is set to **Never** in Control Center. Nothing moved.
+
+Click **Show again** under the step to open the target at the spot again, with the note. See **[Using the Desktop](desktop.md)**.
+
 If the agent stops while you read older messages, the button **Newer messages below. Click to see them.** shows above the message box. It never covers a message. After you send a message, after an answer ends, and after a restart, the transcript scrolls to the end by itself, unless you scrolled up.
 
 When Resume agents continues a step that **Pause all agents** stopped, your message **Please continue where you stopped.** shows with the note **Resumed. Continuing where you stopped.** above it.
@@ -175,6 +184,7 @@ While the agent restarts, the chat says **Restarting the agent...** with a progr
 | Show diff (step) | A link under a step that changed or wrote a file. It opens Code on the change of that file. | `tool-call-show-diff` |
 | Show in Terminal (step) | A link under a step that ran a command. It opens Terminal on that command. | `tool-call-show-terminal` |
 | Show in Browser (step) | A link under a Browser step. It brings that Browser window to the front. | `tool-call-show-browser` |
+| Show again (step) | A link under a step that showed you something. It opens the target at the spot again, with the note. | `tool-call-show-again` |
 | Restarted note | The line "AgentXP restarted. Your last request was not sent again:" with your text. It shows after **Restart** when your last request did not go through. | `chat-restarted-note` |
 | Restarted text | Your last request, on one line, in the restarted note. | `chat-restarted-text` |
 | Send it again | Sends your last request again, in one click. | `chat-restarted-resend` |

@@ -285,6 +285,40 @@ export class DesktopService implements DesktopStates {
     return this.windowState(record.id)
   }
 
+  /**
+   * Show (`docs/AGENT_PRESENCE.md`, section 5): brings the window a show lands in to the front. `focus` (the operator
+   * asked: **Show** on a request, **Show again**) raises and focuses it like any operator open. Without it (the
+   * foreground chat's own show) the window comes to the front, restored when minimized, but the keyboard focus stays
+   * where the operator is: their chat stays the foreground chat and typing goes on. A new window obeys "Agent may open
+   * apps"; `windowId` names an open window (the Browser or Agent Diagrams window of the target).
+   */
+  async presentWindow(sessionId: Id, input: OpenWindowInput & { windowId?: Id }, focus: boolean): Promise<AppWindowState> {
+    const desktopId = this.record(input.desktopId).id
+    const existing = input.windowId !== undefined ? this.windowRecord(input.windowId) : this.existingWindow(input)
+    if (focus) {
+      if (!existing) return this.openWindow(input, 'user')
+      if (input.path !== undefined && existing.app === 'code') this.showInCode(existing, input.path)
+      this.raiseWindow(existing.id)
+      return this.windowState(existing.id)
+    }
+    const focused = this.focusedRecord(desktopId)
+    if (existing) {
+      if (input.path !== undefined && existing.app === 'code') this.showInCode(existing, input.path)
+      if (existing.windowState === 'minimized') this.deps.windows.setWindowState(existing.id, 'normal')
+      // The focus is kept by id: the front-most window would otherwise count as focused.
+      if (focused) this.focus.set(desktopId, focused.id)
+      if (this.deps.windows.list(desktopId).at(-1)?.id !== existing.id) this.deps.windows.raise(existing.id)
+      this.attention.get(desktopId)?.delete(existing.id)
+      this.emit(desktopId)
+      return this.windowState(existing.id)
+    }
+    if (this.policy().openApps !== 'allow') await this.assertMayOpen(sessionId, input.app)
+    const record = this.createWindow(desktopId, input, focused, 'agent')
+    this.focus.set(desktopId, focused?.id ?? record.id)
+    this.emit(desktopId)
+    return this.windowState(record.id)
+  }
+
   /** Creates the window row: below the top bar and beside the focused window (`placeNewWindow`), with its first view. */
   private createWindow(desktopId: Id, input: OpenWindowInput, focused: AppWindowRecord | null, openedBy: OpenedBy, size?: { width?: number; height?: number }): AppWindowRecord {
     // New windows start below the top bar and beside the focused window (`placeNewWindow`).

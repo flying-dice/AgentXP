@@ -71,12 +71,12 @@ beforeEach(() => {
   })
 })
 
-const check = (group: 'fs.read' | 'fs.write' | 'terminal' | 'browser' | 'code', askUser = true) =>
+const check = (group: 'fs.read' | 'fs.write' | 'terminal' | 'browser' | 'notepad', askUser = true) =>
   gateway.forSession(SESSION).check('acp', { group, title: 'Do it', askUser })
 
 describe('ToolGateway', () => {
   it('lets calls through when the app is open and the policy allows', async () => {
-    await expect(check('code')).resolves.toBeUndefined()
+    await expect(check('notepad')).resolves.toBeUndefined()
     await expect(check('fs.read')).resolves.toBeUndefined()
     expect(broker.prompts).toEqual([])
   })
@@ -94,7 +94,7 @@ describe('ToolGateway', () => {
 
   it('refuses everything while paused and when the policy denies', async () => {
     state = { ...state, paused: true }
-    await expect(check('code')).rejects.toThrow(PAUSED_MESSAGE)
+    await expect(check('notepad')).rejects.toThrow(PAUSED_MESSAGE)
     state = { ...state, paused: false }
     policy.groups.terminal = 'deny'
     await expect(check('terminal')).rejects.toThrow(/blocked/)
@@ -124,8 +124,8 @@ describe('ToolGateway', () => {
 
   it('asks for every call while the user is in control', async () => {
     state = { ...state, userInControl: true }
-    await check('code')
-    await check('code')
+    await check('notepad')
+    await check('notepad')
     expect(broker.prompts).toHaveLength(2)
   })
 

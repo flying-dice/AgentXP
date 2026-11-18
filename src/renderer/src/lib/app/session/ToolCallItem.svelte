@@ -7,7 +7,7 @@
   import { DENIED_NOTE, FAILED_NOTE, toolStatusView } from './toolStatus'
   import { plainToolTitle } from './toolTitles'
   import { browserNow, browserStep } from './browserSteps'
-  import { SHOW_LABELS, toolShowTargets, type ToolShowTarget } from './toolShowTarget'
+  import { SHOW_LABELS, showRowOf, toolShowTargets, type ToolShowTarget } from './toolShowTarget'
 
   interface Props {
     row: Extract<TranscriptRow, { kind: 'tool' }>
@@ -38,7 +38,9 @@
   const browserTitle = $derived(
     status.kind === 'running' ? browserNow(row.name, rawInput) : status.kind === 'failed' ? null : browserStep(row.name, rawInput, row.result)
   )
-  const title = $derived(browserTitle ?? plainTitle)
+  // A show row says what the operator was shown and why ("Showed you auth.ts:40-62: <note>").
+  const showRow = $derived(showRowOf({ title: toolCall?.title ?? row.name, rawInput, result: row.result }))
+  const title = $derived(showRow?.title ?? browserTitle ?? plainTitle)
   const argument = $derived(toolArgument(toolCall?.kind, rawInput, toolCall?.locations ?? [], toolCall?.title ?? row.name))
   const result = $derived(row.result ? plainToolResult(row.result) : null)
   const contents = $derived(toolCall?.contents ?? [])
@@ -52,14 +54,14 @@
           kind: target.kind,
           label: SHOW_LABELS[target.kind],
           run: () => onshowtarget(target)
-        }))
+        })).filter((action) => action.kind !== 'again' || showRow?.again === true)
       : []
   )
 </script>
 
 <ToolCallCard
   name={title ?? toolLabel(toolCall?.kind, row.name, rawInput)}
-  argument={title && plainToolTitle(argument) ? '' : argument}
+  argument={showRow || (title && plainToolTitle(argument)) ? '' : argument}
   {status}
   note={denied ? DENIED_NOTE : status.kind === 'failed' ? FAILED_NOTE : undefined}
   onshowevent={onshowevent ? () => onshowevent(row.toolCallId) : undefined}

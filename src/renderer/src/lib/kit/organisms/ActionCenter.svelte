@@ -36,9 +36,11 @@
     onclose?: () => void
     /** Tray button element: presses on it are not "outside". */
     ignore?: HTMLElement | null
+    /** "2 things to look at": shows that wait their turn and show requests nobody answered (null: none). */
+    toLook?: string | null
   }
 
-  let { approvals = [], messages = [], onreview, onaction, onopencontrolcentre, onopeneventviewer, onclose, ignore = null }: Props = $props()
+  let { approvals = [], messages = [], onreview, onaction, onopencontrolcentre, onopeneventviewer, onclose, ignore = null, toLook = null }: Props = $props()
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -75,6 +77,7 @@
   </section>
   <section>
     <h4>Messages</h4>
+    {#if toLook}<div class="look" data-testid="action-center-shows">{toLook}</div>{/if}
     {#each messages as m (m.id)}
       <div class="message" data-testid="action-center-message" data-agent={m.identity?.name}>
         <div class="body">
@@ -102,6 +105,13 @@
 </div>
 
 <style>
+  .look {
+    margin: 0 0 4px;
+    padding: 2px 6px;
+    border: 1px solid var(--xp-balloon-border);
+    background: var(--xp-balloon-tail);
+    font-weight: 700;
+  }
   .xp-action-center {
     box-sizing: border-box;
     width: 336px;

@@ -4,6 +4,7 @@
   import type { AppProps } from '../types'
   import StatusStripLabel from '../../kit/molecules/StatusStripLabel.svelte'
   import ContextMenuStrip from '../../kit/organisms/ContextMenuStrip.svelte'
+  import AgentCursor from '../../kit/organisms/AgentCursor.svelte'
   import type { MenuDef, MenuItemDef } from '../../kit/molecules/MenuItem'
   import { closeItems, editItems, menuBar } from '../../kit/molecules/standardMenu'
   import MenuStrip from '../../kit/organisms/MenuStrip.svelte'
@@ -60,6 +61,8 @@
   let canvas = $state<HTMLCanvasElement | null>(null)
   let agentDrawing = $state(false)
   let ghost = $state<{ x: number; y: number } | null>(null)
+  /** Who is drawing: the name and colour of the agent cursor (`paint_draw` sends them). */
+  let ghostAgent = $state<{ name: string; color: string }>({ name: 'Agent', color: '#3a6fd8' })
   let textBox = $state<{ x: number; y: number; value: string } | null>(null)
   let textInput = $state<HTMLInputElement | null>(null)
   let resizing = $state<{ width: number; height: number } | null>(null)
@@ -114,6 +117,8 @@
 
   async function draw(params: unknown): Promise<unknown> {
     const ops = parseDrawParams(params)
+    const agent = (params as { agent?: { name?: unknown; color?: unknown } } | null)?.agent
+    if (typeof agent?.name === 'string' && typeof agent.color === 'string') ghostAgent = { name: agent.name, color: agent.color }
     snapshot()
     agentDrawing = true
     const delay = Math.min(70, Math.floor(3000 / ops.length))
@@ -470,10 +475,7 @@
         oncontextmenu={(e) => (e.preventDefault(), e.stopPropagation())}
       ></canvas>
       {#if ghost}
-        <div class="ghost" style:left="{ghost.x}px" style:top="{ghost.y}px" aria-hidden="true">
-          <svg viewBox="0 0 16 16" width="22" height="22"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="#fff" stroke="#000" stroke-linejoin="round" /></svg>
-          <span>AgentXP</span>
-        </div>
+        <div class="ghost"><AgentCursor name={ghostAgent.name} color={ghostAgent.color} x={ghost.x} y={ghost.y} state="gliding" glideMs={70} testid="paint-agent-cursor" /></div>
       {/if}
       {#if textBox}
         <input data-testid="paint-text-input"
@@ -769,22 +771,12 @@
       box-shadow: 0 0 8px 1px rgba(63, 155, 240, 0.8);
     }
   }
+  /* The agent cursor while the agent draws (the shared AgentCursor, a quick glide from point to point). */
   .ghost {
     position: absolute;
+    inset: 0;
     z-index: 2;
-    display: flex;
-    align-items: flex-start;
     pointer-events: none;
-    transition: left 0.08s linear, top 0.08s linear;
-  }
-  .ghost span {
-    margin: 12px 0 0 -2px;
-    padding: 0 5px;
-    border: 1px solid #4a7fb8;
-    border-radius: 3px;
-    background: #e8f2fe;
-    font-size: 11px;
-    color: #1e3287;
   }
   .textbox {
     position: absolute;

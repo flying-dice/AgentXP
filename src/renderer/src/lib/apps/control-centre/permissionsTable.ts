@@ -14,6 +14,8 @@ export interface PermissionRow {
   /** The longer form of the name for the tooltip ("Run commands (Terminal)"); the name itself stays the same everywhere. */
   tooltip?: string
   decision: PolicyDecision
+  /** The words of the setting box when they differ from Allow, Ask, Deny (Show: Always, Ask, Never). */
+  items?: { value: PolicyDecision; label: string }[]
 }
 
 /** The two blocks of the page, in order. */
@@ -22,12 +24,19 @@ export const GROUP_TITLES: Record<PermissionGroupId, string> = {
   apps: 'Apps the agent may use'
 }
 
+/** The setting words of **Agent may show you things**: a show is a request to look, so it is Always, Ask or Never. */
+export const SHOW_DECISION_ITEMS: { value: PolicyDecision; label: string }[] = [
+  { value: 'allow', label: 'Always' },
+  { value: 'ask', label: 'Ask' },
+  { value: 'deny', label: 'Never' }
+]
+
 /** One row per tool group of `TOOL_GROUPS` (the always-on `shell` group is not gated), then the app-opening rule. */
-const META: { key: PolicyKey; group: PermissionGroupId; label: string; description: string; tooltip?: string }[] = [
+const META: { key: PolicyKey; group: PermissionGroupId; label: string; description: string; tooltip?: string; items?: { value: PolicyDecision; label: string }[] }[] = [
   { key: 'fs.read', group: 'abilities', label: PERMISSION_NAMES['fs.read'], description: 'Read and list files in the project folders (Explorer, Code)' },
   { key: 'fs.write', group: 'abilities', label: PERMISSION_NAMES['fs.write'], description: 'Create and change files in any app (Notepad, Code)' },
   { key: 'terminal', group: 'abilities', label: PERMISSION_NAMES['terminal'], tooltip: PERMISSION_HINTS.terminal, description: 'Run commands and read their output' },
-  { key: 'code', group: 'apps', label: PERMISSION_NAMES['code'], description: 'Open files, reveal lines and show diffs in Code' },
+  { key: 'show', group: 'abilities', label: PERMISSION_NAMES['show'], description: 'Open a file, a change, a comment, a card, a shape or a page element at the spot, with a note saying why', items: SHOW_DECISION_ITEMS },
   { key: 'notepad', group: 'apps', label: PERMISSION_NAMES['notepad'], description: 'Open and read documents. Saving a file uses Write files.' },
   { key: 'browser', group: 'apps', label: PERMISSION_NAMES['browser'], description: 'Go to web pages, read them and click in them' },
   { key: 'paint', group: 'apps', label: PERMISSION_NAMES['paint'], description: 'Draw on, read and resize the Agent Paint canvas' },
@@ -57,7 +66,8 @@ export const DECISION_ITEMS: { value: PolicyDecision; label: string }[] = [
 ]
 
 /** What the current setting of a row means, in one sentence: "Ask: asks you each time". */
-export const decisionNote = (decision: PolicyDecision): string => `${DECISION_ITEMS.find((d) => d.value === decision)?.label}: ${DECISION_SENTENCES[decision]}`
+export const decisionNote = (decision: PolicyDecision, items: readonly { value: PolicyDecision; label: string }[] = DECISION_ITEMS): string =>
+  `${items.find((d) => d.value === decision)?.label}: ${DECISION_SENTENCES[decision]}`
 
 export const decisionOf = (policy: ToolPolicyDto, key: PolicyKey): PolicyDecision =>
   key === 'openApps' ? policy.openApps : policy.groups[key]
@@ -93,7 +103,7 @@ export const policiesEqual = (a: ToolPolicyDto, b: ToolPolicyDto): boolean => ME
 export const isDecision = (value: string): value is PolicyDecision => value === 'allow' || value === 'ask' || value === 'deny'
 
 /** The help above the table. The last sentence names the top bar box the way the box itself does (UX-199). */
-export const PERMISSIONS_HELP = `Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Code' and 'Notepad' cover only what their rows list. ${ASK_HELP} These settings are always kept. The top bar box 'Ask before every action (this session only)' is different: all tools ask first until you click Resume, and it is not saved.`
+export const PERMISSIONS_HELP = `Each row is separate. The line under each name says what it covers. 'Write files' covers changing files in any app. 'Notepad' covers only what its row lists. ${ASK_HELP} These settings are always kept. The top bar box 'Ask before every action (this session only)' is different: all tools ask first until you click Resume, and it is not saved.`
 
 /** Under this width the help shows its first two sentences with a "More" link (UX-198). */
 export const NARROW_PAGE_PX = 520
