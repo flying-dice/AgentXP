@@ -164,3 +164,12 @@
   --xp-taskpane-link: #215dc6;
   --xp-taskpane-link-hot: #428eff;
 }
+
+/* Notification balloon (Balloon) and the change cue of agent output (a short orange highlight, like the Diagrams flash). */
+:root {
+  --xp-balloon-face: linear-gradient(#fffff0, #ffffe1);
+  --xp-balloon-tail: #ffffe1;
+  --xp-balloon-border: #696969;
+  --xp-change-cue: #ff9c00;
+  --xp-change-cue-face: #fff1c9;
+}

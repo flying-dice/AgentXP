@@ -251,13 +251,42 @@
       timer = setTimeout(() => void loadChanges(), 200)
     })
     const offReview = host.api.on('review.changed', (e: AgentXPEvents['review.changed']) => {
-      if (e.sessionId === sessionId) void loadReview()
+      if (e.sessionId !== sessionId) return
+      void loadReview()
+      // An agent added or changed comments: they flash briefly where they are (output, live; no focus change).
+      if (e.by != null && e.commentIds?.length) flashComments(e.commentIds)
     })
     return () => {
       clearTimeout(timer)
+      clearTimeout(flashTimer)
       offGit()
       offReview()
     }
+  })
+
+  // ---- change cues and Open review -----------------------------------------------------------------
+  /** Comments an agent just added or changed (`review.changed`): their threads and rows flash for `FLASH_MS`. */
+  const FLASH_MS = 1600
+  let flashing = $state.raw<ReadonlySet<number>>(new Set())
+  let flashTimer: ReturnType<typeof setTimeout> | undefined
+  function flashComments(ids: readonly number[]): void {
+    flashing = new Set([...flashing, ...ids])
+    clearTimeout(flashTimer)
+    flashTimer = setTimeout(() => (flashing = new Set()), FLASH_MS)
+  }
+
+  // A notice's Open review asks for a comment (`view.selectedCommentId`): the window goes to it once it is loaded.
+  let shownRequest: number | null = null
+  $effect(() => {
+    const wanted = win.view.selectedCommentId ?? null
+    if (wanted === null) {
+      shownRequest = null
+      return
+    }
+    const comment = review.comments.find((c) => c.id === wanted)
+    if (!comment || shownRequest === wanted) return
+    shownRequest = wanted
+    untrack(() => void showComment(comment))
   })
 
   // ---- ask the agent to review ------------------------------------------------------------------
@@ -598,7 +627,7 @@
                 <span class="stat">{STATUS_LABEL[change.status]}, +{change.additions} -{change.deletions}</span>
               </div>
               {#if loaded}
-                <ReviewDiff flow file={loaded} view={fileView(loaded, layout)} {layout} comments={review.comments} {...diffHandlers} />
+                <ReviewDiff flow file={loaded} view={fileView(loaded, layout)} {layout} comments={review.comments} flash={flashing} {selectedCommentId} {...diffHandlers} />
               {:else}
                 <div class="note">Loading...</div>
               {/if}
@@ -623,7 +652,7 @@
           <span class="spring"></span>
           <span class="stat">{fv.regions.length} {fv.regions.length === 1 ? 'change' : 'changes'}</span>
         </div>
-        <ReviewDiff bind:this={diff} {file} view={fv} {layout} comments={review.comments} {selectedRow} onselectrow={(row) => (selectedRow = row)} {...diffHandlers} />
+        <ReviewDiff bind:this={diff} {file} view={fv} {layout} comments={review.comments} flash={flashing} {selectedCommentId} {selectedRow} onselectrow={(row) => (selectedRow = row)} {...diffHandlers} />
       {/if}
     </div>
     {#if commentsOpen}
@@ -637,7 +666,7 @@
         onresize={(d) => (commentsWidth = Math.max(COMMENTS_MIN, Math.min(COMMENTS_MAX, commentsWidth - d)))}
       />
       <div class="comments" style="width:{commentsWidth}px" data-testid="review-comments-wrap">
-        <ReviewComments comments={review.comments} selectedId={selectedCommentId} onselect={(c) => void showComment(c)} onsendall={() => void openSend('open')} />
+        <ReviewComments comments={review.comments} selectedId={selectedCommentId} flash={flashing} onselect={(c) => void showComment(c)} onsendall={() => void openSend('open')} />
       </div>
     {/if}
     <!-- The reviewer panel is clipped to the window: it never grows past 38 percent of it. -->

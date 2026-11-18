@@ -154,6 +154,8 @@ export function fakeAgui(stateOf: () => AguiSessionState = sampleState, messages
 /** Builds the fake backend; `agents` starts with the sample agents, `folders` and `sessions` can start empty. */
 export type FakeApi = AgentXPApi & {
   pushEvent: ReturnType<typeof createFakeExtras>['pushEvent']
+  /** Pushes an event from "main" to every listener (`desktop.notice` in tests and stories). */
+  emit<K extends keyof AgentXPEvents>(event: K, payload: AgentXPEvents[K]): void
   /** The current drives (C: and the plugged-in USB drives). */
   driveList(): DriveDto[]
   /** Follow plug in / eject (a story host keeps its own desktop in step). */
@@ -310,6 +312,7 @@ export function createFakeApi(options: { empty?: boolean; desktops?: DesktopSumm
   }
   return Object.assign(api, {
     pushEvent: extras.pushEvent,
+    emit,
     driveList: () => fakeVfs.list(),
     watchDrives: (listener: (drives: DriveDto[]) => void) => {
       driveWatchers.add(listener)

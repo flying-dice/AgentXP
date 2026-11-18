@@ -14,10 +14,11 @@
         { id: 2, text: 'Opened C:\\Users\\jonathan\\source\\claude-code-win' }
       ],
       onreview: fn(),
+      onaction: fn(),
       onopencontrolcentre: fn(),
       onclose: fn()
     },
-    argTypes: { onreview: { action: 'review' }, onopencontrolcentre: { action: 'open control center' }, onclose: { action: 'close' } }
+    argTypes: { onreview: { action: 'review' }, onaction: { action: 'message action' }, onopencontrolcentre: { action: 'open control center' }, onclose: { action: 'close' } }
   })
 </script>
 
@@ -27,7 +28,20 @@
 <Story name="Two" args={{ approvals: [{ key: 'a', title: 'Change src/auth/redirect.ts', detail: "In chat 'Fix login redirect bug' (started 10:42)" }, { key: 'b', title: 'Run a command', detail: "In chat 'Add parser unit tests' (started 11:05)" }] }}>
   {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
 </Story>
-<Story name="AfterResume" args={{ approvals: [], messages: [{ id: 1, text: "In chat 'Fix login redirect bug': Resumed. The step that was stopped stays stopped. Send a message to continue.", continueId: 1 }] }}>
+<Story name="AfterResume" args={{ approvals: [], messages: [{ id: 1, text: "In chat 'Fix login redirect bug': Resumed. The step that was stopped stays stopped. Send a message to continue.", actions: [{ id: 'continue', label: 'Continue' }] }] }}>
+  {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
+</Story>
+<Story
+  name="Notices"
+  args={{
+    approvals: [],
+    messages: [
+      { id: 3, title: 'New review comments', text: 'Reviewer left 4 comments on auth.ts', identity: { name: 'Reviewer', color: '#c0612b' }, time: '10:44', actions: [{ id: 'a', label: 'Open review' }] },
+      { id: 2, title: 'Board changed', text: "Builder moved card 'Login bug' to Done", identity: { name: 'Builder', color: '#2e9a5f' }, time: '10:43', actions: [{ id: 'b', label: 'Open board' }] },
+      { id: 1, title: 'Chat finished', text: 'Builder finished: changed 6 files, ran tests (passed)', identity: { name: 'Builder', color: '#2e9a5f' }, time: '10:42', actions: [{ id: 'c', label: 'Review changes' }] }
+    ]
+  }}
+>
   {#snippet template(args)}<div class="stage"><ActionCenter {...args} /></div>{/snippet}
 </Story>
 <Story name="Empty" args={{ approvals: [], messages: [] }}>

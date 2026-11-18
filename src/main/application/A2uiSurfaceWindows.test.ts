@@ -5,7 +5,7 @@ import { SqliteAppWindowRepository } from '../infrastructure/db/sqlite-app-windo
 import { SqliteStickyNoteRepository } from '../infrastructure/db/sqlite-sticky-note-repository'
 import { SqliteToolPolicyRepository } from '../infrastructure/db/sqlite-tool-policy-repository'
 import { A2uiService } from './A2uiService'
-import { DesktopService } from './desktop/DesktopService'
+import { DesktopService, OPEN_APPS_BLOCKED } from './desktop/DesktopService'
 import { createVfsFixture } from './test-helpers'
 
 const v = 'v0.9' as const
@@ -193,5 +193,44 @@ describe('surface placement: move and sidebar tabs', () => {
     expect(await a2ui.apply(String(lone), [create('x', 'X')], { target: 'window' })).toEqual({ ok: true })
     expect(f.repos.surfaces.get(lone, 'x')?.target).toBe('inline')
     expect(() => a2ui.moveSurface(lone, 'x', 'window')).toThrow(/not on a desktop/)
+  })
+})
+
+describe('surface windows: "Agent may open apps"', () => {
+  /** What compose attaches: the agent's open goes through the policy (Never throws, Ask asks). */
+  const attachLikeTheApp = (ask: () => Promise<boolean>): void => {
+    desktops.attachOpenApproval(ask)
+    a2ui.attachWindows({
+      open: (s, id, by, size) => {
+        if (by !== 'agent') return desktops.openSurfaceWindow(s, id, by, size) !== null
+        if (desktops.policy().openApps === 'deny') throw new Error(OPEN_APPS_BLOCKED)
+        return desktops.openAgentSurfaceWindow(s, id, size)
+      },
+      close: (s, id) => void desktops.closeSurfaceWindow(s, id),
+      isOpen: (s, id) => desktops.hasSurfaceWindow(s, id),
+      refresh: (s) => desktops.refresh(f.repos.sessions.get(s)!.desktopId!)
+    })
+  }
+  const policy = (openApps: 'allow' | 'ask' | 'deny'): void => desktops.setPolicy({ ...desktops.policy(), openApps })
+
+  it('Never: the agent is told the window was not opened and why, not that the user closed it', async () => {
+    attachLikeTheApp(async () => true)
+    policy('deny')
+    const result = await render([create('dash', 'Dashboard')], 'window')
+    expect(surfaceWindows()).toHaveLength(0)
+    expect(result.ok && result.notes?.[0]).toContain('its window was not opened. Opening apps is blocked by the permission policy in Control Center.')
+    expect(JSON.stringify(result)).not.toContain('closed this window')
+    // A later update says the same.
+    expect(JSON.stringify(await render([label('dash', 'two')]))).toContain('was not opened')
+  })
+
+  it('Ask: the agent hears that the window waits for the user; a refusal is told as such afterwards', async () => {
+    let answer: (allowed: boolean) => void = () => {}
+    attachLikeTheApp(() => new Promise<boolean>((resolve) => (answer = resolve)))
+    policy('ask')
+    expect(JSON.stringify(await render([create('dash', 'Dashboard')], 'window'))).toContain('opens when the user allows it')
+    answer(false)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(JSON.stringify(await render([label('dash', 'two')]))).toContain('was not opened. The user declined to open')
   })
 })

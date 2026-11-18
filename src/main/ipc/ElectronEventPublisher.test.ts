@@ -35,10 +35,16 @@ describe('ElectronEventPublisher', () => {
     expect(sent).toEqual(['w2:desktop.appRequest', 'w1:notes.changed', 'w2:recycle.changed', 'w1:events.appended'])
   })
 
-  it('broadcasts folders and status, and keeps internal events in main', () => {
+  it('broadcasts folders, and keeps internal events in main', () => {
     sent.length = 0
-    publisher.publish('status.message', { text: 'hi' })
+    publisher.publish('folders.changed', [])
     publisher.publish('tasks.changed', { sessionId: 1, tasks: [] })
-    expect(sent).toEqual(['w1:status.message', 'w2:status.message'])
+    expect(sent).toEqual(['w1:folders.changed', 'w2:folders.changed'])
+  })
+
+  it('sends a notice only to the window of its desktop', () => {
+    sent.length = 0
+    publisher.publish('desktop.notice', { desktopId: 2, id: 'n1', kind: 'summary', title: 'Chat finished', text: 'Builder finished', actions: [], at: '' })
+    expect(sent).toEqual(['w2:desktop.notice'])
   })
 })

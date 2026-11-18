@@ -31,7 +31,7 @@ const RENDERER_EVENTS = {
   'session.changed': true,
   'session.removed': true,
   'folders.changed': true,
-  'status.message': true,
+  'desktop.notice': true,
   'transcript.cleared': true,
   'desktop.changed': true,
   'desktop.appRequest': true,
@@ -98,7 +98,8 @@ const INVOKE_METHODS = {
     attachBrowser: true,
     respondAppRequest: true,
     raiseWindow: true,
-    userActive: true
+    userActive: true,
+    notePaneFocus: true
   },
   vfs: { readDir: true, searchText: true, find: true, readFile: true, writeFile: true, stat: true, readBytes: true, writeBytes: true },
   git: { status: true, lineChanges: true, headText: true, revertHunk: true, init: true },

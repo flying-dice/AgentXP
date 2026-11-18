@@ -71,6 +71,8 @@ Press F7 to go to the next change. Press Shift+F7 to go to the previous change. 
 
 The **Comments** button shows or hides a list of all comments on the right. Each row names the file and line. Use **Open only** to hide resolved and sent comments. Click **Send comments to chat** to pass them to a chat. The same button is in the toolbar, next to **Comments**.
 
+When an agent adds a comment, the comment appears at once. Its thread and its row in the list have an orange frame for a moment. The window does not take the focus. If the window does not have the focus when the agent ends its turn, a balloon tells you, for example **Reviewer left 2 comments on notes.txt**. Click **Open review** in the balloon, or in the Action Center, to bring the window forward with the first new comment selected. See **[Using the Desktop](desktop.md)**.
+
 ### The Review Chat
 
 The right edge of the window holds the chat with the reviewer. You can ask a question or tell the reviewer to look at one file. See **[The embedded chat](embedded-chat.md)**.
@@ -194,7 +196,7 @@ The agent uses the tools below to review changes. The permission **Code review**
 | `review_open` | Opens a Code Review window for a project, or uses the open one. |
 | `review_list_changes` | Lists the changed files, with the lines added and removed. |
 | `review_read_diff` | Shows the change of one file, with line numbers. |
-| `review_add_comment` | Adds a comment on a line, with a severity. |
+| `review_add_comment` | Adds a comment on a line, with a severity. This is output: the comment flashes in the window, and a notice tells you when the window does not have the focus. |
 | `review_submit` | Ends the review with a verdict and a summary. |
 
 ## 5 - Common Tasks

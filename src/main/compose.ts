@@ -13,7 +13,8 @@ import { AgentActionRunner } from './application/scheduler/AgentActionRunner'
 import { ProtocolSchedulerLog } from './application/scheduler/ProtocolSchedulerLog'
 import { SchedulerService } from './application/scheduler/SchedulerService'
 import { TaskEngine } from './application/scheduler/TaskEngine'
-import { DesktopService } from './application/desktop/DesktopService'
+import { DesktopService, OPEN_APPS_BLOCKED } from './application/desktop/DesktopService'
+import { AppError } from './application/errors'
 import { createMemoryWindowHost, type DesktopWindowHost } from './application/desktop/ports'
 import { LauncherService, type ApprovalNotifier } from './application/launcher/LauncherService'
 import { ThumbnailService, type ThumbnailCapturer } from './application/launcher/ThumbnailService'
@@ -75,6 +76,8 @@ import { HelpService } from './application/HelpService'
 import { bundledManuals } from './infrastructure/help/bundledManuals'
 import type { ConfigArea } from '@shared/ipc'
 import { createSnipTools } from './application/tools/snipTools'
+import { NoticeService } from './application/notices/NoticeService'
+import { agentIdentity } from '@shared/identity'
 import { createWordpadTools } from './application/tools/wordpadTools'
 import { createCodeTools } from './application/tools/codeTools'
 import { DesktopToolService } from './application/tools/DesktopToolService'
@@ -436,11 +439,36 @@ export function composeApp(options: ComposeOptions): AppServices {
   // "Agent may open apps" set to Ask: every agent open asks in the chat, like a gated tool call.
   desktops.attachOpenApproval((sessionId, title, reason) => gateway.ask(sessionId, title, reason))
   const reviews = new ReviewService({ reviews: repos.reviews, sessions: repos.sessions, vfs, cli: gitCli, events: publisher, states: desktops })
+  // Notices of agent work the operator was not watching (docs/AGENT_PRESENCE.md, section 6): turn summaries and output.
+  const identityOf = (sessionId: number) => {
+    const session = repos.sessions.get(sessionId)
+    return agentIdentity({ sessionId, member: rooms.memberOfSession(sessionId), agentName: session ? repos.agents.get(session.agentId)?.name : null })
+  }
+  const notices = new NoticeService({
+    sessions: repos.sessions,
+    changes: repos.changes,
+    comments: repos.reviews,
+    identity: identityOf,
+    desktops,
+    // The operator watches the members of the Team Chat room that has the focus: their messages arrive there live.
+    watching: (desktopId, sessionId) => {
+      const state = desktops.state(desktopId)
+      const focused = state.windows.find((w) => w.id === state.focusedWindowId)
+      return focused?.view.app === 'team-chat' && rooms.memberOfSession(sessionId)?.roomId === focused.view.roomId
+    },
+    events: publisher
+  })
+  sessions.observeTurns({ started: (id) => notices.turnStarted(id), ended: (id, outcome) => notices.turnEnded(id, outcome) })
+  publisher.subscribe((message) => notices.onEvent(message))
   const a2ui = new A2uiService(repos.surfaces, repos.transcripts, repos.sessions, publisher, sessions)
   a2ui.attachWindows({
     // The agent's surface window is an output window: behind the user's window, after "Agent may open apps" (a refusal leaves the surface closed).
-    open: (sessionId, surfaceId, by, size) =>
-      by === 'agent' ? (void desktops.openAgentSurfaceWindow(sessionId, surfaceId, size).catch(() => {}), true) : desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null,
+    // Never: refused at once (the agent is told why); Ask: a promise that rejects when the user declines.
+    open: (sessionId, surfaceId, by, size) => {
+      if (by !== 'agent') return desktops.openSurfaceWindow(sessionId, surfaceId, by, size) !== null
+      if (desktops.policy().openApps === 'deny') throw new AppError(OPEN_APPS_BLOCKED)
+      return desktops.openAgentSurfaceWindow(sessionId, surfaceId, size)
+    },
     close: (sessionId, surfaceId) => void desktops.closeSurfaceWindow(sessionId, surfaceId),
     isOpen: (sessionId, surfaceId) => desktops.hasSurfaceWindow(sessionId, surfaceId),
     refresh: (sessionId) => {
@@ -527,7 +555,10 @@ export function composeApp(options: ComposeOptions): AppServices {
     },
     log: {
       called: (context, tool, args) => eventLog.recordToolCall(context, tool, args),
-      finished: (context, tool, result, refused) => eventLog.recordToolResult(context, tool, result, refused)
+      finished: (context, tool, result, refused) => {
+        eventLog.recordToolResult(context, tool, result, refused)
+        notices.toolFinished(context.sessionId, tool, refused || result.isError === true)
+      }
     }
   })
   a2uiBridge = new A2uiBridgeServer(a2uiSink, undefined, undefined, desktopTools, {

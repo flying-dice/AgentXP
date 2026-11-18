@@ -94,6 +94,13 @@ export class TeamRoomService {
     this.publish(roomId)
   }
 
+  /** The room member whose session this is (its profile name and colour, its room), or null for any other session. */
+  memberOfSession(sessionId: Id): { roomId: Id; name: string; color: string } | null {
+    const link = this.deps.rooms.findBySession(sessionId)
+    const profile = link ? this.deps.profiles.get(link.profileId) : null
+    return link && profile ? { roomId: link.roomId, name: profile.name, color: profile.color } : null
+  }
+
   /** A member's session changed (working, waiting for approval, ...): the room shows it. */
   onSessionChanged(session: SessionDto): void {
     const link = this.deps.rooms.findBySession(session.id)

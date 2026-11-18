@@ -135,7 +135,7 @@ export type AppView =
   | { app: 'wordpad'; path: VPath | null; mode: 'read' | 'edit'; dirty: boolean; visibleHeading: string | null }
   | { app: 'sticky-notes' }
   /** `boardId`: the board shown (null: the first one, or none yet). */
-  | { app: 'kanban'; boardId: Id | null }
+  | { app: 'kanban'; boardId: Id | null; /** A card to select and scroll to (a notice's Open board); absent or null: none. */ selectedCardId?: Id | null }
   /**
    * Agent Diagrams: the drawing (`path` a .xpdiagram VPath, or null when not saved yet), the page shown (0-based) and a
    * short outline of that page, so the agent knows the ids of what it can see.
@@ -163,7 +163,7 @@ export type AppView =
    * Code Review: the working tree at `root` against `baseRef`, with the comments of its review session (`sessionId`,
    * role `review`, owned by this window). `selectedPath` is relative to `root`, with `/`.
    */
-  | { app: 'code-review'; root: VPath; baseRef: string; selectedPath: string | null; sessionId: Id }
+  | { app: 'code-review'; root: VPath; baseRef: string; selectedPath: string | null; sessionId: Id; /** A comment to select and scroll to (a notice's Open review); absent or null: none. */ selectedCommentId?: Id | null }
   /** Teams: the profile and team lists, with the editor of the selected one. */
   | { app: 'teams'; tab?: TeamsTab; selectedId?: Id | null }
   /** A team chat room: the members' messages, who is thinking, and the member whose own session is open in the side panel. */
@@ -461,6 +461,11 @@ export interface DesktopApi {
   raiseWindow(windowId: Id): Promise<void>
   /** The user typed or clicked in a window of the desktop: for the next 2 seconds a window the agent opens does not take the focus. */
   userActive(desktopId: Id): Promise<void>
+  /**
+   * The operator focused or typed in the chat pane of a window (`active`), or the pane was hidden (`!active`): while that
+   * window has the focus, the pane's chat is the foreground chat (`docs/AGENT_PRESENCE.md`, rule 1).
+   */
+  notePaneFocus(windowId: Id, active: boolean): Promise<void>
 }
 
 export interface AgentProcessDto {

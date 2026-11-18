@@ -120,7 +120,8 @@ export function createApi(s: ApiServices): InvokeApi {
       attachBrowser: perWindow('desktop.attachBrowser'),
       respondAppRequest: async (response) => s.appRequests.respond(response),
       raiseWindow: async (windowId) => s.desktops.raiseWindow(windowId),
-      userActive: async (desktopId) => s.desktops.noteUserActivity(desktopId)
+      userActive: async (desktopId) => s.desktops.noteUserActivity(desktopId),
+      notePaneFocus: async (windowId, active) => s.desktops.notePaneFocus(windowId, active)
     },
     vfs: {
       readDir: (desktopId, path) => s.vfs.readDir(desktopId, path),

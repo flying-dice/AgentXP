@@ -26,7 +26,7 @@ Use Kanban to track work. A board has lists, such as **To do**, **Doing**, and *
 
 Agents share a board. When a team of agents works in a chat room, each agent reads the board, takes a card, moves it to **Doing**, and moves it to **Done** when the work is finished.
 
-The agents can read and write the boards at any time. The Kanban window does not need to be open. If you want to stop this, set **Kanban boards** to **Deny** in **[Control Center](control-centre.md)**. When the window is open, it shows the changes of the agents as they happen.
+The agents can read and write the boards at any time. The Kanban window does not need to be open. If you want to stop this, set **Kanban boards** to **Deny** in **[Control Center](control-centre.md)**. When the window is open, it shows the changes of the agents as they happen. A card that an agent adds, moves, or changes has an orange frame for a moment, and the window does not take the focus. If the Kanban window does not have the focus when the agent ends its turn, a balloon tells you, for example **Builder moved card 'Login bug' to Done**. Click **Open board** to open the board with the card selected.
 
 ## 2 - Open It
 

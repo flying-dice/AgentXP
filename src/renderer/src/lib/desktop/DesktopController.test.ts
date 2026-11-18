@@ -5,6 +5,7 @@ import { folderBrowsers } from '../kit/organisms/folderBrowser'
 import { messageBoxes } from '../kit/organisms/messageBox'
 import { emptyAguiState } from '@shared/agui-state'
 import { CONTINUE_TEXT, NOTHING_STOPPED_NOTICE } from '../app/session/resumeNote'
+import type { NoticeDto } from '@shared/notices'
 import { BALLOON_LEAVE_MS, BALLOON_LONG_MS, BALLOON_MS, DesktopController, NOTICE_MS, VIEW_DEBOUNCE_MS } from './DesktopController.svelte'
 
 async function started(): Promise<{ api: ReturnType<typeof createFakeApi>; controller: DesktopController }> {
@@ -496,5 +497,105 @@ describe('DesktopController projects and shell feedback', () => {
     await controller.cycleWindows(-1)
     expect(controller.state.focusedWindowId).not.toBe(a.id)
     expect(controller.state.focusedWindowId).not.toBe(b.id)
+  })
+
+  describe('notices', () => {
+    const notice = (id: string, over: Partial<NoticeDto> = {}): NoticeDto => ({
+      desktopId: 1,
+      id,
+      kind: 'summary',
+      title: 'Chat finished',
+      text: `Builder finished ${id}`,
+      identity: { name: 'Builder', color: '#2e9a5f' },
+      sessionId: 1,
+      actions: [{ id: `${id}-a`, label: 'Open chat', target: { kind: 'chat', sessionId: 1 } }],
+      at: '2026-11-17T10:00:00Z',
+      ...over
+    })
+
+    it('queue: one balloon at a time, the others wait; each stays BALLOON_MS, hover holds it', async () => {
+      const { api, controller } = await started()
+      vi.useFakeTimers()
+      controller.dismissBalloon()
+      api.emit('desktop.notice', notice('a'))
+      api.emit('desktop.notice', notice('b'))
+      expect(controller.balloon?.text).toBe('Builder finished a')
+      expect(controller.balloon?.identity?.name).toBe('Builder')
+      expect(controller.moreBalloons).toBe('1 more')
+      controller.holdBalloon(true)
+      vi.advanceTimersByTime(BALLOON_MS * 3)
+      expect(controller.balloon?.text).toBe('Builder finished a')
+      controller.holdBalloon(false)
+      vi.advanceTimersByTime(BALLOON_LEAVE_MS + 1)
+      expect(controller.balloon?.text).toBe('Builder finished b')
+      expect(controller.moreBalloons).toBeNull()
+      vi.advanceTimersByTime(BALLOON_MS + 1)
+      expect(controller.balloon).toBeNull()
+    })
+
+    it('a shell balloon shows at once and the notice it covers comes back after it', async () => {
+      const { api, controller } = await started()
+      controller.dismissBalloon()
+      api.emit('desktop.notice', notice('a'))
+      controller.showBalloon({ title: 'Project removed', text: 'gone', icon: 'usb-safe' })
+      expect(controller.balloon?.title).toBe('Project removed')
+      controller.dismissBalloon()
+      expect(controller.balloon?.text).toBe('Builder finished a')
+    })
+
+    it('every notice stays in the Action Center with its button, title, agent and time, and is announced', async () => {
+      const { api, controller } = await started()
+      api.emit('desktop.notice', notice('a', { kind: 'review', title: 'New review comments', text: 'Reviewer left 2 comments on notes.txt' }))
+      expect(controller.announcement).toBe('New review comments: Reviewer left 2 comments on notes.txt')
+      expect(controller.centreMessages[0]).toMatchObject({ title: 'New review comments', text: 'Reviewer left 2 comments on notes.txt', identity: { name: 'Builder' }, actions: [{ id: 'a-a', label: 'Open chat' }] })
+      expect(controller.centreMessages[0]?.time).toMatch(/^\d\d:\d\d$/)
+    })
+
+    it('a notice of another desktop is ignored', async () => {
+      const { api, controller } = await started()
+      api.emit('desktop.notice', notice('x', { desktopId: 99 }))
+      expect(controller.centreMessages).toEqual([])
+    })
+
+    it('Open chat from the balloon and from the Action Center brings the chat forward', async () => {
+      const { api, controller } = await started()
+      controller.dismissBalloon()
+      const chat = await controller.newChat()
+      const sessionId = chat.view.app === 'chat' ? chat.view.sessionId : 0
+      await controller.openApp({ app: 'notepad' })
+      api.emit('desktop.notice', notice('a', { actions: [{ id: 'go', label: 'Open chat', target: { kind: 'chat', sessionId } }] }))
+      await controller.runBalloonAction()
+      expect(controller.state.focusedWindowId).toBe(chat.id)
+      expect(controller.balloon).toBeNull()
+      await controller.openApp({ app: 'notepad' })
+      await controller.runMessageAction(controller.messages[0]!.id, 'go')
+      expect(controller.state.focusedWindowId).toBe(chat.id)
+    })
+
+    it('Open board opens Kanban on the board with the card selected; Open diagram raises the output window', async () => {
+      const { api, controller } = await started()
+      const spy = vi.spyOn(api.desktop, 'updateView')
+      await controller.runNoticeAction({ kind: 'board', boardId: 4, cardId: 9 })
+      const kanban = controller.state.windows.find((w) => w.app === 'kanban')
+      expect(kanban).toBeDefined()
+      expect(spy).toHaveBeenCalledWith(kanban!.id, { app: 'kanban', boardId: 4, selectedCardId: 9 })
+      const notepad = await controller.openApp({ app: 'notepad' })
+      await controller.runNoticeAction({ kind: 'window', app: 'kanban', windowId: kanban!.id })
+      expect(controller.state.focusedWindowId).toBe(kanban!.id)
+      expect(notepad.id).not.toBe(kanban!.id)
+    })
+
+    it('reports the chat pane focus to main only when it changes, and hiding the pane clears it', async () => {
+      const { api, controller } = await started()
+      const code = await controller.openApp({ app: 'code' })
+      const spy = vi.spyOn(api.desktop, 'notePaneFocus')
+      controller.notePaneFocus(code.id)
+      controller.notePaneFocus(code.id)
+      expect(spy).toHaveBeenCalledTimes(1)
+      controller.setChatPane(code.id, true)
+      controller.setChatPane(code.id, false)
+      expect(spy).toHaveBeenLastCalledWith(code.id, false)
+      expect(spy).toHaveBeenCalledTimes(2)
+    })
   })
 })

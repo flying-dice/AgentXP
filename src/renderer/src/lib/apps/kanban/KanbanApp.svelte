@@ -60,8 +60,40 @@
   $effect(() => {
     void desktopId
     void load()
-    const off = host.api.on('kanban.changed', (e) => e.desktopId === desktopId && void load())
-    return off
+    const off = host.api.on('kanban.changed', (e) => {
+      if (e.desktopId !== desktopId) return
+      void load()
+      // An agent added, moved or changed cards: they flash briefly where they are (output, live; no focus change).
+      if (e.by != null && e.cards?.length) flashCards(e.cards.filter((c) => c.kind !== 'deleted').map((c) => c.cardId))
+    })
+    return () => {
+      off()
+      clearTimeout(flashTimer)
+    }
+  })
+
+  /** Cards an agent just changed (`kanban.changed`): they flash for `FLASH_MS`. */
+  const FLASH_MS = 1600
+  let flashing = $state.raw<ReadonlySet<number>>(new Set())
+  let flashTimer: ReturnType<typeof setTimeout> | undefined
+  function flashCards(ids: readonly number[]): void {
+    if (ids.length === 0) return
+    flashing = new Set([...flashing, ...ids])
+    clearTimeout(flashTimer)
+    flashTimer = setTimeout(() => (flashing = new Set()), FLASH_MS)
+  }
+
+  // A notice's Open board asks for a card (`view.selectedCardId`): it is selected once the board has it.
+  let shownCard: number | null = null
+  $effect(() => {
+    const wanted = win.view.selectedCardId ?? null
+    if (wanted === null) {
+      shownCard = null
+      return
+    }
+    if (shownCard === wanted || !allCards.some((c) => c.id === wanted)) return
+    shownCard = wanted
+    selectedCard = wanted
   })
   $effect(() => {
     let stale = false
@@ -363,6 +395,7 @@
               <KanbanCard
                 {card}
                 selected={selectedCard === card.id}
+                flash={flashing.has(card.id)}
                 dragging={drag?.kind === 'card' && drag.id === card.id}
                 onselect={() => (selectedCard = card.id)}
                 onopen={() => (dialog = { kind: 'edit-card', card })}

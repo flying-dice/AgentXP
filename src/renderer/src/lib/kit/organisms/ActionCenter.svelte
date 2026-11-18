@@ -9,8 +9,14 @@
   export interface ActionCenterMessage {
     id: number
     text: string
-    /** Shows a "Continue" button; `oncontinue` gets this id. */
-    continueId?: number
+    /** A bold line above the text (a notice's title: "New review comments"). */
+    title?: string
+    /** The agent it is about: its colour swatch beside the title (the name is in the text). */
+    identity?: { name: string; color: string }
+    /** When it came ("10:42"). */
+    time?: string
+    /** Buttons under the text ("Open review", "Continue"); `onaction` gets the message id and the action id. */
+    actions?: { id: string; label: string }[]
   }
 </script>
 
@@ -22,8 +28,8 @@
     approvals?: ActionCenterApproval[]
     messages?: ActionCenterMessage[]
     onreview?: (key: string) => void
-    /** The Continue button of a message (a chat whose step Pause stopped). */
-    oncontinue?: (id: number) => void
+    /** A button of a message: the message id and the action id. */
+    onaction?: (messageId: number, actionId: string) => void
     onopencontrolcentre?: () => void
     /** "Open Event Viewer": the list of what happened. */
     onopeneventviewer?: () => void
@@ -32,7 +38,7 @@
     ignore?: HTMLElement | null
   }
 
-  let { approvals = [], messages = [], onreview, oncontinue, onopencontrolcentre, onopeneventviewer, onclose, ignore = null }: Props = $props()
+  let { approvals = [], messages = [], onreview, onaction, onopencontrolcentre, onopeneventviewer, onclose, ignore = null }: Props = $props()
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -70,9 +76,20 @@
   <section>
     <h4>Messages</h4>
     {#each messages as m (m.id)}
-      <div class="message" data-testid="action-center-message">
-        <p>{m.text}</p>
-        {#if m.continueId !== undefined}<Button data-testid="action-center-continue" onclick={() => oncontinue?.(m.continueId!)}>Continue</Button>{/if}
+      <div class="message" data-testid="action-center-message" data-agent={m.identity?.name}>
+        <div class="body">
+          {#if m.title}
+            <div class="mtitle">
+              {#if m.identity}<span class="swatch" data-testid="action-center-message-agent" title={m.identity.name} style:background={m.identity.color} aria-hidden="true"></span>{/if}
+              <b data-testid="action-center-message-title">{m.title}</b>
+              {#if m.time}<span class="time">{m.time}</span>{/if}
+            </div>
+          {/if}
+          <p data-testid="action-center-message-text">{m.text}</p>
+        </div>
+        {#each m.actions ?? [] as a (a.id)}
+          <Button data-testid="action-center-message-action" data-action={a.id} onclick={() => onaction?.(m.id, a.id)}>{a.label}</Button>
+        {/each}
       </div>
     {:else}
       <p class="quiet">No new messages.</p>
@@ -140,9 +157,36 @@
     align-items: flex-start;
     gap: 8px;
   }
-  .message p {
+  .message .body {
     flex: 1;
+    min-width: 0;
+  }
+  .message p {
     margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .mtitle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 1px;
+  }
+  .mtitle b {
+    flex: 1;
+    min-width: 0;
+  }
+  .swatch {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border: 1px solid #404040;
+  }
+  .time {
+    color: var(--xp-text-muted);
+  }
+  section:last-of-type {
+    max-height: 320px;
+    overflow-y: auto;
   }
   .quiet {
     color: var(--xp-text-muted);

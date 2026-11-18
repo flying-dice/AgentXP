@@ -25,6 +25,7 @@ import type { ReviewApi, ReviewEvents } from './review'
 import type { KanbanApi, KanbanEvents } from './kanban'
 import type { McpApi, ProfilesApi, RoomsApi, SkillsApi, TeamsApi, TeamsEvents } from './teams'
 import type { SchedulerApi, SchedulerEvents } from './scheduler'
+import type { NoticeEvents } from './notices'
 
 export interface PromptInput {
   sessionId: Id
@@ -189,11 +190,10 @@ export interface AgentXPApi {
  * A2UI surfaces are not here: they travel in the AG-UI stream (`AguiApi`).
  * What remains feeds the session list and the status bar.
  */
-export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents, SchedulerEvents {
+export interface AgentXPEvents extends DesktopEvents, LauncherEvents, GitEvents, ReviewEvents, KanbanEvents, TeamsEvents, SchedulerEvents, NoticeEvents {
   'session.changed': SessionDto
   'session.removed': { id: Id }
   'folders.changed': FolderDto[]
-  'status.message': { text: string }
   /** The transcript was cleared: the chat's AG-UI store reloads (empty messages and state). */
   'transcript.cleared': { sessionId: Id }
   /** Settings outside a desktop changed (an agent tool did it): open Control Center and Teams windows reload that area. */

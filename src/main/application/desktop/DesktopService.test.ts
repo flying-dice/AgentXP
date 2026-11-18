@@ -553,3 +553,50 @@ describe('DesktopService: Teams and Team Chat windows', () => {
     expect(chats.removed).toEqual([])
   })
 })
+
+describe('DesktopService: foreground chat', () => {
+  const chat = async (): Promise<SessionDto> => chats.create(desktopId, undefined, undefined, 'chat')
+
+  it('is the chat of the focused Chat window, and none when another app has the focus', async () => {
+    const a = await chat()
+    const b = await chat()
+    service.openWindow({ desktopId, app: 'chat', sessionId: a.id })
+    const bw = service.openWindow({ desktopId, app: 'chat', sessionId: b.id })
+    expect(service.foregroundSessionId(desktopId)).toBe(b.id)
+    service.openWindow({ desktopId, app: 'notepad' })
+    expect(service.foregroundSessionId(desktopId)).toBeNull()
+    service.focusWindow(bw.id)
+    expect(service.foregroundSessionId(desktopId)).toBe(b.id)
+  })
+
+  it('is the review session of a focused Code Review window', async () => {
+    const review = await service.openReview(desktopId, 'C:\\Users\\Agent')
+    const sessionId = review.view.app === 'code-review' ? review.view.sessionId : -1
+    expect(service.foregroundSessionId(desktopId)).toBe(sessionId)
+  })
+
+  it('is the chat pane of a focused window only after the operator focused or typed in that pane', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
+    const pane = await service.openAside(desktopId, code.id)
+    expect(service.foregroundSessionId(desktopId)).toBeNull()
+    service.notePaneFocus(code.id, true)
+    expect(service.foregroundSessionId(desktopId)).toBe(pane)
+    // Another window takes the focus: the pane is not the foreground chat any more, until Code is focused again.
+    service.openWindow({ desktopId, app: 'notepad' })
+    expect(service.foregroundSessionId(desktopId)).toBeNull()
+    service.focusWindow(code.id)
+    expect(service.foregroundSessionId(desktopId)).toBe(pane)
+    // Hiding the pane: the window has no foreground chat.
+    service.notePaneFocus(code.id, false)
+    expect(service.foregroundSessionId(desktopId)).toBeNull()
+  })
+
+  it('forgets the pane when its window closes, and is null for a desktop that does not exist', async () => {
+    const code = service.openWindow({ desktopId, app: 'code' })
+    await service.openAside(desktopId, code.id)
+    service.notePaneFocus(code.id, true)
+    service.closeWindow(code.id)
+    expect(service.foregroundSessionId(desktopId)).toBeNull()
+    expect(service.foregroundSessionId(9999)).toBeNull()
+  })
+})

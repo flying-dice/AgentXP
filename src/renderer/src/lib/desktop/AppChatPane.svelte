@@ -102,7 +102,7 @@
   {/if}
 {:else}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="pane" class:overlay={layout.mode === 'overlay'} data-testid="chat-pane" data-pane-mode={layout.mode} data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++}>
+  <div class="pane" class:overlay={layout.mode === 'overlay'} data-testid="chat-pane" data-pane-mode={layout.mode} data-window-id={w.id} onpointerenter={() => seen++} onpointerdown={() => seen++} onfocusin={() => desktop.notePaneFocus(w.id)} onkeydowncapture={() => desktop.notePaneFocus(w.id)}>
     <EmbeddedChat
       host={desktop}
       {sessionId}

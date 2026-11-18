@@ -42,6 +42,10 @@ import { cycleTarget, nextFocus, raise, taskbarAction, windowsToMoveBelowBar } f
 import { ICON_HINT, PROJECT_HINT, takeIconHint, takeProjectHint } from './shellHints'
 import { errorText } from '../apps/shared/listing'
 import type { IconName } from '../kit/atoms/icons'
+import type { NoticeAction, NoticeDto, NoticeTarget } from '@shared/notices'
+import type { AgentIdentity } from '@shared/identity'
+import { drop, next, push, type BalloonQueueState } from './balloonQueue'
+import type { ActionCenterMessage } from '../kit/organisms/ActionCenter.svelte'
 
 export const VIEW_DEBOUNCE_MS = 300
 const GLOW_MS = 1800
@@ -64,6 +68,12 @@ export interface Balloon {
   stayMs?: number | null
   /** The balloon is dismissed when this app is opened by any route (its message is done then). */
   closesWith?: AppKind
+  /** The agent a notice is about: its colour swatch beside the title. */
+  identity?: AgentIdentity
+  /** A notice's id: the same notice shows once. */
+  key?: string
+  /** A notice waits behind the balloon on screen instead of replacing it (`balloonQueue`). */
+  queued?: boolean
 }
 
 export const BALLOON_MS = 9000
@@ -76,7 +86,14 @@ export interface ShellMessage {
   id: number
   text: string
   at: Date
+  /** A notice's title, its agent and its button (`desktop.notice`). */
+  title?: string
+  identity?: AgentIdentity
+  actions?: NoticeAction[]
 }
+
+/** The Action Center keeps this many messages (notices included), newest first. */
+export const MESSAGES_KEPT = 30
 
 /** How long "Resumed. Nothing was stopped." stands in for "Idle" on the bar. */
 export const NOTICE_MS = 6000
@@ -117,6 +134,8 @@ export class DesktopController implements DesktopHost {
   /** Windows the agent just opened (glow). */
   glowing = $state.raw<ReadonlySet<Id>>(new Set())
   messages = $state.raw<ShellMessage[]>([])
+  /** The words of the newest notice, for the `aria-live="polite"` region of the page. */
+  announcement = $state('')
   policy = $state.raw<ToolPolicyDto | null>(null)
   /** A short line that stands in for "Idle" on the top bar ("Resumed. Nothing was stopped."); null when there is none. */
   notice = $state<string | null>(null)
@@ -149,8 +168,10 @@ export class DesktopController implements DesktopHost {
   /** Plug-ins the user started (Plug in a project, Plug in again): they open Explorer, so AutoPlay stays away. */
   private chosenPlugIns = 0
   private lastActivityAt = 0
-  /** The tray balloon, auto-hidden after `BALLOON_MS`. */
+  /** The tray balloon on screen, auto-hidden after `BALLOON_MS`; the next one waiting then shows. */
   balloon = $state.raw<Balloon | null>(null)
+  /** Balloons waiting behind the one on screen (notices), oldest first. */
+  waitingBalloons = $state.raw<readonly Balloon[]>([])
   /** The Safely Remove menu of the tray icon is open. */
   usbMenuOpen = $state(false)
   /** The chat pane of each window: collapsed or open, and its width (remembered in localStorage per window). */
@@ -268,7 +289,7 @@ export class DesktopController implements DesktopHost {
       this.api.on('desktop.changed', (s) => this.apply(s)),
       this.sessions.start(this.api, (id) => this.forgetSession(id)),
       this.api.on('session.changed', () => this.syncStores()),
-      this.api.on('status.message', ({ text }) => this.pushMessage(text)),
+      this.api.on('desktop.notice', (notice) => this.onNotice(notice)),
       this.api.on('room.changed', (room) => this.applyRoom(room)),
       this.api.on('room.removed', ({ id }) => this.dropRoom(id)),
       this.api.on('recycle.changed', () => void this.refreshRecycle()),
@@ -358,7 +379,7 @@ export class DesktopController implements DesktopHost {
     const plugged = this.current ? next.drives.find((d) => d.kind === 'removable' && !this.current?.drives.some((o) => o.letter === d.letter)) : undefined
     if (plugged && this.chosenPlugIns === 0) this.autoPlay = plugged
     // "Plug in a project..." is wrong once a project is plugged in, whoever plugged it (the agent, Code, Computer).
-    if (this.balloon?.title === PROJECT_HINT.title && next.drives.some((d) => d.kind === 'removable')) this.dismissBalloon()
+    if (next.drives.some((d) => d.kind === 'removable')) this.dropBalloons((b) => !b.queued && b.title === PROJECT_HINT.title)
     this.current = next
     for (const id of Object.keys(this.liveBounds).map(Number)) {
       if (!next.windows.some((w) => w.id === id)) this.dropLive(id)
@@ -402,8 +423,74 @@ export class DesktopController implements DesktopHost {
     }
   }
 
-  private pushMessage(text: string): void {
-    this.messages = [{ id: ++this.messageId, text, at: new Date() }, ...this.messages].slice(0, 10)
+  private pushMessage(text: string, extra: Pick<ShellMessage, 'title' | 'identity' | 'actions'> = {}): void {
+    this.messages = [{ id: ++this.messageId, text, at: new Date(), ...extra }, ...this.messages].slice(0, MESSAGES_KEPT)
+  }
+
+  /**
+   * A notice from main (`desktop.notice`): it waits its turn in the balloon queue, stays in the Action Center with its
+   * button, and is announced to screen readers.
+   */
+  private onNotice(notice: NoticeDto): void {
+    if (this.state.desktopId !== 0 && notice.desktopId !== this.state.desktopId) return
+    this.pushMessage(notice.text, { title: notice.title, identity: notice.identity, actions: notice.actions })
+    this.announcement = `${notice.title}: ${notice.text}`
+    const action = notice.actions[0]
+    this.showBalloon({
+      key: notice.id,
+      queued: true,
+      title: notice.title,
+      text: notice.text,
+      icon: 'info',
+      identity: notice.identity,
+      action: action ? { label: action.label, run: () => this.runNoticeAction(action.target) } : undefined
+    })
+  }
+
+  /** A button of an Action Center message (a notice's action). */
+  async runMessageAction(messageId: number, actionId: string): Promise<void> {
+    const action = this.messages.find((m) => m.id === messageId)?.actions?.find((a) => a.id === actionId)
+    if (!action) return
+    this.actionCenterOpen = false
+    await this.runNoticeAction(action.target)
+  }
+
+  /**
+   * Where a notice's button lands. The operator asked, so the window opens or comes forward with the focus: the chat, the
+   * Code Review window at the comment, the board at the card, Code on the chat's change, the output app's window.
+   */
+  async runNoticeAction(target: NoticeTarget): Promise<void> {
+    switch (target.kind) {
+      case 'chat':
+        return this.openChatOf(target.sessionId)
+      case 'changes':
+        return this.showToolTarget({ kind: 'diff', path: target.path }, target.sessionId)
+      case 'window': {
+        const open = (target.windowId !== undefined ? this.windowById(target.windowId) : undefined) ?? this.state.windows.findLast((w) => w.app === target.app)
+        if (open) return this.raiseWindow(open.id)
+        await this.openApp({ app: target.app })
+        return
+      }
+      case 'review': {
+        const open = this.state.windows.find((w) => w.view.app === 'code-review' && w.view.sessionId === target.sessionId)
+        if (!open) {
+          this.showBalloon({ title: 'Code Review', text: 'That review is closed. Its comments went with its window.', icon: 'info' })
+          return
+        }
+        await this.raiseWindow(open.id)
+        const view = this.windowById(open.id)?.view ?? open.view
+        if (view.app !== 'code-review' || target.commentId === undefined) return
+        this.views.flush(open.id)
+        await this.api.desktop.updateView(open.id, { ...view, selectedCommentId: target.commentId })
+        return
+      }
+      case 'board': {
+        const window = await this.openApp({ app: 'kanban' })
+        this.views.flush(window.id)
+        await this.api.desktop.updateView(window.id, { app: 'kanban', boardId: target.boardId, selectedCardId: target.cardId ?? null })
+        return
+      }
+    }
   }
 
   // ---- windows ----------------------------------------------------------------------------------
@@ -421,7 +508,7 @@ export class DesktopController implements DesktopHost {
 
   async openApp(input: Omit<OpenWindowInput, 'desktopId'>): Promise<AppWindowState> {
     this.startOpen = false
-    if (this.balloon?.closesWith === input.app) this.dismissBalloon()
+    this.dropBalloons((b) => b.closesWith === input.app)
     const existing = this.existingWindowFor(input)
     if (existing) {
       await this.raiseWindow(existing.id)
@@ -429,7 +516,7 @@ export class DesktopController implements DesktopHost {
     }
     if (input.app === 'help') {
       const opened = await this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId })
-      this.dismissBalloon() // the welcome balloon would cover the Help window's footer (UX-148)
+      this.dropBalloons((b) => !b.queued) // the welcome balloon would cover the Help window's footer (UX-148)
       return this.placeHelp(opened)
     }
     return this.openBesideOpener(() => this.api.desktop.openWindow({ ...input, desktopId: this.state.desktopId }))
@@ -776,11 +863,18 @@ export class DesktopController implements DesktopHost {
   }
 
   /** What the Action Center lists besides approvals: the chats Pause stopped (from the saved list), then the pushed messages. */
-  get centreMessages(): { id: number; text: string }[] {
+  get centreMessages(): ActionCenterMessage[] {
     const stopped = this.state.paused ? (this.state.stoppedByPause ?? []) : []
+    const time = (at: Date): string => `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`
     return [
       ...stopped.map((id) => ({ id: -id, text: stoppedLine(this.sessions.byId(id)?.title || 'New chat') })),
-      ...this.messages.map((m) => ({ id: m.id, text: m.text }))
+      ...this.messages.map((m) => ({
+        id: m.id,
+        text: m.text,
+        ...(m.title ? { title: m.title, time: time(m.at) } : {}),
+        ...(m.identity ? { identity: m.identity } : {}),
+        ...(m.actions?.length ? { actions: m.actions.map((a) => ({ id: a.id, label: a.label })) } : {})
+      }))
     ]
   }
 
@@ -960,7 +1054,23 @@ export class DesktopController implements DesktopHost {
     if (!window || !windowHasAside(window)) return
     this.patchPane(windowId, { collapsed: !open })
     if (open) this.focusPane(windowId)
-    else void this.unwidenAfterPane(window)
+    else {
+      this.notePaneFocus(windowId, false)
+      void this.unwidenAfterPane(window)
+    }
+  }
+
+  /** The window whose chat pane was last reported focused to main (`notePaneFocus`). */
+  private reportedPane: Id | null = null
+
+  /**
+   * The operator focused or typed in the chat pane of a window (`active`), or hid it: main makes the pane's chat the
+   * foreground chat while that window has the focus (no notices for it). Told only when it changes.
+   */
+  notePaneFocus(windowId: Id, active = true): void {
+    if (active ? this.reportedPane === windowId : this.reportedPane !== windowId) return
+    this.reportedPane = active ? windowId : null
+    void this.api.desktop.notePaneFocus?.(windowId, active).catch(() => {})
   }
 
   /** Windows that grew to make room for their chat pane: the bounds before and after, so hiding the pane gives the width back. */
@@ -1170,14 +1280,38 @@ export class DesktopController implements DesktopHost {
     else this.showBalloon({ title: 'Remove a project', text: 'No project is plugged in.', icon: 'info' })
   }
 
+  /**
+   * Shows a balloon. A balloon of the shell shows at once; a notice (`queued`) waits behind the one on screen. Each stays
+   * `stayMs` (default `BALLOON_MS`), then the next one waiting shows.
+   */
   showBalloon(balloon: Balloon): void {
-    this.balloon = balloon
-    this.armBalloon(balloon.stayMs === undefined ? BALLOON_MS : balloon.stayMs)
+    this.setQueue(push(this.queue, balloon))
+  }
+
+  /** "2 more" under the balloon on screen. */
+  get moreBalloons(): string | null {
+    return this.waitingBalloons.length > 0 ? `${this.waitingBalloons.length} more` : null
+  }
+
+  private get queue(): BalloonQueueState<Balloon> {
+    return { current: this.balloon, waiting: this.waitingBalloons }
+  }
+
+  private setQueue(queue: BalloonQueueState<Balloon>): void {
+    const shown = queue.current !== this.balloon
+    this.balloon = queue.current
+    this.waitingBalloons = queue.waiting
+    if (!shown) return
+    if (queue.current) this.armBalloon(queue.current.stayMs === undefined ? BALLOON_MS : queue.current.stayMs)
+    else if (this.balloonTimer) clearTimeout(this.balloonTimer)
   }
 
   private armBalloon(ms: number | null): void {
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
-    this.balloonTimer = ms === null ? null : setTimeout(() => (this.balloon = null), ms)
+    const balloon = this.balloon
+    this.balloonTimer = ms === null ? null : setTimeout(() => {
+      if (this.balloon === balloon) this.dismissBalloon()
+    }, ms)
   }
 
   /** The pointer is on the balloon (it stays) or left it (it goes after `BALLOON_LEAVE_MS`, unless it is a balloon that stays until closed). */
@@ -1195,9 +1329,15 @@ export class DesktopController implements DesktopHost {
     if (this.balloon === balloon) this.dismissBalloon()
   }
 
+  /** The balloon on screen is done (closed, timed out, its button used): the next one waiting shows. */
   dismissBalloon(): void {
     if (this.balloonTimer) clearTimeout(this.balloonTimer)
-    this.balloon = null
+    this.setQueue(next(this.queue))
+  }
+
+  /** Removes the balloons that match, on screen or waiting (a hint that is done because its app opened). */
+  dropBalloons(match: (balloon: Balloon) => boolean): void {
+    this.setQueue(drop(this.queue, match))
   }
 
   /** AutoPlay choices for the drive that was just plugged in. */
