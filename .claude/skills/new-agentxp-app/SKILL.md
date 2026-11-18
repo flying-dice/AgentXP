@@ -65,6 +65,9 @@ permissions), the tool must still exist but always ask the user (`ToolGateway.as
 
 ## 4. Agent API (the agentxp MCP server)
 
+- First classify every tool as Work, Show or Output and follow `.claude/skills/agent-presence-ux/SKILL.md`: Work
+  tools never open or focus a window, the agent calls `show` when it wants the operator to look, and Output lands in
+  the app's data (live in an open window, one balloon per turn when it is closed).
 - Tool definitions in `src/main/application/tools/catalog.ts` (`TOOL_DEFS`): `<prefix>_<verb>` names, a clear
   description that tells the agent when to use it, a zod input with `.describe()` on every field.
 - Handlers in `src/main/application/tools/<group>Tools.ts`, added to the handler map in `compose.ts`.

@@ -27,7 +27,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J07 | Approve from the Action Center | P2, P3 |
 | J08 | Review and revert changes (Chat, Code) | P1, P2 |
 | J09 | Restore from the Recycle Bin | P1, P2 |
-| J10 | Tools follow apps | P2, P1 |
+| J10 | Agents work quietly (what is it doing, what can it use?) [planned] | P2, P1 |
 | J11 | Pause and take control | P2, P1 |
 | J12 | Eject a drive | P1, P3 |
 | J13 | Disconnect and reconnect while the agent runs | P3, P2 |
@@ -49,6 +49,11 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 | J29 | Browse with tabs and recover from a bad page | P1, P4 |
 | J30 | Use menus, right-click and About in any app | P4, P3 |
 | J31 | Get help from inside an app (Help menu and F1) | P4 |
+| J32 | An agent shows you something [planned] | P1, P4 |
+| J33 | Hear about what the agents made [planned] | P2, P3 |
+| J34 | Follow an agent as it works [planned] | P3, P1 |
+
+J10 and J32 to J34 come from `docs/AGENT_PRESENCE.md` (Work, Show, Output). J10 replaces "Tools follow apps"; until PR 1 of that plan merges, the built app still behaves as the old J10 described (see git history).
 
 ---
 
@@ -298,32 +303,36 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **E2E coverage.** None.
 - **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T09.1 in `tasks.md`.
 
-## J10 - Tools follow apps (what can the agent touch?)
+## J10 - Agents work quietly (what is it doing, what can it use?) [planned]
+
+Replaces "Tools follow apps" (`docs/AGENT_PRESENCE.md`, section 4). Agents work out of sight; the desktop does not move unless the operator asks.
 
 - **Personas.** P2, P1.
-- **Trigger.** The user wants to know or change what the agent can use.
-- **Goal.** Predict exactly what the agent can do, and change it by opening and closing apps.
-- **Preconditions.** A connected desktop.
+- **Trigger.** An agent is working and the user wants to know what it is doing, what it did, or what it is allowed to use.
+- **Goal.** Answer "what is it doing" and "what did it do" in at most two clicks, with no window opening on its own, and know what the agent can use from the policy.
+- **Preconditions.** A connected desktop with a project; an agent reads, searches, edits and runs commands in a turn; no Code, Explorer or Terminal window open.
 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
-| 1 | Top bar | Reads **Agent can use** chips | One chip per enabled group (Read files, Terminal, Notes...) | Chips are the whole truth about tools now; empty desktop shows an "open an app" hint |
-| 2 | Start menu | Opens Terminal | Window opens; chip **Terminal** appears at once | A cause and an effect, in one glance |
-| 3 | Terminal window | Closes it | Chip disappears; agent loses terminal tools | The chip goes away |
-| 4 | Chat | Agent tries a closed tool | Refusal: "The Terminal app is closed. Call desktop_open_app..." | The agent is told, and may open the app by itself if **Agent may open apps** allows |
-| 5 | Control Center | Sets Agent may open apps to Ask or Never | Agent's `desktop_open_app` asks or fails | Link between app and policy |
+| 1 | Desktop | Watches while the agent works | No window opens or takes focus. The top bar reads "Working: reading auth.ts" | The desktop stays theirs; the step is in plain words |
+| 2 | Top bar | Clicks the working link (`topbar-working-link`) | The chat doing the work comes to the front | Where the work happens |
+| 3 | Chat | Reads the tool rows | One row per step, repeats merged, each with **Show in Code**, **Show diff** or **Show in Terminal** | Every step is there, in order |
+| 4 | Chat | Clicks **Show in Code** on a read row | Code opens at the lines that were read, highlighted | Exactly what the agent looked at |
+| 5 | InfoPanels | Clicks an activity row | Same action as the tool row | A second way in, from anywhere |
+| 6 | Code (open on `auth.ts`) | Keeps reading while the agent edits `auth.ts` | The file reloads in place; changed lines flash briefly; tab, scroll and caret stay | Live change without losing their place |
+| 7 | Top bar | Reads **Agent can use** | Chips show the policy (Allow, Ask, Deny) per group, not open apps | What the agent may use, and that the policy decides it |
 
-- **Decision points.** Close an app to take a tool away. Deny or Ask in policy for a stronger guarantee than the window (policy is separate from open apps).
+- **Decision points.** Look now (tool row, feed) or later (Event Viewer). Restrict with the Control Center policy (Deny or Ask), not by closing windows.
 - **Failure and edge branches.**
-  - Two windows of the same app: closing one must not remove the tool until the last window closes (README says last window).
-  - App minimised: tool stays? The chip must stay and the doc must say so.
-  - Tool origin: chip meaning for MCP versus ACP methods versus an agent's own built-in tools (honest limit). The UI must not imply a guarantee Agent7 cannot give. Check wording near the chips and in About.
-  - Agent opened the app: chip and taskbar must show it (`opened_by agent`).
-  - Chips overflow on a narrow window.
-  - Chip colors only distinguish by color.
-- **Success measure.** P2 correctly predicts the agent's available tools in a quiz after 2 minutes. The honest limit is found without the README.
-- **E2E coverage.** `desktop-tools.e2e.ts`, `scripted-desktop-tools.e2e.ts`, `chat.e2e.ts` (first test). Missing: two windows of one app, minimized, honest-limit text.
-- **Docs and panel.** Manual topics for each app used (`manuals/<app>.md`) must name every control of this journey. Panel tasks: T10.1, T10.2 in `tasks.md`.
+  - Several agents working: the top bar reads "3 agents working" and opens the agents popup (`topbar-agents-menu`) with one row per agent.
+  - The agent edits a file that is open in Code but not the active tab: no tab switch; the tab shows a changed marker.
+  - The user is typing in another window when the agent starts: nothing takes focus (typing grace).
+  - The honest limit: an agent's own built-in tools that do not go through ACP are not gated by policy. The wording near the chips and in About must say so.
+  - A tool set to Deny: the agent is refused with a plain message; the tool row says Denied.
+  - Chips overflow on a narrow window; chips never rely on colour alone.
+- **Success measure.** P2 says what the agent did in the last turn, and shows one read in Code, in under 30 seconds, and no window opened during the turn without a user action.
+- **E2E coverage.** Planned: `e2e/search.e2e.ts` and `e2e/scripted-desktop-tools.e2e.ts` rewritten to assert that no window opens; `e2e/desktop-tools.e2e.ts` for policy chips.
+- **Docs and panel.** `manuals/desktop.md`, `manuals/chat.md`, `manuals/code.md`, `manuals/control-centre.md`, README chapter 6. Panel tasks: T10.1, T10.2 in `tasks.md`.
 
 ## J11 - Pause and take control
 
@@ -808,7 +817,7 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **Personas.** P1, P2.
 - **Trigger.** The user wants the agent to work in a web page (read a team chat, fill a form).
 - **Goal.** Hand a web page to the agent, see what it does, and take back control at once when needed.
-- **Preconditions.** A Browser window open (tools follow apps, J10). Browser permission Allow or Ask. A local web app, no network.
+- **Preconditions.** A Browser window open (an output window, J33; before `docs/AGENT_PRESENCE.md` PR 1 also needed for the tools, J10). Browser permission Allow or Ask. A local web app, no network.
 
 | # | Screen | User action | System response | The user must notice |
 |---|---|---|---|---|
@@ -913,3 +922,90 @@ Test id names below follow `docs/CONVENTIONS.md`. Names with a question mark are
 - **Success measure.** P4 finds the answer to an app question in under 30 seconds with F1 or the Help menu.
 - **E2E coverage.** `help.e2e.ts` (F1, search, Start). Missing: F1 in dialogs and the Launcher, Back and Forward, accuracy of procedures.
 - **Docs and panel.** Manual topic `manuals/help.md` and the manuals of all apps. Panel tasks: T31.1, T31.2 in `tasks.md`.
+
+## J32 - An agent shows you something [planned]
+
+`docs/AGENT_PRESENCE.md`, sections 5 and 8.
+
+- **Personas.** P1, P4.
+- **Trigger.** The user asks the agent in a chat "where is the redirect checked?" or the agent wants the user to look at something before it goes on.
+- **Goal.** See the exact spot, know why the agent showed it, and carry on the conversation.
+- **Preconditions.** A connected desktop with `login-app`; a chat in the foreground; **Agent may show you things** is Always.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Chat | Asks the question | The agent works quietly, then calls `show` on `src/auth/redirect.ts:12-20` | Nothing moved while it worked |
+| 2 | Desktop | Watches | Code opens or comes forward at the lines, highlighted; the agent cursor (name tag, agent colour) glides to them | Who is pointing, and where |
+| 3 | Code | Reads the note callout | Agent name, the note ("The redirect target is not checked here"), **OK**, **Reply** | Why they are looking at this |
+| 4 | Note callout | Clicks **Reply** | The chat composer gets focus with the note quoted | The conversation continues where it was |
+| 5 | Chat | Reads the transcript | A row "Showed you redirect.ts:12-20" with **Show again** | The show is kept and can be repeated |
+
+- **Decision points.** **OK**, **Reply**, or ignore it (any click elsewhere dismisses). Change **Agent may show you things** to Ask or Never in Control Center.
+- **Failure and edge branches.**
+  - A background chat or a team member calls `show`: no motion; a balloon "Builder wants to show you redirect.ts:12-20" with **Show** and **Not now**; it stays in the Action Center.
+  - Two shows in a row: the second waits; the Action Center says "2 things to look at".
+  - The user types or clicks during the glide: the glide stops, focus stays where the user is.
+  - Pause during a show: the cursor and callout disappear.
+  - **Ask before every action** is on: the show asks first.
+  - Target near a screen edge, in a maximized or small window: the callout stays on screen.
+  - Reduced motion: the cursor jumps and pulses.
+  - A stale target (file deleted, comment removed): the agent gets an error; nothing opens.
+- **Success measure.** P4 states why the agent showed the lines, and replies to it, in under 20 seconds, on the first try.
+- **E2E coverage.** Planned: `e2e/show.e2e.ts` (foreground show, background request, typing during a glide, Pause, Ask).
+- **Docs and panel.** `manuals/desktop.md` (the agent cursor and note callout), `manuals/chat.md`, `manuals/control-centre.md`. Panel tasks: T32.1, T32.2 in `tasks.md`.
+
+## J33 - Hear about what the agents made [planned]
+
+`docs/AGENT_PRESENCE.md`, section 6.
+
+- **Personas.** P2, P3.
+- **Trigger.** Agents in background chats or a team room finish work that leaves results in apps: review comments, cards, changes, a diagram.
+- **Goal.** Learn about each result once, in plain words, and reach it in one click, without being interrupted while working.
+- **Preconditions.** A connected desktop; the user is working in a foreground chat or an app; a team room with Reviewer and Builder runs in the background; Code Review and Kanban windows are closed.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Desktop | Keeps working | Reviewer adds 4 comments. One balloon: "Reviewer left 4 comments on redirect.ts", **Open review** | One message, in outcome words, not one per comment |
+| 2 | Balloon | Clicks **Open review** | Code Review opens on the first new comment | The result, not just the app |
+| 3 | Desktop | Ignores the next balloon | Builder's turn ends: "Builder finished: changed 6 files, ran tests (passed)", **Open chat**; it times out | Nothing lost |
+| 4 | Action Center | Opens it from the tray flag | Both balloons are listed with their actions | History of what happened |
+| 5 | Kanban (open) | Watches while Builder moves a card | The card moves live and flashes; no balloon; no focus change | Live change in an open window |
+
+- **Decision points.** Act now on the balloon, later from the Action Center, or open the app.
+- **Failure and edge branches.**
+  - The foreground chat makes output: no balloon (the user is watching it).
+  - Many results in one turn: one balloon per kind per turn.
+  - An agent opens an output app (Diagrams, Paint, WordPad, Browser): it opens behind the focused window with a flashing taskbar button and never takes focus; **Agent may open apps** set to Never refuses it.
+  - Balloons while a UAC popup is open: they wait below it.
+  - Two desktops: notices go only to their own desktop.
+- **Success measure.** P2 names every result of a two-agent run from the Action Center alone; P3 reaches each result in one click; the user was never pulled out of their own window.
+- **E2E coverage.** Planned: `e2e/notices.e2e.ts`.
+- **Docs and panel.** `manuals/desktop.md` (balloons, Action Center), `manuals/code-review.md`, `manuals/kanban.md`, `manuals/team-chat.md`. Panel tasks: T33.1, T33.2 in `tasks.md`.
+
+## J34 - Follow an agent as it works [planned]
+
+`docs/AGENT_PRESENCE.md`, section 7.
+
+- **Personas.** P3, P1.
+- **Trigger.** The user wants to watch one agent work live, for example to learn how it approaches a bug.
+- **Goal.** Turn on Follow, watch that agent's steps on the desktop, and stop when done.
+- **Preconditions.** A team room with Builder working on `login-app`.
+
+| # | Screen | User action | System response | The user must notice |
+|---|---|---|---|---|
+| 1 | Team chat | Clicks **Follow** on Builder's row | The top bar reads "Following Builder" with **Stop following** | Follow is on, and for whom |
+| 2 | Desktop | Watches | Code goes to each file and line range Builder reads or edits; Builder's cursor, in its colour, travels with it; the Terminal mirrors its runs | The work in real time, without notes |
+| 3 | Notepad | Starts typing a note | Projection pauses; focus stays in Notepad | The user still wins |
+| 4 | Desktop | Stops typing | After a short pause the projection resumes | It carried on without them |
+| 5 | Top bar | Clicks **Stop following** | Projection and cursor stop | Back to quiet |
+
+- **Decision points.** Follow one agent at a time; **Keep following** across turns or stop at the end of the turn.
+- **Failure and edge branches.**
+  - Follow a second agent: the first stops; the top bar names the new one.
+  - Pause: Follow ends.
+  - The followed chat closes or its turn ends (without **Keep following**): Follow ends with a short notice.
+  - Another agent calls `show` while following: it becomes a request balloon.
+  - Reduced motion: the cursor jumps.
+- **Success measure.** P3 turns Follow on and off without Help; P1 describes the order of Builder's steps after watching one turn.
+- **E2E coverage.** Planned: `e2e/follow.e2e.ts`.
+- **Docs and panel.** `manuals/team-chat.md`, `manuals/chat.md`, `manuals/desktop.md`. Panel tasks: T34.1 in `tasks.md`.

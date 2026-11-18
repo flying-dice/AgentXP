@@ -32,7 +32,12 @@ the intended result, and fill the PR's **Manual verification** section. See `AGE
   behaviour lives in `src/renderer/src/lib/kit/actions/` (Svelte actions/attachments).
 - Era honesty: Windows XP Luna (Blue) / WinForms. 12px Segoe UI, 23px buttons, gradient
   faces, dotted focus rectangles, no rounded "modern" cards, no transitions beyond
-  what WinXP had (hover glow fade is fine), no emoji.
+  what WinXP had (hover glow fade is fine; the agent cursor glide is the one documented
+  exception, see `docs/design/XP_DESIGN_LANGUAGE.md` "Motion"), no emoji.
+- Agent presence: every agent tool and every UI reaction to an agent is Work, Show or
+  Output (`docs/AGENT_PRESENCE.md`). Follow `.claude/skills/agent-presence-ux/SKILL.md`:
+  Work never opens or focuses a window, only the foreground chat may move the operator's
+  view, Output windows open behind.
 - Every component: a Storybook story file using `@storybook/addon-svelte-csf` v5
   (`defineMeta` in `<script module>`), title `Atoms/<Name>`, `Molecules/<Name>`, etc.,
   covering default, disabled and each meaningful variant/state, with `argTypes` so
