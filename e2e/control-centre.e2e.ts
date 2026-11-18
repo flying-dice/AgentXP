@@ -73,10 +73,16 @@ describe('control center', () => {
 
   it('OK stays on the same pixel when the first change is made, and a row name stays on one line (UX-115)', async () => {
     const ok = page('permissions-ok')
-    const before = await ok.boundingBox()
+    // Measured against the table: opening the list may scroll the page (the page scrolls in a small window), which moves
+    // both; the layout itself must not move OK.
+    const place = async (): Promise<{ x: number; y: number; width: number; height: number }> => {
+      const [o, t] = [(await ok.boundingBox())!, (await page('permissions-table').boundingBox())!]
+      return { x: o.x - t.x, y: o.y - t.y, width: o.width, height: o.height }
+    }
+    const before = await place()
     await pick('permissions-setting-fs-read', 'allow')
     await see.attribute(page('permissions-status'), 'data-kind', 'pending')
-    expect(await ok.boundingBox()).toEqual(before)
+    expect(await place()).toEqual(before)
     const row = page('permissions-row').filter({ has: page('permissions-setting-terminal') })
     const box = await row.boundingBox()
     // Name, setting, what it covers and the mode line: no row grows by a wrapped name.
